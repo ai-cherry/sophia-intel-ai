@@ -108,7 +108,9 @@ class StuckAccountPredictor:
             "dependency_blocks": 0.10,
         }
 
-    async def predict_stuck_risk(self, account_data: dict[str, Any]) -> PredictionResult:
+    async def predict_stuck_risk(
+        self, account_data: dict[str, Any]
+    ) -> PredictionResult:
         """Predict risk of account becoming stuck"""
 
         # Extract and calculate features
@@ -147,9 +149,13 @@ class StuckAccountPredictor:
         last_activity = account_data.get("last_activity")
         if last_activity:
             if isinstance(last_activity, str):
-                last_activity = datetime.fromisoformat(last_activity.replace("Z", "+00:00"))
+                last_activity = datetime.fromisoformat(
+                    last_activity.replace("Z", "+00:00")
+                )
             days_since = (datetime.utcnow() - last_activity).days
-            features["days_since_activity"] = min(days_since / 14.0, 1.0)  # Cap at 14 days
+            features["days_since_activity"] = min(
+                days_since / 14.0, 1.0
+            )  # Cap at 14 days
         else:
             features["days_since_activity"] = 1.0  # No activity = max risk
 
@@ -176,7 +182,9 @@ class StuckAccountPredictor:
         # Dependency blocks
         blocked_dependencies = account_data.get("blocked_dependencies", 0)
         total_dependencies = account_data.get("total_dependencies", 0)
-        features["dependency_blocks"] = blocked_dependencies / max(total_dependencies, 1)
+        features["dependency_blocks"] = blocked_dependencies / max(
+            total_dependencies, 1
+        )
 
         return features
 
@@ -273,7 +281,9 @@ class TeamPerformancePredictor:
             lambda: MovingAverageCalculator(window_size=14)
         )
 
-    async def predict_team_performance(self, team_data: dict[str, Any]) -> PredictionResult:
+    async def predict_team_performance(
+        self, team_data: dict[str, Any]
+    ) -> PredictionResult:
         """Predict team performance trend"""
 
         team_id = team_data["id"]
@@ -294,11 +304,15 @@ class TeamPerformancePredictor:
             performance_score = (trend + 1) / 2
 
         # Adjust based on absolute velocity
-        target_velocity = team_data.get("target_velocity", moving_avg or current_velocity)
+        target_velocity = team_data.get(
+            "target_velocity", moving_avg or current_velocity
+        )
         if target_velocity > 0:
             velocity_ratio = current_velocity / target_velocity
             # Weight absolute performance with trend
-            performance_score = (performance_score * 0.7) + (min(velocity_ratio, 1.0) * 0.3)
+            performance_score = (performance_score * 0.7) + (
+                min(velocity_ratio, 1.0) * 0.3
+            )
 
         # Analyze additional factors
         features = {
@@ -311,8 +325,12 @@ class TeamPerformancePredictor:
         }
 
         # Generate insights
-        contributing_factors = self._analyze_performance_factors(features, performance_score)
-        recommendations = self._generate_performance_recommendations(features, performance_score)
+        contributing_factors = self._analyze_performance_factors(
+            features, performance_score
+        )
+        recommendations = self._generate_performance_recommendations(
+            features, performance_score
+        )
 
         return PredictionResult(
             prediction_id=f"team_perf_{team_id}_{int(datetime.utcnow().timestamp())}",
@@ -320,7 +338,9 @@ class TeamPerformancePredictor:
             target_id=team_id,
             target_type="team",
             prediction_value=performance_score,
-            confidence=PredictionConfidence.HIGH if moving_avg else PredictionConfidence.LOW,
+            confidence=(
+                PredictionConfidence.HIGH if moving_avg else PredictionConfidence.LOW
+            ),
             features_analyzed=features,
             contributing_factors=contributing_factors,
             recommendations=recommendations,
@@ -416,7 +436,9 @@ class PredictiveIntelligenceEngine:
             "false_negative_rate": 0.0,
         }
 
-    async def analyze_operational_data(self, operational_data: dict[str, Any]) -> dict[str, Any]:
+    async def analyze_operational_data(
+        self, operational_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze operational data and generate predictions"""
         logger.info("🔮 Running predictive intelligence analysis...")
 
@@ -427,7 +449,9 @@ class PredictiveIntelligenceEngine:
             # Analyze accounts for stuck risk
             accounts = operational_data.get("accounts", [])
             for account in accounts:
-                prediction = await self.stuck_account_predictor.predict_stuck_risk(account)
+                prediction = await self.stuck_account_predictor.predict_stuck_risk(
+                    account
+                )
                 predictions.append(prediction)
 
                 # Cache high-risk predictions
@@ -437,7 +461,9 @@ class PredictiveIntelligenceEngine:
             # Analyze teams for performance forecasting
             teams = operational_data.get("teams", [])
             for team in teams:
-                prediction = await self.team_performance_predictor.predict_team_performance(team)
+                prediction = (
+                    await self.team_performance_predictor.predict_team_performance(team)
+                )
                 predictions.append(prediction)
                 self.prediction_cache[prediction.prediction_id] = prediction
 
@@ -459,7 +485,9 @@ class PredictiveIntelligenceEngine:
                 "status": "completed",
                 "execution_time_seconds": execution_time,
                 "total_predictions": len(predictions),
-                "high_risk_predictions": len([p for p in predictions if p.prediction_value > 0.7]),
+                "high_risk_predictions": len(
+                    [p for p in predictions if p.prediction_value > 0.7]
+                ),
                 "predictions_by_type": self._group_predictions_by_type(predictions),
                 "summary_insights": summary,
                 "model_performance": self.model_metrics,
@@ -468,7 +496,11 @@ class PredictiveIntelligenceEngine:
 
         except Exception as e:
             logger.error(f"Predictive analysis failed: {e}")
-            return {"status": "failed", "error": str(e), "timestamp": start_time.isoformat()}
+            return {
+                "status": "failed",
+                "error": str(e),
+                "timestamp": start_time.isoformat(),
+            }
 
     async def _generate_prediction_summary(
         self, predictions: list[PredictionResult]
@@ -478,7 +510,8 @@ class PredictiveIntelligenceEngine:
         high_risk_accounts = [
             p
             for p in predictions
-            if p.prediction_type == PredictionType.STUCK_ACCOUNT_RISK and p.prediction_value > 0.7
+            if p.prediction_type == PredictionType.STUCK_ACCOUNT_RISK
+            and p.prediction_value > 0.7
         ]
         declining_teams = [
             p
@@ -493,17 +526,23 @@ class PredictiveIntelligenceEngine:
             "teams_declining": len(declining_teams),
             "top_risk_factors": self._extract_top_risk_factors(predictions),
             "recommended_actions": self._extract_top_recommendations(predictions),
-            "confidence_distribution": self._analyze_confidence_distribution(predictions),
+            "confidence_distribution": self._analyze_confidence_distribution(
+                predictions
+            ),
         }
 
-    def _group_predictions_by_type(self, predictions: list[PredictionResult]) -> dict[str, int]:
+    def _group_predictions_by_type(
+        self, predictions: list[PredictionResult]
+    ) -> dict[str, int]:
         """Group predictions by type"""
         type_counts = defaultdict(int)
         for prediction in predictions:
             type_counts[prediction.prediction_type.value] += 1
         return dict(type_counts)
 
-    def _extract_top_risk_factors(self, predictions: list[PredictionResult]) -> list[str]:
+    def _extract_top_risk_factors(
+        self, predictions: list[PredictionResult]
+    ) -> list[str]:
         """Extract most common risk factors"""
         factor_counts = defaultdict(int)
         for prediction in predictions:
@@ -512,10 +551,14 @@ class PredictiveIntelligenceEngine:
 
         return [
             factor
-            for factor, count in sorted(factor_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+            for factor, count in sorted(
+                factor_counts.items(), key=lambda x: x[1], reverse=True
+            )[:5]
         ]
 
-    def _extract_top_recommendations(self, predictions: list[PredictionResult]) -> list[str]:
+    def _extract_top_recommendations(
+        self, predictions: list[PredictionResult]
+    ) -> list[str]:
         """Extract most common recommendations"""
         rec_counts = defaultdict(int)
         for prediction in predictions:
@@ -523,7 +566,10 @@ class PredictiveIntelligenceEngine:
                 rec_counts[rec] += 1
 
         return [
-            rec for rec, count in sorted(rec_counts.items(), key=lambda x: x[1], reverse=True)[:7]
+            rec
+            for rec, count in sorted(
+                rec_counts.items(), key=lambda x: x[1], reverse=True
+            )[:7]
         ]
 
     def _analyze_confidence_distribution(
@@ -554,7 +600,9 @@ class PredictiveIntelligenceEngine:
                         "contributing_factors": prediction.contributing_factors,
                         "recommendations": prediction.recommendations[:3],  # Top 3
                         "expires_at": (
-                            prediction.expires_at.isoformat() if prediction.expires_at else None
+                            prediction.expires_at.isoformat()
+                            if prediction.expires_at
+                            else None
                         ),
                     },
                 )
@@ -567,7 +615,8 @@ class PredictiveIntelligenceEngine:
                 "total_predictions": len(predictions),
                 "confidence": (
                     "high"
-                    if summary["confidence_distribution"].get("high", 0) > len(predictions) * 0.6
+                    if summary["confidence_distribution"].get("high", 0)
+                    > len(predictions) * 0.6
                     else "medium"
                 ),
             },
@@ -591,7 +640,9 @@ class PredictiveIntelligenceEngine:
             ),
             "recent_trends": await self._calculate_recent_trends(),
             "model_performance": self.model_metrics,
-            "top_risk_factors": self._extract_top_risk_factors(list(active_predictions.values())),
+            "top_risk_factors": self._extract_top_risk_factors(
+                list(active_predictions.values())
+            ),
             "recommended_actions": self._extract_top_recommendations(
                 list(active_predictions.values())
             ),
@@ -620,7 +671,9 @@ class PredictiveIntelligenceEngine:
             daily_averages[day_key].append(prediction.prediction_value)
 
         # Convert to average scores
-        daily_scores = {day: sum(scores) / len(scores) for day, scores in daily_averages.items()}
+        daily_scores = {
+            day: sum(scores) / len(scores) for day, scores in daily_averages.items()
+        }
 
         if len(daily_scores) < 2:
             return {

@@ -100,7 +100,8 @@ Provide the complete refactored code."""
     try:
         refactorer = ArtemisAgentFactory.create_refactorer()
         refactor_result = await refactorer.process_task(
-            refactor_prompt + f"\n\nOriginal code:\n{test_code}", context={"file": test_file}
+            refactor_prompt + f"\n\nOriginal code:\n{test_code}",
+            context={"file": test_file},
         )
 
         # Create a proposal

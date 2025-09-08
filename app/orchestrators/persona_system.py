@@ -206,31 +206,46 @@ class SophiaPersonaSystem:
         query_lower = context.query_type.lower() if context.query_type else ""
 
         # Smart persona indicators
-        if any(word in query_lower for word in ["data", "metric", "number", "stat", "trend"]):
+        if any(
+            word in query_lower
+            for word in ["data", "metric", "number", "stat", "trend"]
+        ):
             return "smart"
 
         # Strategic persona indicators
         if any(
-            word in query_lower for word in ["strategy", "plan", "future", "growth", "competitive"]
+            word in query_lower
+            for word in ["strategy", "plan", "future", "growth", "competitive"]
         ):
             return "strategic"
 
         # Analytical persona indicators
-        if any(word in query_lower for word in ["analyze", "breakdown", "explain", "how", "why"]):
+        if any(
+            word in query_lower
+            for word in ["analyze", "breakdown", "explain", "how", "why"]
+        ):
             return "analytical"
 
         # Savvy persona indicators
-        if any(word in query_lower for word in ["business", "revenue", "deal", "sales", "market"]):
+        if any(
+            word in query_lower
+            for word in ["business", "revenue", "deal", "sales", "market"]
+        ):
             return "savvy"
 
         # First-principles indicators
-        if any(word in query_lower for word in ["assume", "fundamental", "basic", "principle"]):
+        if any(
+            word in query_lower
+            for word in ["assume", "fundamental", "basic", "principle"]
+        ):
             return "first_principles"
 
         # Default to smart for most business intelligence contexts
         return "smart"
 
-    async def generate_response(self, query: str, context: PersonaContext) -> PersonaResponse:
+    async def generate_response(
+        self, query: str, context: PersonaContext
+    ) -> PersonaResponse:
         """Generate a response using the appropriate persona"""
 
         # Select persona
@@ -258,7 +273,9 @@ class SophiaPersonaSystem:
             content=response_content,
             persona_used=selected_persona,
             confidence=0.85,  # Could be calculated based on context match
-            suggested_actions=self._generate_suggested_actions(selected_persona, context),
+            suggested_actions=self._generate_suggested_actions(
+                selected_persona, context
+            ),
             metadata=metadata,
         )
 
@@ -434,7 +451,9 @@ I can assist with sales intelligence, market analysis, deal risk assessment, coa
 2. Provide additional context if helpful
 3. Request specific insights or recommendations"""
 
-    def _generate_suggested_actions(self, persona: str, context: PersonaContext) -> list[str]:
+    def _generate_suggested_actions(
+        self, persona: str, context: PersonaContext
+    ) -> list[str]:
         """Generate persona-appropriate suggested actions"""
         base_actions = {
             "smart": [
@@ -486,4 +505,6 @@ I can assist with sales intelligence, market analysis, deal risk assessment, coa
 
     async def list_available_personas(self) -> list[dict]:
         """List all available personas with their characteristics"""
-        return [{"name": name, "config": config} for name, config in self.personas.items()]
+        return [
+            {"name": name, "config": config} for name, config in self.personas.items()
+        ]

@@ -193,7 +193,9 @@ class CodeIntelligence:
     async def _analyze_javascript_file(self, file_info: FileInfo, content: str):
         """Analyze JavaScript/TypeScript file using regex"""
         # Extract imports
-        import_pattern = r'import\s+(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+[\'"]([^\'"]+)[\'"]'
+        import_pattern = (
+            r'import\s+(?:{[^}]+}|\*\s+as\s+\w+|\w+)\s+from\s+[\'"]([^\'"]+)[\'"]'
+        )
         for match in re.finditer(import_pattern, content):
             module = match.group(1)
             file_info.imports.append(module)
@@ -201,7 +203,9 @@ class CodeIntelligence:
                 file_info.dependencies.append(module)
 
         # Extract exports
-        export_pattern = r"export\s+(?:default\s+)?(?:class|function|const|let|var)\s+(\w+)"
+        export_pattern = (
+            r"export\s+(?:default\s+)?(?:class|function|const|let|var)\s+(\w+)"
+        )
         for match in re.finditer(export_pattern, content):
             file_info.exports.append(match.group(1))
 
@@ -211,9 +215,7 @@ class CodeIntelligence:
             file_info.classes.append(match.group(1))
 
         # Extract functions
-        func_pattern = (
-            r"(?:function\s+(\w+)|const\s+(\w+)\s*=\s*(?:async\s+)?(?:\([^)]*\)|[^=])\s*=>)"
-        )
+        func_pattern = r"(?:function\s+(\w+)|const\s+(\w+)\s*=\s*(?:async\s+)?(?:\([^)]*\)|[^=])\s*=>)"
         for match in re.finditer(func_pattern, content):
             func_name = match.group(1) or match.group(2)
             if func_name:
@@ -274,7 +276,9 @@ class CodeIntelligence:
 
         # Find unused files
         for file_path in self.file_cache:
-            if file_path not in self.reverse_dependencies and not file_path.endswith("__main__.py"):
+            if file_path not in self.reverse_dependencies and not file_path.endswith(
+                "__main__.py"
+            ):
                 dependencies["unused"].append(file_path)
 
         return dependencies
@@ -403,9 +407,13 @@ class CodeIntelligence:
 
         if self.file_cache:
             # Average metrics
-            metrics["average_file_size"] = metrics["total_lines"] / metrics["total_files"]
+            metrics["average_file_size"] = (
+                metrics["total_lines"] / metrics["total_files"]
+            )
 
-            complexities = [f.complexity for f in self.file_cache.values() if f.complexity]
+            complexities = [
+                f.complexity for f in self.file_cache.values() if f.complexity
+            ]
             if complexities:
                 metrics["average_complexity"] = sum(complexities) / len(complexities)
 
@@ -417,7 +425,9 @@ class CodeIntelligence:
                 metrics["languages"][lang] += 1
 
             # Find outliers
-            sorted_by_size = sorted(self.file_cache.values(), key=lambda f: f.lines, reverse=True)
+            sorted_by_size = sorted(
+                self.file_cache.values(), key=lambda f: f.lines, reverse=True
+            )
             metrics["largest_files"] = [
                 {"path": f.path, "lines": f.lines} for f in sorted_by_size[:5]
             ]
@@ -428,7 +438,8 @@ class CodeIntelligence:
                 reverse=True,
             )
             metrics["most_complex"] = [
-                {"path": f.path, "complexity": f.complexity} for f in sorted_by_complexity[:5]
+                {"path": f.path, "complexity": f.complexity}
+                for f in sorted_by_complexity[:5]
             ]
 
             sorted_by_deps = sorted(
@@ -464,7 +475,9 @@ class CodeIntelligence:
                     file_changes[line] = file_changes.get(line, 0) + 1
 
             # Sort by change frequency
-            sorted_changes = sorted(file_changes.items(), key=lambda x: x[1], reverse=True)
+            sorted_changes = sorted(
+                file_changes.items(), key=lambda x: x[1], reverse=True
+            )
 
             # Get top hot spots
             for file_path, change_count in sorted_changes[:10]:
@@ -477,7 +490,9 @@ class CodeIntelligence:
                             "changes": change_count,
                             "lines": file_info.lines,
                             "complexity": file_info.complexity,
-                            "risk_score": change_count * (file_info.complexity or 1) / 10,
+                            "risk_score": change_count
+                            * (file_info.complexity or 1)
+                            / 10,
                         }
                     )
 
@@ -541,7 +556,9 @@ class CodeIntelligence:
         if tech_debt["total_score"] > 50:
             tech_debt["recommendations"].append("Consider major refactoring")
         if any(ind["type"] == "long_file" for ind in tech_debt["indicators"]):
-            tech_debt["recommendations"].append("Break down large files into smaller modules")
+            tech_debt["recommendations"].append(
+                "Break down large files into smaller modules"
+            )
         if circular_deps:
             tech_debt["recommendations"].append("Resolve circular dependencies")
 
@@ -549,7 +566,12 @@ class CodeIntelligence:
 
     async def _detect_tech_stack(self) -> dict[str, Any]:
         """Auto-detect technology stack from project files"""
-        tech_stack = {"languages": {}, "frameworks": [], "tools": [], "package_managers": []}
+        tech_stack = {
+            "languages": {},
+            "frameworks": [],
+            "tools": [],
+            "package_managers": [],
+        }
 
         # Check for package manager files
         package_files = {

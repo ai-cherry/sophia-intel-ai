@@ -21,7 +21,9 @@ async def test_server(name: str, port: int):
         async with aiohttp.ClientSession() as session:
             # Health check
             url = f"http://localhost:{port}/health"
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=2)) as response:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=2)
+            ) as response:
                 if response.status == 200:
                     data = await response.json()
                     results["tests"]["health"] = "✅ Healthy"
@@ -38,7 +40,9 @@ async def test_server(name: str, port: int):
     try:
         async with aiohttp.ClientSession() as session:
             url = f"http://localhost:{port}/capabilities"
-            async with session.get(url, timeout=aiohttp.ClientTimeout(total=2)) as response:
+            async with session.get(
+                url, timeout=aiohttp.ClientTimeout(total=2)
+            ) as response:
                 if response.status == 200:
                     data = await response.json()
                     results["tests"]["capabilities"] = "✅ Available"

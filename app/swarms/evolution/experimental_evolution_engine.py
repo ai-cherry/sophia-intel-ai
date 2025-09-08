@@ -61,7 +61,9 @@ class ExperimentalEvolutionConfig:
     # Core experimental settings
     mode: ExperimentalMode = ExperimentalMode.DISABLED  # Disabled by default
     enabled: bool = False  # Must be explicitly enabled
-    experimental_features_acknowledged: bool = False  # Must acknowledge experimental nature
+    experimental_features_acknowledged: bool = (
+        False  # Must acknowledge experimental nature
+    )
 
     # Genetic algorithm parameters (conservative defaults for safety)
     mutation_rate: float = 0.1  # 10% mutation rate (conservative)
@@ -70,7 +72,9 @@ class ExperimentalEvolutionConfig:
     crossover_rate: float = 0.7  # 70% crossover rate
 
     # Safety controls
-    safety_bounds: ExperimentalSafetyBounds = field(default_factory=ExperimentalSafetyBounds)
+    safety_bounds: ExperimentalSafetyBounds = field(
+        default_factory=ExperimentalSafetyBounds
+    )
     enable_rollback: bool = True
     rollback_generations: int = 3
     performance_monitoring_window: int = 5
@@ -113,8 +117,12 @@ class ExperimentalEvolutionConfig:
 
         # Check bounds
         bounds = self.safety_bounds
-        if not (bounds.min_mutation_rate <= self.mutation_rate <= bounds.max_mutation_rate):
-            issues.append(f"Mutation rate {self.mutation_rate} outside experimental safe bounds")
+        if not (
+            bounds.min_mutation_rate <= self.mutation_rate <= bounds.max_mutation_rate
+        ):
+            issues.append(
+                f"Mutation rate {self.mutation_rate} outside experimental safe bounds"
+            )
 
         if not (
             bounds.min_selection_pressure
@@ -125,25 +133,45 @@ class ExperimentalEvolutionConfig:
                 f"Selection pressure {self.selection_pressure} outside experimental safe bounds"
             )
 
-        if not (bounds.min_crossover_rate <= self.crossover_rate <= bounds.max_crossover_rate):
-            issues.append(f"Crossover rate {self.crossover_rate} outside experimental safe bounds")
+        if not (
+            bounds.min_crossover_rate
+            <= self.crossover_rate
+            <= bounds.max_crossover_rate
+        ):
+            issues.append(
+                f"Crossover rate {self.crossover_rate} outside experimental safe bounds"
+            )
 
         # Logical checks
         if self.elite_preservation > self.selection_pressure:
             issues.append("Elite preservation cannot exceed selection pressure")
 
-        if self.mode == ExperimentalMode.AGGRESSIVE and not self.experimental_features_acknowledged:
-            issues.append("Aggressive experimental mode requires explicit acknowledgment")
+        if (
+            self.mode == ExperimentalMode.AGGRESSIVE
+            and not self.experimental_features_acknowledged
+        ):
+            issues.append(
+                "Aggressive experimental mode requires explicit acknowledgment"
+            )
 
         # Experimental feature warnings
-        if self.experimental_pattern_analysis and self.mode != ExperimentalMode.AGGRESSIVE:
-            issues.append("Advanced experimental pattern analysis requires aggressive mode")
+        if (
+            self.experimental_pattern_analysis
+            and self.mode != ExperimentalMode.AGGRESSIVE
+        ):
+            issues.append(
+                "Advanced experimental pattern analysis requires aggressive mode"
+            )
 
         if self.experimental_cross_population_breeding:
-            issues.append("Cross-population breeding is highly experimental - use with caution")
+            issues.append(
+                "Cross-population breeding is highly experimental - use with caution"
+            )
 
         if self.experimental_continuous_adaptation:
-            issues.append("Continuous adaptation is highly experimental - monitor closely")
+            issues.append(
+                "Continuous adaptation is highly experimental - monitor closely"
+            )
 
         return issues
 
@@ -224,13 +252,17 @@ class SwarmChromosome:
                 delta = random.uniform(-0.1, 0.1)
                 if experimental_mode:
                     delta = random.uniform(-0.15, 0.15)  # Larger experimental changes
-                mutated.quality_threshold = max(0.5, min(1.0, self.quality_threshold + delta))
+                mutated.quality_threshold = max(
+                    0.5, min(1.0, self.quality_threshold + delta)
+                )
 
             if random.random() < mutation_rate:
                 delta = random.uniform(-0.1, 0.1)
                 if experimental_mode:
                     delta = random.uniform(-0.15, 0.15)
-                mutated.speed_preference = max(0.0, min(1.0, self.speed_preference + delta))
+                mutated.speed_preference = max(
+                    0.0, min(1.0, self.speed_preference + delta)
+                )
 
             if random.random() < mutation_rate:
                 delta = random.uniform(-0.05, 0.05)
@@ -244,43 +276,57 @@ class SwarmChromosome:
             if experimental_mode:
                 if random.random() < mutation_rate:
                     mutated.experimental_creativity = max(
-                        0.0, min(1.0, self.experimental_creativity + random.uniform(-0.2, 0.2))
+                        0.0,
+                        min(
+                            1.0,
+                            self.experimental_creativity + random.uniform(-0.2, 0.2),
+                        ),
                     )
                 if random.random() < mutation_rate:
                     mutated.experimental_exploration = max(
-                        0.0, min(1.0, self.experimental_exploration + random.uniform(-0.15, 0.15))
+                        0.0,
+                        min(
+                            1.0,
+                            self.experimental_exploration + random.uniform(-0.15, 0.15),
+                        ),
                     )
                 if random.random() < mutation_rate:
                     mutated.experimental_cooperation = max(
-                        0.0, min(1.0, self.experimental_cooperation + random.uniform(-0.1, 0.1))
+                        0.0,
+                        min(
+                            1.0,
+                            self.experimental_cooperation + random.uniform(-0.1, 0.1),
+                        ),
                     )
 
         return mutated
 
     @staticmethod
     def crossover(
-        parent1: "SwarmChromosome", parent2: "SwarmChromosome", experimental_mode: bool = False
+        parent1: "SwarmChromosome",
+        parent2: "SwarmChromosome",
+        experimental_mode: bool = False,
     ) -> tuple["SwarmChromosome", "SwarmChromosome"]:
         """Create two offspring through crossover with experimental options."""
         child1 = deepcopy(parent1)
         child2 = deepcopy(parent2)
 
         # Generate new IDs
-        child1.chromosome_id = (
-            f"cross_{parent1.chromosome_id}_{parent2.chromosome_id}_{random.randint(1000, 9999)}_1"
-        )
-        child2.chromosome_id = (
-            f"cross_{parent1.chromosome_id}_{parent2.chromosome_id}_{random.randint(1000, 9999)}_2"
-        )
+        child1.chromosome_id = f"cross_{parent1.chromosome_id}_{parent2.chromosome_id}_{random.randint(1000, 9999)}_1"
+        child2.chromosome_id = f"cross_{parent1.chromosome_id}_{parent2.chromosome_id}_{random.randint(1000, 9999)}_2"
 
         # Set parents and experimental flag
         child1.parent_chromosomes = [parent1.chromosome_id, parent2.chromosome_id]
         child2.parent_chromosomes = [parent1.chromosome_id, parent2.chromosome_id]
         child1.experimental_variant = (
-            experimental_mode or parent1.experimental_variant or parent2.experimental_variant
+            experimental_mode
+            or parent1.experimental_variant
+            or parent2.experimental_variant
         )
         child2.experimental_variant = (
-            experimental_mode or parent1.experimental_variant or parent2.experimental_variant
+            experimental_mode
+            or parent1.experimental_variant
+            or parent2.experimental_variant
         )
 
         # Increment generation
@@ -295,7 +341,9 @@ class SwarmChromosome:
                         # Weighted average with randomization
                         weight = random.uniform(0.3, 0.7)
                         if experimental_mode:
-                            weight = random.uniform(0.1, 0.9)  # More experimental blending
+                            weight = random.uniform(
+                                0.1, 0.9
+                            )  # More experimental blending
 
                         child1.agent_parameters[agent][param] = (
                             weight * parent1.agent_parameters[agent][param]
@@ -315,7 +363,11 @@ class SwarmChromosome:
         crossover_genes = ["quality_threshold", "speed_preference", "risk_tolerance"]
         if experimental_mode:
             crossover_genes.extend(
-                ["experimental_creativity", "experimental_exploration", "experimental_cooperation"]
+                [
+                    "experimental_creativity",
+                    "experimental_exploration",
+                    "experimental_cooperation",
+                ]
             )
 
         for gene in crossover_genes:
@@ -416,14 +468,18 @@ class ExperimentalEvolutionEngine:
         # Validate configuration
         config_issues = self.config.validate()
         if config_issues:
-            logger.error(f"Experimental evolution engine configuration issues: {config_issues}")
+            logger.error(
+                f"Experimental evolution engine configuration issues: {config_issues}"
+            )
             if not self.config.dry_run_mode:
                 raise ValueError(
                     f"Invalid experimental evolution configuration: {'; '.join(config_issues)}"
                 )
 
         # Population management
-        self.populations: dict[str, list[SwarmChromosome]] = {}  # swarm_type -> chromosomes
+        self.populations: dict[str, list[SwarmChromosome]] = (
+            {}
+        )  # swarm_type -> chromosomes
         self.generation_counter: dict[str, int] = {}
         self.fitness_history: dict[str, list[ExperimentalFitnessEvaluation]] = {}
 
@@ -467,14 +523,19 @@ class ExperimentalEvolutionEngine:
                 "⚠️ Experimental evolution engine is DISABLED - enable in config to activate"
             )
         elif not self.config.experimental_features_acknowledged:
-            logger.warning("⚠️ Experimental features not acknowledged - engine will not activate")
+            logger.warning(
+                "⚠️ Experimental features not acknowledged - engine will not activate"
+            )
         else:
             logger.warning(
                 "🧪 EXPERIMENTAL EVOLUTION ACTIVE - Monitor closely for unexpected behavior"
             )
 
     async def initialize_experimental_population(
-        self, swarm_type: str, base_chromosome: SwarmChromosome, population_size: int = 5
+        self,
+        swarm_type: str,
+        base_chromosome: SwarmChromosome,
+        population_size: int = 5,
     ) -> bool:
         """Initialize experimental population for a swarm type."""
         if not self._can_experiment():
@@ -501,11 +562,14 @@ class ExperimentalEvolutionEngine:
 
             for i in range(population_size - 1):
                 variant = base_chromosome.mutate(
-                    mutation_rate=self.config.mutation_rate * 0.5,  # Reduced for initialization
+                    mutation_rate=self.config.mutation_rate
+                    * 0.5,  # Reduced for initialization
                     safety_bounds=self.config.safety_bounds,
                     experimental_mode=experimental_mode,
                 )
-                variant.chromosome_id = f"{swarm_type}_exp_init_{i+1}_{random.randint(1000, 9999)}"
+                variant.chromosome_id = (
+                    f"{swarm_type}_exp_init_{i+1}_{random.randint(1000, 9999)}"
+                )
                 population.append(variant)
 
             self.populations[swarm_type] = population
@@ -533,7 +597,9 @@ class ExperimentalEvolutionEngine:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to initialize experimental population for {swarm_type}: {e}")
+            logger.error(
+                f"Failed to initialize experimental population for {swarm_type}: {e}"
+            )
             return False
 
     def _can_experiment(self) -> bool:
@@ -542,7 +608,9 @@ class ExperimentalEvolutionEngine:
             return False
 
         if not self.config.experimental_features_acknowledged:
-            logger.warning("🧪 Experimental features not acknowledged - evolution disabled")
+            logger.warning(
+                "🧪 Experimental features not acknowledged - evolution disabled"
+            )
             return False
 
         return self.config.mode != ExperimentalMode.DISABLED
@@ -562,8 +630,12 @@ class ExperimentalEvolutionEngine:
             return None
 
         if self.config.mode == ExperimentalMode.OBSERVE_ONLY:
-            logger.info(f"🧪 Experimental evolution in observe-only mode for {swarm_type}")
-            return await self._observe_experimental_performance(swarm_type, performance_data)
+            logger.info(
+                f"🧪 Experimental evolution in observe-only mode for {swarm_type}"
+            )
+            return await self._observe_experimental_performance(
+                swarm_type, performance_data
+            )
 
         try:
             logger.info(
@@ -588,31 +660,47 @@ class ExperimentalEvolutionEngine:
 
             # Step 2: Safety checks with experimental tolerance
             if await self._check_experimental_safety(swarm_type, fitness_evaluations):
-                logger.warning(f"🧪 Experimental safety check triggered for {swarm_type}")
+                logger.warning(
+                    f"🧪 Experimental safety check triggered for {swarm_type}"
+                )
                 return await self._perform_experimental_rollback(swarm_type)
 
             # Step 3: Experimental selection
-            survivors, elites = self._experimental_selection_phase(population, fitness_evaluations)
+            survivors, elites = self._experimental_selection_phase(
+                population, fitness_evaluations
+            )
 
             # Step 4: Experimental pattern recognition
-            await self._detect_experimental_patterns(swarm_type, survivors, fitness_evaluations)
+            await self._detect_experimental_patterns(
+                swarm_type, survivors, fitness_evaluations
+            )
 
             # Step 5: Experimental crossover
-            offspring = await self._experimental_crossover_phase(survivors, experimental_mode)
+            offspring = await self._experimental_crossover_phase(
+                survivors, experimental_mode
+            )
 
             # Step 6: Experimental mutation
-            await self._experimental_mutation_phase(offspring + survivors, experimental_mode)
+            await self._experimental_mutation_phase(
+                offspring + survivors, experimental_mode
+            )
 
             # Step 7: Create experimental population
             new_population = elites + survivors + offspring
 
             # Step 8: Experimental validation
-            if not await self._validate_experimental_population(swarm_type, new_population):
-                logger.warning(f"🧪 Experimental population failed validation for {swarm_type}")
+            if not await self._validate_experimental_population(
+                swarm_type, new_population
+            ):
+                logger.warning(
+                    f"🧪 Experimental population failed validation for {swarm_type}"
+                )
                 return None
 
             # Step 9: Update population
-            self.populations[swarm_type] = new_population[: len(population)]  # Maintain size
+            self.populations[swarm_type] = new_population[
+                : len(population)
+            ]  # Maintain size
             self.generation_counter[swarm_type] += 1
 
             # Step 10: Create experimental snapshot
@@ -627,7 +715,9 @@ class ExperimentalEvolutionEngine:
             # Return best experimental chromosome
             best_fitness = max(fitness_evaluations, key=lambda f: f.overall_fitness)
             best_chromosome = next(
-                c for c in new_population if c.chromosome_id == best_fitness.chromosome_id
+                c
+                for c in new_population
+                if c.chromosome_id == best_fitness.chromosome_id
             )
 
             self.evolution_stats["successful_evolutions"] += 1
@@ -665,7 +755,8 @@ class ExperimentalEvolutionEngine:
         # Check time-based restrictions
         last_evolution = self.last_evolution_time.get(swarm_type)
         return not (
-            last_evolution and datetime.now() - last_evolution < self.config.adaptation_frequency
+            last_evolution
+            and datetime.now() - last_evolution < self.config.adaptation_frequency
         )
 
     async def _observe_experimental_performance(
@@ -675,20 +766,27 @@ class ExperimentalEvolutionEngine:
         population = self.populations.get(swarm_type, [])
         if population:
             # Record experimental observations
-            self.performance_history[swarm_type] = self.performance_history.get(swarm_type, [])
+            self.performance_history[swarm_type] = self.performance_history.get(
+                swarm_type, []
+            )
             self.performance_history[swarm_type].append(
                 {
                     "timestamp": datetime.now().isoformat(),
                     "performance_data": performance_data,
                     "mode": "experimental_observe_only",
-                    "experimental_features_active": any(c.experimental_variant for c in population),
+                    "experimental_features_active": any(
+                        c.experimental_variant for c in population
+                    ),
                 }
             )
             return population[0]  # Return current best
         return None
 
     async def _evaluate_experimental_fitness(
-        self, swarm_type: str, population: list[SwarmChromosome], performance_data: dict[str, Any]
+        self,
+        swarm_type: str,
+        population: list[SwarmChromosome],
+        performance_data: dict[str, Any],
     ) -> list[ExperimentalFitnessEvaluation]:
         """Evaluate fitness with experimental metrics."""
         evaluations = []
@@ -723,7 +821,10 @@ class ExperimentalEvolutionEngine:
         return evaluations
 
     async def _evaluate_experimental_chromosome_fitness(
-        self, chromosome: SwarmChromosome, performance_data: dict[str, Any], experimental_mode: bool
+        self,
+        chromosome: SwarmChromosome,
+        performance_data: dict[str, Any],
+        experimental_mode: bool,
     ) -> ExperimentalFitnessEvaluation:
         """Evaluate fitness with experimental features."""
         # Standard metrics
@@ -734,11 +835,18 @@ class ExperimentalEvolutionEngine:
 
         # Behavioral scores
         collaboration = min(
-            1.0, chromosome.agent_parameters.get("collaboration", {}).get("coordination", 0.5) * 1.2
+            1.0,
+            chromosome.agent_parameters.get("collaboration", {}).get(
+                "coordination", 0.5
+            )
+            * 1.2,
         )
-        adaptability = chromosome.learning_rate * 0.8 + chromosome.memory_utilization * 0.2
+        adaptability = (
+            chromosome.learning_rate * 0.8 + chromosome.memory_utilization * 0.2
+        )
         innovation = (
-            chromosome.risk_tolerance * 0.6 + chromosome.pattern_recognition_sensitivity * 0.4
+            chromosome.risk_tolerance * 0.6
+            + chromosome.pattern_recognition_sensitivity * 0.4
         )
 
         # Safety metrics
@@ -755,13 +863,17 @@ class ExperimentalEvolutionEngine:
         experimental_breakthrough = 0.0
 
         if experimental_mode and chromosome.experimental_variant:
-            experimental_creativity = chromosome.experimental_creativity * 0.8 + innovation * 0.2
+            experimental_creativity = (
+                chromosome.experimental_creativity * 0.8 + innovation * 0.2
+            )
             experimental_exploration = (
                 chromosome.experimental_exploration * 0.7 + adaptability * 0.3
             )
             # Breakthrough potential based on novelty and risk
             experimental_breakthrough = (
-                experimental_creativity + experimental_exploration + chromosome.risk_tolerance
+                experimental_creativity
+                + experimental_exploration
+                + chromosome.risk_tolerance
             ) / 3.0
 
         # Create evaluation
@@ -813,7 +925,9 @@ class ExperimentalEvolutionEngine:
 
         return evaluation
 
-    def get_experimental_status(self, swarm_type: Optional[str] = None) -> dict[str, Any]:
+    def get_experimental_status(
+        self, swarm_type: Optional[str] = None
+    ) -> dict[str, Any]:
         """Get current experimental evolution status and statistics."""
         if swarm_type:
             population = self.populations.get(swarm_type, [])
@@ -828,16 +942,30 @@ class ExperimentalEvolutionEngine:
                 "generation": self.generation_counter.get(swarm_type, 0),
                 "population_size": len(population),
                 "experimental_variants": experimental_variants,
-                "patterns_discovered": len(self.successful_patterns.get(swarm_type, [])),
+                "patterns_discovered": len(
+                    self.successful_patterns.get(swarm_type, [])
+                ),
                 "breakthrough_events": len(
-                    [b for b in self.breakthrough_events if b["swarm_type"] == swarm_type]
+                    [
+                        b
+                        for b in self.breakthrough_events
+                        if b["swarm_type"] == swarm_type
+                    ]
                 ),
                 "experimental_discoveries": len(
-                    [d for d in self.experimental_discoveries if d.get("swarm_type") == swarm_type]
+                    [
+                        d
+                        for d in self.experimental_discoveries
+                        if d.get("swarm_type") == swarm_type
+                    ]
                 ),
                 "last_evolution": self.last_evolution_time.get(swarm_type, "never"),
                 "experimental_warnings": len(
-                    [w for w in self.experimental_warnings if w.get("swarm_type") == swarm_type]
+                    [
+                        w
+                        for w in self.experimental_warnings
+                        if w.get("swarm_type") == swarm_type
+                    ]
                 ),
             }
         else:
@@ -849,7 +977,9 @@ class ExperimentalEvolutionEngine:
                     "experimental_acknowledged": self.config.experimental_features_acknowledged,
                     "dry_run_mode": self.config.dry_run_mode,
                     "total_swarm_types": len(self.populations),
-                    "active_populations": len([s for s in self.evolution_active.values() if s]),
+                    "active_populations": len(
+                        [s for s in self.evolution_active.values() if s]
+                    ),
                     "config_validation": len(self.config.validate()) == 0,
                 },
                 "experimental_statistics": self.evolution_stats,
@@ -902,11 +1032,15 @@ class ExperimentalEvolutionEngine:
 
         return False
 
-    async def _perform_experimental_rollback(self, swarm_type: str) -> Optional[SwarmChromosome]:
+    async def _perform_experimental_rollback(
+        self, swarm_type: str
+    ) -> Optional[SwarmChromosome]:
         """Perform experimental rollback to previous generation."""
         snapshots = self.rollback_snapshots.get(swarm_type, [])
         if not snapshots:
-            logger.error(f"No experimental rollback snapshots available for {swarm_type}")
+            logger.error(
+                f"No experimental rollback snapshots available for {swarm_type}"
+            )
             return None
 
         # Restore previous population
@@ -969,7 +1103,9 @@ class ExperimentalEvolutionEngine:
                 random_selections = random.sample(
                     diverse_candidates, min(1, len(diverse_candidates))
                 )
-                sorted_population = sorted_population[:survivor_count] + random_selections
+                sorted_population = (
+                    sorted_population[:survivor_count] + random_selections
+                )
                 survivor_count += len(random_selections)
 
         elites = sorted_population[:elite_count]
@@ -1002,7 +1138,9 @@ class ExperimentalEvolutionEngine:
         ]
 
         # Detect experimental breakthroughs
-        experimental_high_performers = [c for c in high_performers if c.experimental_variant]
+        experimental_high_performers = [
+            c for c in high_performers if c.experimental_variant
+        ]
 
         if experimental_high_performers:
             logger.info(
@@ -1013,7 +1151,8 @@ class ExperimentalEvolutionEngine:
             best_experimental_fitness = max(
                 e.overall_fitness
                 for e in fitness_evaluations
-                if e.chromosome_id in [c.chromosome_id for c in experimental_high_performers]
+                if e.chromosome_id
+                in [c.chromosome_id for c in experimental_high_performers]
             )
 
             self.experimental_discoveries.append(
@@ -1044,7 +1183,8 @@ class ExperimentalEvolutionEngine:
                         "performance": max(
                             e.overall_fitness
                             for e in fitness_evaluations
-                            if e.chromosome_id in [c.chromosome_id for c in high_performers]
+                            if e.chromosome_id
+                            in [c.chromosome_id for c in high_performers]
                         ),
                         "experimental_pattern": any(
                             c.experimental_variant for c in high_performers
@@ -1095,7 +1235,10 @@ class ExperimentalEvolutionEngine:
 
         # Experimental gene patterns
         experimental_chromosomes = [c for c in chromosomes if c.experimental_variant]
-        if experimental_chromosomes and len(experimental_chromosomes) >= len(chromosomes) * 0.5:
+        if (
+            experimental_chromosomes
+            and len(experimental_chromosomes) >= len(chromosomes) * 0.5
+        ):
             # Experimental creativity patterns
             creativities = [c.experimental_creativity for c in experimental_chromosomes]
             avg_creativity = sum(creativities) / len(creativities)
@@ -1104,19 +1247,23 @@ class ExperimentalEvolutionEngine:
                 {
                     "type": "experimental_creativity_pattern",
                     "average_creativity": avg_creativity,
-                    "experimental_frequency": len(experimental_chromosomes) / len(chromosomes),
+                    "experimental_frequency": len(experimental_chromosomes)
+                    / len(chromosomes),
                 }
             )
 
             # Experimental exploration patterns
-            explorations = [c.experimental_exploration for c in experimental_chromosomes]
+            explorations = [
+                c.experimental_exploration for c in experimental_chromosomes
+            ]
             avg_exploration = sum(explorations) / len(explorations)
 
             patterns.append(
                 {
                     "type": "experimental_exploration_pattern",
                     "average_exploration": avg_exploration,
-                    "experimental_frequency": len(experimental_chromosomes) / len(chromosomes),
+                    "experimental_frequency": len(experimental_chromosomes)
+                    / len(chromosomes),
                 }
             )
 
@@ -1173,7 +1320,9 @@ class ExperimentalEvolutionEngine:
         offspring = []
 
         # Experimental approach: allow more offspring in experimental mode
-        max_offspring = min(len(survivors), self.config.safety_bounds.max_population_changes)
+        max_offspring = min(
+            len(survivors), self.config.safety_bounds.max_population_changes
+        )
         if experimental_mode:
             max_offspring = min(
                 len(survivors), self.config.safety_bounds.max_population_changes * 2
@@ -1182,7 +1331,9 @@ class ExperimentalEvolutionEngine:
         for i in range(0, min(len(survivors) - 1, max_offspring), 2):
             if random.random() < self.config.crossover_rate:
                 parent1, parent2 = survivors[i], survivors[i + 1]
-                child1, child2 = SwarmChromosome.crossover(parent1, parent2, experimental_mode)
+                child1, child2 = SwarmChromosome.crossover(
+                    parent1, parent2, experimental_mode
+                )
                 offspring.extend([child1, child2])
 
         return offspring
@@ -1215,9 +1366,15 @@ class ExperimentalEvolutionEngine:
 
                 if experimental_mode:
                     chromosome.experimental_creativity = mutated.experimental_creativity
-                    chromosome.experimental_exploration = mutated.experimental_exploration
-                    chromosome.experimental_cooperation = mutated.experimental_cooperation
-                    chromosome.experimental_mutations_count = mutated.experimental_mutations_count
+                    chromosome.experimental_exploration = (
+                        mutated.experimental_exploration
+                    )
+                    chromosome.experimental_cooperation = (
+                        mutated.experimental_cooperation
+                    )
+                    chromosome.experimental_mutations_count = (
+                        mutated.experimental_mutations_count
+                    )
                     experimental_mutations += mutated.experimental_mutations_count
 
                 mutation_count += 1
@@ -1269,7 +1426,9 @@ class ExperimentalEvolutionEngine:
     def _validate_experimental_chromosome(self, chromosome: SwarmChromosome) -> bool:
         """Validate experimental chromosome with adjusted bounds."""
         # Standard bounds still apply
-        if not (0.0 <= chromosome.risk_tolerance <= 0.8):  # Risk still capped at 0.8 for safety
+        if not (
+            0.0 <= chromosome.risk_tolerance <= 0.8
+        ):  # Risk still capped at 0.8 for safety
             return False
         if not (0.0 <= chromosome.quality_threshold <= 1.0):
             return False
@@ -1293,7 +1452,9 @@ class ExperimentalEvolutionEngine:
 
         return True
 
-    def _create_experimental_snapshot(self, swarm_type: str, population: list[SwarmChromosome]):
+    def _create_experimental_snapshot(
+        self, swarm_type: str, population: list[SwarmChromosome]
+    ):
         """Create snapshot for experimental rollback."""
         if swarm_type not in self.rollback_snapshots:
             self.rollback_snapshots[swarm_type] = []
@@ -1368,13 +1529,20 @@ class ExperimentalEvolutionEngine:
                             ),
                         },
                         success_score=best_fitness,
-                        context={"experimental_evolution": True, "swarm_type": swarm_type},
+                        context={
+                            "experimental_evolution": True,
+                            "swarm_type": swarm_type,
+                        },
                     )
 
         except Exception as e:
-            logger.warning(f"🧪 Failed to store experimental evolution results in memory: {e}")
+            logger.warning(
+                f"🧪 Failed to store experimental evolution results in memory: {e}"
+            )
 
-    def get_best_experimental_chromosome(self, swarm_type: str) -> Optional[SwarmChromosome]:
+    def get_best_experimental_chromosome(
+        self, swarm_type: str
+    ) -> Optional[SwarmChromosome]:
         """Get the current best experimental chromosome for a swarm type."""
         population = self.populations.get(swarm_type)
         if not population:
@@ -1402,8 +1570,12 @@ class ExperimentalEvolutionEngine:
                 "swarm_type": swarm_type,
                 "generation": self.generation_counter.get(swarm_type, 0),
                 "population": [asdict(c) for c in population],
-                "experimental_variants": sum(1 for c in population if c.experimental_variant),
-                "fitness_history": [asdict(f) for f in self.fitness_history.get(swarm_type, [])],
+                "experimental_variants": sum(
+                    1 for c in population if c.experimental_variant
+                ),
+                "fitness_history": [
+                    asdict(f) for f in self.fitness_history.get(swarm_type, [])
+                ],
                 "successful_patterns": self.successful_patterns.get(swarm_type, []),
                 "performance_history": self.performance_history.get(swarm_type, []),
                 "experimental_mutations_total": sum(
@@ -1417,7 +1589,9 @@ class ExperimentalEvolutionEngine:
                 data["all_swarm_data"][stype] = {
                     "generation": self.generation_counter.get(stype, 0),
                     "population_size": len(pop),
-                    "experimental_variants": sum(1 for c in pop if c.experimental_variant),
+                    "experimental_variants": sum(
+                        1 for c in pop if c.experimental_variant
+                    ),
                     "patterns_count": len(self.successful_patterns.get(stype, [])),
                     "performance_baseline": self.performance_baseline.get(stype, 0),
                     "experimental_mutations_total": sum(
@@ -1474,7 +1648,9 @@ class ExperimentalEvolutionEngine:
             return None
 
         try:
-            logger.info(f"🧠🧪 Starting consciousness-guided evolution for {swarm_type}")
+            logger.info(
+                f"🧠🧪 Starting consciousness-guided evolution for {swarm_type}"
+            )
 
             population = self.populations.get(swarm_type, [])
             if not population:
@@ -1496,7 +1672,9 @@ class ExperimentalEvolutionEngine:
             )
 
             # Consciousness-informed mutation
-            await self._consciousness_guided_mutation(survivors + elites, consciousness_data)
+            await self._consciousness_guided_mutation(
+                survivors + elites, consciousness_data
+            )
 
             # Update population
             new_population = elites + survivors
@@ -1527,7 +1705,9 @@ class ExperimentalEvolutionEngine:
             return best_chromosome
 
         except Exception as e:
-            logger.error(f"🧠🧪 Consciousness-guided evolution failed for {swarm_type}: {e}")
+            logger.error(
+                f"🧠🧪 Consciousness-guided evolution failed for {swarm_type}: {e}"
+            )
             return None
 
     async def _evaluate_consciousness_enhanced_fitness(
@@ -1552,7 +1732,9 @@ class ExperimentalEvolutionEngine:
             if consciousness_data:
                 # Add consciousness bonus to fitness
                 consciousness_level = consciousness_data.get("consciousness_level", 0)
-                development_stage = consciousness_data.get("development_stage", "nascent")
+                development_stage = consciousness_data.get(
+                    "development_stage", "nascent"
+                )
                 emergence_events = consciousness_data.get("emergence_events", 0)
 
                 # Calculate consciousness fitness bonus
@@ -1594,17 +1776,23 @@ class ExperimentalEvolutionEngine:
         stage_bonus = stage_bonuses.get(development_stage, 0.0)
 
         # Emergence events bonus
-        emergence_bonus = min(0.02, emergence_events * 0.005)  # Max 2% bonus, 0.5% per event
+        emergence_bonus = min(
+            0.02, emergence_events * 0.005
+        )  # Max 2% bonus, 0.5% per event
 
         total_bonus = level_bonus + stage_bonus + emergence_bonus
         return min(0.15, total_bonus)  # Cap total consciousness bonus at 15%
 
     def _consciousness_guided_selection(
-        self, population: list[SwarmChromosome], evaluations: list[ExperimentalFitnessEvaluation]
+        self,
+        population: list[SwarmChromosome],
+        evaluations: list[ExperimentalFitnessEvaluation],
     ) -> tuple[list[SwarmChromosome], list[SwarmChromosome]]:
         """Selection phase guided by consciousness metrics."""
         # Standard selection but with consciousness-enhanced fitness
-        sorted_evaluations = sorted(evaluations, key=lambda e: e.overall_fitness, reverse=True)
+        sorted_evaluations = sorted(
+            evaluations, key=lambda e: e.overall_fitness, reverse=True
+        )
         sorted_population = [
             next(c for c in population if c.chromosome_id == e.chromosome_id)
             for e in sorted_evaluations
@@ -1642,7 +1830,9 @@ class ExperimentalEvolutionEngine:
         return survivors, elites
 
     async def _consciousness_guided_mutation(
-        self, chromosomes: list[SwarmChromosome], consciousness_data: Optional[dict[str, Any]]
+        self,
+        chromosomes: list[SwarmChromosome],
+        consciousness_data: Optional[dict[str, Any]],
     ):
         """Apply mutations guided by consciousness insights."""
         if not consciousness_data:
@@ -1670,7 +1860,9 @@ class ExperimentalEvolutionEngine:
         for chromosome in chromosomes:
             if random.random() < adjusted_mutation_rate:
                 # Apply mutation with consciousness bias
-                await self._apply_consciousness_guided_mutation(chromosome, consciousness_data)
+                await self._apply_consciousness_guided_mutation(
+                    chromosome, consciousness_data
+                )
                 mutations_applied += 1
 
         logger.debug(
@@ -1702,7 +1894,11 @@ class ExperimentalEvolutionEngine:
 
             # Apply targeted mutations
             for param in target_params:
-                if param in ["collaboration", "learning_rate", "pattern_recognition_sensitivity"]:
+                if param in [
+                    "collaboration",
+                    "learning_rate",
+                    "pattern_recognition_sensitivity",
+                ]:
                     current_value = getattr(chromosome, param, 0.5)
                     # Mutate toward higher values for weak dimensions
                     improvement_bias = random.uniform(0.05, 0.15)
@@ -1745,9 +1941,15 @@ class ExperimentalEvolutionEngine:
             if consciousness_data:
                 consciousness_evolution_data.update(
                     {
-                        "consciousness_level": consciousness_data.get("consciousness_level", 0),
-                        "development_stage": consciousness_data.get("development_stage", "nascent"),
-                        "emergence_events": consciousness_data.get("emergence_events", 0),
+                        "consciousness_level": consciousness_data.get(
+                            "consciousness_level", 0
+                        ),
+                        "development_stage": consciousness_data.get(
+                            "development_stage", "nascent"
+                        ),
+                        "emergence_events": consciousness_data.get(
+                            "emergence_events", 0
+                        ),
                         "consciousness_fitness_correlation": self._calculate_consciousness_fitness_correlation(
                             evaluations, consciousness_data
                         ),
@@ -1766,7 +1968,9 @@ class ExperimentalEvolutionEngine:
             logger.warning(f"🧠🧪 Failed to store consciousness-evolution results: {e}")
 
     def _calculate_consciousness_fitness_correlation(
-        self, evaluations: list[ExperimentalFitnessEvaluation], consciousness_data: dict[str, Any]
+        self,
+        evaluations: list[ExperimentalFitnessEvaluation],
+        consciousness_data: dict[str, Any],
     ) -> float:
         """Calculate correlation between consciousness metrics and fitness scores."""
         if not evaluations or not consciousness_data:

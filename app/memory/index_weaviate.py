@@ -46,13 +46,27 @@ def ensure_schema(collection: str, dim: int):
                     vectorizer_config=wvc.config.Configure.Vectorizer.none(),
                     vector_index_config=wvc.config.Configure.VectorIndex.hnsw(),
                     properties=[
-                        wvc.config.Property(name="path", data_type=wvc.config.DataType.TEXT),
-                        wvc.config.Property(name="content", data_type=wvc.config.DataType.TEXT),
-                        wvc.config.Property(name="lang", data_type=wvc.config.DataType.TEXT),
-                        wvc.config.Property(name="start_line", data_type=wvc.config.DataType.INT),
-                        wvc.config.Property(name="end_line", data_type=wvc.config.DataType.INT),
-                        wvc.config.Property(name="chunk_id", data_type=wvc.config.DataType.TEXT),
-                        wvc.config.Property(name="priority", data_type=wvc.config.DataType.TEXT),
+                        wvc.config.Property(
+                            name="path", data_type=wvc.config.DataType.TEXT
+                        ),
+                        wvc.config.Property(
+                            name="content", data_type=wvc.config.DataType.TEXT
+                        ),
+                        wvc.config.Property(
+                            name="lang", data_type=wvc.config.DataType.TEXT
+                        ),
+                        wvc.config.Property(
+                            name="start_line", data_type=wvc.config.DataType.INT
+                        ),
+                        wvc.config.Property(
+                            name="end_line", data_type=wvc.config.DataType.INT
+                        ),
+                        wvc.config.Property(
+                            name="chunk_id", data_type=wvc.config.DataType.TEXT
+                        ),
+                        wvc.config.Property(
+                            name="priority", data_type=wvc.config.DataType.TEXT
+                        ),
                     ],
                 )
         except:
@@ -112,7 +126,9 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                     for k, i in enumerate(A_idx):
                         # Add content to payload for BM25
                         props = {**payloads[i], "content": texts[i]}
-                        batch.add_object(properties=props, vector=vecsA[k], uuid=str(ids[i]))
+                        batch.add_object(
+                            properties=props, vector=vecsA[k], uuid=str(ids[i])
+                        )
             except:
                 # v3 client fallback
                 vecsA = embed_with_cache(A_txt, MODEL_A)
@@ -135,7 +151,9 @@ async def upsert_chunks_dual(ids, texts, payloads, lang=""):
                 with colB.batch.dynamic() as batch:
                     for k, i in enumerate(B_idx):
                         props = {**payloads[i], "content": texts[i]}
-                        batch.add_object(properties=props, vector=vecsB[k], uuid=str(ids[i]))
+                        batch.add_object(
+                            properties=props, vector=vecsB[k], uuid=str(ids[i])
+                        )
             except:
                 # v3 client fallback
                 vecsB = embed_with_cache(B_txt, MODEL_B)
@@ -183,7 +201,11 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                     out.append(
                         {
                             "collection": "A",
-                            "sem": r.metadata.distance if hasattr(r.metadata, "distance") else 0.5,
+                            "sem": (
+                                r.metadata.distance
+                                if hasattr(r.metadata, "distance")
+                                else 0.5
+                            ),
                             "bm25": 0.0,
                             "prop": r.properties,
                         }
@@ -209,7 +231,14 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                 result = (
                     client.query.get(
                         collection_a,
-                        ["path", "lang", "start_line", "end_line", "chunk_id", "content"],
+                        [
+                            "path",
+                            "lang",
+                            "start_line",
+                            "end_line",
+                            "chunk_id",
+                            "content",
+                        ],
                     )
                     .with_near_vector({"vector": qA})
                     .with_limit(k)
@@ -221,7 +250,8 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         out.append(
                             {
                                 "collection": "A",
-                                "sem": 1.0 - r.get("_additional", {}).get("certainty", 0.5),
+                                "sem": 1.0
+                                - r.get("_additional", {}).get("certainty", 0.5),
                                 "bm25": 0.0,
                                 "prop": r,
                             }
@@ -243,7 +273,11 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                     out.append(
                         {
                             "collection": "B",
-                            "sem": r.metadata.distance if hasattr(r.metadata, "distance") else 0.5,
+                            "sem": (
+                                r.metadata.distance
+                                if hasattr(r.metadata, "distance")
+                                else 0.5
+                            ),
                             "bm25": 0.0,
                             "prop": r.properties,
                         }
@@ -254,7 +288,12 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                     bm = colB.query.bm25(query, limit=k)
                     for r in bm.objects:
                         out.append(
-                            {"collection": "B", "sem": 1.0, "bm25": 0.8, "prop": r.properties}
+                            {
+                                "collection": "B",
+                                "sem": 1.0,
+                                "bm25": 0.8,
+                                "prop": r.properties,
+                            }
                         )
                 except:
                     pass
@@ -264,7 +303,14 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                 result = (
                     client.query.get(
                         collection_b,
-                        ["path", "lang", "start_line", "end_line", "chunk_id", "content"],
+                        [
+                            "path",
+                            "lang",
+                            "start_line",
+                            "end_line",
+                            "chunk_id",
+                            "content",
+                        ],
                     )
                     .with_near_vector({"vector": qB})
                     .with_limit(k)
@@ -276,7 +322,8 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
                         out.append(
                             {
                                 "collection": "B",
-                                "sem": 1.0 - r.get("_additional", {}).get("certainty", 0.5),
+                                "sem": 1.0
+                                - r.get("_additional", {}).get("certainty", 0.5),
                                 "bm25": 0.0,
                                 "prop": r,
                             }
@@ -305,7 +352,9 @@ async def hybrid_search_merge(query: str, k: int = 8, semantic_weight: float = 0
     # Calculate final scores
     results = list(seen.values())
     for o in results:
-        o["score"] = semantic_weight * norm_sem(o["sem"]) + (1.0 - semantic_weight) * o["bm25"]
+        o["score"] = (
+            semantic_weight * norm_sem(o["sem"]) + (1.0 - semantic_weight) * o["bm25"]
+        )
 
     # Sort by score and return top k
     results.sort(key=lambda x: x["score"], reverse=True)

@@ -196,7 +196,9 @@ class AGNOAgent(ABC):
         self._running = True
 
         # Emit start event
-        await self.emit_event("agent.start", {"agent_type": self.agent_type, "config": self.config})
+        await self.emit_event(
+            "agent.start", {"agent_type": self.agent_type, "config": self.config}
+        )
 
         # Start execution and monitoring tasks
         self._task = asyncio.create_task(self._execution_loop())
@@ -236,7 +238,9 @@ class AGNOAgent(ABC):
             "agent.stop",
             {
                 "runtime_seconds": (
-                    (self.stop_time - self.start_time).total_seconds() if self.start_time else 0
+                    (self.stop_time - self.start_time).total_seconds()
+                    if self.start_time
+                    else 0
                 ),
                 "execution_count": self.execution_count,
                 "success_count": self.success_count,
@@ -325,7 +329,9 @@ class AGNOAgent(ABC):
 
                 # Check if max errors exceeded
                 if self.error_count >= self.max_errors:
-                    logger.error(f"Agent {self.agent_id} max errors exceeded - attempting recovery")
+                    logger.error(
+                        f"Agent {self.agent_id} max errors exceeded - attempting recovery"
+                    )
                     await self._attempt_recovery()
                 else:
                     # Brief delay before retry
@@ -375,7 +381,9 @@ class AGNOAgent(ABC):
                 await self.monitor_resources()
                 await asyncio.sleep(5)  # Monitor every 5 seconds
             except Exception as e:
-                logger.error(f"Resource monitoring failed for agent {self.agent_id}: {e}")
+                logger.error(
+                    f"Resource monitoring failed for agent {self.agent_id}: {e}"
+                )
                 await asyncio.sleep(5)
 
     async def monitor_resources(self) -> ResourceMetrics:
@@ -389,7 +397,9 @@ class AGNOAgent(ABC):
                 cpu_percent = self.process.cpu_percent()
                 memory_info = self.process.memory_info()
                 io_counters = (
-                    self.process.io_counters() if hasattr(self.process, "io_counters") else None
+                    self.process.io_counters()
+                    if hasattr(self.process, "io_counters")
+                    else None
                 )
 
                 # Update metrics
@@ -409,10 +419,14 @@ class AGNOAgent(ABC):
 
                 # Emit resource event if significant change
                 if cpu_percent > 80 or self.resources.memory_percent > 80:
-                    await self.emit_event("agent.resources.high", self.resources.to_dict())
+                    await self.emit_event(
+                        "agent.resources.high", self.resources.to_dict()
+                    )
 
         except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
-            logger.warning(f"Could not monitor resources for agent {self.agent_id}: {e}")
+            logger.warning(
+                f"Could not monitor resources for agent {self.agent_id}: {e}"
+            )
 
         return self.resources
 
@@ -430,13 +444,19 @@ class AGNOAgent(ABC):
 
         # Emit to event bus
         if self.event_bus:
-            await self.event_bus.publish(f"agno.{self.agent_type}.{event_type}", event.to_dict())
+            await self.event_bus.publish(
+                f"agno.{self.agent_type}.{event_type}", event.to_dict()
+            )
 
         # Call local handlers
         if event_type in self._event_handlers:
             for handler in self._event_handlers[event_type]:
                 try:
-                    await handler(event) if asyncio.iscoroutinefunction(handler) else handler(event)
+                    (
+                        await handler(event)
+                        if asyncio.iscoroutinefunction(handler)
+                        else handler(event)
+                    )
                 except Exception as e:
                     logger.error(f"Event handler failed for {event_type}: {e}")
 
@@ -475,7 +495,9 @@ class AGNOAgent(ABC):
             "success_count": self.success_count,
             "failure_count": self.failure_count,
             "avg_execution_time": (
-                self.total_execution_time / self.execution_count if self.execution_count > 0 else 0
+                self.total_execution_time / self.execution_count
+                if self.execution_count > 0
+                else 0
             ),
             "resources": self.resources.to_dict(),
         }
@@ -487,10 +509,14 @@ class AGNOAgent(ABC):
             "success_count": self.success_count,
             "failure_count": self.failure_count,
             "success_rate": (
-                self.success_count / self.execution_count if self.execution_count > 0 else 0
+                self.success_count / self.execution_count
+                if self.execution_count > 0
+                else 0
             ),
             "avg_execution_time": (
-                self.total_execution_time / self.execution_count if self.execution_count > 0 else 0
+                self.total_execution_time / self.execution_count
+                if self.execution_count > 0
+                else 0
             ),
             "total_execution_time": self.total_execution_time,
             "error_count": self.error_count,

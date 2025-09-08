@@ -169,7 +169,11 @@ class TraceCollector:
         return trace
 
     def end_trace(
-        self, trace_id: str, success: bool = True, error: str = None, output_size: int = 0
+        self,
+        trace_id: str,
+        success: bool = True,
+        error: str = None,
+        output_size: int = 0,
     ):
         """End an active trace."""
         if trace_id not in self.active_traces:
@@ -192,7 +196,9 @@ class TraceCollector:
 
     def get_slow_traces(self, threshold_ms: float = 1000) -> list[ToolExecutionTrace]:
         """Get traces that exceeded duration threshold."""
-        return [t for t in self.traces if t.duration_ms and t.duration_ms > threshold_ms]
+        return [
+            t for t in self.traces if t.duration_ms and t.duration_ms > threshold_ms
+        ]
 
     def get_failed_traces(self) -> list[ToolExecutionTrace]:
         """Get failed execution traces."""
@@ -211,7 +217,9 @@ class TraceCollector:
                     "success": trace.success,
                     "error": trace.error,
                     "memory_delta": (
-                        trace.memory_after - trace.memory_before if trace.memory_after else 0
+                        trace.memory_after - trace.memory_before
+                        if trace.memory_after
+                        else 0
                     ),
                     "context": trace.context,
                 }
@@ -257,7 +265,9 @@ class AlertManager:
         for name, rule in self.alert_rules.items():
             # Check cooldown
             if rule["last_fired"]:
-                cooldown_end = rule["last_fired"] + timedelta(minutes=rule["cooldown_minutes"])
+                cooldown_end = rule["last_fired"] + timedelta(
+                    minutes=rule["cooldown_minutes"]
+                )
                 if now < cooldown_end:
                     continue
 
@@ -325,7 +335,11 @@ class ObservabilitySystem:
         """Setup default alert rules."""
         # High error rate
         self.alerts.add_rule(
-            "high_error_rate", "tool_errors_per_minute", "gt", threshold=10, window_minutes=5
+            "high_error_rate",
+            "tool_errors_per_minute",
+            "gt",
+            threshold=10,
+            window_minutes=5,
         )
 
         # High memory usage
@@ -335,12 +349,20 @@ class ObservabilitySystem:
 
         # Slow tool execution
         self.alerts.add_rule(
-            "slow_execution", "tool_duration_ms", "gt", threshold=5000, window_minutes=10
+            "slow_execution",
+            "tool_duration_ms",
+            "gt",
+            threshold=5000,
+            window_minutes=10,
         )
 
         # Low success rate
         self.alerts.add_rule(
-            "low_success_rate", "tool_success_rate", "lt", threshold=0.8, window_minutes=15
+            "low_success_rate",
+            "tool_success_rate",
+            "lt",
+            threshold=0.8,
+            window_minutes=15,
         )
 
     async def start(self):
@@ -383,7 +405,9 @@ class ObservabilitySystem:
             # Memory usage
             memory = psutil.virtual_memory()
             self.metrics.record("system_memory_percent", memory.percent)
-            self.metrics.record("memory_usage_mb", psutil.Process().memory_info().rss / 1024 / 1024)
+            self.metrics.record(
+                "memory_usage_mb", psutil.Process().memory_info().rss / 1024 / 1024
+            )
 
             # Disk usage
             disk = psutil.disk_usage("/")
@@ -425,12 +449,18 @@ class ObservabilitySystem:
                     self.metrics.increment("tool_errors_per_minute")
 
                 if ctx_self.trace.duration_ms:
-                    self.metrics.record(f"tool_{tool_name}_duration_ms", ctx_self.trace.duration_ms)
+                    self.metrics.record(
+                        f"tool_{tool_name}_duration_ms", ctx_self.trace.duration_ms
+                    )
                     self.metrics.record("tool_duration_ms", ctx_self.trace.duration_ms)
 
                 # Calculate success rate
-                success_count = self.metrics.get_latest(f"tool_{tool_name}_success") or 0
-                total_count = self.metrics.get_latest(f"tool_{tool_name}_executions") or 1
+                success_count = (
+                    self.metrics.get_latest(f"tool_{tool_name}_success") or 0
+                )
+                total_count = (
+                    self.metrics.get_latest(f"tool_{tool_name}_executions") or 1
+                )
                 success_rate = success_count / total_count if total_count > 0 else 0
                 self.metrics.record(f"tool_{tool_name}_success_rate", success_rate)
                 self.metrics.record("tool_success_rate", success_rate)
@@ -440,10 +470,13 @@ class ObservabilitySystem:
     def get_dashboard_data(self) -> dict[str, Any]:
         """Get data for monitoring dashboard."""
         return {
-            "uptime_hours": (datetime.now() - self.metrics.start_time).total_seconds() / 3600,
+            "uptime_hours": (datetime.now() - self.metrics.start_time).total_seconds()
+            / 3600,
             "metrics": {
                 name: self.metrics.get_stats(name, 60)
-                for name in list(self.metrics.metrics.keys())[:20]  # Limit to 20 metrics
+                for name in list(self.metrics.metrics.keys())[
+                    :20
+                ]  # Limit to 20 metrics
             },
             "recent_traces": [
                 {
@@ -455,7 +488,11 @@ class ObservabilitySystem:
                 for t in self.traces.get_recent_traces(10)
             ],
             "alerts": [
-                {"name": a["name"], "timestamp": a["timestamp"].isoformat(), "value": a["value"]}
+                {
+                    "name": a["name"],
+                    "timestamp": a["timestamp"].isoformat(),
+                    "value": a["value"],
+                }
                 for a in self.alerts.alerts[-10:]
             ],
             "system": {

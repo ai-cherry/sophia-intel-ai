@@ -138,7 +138,9 @@ class SwarmDeploymentManager:
             for dir_name in required_dirs:
                 dir_path = self.deployment_path / dir_name
                 if not dir_path.exists():
-                    health_status["errors"].append(f"Required directory missing: {dir_name}")
+                    health_status["errors"].append(
+                        f"Required directory missing: {dir_name}"
+                    )
                     health_status["healthy"] = False
                 else:
                     health_status["checks"][f"directory_{dir_name}"] = True
@@ -190,7 +192,9 @@ class SwarmDeploymentManager:
 
         return health_status
 
-    async def execute_test_session(self, test_codebase_path: str = None) -> dict[str, Any]:
+    async def execute_test_session(
+        self, test_codebase_path: str = None
+    ) -> dict[str, Any]:
         """Execute a test refactoring session to validate deployment"""
         if not self.swarm:
             return {"success": False, "error": "Swarm not deployed"}
@@ -248,7 +252,9 @@ class SwarmDeploymentManager:
             "healthy": self.is_healthy,
             "environment": self.config.environment.value,
             "deployment_time": self.deployment_time,
-            "uptime_seconds": time.time() - self.deployment_time if self.deployment_time else 0,
+            "uptime_seconds": (
+                time.time() - self.deployment_time if self.deployment_time else 0
+            ),
             "configuration": {
                 "swarm_name": self.config.swarm_name,
                 "version": self.config.version,
@@ -268,7 +274,9 @@ class SwarmDeploymentManager:
 
             # Backup configuration
             config_backup = backup_path / "config.json"
-            shutil.copy2(self.deployment_path / "config" / "swarm_config.json", config_backup)
+            shutil.copy2(
+                self.deployment_path / "config" / "swarm_config.json", config_backup
+            )
 
             # Backup session data if it exists
             sessions_dir = self.deployment_path / "sessions"
@@ -313,7 +321,9 @@ class SwarmDeploymentManager:
             # Restore configuration
             config_backup = backup_dir / "config.json"
             if config_backup.exists():
-                shutil.copy2(config_backup, self.deployment_path / "config" / "swarm_config.json")
+                shutil.copy2(
+                    config_backup, self.deployment_path / "config" / "swarm_config.json"
+                )
 
             # Restore sessions
             sessions_backup = backup_dir / "sessions"
@@ -344,7 +354,9 @@ class SwarmOperations:
 
         success = await manager.deploy()
         if not success:
-            raise RuntimeError(f"Failed to deploy swarm in {environment.value} environment")
+            raise RuntimeError(
+                f"Failed to deploy swarm in {environment.value} environment"
+            )
 
         return manager
 
@@ -359,7 +371,9 @@ class SwarmOperations:
 
         success = await manager.deploy()
         if not success:
-            raise RuntimeError(f"Failed to deploy swarm from config: {config_file_path}")
+            raise RuntimeError(
+                f"Failed to deploy swarm from config: {config_file_path}"
+            )
 
         return manager
 
@@ -385,7 +399,10 @@ class SwarmOperations:
         safety_checks = [
             ("Backups required", config.safety.require_backup),
             ("Tests required", config.safety.require_tests),
-            ("Risk approval configured", bool(config.safety.approval_required_for_risk)),
+            (
+                "Risk approval configured",
+                bool(config.safety.approval_required_for_risk),
+            ),
             ("Forbidden paths configured", bool(config.safety.forbidden_paths)),
         ]
 
@@ -404,7 +421,11 @@ class SwarmOperations:
             {
                 "category": "Resources",
                 "check": "Circuit breaker configured",
-                "status": "PASS" if config.resources.circuit_breaker_threshold <= 3 else "WARN",
+                "status": (
+                    "PASS"
+                    if config.resources.circuit_breaker_threshold <= 3
+                    else "WARN"
+                ),
                 "details": f"Threshold: {config.resources.circuit_breaker_threshold}",
             }
         )
@@ -442,7 +463,11 @@ class SwarmOperations:
     @staticmethod
     async def run_comprehensive_test(manager: SwarmDeploymentManager) -> dict[str, Any]:
         """Run comprehensive testing suite on deployed swarm"""
-        test_results = {"overall_status": "PASS", "test_timestamp": time.time(), "tests": {}}
+        test_results = {
+            "overall_status": "PASS",
+            "test_timestamp": time.time(),
+            "tests": {},
+        }
 
         try:
             # Health check
@@ -474,11 +499,16 @@ class SwarmOperations:
                     "details": f"Backup created at {backup_path}",
                 }
             except Exception as e:
-                test_results["tests"]["backup_creation"] = {"status": "FAIL", "details": str(e)}
+                test_results["tests"]["backup_creation"] = {
+                    "status": "FAIL",
+                    "details": str(e),
+                }
 
             # Determine overall status
             failed_tests = [
-                test for test in test_results["tests"].values() if test["status"] == "FAIL"
+                test
+                for test in test_results["tests"].values()
+                if test["status"] == "FAIL"
             ]
 
             if failed_tests:
@@ -486,7 +516,11 @@ class SwarmOperations:
                 test_results["failed_count"] = len(failed_tests)
 
             test_results["passed_count"] = len(
-                [test for test in test_results["tests"].values() if test["status"] == "PASS"]
+                [
+                    test
+                    for test in test_results["tests"].values()
+                    if test["status"] == "PASS"
+                ]
             )
 
         except Exception as e:
@@ -504,14 +538,18 @@ async def deploy_development_swarm() -> SwarmDeploymentManager:
 
 async def deploy_production_swarm() -> SwarmDeploymentManager:
     """Deploy swarm for production environment with full validation"""
-    config = RefactoringSwarmConfiguration.for_environment(DeploymentEnvironment.PRODUCTION)
+    config = RefactoringSwarmConfiguration.for_environment(
+        DeploymentEnvironment.PRODUCTION
+    )
 
     # Run production readiness checklist
     checklist = await SwarmOperations.production_deployment_checklist(config)
     failed_checks = [check for check in checklist if check["status"] == "FAIL"]
 
     if failed_checks:
-        raise RuntimeError(f"Production deployment blocked by {len(failed_checks)} failed checks")
+        raise RuntimeError(
+            f"Production deployment blocked by {len(failed_checks)} failed checks"
+        )
 
     manager = SwarmDeploymentManager(config)
     success = await manager.deploy()

@@ -12,7 +12,10 @@ from typing import Any, Optional
 from app.core.circuit_breaker import with_circuit_breaker
 from app.swarms.agno_teams import AGNOTeamConfig, ExecutionStrategy, SophiaAGNOTeam
 from app.swarms.core.swarm_base import SwarmBase
-from app.swarms.enhanced_memory_integration import EnhancedSwarmMemoryClient, auto_tag_and_store
+from app.swarms.enhanced_memory_integration import (
+    EnhancedSwarmMemoryClient,
+    auto_tag_and_store,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -272,13 +275,17 @@ class CodeRefactoringSwarm(SwarmBase):
                 return RefactoringResult(
                     plan_id=session_id,
                     success=True,
-                    executed_opportunities=[opp.id for opp in validated_plan.opportunities],
+                    executed_opportunities=[
+                        opp.id for opp in validated_plan.opportunities
+                    ],
                     failed_opportunities=[],
                     changes_made={"dry_run": ["Analysis complete"]},
                     test_results={"dry_run": True},
                     rollback_available=False,
                     execution_time=time.time() - start_time,
-                    quality_metrics={"opportunities_found": len(validated_plan.opportunities)},
+                    quality_metrics={
+                        "opportunities_found": len(validated_plan.opportunities)
+                    },
                 )
 
             # Execute refactoring
@@ -343,7 +350,11 @@ class CodeRefactoringSwarm(SwarmBase):
             "architecture_gate",
             self.agno_teams["architectural_analyzer"].execute_task,
             f"Analyze architectural improvements for {codebase_path}",
-            {"codebase_path": codebase_path, "scan_results": scan_results, "phase": "architecture"},
+            {
+                "codebase_path": codebase_path,
+                "scan_results": scan_results,
+                "phase": "architecture",
+            },
         )
 
         # Phase 3: Performance Profiling
@@ -351,17 +362,27 @@ class CodeRefactoringSwarm(SwarmBase):
             "opportunity_gate",
             self.agno_teams["performance_profiler"].execute_task,
             "Profile performance optimization opportunities",
-            {"codebase_path": codebase_path, "scan_results": scan_results, "phase": "performance"},
+            {
+                "codebase_path": codebase_path,
+                "scan_results": scan_results,
+                "phase": "performance",
+            },
         )
 
         # Combine results into opportunities
-        opportunities = self._parse_discovery_results(scan_results, arch_results, perf_results)
+        opportunities = self._parse_discovery_results(
+            scan_results, arch_results, perf_results
+        )
 
-        logger.info(f"Discovery phase complete: {len(opportunities)} opportunities found")
+        logger.info(
+            f"Discovery phase complete: {len(opportunities)} opportunities found"
+        )
         return opportunities
 
     async def _planning_phase(
-        self, opportunities: list[RefactoringOpportunity], risk_tolerance: RefactoringRisk
+        self,
+        opportunities: list[RefactoringOpportunity],
+        risk_tolerance: RefactoringRisk,
     ) -> Optional[RefactoringPlan]:
         """Phase 4-6: Create refactoring execution plan"""
 
@@ -373,7 +394,9 @@ class CodeRefactoringSwarm(SwarmBase):
             self.agno_teams["risk_assessor"].execute_task,
             "Assess risks for refactoring opportunities",
             {
-                "opportunities": [self._opportunity_to_dict(opp) for opp in opportunities],
+                "opportunities": [
+                    self._opportunity_to_dict(opp) for opp in opportunities
+                ],
                 "risk_tolerance": risk_tolerance.value,
                 "phase": "risk_assessment",
             },
@@ -385,7 +408,9 @@ class CodeRefactoringSwarm(SwarmBase):
             self.agno_teams["impact_analyzer"].execute_task,
             "Analyze impact of proposed refactorings",
             {
-                "opportunities": [self._opportunity_to_dict(opp) for opp in opportunities],
+                "opportunities": [
+                    self._opportunity_to_dict(opp) for opp in opportunities
+                ],
                 "risk_results": risk_results,
                 "phase": "impact_analysis",
             },
@@ -397,7 +422,9 @@ class CodeRefactoringSwarm(SwarmBase):
             self.agno_teams["refactoring_planner"].execute_task,
             "Create execution plan for approved refactorings",
             {
-                "opportunities": [self._opportunity_to_dict(opp) for opp in opportunities],
+                "opportunities": [
+                    self._opportunity_to_dict(opp) for opp in opportunities
+                ],
                 "risk_results": risk_results,
                 "impact_results": impact_results,
                 "phase": "planning",
@@ -499,10 +526,14 @@ class CodeRefactoringSwarm(SwarmBase):
             test_results=test_results,
             rollback_available=rollback_available,
             execution_time=0,  # Set by caller
-            quality_metrics=self._calculate_quality_metrics(executed, failed, test_results),
+            quality_metrics=self._calculate_quality_metrics(
+                executed, failed, test_results
+            ),
         )
 
-        logger.info(f"Execution phase complete: {len(executed)} successful, {len(failed)} failed")
+        logger.info(
+            f"Execution phase complete: {len(executed)} successful, {len(failed)} failed"
+        )
         return result
 
     async def _execute_with_safety_gate(
@@ -520,7 +551,10 @@ class CodeRefactoringSwarm(SwarmBase):
                 return result
             else:
                 logger.warning(f"Safety gate {gate_name} failed")
-                return {"success": False, "error": f"Safety gate {gate_name} blocked execution"}
+                return {
+                    "success": False,
+                    "error": f"Safety gate {gate_name} blocked execution",
+                }
 
         except Exception as e:
             logger.error(f"Safety gate {gate_name} execution failed: {e}")
@@ -593,7 +627,9 @@ class CodeRefactoringSwarm(SwarmBase):
             "performance_impact": "neutral",
         }
 
-    async def _update_documentation(self, executed: list[str], changes: dict[str, list[str]]):
+    async def _update_documentation(
+        self, executed: list[str], changes: dict[str, list[str]]
+    ):
         """Update documentation for executed refactorings"""
         if executed:
             await self.agno_teams["documentation_updater"].execute_task(
@@ -615,7 +651,8 @@ class CodeRefactoringSwarm(SwarmBase):
 
         return {
             "success_rate": len(executed) / total,
-            "test_pass_rate": test_results.get("tests_passed", 0) / max(len(executed), 1),
+            "test_pass_rate": test_results.get("tests_passed", 0)
+            / max(len(executed), 1),
             "quality_improvement": 0.85,  # Mock metric
             "technical_debt_reduction": 0.15,
         }
@@ -638,7 +675,9 @@ class CodeRefactoringSwarm(SwarmBase):
         """Convert plan to dictionary"""
         return {
             "id": plan.id,
-            "opportunities": [self._opportunity_to_dict(opp) for opp in plan.opportunities],
+            "opportunities": [
+                self._opportunity_to_dict(opp) for opp in plan.opportunities
+            ],
             "execution_order": plan.execution_order,
             "safety_checks": plan.safety_checks,
             "estimated_duration": plan.estimated_duration,

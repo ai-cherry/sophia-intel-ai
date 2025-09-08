@@ -133,7 +133,12 @@ def get_role_defaults() -> dict[str, AgentRoleConfig]:
             role_name="planner",
             model_config=ModelConfig(temperature=0.2, cost_limit_per_request=0.75),
             max_reasoning_steps=15,
-            tools=["create_timeline", "analyze_dependencies", "estimate_resources", "assess_risks"],
+            tools=[
+                "create_timeline",
+                "analyze_dependencies",
+                "estimate_resources",
+                "assess_risks",
+            ],
         ),
         "coder": AgentRoleConfig(
             role_name="coder",
@@ -204,7 +209,8 @@ class ConfigManager:
 
         # Load security configuration
         security_config = SecurityConfig(
-            enable_api_key_auth=get_config().get("ENABLE_API_KEY_AUTH", "true").lower() == "true",
+            enable_api_key_auth=get_config().get("ENABLE_API_KEY_AUTH", "true").lower()
+            == "true",
             secrets_provider=get_config().get("SECRETS_PROVIDER", "environment"),
             vault_url=os.getenv("VAULT_URL"),
             vault_token=os.getenv("VAULT_TOKEN"),
@@ -223,7 +229,10 @@ class ConfigManager:
         # Load rate limiting configuration
         rate_limit_config = RateLimitConfig(
             requests_per_minute=int(get_config().get("RATE_LIMIT_PER_MINUTE", "60")),
-            enable_rate_limiting=get_config().get("ENABLE_RATE_LIMITING", "true").lower() == "true",
+            enable_rate_limiting=get_config()
+            .get("ENABLE_RATE_LIMITING", "true")
+            .lower()
+            == "true",
         )
 
         # Load default model configuration
@@ -261,7 +270,8 @@ class ConfigManager:
             self.load_config()
 
         return self._config.role_configs.get(
-            role, AgentRoleConfig(role_name=role, model_config=self._config.default_model)
+            role,
+            AgentRoleConfig(role_name=role, model_config=self._config.default_model),
         )
 
     def get_model_config(self, role: Optional[str] = None) -> ModelConfig:

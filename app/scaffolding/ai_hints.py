@@ -108,7 +108,9 @@ class PatternAnalyzer:
         self.performance_patterns = self._init_performance_patterns()
         self.test_patterns = self._init_test_patterns()
 
-    def _init_optimization_patterns(self) -> dict[str, tuple[re.Pattern, str, Severity]]:
+    def _init_optimization_patterns(
+        self,
+    ) -> dict[str, tuple[re.Pattern, str, Severity]]:
         """Initialize optimization opportunity patterns."""
         return {
             "todo_fixme": (
@@ -132,7 +134,9 @@ class PatternAnalyzer:
                 Severity.MEDIUM,
             ),
             "nested_loops": (
-                re.compile(r"^\s+for\s+.*:\s*$.*?^\s+for\s+.*:\s*$", re.MULTILINE | re.DOTALL),
+                re.compile(
+                    r"^\s+for\s+.*:\s*$.*?^\s+for\s+.*:\s*$", re.MULTILINE | re.DOTALL
+                ),
                 "Deeply nested loops may benefit from optimization",
                 Severity.MEDIUM,
             ),
@@ -153,7 +157,8 @@ class PatternAnalyzer:
         return {
             "long_methods": (
                 re.compile(
-                    r"def\s+\w+\([^)]*\):.*?(?=def\s+\w+\([^)]*\):|class\s+\w+|$)", re.DOTALL
+                    r"def\s+\w+\([^)]*\):.*?(?=def\s+\w+\([^)]*\):|class\s+\w+|$)",
+                    re.DOTALL,
                 ),
                 "Long methods should be broken into smaller functions",
                 Severity.MEDIUM,
@@ -189,12 +194,17 @@ class PatternAnalyzer:
         """Initialize security concern patterns."""
         return {
             "sql_injection": (
-                re.compile(r'["\'].*%s.*["\']|["\'].*\+.*["\'].*execute|cursor\.execute\([^)]*%'),
+                re.compile(
+                    r'["\'].*%s.*["\']|["\'].*\+.*["\'].*execute|cursor\.execute\([^)]*%'
+                ),
                 "Potential SQL injection vulnerability",
                 Severity.CRITICAL,
             ),
             "hardcoded_secrets": (
-                re.compile(r'(password|secret|key|token)\s*=\s*["\'][^"\']*["\']', re.IGNORECASE),
+                re.compile(
+                    r'(password|secret|key|token)\s*=\s*["\'][^"\']*["\']',
+                    re.IGNORECASE,
+                ),
                 "Hardcoded secrets should be moved to environment variables",
                 Severity.CRITICAL,
             ),
@@ -220,7 +230,8 @@ class PatternAnalyzer:
             ),
             "debug_info": (
                 re.compile(
-                    r"print\s*\([^)]*password|traceback\.print_exc|debug\s*=\s*True", re.IGNORECASE
+                    r"print\s*\([^)]*password|traceback\.print_exc|debug\s*=\s*True",
+                    re.IGNORECASE,
                 ),
                 "Debug information may leak sensitive data",
                 Severity.MEDIUM,
@@ -254,7 +265,9 @@ class PatternAnalyzer:
                 Severity.MEDIUM,
             ),
             "synchronous_io": (
-                re.compile(r"requests\.(get|post|put|delete)(?!\s*,\s*async)", re.IGNORECASE),
+                re.compile(
+                    r"requests\.(get|post|put|delete)(?!\s*,\s*async)", re.IGNORECASE
+                ),
                 "Synchronous I/O in async contexts blocks event loop",
                 Severity.HIGH,
             ),
@@ -284,7 +297,9 @@ class PatternAnalyzer:
                 Severity.MEDIUM,
             ),
             "external_dependencies": (
-                re.compile(r"requests\.|urllib|http|database|redis|mongo", re.IGNORECASE),
+                re.compile(
+                    r"requests\.|urllib|http|database|redis|mongo", re.IGNORECASE
+                ),
                 "External dependencies require mocking in tests",
                 Severity.MEDIUM,
             ),
@@ -316,7 +331,9 @@ class PatternAnalyzer:
             )
         )
         hints.extend(
-            self._analyze_category(content, file_path, self.security_patterns, HintType.SECURITY)
+            self._analyze_category(
+                content, file_path, self.security_patterns, HintType.SECURITY
+            )
         )
         hints.extend(
             self._analyze_category(
@@ -324,7 +341,9 @@ class PatternAnalyzer:
             )
         )
         hints.extend(
-            self._analyze_category(content, file_path, self.test_patterns, HintType.TESTING)
+            self._analyze_category(
+                content, file_path, self.test_patterns, HintType.TESTING
+            )
         )
 
         return hints
@@ -351,7 +370,9 @@ class PatternAnalyzer:
                 line_number = content[: first_match.start()].count("\n") + 1
 
                 # Generate specific title and action
-                title, action = self._generate_hint_details(pattern_name, match_count, hint_type)
+                title, action = self._generate_hint_details(
+                    pattern_name, match_count, hint_type
+                )
 
                 hint = AIHint(
                     hint_type=hint_type,
@@ -447,7 +468,10 @@ class RiskAssessmentEngine:
                 "Modifies global state which can have system-wide effects",
             ),
             "database_schema_changes": (
-                re.compile(r"CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|migration", re.IGNORECASE),
+                re.compile(
+                    r"CREATE\s+TABLE|ALTER\s+TABLE|DROP\s+TABLE|migration",
+                    re.IGNORECASE,
+                ),
                 0.9,
                 "Database schema changes affect data persistence and compatibility",
             ),
@@ -458,7 +482,8 @@ class RiskAssessmentEngine:
             ),
             "core_business_logic": (
                 re.compile(
-                    r"def\s+(calculate|process|validate|authenticate|authorize)", re.IGNORECASE
+                    r"def\s+(calculate|process|validate|authenticate|authorize)",
+                    re.IGNORECASE,
                 ),
                 0.7,
                 "Core business logic changes affect system functionality",
@@ -474,7 +499,9 @@ class RiskAssessmentEngine:
                 "Security-critical code requires careful review and testing",
             ),
             "performance_critical": (
-                re.compile(r"cache|index|query|optimization|performance", re.IGNORECASE),
+                re.compile(
+                    r"cache|index|query|optimization|performance", re.IGNORECASE
+                ),
                 0.6,
                 "Performance-critical code changes can affect system responsiveness",
             ),
@@ -484,7 +511,10 @@ class RiskAssessmentEngine:
                 "Error handling changes affect system stability and debugging",
             ),
             "data_transformation": (
-                re.compile(r"json\.|pickle\.|serialize|deserialize|encode|decode", re.IGNORECASE),
+                re.compile(
+                    r"json\.|pickle\.|serialize|deserialize|encode|decode",
+                    re.IGNORECASE,
+                ),
                 0.6,
                 "Data transformation changes can cause compatibility issues",
             ),
@@ -521,7 +551,9 @@ class RiskAssessmentEngine:
                 title=f"High modification risk detected (score: {risk_score:.2f})",
                 description="This component has characteristics that increase modification risk",
                 rationale=f"Risk factors: {', '.join([risk[0] for risk in identified_risks])}",
-                suggested_action=self._generate_risk_mitigation_action(identified_risks, severity),
+                suggested_action=self._generate_risk_mitigation_action(
+                    identified_risks, severity
+                ),
                 file_path=meta_tag.file_path,
                 component_name=meta_tag.component_name,
                 confidence=min(0.95, risk_score),
@@ -591,7 +623,9 @@ class RiskAssessmentEngine:
         if any("concurrency" in risk[0] for risk in risks):
             actions.append("Review for race conditions and deadlock scenarios")
 
-        return "; ".join(actions) if actions else "Proceed with careful testing and review"
+        return (
+            "; ".join(actions) if actions else "Proceed with careful testing and review"
+        )
 
 
 class OptimizationDetector:
@@ -610,7 +644,9 @@ class OptimizationDetector:
                         r"def\s+(\w+).*?return\s+.*?expensive.*?calculation",
                         re.IGNORECASE | re.DOTALL,
                     ),
-                    re.compile(r"for\s+.*?in\s+.*?:\s*\n.*?database.*?query", re.IGNORECASE),
+                    re.compile(
+                        r"for\s+.*?in\s+.*?:\s*\n.*?database.*?query", re.IGNORECASE
+                    ),
                     re.compile(r"\.get\(.*?\).*?\.get\(.*?\)"),  # Repeated API calls
                 ],
                 "description": "Functions that perform expensive operations repeatedly",
@@ -619,7 +655,9 @@ class OptimizationDetector:
             "database_optimization": {
                 "patterns": [
                     re.compile(r"for\s+.*?in\s+.*?\.all\(\):", re.IGNORECASE),
-                    re.compile(r"\.filter\(.*?\)\.count\(\).*?\.filter\(.*?\)", re.IGNORECASE),
+                    re.compile(
+                        r"\.filter\(.*?\)\.count\(\).*?\.filter\(.*?\)", re.IGNORECASE
+                    ),
                     re.compile(r"select_related|prefetch_related", re.IGNORECASE),
                 ],
                 "description": "Database queries that can be optimized",
@@ -627,7 +665,9 @@ class OptimizationDetector:
             },
             "algorithmic_improvements": {
                 "patterns": [
-                    re.compile(r"for\s+.*?in\s+.*?:\s*\n.*?for\s+.*?in\s+.*?:", re.MULTILINE),
+                    re.compile(
+                        r"for\s+.*?in\s+.*?:\s*\n.*?for\s+.*?in\s+.*?:", re.MULTILINE
+                    ),
                     re.compile(r"\.sort\(\).*?\.sort\(\)"),
                     re.compile(r"if\s+.*?in\s+\[.*?\]:"),  # Linear search in list
                 ],
@@ -673,7 +713,9 @@ class OptimizationDetector:
                     suggested_action=rules["suggestion"],
                     file_path=meta_tag.file_path,
                     line_range=(
-                        (min(matched_lines), max(matched_lines)) if matched_lines else (0, 0)
+                        (min(matched_lines), max(matched_lines))
+                        if matched_lines
+                        else (0, 0)
                     ),
                     component_name=meta_tag.component_name,
                     confidence=min(0.8, 0.4 + (matches_found * 0.1)),
@@ -698,7 +740,10 @@ class OptimizationDetector:
             base_severity = Severity.MEDIUM
 
         # Increase severity for complex components
-        if complexity.value >= Complexity.HIGH.value and base_severity.value < Severity.HIGH.value:
+        if (
+            complexity.value >= Complexity.HIGH.value
+            and base_severity.value < Severity.HIGH.value
+        ):
             return Severity(base_severity.value + 1)
 
         return base_severity
@@ -762,11 +807,17 @@ class TestRequirementAnalyzer:
                     re.compile(r"async|concurrent|parallel", re.IGNORECASE),
                 ],
                 "description": "Performance-critical code requiring load testing",
-                "requirements": ["Benchmark performance", "Test under load", "Test memory usage"],
+                "requirements": [
+                    "Benchmark performance",
+                    "Test under load",
+                    "Test memory usage",
+                ],
             },
         }
 
-    def analyze_test_requirements(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
+    def analyze_test_requirements(
+        self, content: str, meta_tag: MetaTag
+    ) -> list[AIHint]:
         """Analyze test requirements for the component."""
         hints = []
 
@@ -781,7 +832,9 @@ class TestRequirementAnalyzer:
                 # Generate test requirement hint
                 hint = AIHint(
                     hint_type=HintType.TESTING,
-                    severity=self._calculate_test_severity(len(matches_found), meta_tag),
+                    severity=self._calculate_test_severity(
+                        len(matches_found), meta_tag
+                    ),
                     title=f"Test requirements: {test_type.replace('_', ' ').title()}",
                     description=rules["description"],
                     rationale=f"Found {len(matches_found)} pattern(s) requiring {test_type}",
@@ -839,7 +892,9 @@ class AIHintsPipeline:
 
         try:
             # Pattern-based analysis
-            pattern_hints = self.pattern_analyzer.analyze_patterns(content, meta_tag.file_path)
+            pattern_hints = self.pattern_analyzer.analyze_patterns(
+                content, meta_tag.file_path
+            )
             hints.extend(pattern_hints)
 
             # Risk assessment
@@ -847,7 +902,9 @@ class AIHintsPipeline:
             hints.extend(risk_hints)
 
             # Optimization detection
-            optimization_hints = self.optimization_detector.detect_optimizations(content, meta_tag)
+            optimization_hints = self.optimization_detector.detect_optimizations(
+                content, meta_tag
+            )
             hints.extend(optimization_hints)
 
             # Test requirements analysis
@@ -855,7 +912,9 @@ class AIHintsPipeline:
             hints.extend(test_hints)
 
             # Architecture-level hints
-            architecture_hints = await self._generate_architecture_hints(content, meta_tag)
+            architecture_hints = await self._generate_architecture_hints(
+                content, meta_tag
+            )
             hints.extend(architecture_hints)
 
             # Documentation hints
@@ -872,7 +931,9 @@ class AIHintsPipeline:
 
         return hints
 
-    async def _generate_architecture_hints(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
+    async def _generate_architecture_hints(
+        self, content: str, meta_tag: MetaTag
+    ) -> list[AIHint]:
         """Generate architecture-level improvement hints."""
         hints = []
 
@@ -918,7 +979,9 @@ class AIHintsPipeline:
 
         return hints
 
-    def _generate_documentation_hints(self, content: str, meta_tag: MetaTag) -> list[AIHint]:
+    def _generate_documentation_hints(
+        self, content: str, meta_tag: MetaTag
+    ) -> list[AIHint]:
         """Generate documentation improvement hints."""
         hints = []
 
@@ -981,7 +1044,8 @@ class AIHintsPipeline:
         filtered_hints = [
             hint
             for hint in hints
-            if hint.severity.value >= min_severity.value and hint.confidence >= min_confidence
+            if hint.severity.value >= min_severity.value
+            and hint.confidence >= min_confidence
         ]
 
         # Sort by priority (severity * confidence)
@@ -1014,7 +1078,9 @@ class AIHintsPipeline:
 
         # Calculate statistics
         total_hints = len(hints)
-        avg_confidence = sum(h.confidence for h in hints) / total_hints if total_hints > 0 else 0
+        avg_confidence = (
+            sum(h.confidence for h in hints) / total_hints if total_hints > 0 else 0
+        )
 
         critical_count = len([h for h in hints if h.severity == Severity.CRITICAL])
         high_count = len([h for h in hints if h.severity == Severity.HIGH])
@@ -1033,7 +1099,9 @@ class AIHintsPipeline:
     def _estimate_total_effort(self, hints: list[AIHint]) -> str:
         """Estimate total effort required to address all hints."""
         effort_mapping = {"low": 1, "medium": 3, "high": 8}
-        total_points = sum(effort_mapping.get(hint.estimated_effort, 3) for hint in hints)
+        total_points = sum(
+            effort_mapping.get(hint.estimated_effort, 3) for hint in hints
+        )
 
         if total_points <= 5:
             return "low"

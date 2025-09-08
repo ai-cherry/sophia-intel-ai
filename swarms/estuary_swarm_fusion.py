@@ -155,13 +155,17 @@ class EstuarySwarmFusion:
 
             for source_name, collection_name in sources.items():
                 try:
-                    result = await self.estuary_pool.get_real_time_data(collection_name, limit=50)
+                    result = await self.estuary_pool.get_real_time_data(
+                        collection_name, limit=50
+                    )
 
                     if result["status"] == "success":
                         capture_result["data"][source_name] = result["data"]
                         capture_result["total_records"] += len(result["data"])
 
-                        logger.info(f"Captured {len(result['data'])} records from {source_name}")
+                        logger.info(
+                            f"Captured {len(result['data'])} records from {source_name}"
+                        )
                     else:
                         error_msg = f"Failed to capture {source_name}: {result.get('error', 'Unknown error')}"
                         capture_result["errors"].append(error_msg)
@@ -201,14 +205,21 @@ class EstuarySwarmFusion:
 
             # Process opportunities for analysis
             if data.get("salesforce_opportunities"):
-                opp_analysis = await self._analyze_opportunities(data["salesforce_opportunities"])
+                opp_analysis = await self._analyze_opportunities(
+                    data["salesforce_opportunities"]
+                )
                 swarm_results["recommendations"].extend(opp_analysis)
 
             return swarm_results
 
         except Exception as e:
             logger.error(f"Swarm processing failed: {str(e)}")
-            return {"predictions": [], "scores": [], "recommendations": [], "error": str(e)}
+            return {
+                "predictions": [],
+                "scores": [],
+                "recommendations": [],
+                "error": str(e),
+            }
 
     async def _predict_churn(self, gong_calls: List[Dict]) -> List[Dict]:
         """Predict customer churn from Gong call data"""
@@ -289,7 +300,9 @@ class EstuarySwarmFusion:
                 """
 
                 # Simulate AI scoring
-                score_result = await self._simulate_ai_prediction(scoring_prompt, "lead_scorer")
+                score_result = await self._simulate_ai_prediction(
+                    scoring_prompt, "lead_scorer"
+                )
 
                 scores.append(
                     {
@@ -400,7 +413,10 @@ class EstuarySwarmFusion:
             return {
                 "risk_score": 65,
                 "risk_factors": ["Decreased call frequency", "Negative sentiment"],
-                "recommendations": ["Schedule check-in call", "Offer additional support"],
+                "recommendations": [
+                    "Schedule check-in call",
+                    "Offer additional support",
+                ],
             }
         elif agent_type == "lead_scorer":
             return {
@@ -444,7 +460,9 @@ class EstuarySwarmFusion:
             # Lead insights
             if swarm_results.get("scores"):
                 high_quality_leads = sum(
-                    1 for s in swarm_results["scores"] if s.get("score", {}).get("score", 0) > 80
+                    1
+                    for s in swarm_results["scores"]
+                    if s.get("score", {}).get("score", 0) > 80
                 )
 
                 insights.append(
@@ -534,7 +552,9 @@ class EstuarySwarmFusion:
         try:
             self.metrics["fusion_loops"] += 1
             self.metrics["predictions_made"] += len(loop_result.get("predictions", []))
-            self.metrics["data_points_processed"] += loop_result.get("data_processed", 0)
+            self.metrics["data_points_processed"] += loop_result.get(
+                "data_processed", 0
+            )
 
             # Update average processing time
             current_avg = self.metrics["avg_processing_time"]
@@ -572,9 +592,9 @@ class EstuarySwarmFusion:
             resource_health = await self.resource_pools.health_check()
 
             # Overall health
-            overall_healthy = estuary_health.get("status") == "healthy" and resource_health.get(
-                "overall", False
-            )
+            overall_healthy = estuary_health.get(
+                "status"
+            ) == "healthy" and resource_health.get("overall", False)
 
             return {
                 "status": "healthy" if overall_healthy else "degraded",
@@ -585,7 +605,11 @@ class EstuarySwarmFusion:
             }
 
         except Exception as e:
-            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+            return {
+                "status": "unhealthy",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
+            }
 
 
 # Example usage and testing

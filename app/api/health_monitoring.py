@@ -156,7 +156,9 @@ class HealthMonitor:
                     "status": overall_status.value,
                     "uptime_seconds": int(time.time() - self.start_time),
                     "environment": settings.environment,
-                    "components": {name: comp.status.value for name, comp in components.items()},
+                    "components": {
+                        name: comp.status.value for name, comp in components.items()
+                    },
                     "timestamp": datetime.now().isoformat(),
                 }
 
@@ -281,7 +283,9 @@ class HealthMonitor:
             # Get CPU usage over 1 second interval
             cpu_percent = psutil.cpu_percent(interval=1)
             cpu_count = psutil.cpu_count()
-            load_avg = psutil.getloadavg() if hasattr(psutil, "getloadavg") else (0, 0, 0)
+            load_avg = (
+                psutil.getloadavg() if hasattr(psutil, "getloadavg") else (0, 0, 0)
+            )
 
             status = HealthComponentStatus.HEALTHY
             if cpu_percent > 80:
@@ -378,7 +382,11 @@ class HealthMonitor:
             orchestrator = get_orchestrator()
 
             # Basic functionality test
-            test_request = {"type": "query", "query_type": "metrics", "content": "health check"}
+            test_request = {
+                "type": "query",
+                "query_type": "metrics",
+                "content": "health check",
+            }
 
             start_time = time.time()
             await orchestrator.process_request(test_request)
@@ -498,7 +506,9 @@ class HealthMonitor:
             max_connections = settings.websocket_max_connections
 
             status = HealthComponentStatus.HEALTHY
-            utilization = active_connections / max_connections if max_connections > 0 else 0
+            utilization = (
+                active_connections / max_connections if max_connections > 0 else 0
+            )
 
             if utilization > 0.8:  # >80% utilization
                 status = HealthComponentStatus.DEGRADED
@@ -736,7 +746,9 @@ async def check_component(component: str):
         )
 
     try:
-        result = await health_monitor._run_component_check(component, check_mapping[component])
+        result = await health_monitor._run_component_check(
+            component, check_mapping[component]
+        )
         return result.dict()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -747,4 +759,7 @@ async def clear_health_cache():
     """Clear the health check cache (admin only)"""
     # This would normally check for admin access
     health_monitor.check_cache.clear()
-    return {"message": "Health check cache cleared", "timestamp": datetime.now().isoformat()}
+    return {
+        "message": "Health check cache cleared",
+        "timestamp": datetime.now().isoformat(),
+    }

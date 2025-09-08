@@ -80,7 +80,9 @@ class BehavioralPattern:
     tags: set[str] = field(default_factory=set)
 
     # Temporal aspects
-    time_patterns: dict[str, Any] = field(default_factory=dict)  # hourly, daily, weekly patterns
+    time_patterns: dict[str, Any] = field(
+        default_factory=dict
+    )  # hourly, daily, weekly patterns
     seasonal_factors: dict[str, float] = field(default_factory=dict)
 
     # Predictions
@@ -99,7 +101,9 @@ class PatternStore:
         self.memory_interface = unified_memory
         self.namespace = "patterns"
 
-    async def store_pattern(self, pattern: BehavioralPattern, domain: Optional[str] = None) -> str:
+    async def store_pattern(
+        self, pattern: BehavioralPattern, domain: Optional[str] = None
+    ) -> str:
         """Store a behavioral pattern"""
 
         # Create comprehensive content for storage
@@ -170,7 +174,9 @@ class PatternStore:
         for result in results:
             structured_data = await self._retrieve_structured_pattern(result.memory_id)
 
-            if self._matches_pattern_filters(structured_data, min_strength, entities_filter):
+            if self._matches_pattern_filters(
+                structured_data, min_strength, entities_filter
+            ):
                 enhanced_results.append(
                     {
                         "memory_id": result.memory_id,
@@ -213,7 +219,9 @@ class PatternStore:
             # Count by type
             pattern_type = data.get("pattern_type")
             if pattern_type:
-                analysis["by_type"][pattern_type] = analysis["by_type"].get(pattern_type, 0) + 1
+                analysis["by_type"][pattern_type] = (
+                    analysis["by_type"].get(pattern_type, 0) + 1
+                )
 
             # Count by strength
             strength = data.get("strength", "weak")
@@ -264,18 +272,26 @@ class PatternStore:
         last_occurrence = metrics.get("last_occurrence")
 
         if frequency == 0 or not last_occurrence:
-            return {"pattern_id": pattern_id, "prediction": "insufficient_data", "probability": 0.0}
+            return {
+                "pattern_id": pattern_id,
+                "prediction": "insufficient_data",
+                "probability": 0.0,
+            }
 
         # Simple prediction based on frequency
         hours_since_last = 0
         if last_occurrence:
             last_time = datetime.fromisoformat(last_occurrence)
-            hours_since_last = (datetime.now(timezone.utc) - last_time).total_seconds() / 3600
+            hours_since_last = (
+                datetime.now(timezone.utc) - last_time
+            ).total_seconds() / 3600
 
         expected_interval_hours = 24 / frequency if frequency > 0 else 24
         probability = max(0.0, min(1.0, hours_since_last / expected_interval_hours))
 
-        next_expected = datetime.now(timezone.utc) + timedelta(hours=expected_interval_hours)
+        next_expected = datetime.now(timezone.utc) + timedelta(
+            hours=expected_interval_hours
+        )
 
         return {
             "pattern_id": pattern_id,
@@ -289,7 +305,10 @@ class PatternStore:
         }
 
     async def update_pattern_metrics(
-        self, pattern_id: str, new_occurrence_time: datetime, outcome: Optional[str] = None
+        self,
+        pattern_id: str,
+        new_occurrence_time: datetime,
+        outcome: Optional[str] = None,
     ) -> bool:
         """Update pattern metrics with a new occurrence"""
 
@@ -342,7 +361,11 @@ class PatternStore:
 
         if pattern.outcomes:
             content_parts.extend(
-                ["TYPICAL OUTCOMES:", *[f"• {outcome}" for outcome in pattern.outcomes], ""]
+                [
+                    "TYPICAL OUTCOMES:",
+                    *[f"• {outcome}" for outcome in pattern.outcomes],
+                    "",
+                ]
             )
 
         # Metrics
@@ -360,7 +383,9 @@ class PatternStore:
         )
 
         if pattern.entities_involved:
-            content_parts.extend([f"ENTITIES INVOLVED: {', '.join(pattern.entities_involved)}", ""])
+            content_parts.extend(
+                [f"ENTITIES INVOLVED: {', '.join(pattern.entities_involved)}", ""]
+            )
 
         if pattern.next_likely_occurrence:
             content_parts.extend(
@@ -449,7 +474,9 @@ class PatternStore:
             key, structured_data, ttl=86400 * 14, namespace="patterns"  # 14 days
         )
 
-    async def _retrieve_structured_pattern(self, pattern_id: str) -> Optional[dict[str, Any]]:
+    async def _retrieve_structured_pattern(
+        self, pattern_id: str
+    ) -> Optional[dict[str, Any]]:
         """Retrieve structured pattern data"""
 
         if not self.memory_interface.redis_manager:
@@ -457,7 +484,9 @@ class PatternStore:
 
         try:
             key = f"pattern_structured:{pattern_id}"
-            data = await self.memory_interface.redis_manager.get(key, namespace="patterns")
+            data = await self.memory_interface.redis_manager.get(
+                key, namespace="patterns"
+            )
 
             if data:
                 import json

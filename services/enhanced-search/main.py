@@ -71,7 +71,15 @@ class QueryClassifier:
     """Intelligent query classification for optimal API routing"""
 
     QUERY_PATTERNS = {
-        QueryType.REAL_TIME: ["news", "current", "latest", "today", "recent", "breaking", "now"],
+        QueryType.REAL_TIME: [
+            "news",
+            "current",
+            "latest",
+            "today",
+            "recent",
+            "breaking",
+            "now",
+        ],
         QueryType.RESEARCH: [
             "analyze",
             "study",
@@ -81,7 +89,14 @@ class QueryClassifier:
             "journal",
             "scientific",
         ],
-        QueryType.SEMANTIC: ["similar", "related", "like", "concept", "meaning", "compare"],
+        QueryType.SEMANTIC: [
+            "similar",
+            "related",
+            "like",
+            "concept",
+            "meaning",
+            "compare",
+        ],
         QueryType.REASONING: [
             "why",
             "how",
@@ -91,7 +106,15 @@ class QueryClassifier:
             "understand",
             "reason",
         ],
-        QueryType.FACTUAL: ["what", "when", "where", "who", "definition", "define", "fact"],
+        QueryType.FACTUAL: [
+            "what",
+            "when",
+            "where",
+            "who",
+            "definition",
+            "define",
+            "fact",
+        ],
     }
 
     def classify_query(self, query: str) -> List[QueryType]:
@@ -133,7 +156,9 @@ class SerperClient(APIClient):
         super().__init__("serper", API_KEYS["serper"])
         self.base_url = "https://google.serper.dev"
 
-    async def search(self, query: str, search_type: str = "search") -> List[SearchResult]:
+    async def search(
+        self, query: str, search_type: str = "search"
+    ) -> List[SearchResult]:
         """Execute search via Serper API"""
         try:
             session = await self.get_session()
@@ -240,7 +265,10 @@ class BraveClient(APIClient):
         try:
             session = await self.get_session()
 
-            headers = {"X-Subscription-Token": self.api_key, "Accept": "application/json"}
+            headers = {
+                "X-Subscription-Token": self.api_key,
+                "Accept": "application/json",
+            }
 
             params = {"q": query, "count": 10}
 
@@ -287,7 +315,9 @@ class ExaClient(APIClient):
         super().__init__("exa", API_KEYS["exa"])
         self.base_url = "https://api.exa.ai"
 
-    async def search(self, query: str, search_type: str = "neural") -> List[SearchResult]:
+    async def search(
+        self, query: str, search_type: str = "neural"
+    ) -> List[SearchResult]:
         """Execute semantic search via Exa API"""
         try:
             session = await self.get_session()
@@ -407,7 +437,9 @@ class EnhancedSearchService:
         start_time = time.time()
 
         # Classify query if not provided
-        query_types = request.query_types or self.classifier.classify_query(request.query)
+        query_types = request.query_types or self.classifier.classify_query(
+            request.query
+        )
 
         # Check cache
         cache_key = self._get_cache_key(request.query, query_types)

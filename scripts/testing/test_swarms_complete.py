@@ -62,12 +62,16 @@ class SwarmIntegrationTester:
                     data = response.json()
                     logger.info("✅ Server healthy")
                     logger.info(f"   Status: {data.get('status')}")
-                    logger.info(f"   Systems: {json.dumps(data.get('systems', {}), indent=2)}")
+                    logger.info(
+                        f"   Systems: {json.dumps(data.get('systems', {}), indent=2)}"
+                    )
                     self._record_test("Health check", True, str(data))
                     return True
                 else:
                     logger.info(f"❌ Health check failed: {response.status_code}")
-                    self._record_test("Health check", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Health check", False, f"Status {response.status_code}"
+                    )
                     return False
             except Exception as e:
                 logger.info(f"❌ Health check error: {e}")
@@ -93,7 +97,9 @@ class SwarmIntegrationTester:
                     self._record_test("Get teams", True, f"{len(teams)} teams")
                 else:
                     logger.info(f"❌ Failed to get teams: {response.status_code}")
-                    self._record_test("Get teams", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Get teams", False, f"Status {response.status_code}"
+                    )
             except Exception as e:
                 logger.info(f"❌ Error getting teams: {e}")
                 self._record_test("Get teams", False, str(e))
@@ -106,7 +112,11 @@ class SwarmIntegrationTester:
                     "message": "Test message for simplex team",
                     "pool": "balanced",
                 },
-                {"team_id": "CONSENSUS", "message": "Test consensus mechanism", "pool": "fast"},
+                {
+                    "team_id": "CONSENSUS",
+                    "message": "Test consensus mechanism",
+                    "pool": "fast",
+                },
             ]
 
             for req in test_requests:
@@ -130,12 +140,20 @@ class SwarmIntegrationTester:
                         else:
                             logger.info(f"⚠️ Team {req['team_id']}: Empty response")
                             self._record_test(
-                                f"Execute team {req['team_id']}", False, "Empty streaming response"
+                                f"Execute team {req['team_id']}",
+                                False,
+                                "Empty streaming response",
                             )
                     else:
-                        logger.info(f"❌ Team {req['team_id']}: Failed ({response.status_code})")
-                        error_detail = response.text[:200] if response.text else "No details"
-                        self._record_test(f"Execute team {req['team_id']}", False, error_detail)
+                        logger.info(
+                            f"❌ Team {req['team_id']}: Failed ({response.status_code})"
+                        )
+                        error_detail = (
+                            response.text[:200] if response.text else "No details"
+                        )
+                        self._record_test(
+                            f"Execute team {req['team_id']}", False, error_detail
+                        )
                 except Exception as e:
                     logger.info(f"❌ Team {req['team_id']}: Error - {e}")
                     self._record_test(f"Execute team {req['team_id']}", False, str(e))
@@ -156,10 +174,14 @@ class SwarmIntegrationTester:
                     logger.info(f"✅ Found {len(workflows)} workflows")
                     for workflow in workflows:
                         logger.info(f"   - {workflow['id']}: {workflow['name']}")
-                    self._record_test("Get workflows", True, f"{len(workflows)} workflows")
+                    self._record_test(
+                        "Get workflows", True, f"{len(workflows)} workflows"
+                    )
                 else:
                     logger.info(f"❌ Failed to get workflows: {response.status_code}")
-                    self._record_test("Get workflows", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Get workflows", False, f"Status {response.status_code}"
+                    )
             except Exception as e:
                 logger.info(f"❌ Error getting workflows: {e}")
                 self._record_test("Get workflows", False, str(e))
@@ -181,13 +203,19 @@ class SwarmIntegrationTester:
                     response_text = response.text
                     if response_text and len(response_text.strip()) > 0:
                         logger.info("✅ Workflow executed successfully (streaming)")
-                        self._record_test("Execute workflow", True, "Streaming response received")
+                        self._record_test(
+                            "Execute workflow", True, "Streaming response received"
+                        )
                     else:
                         logger.info("⚠️ Workflow: Empty response")
-                        self._record_test("Execute workflow", False, "Empty streaming response")
+                        self._record_test(
+                            "Execute workflow", False, "Empty streaming response"
+                        )
                 else:
                     logger.info(f"❌ Workflow failed: {response.status_code}")
-                    self._record_test("Execute workflow", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Execute workflow", False, f"Status {response.status_code}"
+                    )
             except Exception as e:
                 logger.info(f"❌ Workflow error: {e}")
                 self._record_test("Execute workflow", False, str(e))
@@ -210,13 +238,17 @@ class SwarmIntegrationTester:
             }
 
             try:
-                response = await client.post(f"{self.base_url}/memory/add", json=test_memory)
+                response = await client.post(
+                    f"{self.base_url}/memory/add", json=test_memory
+                )
                 if response.status_code == 200:
                     logger.info("✅ Memory stored successfully")
                     self._record_test("Memory storage", True, "Success")
                 else:
                     logger.info(f"❌ Memory storage failed: {response.status_code}")
-                    self._record_test("Memory storage", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Memory storage", False, f"Status {response.status_code}"
+                    )
             except Exception as e:
                 logger.info(f"❌ Memory storage error: {e}")
                 self._record_test("Memory storage", False, str(e))
@@ -231,18 +263,24 @@ class SwarmIntegrationTester:
             }
 
             try:
-                response = await client.post(f"{self.base_url}/memory/search", json=search_query)
+                response = await client.post(
+                    f"{self.base_url}/memory/search", json=search_query
+                )
                 if response.status_code == 200:
                     results = response.json()
                     logger.info(
                         f"✅ Memory search returned {len(results.get('results', []))} results"
                     )
                     self._record_test(
-                        "Memory search", True, f"{len(results.get('results', []))} results"
+                        "Memory search",
+                        True,
+                        f"{len(results.get('results', []))} results",
                     )
                 else:
                     logger.info(f"❌ Memory search failed: {response.status_code}")
-                    self._record_test("Memory search", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Memory search", False, f"Status {response.status_code}"
+                    )
             except Exception as e:
                 logger.info(f"❌ Memory search error: {e}")
                 self._record_test("Memory search", False, str(e))
@@ -265,16 +303,24 @@ class SwarmIntegrationTester:
             }
 
             try:
-                response = await client.post(f"{self.base_url}/search", json=search_request)
+                response = await client.post(
+                    f"{self.base_url}/search", json=search_request
+                )
                 if response.status_code == 200:
                     results = response.json()
-                    logger.info(f"✅ Search returned {len(results.get('results', []))} results")
+                    logger.info(
+                        f"✅ Search returned {len(results.get('results', []))} results"
+                    )
                     self._record_test(
-                        "Hybrid search", True, f"{len(results.get('results', []))} results"
+                        "Hybrid search",
+                        True,
+                        f"{len(results.get('results', []))} results",
                     )
                 else:
                     logger.info(f"❌ Search failed: {response.status_code}")
-                    self._record_test("Hybrid search", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Hybrid search", False, f"Status {response.status_code}"
+                    )
             except Exception as e:
                 logger.info(f"❌ Search error: {e}")
                 self._record_test("Hybrid search", False, str(e))
@@ -289,14 +335,17 @@ class SwarmIntegrationTester:
         mcp_servers = {
             "filesystem": get_config().get("MCP_FILESYSTEM", "true").lower() == "true",
             "git": get_config().get("MCP_GIT", "true").lower() == "true",
-            "supermemory": get_config().get("MCP_SUPERMEMORY", "true").lower() == "true",
+            "supermemory": get_config().get("MCP_SUPERMEMORY", "true").lower()
+            == "true",
         }
 
         logger.info("\nMCP Server Configuration:")
         for server, enabled in mcp_servers.items():
             status = "✅ Enabled" if enabled else "❌ Disabled"
             logger.info(f"  {server}: {status}")
-            self._record_test(f"MCP {server} config", enabled, "Enabled" if enabled else "Disabled")
+            self._record_test(
+                f"MCP {server} config", enabled, "Enabled" if enabled else "Disabled"
+            )
 
     async def test_stats_endpoint(self):
         """Test statistics endpoint."""
@@ -316,7 +365,9 @@ class SwarmIntegrationTester:
                     self._record_test("Statistics", True, "Success")
                 else:
                     logger.info(f"❌ Stats failed: {response.status_code}")
-                    self._record_test("Statistics", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "Statistics", False, f"Status {response.status_code}"
+                    )
             except Exception as e:
                 logger.info(f"❌ Stats error: {e}")
                 self._record_test("Statistics", False, str(e))
@@ -380,7 +431,9 @@ class SwarmIntegrationTester:
                     self._record_test("AG UI connection", True, f"Port {ag_ui_port}")
                 else:
                     logger.info(f"⚠️ AG UI returned status {response.status_code}")
-                    self._record_test("AG UI connection", False, f"Status {response.status_code}")
+                    self._record_test(
+                        "AG UI connection", False, f"Status {response.status_code}"
+                    )
             except httpx.ConnectError:
                 logger.info(f"❌ AG UI not running on port {ag_ui_port}")
                 logger.info("   Run: cd agent-ui && pnpm dev")

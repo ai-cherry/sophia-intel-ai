@@ -165,7 +165,9 @@ class ProductionLaunchVerifier:
         )
 
         overall_status = (
-            "PASS" if all(check["status"] == "PASS" for check in validation_checks) else "FAIL"
+            "PASS"
+            if all(check["status"] == "PASS" for check in validation_checks)
+            else "FAIL"
         )
 
         return {"overall_status": overall_status, "checks": validation_checks}
@@ -176,7 +178,9 @@ class ProductionLaunchVerifier:
         try:
             # Check if Pulumi is available
             pulumi_available = (
-                subprocess.run(["pulumi", "version"], capture_output=True, text=True).returncode
+                subprocess.run(
+                    ["pulumi", "version"], capture_output=True, text=True
+                ).returncode
                 == 0
             )
 
@@ -199,12 +203,17 @@ class ProductionLaunchVerifier:
 
                 # Initialize Pulumi project
                 subprocess.run(
-                    ["pulumi", "new", "python", "--yes"], cwd=pulumi_dir, capture_output=True
+                    ["pulumi", "new", "python", "--yes"],
+                    cwd=pulumi_dir,
+                    capture_output=True,
                 )
 
             # Deploy infrastructure
             deploy_result = subprocess.run(
-                ["pulumi", "up", "--yes"], cwd=pulumi_dir, capture_output=True, text=True
+                ["pulumi", "up", "--yes"],
+                cwd=pulumi_dir,
+                capture_output=True,
+                text=True,
             )
 
             if deploy_result.returncode == 0:
@@ -241,7 +250,10 @@ class ProductionLaunchVerifier:
                 deployment_results[service["name"]] = result
 
             except Exception as e:
-                deployment_results[service["name"]] = {"status": "failed", "error": str(e)}
+                deployment_results[service["name"]] = {
+                    "status": "failed",
+                    "error": str(e),
+                }
 
         return deployment_results
 
@@ -402,7 +414,10 @@ class ProductionLaunchVerifier:
 
             # Build frontend
             build_result = subprocess.run(
-                ["npm", "run", "build"], cwd=frontend_dir, capture_output=True, text=True
+                ["npm", "run", "build"],
+                cwd=frontend_dir,
+                capture_output=True,
+                text=True,
             )
 
             if build_result.returncode == 0:
@@ -435,7 +450,10 @@ class ProductionLaunchVerifier:
                 monitoring_results[component["name"]] = result
 
             except Exception as e:
-                monitoring_results[component["name"]] = {"status": "failed", "error": str(e)}
+                monitoring_results[component["name"]] = {
+                    "status": "failed",
+                    "error": str(e),
+                }
 
         return monitoring_results
 
@@ -677,7 +695,9 @@ receivers:
             except Exception as e:
                 health_results[env] = {"success": False, "error": str(e)}
 
-        overall_success = any(result.get("success", False) for result in health_results.values())
+        overall_success = any(
+            result.get("success", False) for result in health_results.values()
+        )
 
         return {"success": overall_success, "endpoints": health_results}
 
@@ -704,7 +724,10 @@ receivers:
                     "error": str(e),
                 }
 
-        return {"success": True, "sites": frontend_results}  # Frontend tests are simulated
+        return {
+            "success": True,
+            "sites": frontend_results,
+        }  # Frontend tests are simulated
 
     async def test_database_connectivity(self) -> Dict:
         """Test database connectivity"""
@@ -749,7 +772,10 @@ receivers:
                 service_results[service["name"]] = {"success": False, "error": str(e)}
 
         overall_success = (
-            sum(1 for result in service_results.values() if result.get("success", False)) >= 2
+            sum(
+                1 for result in service_results.values() if result.get("success", False)
+            )
+            >= 2
         )
 
         return {"success": overall_success, "services": service_results}
@@ -799,7 +825,11 @@ receivers:
 
         try:
             # Auth flow test (simulated)
-            return {"success": True, "auth_methods": ["api_key", "jwt"], "status": "simulated"}
+            return {
+                "success": True,
+                "auth_methods": ["api_key", "jwt"],
+                "status": "simulated",
+            }
 
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -1016,8 +1046,16 @@ receivers:
                 "severity": "warning",
             },
             {"name": "service_down", "condition": "up == 0", "severity": "critical"},
-            {"name": "high_error_rate", "condition": "error_rate > 5%", "severity": "warning"},
-            {"name": "high_cpu_usage", "condition": "cpu_usage > 80%", "severity": "warning"},
+            {
+                "name": "high_error_rate",
+                "condition": "error_rate > 5%",
+                "severity": "warning",
+            },
+            {
+                "name": "high_cpu_usage",
+                "condition": "cpu_usage > 80%",
+                "severity": "warning",
+            },
             {
                 "name": "high_memory_usage",
                 "condition": "memory_usage > 90%",
@@ -1193,7 +1231,9 @@ receivers:
 
         try:
             # Install Docker Compose if not available
-            subprocess.run(["pip3", "install", "docker-compose"], check=True, capture_output=True)
+            subprocess.run(
+                ["pip3", "install", "docker-compose"], check=True, capture_output=True
+            )
             return True
         except Exception:
             return False
@@ -1213,7 +1253,9 @@ receivers:
         """Generate comprehensive launch report"""
 
         successful_phases = sum(
-            1 for result in self.launch_results.values() if result["status"] in ["SUCCESS", "FIXED"]
+            1
+            for result in self.launch_results.values()
+            if result["status"] in ["SUCCESS", "FIXED"]
         )
         total_phases = len(self.launch_results)
 
@@ -1224,9 +1266,12 @@ receivers:
                 "total_phases": total_phases,
                 "successful_phases": successful_phases,
                 "success_rate": (
-                    f"{(successful_phases/total_phases)*100:.1f}%" if total_phases > 0 else "0%"
+                    f"{(successful_phases/total_phases)*100:.1f}%"
+                    if total_phases > 0
+                    else "0%"
                 ),
-                "production_ready": successful_phases >= (total_phases * 0.8),  # 80% threshold
+                "production_ready": successful_phases
+                >= (total_phases * 0.8),  # 80% threshold
             },
             "endpoints": {
                 "api": self.api_endpoints,
@@ -1250,7 +1295,9 @@ receivers:
         actions = []
 
         failed_phases = [
-            name for name, result in self.launch_results.items() if result["status"] == "FAILED"
+            name
+            for name, result in self.launch_results.items()
+            if result["status"] == "FAILED"
         ]
 
         if failed_phases:
@@ -1312,7 +1359,9 @@ async def main():
         print(f"Production Ready: {report['summary']['production_ready']}")
 
         if report["status"] == "PRODUCTION_READY":
-            print(f"\n🎉 PRODUCTION LAUNCH COMPLETE - {report['domain'].upper()} IS LIVE!")
+            print(
+                f"\n🎉 PRODUCTION LAUNCH COMPLETE - {report['domain'].upper()} IS LIVE!"
+            )
             print("\n🌐 Live Endpoints:")
             for category, endpoints in report["endpoints"].items():
                 print(f"\n{category.title()}:")

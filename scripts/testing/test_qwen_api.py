@@ -38,7 +38,9 @@ def test_qwen_dashscope():
             print(f"✅ Qwen via DashScope: {response.output.text}")
             return True
         else:
-            print(f"❌ Qwen via DashScope: Status {response.status_code} - {response.message}")
+            print(
+                f"❌ Qwen via DashScope: Status {response.status_code} - {response.message}"
+            )
             return False
 
     except ImportError:
@@ -155,7 +157,9 @@ def check_key_format():
 
     if QWEN_API_KEY == "qwen-api-key-ad6c81":
         print("\n⚠️  WARNING: This looks like a placeholder key!")
-        print("Real Qwen/DashScope keys usually look like: 'sk-' followed by random characters")
+        print(
+            "Real Qwen/DashScope keys usually look like: 'sk-' followed by random characters"
+        )
         print("To get a real key:")
         print("1. Go to https://dashscope.console.aliyun.com/")
         print("2. Create an account (requires Alibaba Cloud account)")
@@ -173,7 +177,9 @@ def main():
         print(" KEY APPEARS TO BE A PLACEHOLDER")
         print("=" * 60)
         print("\n❌ The Qwen key 'qwen-api-key-ad6c81' is likely not a real API key")
-        print("It looks like a placeholder that needs to be replaced with an actual key")
+        print(
+            "It looks like a placeholder that needs to be replaced with an actual key"
+        )
         return 1
 
     # Test the key

@@ -80,7 +80,9 @@ class DocumentManager:
 
         for md_file in self.root.glob("**/*.md"):
             # Skip node_modules and other generated content
-            if any(skip in str(md_file) for skip in ["node_modules", ".git", "archive"]):
+            if any(
+                skip in str(md_file) for skip in ["node_modules", ".git", "archive"]
+            ):
                 continue
 
             if self.validate_file(md_file):
@@ -108,18 +110,31 @@ class DocumentManager:
                     metadata = yaml.safe_load(metadata_str)
 
                     # Validate required fields
-                    required = ["title", "type", "status", "version", "last_updated", "ai_context"]
+                    required = [
+                        "title",
+                        "type",
+                        "status",
+                        "version",
+                        "last_updated",
+                        "ai_context",
+                    ]
                     for field in required:
                         if field not in metadata:
-                            self.errors.append(f"{filepath}: Missing required field '{field}'")
+                            self.errors.append(
+                                f"{filepath}: Missing required field '{field}'"
+                            )
                             return False
 
                     # Validate field values
                     if metadata["type"] not in [t.value for t in DocType]:
-                        self.warnings.append(f"{filepath}: Invalid type '{metadata['type']}'")
+                        self.warnings.append(
+                            f"{filepath}: Invalid type '{metadata['type']}'"
+                        )
 
                     if metadata["status"] not in [s.value for s in DocStatus]:
-                        self.warnings.append(f"{filepath}: Invalid status '{metadata['status']}'")
+                        self.warnings.append(
+                            f"{filepath}: Invalid status '{metadata['status']}'"
+                        )
 
                     if metadata["ai_context"] not in ["high", "medium", "low"]:
                         self.warnings.append(
@@ -137,7 +152,12 @@ class DocumentManager:
                 relative_path = filepath.relative_to(self.root)
 
                 # Skip certain files that don't need metadata
-                skip_files = ["README.md", "CONTRIBUTING.md", "CHANGELOG.md", "LICENSE.md"]
+                skip_files = [
+                    "README.md",
+                    "CONTRIBUTING.md",
+                    "CHANGELOG.md",
+                    "LICENSE.md",
+                ]
                 if filepath.name in skip_files:
                     return True
 
@@ -178,7 +198,11 @@ class DocumentManager:
         """Auto-detect metadata from file content and path"""
         # Detect title from first heading
         title_match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
-        title = title_match.group(1) if title_match else filepath.stem.replace("_", " ").title()
+        title = (
+            title_match.group(1)
+            if title_match
+            else filepath.stem.replace("_", " ").title()
+        )
 
         # Detect type from path and content
         doc_type = DocType.REFERENCE  # default
@@ -199,7 +223,8 @@ class DocumentManager:
         # Detect AI context importance
         ai_context = "medium"  # default
         if any(
-            keyword in content.lower() for keyword in ["swarm", "orchestrat", "ai", "llm", "agent"]
+            keyword in content.lower()
+            for keyword in ["swarm", "orchestrat", "ai", "llm", "agent"]
         ):
             ai_context = "high"
         elif "archive" in str(filepath).lower():
@@ -279,7 +304,8 @@ _Auto-generated on {}_
 - [CURRENT_STATE](CURRENT_STATE.md) - Live system state
 
 """.format(
-            datetime.now().strftime("%Y-%m-%d"), datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            datetime.now().strftime("%Y-%m-%d"),
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         )
 
         # Add categorized links
@@ -355,7 +381,9 @@ _Auto-generated on {}_
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Documentation Manager for AI Swarm Optimization")
+    parser = argparse.ArgumentParser(
+        description="Documentation Manager for AI Swarm Optimization"
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
 
@@ -364,9 +392,13 @@ def main():
     validate_parser.add_argument("path", nargs="?", help="Specific file to validate")
 
     # Add metadata command
-    metadata_parser = subparsers.add_parser("add-metadata", help="Add metadata to files")
+    metadata_parser = subparsers.add_parser(
+        "add-metadata", help="Add metadata to files"
+    )
     metadata_parser.add_argument("path", help="File to add metadata to")
-    metadata_parser.add_argument("--auto", action="store_true", help="Auto-detect metadata")
+    metadata_parser.add_argument(
+        "--auto", action="store_true", help="Auto-detect metadata"
+    )
 
     # Update index command
     subparsers.add_parser("update-index", help="Update documentation index")

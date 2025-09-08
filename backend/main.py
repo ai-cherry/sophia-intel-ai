@@ -90,7 +90,8 @@ async def log_requests(request: Request, call_next):
     except Exception as e:
         logger.error(f"[{request_id}] Error: {e}")
         response = JSONResponse(
-            status_code=500, content={"error": "Internal server error", "request_id": request_id}
+            status_code=500,
+            content={"error": "Internal server error", "request_id": request_id},
         )
 
     # Log response
@@ -139,7 +140,11 @@ async def readiness_check() -> Dict[str, Any]:
 
     all_ready = all(checks.values()) if checks else True
 
-    return {"ready": all_ready, "checks": checks, "timestamp": datetime.utcnow().isoformat()}
+    return {
+        "ready": all_ready,
+        "checks": checks,
+        "timestamp": datetime.utcnow().isoformat(),
+    }
 
 
 @app.get("/")
@@ -179,7 +184,9 @@ try:
     from backend.routers import chat, memory, orchestration
 
     app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
-    app.include_router(orchestration.router, prefix="/api/orchestration", tags=["orchestration"])
+    app.include_router(
+        orchestration.router, prefix="/api/orchestration", tags=["orchestration"]
+    )
     app.include_router(memory.router, prefix="/api/memory", tags=["memory"])
     logger.info("✓ All routers loaded")
 except ImportError as e:
@@ -188,11 +195,18 @@ except ImportError as e:
     # Create placeholder endpoints
     @app.post("/api/chat")
     async def placeholder_chat(message: dict):
-        return {"response": f"Echo: {message.get('text', 'Hello')}", "status": "placeholder"}
+        return {
+            "response": f"Echo: {message.get('text', 'Hello')}",
+            "status": "placeholder",
+        }
 
     @app.post("/api/orchestration")
     async def placeholder_orchestration(request: dict):
-        return {"result": "Orchestration placeholder", "agents": [], "status": "placeholder"}
+        return {
+            "result": "Orchestration placeholder",
+            "agents": [],
+            "status": "placeholder",
+        }
 
 
 if __name__ == "__main__":

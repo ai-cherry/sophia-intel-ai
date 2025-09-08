@@ -32,7 +32,11 @@ async def health_check():
 @app.get("/teams")
 async def get_teams():
     return [
-        {"id": "coding-team", "name": "Coding Team", "description": "5 agents for coding tasks"},
+        {
+            "id": "coding-team",
+            "name": "Coding Team",
+            "description": "5 agents for coding tasks",
+        },
         {
             "id": "coding-swarm",
             "name": "Coding Swarm",
@@ -54,8 +58,16 @@ async def get_teams():
 @app.get("/workflows")
 async def get_workflows():
     return [
-        {"id": "pr-lifecycle", "name": "PR Lifecycle", "description": "Complete PR workflow"},
-        {"id": "code-review", "name": "Code Review", "description": "Automated code review"},
+        {
+            "id": "pr-lifecycle",
+            "name": "PR Lifecycle",
+            "description": "Complete PR workflow",
+        },
+        {
+            "id": "code-review",
+            "name": "Code Review",
+            "description": "Automated code review",
+        },
     ]
 
 

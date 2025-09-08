@@ -91,7 +91,8 @@ class ArtemisMonitor:
             raise ValueError("PORTKEY_API_KEY not found")
 
         self.metrics: Dict[str, ProviderMetrics] = {
-            provider: ProviderMetrics(provider=provider) for provider in self.VIRTUAL_KEYS.keys()
+            provider: ProviderMetrics(provider=provider)
+            for provider in self.VIRTUAL_KEYS.keys()
         }
         self.start_time = datetime.now()
 
@@ -101,7 +102,9 @@ class ArtemisMonitor:
         metrics.total_requests += 1
 
         try:
-            client = Portkey(api_key=self.api_key, virtual_key=self.VIRTUAL_KEYS[provider])
+            client = Portkey(
+                api_key=self.api_key, virtual_key=self.VIRTUAL_KEYS[provider]
+            )
 
             model = self.MODELS.get(provider)
             if not model:
@@ -109,7 +112,10 @@ class ArtemisMonitor:
 
             # Simple health check message
             messages = [
-                {"role": "system", "content": "You are a health check bot. Respond with 'OK'."},
+                {
+                    "role": "system",
+                    "content": "You are a health check bot. Respond with 'OK'.",
+                },
                 {"role": "user", "content": "Status check"},
             ]
 
@@ -236,8 +242,12 @@ class ArtemisMonitor:
                 "success_rate": f"{metrics.success_rate:.1f}%",
                 "average_latency_ms": metrics.average_latency_ms,
                 "total_tokens": metrics.total_tokens,
-                "last_success": metrics.last_success.isoformat() if metrics.last_success else None,
-                "last_failure": metrics.last_failure.isoformat() if metrics.last_failure else None,
+                "last_success": (
+                    metrics.last_success.isoformat() if metrics.last_success else None
+                ),
+                "last_failure": (
+                    metrics.last_failure.isoformat() if metrics.last_failure else None
+                ),
                 "recent_errors": metrics.errors[-5:] if metrics.errors else [],
             }
 
@@ -311,7 +321,9 @@ async def continuous_monitoring(monitor: ArtemisMonitor, interval: int = 30):
     iteration = 0
     while True:
         iteration += 1
-        print(f"\n🔄 Monitoring Cycle #{iteration} - {datetime.now().strftime('%H:%M:%S')}")
+        print(
+            f"\n🔄 Monitoring Cycle #{iteration} - {datetime.now().strftime('%H:%M:%S')}"
+        )
 
         # Run health checks
         await monitor.monitor_all_providers()
@@ -348,7 +360,9 @@ async def main():
 
     # Save initial report
     initial_report = monitor.get_detailed_report()
-    filename = f"artemis_monitor_initial_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    filename = (
+        f"artemis_monitor_initial_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(filename, "w") as f:
         json.dump(initial_report, f, indent=2, default=str)
 
@@ -372,7 +386,9 @@ async def main():
 
         # Save final report
         final_report = monitor.get_detailed_report()
-        filename = f"artemis_monitor_final_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = (
+            f"artemis_monitor_final_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(filename, "w") as f:
             json.dump(final_report, f, indent=2, default=str)
 

@@ -322,7 +322,9 @@ class CoverageCollector:
 
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 
@@ -356,7 +358,9 @@ class CoverageCollector:
         for suite_name, suite_path, test_files in test_suites:
             self.logger.info(f"Collecting coverage for {suite_name} tests...")
 
-            suite_metrics = await self.collect_suite_coverage(suite_name, suite_path, test_files)
+            suite_metrics = await self.collect_suite_coverage(
+                suite_name, suite_path, test_files
+            )
             all_metrics.extend(suite_metrics)
 
         # Generate comprehensive report
@@ -381,7 +385,9 @@ class CoverageCollector:
             if os.path.exists(test_path):
                 try:
                     # Run coverage analysis
-                    coverage_data = await self._run_coverage_analysis(suite_name, test_path)
+                    coverage_data = await self._run_coverage_analysis(
+                        suite_name, test_path
+                    )
 
                     if coverage_data:
                         # Determine component from test file name
@@ -489,7 +495,9 @@ exclude_lines =
 
                 return self._parse_coverage_data(coverage_data)
             else:
-                self.logger.error(f"Coverage report generation failed: {report_stderr.decode()}")
+                self.logger.error(
+                    f"Coverage report generation failed: {report_stderr.decode()}"
+                )
                 return None
 
         except Exception as e:
@@ -550,7 +558,9 @@ exclude_lines =
     def _get_git_commit(self) -> str:
         """Get current git commit hash"""
         try:
-            result = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["git", "rev-parse", "HEAD"], capture_output=True, text=True
+            )
             if result.returncode == 0:
                 return result.stdout.strip()
         except:
@@ -578,7 +588,9 @@ exclude_lines =
 
         # Calculate overall coverage
         overall_coverage = (
-            (overall_lines_covered / overall_lines_total * 100) if overall_lines_total > 0 else 0
+            (overall_lines_covered / overall_lines_total * 100)
+            if overall_lines_total > 0
+            else 0
         )
 
         # Get trends
@@ -771,7 +783,9 @@ class CoverageDashboard:
                 "coverage_update",
                 {
                     "timestamp": datetime.now().isoformat(),
-                    "metrics": [asdict(m) for m in latest_metrics[:5]],  # Latest 5 metrics
+                    "metrics": [
+                        asdict(m) for m in latest_metrics[:5]
+                    ],  # Latest 5 metrics
                 },
             )
 
@@ -1072,7 +1086,9 @@ async def main():
     parser.add_argument("--dashboard", action="store_true", help="Run web dashboard")
     parser.add_argument("--port", type=int, default=5000, help="Dashboard port")
     parser.add_argument("--host", type=str, default="${BIND_IP}", help="Dashboard host")
-    parser.add_argument("--db", type=str, default="coverage_metrics.db", help="Database path")
+    parser.add_argument(
+        "--db", type=str, default="coverage_metrics.db", help="Database path"
+    )
 
     args = parser.parse_args()
 
@@ -1100,7 +1116,9 @@ async def main():
         dashboard.run(host=args.host, port=args.port)
 
     if not args.collect and not args.dashboard:
-        print("Use --collect to gather coverage data or --dashboard to run web interface")
+        print(
+            "Use --collect to gather coverage data or --dashboard to run web interface"
+        )
 
 
 if __name__ == "__main__":

@@ -189,14 +189,17 @@ class Persona:
 
         return adapted
 
-    def evolve(self, trigger: str, changes: dict[str, Any], performance_delta: float) -> None:
+    def evolve(
+        self, trigger: str, changes: dict[str, Any], performance_delta: float
+    ) -> None:
         """Evolve the persona based on performance"""
         evolution = PersonaEvolution(
             timestamp=datetime.now().isoformat(),
             trigger=trigger,
             changes=changes,
             performance_before=self.performance_metrics.get("overall", 0.5),
-            performance_after=self.performance_metrics.get("overall", 0.5) + performance_delta,
+            performance_after=self.performance_metrics.get("overall", 0.5)
+            + performance_delta,
             reason=f"Performance improvement of {performance_delta:.2%}",
         )
 
@@ -411,7 +414,9 @@ Code quality requirements:
 
         return persona
 
-    def activate_persona(self, name: str, context: Optional[PersonaContext] = None) -> Persona:
+    def activate_persona(
+        self, name: str, context: Optional[PersonaContext] = None
+    ) -> Persona:
         """Activate a persona with optional context"""
         persona = self.get_persona(name)
         if not persona:
@@ -511,9 +516,9 @@ Begin collaborative analysis:"""
 
         # Update metrics
         persona.performance_metrics[task_type] = performance
-        persona.performance_metrics["overall"] = sum(persona.performance_metrics.values()) / len(
-            persona.performance_metrics
-        )
+        persona.performance_metrics["overall"] = sum(
+            persona.performance_metrics.values()
+        ) / len(persona.performance_metrics)
 
         # Check for evolution trigger
         if performance > 0.8 and len(persona.evolution_history) < 10:
@@ -537,7 +542,9 @@ Begin collaborative analysis:"""
     def export_personas(self, path: Path) -> None:
         """Export all personas to file"""
         data = {
-            "personas": {name: persona.to_dict() for name, persona in self.personas.items()},
+            "personas": {
+                name: persona.to_dict() for name, persona in self.personas.items()
+            },
             "shared_knowledge": self.shared_knowledge,
         }
 
@@ -558,7 +565,9 @@ Begin collaborative analysis:"""
                 description=persona_dict["description"],
                 role=persona_dict["role"],
                 traits={PersonaTrait(t) for t in persona_dict.get("traits", [])},
-                capabilities={PersonaCapability(c) for c in persona_dict.get("capabilities", [])},
+                capabilities={
+                    PersonaCapability(c) for c in persona_dict.get("capabilities", [])
+                },
                 knowledge_domains=persona_dict.get("knowledge_domains", []),
                 prompt_template=persona_dict.get("prompt_template", ""),
                 system_message=persona_dict.get("system_message", ""),

@@ -92,7 +92,14 @@ class NaturalLanguageProcessor:
                 "customer",
                 "market",
             ],
-            IntentType.SYSTEM: ["status", "health", "performance", "monitor", "debug", "log"],
+            IntentType.SYSTEM: [
+                "status",
+                "health",
+                "performance",
+                "monitor",
+                "debug",
+                "log",
+            ],
             IntentType.GENERAL: ["help", "what", "how", "why", "when", "who", "tell"],
         }
 
@@ -109,7 +116,9 @@ class NaturalLanguageProcessor:
 
         # Get primary intent
         primary_intent = (
-            max(intent_scores, key=intent_scores.get) if intent_scores else IntentType.GENERAL
+            max(intent_scores, key=intent_scores.get)
+            if intent_scores
+            else IntentType.GENERAL
         )
 
         return {
@@ -128,9 +137,15 @@ class ContextManager:
         self.user_profiles = {}
         self.session_contexts = {}
 
-    async def enrich(self, intent: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
+    async def enrich(
+        self, intent: Dict[str, Any], context: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Enrich intent with contextual information"""
-        enriched = {**intent, **context, "enrichment_timestamp": datetime.now().isoformat()}
+        enriched = {
+            **intent,
+            **context,
+            "enrichment_timestamp": datetime.now().isoformat(),
+        }
 
         # Add session context if available
         session_id = context.get("session_id")
@@ -158,12 +173,18 @@ class ContextManager:
             self.conversation_history[session_id] = []
 
         self.conversation_history[session_id].append(
-            {"message": message, "response": response, "timestamp": datetime.now().isoformat()}
+            {
+                "message": message,
+                "response": response,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         # Keep only last 20 messages per session
         if len(self.conversation_history[session_id]) > 20:
-            self.conversation_history[session_id] = self.conversation_history[session_id][-20:]
+            self.conversation_history[session_id] = self.conversation_history[
+                session_id
+            ][-20:]
 
 
 class ResponseFormatter:
@@ -199,7 +220,11 @@ class GPUAwareRouter:
         self.gpu_instances = {
             "inference": {"ip": "192.222.58.232", "name": "GH200", "memory": "141GB"},
             "ml_pipeline": {"ip": "104.171.202.134", "name": "A100", "memory": "80GB"},
-            "api_services": {"ip": "104.171.202.103", "name": "RTX6000", "memory": "24GB"},
+            "api_services": {
+                "ip": "104.171.202.103",
+                "name": "RTX6000",
+                "memory": "24GB",
+            },
             "mcp_hub": {"ip": "104.171.202.117", "name": "A6000", "memory": "48GB"},
             "development": {"ip": "155.248.194.183", "name": "A10", "memory": "24GB"},
         }
@@ -283,7 +308,9 @@ class ASIPChatBridge:
         complexity = result.get("complexity_score", 0)
 
         # 6. Route to GPU if needed
-        gpu_info = await self.gpu_router.route_to_gpu(intent["primary_intent"], complexity)
+        gpu_info = await self.gpu_router.route_to_gpu(
+            intent["primary_intent"], complexity
+        )
 
         # 7. Format response
         formatted_response = self.response_formatter.format_for_chat(result)
@@ -291,7 +318,9 @@ class ASIPChatBridge:
         # 8. Update conversation history
         session_id = context.get("session_id")
         if session_id:
-            await self.context_manager.update_history(session_id, message, formatted_response)
+            await self.context_manager.update_history(
+                session_id, message, formatted_response
+            )
 
         # Calculate processing time
         processing_time = (datetime.now() - start_time).total_seconds()
@@ -366,7 +395,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
     try:
         result = await bridge.process_chat_message(
             request.message,
-            {**request.context, "user_id": request.user_id, "session_id": request.session_id},
+            {
+                **request.context,
+                "user_id": request.user_id,
+                "session_id": request.session_id,
+            },
         )
 
         return ChatResponse(
@@ -411,7 +444,8 @@ async def openai_compatible_chat(request: Dict[str, Any]):
             "usage": {
                 "prompt_tokens": len(user_message.split()),
                 "completion_tokens": len(result["response"].split()),
-                "total_tokens": len(user_message.split()) + len(result["response"].split()),
+                "total_tokens": len(user_message.split())
+                + len(result["response"].split()),
             },
         }
     except Exception as e:

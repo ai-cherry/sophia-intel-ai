@@ -16,7 +16,11 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 try:
-    from mcp_servers.unified_mcp_server import MCPConfig, UnifiedMCPServer, create_mcp_server
+    from mcp_servers.unified_mcp_server import (
+        MCPConfig,
+        UnifiedMCPServer,
+        create_mcp_server,
+    )
 except ImportError:
 
     class MCPConfig:
@@ -197,7 +201,9 @@ class TestUnifiedMCPServer:
         # Mock client context manager
         mock_client_instance = Mock()
         mock_client_instance.post = AsyncMock(return_value=mock_response)
-        mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_client_instance)
+        mock_client.return_value.__aenter__ = AsyncMock(
+            return_value=mock_client_instance
+        )
         mock_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
         payload = {"model": "test-model", "prompt": "test prompt"}
@@ -227,7 +233,9 @@ class TestUnifiedMCPServer:
         # Mock client context manager
         mock_client_instance = Mock()
         mock_client_instance.post = AsyncMock(return_value=mock_response)
-        mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_client_instance)
+        mock_client.return_value.__aenter__ = AsyncMock(
+            return_value=mock_client_instance
+        )
         mock_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
         payload = {"model": "test-model"}
@@ -253,12 +261,16 @@ class TestUnifiedMCPServer:
         # Mock HTTP response
         mock_response = Mock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {"choices": [{"message": {"content": "test response"}}]}
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": "test response"}}]
+        }
 
         # Mock client context manager
         mock_client_instance = Mock()
         mock_client_instance.post = AsyncMock(return_value=mock_response)
-        mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_client_instance)
+        mock_client.return_value.__aenter__ = AsyncMock(
+            return_value=mock_client_instance
+        )
         mock_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
         payload = {
@@ -390,7 +402,9 @@ class TestErrorHandling:
         # Mock client that raises exception
         mock_client_instance = Mock()
         mock_client_instance.post = AsyncMock(side_effect=Exception("Network error"))
-        mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_client_instance)
+        mock_client.return_value.__aenter__ = AsyncMock(
+            return_value=mock_client_instance
+        )
         mock_client.return_value.__aexit__ = AsyncMock(return_value=None)
 
         result = await server.route_to_lambda_labs({"test": "payload"})
@@ -407,7 +421,9 @@ class TestErrorHandling:
 
         # Mock event loop executor that raises exception
         mock_loop_instance = Mock()
-        mock_loop_instance.run_in_executor = AsyncMock(side_effect=Exception("Redis error"))
+        mock_loop_instance.run_in_executor = AsyncMock(
+            side_effect=Exception("Redis error")
+        )
         mock_loop.return_value = mock_loop_instance
 
         # Should not raise exception, should return None

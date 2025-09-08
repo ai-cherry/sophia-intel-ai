@@ -78,7 +78,12 @@ class DevContainerValidator:
     def check_devcontainer_structure(self) -> Dict:
         """Check DevContainer directory structure"""
 
-        required_files = ["devcontainer.json", "post-create.sh", "post-start.sh", "Dockerfile"]
+        required_files = [
+            "devcontainer.json",
+            "post-create.sh",
+            "post-start.sh",
+            "Dockerfile",
+        ]
 
         missing_files = []
         existing_files = []
@@ -135,10 +140,14 @@ class DevContainerValidator:
             # Check Python configuration
             python_configured = False
             if "features" in config:
-                python_configured = any("python" in feature for feature in config["features"])
+                python_configured = any(
+                    "python" in feature for feature in config["features"]
+                )
 
             return {
-                "valid": len(missing_keys) == 0 and gpu_configured and python_configured,
+                "valid": len(missing_keys) == 0
+                and gpu_configured
+                and python_configured,
                 "config": config,
                 "missing_keys": missing_keys,
                 "gpu_configured": gpu_configured,
@@ -167,7 +176,11 @@ class DevContainerValidator:
         if nvidia_available:
             try:
                 result = subprocess.run(
-                    ["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"],
+                    [
+                        "nvidia-smi",
+                        "--query-gpu=name,memory.total",
+                        "--format=csv,noheader",
+                    ],
                     capture_output=True,
                     text=True,
                 )
@@ -202,7 +215,11 @@ class DevContainerValidator:
             "nvidia_available": nvidia_available,
             "docker_gpu_support": docker_gpu_support,
             "gpu_info": gpu_info,
-            "fix": "setup_gpu_support" if not (nvidia_available and docker_gpu_support) else None,
+            "fix": (
+                "setup_gpu_support"
+                if not (nvidia_available and docker_gpu_support)
+                else None
+            ),
         }
 
     def check_python_environment(self) -> Dict:
@@ -245,7 +262,11 @@ class DevContainerValidator:
             "venv_active": venv_active,
             "installed_packages": installed_packages,
             "missing_packages": missing_packages,
-            "fix": "setup_python_environment" if not python_valid or missing_packages else None,
+            "fix": (
+                "setup_python_environment"
+                if not python_valid or missing_packages
+                else None
+            ),
         }
 
     def check_docker_configuration(self) -> Dict:
@@ -257,18 +278,23 @@ class DevContainerValidator:
 
         if docker_available:
             try:
-                result = subprocess.run(["docker", "version"], capture_output=True, text=True)
+                result = subprocess.run(
+                    ["docker", "version"], capture_output=True, text=True
+                )
                 docker_running = result.returncode == 0
                 if docker_running:
                     docker_version = (
-                        result.stdout.split("\n")[1].split()[-1] if result.stdout else "unknown"
+                        result.stdout.split("\n")[1].split()[-1]
+                        if result.stdout
+                        else "unknown"
                     )
             except:
                 pass
 
         # Check Docker Compose
         compose_available = (
-            shutil.which("docker-compose") is not None or shutil.which("docker") is not None
+            shutil.which("docker-compose") is not None
+            or shutil.which("docker") is not None
         )
 
         return {
@@ -277,7 +303,9 @@ class DevContainerValidator:
             "docker_running": docker_running,
             "docker_version": docker_version,
             "compose_available": compose_available,
-            "fix": "setup_docker" if not (docker_available and docker_running) else None,
+            "fix": (
+                "setup_docker" if not (docker_available and docker_running) else None
+            ),
         }
 
     def check_mcp_components(self) -> Dict:
@@ -310,7 +338,9 @@ class DevContainerValidator:
             "existing_dirs": existing_dirs,
             "missing_dirs": missing_dirs,
             "mcp_importable": mcp_importable,
-            "fix": "setup_mcp_components" if missing_dirs or not mcp_importable else None,
+            "fix": (
+                "setup_mcp_components" if missing_dirs or not mcp_importable else None
+            ),
         }
 
     def check_network_configuration(self) -> Dict:
@@ -331,7 +361,9 @@ class DevContainerValidator:
         # Check DNS resolution
         dns_working = False
         try:
-            result = subprocess.run(["nslookup", "github.com"], capture_output=True, timeout=5)
+            result = subprocess.run(
+                ["nslookup", "github.com"], capture_output=True, timeout=5
+            )
             dns_working = result.returncode == 0
         except:
             pass
@@ -341,7 +373,9 @@ class DevContainerValidator:
             "internet_available": internet_available,
             "dns_working": dns_working,
             "fix": (
-                "fix_network_configuration" if not (internet_available and dns_working) else None
+                "fix_network_configuration"
+                if not (internet_available and dns_working)
+                else None
             ),
         }
 
@@ -510,7 +544,9 @@ class DevContainerValidator:
             if fix_method == "create_devcontainer_structure":
                 return self.create_devcontainer_structure()
             elif fix_method == "create_missing_files":
-                return self.create_missing_devcontainer_files(result.get("missing_files", []))
+                return self.create_missing_devcontainer_files(
+                    result.get("missing_files", [])
+                )
             elif fix_method == "create_devcontainer_config":
                 return self.create_devcontainer_config()
             elif fix_method == "update_devcontainer_config":
@@ -673,7 +709,9 @@ CMD ["bash"]
                     if file_name.endswith(".sh"):
                         file_path.chmod(0o755)
 
-            self.fixes_applied.append(f"created_missing_files: {', '.join(missing_files)}")
+            self.fixes_applied.append(
+                f"created_missing_files: {', '.join(missing_files)}"
+            )
             return True
         except Exception:
             return False
@@ -691,9 +729,13 @@ CMD ["bash"]
 
         try:
             for package in missing_packages:
-                subprocess.run(["pip3", "install", package], check=True, capture_output=True)
+                subprocess.run(
+                    ["pip3", "install", package], check=True, capture_output=True
+                )
 
-            self.fixes_applied.append(f"installed_packages: {', '.join(missing_packages)}")
+            self.fixes_applied.append(
+                f"installed_packages: {', '.join(missing_packages)}"
+            )
             return True
         except Exception:
             return False
@@ -702,7 +744,9 @@ CMD ["bash"]
         """Setup MCP components"""
 
         try:
-            subprocess.run(["pip3", "install", "mcp-server"], check=True, capture_output=True)
+            subprocess.run(
+                ["pip3", "install", "mcp-server"], check=True, capture_output=True
+            )
             self.fixes_applied.append("installed_mcp_server")
             return True
         except Exception:
@@ -729,7 +773,9 @@ CMD ["bash"]
             return True
 
         try:
-            subprocess.run(["sudo", "apt-get", "update"], check=True, capture_output=True)
+            subprocess.run(
+                ["sudo", "apt-get", "update"], check=True, capture_output=True
+            )
             subprocess.run(
                 ["sudo", "apt-get", "install", "-y"] + missing_tools,
                 check=True,
@@ -777,7 +823,9 @@ CMD ["bash"]
         actions = []
 
         failed_checks = [
-            name for name, result in self.validation_results.items() if result["status"] == "FAIL"
+            name
+            for name, result in self.validation_results.items()
+            if result["status"] == "FAIL"
         ]
 
         if failed_checks:

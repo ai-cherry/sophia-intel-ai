@@ -51,7 +51,9 @@ class AirtableBaseManager:
 
         # Initialize shared core base first (highest priority)
         if "shared_core" in base_configs:
-            await self._initialize_base(BaseType.SHARED_CORE, base_configs["shared_core"])
+            await self._initialize_base(
+                BaseType.SHARED_CORE, base_configs["shared_core"]
+            )
 
         # Initialize domain-specific bases
         base_type_mapping = {
@@ -127,7 +129,9 @@ class AirtableBaseManager:
         except Exception as e:
             logger.error(f"Failed to load schema for base {base_id}: {e}")
 
-    async def _get_standard_schema(self, base_type: BaseType) -> dict[str, dict[str, Any]]:
+    async def _get_standard_schema(
+        self, base_type: BaseType
+    ) -> dict[str, dict[str, Any]]:
         """Get standard schema for base type"""
         schemas = {
             BaseType.SHARED_CORE: {
@@ -158,17 +162,38 @@ class AirtableBaseManager:
                     "primary_field": "Model_Name",
                 },
                 "AB_Test_Results": {
-                    "fields": ["Test_Name", "Variant_A", "Variant_B", "Winner", "Confidence"],
+                    "fields": [
+                        "Test_Name",
+                        "Variant_A",
+                        "Variant_B",
+                        "Winner",
+                        "Confidence",
+                    ],
                     "primary_field": "Test_Name",
                 },
                 "Channel_Performance": {
-                    "fields": ["Channel", "Period", "Impressions", "Clicks", "Conversions", "ROI"],
+                    "fields": [
+                        "Channel",
+                        "Period",
+                        "Impressions",
+                        "Clicks",
+                        "Conversions",
+                        "ROI",
+                    ],
                     "primary_field": "Channel",
                 },
             },
             BaseType.SALES_INTELLIGENCE: {
                 "Prospect_Profiles": {
-                    "fields": ["Name", "Company", "Role", "Email", "Phone", "Stage", "Score"],
+                    "fields": [
+                        "Name",
+                        "Company",
+                        "Role",
+                        "Email",
+                        "Phone",
+                        "Stage",
+                        "Score",
+                    ],
                     "primary_field": "Name",
                 },
                 "Personality_Assessments": {
@@ -181,35 +206,77 @@ class AirtableBaseManager:
                     "primary_field": "Prospect_ID",
                 },
                 "Outreach_Sequences": {
-                    "fields": ["Sequence_Name", "Channel", "Steps", "Success_Rate", "Active"],
+                    "fields": [
+                        "Sequence_Name",
+                        "Channel",
+                        "Steps",
+                        "Success_Rate",
+                        "Active",
+                    ],
                     "primary_field": "Sequence_Name",
                 },
                 "Competitive_Intelligence": {
-                    "fields": ["Competitor", "Strengths", "Weaknesses", "Pricing", "Last_Updated"],
+                    "fields": [
+                        "Competitor",
+                        "Strengths",
+                        "Weaknesses",
+                        "Pricing",
+                        "Last_Updated",
+                    ],
                     "primary_field": "Competitor",
                 },
             },
             BaseType.CUSTOMER_SUCCESS: {
                 "Health_Score_Models": {
-                    "fields": ["Model_Name", "Metrics", "Weights", "Thresholds", "Active"],
+                    "fields": [
+                        "Model_Name",
+                        "Metrics",
+                        "Weights",
+                        "Thresholds",
+                        "Active",
+                    ],
                     "primary_field": "Model_Name",
                 },
                 "Success_Milestones": {
-                    "fields": ["Milestone", "Timeline", "Success_Criteria", "Completion_Rate"],
+                    "fields": [
+                        "Milestone",
+                        "Timeline",
+                        "Success_Criteria",
+                        "Completion_Rate",
+                    ],
                     "primary_field": "Milestone",
                 },
                 "Onboarding_Workflows": {
-                    "fields": ["Workflow_Name", "Steps", "Duration", "Success_Rate", "Owner"],
+                    "fields": [
+                        "Workflow_Name",
+                        "Steps",
+                        "Duration",
+                        "Success_Rate",
+                        "Owner",
+                    ],
                     "primary_field": "Workflow_Name",
                 },
             },
             BaseType.FINANCE_OPS: {
                 "Budget_Allocations": {
-                    "fields": ["Department", "Category", "Budget", "Spent", "Remaining", "Period"],
+                    "fields": [
+                        "Department",
+                        "Category",
+                        "Budget",
+                        "Spent",
+                        "Remaining",
+                        "Period",
+                    ],
                     "primary_field": "Department",
                 },
                 "ROI_Models": {
-                    "fields": ["Model_Name", "Formula", "Variables", "Accuracy", "Last_Updated"],
+                    "fields": [
+                        "Model_Name",
+                        "Formula",
+                        "Variables",
+                        "Accuracy",
+                        "Last_Updated",
+                    ],
                     "primary_field": "Model_Name",
                 },
                 "Vendor_Contracts": {
@@ -219,15 +286,33 @@ class AirtableBaseManager:
             },
             BaseType.BRAND_KIT: {
                 "Brand_Guidelines": {
-                    "fields": ["Guideline_Type", "Content", "Version", "Status", "Last_Updated"],
+                    "fields": [
+                        "Guideline_Type",
+                        "Content",
+                        "Version",
+                        "Status",
+                        "Last_Updated",
+                    ],
                     "primary_field": "Guideline_Type",
                 },
                 "Template_Assets": {
-                    "fields": ["Asset_Name", "Type", "Format", "File_URL", "Usage_Context"],
+                    "fields": [
+                        "Asset_Name",
+                        "Type",
+                        "Format",
+                        "File_URL",
+                        "Usage_Context",
+                    ],
                     "primary_field": "Asset_Name",
                 },
                 "Color_Palettes": {
-                    "fields": ["Palette_Name", "Colors", "Usage", "Hex_Codes", "Status"],
+                    "fields": [
+                        "Palette_Name",
+                        "Colors",
+                        "Usage",
+                        "Hex_Codes",
+                        "Status",
+                    ],
                     "primary_field": "Palette_Name",
                 },
                 "Logo_Variants": {
@@ -237,15 +322,32 @@ class AirtableBaseManager:
             },
             BaseType.SOPHIA_FOUNDATION: {
                 "Foundational_Knowledge": {
-                    "fields": ["Title", "Category", "Content", "Confidence", "Last_Validated"],
+                    "fields": [
+                        "Title",
+                        "Category",
+                        "Content",
+                        "Confidence",
+                        "Last_Validated",
+                    ],
                     "primary_field": "Title",
                 },
                 "Context_Mappings": {
-                    "fields": ["Context_Type", "Business_Domain", "Usage_Patterns", "Priority"],
+                    "fields": [
+                        "Context_Type",
+                        "Business_Domain",
+                        "Usage_Patterns",
+                        "Priority",
+                    ],
                     "primary_field": "Context_Type",
                 },
                 "Decision_Frameworks": {
-                    "fields": ["Framework_Name", "Criteria", "Process", "Outcomes", "Active"],
+                    "fields": [
+                        "Framework_Name",
+                        "Criteria",
+                        "Process",
+                        "Outcomes",
+                        "Active",
+                    ],
                     "primary_field": "Framework_Name",
                 },
             },
@@ -348,7 +450,9 @@ class AirtableBaseManager:
             return record
 
         except Exception as e:
-            logger.error(f"Failed to get record {record_id} from {base_id}/{table_name}: {e}")
+            logger.error(
+                f"Failed to get record {record_id} from {base_id}/{table_name}: {e}"
+            )
             return None
 
     async def update_record(
@@ -401,7 +505,9 @@ class AirtableBaseManager:
             return self.record_cache[base_id][record_id]
 
         except Exception as e:
-            logger.error(f"Failed to update record {record_id} in {base_id}/{table_name}: {e}")
+            logger.error(
+                f"Failed to update record {record_id} in {base_id}/{table_name}: {e}"
+            )
             return None
 
     async def query_records(
@@ -524,7 +630,10 @@ class AirtableBaseManager:
             }
 
             record = await self.create_record(
-                sophia_base_id, "Foundational_Knowledge", fields, RecordType.FOUNDATIONAL_KNOWLEDGE
+                sophia_base_id,
+                "Foundational_Knowledge",
+                fields,
+                RecordType.FOUNDATIONAL_KNOWLEDGE,
             )
 
             logger.info(f"Created foundational knowledge: {knowledge_data.title}")

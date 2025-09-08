@@ -123,7 +123,9 @@ class HybridProviderManager:
 
     def __init__(self):
         """Initialize with both Portkey and direct clients"""
-        self.portkey_api_key = os.environ.get("PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I")
+        self.portkey_api_key = os.environ.get(
+            "PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I"
+        )
         self.clients = {}
         self.performance_history = {}
         self.total_cost = 0.0
@@ -139,7 +141,9 @@ class HybridProviderManager:
             try:
                 import openai
 
-                self.clients["openai_direct"] = openai.OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+                self.clients["openai_direct"] = openai.OpenAI(
+                    api_key=os.environ["OPENAI_API_KEY"]
+                )
                 logger.info("✅ OpenAI direct client initialized")
             except ImportError:
                 logger.warning("openai package not installed")
@@ -179,7 +183,9 @@ class HybridProviderManager:
                 )
         return self.clients.get(cache_key)
 
-    def select_provider(self, requirements: RequirementType = RequirementType.DEFAULT) -> str:
+    def select_provider(
+        self, requirements: RequirementType = RequirementType.DEFAULT
+    ) -> str:
         """
         Select best provider based on requirements
 
@@ -249,7 +255,11 @@ class HybridProviderManager:
         raise Exception(f"All providers failed. Last error: {last_error}")
 
     async def _execute_completion(
-        self, provider_name: str, prompt: str, system_prompt: Optional[str], temperature: float
+        self,
+        provider_name: str,
+        prompt: str,
+        system_prompt: Optional[str],
+        temperature: float,
     ) -> dict[str, Any]:
         """Execute completion with a specific provider using best method"""
         config = self.PROVIDERS[provider_name]
@@ -263,9 +273,13 @@ class HybridProviderManager:
 
         # Use direct API for OpenAI and Anthropic
         if config.method == "direct":
-            response = await self._execute_direct(provider_name, messages, config, temperature)
+            response = await self._execute_direct(
+                provider_name, messages, config, temperature
+            )
         else:
-            response = await self._execute_portkey(provider_name, messages, config, temperature)
+            response = await self._execute_portkey(
+                provider_name, messages, config, temperature
+            )
 
         latency_ms = int((time.time() - start_time) * 1000)
 
@@ -279,9 +293,13 @@ class HybridProviderManager:
             )
         else:
             response_text = (
-                response.choices[0].message.content if hasattr(response, "choices") else ""
+                response.choices[0].message.content
+                if hasattr(response, "choices")
+                else ""
             )
-            total_tokens = response.usage.total_tokens if hasattr(response, "usage") else 0
+            total_tokens = (
+                response.usage.total_tokens if hasattr(response, "usage") else 0
+            )
 
         cost = (total_tokens / 1000) * config.cost_per_1k_tokens
         self.total_cost += cost
@@ -297,7 +315,11 @@ class HybridProviderManager:
         }
 
     async def _execute_direct(
-        self, provider_name: str, messages: list[dict], config: ProviderConfig, temperature: float
+        self,
+        provider_name: str,
+        messages: list[dict],
+        config: ProviderConfig,
+        temperature: float,
     ) -> Any:
         """Execute using direct API"""
         loop = asyncio.get_event_loop()
@@ -348,7 +370,11 @@ class HybridProviderManager:
             raise Exception(f"Direct API not implemented for {provider_name}")
 
     async def _execute_portkey(
-        self, provider_name: str, messages: list[dict], config: ProviderConfig, temperature: float
+        self,
+        provider_name: str,
+        messages: list[dict],
+        config: ProviderConfig,
+        temperature: float,
     ) -> Any:
         """Execute using Portkey"""
         loop = asyncio.get_event_loop()
@@ -382,7 +408,9 @@ class HybridProviderManager:
         if success:
             history["successes"] += 1
             history["total_latency_ms"] += latency_ms
-            history["avg_latency_ms"] = history["total_latency_ms"] / history["successes"]
+            history["avg_latency_ms"] = (
+                history["total_latency_ms"] / history["successes"]
+            )
         else:
             history["failures"] += 1
 
@@ -396,7 +424,9 @@ class HybridProviderManager:
         stats = {
             "total_requests": self.request_count,
             "total_cost": round(self.total_cost, 4),
-            "avg_cost_per_request": round(self.total_cost / max(self.request_count, 1), 4),
+            "avg_cost_per_request": round(
+                self.total_cost / max(self.request_count, 1), 4
+            ),
             "provider_performance": {},
         }
 
@@ -420,9 +450,13 @@ class HybridProviderManager:
 
         for name, config in self.PROVIDERS.items():
             status = (
-                "✅" if config.method == "direct" and f"{name}_direct" in self.clients else "📡"
+                "✅"
+                if config.method == "direct" and f"{name}_direct" in self.clients
+                else "📡"
             )
-            lines.append(f"{status} {name}: {config.method} ({config.avg_latency_ms}ms)")
+            lines.append(
+                f"{status} {name}: {config.method} ({config.avg_latency_ms}ms)"
+            )
 
         return "\n".join(lines)
 

@@ -28,7 +28,10 @@ class TestSophiaIntegration:
     @pytest.fixture(scope="class")
     def auth_headers(self):
         """Authentication headers for testing"""
-        return {"Authorization": f"Bearer {TEST_API_KEY}", "Content-Type": "application/json"}
+        return {
+            "Authorization": f"Bearer {TEST_API_KEY}",
+            "Content-Type": "application/json",
+        }
 
     async def test_health_check(self, client: httpx.AsyncClient):
         """Test basic health check endpoint"""
@@ -53,7 +56,9 @@ class TestSophiaIntegration:
         assert "opus_4_1_integration" in data["features"]
         assert data["features"]["opus_4_1_integration"] is True
 
-    async def test_opus_chat_basic(self, client: httpx.AsyncClient, auth_headers: Dict[str, str]):
+    async def test_opus_chat_basic(
+        self, client: httpx.AsyncClient, auth_headers: Dict[str, str]
+    ):
         """Test basic Opus 4.1 chat functionality"""
         chat_request = {
             "messages": [
@@ -70,7 +75,9 @@ class TestSophiaIntegration:
             },
         }
 
-        response = await client.post("/api/chat/opus", json=chat_request, headers=auth_headers)
+        response = await client.post(
+            "/api/chat/opus", json=chat_request, headers=auth_headers
+        )
 
         if response.status_code == 403:
             pytest.skip("Authentication not configured for testing")
@@ -96,10 +103,16 @@ class TestSophiaIntegration:
         # Test with invalid provider first, should fallback
         chat_request = {
             "messages": [{"role": "user", "content": "Test fallback"}],
-            "config": {"provider": "invalid_provider", "temperature": 0.1, "max_tokens": 50},
+            "config": {
+                "provider": "invalid_provider",
+                "temperature": 0.1,
+                "max_tokens": 50,
+            },
         }
 
-        response = await client.post("/api/chat/opus", json=chat_request, headers=auth_headers)
+        response = await client.post(
+            "/api/chat/opus", json=chat_request, headers=auth_headers
+        )
 
         if response.status_code == 403:
             pytest.skip("Authentication not configured for testing")
@@ -107,7 +120,9 @@ class TestSophiaIntegration:
         # Should still work due to fallback
         assert response.status_code in [200, 503]  # 503 if all providers fail
 
-    async def test_opus_usage_stats(self, client: httpx.AsyncClient, auth_headers: Dict[str, str]):
+    async def test_opus_usage_stats(
+        self, client: httpx.AsyncClient, auth_headers: Dict[str, str]
+    ):
         """Test usage statistics tracking"""
         response = await client.get("/api/chat/usage", headers=auth_headers)
 
@@ -173,7 +188,9 @@ class TestSophiaIntegration:
             assert "last_check" in health
             assert health["status"] in ["healthy", "warning", "error"]
 
-    async def test_domains_api(self, client: httpx.AsyncClient, auth_headers: Dict[str, str]):
+    async def test_domains_api(
+        self, client: httpx.AsyncClient, auth_headers: Dict[str, str]
+    ):
         """Test business domains API"""
         response = await client.get("/api/domains", headers=auth_headers)
 
@@ -216,12 +233,17 @@ class TestSophiaIntegration:
         # Check for security headers
         headers = response.headers
         assert (
-            "x-content-type-options" in headers.keys() or "X-Content-Type-Options" in headers.keys()
+            "x-content-type-options" in headers.keys()
+            or "X-Content-Type-Options" in headers.keys()
         )
 
         # CORS should be configured
         options_response = await client.options("/api/chat/opus")
-        assert options_response.status_code in [200, 204, 405]  # 405 is acceptable for OPTIONS
+        assert options_response.status_code in [
+            200,
+            204,
+            405,
+        ]  # 405 is acceptable for OPTIONS
 
     async def test_rate_limiting(self, client: httpx.AsyncClient):
         """Test rate limiting functionality"""
@@ -235,13 +257,17 @@ class TestSophiaIntegration:
 
         # Should have some successful responses
         successful_responses = [
-            r for r in responses if isinstance(r, httpx.Response) and r.status_code == 200
+            r
+            for r in responses
+            if isinstance(r, httpx.Response) and r.status_code == 200
         ]
         assert len(successful_responses) > 0
 
         # Check if rate limiting is working (some requests might be limited)
         rate_limited = [
-            r for r in responses if isinstance(r, httpx.Response) and r.status_code == 429
+            r
+            for r in responses
+            if isinstance(r, httpx.Response) and r.status_code == 429
         ]
         # Rate limiting might not be enabled in test environment, so this is optional
 

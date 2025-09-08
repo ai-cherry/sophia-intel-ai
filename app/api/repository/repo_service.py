@@ -28,7 +28,10 @@ def validate_path(path: str) -> str:
 
 @router.get("/tree")
 async def get_tree(
-    path: str = ".", depth: int = 3, include_hidden: bool = False, include_git_status: bool = True
+    path: str = ".",
+    depth: int = 3,
+    include_hidden: bool = False,
+    include_git_status: bool = True,
 ):
     path = validate_path(path)
     results = []
@@ -58,7 +61,8 @@ async def get_tree(
                 try:
                     status = (
                         subprocess.check_output(
-                            ["git", "status", "--porcelain", str(file_path)], cwd=ROOT_DIR
+                            ["git", "status", "--porcelain", str(file_path)],
+                            cwd=ROOT_DIR,
                         )
                         .decode()
                         .strip()

@@ -175,9 +175,15 @@ Current context: {json.dumps(context, indent=2)}""",
                 "response": response.choices[0].message.content,
                 "timestamp": datetime.now().isoformat(),
                 "usage": {
-                    "prompt_tokens": response.usage.prompt_tokens if response.usage else 0,
-                    "completion_tokens": response.usage.completion_tokens if response.usage else 0,
-                    "total_tokens": response.usage.total_tokens if response.usage else 0,
+                    "prompt_tokens": (
+                        response.usage.prompt_tokens if response.usage else 0
+                    ),
+                    "completion_tokens": (
+                        response.usage.completion_tokens if response.usage else 0
+                    ),
+                    "total_tokens": (
+                        response.usage.total_tokens if response.usage else 0
+                    ),
                 },
             }
 
@@ -188,7 +194,11 @@ Current context: {json.dumps(context, indent=2)}""",
 
         except Exception as e:
             logger.error(f"❌ {agent.name} failed: {e}")
-            return {"agent": agent.name, "error": str(e), "timestamp": datetime.now().isoformat()}
+            return {
+                "agent": agent.name,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
+            }
 
     async def collaborative_code_generation(self, requirements: str) -> Dict[str, Any]:
         """Generate code collaboratively using multiple agents"""
@@ -205,7 +215,9 @@ Current context: {json.dumps(context, indent=2)}""",
 
         # Phase 2: Code Generation
         generator = next(a for a in self.agents if a.name == "artemis-genesis")
-        gen_task = f"Generate code based on architecture: {context['architecture'][:500]}"
+        gen_task = (
+            f"Generate code based on architecture: {context['architecture'][:500]}"
+        )
         results["code"] = await self.execute_task(generator, gen_task, context)
         context["code"] = results["code"].get("response", "")
 
@@ -227,7 +239,9 @@ Current context: {json.dumps(context, indent=2)}""",
         # Phase 6: Documentation
         documenter = next(a for a in self.agents if a.name == "artemis-scribe")
         doc_task = f"Create documentation for: {context['code'][:1000]}"
-        results["documentation"] = await self.execute_task(documenter, doc_task, context)
+        results["documentation"] = await self.execute_task(
+            documenter, doc_task, context
+        )
 
         return {
             "timestamp": datetime.now().isoformat(),
@@ -255,7 +269,9 @@ Current context: {json.dumps(context, indent=2)}""",
             "successful_agents": successful_agents,
             "failed_agents": failed_agents,
             "total_tokens": total_tokens,
-            "estimated_cost": self.portkey_manager._estimate_cost("gpt-4o", total_tokens),
+            "estimated_cost": self.portkey_manager._estimate_cost(
+                "gpt-4o", total_tokens
+            ),
         }
 
     async def parallel_review(self, code: str) -> Dict[str, Any]:
@@ -275,7 +291,9 @@ Current context: {json.dumps(context, indent=2)}""",
         # Create review tasks
         tasks = []
         for agent in review_agents:
-            task = f"Review this code from your {agent.role} perspective:\n\n{code[:2000]}"
+            task = (
+                f"Review this code from your {agent.role} perspective:\n\n{code[:2000]}"
+            )
             tasks.append(self.execute_task(agent, task, {"code": code}))
 
         # Execute reviews in parallel
@@ -311,7 +329,9 @@ Current context: {json.dumps(context, indent=2)}""",
 
         return {
             "total_reviews": len(reviews),
-            "successful_reviews": len([r for r in reviews.values() if "error" not in r]),
+            "successful_reviews": len(
+                [r for r in reviews.values() if "error" not in r]
+            ),
             "issues_found": len(issues),
             "recommendations": len(recommendations),
         }
@@ -385,7 +405,9 @@ async def main():
     print(f"  Estimated Cost: ${summary['estimated_cost']:.4f}")
 
     # Save detailed results
-    output_file = Path(f"artemis_swarm_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+    output_file = Path(
+        f"artemis_swarm_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(output_file, "w") as f:
         json.dump(result, f, indent=2, default=str)
 

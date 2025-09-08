@@ -156,7 +156,10 @@ class HybridModelRouter:
             return ModelType.CLAUDE
 
         # High-volume, simple tasks -> Llama
-        if any(keyword in prompt_lower for keyword in ["summarize", "extract", "list", "simple"]):
+        if any(
+            keyword in prompt_lower
+            for keyword in ["summarize", "extract", "list", "simple"]
+        ):
             return ModelType.LLAMA
 
         # Default to GPT for balanced performance
@@ -203,7 +206,9 @@ class HybridModelRouter:
     ) -> Optional[RoutingRule]:
         """Select best routing rule based on model type and current load"""
         # Filter rules by model type
-        applicable_rules = [rule for rule in self.routing_rules if rule.model_type == model_type]
+        applicable_rules = [
+            rule for rule in self.routing_rules if rule.model_type == model_type
+        ]
 
         if not applicable_rules:
             return None
@@ -222,11 +227,16 @@ class HybridModelRouter:
             cost_score = 1.0 / (rule.cost_per_token * 1000 + 1)  # Normalize cost
             latency_score = 1.0 / (rule.latency_ms + 1)  # Normalize latency
             reliability_score = rule.reliability_score
-            load_score = 1.0 / (provider_load.current_requests + 1)  # Prefer less loaded
+            load_score = 1.0 / (
+                provider_load.current_requests + 1
+            )  # Prefer less loaded
 
             # Weighted composite score
             composite_score = (
-                cost_score * 0.3 + latency_score * 0.3 + reliability_score * 0.3 + load_score * 0.1
+                cost_score * 0.3
+                + latency_score * 0.3
+                + reliability_score * 0.3
+                + load_score * 0.1
             )
 
             if composite_score > best_score:
@@ -267,7 +277,9 @@ class HybridModelRouter:
     async def _get_fallback_rule(self, model_type: ModelType) -> Optional[RoutingRule]:
         """Get fallback routing rule when primary is unavailable"""
         # Find alternative provider for the same model type
-        applicable_rules = [rule for rule in self.routing_rules if rule.model_type == model_type]
+        applicable_rules = [
+            rule for rule in self.routing_rules if rule.model_type == model_type
+        ]
 
         # Sort by reliability score (highest first)
         applicable_rules.sort(key=lambda x: x.reliability_score, reverse=True)
@@ -279,7 +291,9 @@ class HybridModelRouter:
         # If no same-type alternatives, fallback to any available provider
         for rule in self.routing_rules:
             if not await self._is_circuit_open(rule.provider):
-                logger.warning(f"Fallback: Using {rule.model_type} instead of {model_type}")
+                logger.warning(
+                    f"Fallback: Using {rule.model_type} instead of {model_type}"
+                )
                 return rule
 
         return None
@@ -398,7 +412,9 @@ class HybridModelRouter:
 
     def _calculate_cost(self, prompt: str, result: Dict, rule: RoutingRule) -> float:
         """Calculate cost for the request"""
-        tokens_used = result.get("tokens_used", len(prompt.split()) * 1.3)  # Rough estimate
+        tokens_used = result.get(
+            "tokens_used", len(prompt.split()) * 1.3
+        )  # Rough estimate
         return tokens_used * rule.cost_per_token
 
     async def _update_metrics(self, rule: RoutingRule, result: Dict):
@@ -447,7 +463,9 @@ class HybridModelRouter:
             metrics["timestamp"] = datetime.now().isoformat()
 
             # Store updated metrics
-            self.redis_client.setex(metrics_key, 3600, json.dumps(metrics))  # 1 hour TTL
+            self.redis_client.setex(
+                metrics_key, 3600, json.dumps(metrics)
+            )  # 1 hour TTL
 
         except Exception as e:
             logger.error(f"Error updating metrics: {e}")
@@ -478,7 +496,9 @@ class HybridModelRouter:
                 "cooldown_minutes": 5,
             }
 
-            self.redis_client.setex(circuit_key, 600, json.dumps(circuit_data))  # 10 minute TTL
+            self.redis_client.setex(
+                circuit_key, 600, json.dumps(circuit_data)
+            )  # 10 minute TTL
             logger.warning(f"Circuit breaker opened for {provider.value}")
 
         except Exception as e:

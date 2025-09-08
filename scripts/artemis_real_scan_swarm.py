@@ -158,7 +158,11 @@ class ArtemisRealScanSwarm:
                     for line in env_result["content"].split("\n"):
                         if "=" in line and not line.startswith("#"):
                             key, value = line.split("=", 1)
-                            if value and not value.startswith("YOUR_") and len(value) > 10:
+                            if (
+                                value
+                                and not value.startswith("YOUR_")
+                                and len(value) > 10
+                            ):
                                 issues.append(
                                     {
                                         "type": "ENV_KEY_EXPOSED",
@@ -204,8 +208,12 @@ class ArtemisRealScanSwarm:
 
         try:
             # Check for duplicate orchestrators
-            orchestrator_files = glob.glob(f"{self.repo_path}/**/orchestrator*.py", recursive=True)
-            orchestrator_files += glob.glob(f"{self.repo_path}/**/*factory*.py", recursive=True)
+            orchestrator_files = glob.glob(
+                f"{self.repo_path}/**/orchestrator*.py", recursive=True
+            )
+            orchestrator_files += glob.glob(
+                f"{self.repo_path}/**/*factory*.py", recursive=True
+            )
 
             duplicate_functions = {}
 
@@ -233,7 +241,10 @@ class ArtemisRealScanSwarm:
                             "type": "DUPLICATE_FUNCTION",
                             "function": func_name,
                             "locations": [
-                                {"file": loc[0].replace(self.repo_path, ""), "line": loc[1]}
+                                {
+                                    "file": loc[0].replace(self.repo_path, ""),
+                                    "line": loc[1],
+                                }
                                 for loc in locations
                             ],
                             "severity": "MEDIUM",
@@ -243,13 +254,17 @@ class ArtemisRealScanSwarm:
 
             # Check for circular imports
             import_map = {}
-            for py_file in glob.glob(f"{self.repo_path}/app/**/*.py", recursive=True)[:50]:
+            for py_file in glob.glob(f"{self.repo_path}/app/**/*.py", recursive=True)[
+                :50
+            ]:
                 result = read_file(py_file)
                 if "content" in result:
                     files_scanned += 1
                     imports = []
                     for line in result["content"].split("\n"):
-                        if line.startswith("from app.") or line.startswith("import app."):
+                        if line.startswith("from app.") or line.startswith(
+                            "import app."
+                        ):
                             imports.append(line.strip())
                     if imports:
                         import_map[py_file.replace(self.repo_path, "")] = imports
@@ -310,7 +325,11 @@ class ArtemisRealScanSwarm:
 
                     for i, line in enumerate(lines, 1):
                         # Check for synchronous I/O in async functions
-                        if "async def" in content and "open(" in line and "await" not in line:
+                        if (
+                            "async def" in content
+                            and "open(" in line
+                            and "await" not in line
+                        ):
                             issues.append(
                                 {
                                     "type": "BLOCKING_IO_IN_ASYNC",
@@ -325,11 +344,15 @@ class ArtemisRealScanSwarm:
                         if "for " in line:
                             # Check next 10 lines for another loop
                             for j in range(i + 1, min(i + 10, len(lines))):
-                                if "for " in lines[j] and lines[j].count(" ") > line.count(" "):
+                                if "for " in lines[j] and lines[j].count(
+                                    " "
+                                ) > line.count(" "):
                                     issues.append(
                                         {
                                             "type": "NESTED_LOOP",
-                                            "file": file_path.replace(self.repo_path, ""),
+                                            "file": file_path.replace(
+                                                self.repo_path, ""
+                                            ),
                                             "line": i,
                                             "severity": "MEDIUM",
                                             "complexity": "Potential O(n²) complexity",
@@ -338,7 +361,12 @@ class ArtemisRealScanSwarm:
                                     break
 
                         # Check for large list comprehensions
-                        if "[" in line and "for" in line and "]" in line and len(line) > 100:
+                        if (
+                            "[" in line
+                            and "for" in line
+                            and "]" in line
+                            and len(line) > 100
+                        ):
                             issues.append(
                                 {
                                     "type": "LARGE_LIST_COMPREHENSION",
@@ -418,9 +446,13 @@ class ArtemisRealScanSwarm:
             if result.issues_found:
                 print("\n  Top Issues:")
                 for issue in result.issues_found[:3]:
-                    print(f"    • {issue.get('type', 'UNKNOWN')}: {issue.get('file', 'N/A')}")
+                    print(
+                        f"    • {issue.get('type', 'UNKNOWN')}: {issue.get('file', 'N/A')}"
+                    )
                     if "line" in issue:
-                        print(f"      Line {issue['line']}: {issue.get('preview', '')[:60]}...")
+                        print(
+                            f"      Line {issue['line']}: {issue.get('preview', '')[:60]}..."
+                        )
 
         # Generate report
         report = {
@@ -447,14 +479,18 @@ class ArtemisRealScanSwarm:
         }
 
         # Save report
-        report_file = f"artemis_real_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_file = (
+            f"artemis_real_scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(report_file, "w") as f:
             json.dump(report, f, indent=2)
 
         print(f"\n💾 Full report saved to: {report_file}")
 
         # Show critical issues
-        critical_issues = [i for i in self.security_issues if i.get("severity") == "CRITICAL"]
+        critical_issues = [
+            i for i in self.security_issues if i.get("severity") == "CRITICAL"
+        ]
         if critical_issues:
             print("\n🚨 CRITICAL SECURITY ISSUES FOUND:")
             for issue in critical_issues[:5]:

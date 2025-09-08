@@ -20,7 +20,10 @@ def test_webhook_endpoint(base_url: str = "http://localhost:8000"):
 
     # Test 1: URL Verification Challenge
     print("\n1️⃣ Testing URL Verification Challenge...")
-    challenge_payload = {"type": "url_verification", "challenge": "test_challenge_12345"}
+    challenge_payload = {
+        "type": "url_verification",
+        "challenge": "test_challenge_12345",
+    }
 
     try:
         response = requests.post(

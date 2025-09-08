@@ -174,7 +174,11 @@ class PortkeySophiaFactory:
             expertise_areas=self._get_role_expertise(role),
             tools=self._get_role_tools(role),
             integrations=self._get_role_integrations(role),
-            performance_metrics={"accuracy": 0.0, "response_time": 0.0, "insights_generated": 0},
+            performance_metrics={
+                "accuracy": 0.0,
+                "response_time": 0.0,
+                "insights_generated": 0,
+            },
         )
 
         # Store in memory
@@ -574,12 +578,18 @@ Your responses should be strategic, insightful, and focused on driving business 
             memory_id=f"sophia_team_{team_config['id']}",
             memory_type="team_config",
             content=json.dumps(team_config),
-            metadata={"domain": "SOPHIA", "objective": objective, "agent_count": len(agents)},
+            metadata={
+                "domain": "SOPHIA",
+                "objective": objective,
+                "agent_count": len(agents),
+            },
         )
 
         return team_config
 
-    async def search_similar_insights(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def search_similar_insights(
+        self, query: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Search for similar business insights in vector database"""
         try:
             # Generate embedding for query

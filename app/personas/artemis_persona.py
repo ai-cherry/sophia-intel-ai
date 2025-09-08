@@ -136,7 +136,9 @@ You prioritize code quality, maintainability, and performance while being practi
     # Technical knowledge areas
     artemis.add_knowledge_area(TaskDomain.CODE_REVIEW.value, 0.96, learning_rate=0.08)
 
-    artemis.add_knowledge_area(TaskDomain.ARCHITECTURE_DESIGN.value, 0.93, learning_rate=0.10)
+    artemis.add_knowledge_area(
+        TaskDomain.ARCHITECTURE_DESIGN.value, 0.93, learning_rate=0.10
+    )
 
     artemis.add_knowledge_area(TaskDomain.DEBUGGING.value, 0.94, learning_rate=0.09)
 
@@ -201,7 +203,9 @@ You prioritize code quality, maintainability, and performance while being practi
     }
 
     for practice, expertise in se_practices.items():
-        artemis.add_knowledge_area(f"practice_{practice}", expertise, learning_rate=0.09)
+        artemis.add_knowledge_area(
+            f"practice_{practice}", expertise, learning_rate=0.09
+        )
 
     # Preferred task domains
     artemis.preferred_domains = [
@@ -418,7 +422,9 @@ def get_artemis_evolution_patterns() -> dict[str, dict[str, Any]]:
                 "testing_discipline": 0.05,
                 "security_mindset": 0.03,
             },
-            "knowledge_penalties": {"error_domain": -0.01},  # Small penalty to encourage caution
+            "knowledge_penalties": {
+                "error_domain": -0.01
+            },  # Small penalty to encourage caution
         },
     }
 
@@ -451,13 +457,17 @@ def customize_artemis_for_context(artemis: Persona, context: dict[str, Any]) -> 
     if complexity > 0.8:
         customized_artemis.traits["architectural_thinking"].value *= 1.08
         customized_artemis.traits["problem_solving"].value *= 1.05
-        customized_artemis.communication_style["detail_preference"] = "comprehensive_with_diagrams"
+        customized_artemis.communication_style["detail_preference"] = (
+            "comprehensive_with_diagrams"
+        )
 
     # Adjust based on task type
     task_type = context.get("task_type", "")
     if task_type == "legacy_modernization":
         customized_artemis.traits["pragmatism"].value *= 1.1
-        customized_artemis.knowledge_areas["practice_refactoring"].expertise_level *= 1.08
+        customized_artemis.knowledge_areas[
+            "practice_refactoring"
+        ].expertise_level *= 1.08
     elif task_type == "performance_critical":
         customized_artemis.traits["performance_awareness"].value *= 1.12
     elif task_type == "security_focused":
@@ -467,7 +477,9 @@ def customize_artemis_for_context(artemis: Persona, context: dict[str, Any]) -> 
     team_level = context.get("team_experience", "intermediate")
     if team_level == "junior":
         customized_artemis.traits["mentorship_ability"].value *= 1.1
-        customized_artemis.communication_style["examples_style"] = "detailed_step_by_step"
+        customized_artemis.communication_style["examples_style"] = (
+            "detailed_step_by_step"
+        )
     elif team_level == "senior":
         customized_artemis.communication_style["technical_level"] = "expert_concise"
 
@@ -541,7 +553,9 @@ class ArtemisPersonaFactory:
             1.0, artemis.traits["performance_awareness"].value * 1.12
         )
         artemis.knowledge_areas["practice_performance_profiling"].expertise_level = min(
-            1.0, artemis.knowledge_areas["practice_performance_profiling"].expertise_level * 1.1
+            1.0,
+            artemis.knowledge_areas["practice_performance_profiling"].expertise_level
+            * 1.1,
         )
         return artemis
 

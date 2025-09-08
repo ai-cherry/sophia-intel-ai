@@ -67,7 +67,9 @@ class VersioningEngine:
         versions = await self.storage.get_versions(knowledge_id)
         return versions
 
-    async def get_version(self, knowledge_id: str, version_number: int) -> KnowledgeVersion | None:
+    async def get_version(
+        self, knowledge_id: str, version_number: int
+    ) -> KnowledgeVersion | None:
         """Get specific version of knowledge"""
         return await self.storage.get_version(knowledge_id, version_number)
 
@@ -76,7 +78,9 @@ class VersioningEngine:
         # Get the target version
         target_version = await self.get_version(knowledge_id, version_number)
         if not target_version:
-            raise ValueError(f"Version {version_number} not found for knowledge {knowledge_id}")
+            raise ValueError(
+                f"Version {version_number} not found for knowledge {knowledge_id}"
+            )
 
         # Get current entity
         current_entity = await self.storage.get_knowledge(knowledge_id)
@@ -133,12 +137,16 @@ class VersioningEngine:
             "timestamp_1": version1.created_at.isoformat(),
             "timestamp_2": version2.created_at.isoformat(),
             "diff": version2.generate_diff(version1),
-            "metadata_changes": self._compare_metadata(version1.metadata, version2.metadata),
+            "metadata_changes": self._compare_metadata(
+                version1.metadata, version2.metadata
+            ),
         }
 
         return comparison
 
-    async def get_latest_changes(self, knowledge_id: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def get_latest_changes(
+        self, knowledge_id: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Get the latest changes for a knowledge entity"""
         versions = await self.get_history(knowledge_id)
         changes = []
@@ -181,7 +189,9 @@ class VersioningEngine:
 
         # Check for modified fields
         common = old_content_keys & new_content_keys
-        modified_count = sum(1 for k in common if old_version.content[k] != new_entity.content[k])
+        modified_count = sum(
+            1 for k in common if old_version.content[k] != new_entity.content[k]
+        )
         if modified_count:
             changes.append(f"Modified {modified_count} field(s)")
 
@@ -199,7 +209,9 @@ class VersioningEngine:
 
         return "; ".join(changes) if changes else "Content updated"
 
-    def _compare_metadata(self, meta1: dict | None, meta2: dict | None) -> dict[str, Any]:
+    def _compare_metadata(
+        self, meta1: dict | None, meta2: dict | None
+    ) -> dict[str, Any]:
         """Compare metadata between versions"""
         if not meta1:
             meta1 = {}

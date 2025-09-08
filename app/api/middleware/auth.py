@@ -41,7 +41,9 @@ def create_jwt_token(data: dict, expires_delta: timedelta | None = None) -> str:
 
     to_encode.update({"exp": expire})
 
-    encoded_jwt = jwt.encode(to_encode, settings.jwt_secret.get_secret_value(), algorithm="HS256")
+    encoded_jwt = jwt.encode(
+        to_encode, settings.jwt_secret.get_secret_value(), algorithm="HS256"
+    )
 
     return encoded_jwt
 
@@ -49,7 +51,9 @@ def create_jwt_token(data: dict, expires_delta: timedelta | None = None) -> str:
 def decode_jwt_token(token: str) -> dict:
     """Decode and validate a JWT token"""
     try:
-        payload = jwt.decode(token, settings.jwt_secret.get_secret_value(), algorithms=["HS256"])
+        payload = jwt.decode(
+            token, settings.jwt_secret.get_secret_value(), algorithms=["HS256"]
+        )
         return payload
     except jwt.ExpiredSignatureError:
         raise AuthenticationError("Token has expired")
@@ -57,7 +61,9 @@ def decode_jwt_token(token: str) -> dict:
         raise AuthenticationError("Invalid token")
 
 
-async def verify_api_key(credentials: HTTPAuthorizationCredentials = Depends(security)) -> str:
+async def verify_api_key(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> str:
     """
     Verify API key authentication
 
@@ -125,7 +131,9 @@ class RateLimitMiddleware:
         self.request_counts = {}
         self.window_start = datetime.utcnow()
 
-    async def check_rate_limit(self, request: Request, user: str = Depends(get_current_user)):
+    async def check_rate_limit(
+        self, request: Request, user: str = Depends(get_current_user)
+    ):
         """Check if request should be rate limited"""
         # Use IP address if no user
         identifier = user or request.client.host
@@ -156,6 +164,8 @@ rate_limiter = RateLimitMiddleware(requests_per_minute=settings.max_concurrent_r
 
 
 # Dependency for rate limiting
-async def check_rate_limit(request: Request, user: str | None = Depends(get_current_user)) -> str:
+async def check_rate_limit(
+    request: Request, user: str | None = Depends(get_current_user)
+) -> str:
     """Rate limit dependency"""
     return await rate_limiter.check_rate_limit(request, user)

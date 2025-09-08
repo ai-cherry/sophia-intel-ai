@@ -128,7 +128,9 @@ class SophiaWorkflowEngine:
         workflow.add_edge("options", "complete")
         return workflow.compile()
 
-    async def execute(self, task_id: str, initial_state: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, task_id: str, initial_state: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute a workflow with conflict resolution and error recovery"""
         async with self.worker_semaphore:
             self.workflow_metrics["total_tasks"] += 1
@@ -177,14 +179,18 @@ class SophiaWorkflowEngine:
                         self.workflow_metrics["failed_tasks"] += 1
                         state["status"] = "error"
                         state["error"] = str(resolution.error)
-                        state["metadata"]["conflict_resolutions"] = context.resolution_history
+                        state["metadata"][
+                            "conflict_resolutions"
+                        ] = context.resolution_history
                         await self.state_manager.save_state(task_id, state)
                         raise resolution.error or Exception("Workflow execution failed")
                 except Exception as e:
                     self.workflow_metrics["failed_tasks"] += 1
                     logger.error(f"Workflow execution failed for task {task_id}: {e}")
                     error_type = type(e).__name__
-                    self.error_patterns[error_type] = self.error_patterns.get(error_type, 0) + 1
+                    self.error_patterns[error_type] = (
+                        self.error_patterns.get(error_type, 0) + 1
+                    )
                     state["status"] = "error"
                     state["error"] = str(e)
                     await self.state_manager.save_state(task_id, state)
@@ -262,7 +268,9 @@ class SophiaWorkflowEngine:
                     async def search_with_timeout(item):
                         try:
                             return await asyncio.wait_for(
-                                self.tool_registry.execute_tool("code_search", {"query": item}),
+                                self.tool_registry.execute_tool(
+                                    "code_search", {"query": item}
+                                ),
                                 timeout=30.0,
                             )
                         except TimeoutError:
@@ -276,7 +284,9 @@ class SophiaWorkflowEngine:
                 ):
                     if isinstance(result, Exception):
                         logger.error(f"Search failed for {context_item}: {result}")
-                        state["context"][f"search_{context_item}"] = {"error": str(result)}
+                        state["context"][f"search_{context_item}"] = {
+                            "error": str(result)
+                        }
                     else:
                         state["context"][f"search_{context_item}"] = result
                     state["tools_used"].append("code_search")
@@ -472,7 +482,9 @@ class SophiaWorkflowEngine:
             return False
 
         try:
-            resolution = await self.conflict_resolver.resolve_conflict(context, recovery_operation)
+            resolution = await self.conflict_resolver.resolve_conflict(
+                context, recovery_operation
+            )
             if resolution.success:
                 state["progress"]["events"].append(
                     {
@@ -547,7 +559,9 @@ class SophiaWorkflowEngine:
         await asyncio.sleep(self.gpu_idle_timeout)
         if task_id in self.gpu_instances:
             instance_info = self.gpu_instances[task_id]
-            idle_time = (datetime.now() - instance_info["last_activity"]).total_seconds()
+            idle_time = (
+                datetime.now() - instance_info["last_activity"]
+            ).total_seconds()
             if idle_time >= self.gpu_idle_timeout:
                 try:
                     await self._terminate_gpu_instance(instance_info["instance_id"])
@@ -575,9 +589,12 @@ class SophiaWorkflowEngine:
         if state.get("error"):
             error_msg = state.get("error", "")
             if any(
-                pattern in error_msg.lower() for pattern in ["timeout", "rate limit", "temporary"]
+                pattern in error_msg.lower()
+                for pattern in ["timeout", "rate limit", "temporary"]
             ):
-                state["metadata"]["retry_count"] = state["metadata"].get("retry_count", 0) + 1
+                state["metadata"]["retry_count"] = (
+                    state["metadata"].get("retry_count", 0) + 1
+                )
                 if state["metadata"]["retry_count"] < 3:
                     state["error"] = None
                     return "analyze"
@@ -606,7 +623,10 @@ class SophiaWorkflowEngine:
         if state.get("error"):
             return "error"
         review_results = [r for r in state["results"] if r["type"] == "review"]
-        if review_results and review_results[-1]["data"]["approval_status"] == "approved":
+        if (
+            review_results
+            and review_results[-1]["data"]["approval_status"] == "approved"
+        ):
             return "approved"
         return "needs_changes"
 

@@ -42,8 +42,12 @@ class AdversarialDebateSystem:
             con_argument = await self._generate_con_argument(critic, solution)
 
             # Judge evaluates
-            judge = random.choice([a for a in self.agents if a not in [advocate, critic]])
-            verdict = await self._evaluate_arguments(judge, pro_argument, con_argument, solution)
+            judge = random.choice(
+                [a for a in self.agents if a not in [advocate, critic]]
+            )
+            verdict = await self._evaluate_arguments(
+                judge, pro_argument, con_argument, solution
+            )
 
             debate_results.append(
                 {
@@ -58,7 +62,11 @@ class AdversarialDebateSystem:
         # Select best solution based on debate outcomes
         best_debate = max(debate_results, key=lambda x: x["score"])
         self.debate_history.append(
-            {"problem": problem, "winner": best_debate, "timestamp": datetime.now().isoformat()}
+            {
+                "problem": problem,
+                "winner": best_debate,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         return best_debate
@@ -68,7 +76,11 @@ class AdversarialDebateSystem:
         return {
             "agent": str(agent),
             "stance": "support",
-            "points": ["Efficient implementation", "Scalable architecture", "Well-tested approach"],
+            "points": [
+                "Efficient implementation",
+                "Scalable architecture",
+                "Well-tested approach",
+            ],
             "confidence": 0.85,
         }
 
@@ -233,7 +245,11 @@ class StrategyArchive:
             json.dump(self.patterns, f, indent=2)
 
     def archive_success(
-        self, problem_type: str, roles: list[str], interaction_sequence: str, quality_score: float
+        self,
+        problem_type: str,
+        roles: list[str],
+        interaction_sequence: str,
+        quality_score: float,
     ):
         """Archive a successful pattern."""
         if quality_score < 0.8:
@@ -251,7 +267,9 @@ class StrategyArchive:
         if problem_type not in self.patterns["problem_types"]:
             self.patterns["problem_types"][problem_type] = {"successful_patterns": []}
 
-        self.patterns["problem_types"][problem_type]["successful_patterns"].append(pattern)
+        self.patterns["problem_types"][problem_type]["successful_patterns"].append(
+            pattern
+        )
         self.save_archive()
         logger.info(f"Archived successful pattern for {problem_type}")
 
@@ -587,13 +605,17 @@ class KnowledgeTransferSystem:
         """Attempt to transfer knowledge between domains."""
 
         # Calculate similarity between domains
-        similarity = await self._calculate_domain_similarity(source_domain, target_domain)
+        similarity = await self._calculate_domain_similarity(
+            source_domain, target_domain
+        )
 
         if similarity < self.transfer_threshold:
             return None
 
         # Adapt pattern for target domain
-        adapted_pattern = await self._adapt_pattern(pattern, source_domain, target_domain)
+        adapted_pattern = await self._adapt_pattern(
+            pattern, source_domain, target_domain
+        )
 
         # Test adapted pattern
         success_rate = await self._test_adaptation(adapted_pattern, target_domain)
@@ -609,7 +631,9 @@ class KnowledgeTransferSystem:
                 }
             )
 
-            logger.info(f"Successfully transferred pattern from {source_domain} to {target_domain}")
+            logger.info(
+                f"Successfully transferred pattern from {source_domain} to {target_domain}"
+            )
             return adapted_pattern
 
         return None
@@ -637,7 +661,9 @@ class KnowledgeTransferSystem:
 
         # Adapt terminology
         if source == "code" and target == "research":
-            adapted["roles"] = [r.replace("code_", "research_") for r in adapted.get("roles", [])]
+            adapted["roles"] = [
+                r.replace("code_", "research_") for r in adapted.get("roles", [])
+            ]
 
         return adapted
 
@@ -718,7 +744,12 @@ class ImprovedAgentSwarm:
             if self.optimization_mode == "lite":
                 enabled = ["quality_gates"]
             elif self.optimization_mode == "balanced":
-                enabled = ["quality_gates", "debate", "strategy_archive", "role_assigner"]
+                enabled = [
+                    "quality_gates",
+                    "debate",
+                    "strategy_archive",
+                    "role_assigner",
+                ]
             else:  # quality mode
                 enabled = [
                     "debate",
@@ -737,16 +768,22 @@ class ImprovedAgentSwarm:
             patterns["debate"] = AdversarialDebateSystem(self.agents)
 
         if "quality_gates" in enabled:
-            patterns["quality_gates"] = QualityGateSystem(self.config.get("quality_gates", {}))
+            patterns["quality_gates"] = QualityGateSystem(
+                self.config.get("quality_gates", {})
+            )
 
         if "strategy_archive" in enabled:
             patterns["strategy_archive"] = StrategyArchive()
 
         if "role_assigner" in enabled:
-            patterns["role_assigner"] = DynamicRoleAssigner(self.config.get("role_assignment", {}))
+            patterns["role_assigner"] = DynamicRoleAssigner(
+                self.config.get("role_assignment", {})
+            )
 
         if "consensus" in enabled:
-            patterns["consensus"] = ConsensusSystem(self.config.get("consensus_config", {}))
+            patterns["consensus"] = ConsensusSystem(
+                self.config.get("consensus_config", {})
+            )
 
         if "param_manager" in enabled:
             patterns["param_manager"] = AdaptiveParameterManager(
@@ -779,7 +816,10 @@ class ImprovedAgentSwarm:
                 "max_retry_rounds": 3,
                 "retry_strategies": {
                     "low_quality": {"threshold": 0.4, "action": "expand_agent_team"},
-                    "medium_quality": {"threshold": 0.6, "action": "increase_creativity"},
+                    "medium_quality": {
+                        "threshold": 0.6,
+                        "action": "increase_creativity",
+                    },
                 },
             },
             "safety_config": {
@@ -793,7 +833,13 @@ class ImprovedAgentSwarm:
                     "medium": {"max": 0.7, "roles": ["planner", "generator", "critic"]},
                     "complex": {
                         "max": 1.0,
-                        "roles": ["planner", "specialist_a", "specialist_b", "critic", "judge"],
+                        "roles": [
+                            "planner",
+                            "specialist_a",
+                            "specialist_b",
+                            "critic",
+                            "judge",
+                        ],
                     },
                 }
             },
@@ -829,7 +875,9 @@ class ImprovedAgentSwarm:
         # Allows NL dispatcher or API caller to select lite/balanced/quality per-task
         desired_mode = problem.get("mode", self.optimization_mode)
         if desired_mode and desired_mode != self.optimization_mode:
-            logger.info(f"Switching optimization mode: {self.optimization_mode} -> {desired_mode}")
+            logger.info(
+                f"Switching optimization mode: {self.optimization_mode} -> {desired_mode}"
+            )
             self.optimization_mode = desired_mode
             # Re-initialize patterns based on new mode
             self.patterns = self._initialize_patterns_selectively()
@@ -869,7 +917,9 @@ class ImprovedAgentSwarm:
                 for i in range(2)
             ]
 
-            debate_result = await self.debate_system.conduct_debate(str(problem), alternatives)
+            debate_result = await self.debate_system.conduct_debate(
+                str(problem), alternatives
+            )
             initial_result["result"] = debate_result["solution"]
             initial_result["quality_score"] = debate_result["score"]
 
@@ -883,7 +933,10 @@ class ImprovedAgentSwarm:
         # Archive successful pattern
         if initial_result["quality_score"] > 0.8:
             self.strategy_archive.archive_success(
-                problem_type, agent_roles, "standard_flow", initial_result["quality_score"]
+                problem_type,
+                agent_roles,
+                "standard_flow",
+                initial_result["quality_score"],
             )
 
         # Pattern 7: Update adaptive parameters
@@ -897,7 +950,10 @@ class ImprovedAgentSwarm:
                     await self.transfer_system.attempt_transfer(
                         problem_type,
                         target_domain,
-                        {"roles": agent_roles, "quality": initial_result["quality_score"]},
+                        {
+                            "roles": agent_roles,
+                            "quality": initial_result["quality_score"],
+                        },
                     )
 
         # Track performance
@@ -911,7 +967,11 @@ class ImprovedAgentSwarm:
                     "safety_check",
                     "dynamic_roles",
                     "quality_gates",
-                    "adversarial_debate" if initial_result["quality_score"] < 0.8 else None,
+                    (
+                        "adversarial_debate"
+                        if initial_result["quality_score"] < 0.8
+                        else None
+                    ),
                 ],
             }
         )
@@ -988,8 +1048,16 @@ class MCPUIIntegration:
                 ],
                 "actions": [
                     {"label": "Run Test", "tool": "swarm.test", "params": {}},
-                    {"label": "Clear Archive", "tool": "swarm.clear_archive", "params": {}},
-                    {"label": "Reset Parameters", "tool": "swarm.reset_params", "params": {}},
+                    {
+                        "label": "Clear Archive",
+                        "tool": "swarm.clear_archive",
+                        "params": {},
+                    },
+                    {
+                        "label": "Reset Parameters",
+                        "tool": "swarm.reset_params",
+                        "params": {},
+                    },
                 ],
             },
         }

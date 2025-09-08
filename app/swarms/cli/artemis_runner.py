@@ -102,7 +102,9 @@ def cmd_apply(args) -> int:
         return 2
 
     if not args.apply:
-        print(f"[dry-run] Would write to {path} with {len(content.encode('utf-8'))} bytes.")
+        print(
+            f"[dry-run] Would write to {path} with {len(content.encode('utf-8'))} bytes."
+        )
         return 0
 
     res = client.fs_write(path, content)
@@ -120,7 +122,11 @@ def cmd_apply(args) -> int:
 
 def format_scout_json(task_text, result):
     def _extract_list(section: str) -> list[str]:
-        text = getattr(result, "final_output", None) or getattr(result, "content", "") or ""
+        text = (
+            getattr(result, "final_output", None)
+            or getattr(result, "content", "")
+            or ""
+        )
         lines = text.splitlines()
         items = []
         capturing = False
@@ -162,7 +168,9 @@ def format_scout_json(task_text, result):
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="artemis-run", description="Artemis local runner (stdio MCP)")
+    p = argparse.ArgumentParser(
+        prog="artemis-run", description="Artemis local runner (stdio MCP)"
+    )
     sub = p.add_subparsers(dest="cmd")
 
     sp = sub.add_parser("smoke", help="Run end-to-end local smoke test")
@@ -176,7 +184,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp = sub.add_parser("apply", help="Apply a simple content write via MCP fs.write")
     sp.add_argument("--path", required=True, help="Path to write within repo")
     sp.add_argument("--content", required=True, help="Content to write")
-    sp.add_argument("--apply", action="store_true", help="Confirm apply (otherwise dry-run)")
+    sp.add_argument(
+        "--apply", action="store_true", help="Confirm apply (otherwise dry-run)"
+    )
     sp.set_defaults(func=cmd_apply)
 
     sp = sub.add_parser(
@@ -188,7 +198,9 @@ def build_parser() -> argparse.ArgumentParser:
     def _do_propose(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         results = propose_patches(client, args.paths, args.max_files)
         # Store each proposal (summary) in memory
@@ -210,12 +222,16 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=_do_propose)
 
     # Collaboration helpers (MCP-memory based event bus)
-    collab = sub.add_parser("collab", help="Collaboration helpers (tasks, proposals, reviews)")
+    collab = sub.add_parser(
+        "collab", help="Collaboration helpers (tasks, proposals, reviews)"
+    )
     collab_sub = collab.add_subparsers(dest="collab_cmd")
 
     # collab emit
     sp = collab_sub.add_parser("emit", help="Emit a collab entry: task|proposal|review")
-    sp.add_argument("--type", required=True, choices=["task", "proposal", "review"], dest="etype")
+    sp.add_argument(
+        "--type", required=True, choices=["task", "proposal", "review"], dest="etype"
+    )
     sp.add_argument("--for", dest="assignee", help="Intended assignee (codex|claude)")
     sp.add_argument("--id", dest="eid", help="External or proposal id")
     sp.add_argument("--swarm", dest="swarm", help="Related swarm type (optional)")
@@ -228,13 +244,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Validate proposal JSON if --type=proposal",
     )
     sp.add_argument(
-        "--ttl", dest="ttl", help="Time-to-live (e.g., 7d, 24h) to add expires:<ISO> tag"
+        "--ttl",
+        dest="ttl",
+        help="Time-to-live (e.g., 7d, 24h) to add expires:<ISO> tag",
     )
 
     def _do_collab_emit(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
         import uuid
@@ -262,7 +282,9 @@ def build_parser() -> argparse.ArgumentParser:
 
             try:
                 delta = _parse_duration(args.ttl)
-                expires = (_dt.datetime.utcnow() + delta).replace(microsecond=0).isoformat() + "Z"
+                expires = (_dt.datetime.utcnow() + delta).replace(
+                    microsecond=0
+                ).isoformat() + "Z"
                 base_tags.append(f"expires:{expires}")
             except Exception:
                 pass
@@ -283,7 +305,11 @@ def build_parser() -> argparse.ArgumentParser:
             if content.strip().startswith(("{", "[")):
                 _ = _json.loads(content)
                 # Optional lightweight proposal validation
-                if args.etype == "proposal" and args.validate_proposal and isinstance(_, dict):
+                if (
+                    args.etype == "proposal"
+                    and args.validate_proposal
+                    and isinstance(_, dict)
+                ):
                     ok = True
                     if _.get("type") == "code_change":
                         files = _.get("files", [])
@@ -293,15 +319,24 @@ def build_parser() -> argparse.ArgumentParser:
                             ok = False
                         # check minimal shape
                         for f in files if isinstance(files, list) else []:
-                            if not f.get("path") or not isinstance(f.get("changes", []), list):
+                            if not f.get("path") or not isinstance(
+                                f.get("changes", []), list
+                            ):
                                 ok = False
                                 break
                     # If invalid, return error
                     if not ok:
-                        err = {"ok": False, "error": "Invalid proposal schema for type=code_change"}
+                        err = {
+                            "ok": False,
+                            "error": "Invalid proposal schema for type=code_change",
+                        }
                         print(
                             _json.dumps(
-                                err if args.json else {k: v for k, v in err.items() if k != "ok"},
+                                (
+                                    err
+                                    if args.json
+                                    else {k: v for k, v in err.items() if k != "ok"}
+                                ),
                                 indent=2,
                             )
                         )
@@ -317,10 +352,17 @@ def build_parser() -> argparse.ArgumentParser:
             tags=base_tags,
             memory_type="procedural",
         )
-        out = {"ok": True, "id": entry_id, "topic": topic, "tags": base_tags, "result": res}
+        out = {
+            "ok": True,
+            "id": entry_id,
+            "topic": topic,
+            "tags": base_tags,
+            "result": res,
+        }
         print(
             _json.dumps(
-                out if args.json else {k: v for k, v in out.items() if k != "result"}, indent=2
+                out if args.json else {k: v for k, v in out.items() if k != "result"},
+                indent=2,
             )
         )
         return 0
@@ -328,18 +370,24 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=_do_collab_emit)
 
     # collab list
-    sp = collab_sub.add_parser("list", help="List collaboration entries via a memory.search filter")
+    sp = collab_sub.add_parser(
+        "list", help="List collaboration entries via a memory.search filter"
+    )
     sp.add_argument("--filter", default="collab", dest="flt")
     sp.add_argument("--limit", type=int, default=10)
     sp.add_argument("--json", action="store_true", help="JSON output")
     sp.add_argument(
-        "--older-than", dest="older_than", help="Filter results older than duration (e.g., 7d, 12h)"
+        "--older-than",
+        dest="older_than",
+        help="Filter results older than duration (e.g., 7d, 12h)",
     )
 
     def _do_collab_list(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
 
@@ -371,7 +419,10 @@ def build_parser() -> argparse.ArgumentParser:
                 items = [
                     it
                     for it in (items or [])
-                    if _parse_iso(it.get("timestamp", "1970-01-01")).replace(tzinfo=None) < cutoff
+                    if _parse_iso(it.get("timestamp", "1970-01-01")).replace(
+                        tzinfo=None
+                    )
+                    < cutoff
                 ]
                 res = {"results": items}
             except Exception:
@@ -382,7 +433,9 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=_do_collab_list)
 
     # collab claim
-    sp = collab_sub.add_parser("claim", help="Claim a pending task/proposal by id for an agent")
+    sp = collab_sub.add_parser(
+        "claim", help="Claim a pending task/proposal by id for an agent"
+    )
     sp.add_argument("--id", required=True, dest="eid")
     sp.add_argument("--agent", required=True, choices=["codex", "claude"])
     sp.add_argument("--json", action="store_true", help="JSON output")
@@ -390,7 +443,9 @@ def build_parser() -> argparse.ArgumentParser:
     def _do_collab_claim(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
 
@@ -405,7 +460,8 @@ def build_parser() -> argparse.ArgumentParser:
         out = {"ok": True, "claimed": args.eid, "by": args.agent, "result": res}
         print(
             _json.dumps(
-                out if args.json else {k: v for k, v in out.items() if k != "result"}, indent=2
+                out if args.json else {k: v for k, v in out.items() if k != "result"},
+                indent=2,
             )
         )
         return 0
@@ -423,7 +479,9 @@ def build_parser() -> argparse.ArgumentParser:
     def _do_collab_approve(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
 
@@ -434,7 +492,13 @@ def build_parser() -> argparse.ArgumentParser:
             "confidence": args.confidence,
             "notes": args.notes,
         }
-        tags = ["collab", "review", "status:approved", f"refs:{args.pid}", f"by:{args.agent}"]
+        tags = [
+            "collab",
+            "review",
+            "status:approved",
+            f"refs:{args.pid}",
+            f"by:{args.agent}",
+        ]
         res = client.memory_add(
             topic=f"collab_review:{args.pid}",
             content=_json.dumps(body),
@@ -445,7 +509,8 @@ def build_parser() -> argparse.ArgumentParser:
         out = {"ok": True, "proposal": args.pid, "status": "approved", "result": res}
         print(
             _json.dumps(
-                out if args.json else {k: v for k, v in out.items() if k != "result"}, indent=2
+                out if args.json else {k: v for k, v in out.items() if k != "result"},
+                indent=2,
             )
         )
         return 0
@@ -497,7 +562,9 @@ def build_parser() -> argparse.ArgumentParser:
         """Apply schema v2 hunks: replace lines[start:end] with new block. Validate 'old' if provided."""
         src_lines = text.splitlines(keepends=True)
         # Apply from bottom to top to keep indices stable
-        ordered = sorted(hunks or [], key=lambda h: int(h.get("start_line", 0)), reverse=True)
+        ordered = sorted(
+            hunks or [], key=lambda h: int(h.get("start_line", 0)), reverse=True
+        )
         for h in ordered:
             try:
                 s = max(1, int(h.get("start_line"))) - 1
@@ -511,9 +578,9 @@ def build_parser() -> argparse.ArgumentParser:
             if old_block and old_block.strip() and old_block.strip() != seg.strip():
                 # Skip this hunk if validation fails
                 continue
-            new_lines = (new_block if new_block.endswith("\n") else new_block + "\n").splitlines(
-                keepends=True
-            )
+            new_lines = (
+                new_block if new_block.endswith("\n") else new_block + "\n"
+            ).splitlines(keepends=True)
             src_lines[s : e + 1] = new_lines
         return "".join(src_lines)
 
@@ -546,7 +613,9 @@ def build_parser() -> argparse.ArgumentParser:
     def _do_collab_apply(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
         import subprocess
@@ -559,7 +628,9 @@ def build_parser() -> argparse.ArgumentParser:
         for it in items:
             topic = it.get("topic", "")
             tags = it.get("tags", []) or []
-            if topic.startswith("collab_proposal:") and any(t == f"id:{args.pid}" for t in tags):
+            if topic.startswith("collab_proposal:") and any(
+                t == f"id:{args.pid}" for t in tags
+            ):
                 target = it
                 break
         if not target:
@@ -574,7 +645,10 @@ def build_parser() -> argparse.ArgumentParser:
             print(_json.dumps(err, indent=2))
             return 2
         if proposal.get("type") != "code_change":
-            err = {"ok": False, "error": "Unsupported proposal type (expected 'code_change')"}
+            err = {
+                "ok": False,
+                "error": "Unsupported proposal type (expected 'code_change')",
+            }
             print(_json.dumps(err, indent=2))
             return 2
         files = proposal.get("files", [])
@@ -594,7 +668,11 @@ def build_parser() -> argparse.ArgumentParser:
                     conflict = client.memory_search(
                         f'collab AND pending_review AND content:"{pth}"', limit=10
                     )
-                    hits = conflict.get("results") if isinstance(conflict, dict) else conflict or []
+                    hits = (
+                        conflict.get("results")
+                        if isinstance(conflict, dict)
+                        else conflict or []
+                    )
                     # If multiple proposals reference same path and not the current one, warn and abort
                     if hits:
                         raise RuntimeError(
@@ -617,7 +695,9 @@ def build_parser() -> argparse.ArgumentParser:
                         # Backup and write empty placeholder
                         original = client.fs_read(dest)
                         original_text = (
-                            original.get("content") if isinstance(original, dict) else str(original)
+                            original.get("content")
+                            if isinstance(original, dict)
+                            else str(original)
                         )
                         backup_name = f".mcp_backups/{dest.replace('/', '__')}.{ts}.bak"
                         client.fs_write(backup_name, original_text)
@@ -630,7 +710,9 @@ def build_parser() -> argparse.ArgumentParser:
                         dst = f.get("to")
                         original = client.fs_read(src)
                         original_text = (
-                            original.get("content") if isinstance(original, dict) else str(original)
+                            original.get("content")
+                            if isinstance(original, dict)
+                            else str(original)
                         )
                         backup_name = f".mcp_backups/{src.replace('/', '__')}.{ts}.bak"
                         client.fs_write(backup_name, original_text)
@@ -642,7 +724,9 @@ def build_parser() -> argparse.ArgumentParser:
                         dest = f.get("file")
                         original = client.fs_read(dest)
                         original_text = (
-                            original.get("content") if isinstance(original, dict) else str(original)
+                            original.get("content")
+                            if isinstance(original, dict)
+                            else str(original)
                         )
                         backup_name = f".mcp_backups/{dest.replace('/', '__')}.{ts}.bak"
                         client.fs_write(backup_name, original_text)
@@ -660,7 +744,9 @@ def build_parser() -> argparse.ArgumentParser:
                         continue
                     original = client.fs_read(path)
                     original_text = (
-                        original.get("content") if isinstance(original, dict) else str(original)
+                        original.get("content")
+                        if isinstance(original, dict)
+                        else str(original)
                     )
                     new_text = _apply_line_changes(original_text, f.get("changes", []))
                     # Backup
@@ -694,7 +780,10 @@ def build_parser() -> argparse.ArgumentParser:
             client.memory_add(
                 topic="metrics",
                 content=_json.dumps(
-                    {"name": "collab.apply.success", "value": 1 if test_result["passed"] else 0}
+                    {
+                        "name": "collab.apply.success",
+                        "value": 1 if test_result["passed"] else 0,
+                    }
                 ),
                 source="artemis-run",
                 tags=[
@@ -707,7 +796,9 @@ def build_parser() -> argparse.ArgumentParser:
             )
             client.memory_add(
                 topic="metrics",
-                content=_json.dumps({"name": "collab.test.duration_ms", "value": test_duration_ms}),
+                content=_json.dumps(
+                    {"name": "collab.test.duration_ms", "value": test_duration_ms}
+                ),
                 source="artemis-run",
                 tags=["metrics", "collab", "test", f"duration_ms:{test_duration_ms}"],
                 memory_type="episodic",
@@ -717,12 +808,18 @@ def build_parser() -> argparse.ArgumentParser:
                 # Rollback
                 for b in backups:
                     orig = client.fs_read(b["backup"])
-                    original_text = orig.get("content") if isinstance(orig, dict) else str(orig)
+                    original_text = (
+                        orig.get("content") if isinstance(orig, dict) else str(orig)
+                    )
                     client.fs_write(b["path"], original_text)
 
             # Optionally auto-commit and push on success
             commit_info: dict[str, str] | None = None
-            if test_result["passed"] and not args.dry_run and getattr(args, "git_push", False):
+            if (
+                test_result["passed"]
+                and not args.dry_run
+                and getattr(args, "git_push", False)
+            ):
                 message = f"collab: apply {args.pid} (tests passed)"
                 try:
                     # Stage everything
@@ -739,9 +836,13 @@ def build_parser() -> argparse.ArgumentParser:
                             capture_output=True,
                         )
                         if proc2.returncode != 0:
-                            raise RuntimeError(f"git commit failed: {proc.stderr or proc2.stderr}")
+                            raise RuntimeError(
+                                f"git commit failed: {proc.stderr or proc2.stderr}"
+                            )
                     # Push
-                    push = subprocess.run(["git", "push"], text=True, capture_output=True)
+                    push = subprocess.run(
+                        ["git", "push"], text=True, capture_output=True
+                    )
                     if push.returncode != 0:
                         raise RuntimeError(f"git push failed: {push.stderr}")
                     # Capture short commit id
@@ -777,7 +878,9 @@ def build_parser() -> argparse.ArgumentParser:
             print(
                 _json.dumps(out, indent=2)
                 if args.json
-                else _json.dumps({k: v for k, v in out.items() if k != "tests"}, indent=2)
+                else _json.dumps(
+                    {k: v for k, v in out.items() if k != "tests"}, indent=2
+                )
             )
             return 0 if test_result["passed"] else 1
         except Exception as e:
@@ -786,7 +889,9 @@ def build_parser() -> argparse.ArgumentParser:
                 try:
                     for b in backups:
                         orig = client.fs_read(b["backup"])
-                        original_text = orig.get("content") if isinstance(orig, dict) else str(orig)
+                        original_text = (
+                            orig.get("content") if isinstance(orig, dict) else str(orig)
+                        )
                         client.fs_write(b["path"], original_text)
                 except Exception:
                     pass
@@ -797,13 +902,16 @@ def build_parser() -> argparse.ArgumentParser:
     sp.set_defaults(func=_do_collab_apply)
 
     sp = sub.add_parser(
-        "scout", help="Run the Artemis Repository Scout swarm (requires manual LLM env vars)"
+        "scout",
+        help="Run the Artemis Repository Scout swarm (requires manual LLM env vars)",
     )
     sp.add_argument(
         "--task",
         default="Scout this repository: map integrations, hotspots, and propose improvements.",
     )
-    sp.add_argument("--check", action="store_true", help="Run scout readiness checks and exit")
+    sp.add_argument(
+        "--check", action="store_true", help="Run scout readiness checks and exit"
+    )
     sp.add_argument(
         "--approval",
         choices=["suggest", "auto-analyze", "full-auto"],
@@ -811,7 +919,9 @@ def build_parser() -> argparse.ArgumentParser:
         help="Approval mode: suggest (ask before analysis & prefetch), auto-analyze (ask before prefetch), full-auto",
     )
     sp.add_argument(
-        "--json", action="store_true", help="Emit structured JSON output and suppress progress"
+        "--json",
+        action="store_true",
+        help="Emit structured JSON output and suppress progress",
     )
 
     def _do_scout(args):
@@ -871,7 +981,9 @@ def build_parser() -> argparse.ArgumentParser:
                             return ""
                 return ""
 
-            def _run_hook(which: str, json_input: str | None = None, approval: str = "") -> int:
+            def _run_hook(
+                which: str, json_input: str | None = None, approval: str = ""
+            ) -> int:
                 hook = _Path(".artemis/hooks") / (
                     "pre-scout.sh" if which == "pre" else "post-scout.sh"
                 )
@@ -891,10 +1003,16 @@ def build_parser() -> argparse.ArgumentParser:
                 }
                 try:
                     if json_input is None:
-                        pr = _sp.run([str(hook)], env=env, capture_output=True, text=True)
+                        pr = _sp.run(
+                            [str(hook)], env=env, capture_output=True, text=True
+                        )
                     else:
                         pr = _sp.run(
-                            [str(hook)], env=env, input=json_input, capture_output=True, text=True
+                            [str(hook)],
+                            env=env,
+                            input=json_input,
+                            capture_output=True,
+                            text=True,
                         )
                     return pr.returncode
                 except Exception:
@@ -960,7 +1078,9 @@ def build_parser() -> argparse.ArgumentParser:
                 _run_hook("post", json_input=j, approval=mode)
             else:
                 _summary = (
-                    getattr(result, "final_output", None) or getattr(result, "content", "") or ""
+                    getattr(result, "final_output", None)
+                    or getattr(result, "content", "")
+                    or ""
                 )
                 print(
                     json.dumps(
@@ -993,11 +1113,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     sp.set_defaults(func=_do_scout)
 
-    sp = sub.add_parser("swarm", help="Run a micro-swarm by type with mode leader|swarm")
+    sp = sub.add_parser(
+        "swarm", help="Run a micro-swarm by type with mode leader|swarm"
+    )
     sp.add_argument(
         "--type",
         required=True,
-        choices=["repository_scout", "code_planning", "code_review_micro", "security_micro"],
+        choices=[
+            "repository_scout",
+            "code_planning",
+            "code_review_micro",
+            "security_micro",
+        ],
     )
     sp.add_argument("--mode", default="swarm", choices=["leader", "swarm"])
     sp.add_argument("--task", default="Run micro-swarm task")
@@ -1084,7 +1211,9 @@ def build_parser() -> argparse.ArgumentParser:
                 import asyncio
 
                 res = asyncio.get_event_loop().run_until_complete(
-                    orchestrator.execute_swarm(content=args.task, swarm_type=args.type, context={})
+                    orchestrator.execute_swarm(
+                        content=args.task, swarm_type=args.type, context={}
+                    )
                 )
             output = {
                 "success": getattr(res, "success", False),
@@ -1133,7 +1262,9 @@ def build_parser() -> argparse.ArgumentParser:
     def _do_collab_merge_check(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
 
@@ -1145,7 +1276,9 @@ def build_parser() -> argparse.ArgumentParser:
         for r in results or []:
             tags = r.get("tags", []) or []
             if any(t == "status:approved" for t in tags):
-                by = next((t.split(":", 1)[1] for t in tags if t.startswith("by:")), None)
+                by = next(
+                    (t.split(":", 1)[1] for t in tags if t.startswith("by:")), None
+                )
                 try:
                     body = _json.loads(r.get("content") or "{}")
                 except Exception:
@@ -1155,7 +1288,8 @@ def build_parser() -> argparse.ArgumentParser:
                     approvals[by] = max(conf, approvals.get(by, 0.0))
 
         ready = (
-            approvals.get("claude", 0.0) >= threshold and approvals.get("codex", 0.0) >= threshold
+            approvals.get("claude", 0.0) >= threshold
+            and approvals.get("codex", 0.0) >= threshold
         )
         apply_task_id = None
         if ready:
@@ -1189,19 +1323,24 @@ def build_parser() -> argparse.ArgumentParser:
         print(
             _json.dumps(out, indent=2)
             if args.json
-            else _json.dumps({k: v for k, v in out.items() if k != "approvals"}, indent=2)
+            else _json.dumps(
+                {k: v for k, v in out.items() if k != "approvals"}, indent=2
+            )
         )
         return 0
 
     sp = collab_sub.add_parser(
-        "merge-check", help="Check if a proposal is merge-ready and emit Apply task if so"
+        "merge-check",
+        help="Check if a proposal is merge-ready and emit Apply task if so",
     )
     sp.add_argument("--proposal", required=True, dest="pid")
     sp.add_argument("--json", action="store_true", help="JSON output")
     sp.set_defaults(func=_do_collab_merge_check)
 
     # Health and proof: verify MCP, memory vectors, recent scout breadcrumbs
-    sp = sub.add_parser("health", help="Check MCP/memory health and show proof of scout indexing")
+    sp = sub.add_parser(
+        "health", help="Check MCP/memory health and show proof of scout indexing"
+    )
     sp.add_argument("--json", action="store_true", help="JSON output")
     sp.add_argument("--limit", type=int, default=5, help="Max recent items to show")
 
@@ -1228,7 +1367,11 @@ def build_parser() -> argparse.ArgumentParser:
                     {
                         "topic": it.get("topic"),
                         "timestamp": it.get("timestamp"),
-                        "tags": it.get("tags")[:6] if isinstance(it.get("tags"), list) else [],
+                        "tags": (
+                            it.get("tags")[:6]
+                            if isinstance(it.get("tags"), list)
+                            else []
+                        ),
                         "content_preview": (it.get("content") or "")[:140],
                     }
                     for it in items
@@ -1276,13 +1419,19 @@ def build_parser() -> argparse.ArgumentParser:
                     {
                         "ok": out.get("ok", True),
                         "mcp_available": out.get("mcp", {}).get("available", False),
-                        "repo_index_sample": out.get("mcp", {}).get("repo_index_sample", 0),
-                        "vectors_available": out.get("vectors", {}).get("available", False),
+                        "repo_index_sample": out.get("mcp", {}).get(
+                            "repo_index_sample", 0
+                        ),
+                        "vectors_available": out.get("vectors", {}).get(
+                            "available", False
+                        ),
                         "probe_hits": out.get("vectors", {}).get("probe_hits", 0),
                         "delta_index_cache_entries": out.get("recent", {}).get(
                             "delta_index_cache_entries", 0
                         ),
-                        "recent_mcp_memory": out.get("recent", {}).get("mcp_memory", [])[:3],
+                        "recent_mcp_memory": out.get("recent", {}).get(
+                            "mcp_memory", []
+                        )[:3],
                     },
                     indent=2,
                 )
@@ -1293,7 +1442,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     # Metrics: summarize recent scout runs from vectors + MCP
     sp = sub.add_parser(
-        "metrics", help="Show recent scout metrics with quality scoring (vectors + MCP breadcrumbs)"
+        "metrics",
+        help="Show recent scout metrics with quality scoring (vectors + MCP breadcrumbs)",
     )
     sp.add_argument("--json", action="store_true", help="JSON output")
     sp.add_argument("--limit", type=int, default=5, help="Max recent items to show")
@@ -1324,7 +1474,11 @@ def build_parser() -> argparse.ArgumentParser:
                     {
                         "topic": it.get("topic"),
                         "timestamp": it.get("timestamp"),
-                        "tags": it.get("tags")[:8] if isinstance(it.get("tags"), list) else [],
+                        "tags": (
+                            it.get("tags")[:8]
+                            if isinstance(it.get("tags"), list)
+                            else []
+                        ),
                         "content_preview": (it.get("content") or "")[:160],
                     }
                     for it in items
@@ -1445,7 +1599,9 @@ def build_parser() -> argparse.ArgumentParser:
                     def __init__(self, content):
                         self.final_output = content
                         self.success = True
-                        self.confidence = 0.0  # Will be extracted from content if available
+                        self.confidence = (
+                            0.0  # Will be extracted from content if available
+                        )
                         self.execution_time_ms = 0.0
                         self.metadata = {}
 
@@ -1453,7 +1609,12 @@ def build_parser() -> argparse.ArgumentParser:
                 scout_data = format_scout_json("recent_scout_run", dummy_result)
 
                 # Extract components for quality scoring
-                schema_sections = ["FINDINGS", "INTEGRATIONS", "RISKS", "RECOMMENDATIONS"]
+                schema_sections = [
+                    "FINDINGS",
+                    "INTEGRATIONS",
+                    "RISKS",
+                    "RECOMMENDATIONS",
+                ]
                 missing_sections = []
                 found_sections = 0
 
@@ -1487,9 +1648,13 @@ def build_parser() -> argparse.ArgumentParser:
 
                 # Calculate signals (capped as per formula)
                 risk_signal = min(1.0, risks_count / 8.0) if risks_count > 0 else 0.0
-                findings_signal = min(1.0, findings_count / 12.0) if findings_count > 0 else 0.0
+                findings_signal = (
+                    min(1.0, findings_count / 12.0) if findings_count > 0 else 0.0
+                )
                 recs_signal = (
-                    min(1.0, recommendations_count / 10.0) if recommendations_count > 0 else 0.0
+                    min(1.0, recommendations_count / 10.0)
+                    if recommendations_count > 0
+                    else 0.0
                 )
 
                 # Overall score formula
@@ -1502,7 +1667,9 @@ def build_parser() -> argparse.ArgumentParser:
                 )
 
                 # Get orchestrator metrics
-                execution_time = scout_data.get("metrics", {}).get("execution_time", 0.0)
+                execution_time = scout_data.get("metrics", {}).get(
+                    "execution_time", 0.0
+                )
                 tool_usage = scout_data.get("metrics", {}).get("tool_usage_total", 0)
 
                 return {
@@ -1600,10 +1767,15 @@ def main() -> int:
 
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         seen = set()
-        flt = args.filter or f"collab AND for:{args.agent} AND (pending OR pending_review)"
+        flt = (
+            args.filter
+            or f"collab AND for:{args.agent} AND (pending OR pending_review)"
+        )
         print(f"Watching for: {flt} (interval={args.poll_interval}s). Ctrl-C to stop.")
         try:
             while True:
@@ -1634,14 +1806,18 @@ def main() -> int:
 
     sp.set_defaults(func=_do_collab_watch)
     # collab status
-    sp = collab_sub.add_parser("status", help="Show current status for a collaboration id")
+    sp = collab_sub.add_parser(
+        "status", help="Show current status for a collaboration id"
+    )
     sp.add_argument("--id", required=True, dest="eid")
     sp.add_argument("--json", action="store_true", help="JSON output")
 
     def _do_collab_status(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
 
@@ -1665,7 +1841,9 @@ def main() -> int:
         for it in items:
             tags = it.get("tags", []) or []
             topic = it.get("topic", "")
-            state["entries"].append({"topic": topic, "tags": tags, "ts": it.get("timestamp")})
+            state["entries"].append(
+                {"topic": topic, "tags": tags, "ts": it.get("timestamp")}
+            )
             if topic.startswith("collab_proposal:"):
                 state["has_proposal"] = True
                 state["pending_review"] |= any(t == "pending_review" for t in tags)
@@ -1675,14 +1853,18 @@ def main() -> int:
                 state["completed"] |= any(t == "completed" for t in tags)
             if topic.startswith("collab_review:"):
                 if any(t == "status:approved" for t in tags):
-                    by = next((t.split(":", 1)[1] for t in tags if t.startswith("by:")), None)
+                    by = next(
+                        (t.split(":", 1)[1] for t in tags if t.startswith("by:")), None
+                    )
                     try:
                         body = _json.loads(it.get("content") or "{}")
                     except Exception:
                         body = {}
                     conf = float(body.get("confidence", 0.0))
                     if by:
-                        state["approvals"][by] = max(conf, state["approvals"].get(by, 0.0))
+                        state["approvals"][by] = max(
+                            conf, state["approvals"].get(by, 0.0)
+                        )
                 if any(t == "status:rejected" for t in tags):
                     state["rejected"] = True
             if topic.startswith("collab_apply:"):
@@ -1695,7 +1877,9 @@ def main() -> int:
         print(
             _json.dumps(state, indent=2)
             if args.json
-            else _json.dumps({k: v for k, v in state.items() if k != "entries"}, indent=2)
+            else _json.dumps(
+                {k: v for k, v in state.items() if k != "entries"}, indent=2
+            )
         )
         return 0
 
@@ -1707,16 +1891,24 @@ def main() -> int:
     clean_sub = clean.add_subparsers(dest="cleanup_cmd")
 
     # cleanup collab
-    sp = clean_sub.add_parser("collab", help="Mark old/expired collab entries as archived")
-    sp.add_argument("--type", choices=["stale", "completed", "expired"], default="expired")
-    sp.add_argument("--older-than", dest="older_than", help="Duration filter (e.g., 7d, 12h)")
+    sp = clean_sub.add_parser(
+        "collab", help="Mark old/expired collab entries as archived"
+    )
+    sp.add_argument(
+        "--type", choices=["stale", "completed", "expired"], default="expired"
+    )
+    sp.add_argument(
+        "--older-than", dest="older_than", help="Duration filter (e.g., 7d, 12h)"
+    )
     sp.add_argument("--dry-run", action="store_true")
     sp.add_argument("--json", action="store_true")
 
     def _do_cleanup_collab(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import datetime as _dt
         import json as _json
@@ -1762,7 +1954,9 @@ def main() -> int:
             for t in tags:
                 if t.startswith("expires:"):
                     try:
-                        exp = _dt.datetime.fromisoformat(t.split(":", 1)[1].replace("Z", ""))
+                        exp = _dt.datetime.fromisoformat(
+                            t.split(":", 1)[1].replace("Z", "")
+                        )
                         if exp.replace(tzinfo=None) <= now:
                             is_expired = True
                             break
@@ -1778,7 +1972,9 @@ def main() -> int:
         if not args.dry_run:
             for it in to_archive:
                 topic = it.get("topic") or ""
-                id_tag = next((t for t in (it.get("tags") or []) if t.startswith("id:")), None)
+                id_tag = next(
+                    (t for t in (it.get("tags") or []) if t.startswith("id:")), None
+                )
                 collab_id = id_tag.split(":", 1)[1] if id_tag else "unknown"
                 # Mark archived
                 client.memory_add(
@@ -1799,14 +1995,18 @@ def main() -> int:
         print(
             _json.dumps(out, indent=2)
             if args.json
-            else _json.dumps({k: v for k, v in out.items() if k != "archived"}, indent=2)
+            else _json.dumps(
+                {k: v for k, v in out.items() if k != "archived"}, indent=2
+            )
         )
         return 0
 
     sp.set_defaults(func=_do_cleanup_collab)
 
     # cleanup backups
-    sp = clean_sub.add_parser("backups", help="Delete .mcp_backups older than the given duration")
+    sp = clean_sub.add_parser(
+        "backups", help="Delete .mcp_backups older than the given duration"
+    )
     sp.add_argument("--older-than", required=True)
     sp.add_argument("--dry-run", action="store_true")
     sp.add_argument("--json", action="store_true")
@@ -1841,7 +2041,12 @@ def main() -> int:
                         removed.append(str(p))
                     except Exception:
                         pass
-        out = {"ok": True, "matched": matched, "removed": removed, "dry_run": args.dry_run}
+        out = {
+            "ok": True,
+            "matched": matched,
+            "removed": removed,
+            "dry_run": args.dry_run,
+        }
         print(
             _json.dumps(out, indent=2)
             if args.json
@@ -1860,14 +2065,18 @@ def main() -> int:
     sp.add_argument("--line", required=True, type=int)
     sp.add_argument("--old", required=True)
     sp.add_argument("--new", required=True)
-    sp.add_argument("--test", action="append", default=[], help="Test command to run (repeatable)")
+    sp.add_argument(
+        "--test", action="append", default=[], help="Test command to run (repeatable)"
+    )
     sp.add_argument("--json", action="store_true")
     sp.add_argument("--dry-run", action="store_true")
 
     def _do_collab_quick_fix(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
         import uuid
@@ -1905,7 +2114,13 @@ def main() -> int:
                 topic=f"collab_review:{pid}",
                 content=_json.dumps(body),
                 source="artemis-run",
-                tags=["collab", "review", "status:approved", f"refs:{pid}", f"by:{agent}"],
+                tags=[
+                    "collab",
+                    "review",
+                    "status:approved",
+                    f"refs:{pid}",
+                    f"by:{agent}",
+                ],
                 memory_type="procedural",
             )
 
@@ -1923,7 +2138,9 @@ def main() -> int:
     sp.set_defaults(func=_do_collab_quick_fix)
 
     # Batch approve
-    sp = collab_sub.add_parser("batch-approve", help="Approve multiple proposals in one call")
+    sp = collab_sub.add_parser(
+        "batch-approve", help="Approve multiple proposals in one call"
+    )
     sp.add_argument("--agent", required=True, choices=["codex", "claude"])
     sp.add_argument("--proposals", required=True, help="Comma-separated proposal ids")
     sp.add_argument("--confidence", type=float, default=0.85)
@@ -1933,7 +2150,9 @@ def main() -> int:
     def _do_collab_batch_approve(args):
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
         import json as _json
 
@@ -1951,7 +2170,13 @@ def main() -> int:
                 topic=f"collab_review:{pid}",
                 content=_json.dumps(body),
                 source="artemis-run",
-                tags=["collab", "review", "status:approved", f"refs:{pid}", f"by:{args.agent}"],
+                tags=[
+                    "collab",
+                    "review",
+                    "status:approved",
+                    f"refs:{pid}",
+                    f"by:{args.agent}",
+                ],
                 memory_type="procedural",
             )
             done.append(pid)
@@ -1974,7 +2199,9 @@ def main() -> int:
 
         client = detect_stdio_mcp(Path.cwd())
         if not client:
-            print("ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working.")
+            print(
+                "ERROR: stdio MCP server (bin/mcp-fs-memory) not found or not working."
+            )
             return 2
 
         def _count(q: str) -> int:
@@ -2000,7 +2227,9 @@ def main() -> int:
             return _dt.timedelta(seconds=int(s))
 
         cutoff = _dt.datetime.utcnow() - _dur(window)
-        tests = client.memory_search("collab AND test AND result:", limit=500).get("results", [])
+        tests = client.memory_search("collab AND test AND result:", limit=500).get(
+            "results", []
+        )
 
         def _ts(it):
             try:
@@ -2011,7 +2240,11 @@ def main() -> int:
                 return _dt.datetime.min
 
         tests = [t for t in tests if _ts(t) > cutoff]
-        passed = sum(1 for t in tests if any(tag == "result:pass" for tag in (t.get("tags") or [])))
+        passed = sum(
+            1
+            for t in tests
+            if any(tag == "result:pass" for tag in (t.get("tags") or []))
+        )
         total = len(tests)
         success_rate = round((passed / total) * 100, 1) if total else 0.0
         # Stale items (>7d)
@@ -2020,7 +2253,8 @@ def main() -> int:
         stale = sum(
             1
             for it in all_collab
-            if _ts(it) < seven and not any(tag == "archived" for tag in (it.get("tags") or []))
+            if _ts(it) < seven
+            and not any(tag == "archived" for tag in (it.get("tags") or []))
         )
         out = {
             "pending_tasks": {"claude": pending_claude, "codex": pending_codex},
@@ -2029,18 +2263,26 @@ def main() -> int:
                 "approved_reviews": approved,
                 "applied_today": applied_today,
             },
-            "tests": {"success_rate_pct": success_rate, "total": total, "passed": passed},
+            "tests": {
+                "success_rate_pct": success_rate,
+                "total": total,
+                "passed": passed,
+            },
             "cleanup": {"stale_gt_7d": stale},
         }
         if args.json:
             print(_json.dumps(out, indent=2))
         else:
             print("Collaboration Status\n-------------------")
-            print(f"Pending Tasks:\n  Claude: {pending_claude}\n  Codex:  {pending_codex}")
+            print(
+                f"Pending Tasks:\n  Claude: {pending_claude}\n  Codex:  {pending_codex}"
+            )
             print(
                 f"\nActive Proposals:\n  Pending Review: {pending_review}\n  Approved Reviews: {approved}\n  Applied Today:   {applied_today}"
             )
-            print(f"\nSuccess Rate (last {args.window}): {success_rate}% ({passed}/{total})")
+            print(
+                f"\nSuccess Rate (last {args.window}): {success_rate}% ({passed}/{total})"
+            )
             print(f"\nCleanup Needed:\n  Stale (>7d): {stale}")
         return 0
 
@@ -2048,9 +2290,13 @@ def main() -> int:
 
     # Metrics command for scout visibility
     sp = sub.add_parser("metrics", help="Show scout execution metrics and statistics")
-    sp.add_argument("--recent", action="store_true", help="Show recent scout executions")
+    sp.add_argument(
+        "--recent", action="store_true", help="Show recent scout executions"
+    )
     sp.add_argument("--json", action="store_true", help="Output as JSON")
-    sp.add_argument("--limit", type=int, default=5, help="Number of recent executions to show")
+    sp.add_argument(
+        "--limit", type=int, default=5, help="Number of recent executions to show"
+    )
 
     def _do_metrics(args):
         client = detect_stdio_mcp(Path.cwd())
@@ -2105,7 +2351,8 @@ def main() -> int:
                         else 0
                     ),
                     "avg_time_ms": (
-                        sum(r["execution_time_ms"] for r in scout_runs) / len(scout_runs)
+                        sum(r["execution_time_ms"] for r in scout_runs)
+                        / len(scout_runs)
                         if scout_runs
                         else 0
                     ),

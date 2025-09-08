@@ -264,7 +264,9 @@ class FoundationalKnowledgeManager:
         async with self.async_session() as session:
             try:
                 result = await session.execute(
-                    select(FoundationalKnowledge).where(FoundationalKnowledge.id == knowledge_id)
+                    select(FoundationalKnowledge).where(
+                        FoundationalKnowledge.id == knowledge_id
+                    )
                 )
                 knowledge = result.scalar_one_or_none()
 
@@ -302,7 +304,9 @@ class FoundationalKnowledgeManager:
                 await self.cache_manager.delete(f"knowledge:{knowledge_id}")
                 await self.cache_manager.invalidate_pattern("search:*")
 
-                logger.info(f"{'Soft' if soft_delete else 'Hard'} deleted knowledge {knowledge_id}")
+                logger.info(
+                    f"{'Soft' if soft_delete else 'Hard'} deleted knowledge {knowledge_id}"
+                )
                 return True
 
             except Exception as e:
@@ -377,7 +381,9 @@ class FoundationalKnowledgeManager:
                     filters.append(FoundationalKnowledge.tags.contains([tag]))
 
             if classification:
-                filters.append(FoundationalKnowledge.data_classification == classification)
+                filters.append(
+                    FoundationalKnowledge.data_classification == classification
+                )
 
             # Apply access control
             access_hierarchy = {
@@ -426,21 +432,29 @@ class FoundationalKnowledgeManager:
                 "results": [r.dict() for r in results],
                 "total_count": total_count,
                 "query": query,
-                "filters": {"category": category, "tags": tags, "classification": classification},
+                "filters": {
+                    "category": category,
+                    "tags": tags,
+                    "classification": classification,
+                },
                 "pagination": {"limit": limit, "offset": offset},
                 "took_ms": took_ms,
             }
 
             # Cache results
             if use_cache:
-                await self.cache_manager.set(cache_key, response, ttl=300)  # 5 min cache
+                await self.cache_manager.set(
+                    cache_key, response, ttl=300
+                )  # 5 min cache
 
             # Log search
             if self.enable_audit:
                 await self._log_access(
                     accessed_by=str(user_level),
                     access_type="search",
-                    access_context=json.dumps({"query": query, "results": len(results)}),
+                    access_context=json.dumps(
+                        {"query": query, "results": len(results)}
+                    ),
                     session=session,
                 )
 
@@ -481,7 +495,9 @@ class FoundationalKnowledgeManager:
             session.add(relationship)
             await session.commit()
 
-            logger.info(f"Added {relationship_type} relationship: {source_id} -> {target_id}")
+            logger.info(
+                f"Added {relationship_type} relationship: {source_id} -> {target_id}"
+            )
             return relationship
 
     async def get_related_knowledge(
@@ -508,7 +524,8 @@ class FoundationalKnowledgeManager:
                 select(KnowledgeRelationship, FoundationalKnowledge)
                 .join(
                     FoundationalKnowledge,
-                    KnowledgeRelationship.target_knowledge_id == FoundationalKnowledge.id,
+                    KnowledgeRelationship.target_knowledge_id
+                    == FoundationalKnowledge.id,
                 )
                 .where(
                     and_(
@@ -520,7 +537,9 @@ class FoundationalKnowledgeManager:
             )
 
             if relationship_types:
-                stmt = stmt.where(KnowledgeRelationship.relationship_type.in_(relationship_types))
+                stmt = stmt.where(
+                    KnowledgeRelationship.relationship_type.in_(relationship_types)
+                )
 
             stmt = stmt.order_by(KnowledgeRelationship.strength.desc()).limit(limit)
 
@@ -596,7 +615,9 @@ class FoundationalKnowledgeManager:
 
             # Get current knowledge
             result = await session.execute(
-                select(FoundationalKnowledge).where(FoundationalKnowledge.id == knowledge_id)
+                select(FoundationalKnowledge).where(
+                    FoundationalKnowledge.id == knowledge_id
+                )
             )
             knowledge = result.scalar_one_or_none()
 
@@ -627,7 +648,9 @@ class FoundationalKnowledgeManager:
             # Invalidate cache
             await self.cache_manager.delete(f"knowledge:{knowledge_id}")
 
-            logger.info(f"Restored knowledge {knowledge_id} to version {version_number}")
+            logger.info(
+                f"Restored knowledge {knowledge_id} to version {version_number}"
+            )
             return knowledge
 
     # ==================== Utility Methods ====================
@@ -683,7 +706,10 @@ class FoundationalKnowledgeManager:
 
             # Count by classification
             classification_counts = await session.execute(
-                select(FoundationalKnowledge.data_classification, func.count().label("count"))
+                select(
+                    FoundationalKnowledge.data_classification,
+                    func.count().label("count"),
+                )
                 .where(FoundationalKnowledge.is_current)
                 .group_by(FoundationalKnowledge.data_classification)
             )
@@ -708,5 +734,7 @@ class FoundationalKnowledgeManager:
                 "by_classification": {row[0]: row[1] for row in classification_counts},
                 "total_versions": total_versions,
                 "last_sync": last_sync.dict() if last_sync else None,
-                "cache_stats": await self.cache_manager.get_stats() if self.cache_manager else None,
+                "cache_stats": (
+                    await self.cache_manager.get_stats() if self.cache_manager else None
+                ),
             }

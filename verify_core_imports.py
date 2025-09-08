@@ -21,14 +21,22 @@ def sophia_import(module_path, symbol=None):
 
 def main():
     results = []
-    results.append(sophia_import("core.memory.enhanced_mem0_system", "EnhancedMem0System"))
+    results.append(
+        sophia_import("core.memory.enhanced_mem0_system", "EnhancedMem0System")
+    )
     results.append(sophia_import("core.hives.hive_orchestrator", "HiveOrchestrator"))
     results.append(sophia_import("core.hives.hive_orchestrator", "HiveType"))
     results.append(
-        sophia_import("core.framework.pure_langroid_lambda_orchestrator", "get_orchestrator")
+        sophia_import(
+            "core.framework.pure_langroid_lambda_orchestrator", "get_orchestrator"
+        )
     )
-    results.append(sophia_import("core.framework.langroid_base_agent", "SophiaAgentConfig"))
-    results.append(sophia_import("core.infrastructure.lambda_labs_gpu_manager", "get_gpu_manager"))
+    results.append(
+        sophia_import("core.framework.langroid_base_agent", "SophiaAgentConfig")
+    )
+    results.append(
+        sophia_import("core.infrastructure.lambda_labs_gpu_manager", "get_gpu_manager")
+    )
     results.append(sophia_import("startup_orchestrator"))
 
     # Startup orchestrator instantiation

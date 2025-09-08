@@ -12,7 +12,9 @@ from pathlib import Path
 
 class AgentCLI:
     def __init__(self) -> None:
-        self.unified = Path(__file__).resolve().parents[2] / "scripts" / "unified_ai_agents.py"
+        self.unified = (
+            Path(__file__).resolve().parents[2] / "scripts" / "unified_ai_agents.py"
+        )
 
     def execute(self, agent_name: str, *args: str) -> int:
         cmd = [sys.executable, str(self.unified), "--agent", agent_name] + list(args)

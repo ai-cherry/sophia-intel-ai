@@ -220,7 +220,9 @@ class GuardianAgent(BaseAgent):
 
         try:
             # Get agent health data from Redis
-            health_data = await asyncio.to_thread(self.redis_client.get, f"agent_health:{agent_id}")
+            health_data = await asyncio.to_thread(
+                self.redis_client.get, f"agent_health:{agent_id}"
+            )
 
             if not health_data:
                 health_status["is_healthy"] = False
@@ -233,7 +235,9 @@ class GuardianAgent(BaseAgent):
             health_status["last_seen"] = agent_health.get("timestamp")
 
             # Check various health indicators
-            await self._check_agent_responsiveness(agent_id, agent_health, health_status)
+            await self._check_agent_responsiveness(
+                agent_id, agent_health, health_status
+            )
             await self._check_agent_error_rate(agent_id, agent_health, health_status)
             await self._check_agent_performance(agent_id, agent_health, health_status)
             await self._check_agent_connections(agent_id, agent_health, health_status)
@@ -270,7 +274,9 @@ class GuardianAgent(BaseAgent):
         last_activity_str = agent_health.get("timestamp")
         if last_activity_str:
             try:
-                last_activity = datetime.fromisoformat(last_activity_str.replace("Z", "+00:00"))
+                last_activity = datetime.fromisoformat(
+                    last_activity_str.replace("Z", "+00:00")
+                )
                 inactive_time = (
                     datetime.now() - last_activity.replace(tzinfo=None)
                 ).total_seconds()
@@ -336,7 +342,8 @@ class GuardianAgent(BaseAgent):
         for issue in health_status["issues"]:
             # Determine alert level
             if any(
-                keyword in issue.lower() for keyword in ["critical", "failed", "connection lost"]
+                keyword in issue.lower()
+                for keyword in ["critical", "failed", "connection lost"]
             ):
                 level = AlertLevel.CRITICAL
             elif any(keyword in issue.lower() for keyword in ["high", "timeout"]):
@@ -423,7 +430,9 @@ class GuardianAgent(BaseAgent):
                 )
 
             except Exception as e:
-                logger.error("Failed to store alert", guardian_id=self.agent_id, error=str(e))
+                logger.error(
+                    "Failed to store alert", guardian_id=self.agent_id, error=str(e)
+                )
 
     async def _attempt_agent_recovery(
         self, agent_id: str, health_status: dict[str, Any]
@@ -467,7 +476,9 @@ class GuardianAgent(BaseAgent):
 
             # Recovery action 2: Clear error state
             if "High error count" in str(health_status["issues"]):
-                await asyncio.to_thread(self.redis_client.delete, f"agent_errors:{agent_id}")
+                await asyncio.to_thread(
+                    self.redis_client.delete, f"agent_errors:{agent_id}"
+                )
                 recovery_result["actions"].append("error_state_cleared")
 
             # Recovery action 3: Refresh connections
@@ -555,9 +566,13 @@ class GuardianAgent(BaseAgent):
                         await asyncio.to_thread(
                             self.redis_client.ltrim, f"alerts:{agent_id}", 0, 99
                         )
-                        maintenance_results["tasks_completed"].append(f"cleaned_alerts_{agent_id}")
+                        maintenance_results["tasks_completed"].append(
+                            f"cleaned_alerts_{agent_id}"
+                        )
                     except Exception as e:
-                        maintenance_results["errors"].append(f"alert_cleanup_{agent_id}: {str(e)}")
+                        maintenance_results["errors"].append(
+                            f"alert_cleanup_{agent_id}: {str(e)}"
+                        )
 
             # Update guardian metrics
             self.metrics["last_maintenance"] = datetime.now()
@@ -602,7 +617,11 @@ class GuardianAgent(BaseAgent):
                         self.redis_client.lrange,
                         f"alerts:{monitored_agent}",
                         0,
-                        (limit // len(self.monitored_agents) if self.monitored_agents else limit),
+                        (
+                            limit // len(self.monitored_agents)
+                            if self.monitored_agents
+                            else limit
+                        ),
                     )
 
                     for alert_json in agent_alerts:
@@ -612,7 +631,9 @@ class GuardianAgent(BaseAgent):
             alerts.sort(key=lambda x: x["timestamp"], reverse=True)
 
         except Exception as e:
-            logger.error("Failed to retrieve alerts", guardian_id=self.agent_id, error=str(e))
+            logger.error(
+                "Failed to retrieve alerts", guardian_id=self.agent_id, error=str(e)
+            )
 
         return alerts[:limit]
 
@@ -624,7 +645,9 @@ class GuardianAgent(BaseAgent):
         guardian_status = {
             **base_status,
             "monitored_agents": list(self.monitored_agents),
-            "active_alerts": len([alert for alert in self.alerts if not alert.resolved]),
+            "active_alerts": len(
+                [alert for alert in self.alerts if not alert.resolved]
+            ),
             "total_alerts": len(self.alerts),
             "monitoring_interval": self.monitoring_interval,
             "alert_thresholds": self.alert_thresholds,

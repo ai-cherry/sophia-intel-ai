@@ -36,7 +36,10 @@ SSH_AUTH_SOCK = os.getenv("SSH_AUTH_SOCK", "")
 app = FastAPI(title="MCP Git Server")
 
 # Load git policy
-_git_policy = {"protected_branches": ["main", "production"], "force_push_allowed": False}
+_git_policy = {
+    "protected_branches": ["main", "production"],
+    "force_push_allowed": False,
+}
 try:
     policy_path = Path(__file__).resolve().parent.parent / "policies" / "git.yml"
     if policy_path.exists():
@@ -52,7 +55,9 @@ def run(cmd: List[str], cwd: Path) -> str:
     if SSH_AUTH_SOCK:
         env["SSH_AUTH_SOCK"] = SSH_AUTH_SOCK
     try:
-        out = subprocess.check_output(cmd, cwd=str(cwd), env=env, stderr=subprocess.STDOUT)
+        out = subprocess.check_output(
+            cmd, cwd=str(cwd), env=env, stderr=subprocess.STDOUT
+        )
         return out.decode("utf-8", errors="replace")
     except subprocess.CalledProcessError as e:
         raise HTTPException(500, detail=e.output.decode("utf-8", errors="replace"))
@@ -91,7 +96,9 @@ async def git_push(req: GitPushRequest) -> Dict[str, Any]:
     # Policy: handle protected branches and force push
     if req.branch in _git_policy.get("protected_branches", []):
         if req.force and not _git_policy.get("force_push_allowed", False):
-            raise HTTPException(403, detail="force push to protected branch disabled by policy")
+            raise HTTPException(
+                403, detail="force push to protected branch disabled by policy"
+            )
     else:
         if req.force and not _git_policy.get("force_push_allowed", False):
             raise HTTPException(403, detail="force push disabled by policy")

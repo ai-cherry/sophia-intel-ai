@@ -136,7 +136,9 @@ class AgentFactory:
         self.agno_teams: dict[str, SophiaAGNOTeam] = {}
 
         # Comprehensive agent inventory system
-        self.catalog_path = Path(catalog_path) if catalog_path else Path("./agent_catalog")
+        self.catalog_path = (
+            Path(catalog_path) if catalog_path else Path("./agent_catalog")
+        )
         self.inventory: dict[str, AgentBlueprint] = {}
         self.active_agents: dict[str, Any] = {}
         self.swarm_templates: dict[str, dict[str, Any]] = {}
@@ -198,7 +200,9 @@ class AgentFactory:
             self._create_basic_agent(
                 "analyst", AgentSpecialty.ANALYST, [AgentCapability.DATA_ANALYSIS]
             ),
-            self._create_basic_agent("tester", AgentSpecialty.TESTER, [AgentCapability.TESTING]),
+            self._create_basic_agent(
+                "tester", AgentSpecialty.TESTER, [AgentCapability.TESTING]
+            ),
         ]
 
         for agent in basic_agents:
@@ -221,7 +225,8 @@ class AgentFactory:
             capabilities=capabilities,
             personality=AgentPersonality.ANALYTICAL,
             config=AgentRoleConfig(
-                role_name=name, model_settings=ModelConfig(temperature=0.5, max_tokens=2000)
+                role_name=name,
+                model_settings=ModelConfig(temperature=0.5, max_tokens=2000),
             ),
             system_prompt_template=f"You are a {name} agent focused on {specialty.value} tasks.",
         )
@@ -299,7 +304,11 @@ class AgentFactory:
                         model="x-ai/grok-code-fast-1",
                         temperature=0.7,
                         instructions="Generate clean, efficient code based on the plan. Follow best practices and include error handling.",
-                        capabilities=["code_generation", "best_practices", "error_handling"],
+                        capabilities=[
+                            "code_generation",
+                            "best_practices",
+                            "error_handling",
+                        ],
                     ),
                     AgentDefinition(
                         name="Code Reviewer",
@@ -307,7 +316,11 @@ class AgentFactory:
                         model="openai/gpt-5-chat",
                         temperature=0.2,
                         instructions="Review generated code for bugs, security issues, and improvements. Be thorough but constructive.",
-                        capabilities=["code_review", "security_analysis", "optimization"],
+                        capabilities=[
+                            "code_review",
+                            "security_analysis",
+                            "optimization",
+                        ],
                     ),
                 ],
             ),
@@ -326,7 +339,11 @@ class AgentFactory:
                         model="anthropic/claude-sonnet-4",
                         temperature=0.8,
                         instructions="Argue strongly in favor of the proposed solution. Present compelling evidence.",
-                        capabilities=["argumentation", "evidence_gathering", "persuasion"],
+                        capabilities=[
+                            "argumentation",
+                            "evidence_gathering",
+                            "persuasion",
+                        ],
                     ),
                     AgentDefinition(
                         name="Critic",
@@ -357,7 +374,11 @@ class AgentFactory:
                 type=SwarmType.CONSENSUS,
                 category="collaboration",
                 pattern="consensus",
-                recommended_for=["complex_decisions", "multi_stakeholder", "strategic_planning"],
+                recommended_for=[
+                    "complex_decisions",
+                    "multi_stakeholder",
+                    "strategic_planning",
+                ],
                 agents=[
                     AgentDefinition(
                         name="Technical Analyst",
@@ -377,7 +398,11 @@ class AgentFactory:
                         model="qwen/qwen3-30b-a3b",
                         temperature=0.5,
                         instructions="Provide analysis from business perspective. Focus on value and ROI.",
-                        capabilities=["business_analysis", "roi_calculation", "market_assessment"],
+                        capabilities=[
+                            "business_analysis",
+                            "roi_calculation",
+                            "market_assessment",
+                        ],
                     ),
                     AgentDefinition(
                         name="User Experience Analyst",
@@ -385,7 +410,11 @@ class AgentFactory:
                         model="anthropic/claude-sonnet-4",
                         temperature=0.5,
                         instructions="Provide analysis from user experience perspective. Focus on usability and adoption.",
-                        capabilities=["ux_analysis", "usability_assessment", "adoption_strategies"],
+                        capabilities=[
+                            "ux_analysis",
+                            "usability_assessment",
+                            "adoption_strategies",
+                        ],
                     ),
                     AgentDefinition(
                         name="Synthesizer",
@@ -426,7 +455,9 @@ class AgentFactory:
         # Track creation
         agent_id = f"{blueprint_id}_{uuid4().hex[:8]}"
         self.active_agents[agent_id] = agent
-        self.creation_metrics[blueprint_id] = self.creation_metrics.get(blueprint_id, 0) + 1
+        self.creation_metrics[blueprint_id] = (
+            self.creation_metrics.get(blueprint_id, 0) + 1
+        )
 
         # Update blueprint usage
         blueprint.metadata.usage_count += 1
@@ -479,7 +510,10 @@ class AgentFactory:
 
         for agent in self.inventory.values():
             # Search in name and description
-            if query in agent.metadata.name.lower() or query in agent.metadata.description.lower():
+            if (
+                query in agent.metadata.name.lower()
+                or query in agent.metadata.description.lower()
+            ):
                 results.append(agent)
                 continue
 
@@ -513,7 +547,9 @@ class AgentFactory:
 
         # Select required specialists first
         for specialty in required_specialties:
-            agents = [a for a in self.inventory.values() if a.specialty.value == specialty]
+            agents = [
+                a for a in self.inventory.values() if a.specialty.value == specialty
+            ]
             if agents:
                 # Pick best performing agent
                 best_agent = max(agents, key=lambda a: a.metadata.success_rate)
@@ -576,9 +612,13 @@ class AgentFactory:
         # Create SwarmBlueprint for legacy compatibility
         swarm_blueprint = SwarmBlueprint(
             name=swarm_config.get("name", f"Inventory Swarm {swarm_id}"),
-            description=swarm_config.get("description", "Swarm created from agent inventory"),
+            description=swarm_config.get(
+                "description", "Swarm created from agent inventory"
+            ),
             swarm_type=SwarmType(swarm_config.get("type", "standard")),
-            execution_mode=SwarmExecutionMode(swarm_config.get("execution_mode", "parallel")),
+            execution_mode=SwarmExecutionMode(
+                swarm_config.get("execution_mode", "parallel")
+            ),
             agents=agent_definitions,
             pattern=swarm_config.get("pattern", "hierarchical"),
             memory_enabled=swarm_config.get("memory_enabled", True),
@@ -592,7 +632,9 @@ class AgentFactory:
         # Create AGNO team for execution
         agno_config = AGNOTeamConfig(
             name=swarm_blueprint.name,
-            strategy=self._map_execution_mode_to_strategy(swarm_blueprint.execution_mode),
+            strategy=self._map_execution_mode_to_strategy(
+                swarm_blueprint.execution_mode
+            ),
             max_agents=len(agent_definitions),
             enable_memory=swarm_blueprint.memory_enabled,
             auto_tag=True,
@@ -931,10 +973,14 @@ class AgentFactory:
             "created_at": datetime.now().isoformat(),
             "executions": len(executions),
             "success_rate": (
-                sum(1 for e in executions if e.success) / len(executions) if executions else 0
+                sum(1 for e in executions if e.success) / len(executions)
+                if executions
+                else 0
             ),
             "average_execution_time": (
-                sum(e.execution_time for e in executions) / len(executions) if executions else 0
+                sum(e.execution_time for e in executions) / len(executions)
+                if executions
+                else 0
             ),
             "total_cost": sum(e.cost_estimate for e in executions),
         }
@@ -958,7 +1004,9 @@ class AgentFactory:
             del self.agno_teams[swarm_id]
 
         # Remove from execution history
-        self.execution_history = [e for e in self.execution_history if e.swarm_id != swarm_id]
+        self.execution_history = [
+            e for e in self.execution_history if e.swarm_id != swarm_id
+        ]
 
         logger.info(f"Deleted swarm {swarm_id}")
         return True
@@ -969,7 +1017,9 @@ class AgentFactory:
             raise HTTPException(status_code=400, detail="Swarm name is required")
 
         if len(blueprint.agents) < 1:
-            raise HTTPException(status_code=400, detail="At least one agent is required")
+            raise HTTPException(
+                status_code=400, detail="At least one agent is required"
+            )
 
         if len(blueprint.agents) > 10:
             raise HTTPException(status_code=400, detail="Maximum 10 agents allowed")
@@ -978,14 +1028,20 @@ class AgentFactory:
         agent_names = []
         for agent in blueprint.agents:
             if not agent.name:
-                raise HTTPException(status_code=400, detail="All agents must have names")
+                raise HTTPException(
+                    status_code=400, detail="All agents must have names"
+                )
 
             if agent.name in agent_names:
-                raise HTTPException(status_code=400, detail=f"Duplicate agent name: {agent.name}")
+                raise HTTPException(
+                    status_code=400, detail=f"Duplicate agent name: {agent.name}"
+                )
             agent_names.append(agent.name)
 
             if not agent.model:
-                raise HTTPException(status_code=400, detail=f"Agent {agent.name} must have a model")
+                raise HTTPException(
+                    status_code=400, detail=f"Agent {agent.name} must have a model"
+                )
 
             if not (0.0 <= agent.temperature <= 1.0):
                 raise HTTPException(
@@ -993,7 +1049,9 @@ class AgentFactory:
                     detail=f"Agent {agent.name} temperature must be between 0.0 and 1.0",
                 )
 
-    def _map_execution_mode_to_strategy(self, mode: SwarmExecutionMode) -> ExecutionStrategy:
+    def _map_execution_mode_to_strategy(
+        self, mode: SwarmExecutionMode
+    ) -> ExecutionStrategy:
         """Map SwarmExecutionMode to AGNO ExecutionStrategy"""
         mapping = {
             SwarmExecutionMode.LINEAR: ExecutionStrategy.LITE,
@@ -1005,7 +1063,9 @@ class AgentFactory:
         }
         return mapping.get(mode, ExecutionStrategy.BALANCED)
 
-    def _estimate_cost(self, blueprint: SwarmBlueprint, result: dict[str, Any]) -> float:
+    def _estimate_cost(
+        self, blueprint: SwarmBlueprint, result: dict[str, Any]
+    ) -> float:
         """Estimate cost of execution"""
         # Simple cost estimation based on token usage and model pricing
         token_usage = result.get("token_usage", {})
@@ -1272,7 +1332,9 @@ async def create_custom_agent(agent_spec: dict[str, Any]):
 
 
 @router.post("/inventory/agents/{blueprint_id}/create")
-async def create_agent_instance(blueprint_id: str, config: Optional[dict[str, Any]] = None):
+async def create_agent_instance(
+    blueprint_id: str, config: Optional[dict[str, Any]] = None
+):
     """Create agent instance from blueprint"""
     try:
         agent_id = factory.create_agent_from_blueprint(blueprint_id, config)
@@ -1289,7 +1351,9 @@ async def create_agent_instance(blueprint_id: str, config: Optional[dict[str, An
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to create agent instance: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to create agent instance: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create agent instance: {str(e)}"
+        )
 
 
 @router.get("/inventory/stats")
@@ -1301,7 +1365,9 @@ async def get_inventory_statistics():
 
     except Exception as e:
         logger.error(f"Failed to get inventory stats: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get statistics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get statistics: {str(e)}"
+        )
 
 
 @router.get("/inventory/specialties")
@@ -1314,7 +1380,9 @@ async def get_available_specialties():
         specialties = []
         for specialty in AgentSpecialty:
             # Count agents with this specialty
-            agents_count = len([a for a in factory.inventory.values() if a.specialty == specialty])
+            agents_count = len(
+                [a for a in factory.inventory.values() if a.specialty == specialty]
+            )
 
             specialties.append(
                 {
@@ -1328,7 +1396,9 @@ async def get_available_specialties():
 
     except Exception as e:
         logger.error(f"Failed to get specialties: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get specialties: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get specialties: {str(e)}"
+        )
 
 
 @router.get("/inventory/capabilities")
@@ -1357,7 +1427,9 @@ async def get_available_capabilities():
 
     except Exception as e:
         logger.error(f"Failed to get capabilities: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get capabilities: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get capabilities: {str(e)}"
+        )
 
 
 # ==============================================================================
@@ -1374,7 +1446,9 @@ async def get_swarm_templates():
 
     except Exception as e:
         logger.error(f"Failed to get swarm templates: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get templates: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get templates: {str(e)}"
+        )
 
 
 @router.get("/inventory/swarm-templates/{template_id}")
@@ -1382,7 +1456,9 @@ async def get_swarm_template(template_id: str):
     """Get specific swarm template by ID"""
     try:
         if template_id not in factory.swarm_templates:
-            raise HTTPException(status_code=404, detail=f"Swarm template '{template_id}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Swarm template '{template_id}' not found"
+            )
 
         template = factory.swarm_templates[template_id]
 
@@ -1392,7 +1468,9 @@ async def get_swarm_template(template_id: str):
 
         recommended_agents = []
         for specialty in required_specs:
-            agents = [a for a in factory.inventory.values() if a.specialty.value == specialty]
+            agents = [
+                a for a in factory.inventory.values() if a.specialty.value == specialty
+            ]
             if agents:
                 best_agent = max(agents, key=lambda a: a.metadata.success_rate)
                 recommended_agents.append(factory._blueprint_to_dict(best_agent))
@@ -1443,7 +1521,9 @@ async def create_swarm_from_inventory(swarm_config: dict[str, Any]):
 
 
 @router.post("/inventory/swarms/from-template/{template_id}")
-async def create_swarm_from_template(template_id: str, overrides: Optional[dict[str, Any]] = None):
+async def create_swarm_from_template(
+    template_id: str, overrides: Optional[dict[str, Any]] = None
+):
     """Create swarm from template with optional overrides"""
     try:
         swarm_id = factory.create_swarm_from_template(template_id, overrides)
@@ -1502,7 +1582,9 @@ async def recommend_agents_for_task(request: dict[str, Any]):
         raise
     except Exception as e:
         logger.error(f"Failed to recommend agents: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get recommendations: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get recommendations: {str(e)}"
+        )
 
 
 @router.get("/inventory/swarms/{swarm_id}/details")
@@ -1534,7 +1616,9 @@ async def get_swarm_details_from_inventory(swarm_id: str):
                         }
                     )
                 else:
-                    agent_details.append({"agent_definition": asdict(agent_def), "blueprint": None})
+                    agent_details.append(
+                        {"agent_definition": asdict(agent_def), "blueprint": None}
+                    )
 
             swarm_info["agent_details"] = agent_details
 
@@ -1544,4 +1628,6 @@ async def get_swarm_details_from_inventory(swarm_id: str):
         raise
     except Exception as e:
         logger.error(f"Failed to get swarm details: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get swarm details: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get swarm details: {str(e)}"
+        )

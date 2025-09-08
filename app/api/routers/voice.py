@@ -22,7 +22,9 @@ class VoiceSynthesisRequest(BaseModel):
     system: str = Field(..., description="AI system: 'sophia' or 'artemis'")
     persona: Optional[str] = Field(None, description="Voice persona to use")
     voice_id: Optional[str] = Field(None, description="Specific ElevenLabs voice ID")
-    settings: Optional[dict[str, Any]] = Field(None, description="Custom voice settings")
+    settings: Optional[dict[str, Any]] = Field(
+        None, description="Custom voice settings"
+    )
 
 
 class VoiceStatusResponse(BaseModel):
@@ -57,7 +59,9 @@ class VoiceSynthesisResponse(BaseModel):
 
 class SpeechToTextRequest(BaseModel):
     audio_base64: str = Field(..., description="Base64 encoded audio data")
-    audio_format: str = Field(default="mp3", description="Audio format (mp3, wav, m4a, flac, ogg)")
+    audio_format: str = Field(
+        default="mp3", description="Audio format (mp3, wav, m4a, flac, ogg)"
+    )
     system: str = Field(..., description="AI system: 'sophia' or 'artemis'")
 
 
@@ -82,7 +86,11 @@ class VoiceCapabilitiesResponse(BaseModel):
 sophia_voice = SophiaVoiceIntegration()
 
 
-@router.get("/status", response_model=VoiceStatusResponse, summary="Get voice integration status")
+@router.get(
+    "/status",
+    response_model=VoiceStatusResponse,
+    summary="Get voice integration status",
+)
 async def get_voice_status():
     """Get the current status of voice integration for both systems"""
     try:
@@ -90,11 +98,15 @@ async def get_voice_status():
         return VoiceStatusResponse(**status)
     except Exception as e:
         logger.error(f"Voice status check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Voice status check failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Voice status check failed: {str(e)}"
+        )
 
 
 @router.get(
-    "/personas", response_model=list[VoicePersonaResponse], summary="List available voice personas"
+    "/personas",
+    response_model=list[VoicePersonaResponse],
+    summary="List available voice personas",
 )
 async def get_voice_personas():
     """Get all available voice personas for both Sophia and Artemis"""
@@ -158,16 +170,24 @@ async def get_voice_personas():
         return personas
     except Exception as e:
         logger.error(f"Failed to get voice personas: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get voice personas: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get voice personas: {str(e)}"
+        )
 
 
-@router.post("/synthesize", response_model=VoiceSynthesisResponse, summary="Convert text to speech")
+@router.post(
+    "/synthesize",
+    response_model=VoiceSynthesisResponse,
+    summary="Convert text to speech",
+)
 async def synthesize_speech(request: VoiceSynthesisRequest):
     """Convert text to speech using ElevenLabs API"""
     try:
         # Validate system
         if request.system not in ["sophia", "artemis"]:
-            raise HTTPException(status_code=400, detail="System must be 'sophia' or 'artemis'")
+            raise HTTPException(
+                status_code=400, detail="System must be 'sophia' or 'artemis'"
+            )
 
         # Handle Artemis voice synthesis
         if request.system == "artemis":
@@ -184,7 +204,9 @@ async def synthesize_speech(request: VoiceSynthesisRequest):
         raise HTTPException(status_code=500, detail=f"Voice synthesis failed: {str(e)}")
 
 
-async def _synthesize_sophia_voice(request: VoiceSynthesisRequest) -> VoiceSynthesisResponse:
+async def _synthesize_sophia_voice(
+    request: VoiceSynthesisRequest,
+) -> VoiceSynthesisResponse:
     """Handle Sophia voice synthesis"""
 
     # Create voice settings if provided
@@ -221,7 +243,9 @@ async def _synthesize_sophia_voice(request: VoiceSynthesisRequest) -> VoiceSynth
     )
 
 
-async def _synthesize_artemis_voice(request: VoiceSynthesisRequest) -> VoiceSynthesisResponse:
+async def _synthesize_artemis_voice(
+    request: VoiceSynthesisRequest,
+) -> VoiceSynthesisResponse:
     """Handle Artemis voice synthesis"""
 
     # Artemis uses specific voice configurations
@@ -234,7 +258,9 @@ async def _synthesize_artemis_voice(request: VoiceSynthesisRequest) -> VoiceSynt
     voice_id = request.voice_id
     if not voice_id:
         persona = request.persona or "artemis_technical"
-        voice_id = artemis_voice_mapping.get(persona, artemis_voice_mapping["artemis_technical"])
+        voice_id = artemis_voice_mapping.get(
+            persona, artemis_voice_mapping["artemis_technical"]
+        )
 
     # Artemis-specific voice settings (more technical/authoritative)
     settings = VoiceSettings(
@@ -340,7 +366,9 @@ async def test_voice_integration():
 
     except Exception as e:
         logger.error(f"Voice integration test failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Voice integration test failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Voice integration test failed: {str(e)}"
+        )
 
 
 @router.get("/available-voices", summary="Get available ElevenLabs voices")
@@ -348,21 +376,31 @@ async def get_available_voices():
     """Get list of available voices from ElevenLabs"""
     try:
         voices = await sophia_voice.get_available_voices()
-        return {"voices": voices, "count": len(voices), "timestamp": datetime.now().isoformat()}
+        return {
+            "voices": voices,
+            "count": len(voices),
+            "timestamp": datetime.now().isoformat(),
+        }
     except Exception as e:
         logger.error(f"Failed to get available voices: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get available voices: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get available voices: {str(e)}"
+        )
 
 
 @router.post(
-    "/transcribe", response_model=SpeechToTextApiResponse, summary="Convert speech to text"
+    "/transcribe",
+    response_model=SpeechToTextApiResponse,
+    summary="Convert speech to text",
 )
 async def transcribe_speech(request: SpeechToTextRequest):
     """Convert speech audio to text using OpenAI Whisper"""
     try:
         # Validate system
         if request.system not in ["sophia", "artemis"]:
-            raise HTTPException(status_code=400, detail="System must be 'sophia' or 'artemis'")
+            raise HTTPException(
+                status_code=400, detail="System must be 'sophia' or 'artemis'"
+            )
 
         # Use Sophia's speech-to-text capability for both systems
         result = await sophia_voice.speech_to_text(
@@ -381,11 +419,15 @@ async def transcribe_speech(request: SpeechToTextRequest):
 
     except Exception as e:
         logger.error(f"Speech transcription failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Speech transcription failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Speech transcription failed: {str(e)}"
+        )
 
 
 @router.get(
-    "/capabilities", response_model=VoiceCapabilitiesResponse, summary="Get voice capabilities"
+    "/capabilities",
+    response_model=VoiceCapabilitiesResponse,
+    summary="Get voice capabilities",
 )
 async def get_voice_capabilities():
     """Get comprehensive voice capabilities for both systems"""
@@ -394,7 +436,9 @@ async def get_voice_capabilities():
         return VoiceCapabilitiesResponse(**capabilities)
     except Exception as e:
         logger.error(f"Failed to get voice capabilities: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to get voice capabilities: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get voice capabilities: {str(e)}"
+        )
 
 
 @router.post("/full-duplex", summary="Full voice conversation (speech in, speech out)")
@@ -407,7 +451,9 @@ async def full_duplex_conversation(request: dict[str, Any]):
         audio_base64 = request.get("audio_base64")
         audio_format = request.get("audio_format", "mp3")
         system = request.get("system", "sophia")
-        persona = request.get("persona", "smart" if system == "sophia" else "artemis_technical")
+        persona = request.get(
+            "persona", "smart" if system == "sophia" else "artemis_technical"
+        )
 
         if not audio_base64:
             raise HTTPException(status_code=400, detail="audio_base64 is required")
@@ -425,17 +471,19 @@ async def full_duplex_conversation(request: dict[str, Any]):
             }
 
         # Step 2: AI Processing (simplified - would integrate with actual AI systems)
-        ai_response_text = (
-            f"I heard you say: '{transcription.text}'. This is {system} responding to your message."
-        )
+        ai_response_text = f"I heard you say: '{transcription.text}'. This is {system} responding to your message."
 
         # Step 3: Text to Speech
         if system == "sophia":
-            synthesis = await sophia_voice.generate_persona_speech(ai_response_text, persona)
+            synthesis = await sophia_voice.generate_persona_speech(
+                ai_response_text, persona
+            )
         else:
             # Artemis synthesis
             synthesis = await _synthesize_artemis_voice(
-                VoiceSynthesisRequest(text=ai_response_text, system="artemis", persona=persona)
+                VoiceSynthesisRequest(
+                    text=ai_response_text, system="artemis", persona=persona
+                )
             )
 
         return {
@@ -445,7 +493,11 @@ async def full_duplex_conversation(request: dict[str, Any]):
                 "confidence": transcription.confidence,
                 "duration": transcription.duration,
             },
-            "ai_response": {"text": ai_response_text, "system": system, "persona": persona},
+            "ai_response": {
+                "text": ai_response_text,
+                "system": system,
+                "persona": persona,
+            },
             "audio_response": {
                 "success": synthesis.success,
                 "audio_base64": (
@@ -468,4 +520,6 @@ async def full_duplex_conversation(request: dict[str, Any]):
 
     except Exception as e:
         logger.error(f"Full duplex conversation failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Full duplex conversation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Full duplex conversation failed: {str(e)}"
+        )

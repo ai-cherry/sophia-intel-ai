@@ -55,7 +55,9 @@ class OptimizedStream:
             if len(compressed) < len(data):
                 # Compression helped, use it
                 data = b"COMPRESSED:" + compressed
-                self.metrics.compression_savings += (len(data) - len(compressed)) / len(data)
+                self.metrics.compression_savings += (len(data) - len(compressed)) / len(
+                    data
+                )
 
         await self.send_stream.send(data)
 
@@ -172,13 +174,19 @@ class MCPStreamSystem:
             s.metrics.messages_sent + s.metrics.messages_received
             for s in self.active_streams.values()
         )
-        total_latency = sum(s.metrics.total_latency_ms for s in self.active_streams.values())
+        total_latency = sum(
+            s.metrics.total_latency_ms for s in self.active_streams.values()
+        )
 
         avg_latency = total_latency / total_operations if total_operations > 0 else 0
 
         # Calculate compression savings
-        avg_compression = sum(s.metrics.compression_savings for s in self.active_streams.values())
-        avg_compression = avg_compression / len(self.active_streams) if self.active_streams else 0
+        avg_compression = sum(
+            s.metrics.compression_savings for s in self.active_streams.values()
+        )
+        avg_compression = (
+            avg_compression / len(self.active_streams) if self.active_streams else 0
+        )
 
         return {
             "active_streams": len(self.active_streams),

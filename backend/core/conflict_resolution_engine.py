@@ -106,7 +106,10 @@ class CircuitBreaker:
                     self.half_open_calls = 0
                 else:
                     raise Exception("Circuit breaker is OPEN. Service unavailable.")
-            if self.state == "HALF_OPEN" and self.half_open_calls >= self.half_open_max_calls:
+            if (
+                self.state == "HALF_OPEN"
+                and self.half_open_calls >= self.half_open_max_calls
+            ):
                 if self.failure_count > 0:
                     self.state = "OPEN"
                     raise Exception("Circuit breaker is OPEN after half-open test.")
@@ -134,12 +137,18 @@ class CircuitBreaker:
         async with self._lock:
             self.failure_count += 1
             self.last_failure_time = time.time()
-            if self.state == "HALF_OPEN" or self.failure_count >= self.failure_threshold:
+            if (
+                self.state == "HALF_OPEN"
+                or self.failure_count >= self.failure_threshold
+            ):
                 self.state = "OPEN"
 
     def _should_attempt_reset(self) -> bool:
         """Check if we should attempt to reset the circuit"""
-        return self.last_failure_time and time.time() - self.last_failure_time >= self.timeout
+        return (
+            self.last_failure_time
+            and time.time() - self.last_failure_time >= self.timeout
+        )
 
 
 class ExponentialBackoff:
@@ -184,7 +193,9 @@ class DeadLetterQueue:
         }
         self.queue.append(entry)
         self.stats[context.error_type.value] += 1
-        logger.error(f"Added to dead letter queue: {context.error_type.value} - {error}")
+        logger.error(
+            f"Added to dead letter queue: {context.error_type.value} - {error}"
+        )
 
     async def process_batch(self, batch_size: int = 100) -> list[dict[str, Any]]:
         """Process a batch from dead letter queue"""
@@ -226,7 +237,9 @@ class ConflictResolutionEngine:
         self.handlers[ConflictType.API_RATE_LIMIT] = self._handle_rate_limit
         self.handlers[ConflictType.NETWORK_TIMEOUT] = self._handle_timeout
         self.handlers[ConflictType.DATABASE_DEADLOCK] = self._handle_deadlock
-        self.handlers[ConflictType.QDRANT_UPSERT_CONFLICT] = self._handle_qdrant_conflict
+        self.handlers[ConflictType.QDRANT_UPSERT_CONFLICT] = (
+            self._handle_qdrant_conflict
+        )
         self.handlers[ConflictType.PULUMI_STACK_MERGE] = self._handle_pulumi_merge
         self.handlers[ConflictType.LAMBDA_LABS_RESOURCE] = self._handle_lambda_resource
 
@@ -365,7 +378,9 @@ class ConflictResolutionEngine:
                         strategy_used=ResolutionStrategy.COMPENSATING_TRANSACTION,
                         error=e,
                     )
-        return ResolutionResult(success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION)
+        return ResolutionResult(
+            success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION
+        )
 
     async def _handle_qdrant_conflict(
         self, context: ConflictContext, operation: Callable
@@ -385,7 +400,9 @@ class ConflictResolutionEngine:
                 )
             except Exception:
                 return await self._deduplicate_and_merge(context, operation)
-        return ResolutionResult(success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION)
+        return ResolutionResult(
+            success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION
+        )
 
     async def _handle_pulumi_merge(
         self, context: ConflictContext, operation: Callable
@@ -466,7 +483,9 @@ class ConflictResolutionEngine:
                 )
             except Exception as e:
                 logger.error(f"Merge failed: {e}")
-        return ResolutionResult(success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION)
+        return ResolutionResult(
+            success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION
+        )
 
     async def _three_way_merge(self, base: dict, ours: dict, theirs: dict) -> dict:
         """Perform three-way merge for configurations"""

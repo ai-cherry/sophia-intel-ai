@@ -65,7 +65,9 @@ class OptimizedMCPStartup:
 
     def setup_logging(self):
         """Setup comprehensive logging"""
-        log_file = self.log_dir / f"mcp_startup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        log_file = (
+            self.log_dir / f"mcp_startup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+        )
 
         logging.basicConfig(
             level=logging.INFO,
@@ -118,7 +120,9 @@ class OptimizedMCPStartup:
             is_healthy = credential_manager.verify_integrity()
             creds = credential_manager.credentials
 
-            logger.info(f"✅ Credential manager initialized with {len(creds)} credential sections")
+            logger.info(
+                f"✅ Credential manager initialized with {len(creds)} credential sections"
+            )
 
             # Validate Redis credentials
             redis_config = credential_manager.get_redis_config()
@@ -141,7 +145,9 @@ class OptimizedMCPStartup:
                 r = redis.Redis(
                     host=redis_config["host"],
                     port=redis_config["port"],
-                    password=redis_config["password"] if redis_config["password"] else None,
+                    password=(
+                        redis_config["password"] if redis_config["password"] else None
+                    ),
                     db=redis_config["db"],
                 )
                 r.ping()
@@ -157,7 +163,10 @@ class OptimizedMCPStartup:
             logger.info(f"Starting Redis with command: {' '.join(redis_cmd)}")
 
             self.redis_process = subprocess.Popen(
-                redis_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.project_root
+                redis_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=self.project_root,
             )
 
             # Wait for Redis to start
@@ -167,7 +176,11 @@ class OptimizedMCPStartup:
                     r = redis.Redis(
                         host=redis_config["host"],
                         port=redis_config["port"],
-                        password=redis_config["password"] if redis_config["password"] else None,
+                        password=(
+                            redis_config["password"]
+                            if redis_config["password"]
+                            else None
+                        ),
                         db=redis_config["db"],
                     )
                     r.ping()
@@ -229,7 +242,9 @@ logfile {self.log_dir / 'redis.log'}
         try:
             # Check if unified server is already running
             async with httpx.AsyncClient(timeout=5) as client:
-                response = await client.get(f"http://localhost:{self.unified_server_port}/healthz")
+                response = await client.get(
+                    f"http://localhost:{self.unified_server_port}/healthz"
+                )
                 if response.status_code == 200:
                     self.service_health["unified_server"] = True
                     logger.info("✅ Unified server is already running")
@@ -266,7 +281,9 @@ logfile {self.log_dir / 'redis.log'}
                     )
                     if response.status_code == 200:
                         self.service_health["unified_server"] = True
-                        logger.info(f"✅ Unified server started successfully (took {i+1} seconds)")
+                        logger.info(
+                            f"✅ Unified server started successfully (took {i+1} seconds)"
+                        )
                         return
             except Exception as e:
                 if i < max_wait - 1:
@@ -287,7 +304,9 @@ logfile {self.log_dir / 'redis.log'}
 
             logger.info("✅ MCP orchestrator initialized successfully")
             logger.info(f"   - Total servers: {health['registry']['total_servers']}")
-            logger.info(f"   - Healthy servers: {health['registry']['healthy_servers']}")
+            logger.info(
+                f"   - Healthy servers: {health['registry']['healthy_servers']}"
+            )
 
             # Test key capabilities
             await self.test_mcp_capabilities(orchestrator)
@@ -328,7 +347,9 @@ logfile {self.log_dir / 'redis.log'}
             )
 
             if result["success"]:
-                logger.info(f"✅ Git capability working ({len(result['files'])} changed files)")
+                logger.info(
+                    f"✅ Git capability working ({len(result['files'])} changed files)"
+                )
             else:
                 logger.warning(f"⚠️ Git capability issue: {result.get('error')}")
         except Exception as e:
@@ -412,7 +433,9 @@ logfile {self.log_dir / 'redis.log'}
             }
 
             # Save Claude config
-            claude_config_dir = Path.home() / "Library" / "Application Support" / "Claude"
+            claude_config_dir = (
+                Path.home() / "Library" / "Application Support" / "Claude"
+            )
             claude_config_dir.mkdir(parents=True, exist_ok=True)
 
             claude_config_path = claude_config_dir / "claude_desktop_config.json"
@@ -469,7 +492,12 @@ logfile {self.log_dir / 'redis.log'}
                 "capabilities": {
                     "filesystem": {
                         "endpoint": "/mcp/filesystem",
-                        "methods": ["read_file", "write_file", "list_directory", "search_files"],
+                        "methods": [
+                            "read_file",
+                            "write_file",
+                            "list_directory",
+                            "search_files",
+                        ],
                     },
                     "git": {
                         "endpoint": "/mcp/git",
@@ -477,7 +505,11 @@ logfile {self.log_dir / 'redis.log'}
                     },
                     "memory": {
                         "endpoint": "/mcp/memory",
-                        "methods": ["store_memory", "retrieve_memory", "semantic_search"],
+                        "methods": [
+                            "store_memory",
+                            "retrieve_memory",
+                            "semantic_search",
+                        ],
                     },
                     "embeddings": {
                         "endpoint": "/mcp/embeddings",
@@ -514,21 +546,29 @@ logfile {self.log_dir / 'redis.log'}
                 "services": {
                     "unified_server": {
                         "status": (
-                            "healthy" if self.service_health["unified_server"] else "unhealthy"
+                            "healthy"
+                            if self.service_health["unified_server"]
+                            else "unhealthy"
                         ),
                         "port": self.unified_server_port,
                         "endpoint": f"http://localhost:{self.unified_server_port}",
                         "health_check": f"http://localhost:{self.unified_server_port}/healthz",
                     },
                     "redis": {
-                        "status": "healthy" if self.service_health["redis"] else "unhealthy",
+                        "status": (
+                            "healthy" if self.service_health["redis"] else "unhealthy"
+                        ),
                         "purpose": "Caching and connection state management",
                     },
                     "mcp_orchestrator": {
                         "status": (
-                            "healthy" if self.service_health["mcp_orchestrator"] else "unhealthy"
+                            "healthy"
+                            if self.service_health["mcp_orchestrator"]
+                            else "unhealthy"
                         ),
-                        "servers": health_status.get("registry", {}).get("total_servers", 0),
+                        "servers": health_status.get("registry", {}).get(
+                            "total_servers", 0
+                        ),
                         "healthy_servers": health_status.get("registry", {}).get(
                             "healthy_servers", 0
                         ),
@@ -572,7 +612,10 @@ logfile {self.log_dir / 'redis.log'}
                     {
                         "timestamp": datetime.now().isoformat(),
                         "status": "operational",
-                        "unified_server": {"port": self.unified_server_port, "health": "healthy"},
+                        "unified_server": {
+                            "port": self.unified_server_port,
+                            "health": "healthy",
+                        },
                         "mcp_orchestrator": "active",
                         "redis": "connected",
                         "capabilities_available": list(
@@ -617,9 +660,13 @@ logfile {self.log_dir / 'redis.log'}
         print()
 
         print("📝 Key Endpoints:")
-        print(f"  • Filesystem: POST http://localhost:{self.unified_server_port}/mcp/filesystem")
+        print(
+            f"  • Filesystem: POST http://localhost:{self.unified_server_port}/mcp/filesystem"
+        )
         print(f"  • Git: POST http://localhost:{self.unified_server_port}/mcp/git")
-        print(f"  • Memory: POST http://localhost:{self.unified_server_port}/mcp/memory")
+        print(
+            f"  • Memory: POST http://localhost:{self.unified_server_port}/mcp/memory"
+        )
         print()
 
         print("🎯 Next Steps:")

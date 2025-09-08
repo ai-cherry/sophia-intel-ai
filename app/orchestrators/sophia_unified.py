@@ -103,16 +103,32 @@ class SemanticBusinessLayer:
         return {
             "entities": {
                 "sales": ["revenue", "deals", "pipeline", "conversion", "quota"],
-                "customers": ["accounts", "contacts", "segments", "churn", "ltv", "nps"],
+                "customers": [
+                    "accounts",
+                    "contacts",
+                    "segments",
+                    "churn",
+                    "ltv",
+                    "nps",
+                ],
                 "marketing": ["leads", "campaigns", "attribution", "funnel", "cac"],
                 "product": ["usage", "adoption", "features", "roadmap", "feedback"],
-                "operations": ["efficiency", "costs", "processes", "capacity", "quality"],
+                "operations": [
+                    "efficiency",
+                    "costs",
+                    "processes",
+                    "capacity",
+                    "quality",
+                ],
                 "finance": ["cash_flow", "burn_rate", "runway", "margins", "forecasts"],
             },
             "relationships": {
                 "drives": ["sales_drives_revenue", "marketing_drives_leads"],
                 "impacts": ["churn_impacts_revenue", "adoption_impacts_retention"],
-                "correlates": ["nps_correlates_retention", "usage_correlates_expansion"],
+                "correlates": [
+                    "nps_correlates_retention",
+                    "usage_correlates_expansion",
+                ],
             },
             "temporal_aspects": {
                 "trends": ["growth", "decline", "seasonal", "cyclical"],
@@ -165,7 +181,9 @@ class SemanticBusinessLayer:
         confidence = 0.0
 
         for pattern_name, pattern in self.query_patterns.items():
-            keyword_matches = sum(1 for keyword in pattern["keywords"] if keyword in query_lower)
+            keyword_matches = sum(
+                1 for keyword in pattern["keywords"] if keyword in query_lower
+            )
             pattern_confidence = keyword_matches / len(pattern["keywords"])
 
             if pattern_confidence > confidence:
@@ -263,7 +281,9 @@ class DataGatheringEngine:
             relevant_connectors, key=lambda x: self.connector_priorities.get(x, 999)
         ):
             if connector in self.orchestrator.connectors:
-                data_tasks.append(self._fetch_connector_data(connector, query_analysis, task))
+                data_tasks.append(
+                    self._fetch_connector_data(connector, query_analysis, task)
+                )
 
         # Execute data gathering
         raw_data = {}
@@ -342,12 +362,16 @@ class DataGatheringEngine:
                 if source in raw_data:
                     source_data = raw_data[source].get("data", {})
                     fused[data_type] = self._merge_data_records(
-                        fused.get(data_type, {}), source_data, fusion_rule["conflict_resolution"]
+                        fused.get(data_type, {}),
+                        source_data,
+                        fusion_rule["conflict_resolution"],
                     )
 
         return fused
 
-    def _merge_data_records(self, primary: dict, secondary: dict, resolution_strategy: str) -> dict:
+    def _merge_data_records(
+        self, primary: dict, secondary: dict, resolution_strategy: str
+    ) -> dict:
         """Merge data records according to resolution strategy"""
         merged = primary.copy()
 
@@ -376,7 +400,9 @@ class DataGatheringEngine:
             # Simple quality calculation based on completeness
             if isinstance(data, dict):
                 total_fields = len(data)
-                filled_fields = sum(1 for v in data.values() if v is not None and v != "")
+                filled_fields = sum(
+                    1 for v in data.values() if v is not None and v != ""
+                )
                 completeness = filled_fields / total_fields if total_fields > 0 else 0
                 quality_scores[data_type] = completeness
             else:
@@ -426,7 +452,11 @@ class InsightGenerationEngine:
             "opportunity_insight": {
                 "title_template": "Growth opportunity in {area}",
                 "description_template": "Analysis indicates potential for {improvement_type} in {area}",
-                "impact_factors": ["potential_value", "implementation_effort", "timeline"],
+                "impact_factors": [
+                    "potential_value",
+                    "implementation_effort",
+                    "timeline",
+                ],
             },
         }
 
@@ -468,7 +498,9 @@ class InsightGenerationEngine:
         insights.extend(await self._analyze_correlations(fused_data))
 
         # Filter and rank insights by relevance and quality
-        filtered_insights = self._filter_insights(insights, query_analysis, quality_scores)
+        filtered_insights = self._filter_insights(
+            insights, query_analysis, quality_scores
+        )
         ranked_insights = self._rank_insights(filtered_insights)
 
         return ranked_insights[:10]  # Return top 10 insights
@@ -513,7 +545,10 @@ class InsightGenerationEngine:
                     impact_level="high",
                     confidence=0.9,
                     supporting_data=[{"type": "anomaly_analysis", "data": dataset}],
-                    recommendations=[f"Investigate {data_type} anomaly", "Take corrective action"],
+                    recommendations=[
+                        f"Investigate {data_type} anomaly",
+                        "Take corrective action",
+                    ],
                     affected_metrics=[data_type],
                     time_horizon="immediate",
                     category="anomaly",
@@ -522,7 +557,9 @@ class InsightGenerationEngine:
 
         return anomalies
 
-    async def _identify_opportunities(self, data: dict[str, Any]) -> list[BusinessInsight]:
+    async def _identify_opportunities(
+        self, data: dict[str, Any]
+    ) -> list[BusinessInsight]:
         """Identify business opportunities"""
         opportunities = []
 
@@ -532,8 +569,13 @@ class InsightGenerationEngine:
             description="Analysis suggests potential for upselling existing customers",
             impact_level="high",
             confidence=0.75,
-            supporting_data=[{"type": "customer_analysis", "data": data.get("customer_data", {})}],
-            recommendations=["Develop upselling strategy", "Target high-value customers"],
+            supporting_data=[
+                {"type": "customer_analysis", "data": data.get("customer_data", {})}
+            ],
+            recommendations=[
+                "Develop upselling strategy",
+                "Target high-value customers",
+            ],
             affected_metrics=["revenue", "customer_ltv"],
             time_horizon="long_term",
             category="opportunity",
@@ -552,8 +594,13 @@ class InsightGenerationEngine:
             description="Several high-value customers showing reduced engagement",
             impact_level="high",
             confidence=0.85,
-            supporting_data=[{"type": "churn_analysis", "data": data.get("customer_data", {})}],
-            recommendations=["Implement retention program", "Increase customer engagement"],
+            supporting_data=[
+                {"type": "churn_analysis", "data": data.get("customer_data", {})}
+            ],
+            recommendations=[
+                "Implement retention program",
+                "Increase customer engagement",
+            ],
             affected_metrics=["churn_rate", "revenue"],
             time_horizon="immediate",
             category="risk",
@@ -562,7 +609,9 @@ class InsightGenerationEngine:
 
         return risks
 
-    async def _analyze_correlations(self, data: dict[str, Any]) -> list[BusinessInsight]:
+    async def _analyze_correlations(
+        self, data: dict[str, Any]
+    ) -> list[BusinessInsight]:
         """Analyze correlations between metrics"""
         correlations = []
 
@@ -573,7 +622,10 @@ class InsightGenerationEngine:
             impact_level="medium",
             confidence=0.7,
             supporting_data=[{"type": "correlation_analysis", "data": {}}],
-            recommendations=["Optimize marketing budget allocation", "Focus on high-ROI channels"],
+            recommendations=[
+                "Optimize marketing budget allocation",
+                "Focus on high-ROI channels",
+            ],
             affected_metrics=["marketing_spend", "lead_conversion"],
             time_horizon="short_term",
             category="trend",
@@ -604,7 +656,9 @@ class InsightGenerationEngine:
         for insight in insights:
             # Check data quality for affected metrics
             avg_quality = (
-                sum(quality_scores.get(metric, 0) for metric in insight.affected_metrics)
+                sum(
+                    quality_scores.get(metric, 0) for metric in insight.affected_metrics
+                )
                 / len(insight.affected_metrics)
                 if insight.affected_metrics
                 else 0.5
@@ -666,7 +720,11 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
                 "asana",
                 "airtable",
             ],
-            quality_thresholds={"confidence_min": 0.7, "citation_min": 3, "source_diversity": 0.6},
+            quality_thresholds={
+                "confidence_min": 0.7,
+                "citation_min": 3,
+                "source_diversity": 0.6,
+            },
         )
 
         super().__init__(config)
@@ -711,7 +769,11 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
             fiscal_year_start="01-01",
             market_segment="U.S. Multifamily Housing",
             business_model="Platform + AI Services",
-            revenue_streams=["Platform Subscriptions", "AI Services", "Payment Processing"],
+            revenue_streams=[
+                "Platform Subscriptions",
+                "AI Services",
+                "Payment Processing",
+            ],
             customer_segments=[
                 "Property Management Companies",
                 "Real Estate Operators",
@@ -758,7 +820,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
                 # Override defaults with Pay Ready specifics
                 self.business_context.company_mission = pay_ready_data.mission
-                self.business_context.key_differentiators = pay_ready_data.key_differentiators
+                self.business_context.key_differentiators = (
+                    pay_ready_data.key_differentiators
+                )
                 self.business_context.industry = pay_ready_data.industry
 
                 logger.info(
@@ -787,7 +851,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         # Cache miss or expired, fetch fresh data
         try:
             logger.debug("Fetching fresh Pay Ready context")
-            foundational_data = await self.foundational_knowledge.get_pay_ready_context()
+            foundational_data = (
+                await self.foundational_knowledge.get_pay_ready_context()
+            )
 
             # Validate the fetched data
             if foundational_data and isinstance(foundational_data, dict):
@@ -807,7 +873,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
             logger.error(f"Failed to fetch Pay Ready context: {e}")
             # Return cached data if available, even if expired
             if self._pay_ready_context_cache:
-                logger.info("Using expired cached Pay Ready context due to fetch failure")
+                logger.info(
+                    "Using expired cached Pay Ready context due to fetch failure"
+                )
                 return self._pay_ready_context_cache
 
             # Final fallback to embedded Pay Ready context
@@ -908,7 +976,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
                 "status": "active",
                 "last_sync": datetime.now().isoformat(),
             }
-            logger.info(f"Initialized {name} connector with priority {config['priority']}")
+            logger.info(
+                f"Initialized {name} connector with priority {config['priority']}"
+            )
 
     async def _execute_core(self, task: UnifiedTask, routing: Any) -> UnifiedResult:
         """
@@ -925,13 +995,19 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
         try:
             # Parse business query using semantic layer
-            query_analysis = await self.semantic_layer.parse_business_query(task.content)
+            query_analysis = await self.semantic_layer.parse_business_query(
+                task.content
+            )
 
             # Gather business data from multiple sources
-            business_data = await self.data_engine.gather_business_data(query_analysis, task)
+            business_data = await self.data_engine.gather_business_data(
+                query_analysis, task
+            )
 
             # Generate insights using advanced analytics
-            insights = await self.insight_engine.generate_insights(business_data, query_analysis)
+            insights = await self.insight_engine.generate_insights(
+                business_data, query_analysis
+            )
 
             # Enrich with persona-specific context
             enriched_context = await self._enrich_with_persona_context(
@@ -939,7 +1015,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
             )
 
             # Prepare messages for LLM with semantic understanding
-            messages = self._prepare_semantic_messages(task, query_analysis, enriched_context)
+            messages = self._prepare_semantic_messages(
+                task, query_analysis, enriched_context
+            )
 
             # Execute with Portkey using appropriate routing
             response = await self.portkey.execute_with_fallback(
@@ -950,7 +1028,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
             )
 
             # Process response with business intelligence context
-            processed = await self._process_business_response(response, task, query_analysis)
+            processed = await self._process_business_response(
+                response, task, query_analysis
+            )
 
             # Generate comprehensive business report
             business_report = await self._generate_business_report(
@@ -973,7 +1053,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
                     "report_gen",
                 ],
             }
-            result.confidence = self._calculate_business_confidence(business_report, business_data)
+            result.confidence = self._calculate_business_confidence(
+                business_report, business_data
+            )
             result.citations = self._extract_business_citations(business_data)
             result.insights = [insight.__dict__ for insight in insights]
             result.recommendations = business_report.recommendations
@@ -982,7 +1064,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
             # Track usage
             if hasattr(response, "usage"):
                 result.tokens_used = response.usage.total_tokens
-                result.cost = self.portkey._estimate_cost(routing.model, result.tokens_used)
+                result.cost = self.portkey._estimate_cost(
+                    routing.model, result.tokens_used
+                )
 
         except Exception as e:
             logger.error(f"Sophia unified execution failed: {e}")
@@ -991,7 +1075,10 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         return result
 
     async def _enrich_with_persona_context(
-        self, task: UnifiedTask, business_data: dict[str, Any], insights: list[BusinessInsight]
+        self,
+        task: UnifiedTask,
+        business_data: dict[str, Any],
+        insights: list[BusinessInsight],
     ) -> dict[str, Any]:
         """Enrich context with persona-specific information"""
         context = {
@@ -1027,7 +1114,9 @@ class SophiaUnifiedOrchestrator(UnifiedBaseOrchestrator):
         context["industry_benchmarks"] = self._get_industry_benchmarks()
 
         # Add competitive intelligence
-        context["competitive_intelligence"] = await self._gather_competitive_intelligence()
+        context["competitive_intelligence"] = (
+            await self._gather_competitive_intelligence()
+        )
 
         return context
 
@@ -1118,10 +1207,14 @@ Always provide:
                         "foundational_knowledge", {}
                     ).items():
                         if items and len(items) > 0:
-                            fk_summary.append(f"- {category.title()}: {len(items)} entries")
+                            fk_summary.append(
+                                f"- {category.title()}: {len(items)} entries"
+                            )
                             # Add most important entry from each category
                             top_item = max(items, key=lambda x: x.get("priority", 0))
-                            fk_summary.append(f"  Key: {top_item.get('name', 'Unknown')}")
+                            fk_summary.append(
+                                f"  Key: {top_item.get('name', 'Unknown')}"
+                            )
 
                     if fk_summary:
                         pay_ready_foundational_context = f"""
@@ -1183,7 +1276,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
                 f"Quality: {quality:.2f}, Freshness: {metadata.get('data_freshness', 'unknown')}"
             )
 
-        return "\n".join(summary_lines) if summary_lines else "No data sources available"
+        return (
+            "\n".join(summary_lines) if summary_lines else "No data sources available"
+        )
 
     def _format_insights_summary(self, insights: list[BusinessInsight]) -> str:
         """Format insights for LLM consumption"""
@@ -1204,7 +1299,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
     ) -> dict[str, Any]:
         """Process LLM response with business intelligence context"""
         content = (
-            response.choices[0].message.content if hasattr(response, "choices") else str(response)
+            response.choices[0].message.content
+            if hasattr(response, "choices")
+            else str(response)
         )
 
         processed = {
@@ -1256,7 +1353,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
                     "source": source,
                     "type": "integration_data",
                     "metadata": data.get("metadata", {}),
-                    "quality_score": business_data.get("quality_scores", {}).get(source, 0),
+                    "quality_score": business_data.get("quality_scores", {}).get(
+                        source, 0
+                    ),
                 }
             )
 
@@ -1267,7 +1366,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
             risks=risks,
             opportunities=opportunities,
             supporting_data=supporting_data,
-            confidence_level=self._calculate_overall_confidence(all_insights, business_data),
+            confidence_level=self._calculate_overall_confidence(
+                all_insights, business_data
+            ),
             data_sources=list(business_data.get("raw_data", {}).keys()),
             trend_analysis=self._extract_trend_analysis(processed),
             competitive_analysis=self._extract_competitive_analysis(processed),
@@ -1279,7 +1380,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
         """Extract structured analysis from LLM response"""
         # Simple extraction - would be more sophisticated in production
         return {
-            "executive_summary": content[:500] + "..." if len(content) > 500 else content,
+            "executive_summary": (
+                content[:500] + "..." if len(content) > 500 else content
+            ),
             "key_points": [],
             "methodology": "Multi-source business intelligence analysis",
         }
@@ -1354,7 +1457,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
 
         return sum(factors) / len(factors)
 
-    def _extract_business_citations(self, business_data: dict[str, Any]) -> list[dict[str, str]]:
+    def _extract_business_citations(
+        self, business_data: dict[str, Any]
+    ) -> list[dict[str, str]]:
         """Extract citations from business data sources"""
         citations = []
 
@@ -1364,7 +1469,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
                 {
                     "source": source,
                     "type": "integration",
-                    "timestamp": metadata.get("fetch_timestamp", datetime.now().isoformat()),
+                    "timestamp": metadata.get(
+                        "fetch_timestamp", datetime.now().isoformat()
+                    ),
                     "record_count": str(metadata.get("record_count", 0)),
                     "quality_score": str(metadata.get("quality_score", 0)),
                     "freshness": metadata.get("data_freshness", "unknown"),
@@ -1415,8 +1522,16 @@ Format the response as a structured business report suitable for Pay Ready's exe
         return {
             "competitive_landscape": self.business_context.competitive_landscape,
             "market_position": "Strong",
-            "competitive_advantages": ["Product innovation", "Customer service", "Market timing"],
-            "threats": ["New market entrants", "Price competition", "Technology disruption"],
+            "competitive_advantages": [
+                "Product innovation",
+                "Customer service",
+                "Market timing",
+            ],
+            "threats": [
+                "New market entrants",
+                "Price competition",
+                "Technology disruption",
+            ],
             "differentiation_factors": [
                 "Unique features",
                 "Customer experience",
@@ -1431,7 +1546,9 @@ Format the response as a structured business report suitable for Pay Ready's exe
         if not insights:
             return 0.5
 
-        insight_confidence = sum(insight.confidence for insight in insights) / len(insights)
+        insight_confidence = sum(insight.confidence for insight in insights) / len(
+            insights
+        )
         data_quality = sum(business_data.get("quality_scores", {}).values()) / max(
             len(business_data.get("quality_scores", {})), 1
         )
@@ -1441,12 +1558,18 @@ Format the response as a structured business report suitable for Pay Ready's exe
     def _extract_trend_analysis(self, processed: dict[str, Any]) -> dict[str, Any]:
         """Extract trend analysis from processed data"""
         return {
-            "key_trends": ["Growth acceleration", "Market expansion", "Product adoption"],
+            "key_trends": [
+                "Growth acceleration",
+                "Market expansion",
+                "Product adoption",
+            ],
             "trend_confidence": 0.8,
             "time_horizon": "6 months",
         }
 
-    def _extract_competitive_analysis(self, processed: dict[str, Any]) -> dict[str, Any]:
+    def _extract_competitive_analysis(
+        self, processed: dict[str, Any]
+    ) -> dict[str, Any]:
         """Extract competitive analysis"""
         return {
             "competitive_position": "Strong",
@@ -1519,7 +1642,11 @@ Format the response as a structured business report suitable for Pay Ready's exe
     ) -> BusinessReport:
         """Identify business growth opportunities"""
         if not focus_areas:
-            focus_areas = ["customer_expansion", "market_penetration", "product_development"]
+            focus_areas = [
+                "customer_expansion",
+                "market_penetration",
+                "product_development",
+            ]
 
         if not market_segments:
             market_segments = self.business_context.customer_segments

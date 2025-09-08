@@ -67,7 +67,10 @@ class ProductionDeploymentManager:
         """Authenticate with Fly.io"""
         try:
             result = subprocess.run(
-                ["fly", "auth", "token"], input=self.fly_api_token, text=True, capture_output=True
+                ["fly", "auth", "token"],
+                input=self.fly_api_token,
+                text=True,
+                capture_output=True,
             )
 
             if result.returncode == 0:
@@ -99,7 +102,9 @@ class ProductionDeploymentManager:
                 logger.info(f"✅ Created Fly.io app: {app_name}")
                 return True
             else:
-                logger.info(f"⚠️  App creation warning for {app_name}: {create_result.stderr}")
+                logger.info(
+                    f"⚠️  App creation warning for {app_name}: {create_result.stderr}"
+                )
                 return True  # Continue anyway, might be name conflict
 
         except Exception as e:
@@ -131,7 +136,9 @@ class ProductionDeploymentManager:
                 "--detach",
             ]
 
-            deploy_result = subprocess.run(deploy_cmd, capture_output=True, text=True, timeout=600)
+            deploy_result = subprocess.run(
+                deploy_cmd, capture_output=True, text=True, timeout=600
+            )
 
             if deploy_result.returncode == 0:
                 logger.info(f"✅ Deployment initiated for {app_name}")
@@ -145,11 +152,19 @@ class ProductionDeploymentManager:
                     "health_status": deployment_status,
                 }
             else:
-                logger.info(f"⚠️  Deployment issue for {app_name}: {deploy_result.stderr}")
-                return {"status": "warning", "app_name": app_name, "error": deploy_result.stderr}
+                logger.info(
+                    f"⚠️  Deployment issue for {app_name}: {deploy_result.stderr}"
+                )
+                return {
+                    "status": "warning",
+                    "app_name": app_name,
+                    "error": deploy_result.stderr,
+                }
 
         except subprocess.TimeoutExpired:
-            logger.info(f"⏱️  Deployment timeout for {app_name} (continuing in background)")
+            logger.info(
+                f"⏱️  Deployment timeout for {app_name} (continuing in background)"
+            )
             return {
                 "status": "deploying",
                 "app_name": app_name,
@@ -169,7 +184,9 @@ class ProductionDeploymentManager:
             try:
                 # Check app status
                 status_cmd = ["fly", "status", "--app", app_name, "--json"]
-                status_result = subprocess.run(status_cmd, capture_output=True, text=True)
+                status_result = subprocess.run(
+                    status_cmd, capture_output=True, text=True
+                )
 
                 if status_result.returncode == 0:
                     status_data = json.loads(status_result.stdout)
@@ -178,10 +195,14 @@ class ProductionDeploymentManager:
                     allocations = status_data.get("Allocations", [])
                     if allocations:
                         running_count = sum(
-                            1 for alloc in allocations if alloc.get("Status") == "running"
+                            1
+                            for alloc in allocations
+                            if alloc.get("Status") == "running"
                         )
                         if running_count > 0:
-                            logger.info(f"✅ {app_name} is running ({running_count} instances)")
+                            logger.info(
+                                f"✅ {app_name} is running ({running_count} instances)"
+                            )
                             return {
                                 "status": "healthy",
                                 "running_instances": running_count,
@@ -200,7 +221,9 @@ class ProductionDeploymentManager:
         logger.info(f"⏱️  Health check timeout for {app_name}")
         return {"status": "timeout", "waited_seconds": max_wait}
 
-    def test_service_endpoint(self, app_name: str, health_path: str = "/health") -> dict[str, Any]:
+    def test_service_endpoint(
+        self, app_name: str, health_path: str = "/health"
+    ) -> dict[str, Any]:
         """Test service endpoint health"""
 
         url = f"https://{app_name}.fly.dev{health_path}"
@@ -304,7 +327,9 @@ class ProductionDeploymentManager:
 
         return deployment_results
 
-    def monitor_all_services(self, deployment_results: dict[str, Any]) -> dict[str, Any]:
+    def monitor_all_services(
+        self, deployment_results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Monitor all deployed services"""
 
         logger.info("\n📊 MONITORING DEPLOYED SERVICES")
@@ -323,7 +348,10 @@ class ProductionDeploymentManager:
         }
 
         for app_name, health_path in health_endpoints.items():
-            if deployment_results.get(app_name, {}).get("status") in ["deployed", "deploying"]:
+            if deployment_results.get(app_name, {}).get("status") in [
+                "deployed",
+                "deploying",
+            ]:
                 logger.info(f"🔍 Testing {app_name} health endpoint...")
                 health_result = self.test_service_endpoint(app_name, health_path)
                 monitoring_results[app_name] = health_result
@@ -350,7 +378,9 @@ class ProductionDeploymentManager:
         successful_deployments = len(
             [r for r in deployment_results.values() if r.get("status") == "deployed"]
         )
-        healthy_services = len([r for r in monitoring_results.values() if r.get("healthy")])
+        healthy_services = len(
+            [r for r in monitoring_results.values() if r.get("healthy")]
+        )
 
         report = f"""
 # Production Deployment Report - Sophia Intel AI
@@ -381,7 +411,9 @@ class ProductionDeploymentManager:
                 report += f"- **URL**: {deploy_status['public_url']}\n"
 
             if health_status.get("response_time_ms"):
-                report += f"- **Response Time**: {health_status['response_time_ms']:.0f}ms\n"
+                report += (
+                    f"- **Response Time**: {health_status['response_time_ms']:.0f}ms\n"
+                )
 
         report += """
 ## 🔗 Service URLs
@@ -441,7 +473,9 @@ def main():
         monitoring_results = manager.monitor_all_services(deployment_results)
 
         # Generate report
-        report = manager.generate_deployment_report(deployment_results, monitoring_results)
+        report = manager.generate_deployment_report(
+            deployment_results, monitoring_results
+        )
 
         # Save report
         with open("PRODUCTION_DEPLOYMENT_REPORT.md", "w") as f:
@@ -457,7 +491,11 @@ def main():
                     "monitoring": monitoring_results,
                     "timestamp": datetime.now().isoformat(),
                     "success_rate": len(
-                        [r for r in deployment_results.values() if r.get("status") == "deployed"]
+                        [
+                            r
+                            for r in deployment_results.values()
+                            if r.get("status") == "deployed"
+                        ]
                     )
                     / len(manager.services),
                 },
@@ -466,7 +504,9 @@ def main():
             )
 
         # Final summary
-        successful = len([r for r in deployment_results.values() if r.get("status") == "deployed"])
+        successful = len(
+            [r for r in deployment_results.values() if r.get("status") == "deployed"]
+        )
         healthy = len([r for r in monitoring_results.values() if r.get("healthy")])
 
         logger.info("\n" + "=" * 70)

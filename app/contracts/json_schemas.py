@@ -17,7 +17,9 @@ class Dependency(BaseModel):
     """Task dependency specification."""
 
     task_id: str = Field(..., description="ID of the dependent task")
-    type: Literal["blocks", "informs", "optional"] = Field("blocks", description="Dependency type")
+    type: Literal["blocks", "informs", "optional"] = Field(
+        "blocks", description="Dependency type"
+    )
 
 
 class Story(BaseModel):
@@ -30,7 +32,8 @@ class Story(BaseModel):
     )
     dependencies: list[Dependency] = Field(default_factory=list)
     tags: list[str] = Field(
-        default_factory=list, description="Tags: coding, debugging, qa, ux, infrastructure"
+        default_factory=list,
+        description="Tags: coding, debugging, qa, ux, infrastructure",
     )
     estimate_hours: float = Field(0.5, ge=0.5, le=40)
     priority: Literal["low", "medium", "high", "critical"] = "medium"
@@ -71,8 +74,12 @@ class PlannerOutput(BaseModel):
     global_risks: list[str] = Field(
         default_factory=list, max_length=10, description="Major risk factors"
     )
-    tool_hints: list[str] = Field(default_factory=list, description="Suggested tools and libraries")
-    success_metrics: list[str] = Field(..., min_length=1, description="Overall success criteria")
+    tool_hints: list[str] = Field(
+        default_factory=list, description="Suggested tools and libraries"
+    )
+    success_metrics: list[str] = Field(
+        ..., min_length=1, description="Overall success criteria"
+    )
     total_estimate_days: float = Field(..., ge=0.5)
 
     @model_validator(mode="after")
@@ -125,7 +132,9 @@ class CriticOutput(BaseModel):
     verdict: Literal["pass", "revise"] = Field(..., description="Overall verdict")
     findings: Findings = Field(..., description="Categorized findings")
     must_fix: list[str] = Field(
-        default_factory=list, max_length=10, description="Critical issues that must be fixed"
+        default_factory=list,
+        max_length=10,
+        description="Critical issues that must be fixed",
     )
     nice_to_have: list[str] = Field(
         default_factory=list, max_length=10, description="Optional improvements"
@@ -180,7 +189,9 @@ class MergeStrategy(str, Enum):
 class JudgeOutput(BaseModel):
     """Judge's decision output with strict validation."""
 
-    decision: Literal["accept", "merge", "reject"] = Field(..., description="Final decision")
+    decision: Literal["accept", "merge", "reject"] = Field(
+        ..., description="Final decision"
+    )
     selected: Optional[str] = Field(
         None, pattern=r"^[A-C]$", description="Selected proposal (A/B/C) if applicable"
     )
@@ -211,7 +222,9 @@ class JudgeOutput(BaseModel):
         # Accept/Merge requires runner_instructions
         if self.decision in ["accept", "merge"]:
             if not self.runner_instructions:
-                raise ValueError(f"Decision '{self.decision}' requires runner_instructions")
+                raise ValueError(
+                    f"Decision '{self.decision}' requires runner_instructions"
+                )
             if len(self.runner_instructions) < 3:
                 raise ValueError("Runner instructions should have at least 3 steps")
 
@@ -231,7 +244,9 @@ class JudgeOutput(BaseModel):
         ]:
             expected = self.merge_strategy.value[-1].upper()
             if self.selected != expected:
-                raise ValueError(f"Strategy {self.merge_strategy} requires selected='{expected}'")
+                raise ValueError(
+                    f"Strategy {self.merge_strategy} requires selected='{expected}'"
+                )
 
         return self
 
@@ -253,7 +268,9 @@ class GeneratorProposal(BaseModel):
     )
     test_plan: list[str] = Field(..., min_length=1, description="Testing strategy")
     estimated_loc: int = Field(0, ge=0, le=10000)
-    risk_level: Literal["low", "medium", "high"] = Field(..., description="Risk assessment")
+    risk_level: Literal["low", "medium", "high"] = Field(
+        ..., description="Risk assessment"
+    )
     dependencies: list[str] = Field(
         default_factory=list, description="External dependencies required"
     )

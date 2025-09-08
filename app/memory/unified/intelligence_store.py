@@ -156,7 +156,9 @@ class IntelligenceStore:
             tag_filter=search_tags if search_tags else None,
             domain_filter=domain,
             max_results=max_results,
-            similarity_threshold=0.7 if min_confidence is None else min_confidence.value,
+            similarity_threshold=(
+                0.7 if min_confidence is None else min_confidence.value
+            ),
         )
 
         results = await self.memory_interface.search(search_request)
@@ -220,7 +222,9 @@ class IntelligenceStore:
             # Count by type
             intel_type = structured.get("intelligence_type")
             if intel_type:
-                summary["by_type"][intel_type] = summary["by_type"].get(intel_type, 0) + 1
+                summary["by_type"][intel_type] = (
+                    summary["by_type"].get(intel_type, 0) + 1
+                )
 
             # Count by impact
             impact = structured.get("business_impact", "low")
@@ -244,7 +248,9 @@ class IntelligenceStore:
 
             # Collect recommendations
             recommendations = structured.get("recommendations", [])
-            summary["key_recommendations"].extend(recommendations[:2])  # Top 2 per insight
+            summary["key_recommendations"].extend(
+                recommendations[:2]
+            )  # Top 2 per insight
 
             # Identify risk alerts
             if intel_type == "risk_analysis" and impact in ["critical", "high"]:
@@ -274,7 +280,9 @@ class IntelligenceStore:
 
         return summary
 
-    async def update_insight(self, memory_id: str, updated_insight: IntelligenceInsight) -> bool:
+    async def update_insight(
+        self, memory_id: str, updated_insight: IntelligenceInsight
+    ) -> bool:
         """Update an existing intelligence insight"""
 
         # Update the main content
@@ -301,7 +309,9 @@ class IntelligenceStore:
 
         return success
 
-    async def get_intelligence_analytics(self, domain: Optional[str] = None) -> dict[str, Any]:
+    async def get_intelligence_analytics(
+        self, domain: Optional[str] = None
+    ) -> dict[str, Any]:
         """Get analytics on intelligence store usage and patterns"""
 
         # This would integrate with the analytics system
@@ -348,23 +358,34 @@ class IntelligenceStore:
 
         if insight.implications:
             content_parts.extend(
-                ["IMPLICATIONS:", *[f"• {implication}" for implication in insight.implications], ""]
+                [
+                    "IMPLICATIONS:",
+                    *[f"• {implication}" for implication in insight.implications],
+                    "",
+                ]
             )
 
         if insight.recommendations:
             content_parts.extend(
                 [
                     "RECOMMENDATIONS:",
-                    *[f"• {recommendation}" for recommendation in insight.recommendations],
+                    *[
+                        f"• {recommendation}"
+                        for recommendation in insight.recommendations
+                    ],
                     "",
                 ]
             )
 
         if insight.stakeholders:
-            content_parts.extend([f"STAKEHOLDERS: {', '.join(insight.stakeholders)}", ""])
+            content_parts.extend(
+                [f"STAKEHOLDERS: {', '.join(insight.stakeholders)}", ""]
+            )
 
         if insight.sources:
-            content_parts.extend(["SOURCES:", *[f"• {source}" for source in insight.sources], ""])
+            content_parts.extend(
+                ["SOURCES:", *[f"• {source}" for source in insight.sources], ""]
+            )
 
         return "\n".join(content_parts)
 
@@ -382,7 +403,9 @@ class IntelligenceStore:
         else:
             return MemoryPriority.STANDARD
 
-    async def _store_structured_insight(self, memory_id: str, insight: IntelligenceInsight):
+    async def _store_structured_insight(
+        self, memory_id: str, insight: IntelligenceInsight
+    ):
         """Store structured insight data for complex queries"""
 
         if not self.memory_interface.redis_manager:
@@ -409,7 +432,9 @@ class IntelligenceStore:
             key, structured_data, ttl=86400 * 30, namespace="intelligence"  # 30 days
         )
 
-    async def _retrieve_structured_insight(self, memory_id: str) -> Optional[dict[str, Any]]:
+    async def _retrieve_structured_insight(
+        self, memory_id: str
+    ) -> Optional[dict[str, Any]]:
         """Retrieve structured insight data"""
 
         if not self.memory_interface.redis_manager:
@@ -417,7 +442,9 @@ class IntelligenceStore:
 
         try:
             key = f"intelligence_structured:{memory_id}"
-            data = await self.memory_interface.redis_manager.get(key, namespace="intelligence")
+            data = await self.memory_interface.redis_manager.get(
+                key, namespace="intelligence"
+            )
 
             if data:
                 import json

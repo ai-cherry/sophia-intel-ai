@@ -89,27 +89,55 @@ GONG_CALL_SCHEMA = {
     "description": "Complete call record from Gong with metadata and participants",
     "vectorizer": "text2vec-openai",
     "moduleConfig": {
-        "text2vec-openai": {"model": "text-embedding-3-small", "dimensions": 1536, "type": "text"}
+        "text2vec-openai": {
+            "model": "text-embedding-3-small",
+            "dimensions": 1536,
+            "type": "text",
+        }
     },
     "properties": [
-        {"name": "callId", "dataType": ["text"], "description": "Unique Gong call identifier"},
-        {"name": "title", "dataType": ["text"], "description": "Call title or meeting name"},
+        {
+            "name": "callId",
+            "dataType": ["text"],
+            "description": "Unique Gong call identifier",
+        },
+        {
+            "name": "title",
+            "dataType": ["text"],
+            "description": "Call title or meeting name",
+        },
         {
             "name": "summary",
             "dataType": ["text"],
             "description": "AI-generated call summary for vector search",
         },
-        {"name": "fullTranscript", "dataType": ["text"], "description": "Complete call transcript"},
+        {
+            "name": "fullTranscript",
+            "dataType": ["text"],
+            "description": "Complete call transcript",
+        },
         {"name": "callUrl", "dataType": ["text"], "description": "Gong call URL"},
         {
             "name": "status",
             "dataType": ["text"],
             "description": "Call status (scheduled, completed, etc.)",
         },
-        {"name": "scheduledStart", "dataType": ["date"], "description": "Scheduled start time"},
-        {"name": "actualStart", "dataType": ["date"], "description": "Actual start time"},
+        {
+            "name": "scheduledStart",
+            "dataType": ["date"],
+            "description": "Scheduled start time",
+        },
+        {
+            "name": "actualStart",
+            "dataType": ["date"],
+            "description": "Actual start time",
+        },
         {"name": "actualEnd", "dataType": ["date"], "description": "Actual end time"},
-        {"name": "durationSeconds", "dataType": ["int"], "description": "Call duration in seconds"},
+        {
+            "name": "durationSeconds",
+            "dataType": ["int"],
+            "description": "Call duration in seconds",
+        },
         {
             "name": "meetingPlatform",
             "dataType": ["text"],
@@ -120,7 +148,11 @@ GONG_CALL_SCHEMA = {
             "dataType": ["text"],
             "description": "Recording availability status",
         },
-        {"name": "participantCount", "dataType": ["int"], "description": "Number of participants"},
+        {
+            "name": "participantCount",
+            "dataType": ["int"],
+            "description": "Number of participants",
+        },
         {
             "name": "internalParticipants",
             "dataType": ["text[]"],
@@ -136,9 +168,21 @@ GONG_CALL_SCHEMA = {
             "dataType": ["text[]"],
             "description": "Departments represented in call",
         },
-        {"name": "tags", "dataType": ["text[]"], "description": "Call tags and categories"},
-        {"name": "topics", "dataType": ["text[]"], "description": "Discussion topics identified"},
-        {"name": "keywords", "dataType": ["text[]"], "description": "Important keywords from call"},
+        {
+            "name": "tags",
+            "dataType": ["text[]"],
+            "description": "Call tags and categories",
+        },
+        {
+            "name": "topics",
+            "dataType": ["text[]"],
+            "description": "Discussion topics identified",
+        },
+        {
+            "name": "keywords",
+            "dataType": ["text[]"],
+            "description": "Important keywords from call",
+        },
         {
             "name": "talkRatio",
             "dataType": ["number"],
@@ -164,9 +208,21 @@ GONG_CALL_SCHEMA = {
             "dataType": ["number"],
             "description": "Engagement score (0.0 to 1.0)",
         },
-        {"name": "actionItems", "dataType": ["text[]"], "description": "Extracted action items"},
-        {"name": "decisions", "dataType": ["text[]"], "description": "Key decisions made"},
-        {"name": "nextSteps", "dataType": ["text[]"], "description": "Identified next steps"},
+        {
+            "name": "actionItems",
+            "dataType": ["text[]"],
+            "description": "Extracted action items",
+        },
+        {
+            "name": "decisions",
+            "dataType": ["text[]"],
+            "description": "Key decisions made",
+        },
+        {
+            "name": "nextSteps",
+            "dataType": ["text[]"],
+            "description": "Identified next steps",
+        },
         {
             "name": "pipelineStage",
             "dataType": ["text"],
@@ -177,9 +233,21 @@ GONG_CALL_SCHEMA = {
             "dataType": ["number"],
             "description": "Associated deal value if applicable",
         },
-        {"name": "createdAt", "dataType": ["date"], "description": "Record creation timestamp"},
-        {"name": "updatedAt", "dataType": ["date"], "description": "Record last update timestamp"},
-        {"name": "source", "dataType": ["text"], "description": "Data source identifier"},
+        {
+            "name": "createdAt",
+            "dataType": ["date"],
+            "description": "Record creation timestamp",
+        },
+        {
+            "name": "updatedAt",
+            "dataType": ["date"],
+            "description": "Record last update timestamp",
+        },
+        {
+            "name": "source",
+            "dataType": ["text"],
+            "description": "Data source identifier",
+        },
     ],
 }
 
@@ -189,24 +257,44 @@ GONG_TRANSCRIPT_CHUNK_SCHEMA = {
     "description": "Chunked transcript segments from Gong calls for detailed search",
     "vectorizer": "text2vec-openai",
     "moduleConfig": {
-        "text2vec-openai": {"model": "text-embedding-3-small", "dimensions": 1536, "type": "text"}
+        "text2vec-openai": {
+            "model": "text-embedding-3-small",
+            "dimensions": 1536,
+            "type": "text",
+        }
     },
     "properties": [
-        {"name": "callId", "dataType": ["text"], "description": "Parent call identifier"},
-        {"name": "chunkId", "dataType": ["text"], "description": "Unique chunk identifier"},
+        {
+            "name": "callId",
+            "dataType": ["text"],
+            "description": "Parent call identifier",
+        },
+        {
+            "name": "chunkId",
+            "dataType": ["text"],
+            "description": "Unique chunk identifier",
+        },
         {
             "name": "content",
             "dataType": ["text"],
             "description": "Transcript content for this chunk",
         },
-        {"name": "speakerId", "dataType": ["text"], "description": "Speaker identifier"},
+        {
+            "name": "speakerId",
+            "dataType": ["text"],
+            "description": "Speaker identifier",
+        },
         {"name": "speakerName", "dataType": ["text"], "description": "Speaker name"},
         {
             "name": "speakerRole",
             "dataType": ["text"],
             "description": "Speaker role (host, participant, guest)",
         },
-        {"name": "speakerEmail", "dataType": ["text"], "description": "Speaker email address"},
+        {
+            "name": "speakerEmail",
+            "dataType": ["text"],
+            "description": "Speaker email address",
+        },
         {
             "name": "isInternal",
             "dataType": ["boolean"],
@@ -217,9 +305,21 @@ GONG_TRANSCRIPT_CHUNK_SCHEMA = {
             "dataType": ["text"],
             "description": "Speaker department if internal",
         },
-        {"name": "startTime", "dataType": ["number"], "description": "Chunk start time in seconds"},
-        {"name": "endTime", "dataType": ["number"], "description": "Chunk end time in seconds"},
-        {"name": "duration", "dataType": ["number"], "description": "Chunk duration in seconds"},
+        {
+            "name": "startTime",
+            "dataType": ["number"],
+            "description": "Chunk start time in seconds",
+        },
+        {
+            "name": "endTime",
+            "dataType": ["number"],
+            "description": "Chunk end time in seconds",
+        },
+        {
+            "name": "duration",
+            "dataType": ["number"],
+            "description": "Chunk duration in seconds",
+        },
         {
             "name": "confidence",
             "dataType": ["number"],
@@ -240,8 +340,16 @@ GONG_TRANSCRIPT_CHUNK_SCHEMA = {
             "dataType": ["text[]"],
             "description": "Keywords extracted from this chunk",
         },
-        {"name": "topics", "dataType": ["text[]"], "description": "Topics discussed in this chunk"},
-        {"name": "entities", "dataType": ["text[]"], "description": "Named entities mentioned"},
+        {
+            "name": "topics",
+            "dataType": ["text[]"],
+            "description": "Topics discussed in this chunk",
+        },
+        {
+            "name": "entities",
+            "dataType": ["text[]"],
+            "description": "Named entities mentioned",
+        },
         {
             "name": "questions",
             "dataType": ["text[]"],
@@ -263,11 +371,31 @@ GONG_TRANSCRIPT_CHUNK_SCHEMA = {
             "description": "Call date for temporal filtering",
         },
         {"name": "callTitle", "dataType": ["text"], "description": "Parent call title"},
-        {"name": "meetingPlatform", "dataType": ["text"], "description": "Meeting platform used"},
-        {"name": "chunkIndex", "dataType": ["int"], "description": "Chunk sequence number in call"},
-        {"name": "totalChunks", "dataType": ["int"], "description": "Total chunks in call"},
-        {"name": "createdAt", "dataType": ["date"], "description": "Record creation timestamp"},
-        {"name": "source", "dataType": ["text"], "description": "Data source identifier"},
+        {
+            "name": "meetingPlatform",
+            "dataType": ["text"],
+            "description": "Meeting platform used",
+        },
+        {
+            "name": "chunkIndex",
+            "dataType": ["int"],
+            "description": "Chunk sequence number in call",
+        },
+        {
+            "name": "totalChunks",
+            "dataType": ["int"],
+            "description": "Total chunks in call",
+        },
+        {
+            "name": "createdAt",
+            "dataType": ["date"],
+            "description": "Record creation timestamp",
+        },
+        {
+            "name": "source",
+            "dataType": ["text"],
+            "description": "Data source identifier",
+        },
     ],
 }
 
@@ -277,7 +405,11 @@ GONG_EMAIL_SCHEMA = {
     "description": "Email communications tracked in Gong with context and relationships",
     "vectorizer": "text2vec-openai",
     "moduleConfig": {
-        "text2vec-openai": {"model": "text-embedding-3-small", "dimensions": 1536, "type": "text"}
+        "text2vec-openai": {
+            "model": "text-embedding-3-small",
+            "dimensions": 1536,
+            "type": "text",
+        }
     },
     "properties": [
         {
@@ -292,10 +424,26 @@ GONG_EMAIL_SCHEMA = {
             "dataType": ["text"],
             "description": "Plain text version of email body",
         },
-        {"name": "fromEmail", "dataType": ["text"], "description": "Sender email address"},
-        {"name": "fromName", "dataType": ["text"], "description": "Sender display name"},
-        {"name": "toEmails", "dataType": ["text[]"], "description": "Recipient email addresses"},
-        {"name": "ccEmails", "dataType": ["text[]"], "description": "CC recipient email addresses"},
+        {
+            "name": "fromEmail",
+            "dataType": ["text"],
+            "description": "Sender email address",
+        },
+        {
+            "name": "fromName",
+            "dataType": ["text"],
+            "description": "Sender display name",
+        },
+        {
+            "name": "toEmails",
+            "dataType": ["text[]"],
+            "description": "Recipient email addresses",
+        },
+        {
+            "name": "ccEmails",
+            "dataType": ["text[]"],
+            "description": "CC recipient email addresses",
+        },
         {
             "name": "bccEmails",
             "dataType": ["text[]"],
@@ -306,9 +454,21 @@ GONG_EMAIL_SCHEMA = {
             "dataType": ["text"],
             "description": "Email type (inbound, outbound, internal)",
         },
-        {"name": "threadId", "dataType": ["text"], "description": "Email thread identifier"},
-        {"name": "isReply", "dataType": ["boolean"], "description": "Whether email is a reply"},
-        {"name": "isForward", "dataType": ["boolean"], "description": "Whether email is forwarded"},
+        {
+            "name": "threadId",
+            "dataType": ["text"],
+            "description": "Email thread identifier",
+        },
+        {
+            "name": "isReply",
+            "dataType": ["boolean"],
+            "description": "Whether email is a reply",
+        },
+        {
+            "name": "isForward",
+            "dataType": ["boolean"],
+            "description": "Whether email is forwarded",
+        },
         {
             "name": "priority",
             "dataType": ["text"],
@@ -319,9 +479,17 @@ GONG_EMAIL_SCHEMA = {
             "dataType": ["boolean"],
             "description": "Whether email has attachments",
         },
-        {"name": "attachmentNames", "dataType": ["text[]"], "description": "Names of attachments"},
+        {
+            "name": "attachmentNames",
+            "dataType": ["text[]"],
+            "description": "Names of attachments",
+        },
         {"name": "sentAt", "dataType": ["date"], "description": "Email sent timestamp"},
-        {"name": "receivedAt", "dataType": ["date"], "description": "Email received timestamp"},
+        {
+            "name": "receivedAt",
+            "dataType": ["date"],
+            "description": "Email received timestamp",
+        },
         {
             "name": "dealId",
             "dataType": ["text"],
@@ -337,7 +505,11 @@ GONG_EMAIL_SCHEMA = {
             "dataType": ["text[]"],
             "description": "Associated contact identifiers",
         },
-        {"name": "accountId", "dataType": ["text"], "description": "Associated account identifier"},
+        {
+            "name": "accountId",
+            "dataType": ["text"],
+            "description": "Associated account identifier",
+        },
         {
             "name": "companyName",
             "dataType": ["text"],
@@ -358,20 +530,36 @@ GONG_EMAIL_SCHEMA = {
             "dataType": ["number"],
             "description": "Urgency score (0.0 to 1.0)",
         },
-        {"name": "topics", "dataType": ["text[]"], "description": "Topics discussed in email"},
+        {
+            "name": "topics",
+            "dataType": ["text[]"],
+            "description": "Topics discussed in email",
+        },
         {
             "name": "keywords",
             "dataType": ["text[]"],
             "description": "Important keywords from email",
         },
-        {"name": "entities", "dataType": ["text[]"], "description": "Named entities mentioned"},
+        {
+            "name": "entities",
+            "dataType": ["text[]"],
+            "description": "Named entities mentioned",
+        },
         {
             "name": "actionItems",
             "dataType": ["text[]"],
             "description": "Action items mentioned in email",
         },
-        {"name": "questions", "dataType": ["text[]"], "description": "Questions asked in email"},
-        {"name": "nextSteps", "dataType": ["text[]"], "description": "Next steps mentioned"},
+        {
+            "name": "questions",
+            "dataType": ["text[]"],
+            "description": "Questions asked in email",
+        },
+        {
+            "name": "nextSteps",
+            "dataType": ["text[]"],
+            "description": "Next steps mentioned",
+        },
         {
             "name": "isInternal",
             "dataType": ["boolean"],
@@ -402,9 +590,21 @@ GONG_EMAIL_SCHEMA = {
             "dataType": ["text[]"],
             "description": "Meeting invites or references",
         },
-        {"name": "createdAt", "dataType": ["date"], "description": "Record creation timestamp"},
-        {"name": "updatedAt", "dataType": ["date"], "description": "Record last update timestamp"},
-        {"name": "source", "dataType": ["text"], "description": "Data source identifier"},
+        {
+            "name": "createdAt",
+            "dataType": ["date"],
+            "description": "Record creation timestamp",
+        },
+        {
+            "name": "updatedAt",
+            "dataType": ["date"],
+            "description": "Record last update timestamp",
+        },
+        {
+            "name": "source",
+            "dataType": ["text"],
+            "description": "Data source identifier",
+        },
     ],
 }
 
@@ -458,7 +658,9 @@ class GongWeaviateSchemaManager:
         """Get schema definition for a class"""
         return self.schemas.get(class_name)
 
-    def validate_object(self, class_name: str, obj_data: dict[str, Any]) -> tuple[bool, list[str]]:
+    def validate_object(
+        self, class_name: str, obj_data: dict[str, Any]
+    ) -> tuple[bool, list[str]]:
         """Validate object data against schema"""
         schema = self.get_schema(class_name)
         if not schema:
@@ -505,10 +707,14 @@ def create_call_object(call_data: dict[str, Any]) -> dict[str, Any]:
         "recordingStatus": call_data.get("recording_status", "available"),
         "participantCount": len(call_data.get("participants", [])),
         "internalParticipants": [
-            p["email"] for p in call_data.get("participants", []) if p.get("is_internal", True)
+            p["email"]
+            for p in call_data.get("participants", [])
+            if p.get("is_internal", True)
         ],
         "externalParticipants": [
-            p["email"] for p in call_data.get("participants", []) if not p.get("is_internal", True)
+            p["email"]
+            for p in call_data.get("participants", [])
+            if not p.get("is_internal", True)
         ],
         "departments": list(
             {
@@ -522,7 +728,9 @@ def create_call_object(call_data: dict[str, Any]) -> dict[str, Any]:
         "keywords": call_data.get("keywords", []),
         "talkRatio": call_data.get("metrics", {}).get("talk_ratio", 0.0),
         "silenceRatio": call_data.get("metrics", {}).get("silence_ratio", 0.0),
-        "interruptionsCount": call_data.get("metrics", {}).get("interruptions_count", 0),
+        "interruptionsCount": call_data.get("metrics", {}).get(
+            "interruptions_count", 0
+        ),
         "sentimentScore": call_data.get("metrics", {}).get("sentiment_score"),
         "engagementScore": call_data.get("metrics", {}).get("engagement_score"),
         "actionItems": call_data.get("action_items", []),
@@ -543,12 +751,15 @@ def create_transcript_chunk_object(
     return {
         "callId": call_context.get("call_id", ""),
         "chunkId": chunk_data.get(
-            "chunk_id", f"{call_context.get('call_id', '')}_{chunk_data.get('index', 0)}"
+            "chunk_id",
+            f"{call_context.get('call_id', '')}_{chunk_data.get('index', 0)}",
         ),
         "content": chunk_data.get("content", ""),
         "speakerId": chunk_data.get("speaker_id", ""),
         "speakerName": chunk_data.get("speaker_name", ""),
-        "speakerRole": chunk_data.get("speaker_role", ParticipantRole.PARTICIPANT.value),
+        "speakerRole": chunk_data.get(
+            "speaker_role", ParticipantRole.PARTICIPANT.value
+        ),
         "speakerEmail": chunk_data.get("speaker_email", ""),
         "isInternal": chunk_data.get("is_internal", True),
         "department": chunk_data.get("department"),

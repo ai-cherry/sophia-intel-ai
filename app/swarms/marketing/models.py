@@ -211,7 +211,9 @@ class MarketInsight:
         impact_score = impact_weights.get(self.impact_level, 0.5)
         urgency_score = urgency_weights.get(self.urgency_level, 0.5)
 
-        return (self.confidence_level * 0.4) + (impact_score * 0.4) + (urgency_score * 0.2)
+        return (
+            (self.confidence_level * 0.4) + (impact_score * 0.4) + (urgency_score * 0.2)
+        )
 
 
 @dataclass
@@ -445,7 +447,9 @@ class MarketingContext:
 
     def get_best_performing_segments(self, limit: int = 3) -> list[str]:
         """Get top performing market segments"""
-        sorted_segments = sorted(self.segment_performance.items(), key=lambda x: x[1], reverse=True)
+        sorted_segments = sorted(
+            self.segment_performance.items(), key=lambda x: x[1], reverse=True
+        )
         return [segment for segment, _ in sorted_segments[:limit]]
 
     def update_sync_status(self, platform: str):

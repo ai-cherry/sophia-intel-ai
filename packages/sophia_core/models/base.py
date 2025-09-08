@@ -251,7 +251,11 @@ class ConversationHistory(PydanticBaseModel):
                 "role": msg.role.value,
                 "content": msg.content,
                 **({"name": msg.name} if msg.name else {}),
-                **({"tool_calls": [tc.dict() for tc in msg.tool_calls]} if msg.tool_calls else {}),
+                **(
+                    {"tool_calls": [tc.dict() for tc in msg.tool_calls]}
+                    if msg.tool_calls
+                    else {}
+                ),
                 **({"tool_call_id": msg.tool_call_id} if msg.tool_call_id else {}),
             }
             for msg in self.messages
@@ -268,7 +272,9 @@ class ConversationHistory(PydanticBaseModel):
                 return message
         return None
 
-    def count_tokens(self, tokenizer_func: Optional[Callable[[str], int]] = None) -> int:
+    def count_tokens(
+        self, tokenizer_func: Optional[Callable[[str], int]] = None
+    ) -> int:
         """
         Estimate token count for the conversation.
 
@@ -295,7 +301,12 @@ class BaseModel(ABC):
     Abstract base class for language model implementations.
     """
 
-    def __init__(self, model_name: str, capabilities: Optional[ModelCapabilities] = None, **kwargs):
+    def __init__(
+        self,
+        model_name: str,
+        capabilities: Optional[ModelCapabilities] = None,
+        **kwargs,
+    ):
         """
         Initialize the model.
 
@@ -311,7 +322,10 @@ class BaseModel(ABC):
 
     @abstractmethod
     async def generate(
-        self, messages: List[Message], parameters: Optional[ModelParameters] = None, **kwargs
+        self,
+        messages: List[Message],
+        parameters: Optional[ModelParameters] = None,
+        **kwargs,
     ) -> ModelResponse:
         """
         Generate a response from the model.
@@ -331,7 +345,10 @@ class BaseModel(ABC):
 
     @abstractmethod
     async def stream(
-        self, messages: List[Message], parameters: Optional[ModelParameters] = None, **kwargs
+        self,
+        messages: List[Message],
+        parameters: Optional[ModelParameters] = None,
+        **kwargs,
     ) -> AsyncGenerator[StreamingResponse, None]:
         """
         Stream responses from the model.

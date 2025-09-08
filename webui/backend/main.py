@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 import uuid
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
@@ -11,9 +12,19 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
-from app.llm.provider_router import EnhancedProviderRouter
 import httpx
 import os
+
+# Add the root directory to Python path to import app modules
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
+try:
+    from app.llm.provider_router import EnhancedProviderRouter
+    from app.orchestrator.artemis_supreme import ArtemisSupremeOrchestrator
+    ROUTER_AVAILABLE = True
+except ImportError:
+    print("Warning: Advanced routing not available, using mock router")
+    ROUTER_AVAILABLE = False
 
 
 class CreateSessionRequest(BaseModel):
@@ -68,7 +79,10 @@ class WebUIServer:
             "git": os.getenv("MCP_GIT_URL", "http://mcp-git:8000"),
             "memory": os.getenv("MCP_MEMORY_URL", "http://mcp-memory:8000"),
         }
-        self.router = EnhancedProviderRouter()
+        if ROUTER_AVAILABLE:
+            self.router = EnhancedProviderRouter()
+        else:
+            self.router = None
         self._routes()
 
     def _routes(self) -> None:
@@ -82,11 +96,15 @@ class WebUIServer:
         static_dir = Path(__file__).resolve().parents[1] / "frontend"
         if static_dir.exists():
             app.mount("/ui", StaticFiles(directory=static_dir, html=True), name="ui")
-        
+
         @app.get("/tactical")
         async def tactical_command_center():
             """Serve the tactical command center interface"""
-            tactical_file = Path(__file__).resolve().parents[1] / "frontend" / "tactical-command.html"
+            tactical_file = (
+                Path(__file__).resolve().parents[1]
+                / "frontend"
+                / "tactical-command.html"
+            )
             if tactical_file.exists():
                 return FileResponse(tactical_file)
             raise HTTPException(404, detail="Tactical interface not found")
@@ -96,7 +114,9 @@ class WebUIServer:
             if len(self.sessions) >= self.MAX_SESSIONS:
                 raise HTTPException(status_code=429, detail="Maximum sessions reached")
             sid = str(uuid.uuid4())
-            self.sessions[sid] = ChatSession(id=sid, agent=req.agent, repo_scope=req.repo_scope)
+            self.sessions[sid] = ChatSession(
+                id=sid, agent=req.agent, repo_scope=req.repo_scope
+            )
             return {"session_id": sid}
 
         @app.websocket("/ws")
@@ -106,6 +126,24 @@ class WebUIServer:
             if not sid or sid not in self.sessions:
                 await ws.send_json({"type": "error", "message": "session not found"})
                 await ws.close(code=4004)
+                return
+
+            await ws.send_json(
+                {"type": "status", "message": "connected", "session_id": sid}
+            )
+            try:
+                while True:
+                    data = await ws.receive_text()
+                    # Echo back as a minimal placeholder for streaming
+                    await ws.send_json(
+                        {
+                            "type": "message",
+                            "agent": self.sessions[sid].agent,
+                            "text": f"🎯 ARTEMIS TACTICAL RESPONSE: {data}",
+                        }
+                    )
+                    await asyncio.sleep(0.01)
+            except WebSocketDisconnect:
                 return
 
         @app.post("/tools/invoke")
@@ -148,19 +186,27 @@ class WebUIServer:
             provider = payload.get("provider")
             model = payload.get("model")
 
-            text = await self.router.complete(
-                task_type=task_type,
-                messages=messages,
-                provider_override=provider,
-                model_override=model,
-            )
-            # Future: stream tokens via per-session queue; for now, return full text
-            r = self.router._route_for(task_type)
-            route_meta = {"provider": provider or r.provider, "model": model or r.model}
+            if self.router:
+                text = await self.router.complete(
+                    task_type=task_type,
+                    messages=messages,
+                    provider_override=provider,
+                    model_override=model,
+                )
+                # Future: stream tokens via per-session queue; for now, return full text
+                r = self.router._route_for(task_type)
+                route_meta = {"provider": provider or r.provider, "model": model or r.model}
+            else:
+                # Mock response when router not available
+                text = f"🎯 ARTEMIS TACTICAL COMMAND CENTER ACTIVE\n\nMock response for: {messages[-1].get('content', 'No message') if messages else 'Empty request'}\n\nStatus: TACTICAL SYSTEMS OPERATIONAL"
+                route_meta = {"provider": provider or "mock", "model": model or "tactical-mock"}
+            
             return {"text": text, "route": route_meta}
 
         @app.post("/sessions/{session_id}/proposals")
-        async def create_proposal(session_id: str, req: CreateProposalRequest) -> Dict[str, Any]:
+        async def create_proposal(
+            session_id: str, req: CreateProposalRequest
+        ) -> Dict[str, Any]:
             if session_id not in self.sessions:
                 raise HTTPException(404, detail="session not found")
             pid = str(uuid.uuid4())
@@ -194,10 +240,18 @@ class WebUIServer:
                     if ch["capability"] != "fs":
                         raise HTTPException(400, detail="only fs changes supported")
                     base = self.mcp_urls[
-                        "fs_sophia" if ch.get("scope", "sophia") == "sophia" else "fs_artemis"
+                        (
+                            "fs_sophia"
+                            if ch.get("scope", "sophia") == "sophia"
+                            else "fs_artemis"
+                        )
                     ]
                     url = f"{base}/fs/write"
-                    payload = {"path": ch["path"], "content": ch["content"], "create_dirs": True}
+                    payload = {
+                        "path": ch["path"],
+                        "content": ch["content"],
+                        "create_dirs": True,
+                    }
                     r = await client.post(url, json=payload)
                     r.raise_for_status()
 
@@ -206,7 +260,11 @@ class WebUIServer:
                     repo = "sophia" if sess.repo_scope == "sophia" else "artemis"
                     r = await client.post(
                         f"{self.mcp_urls['git']}/git/commit",
-                        json={"repo": repo, "message": prop["commit_message"], "add_all": True},
+                        json={
+                            "repo": repo,
+                            "message": prop["commit_message"],
+                            "add_all": True,
+                        },
                     )
                     r.raise_for_status()
 
@@ -223,18 +281,12 @@ class WebUIServer:
                 raise HTTPException(404, detail="proposal not found")
             prop["status"] = "rejected"
             return {"ok": True}
-            await ws.send_json({"type": "status", "message": "connected", "session_id": sid})
-            try:
-                while True:
-                    data = await ws.receive_text()
-                    # Echo back as a minimal placeholder for streaming
-                    await ws.send_json(
-                        {"type": "message", "agent": self.sessions[sid].agent, "text": data}
-                    )
-                    await asyncio.sleep(0.01)
-            except WebSocketDisconnect:
-                return
 
 
 server = WebUIServer()
 app = server.app
+
+# Add startup check
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

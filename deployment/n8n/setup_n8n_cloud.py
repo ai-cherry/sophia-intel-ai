@@ -28,13 +28,18 @@ class N8NCloudSetup:
     def __init__(self):
         self.api_key = N8N_API_KEY
         self.base_url = f"{N8N_INSTANCE_URL}/api/v1"
-        self.headers = {"X-N8N-API-KEY": self.api_key, "Content-Type": "application/json"}
+        self.headers = {
+            "X-N8N-API-KEY": self.api_key,
+            "Content-Type": "application/json",
+        }
         self.workflow_id = None
 
     def test_connection(self) -> bool:
         """Test connection to n8n cloud instance"""
         try:
-            response = requests.get(f"{self.base_url}/workflows", headers=self.headers, timeout=10)
+            response = requests.get(
+                f"{self.base_url}/workflows", headers=self.headers, timeout=10
+            )
             if response.status_code == 200:
                 print("✅ Connected to n8n Cloud successfully")
                 return True
@@ -96,14 +101,10 @@ class N8NCloudSetup:
 
         # Choose workflow version based on n8n version
         if use_enhanced:
-            workflow_path = (
-                "/Users/lynnmusil/sophia-intel-ai/deployment/n8n/gong-webhook-enhanced-v1110.json"
-            )
+            workflow_path = "/Users/lynnmusil/sophia-intel-ai/deployment/n8n/gong-webhook-enhanced-v1110.json"
             print("📈 Using enhanced workflow for n8n v1.110+")
         else:
-            workflow_path = (
-                "/Users/lynnmusil/sophia-intel-ai/deployment/n8n/gong-webhook-simple.json"
-            )
+            workflow_path = "/Users/lynnmusil/sophia-intel-ai/deployment/n8n/gong-webhook-simple.json"
             print("📋 Using simple workflow for compatibility")
 
         try:
@@ -116,7 +117,14 @@ class N8NCloudSetup:
             )
 
             # Remove fields that cause API issues in v1.110+
-            fields_to_remove = ["id", "versionId", "triggerCount", "meta", "active", "tags"]
+            fields_to_remove = [
+                "id",
+                "versionId",
+                "triggerCount",
+                "meta",
+                "active",
+                "tags",
+            ]
             for field in fields_to_remove:
                 workflow_data.pop(field, None)
 
@@ -127,20 +135,27 @@ class N8NCloudSetup:
                 # Keep only basic settings that API accepts
                 allowed_settings = ["executionOrder", "saveManualExecutions"]
                 filtered_settings = {
-                    k: v for k, v in workflow_data["settings"].items() if k in allowed_settings
+                    k: v
+                    for k, v in workflow_data["settings"].items()
+                    if k in allowed_settings
                 }
                 workflow_data["settings"] = filtered_settings
 
             # Create workflow via API
             response = requests.post(
-                f"{self.base_url}/workflows", headers=self.headers, json=workflow_data, timeout=30
+                f"{self.base_url}/workflows",
+                headers=self.headers,
+                json=workflow_data,
+                timeout=30,
             )
 
             if response.status_code in [200, 201]:
                 workflow = response.json()
                 self.workflow_id = workflow.get("id")
                 print(f"✅ Enhanced workflow created with ID: {self.workflow_id}")
-                print("📊 Workflow includes: Database storage, Redis caching, Priority routing")
+                print(
+                    "📊 Workflow includes: Database storage, Redis caching, Priority routing"
+                )
                 return self.workflow_id
             else:
                 print(f"❌ Failed to create workflow: {response.status_code}")
@@ -187,7 +202,9 @@ class N8NCloudSetup:
         """Get the webhook URL for the workflow"""
         try:
             response = requests.get(
-                f"{self.base_url}/workflows/{workflow_id}", headers=self.headers, timeout=10
+                f"{self.base_url}/workflows/{workflow_id}",
+                headers=self.headers,
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -256,7 +273,9 @@ class N8NCloudSetup:
         """Check n8n version and available features"""
         try:
             # Get version info (if available via API)
-            response = requests.get(f"{self.base_url}/workflows", headers=self.headers, timeout=10)
+            response = requests.get(
+                f"{self.base_url}/workflows", headers=self.headers, timeout=10
+            )
 
             version_info = {
                 "api_available": response.status_code == 200,

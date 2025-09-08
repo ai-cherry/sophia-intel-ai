@@ -34,7 +34,9 @@ class TokenStats:
         """Estimate cost in USD based on token usage."""
         # Rough estimates per 1M tokens (adjust based on actual model pricing)
         prompt_cost = self.prompt_tokens * 0.01 / 1000  # $10 per 1M prompt tokens
-        completion_cost = self.completion_tokens * 0.03 / 1000  # $30 per 1M completion tokens
+        completion_cost = (
+            self.completion_tokens * 0.03 / 1000
+        )  # $30 per 1M completion tokens
         return prompt_cost + completion_cost
 
 
@@ -89,12 +91,18 @@ class LLMResponse:
             "latency_ms": self.latency_ms,
             "token_stats": (
                 {
-                    "prompt_tokens": self.token_stats.prompt_tokens if self.token_stats else 0,
+                    "prompt_tokens": (
+                        self.token_stats.prompt_tokens if self.token_stats else 0
+                    ),
                     "completion_tokens": (
                         self.token_stats.completion_tokens if self.token_stats else 0
                     ),
-                    "total_tokens": self.token_stats.total_tokens if self.token_stats else 0,
-                    "cached_tokens": self.token_stats.cached_tokens if self.token_stats else 0,
+                    "total_tokens": (
+                        self.token_stats.total_tokens if self.token_stats else 0
+                    ),
+                    "cached_tokens": (
+                        self.token_stats.cached_tokens if self.token_stats else 0
+                    ),
                 }
                 if self.token_stats
                 else None

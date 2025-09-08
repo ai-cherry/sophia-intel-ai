@@ -99,7 +99,9 @@ class WebSocketManager:
         for _call_id, subscribers in self.call_subscriptions.items():
             subscribers.discard(websocket)
 
-        logger.info(f"WebSocket disconnected. Total connections: {len(self.connections)}")
+        logger.info(
+            f"WebSocket disconnected. Total connections: {len(self.connections)}"
+        )
 
     async def broadcast_to_all(self, message: dict[str, Any]):
         """Broadcast message to all connected clients"""
@@ -170,14 +172,18 @@ class MetricsCalculator:
                 total_weight += factors["sentiment"]
 
             elif output.agent_type == "coaching":
-                talk_balance = output.data.get("talk_time_balance", {}).get("balance_score", 0.5)
+                talk_balance = output.data.get("talk_time_balance", {}).get(
+                    "balance_score", 0.5
+                )
                 question_quality = output.data.get("questioning_analysis", {}).get(
                     "question_quality", 0.5
                 )
 
                 total_score += talk_balance * 100 * factors["talk_time_balance"]
                 total_score += question_quality * 100 * factors["question_quality"]
-                total_weight += factors["talk_time_balance"] + factors["question_quality"]
+                total_weight += (
+                    factors["talk_time_balance"] + factors["question_quality"]
+                )
 
         if total_weight > 0:
             return total_score / total_weight
@@ -189,7 +195,9 @@ class MetricsCalculator:
             return "stable"
 
         risk_metrics = [
-            m for m in self.metric_history[call_id] if m.metric_type == MetricType.RISK_SCORE
+            m
+            for m in self.metric_history[call_id]
+            if m.metric_type == MetricType.RISK_SCORE
         ]
 
         if len(risk_metrics) < 2:
@@ -252,7 +260,9 @@ class SalesIntelligenceDashboard:
         # Load initial platform data
         try:
             self.platform_data = await get_unified_data()
-            logger.info(f"Loaded data from {self.platform_data.connected_platforms} platforms")
+            logger.info(
+                f"Loaded data from {self.platform_data.connected_platforms} platforms"
+            )
         except Exception as e:
             logger.error(f"Failed to load platform data: {e}")
 
@@ -272,7 +282,9 @@ class SalesIntelligenceDashboard:
                 label="Sentiment Score",
                 unit="score",
                 trend=self._calculate_trend(
-                    call_id, MetricType.SENTIMENT, output.data.get("overall_sentiment", 0.0)
+                    call_id,
+                    MetricType.SENTIMENT,
+                    output.data.get("overall_sentiment", 0.0),
                 ),
                 color=self.metrics_calculator.get_metric_color(
                     MetricType.SENTIMENT, output.data.get("overall_sentiment", 0.0)
@@ -290,14 +302,18 @@ class SalesIntelligenceDashboard:
                 label="Deal Risk",
                 unit="score",
                 trend=self.metrics_calculator.calculate_risk_trend(call_id, risk_score),
-                color=self.metrics_calculator.get_metric_color(MetricType.RISK_SCORE, risk_score),
+                color=self.metrics_calculator.get_metric_color(
+                    MetricType.RISK_SCORE, risk_score
+                ),
                 target_value=0.3,
             )
             metrics.append(risk_metric)
 
         elif output.agent_type == "coaching":
             # Multiple metrics from coaching agent
-            talk_time = output.data.get("talk_time_balance", {}).get("internal_ratio", 0.5)
+            talk_time = output.data.get("talk_time_balance", {}).get(
+                "internal_ratio", 0.5
+            )
             question_quality = output.data.get("questioning_analysis", {}).get(
                 "question_quality", 0.5
             )
@@ -310,7 +326,9 @@ class SalesIntelligenceDashboard:
                 label="Talk Time Ratio",
                 unit="ratio",
                 trend=self._calculate_trend(call_id, MetricType.TALK_TIME, talk_time),
-                color=self.metrics_calculator.get_metric_color(MetricType.TALK_TIME, talk_time),
+                color=self.metrics_calculator.get_metric_color(
+                    MetricType.TALK_TIME, talk_time
+                ),
                 target_value=0.35,
             )
 
@@ -321,7 +339,9 @@ class SalesIntelligenceDashboard:
                 call_id=call_id,
                 label="Question Quality",
                 unit="score",
-                trend=self._calculate_trend(call_id, MetricType.QUESTION_QUALITY, question_quality),
+                trend=self._calculate_trend(
+                    call_id, MetricType.QUESTION_QUALITY, question_quality
+                ),
                 color=self.metrics_calculator.get_metric_color(
                     MetricType.QUESTION_QUALITY, question_quality
                 ),
@@ -362,13 +382,16 @@ class SalesIntelligenceDashboard:
         # Broadcast updates
         await self._broadcast_metrics_update(call_id, metrics)
 
-    def _calculate_trend(self, call_id: str, metric_type: MetricType, current_value: float) -> str:
+    def _calculate_trend(
+        self, call_id: str, metric_type: MetricType, current_value: float
+    ) -> str:
         """Calculate trend for a metric"""
         history = self.metrics_calculator.metric_history.get(call_id, [])
         recent_values = [
             m.value
             for m in history
-            if m.metric_type == metric_type and m.timestamp > datetime.now() - timedelta(minutes=5)
+            if m.metric_type == metric_type
+            and m.timestamp > datetime.now() - timedelta(minutes=5)
         ]
 
         if len(recent_values) < 2:
@@ -443,7 +466,9 @@ class SalesIntelligenceDashboard:
         insight_generator = insights.get(output.agent_type)
         return insight_generator(output.data) if insight_generator else None
 
-    async def _broadcast_metrics_update(self, call_id: str, metrics: list[DashboardMetric]):
+    async def _broadcast_metrics_update(
+        self, call_id: str, metrics: list[DashboardMetric]
+    ):
         """Broadcast metrics update to WebSocket clients"""
         update_message = {
             "type": "metrics_update",
@@ -493,7 +518,9 @@ class SalesIntelligenceDashboard:
         latest_metrics = {}
         for metric_type, metric_list in metrics_by_type.items():
             if metric_list:
-                latest_metrics[metric_type] = max(metric_list, key=lambda m: m["timestamp"])
+                latest_metrics[metric_type] = max(
+                    metric_list, key=lambda m: m["timestamp"]
+                )
 
         return {
             "call_id": call_id,
@@ -547,9 +574,13 @@ class SalesIntelligenceDashboard:
 
         # Calculate team metrics
         total_calls = len(active_calls)
-        high_risk_calls = len([c for c in active_calls if c.risk_level in ["high", "critical"]])
+        high_risk_calls = len(
+            [c for c in active_calls if c.risk_level in ["high", "critical"]]
+        )
         avg_sentiment = (
-            sum(c.sentiment_score for c in active_calls) / total_calls if total_calls > 0 else 0.0
+            sum(c.sentiment_score for c in active_calls) / total_calls
+            if total_calls > 0
+            else 0.0
         )
 
         # Recent activity
@@ -580,7 +611,11 @@ class SalesIntelligenceDashboard:
                 "platforms": {
                     "gong": {
                         "enabled": bool(self.platform_data.gong),
-                        "count": self.platform_data.gong.count if self.platform_data.gong else 0,
+                        "count": (
+                            self.platform_data.gong.count
+                            if self.platform_data.gong
+                            else 0
+                        ),
                         "type": (
                             self.platform_data.gong.data_type
                             if self.platform_data.gong
@@ -589,7 +624,11 @@ class SalesIntelligenceDashboard:
                     },
                     "asana": {
                         "enabled": bool(self.platform_data.asana),
-                        "count": self.platform_data.asana.count if self.platform_data.asana else 0,
+                        "count": (
+                            self.platform_data.asana.count
+                            if self.platform_data.asana
+                            else 0
+                        ),
                         "type": (
                             self.platform_data.asana.data_type
                             if self.platform_data.asana
@@ -599,7 +638,9 @@ class SalesIntelligenceDashboard:
                     "linear": {
                         "enabled": bool(self.platform_data.linear),
                         "count": (
-                            self.platform_data.linear.count if self.platform_data.linear else 0
+                            self.platform_data.linear.count
+                            if self.platform_data.linear
+                            else 0
                         ),
                         "type": (
                             self.platform_data.linear.data_type
@@ -610,7 +651,9 @@ class SalesIntelligenceDashboard:
                     "notion": {
                         "enabled": bool(self.platform_data.notion),
                         "count": (
-                            self.platform_data.notion.count if self.platform_data.notion else 0
+                            self.platform_data.notion.count
+                            if self.platform_data.notion
+                            else 0
                         ),
                         "type": (
                             self.platform_data.notion.data_type
@@ -621,7 +664,9 @@ class SalesIntelligenceDashboard:
                     "hubspot": {
                         "enabled": bool(self.platform_data.hubspot),
                         "count": (
-                            self.platform_data.hubspot.count if self.platform_data.hubspot else 0
+                            self.platform_data.hubspot.count
+                            if self.platform_data.hubspot
+                            else 0
                         ),
                         "type": (
                             self.platform_data.hubspot.data_type
@@ -728,7 +773,9 @@ def create_dashboard_app(dashboard: SalesIntelligenceDashboard) -> FastAPI:
                     "total_records": platform_data.total_records,
                     "connected_platforms": platform_data.connected_platforms,
                     "last_sync": (
-                        platform_data.last_sync.isoformat() if platform_data.last_sync else None
+                        platform_data.last_sync.isoformat()
+                        if platform_data.last_sync
+                        else None
                     ),
                     "platforms": {
                         name: {

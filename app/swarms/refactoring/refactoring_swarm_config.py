@@ -8,7 +8,10 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Optional
 
-from app.swarms.refactoring.code_refactoring_swarm import RefactoringRisk, RefactoringType
+from app.swarms.refactoring.code_refactoring_swarm import (
+    RefactoringRisk,
+    RefactoringType,
+)
 
 
 class DeploymentEnvironment(Enum):
@@ -115,7 +118,9 @@ class RefactoringSwarmConfiguration:
     memory_enabled: bool = True
 
     @classmethod
-    def for_environment(cls, env: DeploymentEnvironment) -> "RefactoringSwarmConfiguration":
+    def for_environment(
+        cls, env: DeploymentEnvironment
+    ) -> "RefactoringSwarmConfiguration":
         """Create configuration optimized for specific environment"""
 
         if env == DeploymentEnvironment.DEVELOPMENT:
@@ -149,7 +154,9 @@ class RefactoringSwarmConfiguration:
                 rate_limit_requests_per_minute=100,
             ),
             monitoring=MonitoringConfiguration(
-                level=MonitoringLevel.BASIC, alerts_enabled=False, dashboard_enabled=True
+                level=MonitoringLevel.BASIC,
+                alerts_enabled=False,
+                dashboard_enabled=True,
             ),
         )
 
@@ -164,7 +171,10 @@ class RefactoringSwarmConfiguration:
                 max_changes_per_file=15,
                 require_backup=True,
                 require_tests=True,
-                approval_required_for_risk=[RefactoringRisk.HIGH, RefactoringRisk.CRITICAL],
+                approval_required_for_risk=[
+                    RefactoringRisk.HIGH,
+                    RefactoringRisk.CRITICAL,
+                ],
             ),
             resources=ResourceConfiguration(
                 max_concurrent_agents=8,
@@ -173,7 +183,9 @@ class RefactoringSwarmConfiguration:
                 rate_limit_requests_per_minute=200,
             ),
             monitoring=MonitoringConfiguration(
-                level=MonitoringLevel.DETAILED, alerts_enabled=True, dashboard_enabled=True
+                level=MonitoringLevel.DETAILED,
+                alerts_enabled=True,
+                dashboard_enabled=True,
             ),
         )
 
@@ -189,7 +201,10 @@ class RefactoringSwarmConfiguration:
                 require_backup=True,
                 require_tests=True,
                 rollback_timeout_minutes=30,
-                approval_required_for_risk=[RefactoringRisk.HIGH, RefactoringRisk.CRITICAL],
+                approval_required_for_risk=[
+                    RefactoringRisk.HIGH,
+                    RefactoringRisk.CRITICAL,
+                ],
             ),
             resources=ResourceConfiguration(
                 max_concurrent_agents=10,
@@ -286,7 +301,9 @@ class RefactoringSwarmConfiguration:
             "environment": self.environment.value,
             "swarm_name": self.swarm_name,
             "version": self.version,
-            "enabled_refactoring_types": [rt.value for rt in self.enabled_refactoring_types],
+            "enabled_refactoring_types": [
+                rt.value for rt in self.enabled_refactoring_types
+            ],
             "default_risk_tolerance": self.default_risk_tolerance.value,
             "dry_run_default": self.dry_run_default,
             "safety": {
@@ -344,7 +361,9 @@ class RefactoringSwarmConfiguration:
         config = cls()
 
         # Basic settings
-        config.environment = DeploymentEnvironment(data.get("environment", "development"))
+        config.environment = DeploymentEnvironment(
+            data.get("environment", "development")
+        )
         config.swarm_name = data.get("swarm_name", "code-refactoring-swarm")
         config.version = data.get("version", "1.0.0")
 
@@ -367,12 +386,16 @@ class RefactoringSwarmConfiguration:
             rollback_timeout_minutes=safety_data.get("rollback_timeout_minutes", 60),
             approval_required_for_risk=[
                 RefactoringRisk(r)
-                for r in safety_data.get("approval_required_for_risk", ["high", "critical"])
+                for r in safety_data.get(
+                    "approval_required_for_risk", ["high", "critical"]
+                )
             ],
             allowed_file_extensions=safety_data.get(
                 "allowed_file_extensions", [".py", ".js", ".ts"]
             ),
-            forbidden_paths=safety_data.get("forbidden_paths", ["/config/", "/secrets/"]),
+            forbidden_paths=safety_data.get(
+                "forbidden_paths", ["/config/", "/secrets/"]
+            ),
         )
 
         # Resource settings
@@ -380,8 +403,12 @@ class RefactoringSwarmConfiguration:
         config.resources = ResourceConfiguration(
             max_concurrent_agents=resources_data.get("max_concurrent_agents", 10),
             max_memory_per_agent_mb=resources_data.get("max_memory_per_agent_mb", 512),
-            max_execution_time_minutes=resources_data.get("max_execution_time_minutes", 120),
-            circuit_breaker_threshold=resources_data.get("circuit_breaker_threshold", 5),
+            max_execution_time_minutes=resources_data.get(
+                "max_execution_time_minutes", 120
+            ),
+            circuit_breaker_threshold=resources_data.get(
+                "circuit_breaker_threshold", 5
+            ),
             retry_attempts=resources_data.get("retry_attempts", 3),
             rate_limit_requests_per_minute=resources_data.get(
                 "rate_limit_requests_per_minute", 300
@@ -429,16 +456,22 @@ class RefactoringSwarmConfiguration:
     @classmethod
     def from_env(cls) -> "RefactoringSwarmConfiguration":
         """Create configuration from environment variables"""
-        env = DeploymentEnvironment(get_config().get("REFACTORING_SWARM_ENV", "development"))
+        env = DeploymentEnvironment(
+            get_config().get("REFACTORING_SWARM_ENV", "development")
+        )
 
         config = cls.for_environment(env)
 
         # Override with environment variables if present
         if os.getenv("REFACTORING_MAX_FILES"):
-            config.safety.max_files_per_session = int(os.getenv("REFACTORING_MAX_FILES"))
+            config.safety.max_files_per_session = int(
+                os.getenv("REFACTORING_MAX_FILES")
+            )
 
         if os.getenv("REFACTORING_MAX_AGENTS"):
-            config.resources.max_concurrent_agents = int(os.getenv("REFACTORING_MAX_AGENTS"))
+            config.resources.max_concurrent_agents = int(
+                os.getenv("REFACTORING_MAX_AGENTS")
+            )
 
         if os.getenv("REFACTORING_DRY_RUN"):
             config.dry_run_default = os.getenv("REFACTORING_DRY_RUN").lower() == "true"
@@ -453,6 +486,12 @@ class RefactoringSwarmConfiguration:
 DEVELOPMENT_CONFIG = RefactoringSwarmConfiguration.for_environment(
     DeploymentEnvironment.DEVELOPMENT
 )
-STAGING_CONFIG = RefactoringSwarmConfiguration.for_environment(DeploymentEnvironment.STAGING)
-PRODUCTION_CONFIG = RefactoringSwarmConfiguration.for_environment(DeploymentEnvironment.PRODUCTION)
-ENTERPRISE_CONFIG = RefactoringSwarmConfiguration.for_environment(DeploymentEnvironment.ENTERPRISE)
+STAGING_CONFIG = RefactoringSwarmConfiguration.for_environment(
+    DeploymentEnvironment.STAGING
+)
+PRODUCTION_CONFIG = RefactoringSwarmConfiguration.for_environment(
+    DeploymentEnvironment.PRODUCTION
+)
+ENTERPRISE_CONFIG = RefactoringSwarmConfiguration.for_environment(
+    DeploymentEnvironment.ENTERPRISE
+)

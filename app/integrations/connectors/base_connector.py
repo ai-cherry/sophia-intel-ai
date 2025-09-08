@@ -102,7 +102,9 @@ class RateLimiter:
             if hasattr(self, "_last_refill"):
                 time_passed = (now - self._last_refill).total_seconds()
                 refill_rate = self.max_calls / self.period_seconds
-                self._tokens = min(self.max_calls, self._tokens + time_passed * refill_rate)
+                self._tokens = min(
+                    self.max_calls, self._tokens + time_passed * refill_rate
+                )
 
             self._last_refill = now
 
@@ -155,7 +157,9 @@ class BaseConnector(ABC):
         breaker_config = CircuitBreakerConfig(
             failure_threshold=5, timeout=60, expected_exception=aiohttp.ClientError
         )
-        self.circuit_breaker = CircuitBreaker(name=f"{self.name}_breaker", config=breaker_config)
+        self.circuit_breaker = CircuitBreaker(
+            name=f"{self.name}_breaker", config=breaker_config
+        )
 
         # Memory router for caching and storage
         self.memory = get_memory_router()
@@ -295,13 +299,19 @@ class BaseConnector(ABC):
         # Make request with circuit breaker
         async def _request():
             async with self.session.request(
-                method=method, url=url, params=params, json=json_data, headers=req_headers
+                method=method,
+                url=url,
+                params=params,
+                json=json_data,
+                headers=req_headers,
             ) as response:
                 self.metrics["requests_total"] += 1
 
                 if response.status >= 400:
                     self.metrics["requests_failed"] += 1
-                    self.metrics["last_error"] = f"{response.status}: {await response.text()}"
+                    self.metrics["last_error"] = (
+                        f"{response.status}: {await response.text()}"
+                    )
                     response.raise_for_status()
 
                 return await response.json()
@@ -344,7 +354,9 @@ class BaseConnector(ABC):
 
             # Store in memory
             if chunks:
-                upsert_report = await self.memory.upsert_chunks(chunks, domain=MemoryDomain.SOPHIA)
+                upsert_report = await self.memory.upsert_chunks(
+                    chunks, domain=MemoryDomain.SOPHIA
+                )
                 report.records_stored = upsert_report.chunks_stored
 
             # Cache raw data
@@ -353,7 +365,9 @@ class BaseConnector(ABC):
             # Update sync state
             self.last_sync = datetime.now()
             report.success = True
-            report.next_sync = self.last_sync + timedelta(seconds=self.config.sync_interval)
+            report.next_sync = self.last_sync + timedelta(
+                seconds=self.config.sync_interval
+            )
 
             logger.info(
                 f"{self.name} sync completed: {report.records_fetched} fetched, {report.records_stored} stored"
@@ -416,7 +430,10 @@ class BaseConnector(ABC):
                     content=json.dumps(item),
                     source_uri=f"{self.name}://{item.get('id', 'unknown')}",
                     domain=MemoryDomain.SOPHIA,
-                    metadata={"connector": self.name, "timestamp": datetime.now().isoformat()},
+                    metadata={
+                        "connector": self.name,
+                        "timestamp": datetime.now().isoformat(),
+                    },
                 )
                 chunks.append(chunk)
 
@@ -439,7 +456,9 @@ class BaseConnector(ABC):
             return
 
         self._sync_task = asyncio.create_task(self._auto_sync_loop())
-        logger.info(f"{self.name} auto-sync started (interval: {self.config.sync_interval}s)")
+        logger.info(
+            f"{self.name} auto-sync started (interval: {self.config.sync_interval}s)"
+        )
 
     def stop_auto_sync(self) -> None:
         """Stop automatic sync"""
@@ -478,7 +497,9 @@ class BaseConnector(ABC):
             return False
 
         # Verify signature if configured
-        if self.config.webhook_secret and not self._verify_webhook_signature(payload, signature):
+        if self.config.webhook_secret and not self._verify_webhook_signature(
+            payload, signature
+        ):
             logger.warning(f"{self.name} webhook signature verification failed")
             return False
 
@@ -490,7 +511,9 @@ class BaseConnector(ABC):
             logger.error(f"{self.name} webhook processing failed: {e}")
             return False
 
-    def _verify_webhook_signature(self, payload: dict[str, Any], signature: Optional[str]) -> bool:
+    def _verify_webhook_signature(
+        self, payload: dict[str, Any], signature: Optional[str]
+    ) -> bool:
         """Verify webhook signature"""
         # Implementation depends on service
         # This is a placeholder

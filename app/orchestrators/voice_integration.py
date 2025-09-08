@@ -182,13 +182,17 @@ class SophiaVoiceIntegration:
                         )
                     else:
                         error_text = await response.text()
-                        logger.error(f"ElevenLabs API error: {response.status} - {error_text}")
+                        logger.error(
+                            f"ElevenLabs API error: {response.status} - {error_text}"
+                        )
 
                         return VoiceResponse(
                             audio_base64="",
                             voice_used=voice_name,
                             text_length=len(text),
-                            generation_time=(datetime.now() - start_time).total_seconds(),
+                            generation_time=(
+                                datetime.now() - start_time
+                            ).total_seconds(),
                             success=False,
                             error_message=f"API Error: {response.status} - {error_text}",
                         )
@@ -467,7 +471,9 @@ class SophiaVoiceIntegration:
                         )
                     else:
                         error_text = await response.text()
-                        logger.error(f"Speech-to-text API error: {response.status} - {error_text}")
+                        logger.error(
+                            f"Speech-to-text API error: {response.status} - {error_text}"
+                        )
 
                         return SpeechToTextResponse(
                             text="",
@@ -495,7 +501,18 @@ class SophiaVoiceIntegration:
                 "provider": "OpenAI Whisper",
                 "supported_formats": ["mp3", "wav", "m4a", "flac", "ogg"],
                 "max_file_size": "25MB",
-                "languages": ["en", "es", "fr", "de", "it", "pt", "ru", "ja", "ko", "zh"],
+                "languages": [
+                    "en",
+                    "es",
+                    "fr",
+                    "de",
+                    "it",
+                    "pt",
+                    "ru",
+                    "ja",
+                    "ko",
+                    "zh",
+                ],
             },
             "text_to_speech": {
                 "available": True,

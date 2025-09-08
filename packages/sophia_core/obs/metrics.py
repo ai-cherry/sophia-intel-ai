@@ -44,7 +44,9 @@ class BaseMetric(ABC):
     Abstract base class for metrics.
     """
 
-    def __init__(self, name: str, description: str = "", labels: Optional[List[str]] = None):
+    def __init__(
+        self, name: str, description: str = "", labels: Optional[List[str]] = None
+    ):
         """
         Initialize metric.
 
@@ -151,7 +153,9 @@ class Counter(BaseMetric):
                         k, v = pair.split("=", 1)
                         labels[k] = v
 
-                values.append(MetricValue(value=value, timestamp=time.time(), labels=labels))
+                values.append(
+                    MetricValue(value=value, timestamp=time.time(), labels=labels)
+                )
 
             return values
 
@@ -233,7 +237,9 @@ class Gauge(BaseMetric):
                         k, v = pair.split("=", 1)
                         labels[k] = v
 
-                values.append(MetricValue(value=value, timestamp=time.time(), labels=labels))
+                values.append(
+                    MetricValue(value=value, timestamp=time.time(), labels=labels)
+                )
 
             return values
 
@@ -269,7 +275,9 @@ class Histogram(BaseMetric):
         self.buckets = sorted(self.buckets)
 
         # Track bucket counts and total
-        self._bucket_counts: Dict[str, Dict[float, int]] = defaultdict(lambda: defaultdict(int))
+        self._bucket_counts: Dict[str, Dict[float, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
         self._counts: Dict[str, int] = defaultdict(int)
         self._sums: Dict[str, float] = defaultdict(float)
 
@@ -341,15 +349,21 @@ class Histogram(BaseMetric):
                 # Add bucket counts
                 for bucket in self.buckets:
                     bucket_labels = labels.copy()
-                    bucket_labels["le"] = str(bucket) if bucket != float("inf") else "+Inf"
+                    bucket_labels["le"] = (
+                        str(bucket) if bucket != float("inf") else "+Inf"
+                    )
 
                     cumulative_count = sum(
-                        count for b, count in self._bucket_counts[label_key].items() if b <= bucket
+                        count
+                        for b, count in self._bucket_counts[label_key].items()
+                        if b <= bucket
                     )
 
                     values.append(
                         MetricValue(
-                            value=cumulative_count, timestamp=time.time(), labels=bucket_labels
+                            value=cumulative_count,
+                            timestamp=time.time(),
+                            labels=bucket_labels,
                         )
                     )
 
@@ -358,7 +372,9 @@ class Histogram(BaseMetric):
                 count_labels["__name__"] = f"{self.name}_count"
                 values.append(
                     MetricValue(
-                        value=self._counts[label_key], timestamp=time.time(), labels=count_labels
+                        value=self._counts[label_key],
+                        timestamp=time.time(),
+                        labels=count_labels,
                     )
                 )
 
@@ -366,7 +382,9 @@ class Histogram(BaseMetric):
                 sum_labels["__name__"] = f"{self.name}_sum"
                 values.append(
                     MetricValue(
-                        value=self._sums[label_key], timestamp=time.time(), labels=sum_labels
+                        value=self._sums[label_key],
+                        timestamp=time.time(),
+                        labels=sum_labels,
                     )
                 )
 
@@ -473,7 +491,9 @@ class MetricsCollector:
         counter = Counter(name, description, labels)
         return self.register(counter)
 
-    def gauge(self, name: str, description: str = "", labels: Optional[List[str]] = None) -> Gauge:
+    def gauge(
+        self, name: str, description: str = "", labels: Optional[List[str]] = None
+    ) -> Gauge:
         """
         Create or get gauge metric.
 
@@ -522,7 +542,9 @@ class MetricsCollector:
         histogram = Histogram(name, description, labels, buckets=buckets)
         return self.register(histogram)
 
-    def timer(self, histogram: Histogram, labels: Optional[Dict[str, str]] = None) -> Timer:
+    def timer(
+        self, histogram: Histogram, labels: Optional[Dict[str, str]] = None
+    ) -> Timer:
         """
         Create timer for histogram.
 
@@ -706,7 +728,9 @@ class AgentMetrics:
         )
 
         self.agents_active = collector.gauge(
-            "sophia_agents_active", "Number of currently active agents", ["agent_type", "state"]
+            "sophia_agents_active",
+            "Number of currently active agents",
+            ["agent_type", "state"],
         )
 
         # Message processing metrics
@@ -738,7 +762,9 @@ class AgentMetrics:
 
         # Error metrics
         self.errors_total = collector.counter(
-            "sophia_agent_errors_total", "Total agent errors", ["agent_id", "error_type"]
+            "sophia_agent_errors_total",
+            "Total agent errors",
+            ["agent_id", "error_type"],
         )
 
 
@@ -754,12 +780,16 @@ class SwarmMetrics:
         )
 
         self.swarms_active = collector.gauge(
-            "sophia_swarms_active", "Number of currently active swarms", ["topology", "state"]
+            "sophia_swarms_active",
+            "Number of currently active swarms",
+            ["topology", "state"],
         )
 
         # Member metrics
         self.swarm_members = collector.gauge(
-            "sophia_swarm_members", "Number of members in swarms", ["swarm_id", "role", "status"]
+            "sophia_swarm_members",
+            "Number of members in swarms",
+            ["swarm_id", "role", "status"],
         )
 
         # Task distribution metrics
@@ -770,7 +800,9 @@ class SwarmMetrics:
         )
 
         self.task_distribution_duration = collector.histogram(
-            "sophia_swarm_task_distribution_seconds", "Time spent distributing tasks", ["swarm_id"]
+            "sophia_swarm_task_distribution_seconds",
+            "Time spent distributing tasks",
+            ["swarm_id"],
         )
 
         # Coordination metrics
@@ -781,7 +813,9 @@ class SwarmMetrics:
         )
 
         self.coordination_duration = collector.histogram(
-            "sophia_swarm_coordination_seconds", "Time spent in coordination", ["swarm_id"]
+            "sophia_swarm_coordination_seconds",
+            "Time spent in coordination",
+            ["swarm_id"],
         )
 
 
@@ -793,7 +827,9 @@ class ToolMetrics:
 
         # Tool execution metrics
         self.executions_total = collector.counter(
-            "sophia_tool_executions_total", "Total tool executions", ["tool_name", "status"]
+            "sophia_tool_executions_total",
+            "Total tool executions",
+            ["tool_name", "status"],
         )
 
         self.execution_duration = collector.histogram(
@@ -843,7 +879,9 @@ class MemoryMetrics:
 
         # Query metrics
         self.queries_total = collector.counter(
-            "sophia_memory_queries_total", "Total memory queries", ["memory_type", "strategy"]
+            "sophia_memory_queries_total",
+            "Total memory queries",
+            ["memory_type", "strategy"],
         )
 
         self.query_results = collector.histogram(

@@ -33,7 +33,9 @@ async def chat_endpoint(request: ChatRequest):
             frequency_penalty=request.frequency_penalty,
             stop=request.stop,
         )
-        return {"choices": [{"message": {"content": response.choices[0].message.content}}]}
+        return {
+            "choices": [{"message": {"content": response.choices[0].message.content}}]
+        }
 
     # Fallback to default OpenAI client (for non-OpenRouter models)
     # [Add default OpenAI client handling here]

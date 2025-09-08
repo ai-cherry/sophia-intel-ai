@@ -48,7 +48,8 @@ class VectorClock:
             if timestamp > other.clock.get(agent_id, 0):
                 return False
         return any(
-            timestamp < other.clock.get(agent_id, 0) for agent_id, timestamp in self.clock.items()
+            timestamp < other.clock.get(agent_id, 0)
+            for agent_id, timestamp in self.clock.items()
         )
 
     def concurrent_with(self, other: "VectorClock") -> bool:
@@ -140,7 +141,9 @@ class CRDTMemoryState:
                 # Both have the key - use latest timestamp or merge
                 if isinstance(content1[key], dict) and isinstance(content2[key], dict):
                     merged[key] = self._merge_content(content1[key], content2[key])
-                elif isinstance(content1[key], list) and isinstance(content2[key], list):
+                elif isinstance(content1[key], list) and isinstance(
+                    content2[key], list
+                ):
                     # Union of lists for concurrent updates
                     merged[key] = list(set(content1[key] + content2[key]))
                 else:
@@ -413,11 +416,15 @@ class CRDTMemoryStore:
         elif operation.operation_type == OperationType.DELETE:
             if memory_id in self.memory_states:
                 self.memory_states[memory_id].tombstone = True
-                self.memory_states[memory_id].vector_clock.update(operation.vector_clock)
+                self.memory_states[memory_id].vector_clock.update(
+                    operation.vector_clock
+                )
 
         return True
 
-    async def _apply_operation_with_conflict_resolution(self, operation: MemoryOperation) -> bool:
+    async def _apply_operation_with_conflict_resolution(
+        self, operation: MemoryOperation
+    ) -> bool:
         """Apply operation with CRDT conflict resolution"""
         memory_id = operation.memory_id
 
@@ -473,7 +480,9 @@ class CRDTMemoryStore:
 
         # Get operations to sync
         ops_to_sync = [
-            op for op in self.operation_log if op.operation_id not in self.pending_operations
+            op
+            for op in self.operation_log
+            if op.operation_id not in self.pending_operations
         ]
 
         # Send to all peers
@@ -509,7 +518,9 @@ class CRDTMemoryStore:
             "agent_id": self.agent_id,
             "vector_clock": self.vector_clock.to_dict(),
             "memory_count": len(self.memory_states),
-            "active_memories": sum(1 for s in self.memory_states.values() if not s.tombstone),
+            "active_memories": sum(
+                1 for s in self.memory_states.values() if not s.tombstone
+            ),
             "tombstones": sum(1 for s in self.memory_states.values() if s.tombstone),
             "operation_log_size": len(self.operation_log),
             "metrics": self.metrics,

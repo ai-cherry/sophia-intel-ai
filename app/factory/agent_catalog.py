@@ -33,7 +33,12 @@ class SpecializedAgentCatalog:
                 name="Senior Software Architect",
                 description="Designs scalable system architectures, makes technology decisions, and ensures architectural consistency across projects.",
                 version="1.0.0",
-                tags=["architecture", "system_design", "technical_leadership", "scalability"],
+                tags=[
+                    "architecture",
+                    "system_design",
+                    "technical_leadership",
+                    "scalability",
+                ],
             ),
             specialty=AgentSpecialty.ARCHITECT,
             capabilities=[
@@ -193,7 +198,12 @@ Provide complete, production-ready code with proper error handling, logging, and
                 model_settings=ModelConfig(
                     temperature=0.5, max_tokens=5000, cost_limit_per_request=0.65
                 ),
-                tools=["react_tools", "css_frameworks", "testing_tools", "design_systems"],
+                tools=[
+                    "react_tools",
+                    "css_frameworks",
+                    "testing_tools",
+                    "design_systems",
+                ],
                 max_reasoning_steps=12,
             ),
             system_prompt_template="""You are a Frontend Development Specialist focused on creating exceptional user experiences.
@@ -264,7 +274,12 @@ Focus on creating intuitive, fast, and accessible user interfaces that work seam
                 model_settings=ModelConfig(
                     temperature=0.3, max_tokens=5500, cost_limit_per_request=0.70
                 ),
-                tools=["api_frameworks", "database_tools", "monitoring_tools", "load_testing"],
+                tools=[
+                    "api_frameworks",
+                    "database_tools",
+                    "monitoring_tools",
+                    "load_testing",
+                ],
                 max_reasoning_steps=18,
             ),
             system_prompt_template="""You are a Backend Development Specialist with expertise in scalable server-side architectures.
@@ -336,7 +351,13 @@ Provide production-ready backend code with proper error handling, security, and 
                 model_settings=ModelConfig(
                     temperature=0.2, max_tokens=4500, cost_limit_per_request=0.80
                 ),
-                tools=["terraform", "kubernetes", "docker", "ci_cd_tools", "monitoring_stack"],
+                tools=[
+                    "terraform",
+                    "kubernetes",
+                    "docker",
+                    "ci_cd_tools",
+                    "monitoring_stack",
+                ],
                 max_reasoning_steps=15,
             ),
             system_prompt_template="""You are a DevOps Engineer focused on building reliable, scalable, and secure infrastructure.
@@ -371,7 +392,12 @@ Focus on creating robust, automated, and observable infrastructure that enables 
                 "container_orchestration": "Set up and manage Kubernetes clusters with proper networking and security",
                 "monitoring_setup": "Implement comprehensive monitoring, logging, and alerting systems",
             },
-            tools=["terraform", "kubernetes_tools", "ci_cd_platforms", "monitoring_solutions"],
+            tools=[
+                "terraform",
+                "kubernetes_tools",
+                "ci_cd_platforms",
+                "monitoring_solutions",
+            ],
             max_concurrent_tasks=3,
             rate_limit_per_hour=60,
         )
@@ -442,7 +468,12 @@ Focus on preventing defects, automating repetitive tasks, and ensuring comprehen
                 "performance_testing": "Design and execute performance tests to identify bottlenecks and capacity limits",
                 "quality_assessment": "Evaluate software quality and provide recommendations for improvement",
             },
-            tools=["test_frameworks", "automation_tools", "performance_tools", "quality_metrics"],
+            tools=[
+                "test_frameworks",
+                "automation_tools",
+                "performance_tools",
+                "quality_metrics",
+            ],
             max_concurrent_tasks=6,
             rate_limit_per_hour=90,
         )
@@ -456,7 +487,12 @@ Focus on preventing defects, automating repetitive tasks, and ensuring comprehen
                 name="Security Specialist",
                 description="Focuses on application security, threat modeling, security testing, and implementing security best practices.",
                 version="1.0.0",
-                tags=["security", "threat_modeling", "penetration_testing", "compliance"],
+                tags=[
+                    "security",
+                    "threat_modeling",
+                    "penetration_testing",
+                    "compliance",
+                ],
             ),
             specialty=AgentSpecialty.SECURITY,
             capabilities=[
@@ -594,7 +630,11 @@ Focus on creating clear, actionable requirements that bridge the gap between bus
                 "solution_design": "Design solutions that meet business objectives and technical constraints",
                 "stakeholder_communication": "Facilitate communication between business and technical teams",
             },
-            tools=["requirements_management", "process_modeling_tools", "collaboration_platforms"],
+            tools=[
+                "requirements_management",
+                "process_modeling_tools",
+                "collaboration_platforms",
+            ],
             max_concurrent_tasks=5,
             rate_limit_per_hour=70,
         )
@@ -608,7 +648,13 @@ Focus on creating clear, actionable requirements that bridge the gap between bus
                 name="Data Scientist",
                 description="Extracts insights from data using statistical analysis, machine learning, and predictive modeling to drive business decisions.",
                 version="1.0.0",
-                tags=["data_science", "machine_learning", "analytics", "statistics", "ai"],
+                tags=[
+                    "data_science",
+                    "machine_learning",
+                    "analytics",
+                    "statistics",
+                    "ai",
+                ],
             ),
             specialty=AgentSpecialty.DATA_SCIENTIST,
             capabilities=[
@@ -625,7 +671,12 @@ Focus on creating clear, actionable requirements that bridge the gap between bus
                 model_settings=ModelConfig(
                     temperature=0.3, max_tokens=5000, cost_limit_per_request=0.70
                 ),
-                tools=["ml_frameworks", "statistical_tools", "visualization", "data_platforms"],
+                tools=[
+                    "ml_frameworks",
+                    "statistical_tools",
+                    "visualization",
+                    "data_platforms",
+                ],
                 max_reasoning_steps=20,
             ),
             system_prompt_template="""You are a Data Scientist specializing in extracting actionable insights from complex datasets.
@@ -746,7 +797,11 @@ Focus on creating products that solve real user problems while achieving busines
                 "market_analysis": "Conduct market research and competitive intelligence analysis",
                 "requirements_definition": "Define detailed product requirements and user stories",
             },
-            tools=["product_management_platforms", "analytics_tools", "user_research_tools"],
+            tools=[
+                "product_management_platforms",
+                "analytics_tools",
+                "user_research_tools",
+            ],
             max_concurrent_tasks=6,
             rate_limit_per_hour=80,
         )
@@ -815,11 +870,17 @@ class SwarmTemplateLibrary:
                 AgentCapability.TESTING.value,
                 AgentCapability.CODE_REVIEW.value,
             ],
-            "optional_specialties": [AgentSpecialty.DEVOPS.value, AgentSpecialty.SECURITY.value],
+            "optional_specialties": [
+                AgentSpecialty.DEVOPS.value,
+                AgentSpecialty.SECURITY.value,
+            ],
             "max_agents": 6,
             "type": "coding",
             "execution_mode": "hierarchical",
-            "config_overrides": {"quality_threshold": 0.85, "max_execution_time": 600.0},
+            "config_overrides": {
+                "quality_threshold": 0.85,
+                "max_execution_time": 600.0,
+            },
         }
 
     @staticmethod
@@ -852,7 +913,10 @@ class SwarmTemplateLibrary:
             "id": "security_team",
             "name": "Security Assessment Team",
             "description": "Comprehensive security analysis and threat assessment",
-            "required_specialties": [AgentSpecialty.SECURITY.value, AgentSpecialty.ANALYST.value],
+            "required_specialties": [
+                AgentSpecialty.SECURITY.value,
+                AgentSpecialty.ANALYST.value,
+            ],
             "required_capabilities": [
                 AgentCapability.RISK_ASSESSMENT.value,
                 AgentCapability.CODE_REVIEW.value,
@@ -862,7 +926,10 @@ class SwarmTemplateLibrary:
             "max_agents": 4,
             "type": "standard",
             "execution_mode": "linear",
-            "config_overrides": {"quality_threshold": 0.90, "max_execution_time": 900.0},
+            "config_overrides": {
+                "quality_threshold": 0.90,
+                "max_execution_time": 900.0,
+            },
         }
 
     @staticmethod

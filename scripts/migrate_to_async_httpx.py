@@ -95,9 +95,13 @@ def generate_migration_report(files: list[Path]) -> str:
         report.append("FILES TO MIGRATE:")
         report.append("-" * 40)
         for analysis in files_to_migrate[:10]:  # Show first 10
-            rel_path = os.path.relpath(analysis["file"], "/Users/lynnmusil/sophia-intel-ai")
+            rel_path = os.path.relpath(
+                analysis["file"], "/Users/lynnmusil/sophia-intel-ai"
+            )
             report.append(f"\n📁 {rel_path}")
-            report.append(f"   Async ready: {'✅' if analysis['async_ready'] else '❌'}")
+            report.append(
+                f"   Async ready: {'✅' if analysis['async_ready'] else '❌'}"
+            )
             report.append(f"   Blocking calls: {len(analysis['blocking_calls'])}")
 
             for call in analysis["blocking_calls"][:3]:  # Show first 3
@@ -112,9 +116,7 @@ def create_async_wrapper(file_path: Path) -> str:
 
     # Add async HTTP client import
     if "import httpx" not in content:
-        import_line = (
-            "from app.core.async_http_client import AsyncHTTPClient, async_get, async_post\n"
-        )
+        import_line = "from app.core.async_http_client import AsyncHTTPClient, async_get, async_post\n"
 
         # Find where to insert import
         lines = content.split("\n")
@@ -169,7 +171,8 @@ def post_data(url, data):
 
     # Add imports
     migrated = (
-        "from app.core.async_http_client import AsyncHTTPClient, async_get, async_post\n" + migrated
+        "from app.core.async_http_client import AsyncHTTPClient, async_get, async_post\n"
+        + migrated
     )
 
     logger.info("AFTER MIGRATION:")

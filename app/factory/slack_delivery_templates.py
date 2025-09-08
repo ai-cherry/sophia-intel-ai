@@ -556,7 +556,10 @@ class SlackDeliveryTemplateManager:
                 agent_roles=[AgentRole.STRATEGIST],
                 confidence_threshold=0.85,
                 keywords=["business", "strategic", "executive", "leadership"],
-                time_ranges=[{"start_hour": 7, "end_hour": 9}, {"start_hour": 17, "end_hour": 19}],
+                time_ranges=[
+                    {"start_hour": 7, "end_hour": 9},
+                    {"start_hour": 17, "end_hour": 19},
+                ],
                 delivery_config=self.delivery_configs["executive_reports"],
                 enabled=True,
             )
@@ -641,7 +644,9 @@ class SlackDeliveryTemplateManager:
 
         return rules
 
-    def format_message_with_template(self, template_id: str, variables: dict[str, Any]) -> str:
+    def format_message_with_template(
+        self, template_id: str, variables: dict[str, Any]
+    ) -> str:
         """Format a message using a template"""
 
         template = self.message_templates.get(template_id)
@@ -652,7 +657,9 @@ class SlackDeliveryTemplateManager:
         format_vars = {**template.default_values, **variables}
 
         # Check required variables
-        missing_vars = [var for var in template.required_variables if var not in format_vars]
+        missing_vars = [
+            var for var in template.required_variables if var not in format_vars
+        ]
         if missing_vars:
             raise ValueError(
                 f"Missing required variables for template {template_id}: {missing_vars}"
@@ -692,7 +699,9 @@ class SlackDeliveryTemplateManager:
         elif context.get("technical_focus"):
             config_name = "technical_operations"
 
-        return self.delivery_configs.get(config_name, self.delivery_configs["daily_intelligence"])
+        return self.delivery_configs.get(
+            config_name, self.delivery_configs["daily_intelligence"]
+        )
 
 
 # Global template manager instance

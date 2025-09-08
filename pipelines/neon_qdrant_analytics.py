@@ -324,7 +324,8 @@ class QdrantVectorManager:
                     self.client.create_collection(
                         collection_name=collection_name,
                         vectors_config=VectorParams(
-                            size=768, distance=Distance.COSINE  # HuggingFace BERT embeddings
+                            size=768,
+                            distance=Distance.COSINE,  # HuggingFace BERT embeddings
                         ),
                     )
                     logger.info(f"Created Qdrant collection: {collection_name}")
@@ -364,7 +365,8 @@ class QdrantVectorManager:
 
                 # Insert into Qdrant
                 self.client.upsert(
-                    collection_name=self.collections["proptech_embeddings"], points=[point]
+                    collection_name=self.collections["proptech_embeddings"],
+                    points=[point],
                 )
 
                 embedded += 1
@@ -382,7 +384,9 @@ class QdrantVectorManager:
         np.random.seed(hash(text) % 2**32)
         return np.random.random(768).tolist()
 
-    async def semantic_search(self, query: str, domain: str, limit: int = 5) -> List[Dict]:
+    async def semantic_search(
+        self, query: str, domain: str, limit: int = 5
+    ) -> List[Dict]:
         """Perform semantic search across domain data"""
         try:
             collection_map = {
@@ -409,7 +413,9 @@ class QdrantVectorManager:
             # Format results
             results = []
             for result in search_results:
-                results.append({"score": result.score, "payload": result.payload, "domain": domain})
+                results.append(
+                    {"score": result.score, "payload": result.payload, "domain": domain}
+                )
 
             return results
 
@@ -425,7 +431,9 @@ class EstuaryDataPipeline:
         self.api_token = os.getenv("ESTUARY_API_TOKEN")
         self.base_url = "https://api.estuary.dev"
 
-    async def create_sync_pipeline(self, source_config: Dict, destination_config: Dict) -> Dict:
+    async def create_sync_pipeline(
+        self, source_config: Dict, destination_config: Dict
+    ) -> Dict:
         """Create data pipeline between Neon and Qdrant"""
         if not self.api_token:
             logger.warning("ESTUARY_API_TOKEN not configured")
@@ -469,7 +477,9 @@ class EstuaryDataPipeline:
 class PredictiveAnalyticsEngine:
     """AI-powered predictive analytics using cross-database insights"""
 
-    def __init__(self, neon_manager: NeonPostgreSQLManager, qdrant_manager: QdrantVectorManager):
+    def __init__(
+        self, neon_manager: NeonPostgreSQLManager, qdrant_manager: QdrantVectorManager
+    ):
         self.neon = neon_manager
         self.qdrant = qdrant_manager
         self.redis_client = self._init_redis()
@@ -500,12 +510,16 @@ class PredictiveAnalyticsEngine:
                 )
 
             # Simple trend analysis (in production, use ML models)
-            monthly_revenues = [row["total_revenue"] for row in revenue_data["revenue_by_month"]]
+            monthly_revenues = [
+                row["total_revenue"] for row in revenue_data["revenue_by_month"]
+            ]
 
             # Calculate trend
             if len(monthly_revenues) >= 3:
                 recent_avg = sum(monthly_revenues[-3:]) / 3
-                older_avg = sum(monthly_revenues[:-3]) / max(1, len(monthly_revenues) - 3)
+                older_avg = sum(monthly_revenues[:-3]) / max(
+                    1, len(monthly_revenues) - 3
+                )
                 growth_rate = (recent_avg - older_avg) / max(1, older_avg)
             else:
                 growth_rate = 0.1  # Default 10% growth
@@ -515,7 +529,9 @@ class PredictiveAnalyticsEngine:
             projected_revenue = last_revenue * (1 + growth_rate) ** forecast_months
 
             # Calculate confidence based on data consistency
-            revenue_variance = np.var(monthly_revenues) if len(monthly_revenues) > 1 else 0
+            revenue_variance = (
+                np.var(monthly_revenues) if len(monthly_revenues) > 1 else 0
+            )
             confidence = max(0.5, 1.0 - (revenue_variance / (last_revenue**2)))
 
             # Identify key factors
@@ -580,11 +596,15 @@ class PredictiveAnalyticsEngine:
                     market_values.append(float(prop["payload"]["market_value"]))
 
             if not market_values:
-                estimated_value = property_features["square_feet"] * 200  # $200/sqft default
+                estimated_value = (
+                    property_features["square_feet"] * 200
+                )  # $200/sqft default
                 confidence = 0.3
             else:
                 estimated_value = sum(market_values) / len(market_values)
-                confidence = min(0.9, len(market_values) / 10.0)  # More data = higher confidence
+                confidence = min(
+                    0.9, len(market_values) / 10.0
+                )  # More data = higher confidence
 
             # Adjust for property-specific features
             if property_features.get("bedrooms", 0) > 3:
@@ -635,7 +655,9 @@ class PredictiveAnalyticsEngine:
                 "timestamp": result.timestamp.isoformat(),
             }
 
-            self.redis_client.setex(cache_key, 3600, json.dumps(cache_data))  # 1 hour TTL
+            self.redis_client.setex(
+                cache_key, 3600, json.dumps(cache_data)
+            )  # 1 hour TTL
 
         except Exception as e:
             logger.error(f"Error caching prediction: {e}")
@@ -725,7 +747,9 @@ class CrossDatabaseAnalyticsMCP:
                     forecast_months=query.parameters.get("months", 6)
                 )
             elif query.query_type == "property_value_prediction":
-                result = await self.analytics_engine.predict_property_value(query.parameters)
+                result = await self.analytics_engine.predict_property_value(
+                    query.parameters
+                )
             else:
                 return {"error": f"Unsupported query type: {query.query_type}"}
 

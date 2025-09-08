@@ -75,7 +75,9 @@ class NeonAPIClient:
             logger.error(f"Failed to get project info: {e}")
             return {}
 
-    async def create_branch(self, branch_name: str, parent_branch: str = "main") -> dict[str, Any]:
+    async def create_branch(
+        self, branch_name: str, parent_branch: str = "main"
+    ) -> dict[str, Any]:
         """Create a new database branch (Scale plan: up to 5 branches)"""
         try:
             payload = {"branch": {"name": branch_name, "parent_id": parent_branch}}
@@ -122,7 +124,9 @@ class NeonAPIClient:
             usage = response.json()
 
             # Calculate usage percentages
-            storage_usage_pct = (usage.get("storage_gb", 0) / self.config.max_storage_gb) * 100
+            storage_usage_pct = (
+                usage.get("storage_gb", 0) / self.config.max_storage_gb
+            ) * 100
             compute_usage_pct = (
                 usage.get("compute_hours", 0) / self.config.max_compute_hours
             ) * 100
@@ -135,7 +139,9 @@ class NeonAPIClient:
                 "active_branches": usage.get("branches", 0),
                 "max_branches": self.config.max_branches,
                 "scale_plan_status": (
-                    "optimal" if storage_usage_pct < 80 and compute_usage_pct < 80 else "warning"
+                    "optimal"
+                    if storage_usage_pct < 80 and compute_usage_pct < 80
+                    else "warning"
                 ),
             }
 
@@ -180,7 +186,9 @@ class NeonDatabaseManager:
                     "jit": "off",  # Disable JIT for faster startup
                 },
             )
-            logger.info(f"Initialized connection pool: {min_size}-{max_size} connections")
+            logger.info(
+                f"Initialized connection pool: {min_size}-{max_size} connections"
+            )
 
         except Exception as e:
             logger.error(f"Failed to initialize connection pool: {e}")
@@ -480,7 +488,9 @@ async def main():
     config = NeonConfig.from_env()
 
     if not all([config.api_token, config.project_id, config.host]):
-        logger.error("Missing required Neon configuration. Check environment variables.")
+        logger.error(
+            "Missing required Neon configuration. Check environment variables."
+        )
         return
 
     # Initialize database manager

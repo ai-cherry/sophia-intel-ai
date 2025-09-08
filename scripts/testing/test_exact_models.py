@@ -77,7 +77,9 @@ def test_model(model_name, provider="AIMLAPI"):
                         grok_models = re.findall(r"'([^']*grok[^']*)'", error_str)
                         if grok_models:
                             print(f"Found Grok models in error: {grok_models[:3]}")
-                    elif "gemini" in model_name.lower() and "gemini" in error_str.lower():
+                    elif (
+                        "gemini" in model_name.lower() and "gemini" in error_str.lower()
+                    ):
                         import re
 
                         gemini_models = re.findall(r"'([^']*gemini[^']*)'", error_str)

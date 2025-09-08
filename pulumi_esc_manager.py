@@ -74,7 +74,9 @@ class PulumiESCManager:
     def _ensure_esc_installed(self) -> bool:
         """Ensure Pulumi ESC CLI is installed"""
         try:
-            result = subprocess.run(["esc", "version"], capture_output=True, text=True, timeout=5)
+            result = subprocess.run(
+                ["esc", "version"], capture_output=True, text=True, timeout=5
+            )
             if result.returncode == 0:
                 logger.info(f"✅ Pulumi ESC version: {result.stdout.strip()}")
                 return True
@@ -105,7 +107,9 @@ class PulumiESCManager:
                 logger.error("❌ No Pulumi access token provided")
                 return False
 
-            result = subprocess.run(["esc", "login"], capture_output=True, text=True, timeout=10)
+            result = subprocess.run(
+                ["esc", "login"], capture_output=True, text=True, timeout=10
+            )
 
             if result.returncode == 0:
                 logger.info("✅ Logged in to Pulumi ESC")
@@ -219,7 +223,12 @@ class PulumiESCManager:
 
     def _get_environment_file(self) -> Dict[str, Any]:
         """Get the environment configuration file"""
-        cmd = ["esc", "environment", "get", f"{self.config.organization}/{self.config.environment}"]
+        cmd = [
+            "esc",
+            "environment",
+            "get",
+            f"{self.config.organization}/{self.config.environment}",
+        ]
 
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
@@ -335,7 +344,9 @@ class PulumiESCManager:
             sync_template = {"values": {}}
 
             for secret in github_secrets:
-                sync_template["values"][secret] = {"secret": f"${{github.secrets.{secret}}}"}
+                sync_template["values"][secret] = {
+                    "secret": f"${{github.secrets.{secret}}}"
+                }
 
             # Save template for manual configuration
             template_file = self.cache_dir / "github_sync_template.yaml"
@@ -343,7 +354,9 @@ class PulumiESCManager:
                 yaml.dump(sync_template, f)
 
             logger.info(f"✅ GitHub sync template created: {template_file}")
-            logger.info("📋 Manual step: Configure GitHub Actions to sync these secrets")
+            logger.info(
+                "📋 Manual step: Configure GitHub Actions to sync these secrets"
+            )
 
             return True
 
@@ -356,7 +369,9 @@ class PulumiESCManager:
         cache_file = self.cache_dir / f"{self.config.environment}_cache.json"
 
         with open(cache_file, "w") as f:
-            json.dump({"timestamp": datetime.now().isoformat(), "data": env_data}, f, indent=2)
+            json.dump(
+                {"timestamp": datetime.now().isoformat(), "data": env_data}, f, indent=2
+            )
 
         # Set restrictive permissions
         os.chmod(cache_file, 0o600)
@@ -462,14 +477,22 @@ class PulumiESCManager:
                 "values": {
                     # AI Provider APIs
                     "OPENAI_API_KEY": {"secret": "${github.secrets.OPENAI_API_KEY}"},
-                    "ANTHROPIC_API_KEY": {"secret": "${github.secrets.ANTHROPIC_API_KEY}"},
-                    "DEEPSEEK_API_KEY": {"secret": "${github.secrets.DEEPSEEK_API_KEY}"},
+                    "ANTHROPIC_API_KEY": {
+                        "secret": "${github.secrets.ANTHROPIC_API_KEY}"
+                    },
+                    "DEEPSEEK_API_KEY": {
+                        "secret": "${github.secrets.DEEPSEEK_API_KEY}"
+                    },
                     "MISTRAL_API_KEY": {"secret": "${github.secrets.MISTRAL_API_KEY}"},
                     "GROK_API_KEY": {"secret": "${github.secrets.GROK_API_KEY}"},
                     # Infrastructure
                     "LAMBDA_API_KEY": {"secret": "${github.secrets.LAMBDA_API_KEY}"},
-                    "AWS_ACCESS_KEY_ID": {"secret": "${github.secrets.AWS_ACCESS_KEY_ID}"},
-                    "AWS_SECRET_ACCESS_KEY": {"secret": "${github.secrets.AWS_SECRET_ACCESS_KEY}"},
+                    "AWS_ACCESS_KEY_ID": {
+                        "secret": "${github.secrets.AWS_ACCESS_KEY_ID}"
+                    },
+                    "AWS_SECRET_ACCESS_KEY": {
+                        "secret": "${github.secrets.AWS_SECRET_ACCESS_KEY}"
+                    },
                     # Database
                     "DATABASE_URL": {"secret": "${github.secrets.DATABASE_URL}"},
                     "REDIS_URL": {"secret": "${github.secrets.REDIS_URL}"},
@@ -479,10 +502,14 @@ class PulumiESCManager:
                     # Third-party Services
                     "ARIZE_SPACE_ID": {"secret": "${github.secrets.ARIZE_SPACE_ID}"},
                     "ARIZE_API_KEY": {"secret": "${github.secrets.ARIZE_API_KEY}"},
-                    "OPENROUTER_API_KEY": {"secret": "${github.secrets.OPENROUTER_API_KEY}"},
+                    "OPENROUTER_API_KEY": {
+                        "secret": "${github.secrets.OPENROUTER_API_KEY}"
+                    },
                     "PORTKEY_API_KEY": {"secret": "${github.secrets.PORTKEY_API_KEY}"},
                     "GONG_ACCESS_KEY": {"secret": "${github.secrets.GONG_ACCESS_KEY}"},
-                    "GONG_CLIENT_SECRET": {"secret": "${github.secrets.GONG_CLIENT_SECRET}"},
+                    "GONG_CLIENT_SECRET": {
+                        "secret": "${github.secrets.GONG_CLIENT_SECRET}"
+                    },
                     # Security
                     "JWT_SECRET_KEY": {"secret": "${github.secrets.JWT_SECRET_KEY}"},
                     "ENCRYPTION_KEY": {"secret": "${github.secrets.ENCRYPTION_KEY}"},
@@ -491,12 +518,18 @@ class PulumiESCManager:
                     "ENVIRONMENT": self.environment.value,
                     "DEPLOYMENT_ID": "${pulumi.deployment.id}",
                     "REGION": self.config.region,
-                    "LOG_LEVEL": "INFO" if self.environment == Environment.PRODUCTION else "DEBUG",
+                    "LOG_LEVEL": (
+                        "INFO"
+                        if self.environment == Environment.PRODUCTION
+                        else "DEBUG"
+                    ),
                 }
             }
 
             # Save template
-            template_file = self.cache_dir / f"sophia_{self.environment.value}_template.yaml"
+            template_file = (
+                self.cache_dir / f"sophia_{self.environment.value}_template.yaml"
+            )
             with open(template_file, "w") as f:
                 yaml.dump(template, f, default_flow_style=False)
 
@@ -517,10 +550,22 @@ def main():
     parser = argparse.ArgumentParser(description="Sophia AI Pulumi ESC Manager v3.3")
     parser.add_argument(
         "action",
-        choices=["login", "open", "get", "set", "rotate", "sync", "export", "validate", "template"],
+        choices=[
+            "login",
+            "open",
+            "get",
+            "set",
+            "rotate",
+            "sync",
+            "export",
+            "validate",
+            "template",
+        ],
     )
     parser.add_argument(
-        "--env", default="production", choices=["production", "development", "staging", "test"]
+        "--env",
+        default="production",
+        choices=["production", "development", "staging", "test"],
     )
     parser.add_argument("--key", help="Secret key (for get/set/rotate)")
     parser.add_argument("--value", help="Secret value (for set)")

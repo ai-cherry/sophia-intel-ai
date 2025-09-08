@@ -198,7 +198,10 @@ class EnhancedSwarmMemoryClient:
                     f"task:{v}",
                     f"task_hash:{hashlib.md5(v.encode()).hexdigest()[:8]}",
                 ],
-                "agent_role": lambda v: [f"role:{v}", f"team:{metadata.get('team', 'default')}"],
+                "agent_role": lambda v: [
+                    f"role:{v}",
+                    f"team:{metadata.get('team', 'default')}",
+                ],
                 "repo_path": lambda v: [f"repo:{os.path.basename(v)}", "vcs:git"],
                 "file_path": lambda v: self._process_file_path(v),
                 "execution_pattern": lambda v: [
@@ -338,7 +341,11 @@ class EnhancedSwarmMemoryClient:
 
 # Helper functions for orchestrator integration
 def create_swarm_context(
-    task_id: str, agent_role: str, repo_path: str, file_path: Optional[str] = None, **kwargs
+    task_id: str,
+    agent_role: str,
+    repo_path: str,
+    file_path: Optional[str] = None,
+    **kwargs,
 ) -> dict[str, Any]:
     """Create standard swarm execution context"""
     context = {

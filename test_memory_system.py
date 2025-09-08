@@ -23,7 +23,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from memory.mem0_bridge import Mem0Bridge
 except ImportError:
-    logger.error("Error: Could not import Mem0Bridge. Make sure memory/mem0_bridge.py exists.")
+    logger.error(
+        "Error: Could not import Mem0Bridge. Make sure memory/mem0_bridge.py exists."
+    )
     sys.exit(1)
 
 
@@ -72,7 +74,9 @@ async def test_memory_bridge():
             if success:
                 logger.info(f"✅ Added memory with relevance {memory['relevance']}")
             else:
-                logger.error(f"❌ Failed to add memory with relevance {memory['relevance']}")
+                logger.error(
+                    f"❌ Failed to add memory with relevance {memory['relevance']}"
+                )
                 return False
         except Exception as e:
             logger.error(f"❌ Error adding memory: {str(e)}")
@@ -95,7 +99,9 @@ async def test_memory_bridge():
                 logger.info(f"     Content: {result.get('content', '')[:50]}...")
 
             if results.get("related_entities"):
-                logger.info(f"✅ Found related entities: {', '.join(results['related_entities'])}")
+                logger.info(
+                    f"✅ Found related entities: {', '.join(results['related_entities'])}"
+                )
 
         except Exception as e:
             logger.error(f"❌ Error retrieving memories for query '{query}': {str(e)}")
@@ -151,11 +157,15 @@ async def test_http_client():
             if response.status_code == 200:
                 logger.info(f"✅ Health check: {response.json()}")
             else:
-                logger.error(f"❌ Health check failed: {response.status_code} {response.text}")
+                logger.error(
+                    f"❌ Health check failed: {response.status_code} {response.text}"
+                )
                 return False
         except Exception as e:
             logger.error(f"❌ Error connecting to MCP server: {str(e)}")
-            logger.info("   Is the server running? Start it with: python -m mcp_servers.memory_mcp")
+            logger.info(
+                "   Is the server running? Start it with: python -m mcp_servers.memory_mcp"
+            )
             return False
 
         # Test adding memory
@@ -205,7 +215,9 @@ async def test_http_client():
 
         # Test Continue.dev integration
         try:
-            response = await client.get(f"{base_url}/continue/search?query=test&agent_id=http_test")
+            response = await client.get(
+                f"{base_url}/continue/search?query=test&agent_id=http_test"
+            )
             if response.status_code == 200:
                 logger.info(f"✅ Continue.dev integration: {response.json()}")
             else:
@@ -246,7 +258,9 @@ async def main():
     # Prompt to start MCP server if needed
     if input("\nDo you want to test the Memory MCP server? (y/n): ").lower() == "y":
         logger.info("Starting Memory MCP server test...")
-        logger.info("Note: Make sure the server is running with: python -m mcp_servers.memory_mcp")
+        logger.info(
+            "Note: Make sure the server is running with: python -m mcp_servers.memory_mcp"
+        )
 
         if input("Is the Memory MCP server running? (y/n): ").lower() == "y":
             # Test HTTP client

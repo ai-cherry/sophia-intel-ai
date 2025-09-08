@@ -140,7 +140,9 @@ class ConnectionPoolManager:
     async def _init_redis(self, config: RedisConfig):
         """Initialize Redis cluster connection"""
         try:
-            startup_nodes = [{"host": node["host"], "port": node["port"]} for node in config.nodes]
+            startup_nodes = [
+                {"host": node["host"], "port": node["port"]} for node in config.nodes
+            ]
             self.redis_client = aioredis.RedisCluster(
                 startup_nodes=startup_nodes,
                 password=config.password,

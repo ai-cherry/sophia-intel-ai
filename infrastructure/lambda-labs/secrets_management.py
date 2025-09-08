@@ -24,7 +24,9 @@ class LambdaLabsSecretsManager:
     def __init__(self, config_path: str = "secrets-config.yaml"):
         self.config_path = config_path
         self.config = self._load_config()
-        self.secrets_dir = Path(self.config.get("secrets_dir", "/etc/sophia-ai/secrets"))
+        self.secrets_dir = Path(
+            self.config.get("secrets_dir", "/etc/sophia-ai/secrets")
+        )
         self.secrets_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize encryption
@@ -66,7 +68,9 @@ class LambdaLabsSecretsManager:
 
     def _get_or_create_encryption_key(self) -> bytes:
         """Get or create encryption key"""
-        key_file = Path(self.config.get("encryption_key_file", "/etc/sophia-ai/encryption.key"))
+        key_file = Path(
+            self.config.get("encryption_key_file", "/etc/sophia-ai/encryption.key")
+        )
 
         if key_file.exists():
             return key_file.read_bytes()
@@ -139,7 +143,9 @@ class LambdaLabsSecretsManager:
                     if secret_value:
                         # Convert to Kubernetes secret format
                         k8s_key = key.replace("_", "-")
-                        secret_data[k8s_key] = base64.b64encode(secret_value.encode()).decode()
+                        secret_data[k8s_key] = base64.b64encode(
+                            secret_value.encode()
+                        ).decode()
 
             # Create Kubernetes secret manifest
             secret_manifest = {
@@ -302,7 +308,9 @@ class LambdaLabsSecretsManager:
         """Check secrets management health"""
         health = {
             "status": "healthy",
-            "encryption_key_exists": Path(self.config.get("encryption_key_file", "")).exists(),
+            "encryption_key_exists": Path(
+                self.config.get("encryption_key_file", "")
+            ).exists(),
             "secrets_dir_exists": self.secrets_dir.exists(),
             "secrets_count": len(list(self.secrets_dir.glob("*.secret"))),
             "kubernetes_secret_exists": False,

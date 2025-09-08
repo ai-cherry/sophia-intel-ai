@@ -45,7 +45,9 @@ async def verify_api_key(
 
     if not x_api_key:
         logger.warning(f"Missing API key for {path} from {request.client.host}")
-        raise HTTPException(status_code=401, detail="API key required. Include X-API-Key header.")
+        raise HTTPException(
+            status_code=401, detail="API key required. Include X-API-Key header."
+        )
 
     if x_api_key != expected_key:
         logger.warning(f"Invalid API key for {path} from {request.client.host}")

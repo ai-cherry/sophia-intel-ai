@@ -14,7 +14,12 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Optional
 
-from .base_persona import BasePersonaAgent, ConversationStyle, PersonalityTrait, PersonaProfile
+from .base_persona import (
+    BasePersonaAgent,
+    ConversationStyle,
+    PersonalityTrait,
+    PersonaProfile,
+)
 
 
 class HealthStatus(str, Enum):
@@ -210,7 +215,9 @@ class ClientHealthAgent(BasePersonaAgent):
         self.client_behavior_patterns: dict[str, list[str]] = {}
         self.seasonal_trends: dict[str, dict[str, Any]] = {}
 
-    async def process_interaction(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
+    async def process_interaction(
+        self, user_input: str, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Process client health interaction"""
         interaction_type = context.get("type", "health_check")
         client_id = context.get("client_id")
@@ -265,7 +272,9 @@ class ClientHealthAgent(BasePersonaAgent):
 
         return f"{base_greeting}{time_context}"
 
-    async def analyze_domain_specific_data(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def analyze_domain_specific_data(
+        self, data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze client health data for insights"""
         analysis_type = data.get("type", "health_overview")
 
@@ -296,7 +305,9 @@ class ClientHealthAgent(BasePersonaAgent):
         risk_factors = self._identify_risk_factors(client_data)
 
         # Generate insights
-        insights = await self._generate_health_insights(client_id, health_score, risk_factors)
+        insights = await self._generate_health_insights(
+            client_id, health_score, risk_factors
+        )
 
         # Store updated health score
         self.client_health_scores[client_id] = health_score
@@ -364,14 +375,18 @@ class ClientHealthAgent(BasePersonaAgent):
             ),
         }
 
-    async def _plan_intervention(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
+    async def _plan_intervention(
+        self, user_input: str, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Plan specific client intervention strategy"""
         client_id = context.get("client_id")
         intervention_type = context.get("intervention_type", "retention")
         urgency = context.get("urgency", "medium")
 
         # Retrieve client history and context
-        self.retrieve_memories(f"client {client_id} intervention {intervention_type}", limit=5)
+        self.retrieve_memories(
+            f"client {client_id} intervention {intervention_type}", limit=5
+        )
 
         # Create intervention plan
         intervention_plan = await self._create_intervention_plan(
@@ -408,7 +423,9 @@ class ClientHealthAgent(BasePersonaAgent):
         # Generate success metrics
         success_metrics = self._define_success_metrics(client_id, goals)
 
-        response = self._format_success_plan_response(milestones, success_metrics, journey_stage)
+        response = self._format_success_plan_response(
+            milestones, success_metrics, journey_stage
+        )
 
         return {
             "response": self.generate_response_with_personality(response, context),
@@ -427,10 +444,14 @@ class ClientHealthAgent(BasePersonaAgent):
         relationship_data = context.get("relationship_data", {})
 
         # Analyze stakeholder engagement
-        stakeholder_health = self._analyze_stakeholder_health(client_id, relationship_data)
+        stakeholder_health = self._analyze_stakeholder_health(
+            client_id, relationship_data
+        )
 
         # Review communication patterns
-        communication_health = self._analyze_communication_health(client_id, relationship_data)
+        communication_health = self._analyze_communication_health(
+            client_id, relationship_data
+        )
 
         # Assess value realization
         value_realization = self._assess_value_realization(client_id, relationship_data)
@@ -468,7 +489,9 @@ class ClientHealthAgent(BasePersonaAgent):
         )
 
         return {
-            "response": self.generate_response_with_personality(personalized_guidance, context),
+            "response": self.generate_response_with_personality(
+                personalized_guidance, context
+            ),
             "guidance_type": "general",
             "topic": guidance_topic,
         }
@@ -505,13 +528,19 @@ class ClientHealthAgent(BasePersonaAgent):
         usage_score = self._calculate_usage_health(client_data.get("usage_data", {}))
 
         # Engagement health (0-100)
-        engagement_score = self._calculate_engagement_health(client_data.get("engagement_data", {}))
+        engagement_score = self._calculate_engagement_health(
+            client_data.get("engagement_data", {})
+        )
 
         # Support health (0-100) - fewer escalations = higher score
-        support_score = self._calculate_support_health(client_data.get("support_data", {}))
+        support_score = self._calculate_support_health(
+            client_data.get("support_data", {})
+        )
 
         # Financial health (0-100)
-        financial_score = self._calculate_financial_health(client_data.get("financial_data", {}))
+        financial_score = self._calculate_financial_health(
+            client_data.get("financial_data", {})
+        )
 
         # Relationship health (0-100)
         relationship_score = self._calculate_relationship_health(
@@ -562,7 +591,9 @@ class ClientHealthAgent(BasePersonaAgent):
                 "relationship": relationship_score,
             },
             risk_factors=risk_factors,
-            improvement_trends=self._calculate_improvement_trends(client_id, overall_score),
+            improvement_trends=self._calculate_improvement_trends(
+                client_id, overall_score
+            ),
             last_calculated=datetime.utcnow(),
             confidence_level=0.85,
         )
@@ -578,7 +609,8 @@ class ClientHealthAgent(BasePersonaAgent):
 
         # Normalize and weight metrics (simplified example)
         score = (
-            min(monthly_active_users / usage_data.get("licensed_users", 1) * 100, 100) * 0.4
+            min(monthly_active_users / usage_data.get("licensed_users", 1) * 100, 100)
+            * 0.4
             + feature_adoption * 100 * 0.35
             + min(session_frequency * 10, 100) * 0.25
         )
@@ -637,12 +669,16 @@ class ClientHealthAgent(BasePersonaAgent):
 
         return max(0, min(100, score))
 
-    def _calculate_relationship_health(self, relationship_data: dict[str, Any]) -> float:
+    def _calculate_relationship_health(
+        self, relationship_data: dict[str, Any]
+    ) -> float:
         """Calculate relationship health score"""
         if not relationship_data:
             return 60.0
 
-        stakeholder_engagement = relationship_data.get("stakeholder_engagement_score", 0.6)
+        stakeholder_engagement = relationship_data.get(
+            "stakeholder_engagement_score", 0.6
+        )
         executive_alignment = relationship_data.get("executive_alignment_score", 0.5)
         advocacy_score = relationship_data.get("advocacy_likelihood", 0.5)
 
@@ -671,9 +707,9 @@ class ClientHealthAgent(BasePersonaAgent):
         # Check contract renewal timing
         contract_data = client_data.get("contract_data", {})
         renewal_date = contract_data.get("renewal_date")
-        if renewal_date and datetime.fromisoformat(renewal_date) - datetime.utcnow() < timedelta(
-            days=90
-        ):
+        if renewal_date and datetime.fromisoformat(
+            renewal_date
+        ) - datetime.utcnow() < timedelta(days=90):
             risk_factors.append(RiskFactor.CONTRACT_RENEWAL)
 
         # Check for stakeholder changes
@@ -683,7 +719,9 @@ class ClientHealthAgent(BasePersonaAgent):
 
         return risk_factors
 
-    def _calculate_improvement_trends(self, client_id: str, current_score: float) -> dict[str, str]:
+    def _calculate_improvement_trends(
+        self, client_id: str, current_score: float
+    ) -> dict[str, str]:
         """Calculate improvement trends for key metrics"""
         # In a real implementation, compare with historical data
         return {
@@ -693,7 +731,9 @@ class ClientHealthAgent(BasePersonaAgent):
             "support_trend": "improving",
         }
 
-    def _calculate_churn_probability(self, client_id: str, risk_data: dict[str, Any]) -> float:
+    def _calculate_churn_probability(
+        self, client_id: str, risk_data: dict[str, Any]
+    ) -> float:
         """Calculate probability of churn using predictive model"""
         churn_score = 0.0
 
@@ -712,7 +752,9 @@ class ClientHealthAgent(BasePersonaAgent):
         # Sort risk factors by impact
         risk_impacts = []
         for predictor, weight in self.churn_predictors.items():
-            if predictor in risk_data and risk_data[predictor] > 0.3:  # Threshold for concern
+            if (
+                predictor in risk_data and risk_data[predictor] > 0.3
+            ):  # Threshold for concern
                 impact = risk_data[predictor] * weight
                 risk_impacts.append((predictor, impact))
 
@@ -748,7 +790,9 @@ class ClientHealthAgent(BasePersonaAgent):
             elif "support" in risk_driver:
                 recommendations.append("Escalate to support leadership for resolution")
             elif "stakeholder" in risk_driver:
-                recommendations.append("Conduct stakeholder mapping and relationship reset")
+                recommendations.append(
+                    "Conduct stakeholder mapping and relationship reset"
+                )
 
         return recommendations
 
@@ -791,11 +835,16 @@ class ClientHealthAgent(BasePersonaAgent):
         return response.strip()
 
     def _format_risk_analysis_response(
-        self, churn_probability: float, risk_drivers: list[str], interventions: list[str]
+        self,
+        churn_probability: float,
+        risk_drivers: list[str],
+        interventions: list[str],
     ) -> str:
         """Format risk analysis response"""
         risk_level = (
-            "HIGH" if churn_probability > 0.6 else "MEDIUM" if churn_probability > 0.3 else "LOW"
+            "HIGH"
+            if churn_probability > 0.6
+            else "MEDIUM" if churn_probability > 0.3 else "LOW"
         )
 
         response = f"""
@@ -833,7 +882,10 @@ class ClientHealthAgent(BasePersonaAgent):
         }
 
     async def _generate_health_insights(
-        self, client_id: str, health_score: ClientHealthScore, risk_factors: list[RiskFactor]
+        self,
+        client_id: str,
+        health_score: ClientHealthScore,
+        risk_factors: list[RiskFactor],
     ) -> list[ClientInsight]:
         """Generate actionable health insights"""
         insights = []
@@ -861,7 +913,11 @@ class ClientHealthAgent(BasePersonaAgent):
         return insights
 
     async def _create_intervention_plan(
-        self, client_id: str, intervention_type: str, urgency: str, context: dict[str, Any]
+        self,
+        client_id: str,
+        intervention_type: str,
+        urgency: str,
+        context: dict[str, Any],
     ) -> InterventionRecommendation:
         """Create detailed intervention plan"""
         return InterventionRecommendation(
@@ -886,10 +942,14 @@ class ClientHealthAgent(BasePersonaAgent):
     async def _analyze_renewal_risk(self, data: dict[str, Any]) -> dict[str, Any]:
         return {"status": "analyzed", "insights": []}
 
-    async def _identify_expansion_opportunities(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def _identify_expansion_opportunities(
+        self, data: dict[str, Any]
+    ) -> dict[str, Any]:
         return {"status": "analyzed", "opportunities": []}
 
-    def _format_intervention_plan_response(self, plan: InterventionRecommendation) -> str:
+    def _format_intervention_plan_response(
+        self, plan: InterventionRecommendation
+    ) -> str:
         return f"Intervention plan created for {plan.intervention_type} with {plan.success_probability:.0%} success probability."
 
     async def _analyze_client_journey_stage(
@@ -914,27 +974,45 @@ class ClientHealthAgent(BasePersonaAgent):
             "Expand usage to additional teams",
         ]
 
-    def _define_success_metrics(self, client_id: str, goals: list[str]) -> dict[str, float]:
-        return {"user_adoption": 0.8, "feature_utilization": 0.6, "satisfaction_score": 4.2}
+    def _define_success_metrics(
+        self, client_id: str, goals: list[str]
+    ) -> dict[str, float]:
+        return {
+            "user_adoption": 0.8,
+            "feature_utilization": 0.6,
+            "satisfaction_score": 4.2,
+        }
 
     def _format_success_plan_response(
-        self, milestones: list[str], metrics: dict[str, float], stage: ClientJourneyStage
+        self,
+        milestones: list[str],
+        metrics: dict[str, float],
+        stage: ClientJourneyStage,
     ) -> str:
         return f"Success plan created with {len(milestones)} milestones for client in {stage.current_stage} stage."
 
-    def _analyze_stakeholder_health(self, client_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    def _analyze_stakeholder_health(
+        self, client_id: str, data: dict[str, Any]
+    ) -> dict[str, Any]:
         return {"engagement_level": "high", "key_stakeholders": 3}
 
-    def _analyze_communication_health(self, client_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    def _analyze_communication_health(
+        self, client_id: str, data: dict[str, Any]
+    ) -> dict[str, Any]:
         return {"frequency": "optimal", "sentiment": "positive"}
 
-    def _assess_value_realization(self, client_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    def _assess_value_realization(
+        self, client_id: str, data: dict[str, Any]
+    ) -> dict[str, Any]:
         return {"value_score": 0.75, "roi_achieved": True}
 
     async def _generate_relationship_recommendations(
         self, stakeholder_health: dict, comm_health: dict, value_realization: dict
     ) -> list[str]:
-        return ["Continue current engagement strategy", "Schedule quarterly business review"]
+        return [
+            "Continue current engagement strategy",
+            "Schedule quarterly business review",
+        ]
 
     def _format_relationship_review(
         self,
@@ -962,7 +1040,9 @@ class ClientHealthAgent(BasePersonaAgent):
             "expansion_strategy": "Identify value realization opportunities and stakeholder champions",
             "onboarding": "Establish clear success criteria and regular check-in cadence",
         }
-        return practices.get(topic, "Apply client-centric approach with regular health monitoring")
+        return practices.get(
+            topic, "Apply client-centric approach with regular health monitoring"
+        )
 
     async def _personalize_guidance(
         self, practices: str, user_input: str, context: dict[str, Any]
@@ -1014,9 +1094,13 @@ class ClientHealthAgent(BasePersonaAgent):
             ),
             "risk_factors": risk_factors,
             "recommendations": recommendations,
-            "next_action": recommendations[0] if recommendations else "Continue regular engagement",
+            "next_action": (
+                recommendations[0] if recommendations else "Continue regular engagement"
+            ),
             "renewal_likelihood": (
-                "low" if health_score < 0.4 else "medium" if health_score < 0.7 else "high"
+                "low"
+                if health_score < 0.4
+                else "medium" if health_score < 0.7 else "high"
             ),
         }
 

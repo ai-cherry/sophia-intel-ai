@@ -75,7 +75,11 @@ class TestRedisPruningAgent:
     async def test_identify_pruning_candidates(self, pruning_agent, mock_redis_client):
         """Test identification of pruning candidates"""
         # Setup mock responses
-        mock_redis_client.keys.return_value = [b"large_key_1", b"large_key_2", b"small_key"]
+        mock_redis_client.keys.return_value = [
+            b"large_key_1",
+            b"large_key_2",
+            b"small_key",
+        ]
 
         def mock_memory_usage(key):
             if b"large" in key:
@@ -97,11 +101,15 @@ class TestRedisPruningAgent:
         # Verify results
         assert len(candidates) == 2  # Only large keys should be candidates
         assert all("large" in candidate["key"] for candidate in candidates)
-        assert all(candidate["memory_usage"] > 100 * 1024 * 1024 for candidate in candidates)
+        assert all(
+            candidate["memory_usage"] > 100 * 1024 * 1024 for candidate in candidates
+        )
         assert all(candidate["last_access"] > 3600 for candidate in candidates)
 
     @pytest.mark.asyncio
-    async def test_execute_pruning(self, pruning_agent, mock_redis_client, mock_mem0_client):
+    async def test_execute_pruning(
+        self, pruning_agent, mock_redis_client, mock_mem0_client
+    ):
         """Test pruning execution"""
         # Setup test candidates
         candidates = [
@@ -277,7 +285,9 @@ class TestMemoryOptimizationSwarm:
                         }
                     )
                     mock_agent.identify_pruning_candidates = AsyncMock(
-                        return_value=[{"key": "test_key", "memory_usage": 1024 * 1024 * 50}]
+                        return_value=[
+                            {"key": "test_key", "memory_usage": 1024 * 1024 * 50}
+                        ]
                     )
                     mock_agent.execute_pruning = AsyncMock(
                         return_value={

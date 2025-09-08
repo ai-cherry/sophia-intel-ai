@@ -192,9 +192,13 @@ class UnifiedMCPOrchestrator:
         # Scaling configuration for horizontal distribution
         self.scaling_config = {
             "max_concurrent_tasks": self.config.get("max_concurrent_tasks", 10),
-            "task_distribution_strategy": self.config.get("distribution_strategy", "round_robin"),
+            "task_distribution_strategy": self.config.get(
+                "distribution_strategy", "round_robin"
+            ),
             "worker_pool_size": self.config.get("worker_pool_size", 4),
-            "scale_out_threshold": self.config.get("scale_out_threshold", 0.8),  # CPU utilization
+            "scale_out_threshold": self.config.get(
+                "scale_out_threshold", 0.8
+            ),  # CPU utilization
         }
 
         logger.info("Unified MCP Orchestrator initialized")
@@ -313,7 +317,9 @@ class UnifiedMCPOrchestrator:
 
         # Validate the plan
         if not nx.is_directed_acyclic_graph(plan.dependencies):
-            raise ValueError("Task dependencies contain cycles - execution plan invalid")
+            raise ValueError(
+                "Task dependencies contain cycles - execution plan invalid"
+            )
 
         self.active_plans[plan.id] = plan
         logger.info(f"Created execution plan {plan.id} with {len(tasks)} tasks")
@@ -333,7 +339,9 @@ class UnifiedMCPOrchestrator:
                 if not ready_tasks:
                     # Check if all tasks are completed
                     remaining_tasks = [
-                        t for t in plan.tasks.values() if t.status == ExecutionStatus.PENDING
+                        t
+                        for t in plan.tasks.values()
+                        if t.status == ExecutionStatus.PENDING
                     ]
 
                     if remaining_tasks:
@@ -361,7 +369,9 @@ class UnifiedMCPOrchestrator:
             completed_tasks = [
                 t for t in plan.tasks.values() if t.status == ExecutionStatus.COMPLETED
             ]
-            failed_tasks = [t for t in plan.tasks.values() if t.status == ExecutionStatus.FAILED]
+            failed_tasks = [
+                t for t in plan.tasks.values() if t.status == ExecutionStatus.FAILED
+            ]
 
             success = len(failed_tasks) == 0
 
@@ -374,9 +384,9 @@ class UnifiedMCPOrchestrator:
             total_time = self.metrics["average_execution_time"] * (
                 self.metrics["total_executions"] - 1
             )
-            self.metrics["average_execution_time"] = (total_time + execution_time) / self.metrics[
-                "total_executions"
-            ]
+            self.metrics["average_execution_time"] = (
+                total_time + execution_time
+            ) / self.metrics["total_executions"]
 
             # Aggregate results
             results = {
@@ -426,7 +436,8 @@ class UnifiedMCPOrchestrator:
 
         recommendation = {
             "current_utilization": utilization,
-            "scale_out_needed": utilization > self.scaling_config["scale_out_threshold"],
+            "scale_out_needed": utilization
+            > self.scaling_config["scale_out_threshold"],
             "recommended_workers": max(
                 1, int(utilization * self.scaling_config["worker_pool_size"])
             ),
@@ -446,7 +457,9 @@ class UnifiedMCPOrchestrator:
             server = self._select_server_for_task(task)
 
             if not server:
-                raise ValueError(f"No available server for capability {task.capability}")
+                raise ValueError(
+                    f"No available server for capability {task.capability}"
+                )
 
             task.assigned_server = server.name
 
@@ -532,7 +545,9 @@ class UnifiedMCPOrchestrator:
                     "status": server.status.value,
                     "capabilities": [cap.value for cap in server.capabilities],
                     "last_health_check": (
-                        server.last_health_check.isoformat() if server.last_health_check else None
+                        server.last_health_check.isoformat()
+                        if server.last_health_check
+                        else None
                     ),
                     "response_time_ms": server.response_time_ms,
                     "consecutive_failures": server.consecutive_failures,
@@ -552,10 +567,15 @@ class UnifiedMCPOrchestrator:
     # Convenience methods for common operations
 
     async def simple_execute(
-        self, capability: MCPCapability, operation: str, parameters: dict[str, Any] = None
+        self,
+        capability: MCPCapability,
+        operation: str,
+        parameters: dict[str, Any] = None,
     ) -> Any:
         """Execute a single task without complex planning"""
-        task = MCPTask(capability=capability, operation=operation, parameters=parameters or {})
+        task = MCPTask(
+            capability=capability, operation=operation, parameters=parameters or {}
+        )
 
         plan = self.create_execution_plan([task])
         result = await self.execute_plan(plan)

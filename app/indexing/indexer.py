@@ -71,7 +71,9 @@ class RepositoryIndexer:
                 )
 
                 # Store in Weaviate
-                for i, (chunk, embedding) in enumerate(zip(chunks, embeddings, strict=False)):
+                for i, (chunk, embedding) in enumerate(
+                    zip(chunks, embeddings, strict=False)
+                ):
                     metadata = {
                         "file_path": str(file_path.relative_to(repo_path)),
                         "file_type": file_path.suffix,
@@ -84,13 +86,21 @@ class RepositoryIndexer:
                         embedding=embedding, text=chunk, metadata=metadata
                     )
 
-                results.append({"file": str(file_path), "chunks": len(chunks), "status": "indexed"})
+                results.append(
+                    {"file": str(file_path), "chunks": len(chunks), "status": "indexed"}
+                )
 
             except Exception as e:
                 logger.error(f"Error indexing {file_path}: {str(e)}")
-                results.append({"file": str(file_path), "status": "failed", "error": str(e)})
+                results.append(
+                    {"file": str(file_path), "status": "failed", "error": str(e)}
+                )
 
-        return {"repository": str(repo_path), "files_indexed": len(results), "results": results}
+        return {
+            "repository": str(repo_path),
+            "files_indexed": len(results),
+            "results": results,
+        }
 
     async def search_repository(
         self, query: str, top_k: int = 5, repo_path: Optional[str] = None

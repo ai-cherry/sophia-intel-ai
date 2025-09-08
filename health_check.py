@@ -24,7 +24,10 @@ class HealthChecker:
                     if response.status == 200:
                         return {"status": "healthy", "response_time": "< 100ms"}
                     else:
-                        return {"status": "unhealthy", "error": f"HTTP {response.status}"}
+                        return {
+                            "status": "unhealthy",
+                            "error": f"HTTP {response.status}",
+                        }
         except Exception as e:
             return {"status": "unhealthy", "error": str(e)}
 
@@ -51,7 +54,11 @@ class HealthChecker:
         try:
             # Simulate GPU check
             await asyncio.sleep(0.1)
-            return {"status": "healthy", "gpu_utilization": "85%", "memory": "12GB/24GB"}
+            return {
+                "status": "healthy",
+                "gpu_utilization": "85%",
+                "memory": "12GB/24GB",
+            }
         except Exception as e:
             return {"status": "unhealthy", "error": str(e)}
 

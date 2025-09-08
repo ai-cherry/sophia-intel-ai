@@ -81,7 +81,11 @@ class SwarmMetrics:
     last_updated: datetime = field(default_factory=datetime.now)
 
     def record_execution(
-        self, success: bool, response_time: float, agents_used: list[str], patterns_used: list[str]
+        self,
+        success: bool,
+        response_time: float,
+        agents_used: list[str],
+        patterns_used: list[str],
     ):
         """Record execution metrics"""
         self.total_requests += 1
@@ -117,7 +121,9 @@ class SwarmMetrics:
             return 0.0
 
         success_rate = self.successful_executions / self.total_requests
-        avg_response_time_score = max(0, min(100, 1000 / max(self.avg_response_time, 0.1)))
+        avg_response_time_score = max(
+            0, min(100, 1000 / max(self.avg_response_time, 0.1))
+        )
 
         # Weighted score
         return success_rate * 70.0 + avg_response_time_score * 30.0
@@ -150,7 +156,12 @@ class SwarmConfig:
 
     # Patterns to enable
     enabled_patterns: list[str] = field(
-        default_factory=lambda: ["quality_gates", "consensus", "strategy_archive", "debate"]
+        default_factory=lambda: [
+            "quality_gates",
+            "consensus",
+            "strategy_archive",
+            "debate",
+        ]
     )
 
     # Memory integration
@@ -176,7 +187,8 @@ class SwarmConfig:
             data["execution_mode"] = SwarmExecutionMode(data["execution_mode"])
         if "capabilities" in data and data["capabilities"]:
             data["capabilities"] = [
-                SwarmCapability(c) if isinstance(c, str) else c for c in data["capabilities"]
+                SwarmCapability(c) if isinstance(c, str) else c
+                for c in data["capabilities"]
             ]
 
         return cls(**data)
@@ -231,7 +243,9 @@ class SwarmBase(ABC):
             agent_count=len(self.agents) if self.agents else config.agent_count,
         )
 
-        logger.info(f"🐝 Initialized {config.swarm_type.value} swarm: {config.swarm_id}")
+        logger.info(
+            f"🐝 Initialized {config.swarm_type.value} swarm: {config.swarm_id}"
+        )
         logger.info(
             f"⚡ Parallel execution enforced with {self.parallel_config.agent_count} unique virtual keys"
         )
@@ -259,7 +273,9 @@ class SwarmBase(ABC):
                     self.patterns[pattern_name] = pattern
                     logger.info(f"Intialized pattern: {pattern_name}")
                 except Exception as e:
-                    logger.warning(f"Failed to initialize pattern {pattern_name}: {str(e)}")
+                    logger.warning(
+                        f"Failed to initialize pattern {pattern_name}: {str(e)}"
+                    )
 
         # Initialize agents
         for agent in self.agents:
@@ -306,7 +322,9 @@ class SwarmBase(ABC):
         # Add memory context if enabled
         if self.config.memory_enabled and self.memory_client:
             try:
-                memory_context = await self.memory_client.load_swarm_context(self.config.swarm_id)
+                memory_context = await self.memory_client.load_swarm_context(
+                    self.config.swarm_id
+                )
                 context["memory_context"] = memory_context
                 logger.info("📚 Loaded memory context for swarm execution")
             except Exception as e:
@@ -329,7 +347,9 @@ class SwarmBase(ABC):
                     result = await pattern.apply(enhanced_problem, context)
 
                     if result.get("success", False):
-                        enhanced_problem = result.get("enhanced_problem", enhanced_problem)
+                        enhanced_problem = result.get(
+                            "enhanced_problem", enhanced_problem
+                        )
                         context[f"pattern_{pattern_name}"] = result
                         logger.info(f"✅ Applied pattern: {pattern_name}")
 
@@ -415,7 +435,9 @@ class SwarmBase(ABC):
 
         try:
             # Coordinator plans and assigns tasks
-            coordinator_result = await self._execute_single_agent(coordinator, problem, context)
+            coordinator_result = await self._execute_single_agent(
+                coordinator, problem, context
+            )
 
             if coordinator_result.get("success", False):
                 task_assignments = coordinator_result.get("task_assignments", [])
@@ -434,12 +456,17 @@ class SwarmBase(ABC):
         return await self._execute_parallel(problem, context)
 
     async def _execute_parallel_impl(
-        self, agents: list[Any], task_assignments: list[dict[str, Any]], context: dict[str, Any]
+        self,
+        agents: list[Any],
+        task_assignments: list[dict[str, Any]],
+        context: dict[str, Any],
     ) -> list[dict[str, Any]]:
         """Helper for parallel execution with assignments"""
         # For simplicity, distribute equally
         chunk_size = len(agents) // len(task_assignments) if task_assignments else 1
-        agent_chunks = [agents[i : i + chunk_size] for i in range(0, len(agents), chunk_size)]
+        agent_chunks = [
+            agents[i : i + chunk_size] for i in range(0, len(agents), chunk_size)
+        ]
 
         async def execute_chunk(chunk, task_idx):
             results = []
@@ -574,7 +601,9 @@ class SwarmBase(ABC):
 
         # Return best result (by confidence or score)
         sorted_results = sorted(
-            successful_results, key=lambda x: x.get("confidence", x.get("score", 0)), reverse=True
+            successful_results,
+            key=lambda x: x.get("confidence", x.get("score", 0)),
+            reverse=True,
         )
 
         best_result = sorted_results[0]
@@ -762,7 +791,10 @@ class SwarmFactory:
         if "code" in task_type or "programming" in task_type:
             config.swarm_type = SwarmType.CODING
             config.execution_mode = SwarmExecutionMode.HIERARCHICAL
-            config.capabilities = [SwarmCapability.CODING, SwarmCapability.QUALITY_ASSURANCE]
+            config.capabilities = [
+                SwarmCapability.CODING,
+                SwarmCapability.QUALITY_ASSURANCE,
+            ]
 
         elif "research" in task_type or "analysis" in task_type:
             config.swarm_type = SwarmType.MEMORY_ENHANCED
@@ -772,7 +804,10 @@ class SwarmFactory:
         elif "creative" in task_type or "writing" in task_type:
             config.swarm_type = SwarmType.STANDARD
             config.execution_mode = SwarmExecutionMode.DEBATE
-            config.capabilities = [SwarmCapability.CREATIVITY, SwarmCapability.QUALITY_ASSURANCE]
+            config.capabilities = [
+                SwarmCapability.CREATIVITY,
+                SwarmCapability.QUALITY_ASSURANCE,
+            ]
 
         return config
 
@@ -819,7 +854,9 @@ async def cleanup_all_swarms():
 # =============================================================================
 
 
-def validate_task_compatibility(task: dict[str, Any], swarm: SwarmBase) -> tuple[bool, str]:
+def validate_task_compatibility(
+    task: dict[str, Any], swarm: SwarmBase
+) -> tuple[bool, str]:
     """Validate if a swarm can handle a specific task"""
     swarm_caps = [cap.value for cap in swarm.config.capabilities]
     task_requires = task.get("required_capabilities", [])
@@ -833,7 +870,10 @@ def validate_task_compatibility(task: dict[str, Any], swarm: SwarmBase) -> tuple
     # Check optional capabilities (warning but allow)
     missing_optional = [cap for cap in task_optional if cap not in swarm_caps]
     if missing_optional:
-        return True, f"Missing optional capabilities (may reduce performance): {missing_optional}"
+        return (
+            True,
+            f"Missing optional capabilities (may reduce performance): {missing_optional}",
+        )
 
     return True, "Task is compatible with swarm"
 

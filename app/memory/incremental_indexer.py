@@ -168,7 +168,9 @@ class IndexStateManager:
         with sqlite3.connect(self.db_path) as conn:
             file_count = conn.execute("SELECT COUNT(*) FROM file_state").fetchone()[0]
             chunk_count = conn.execute("SELECT COUNT(*) FROM chunk_state").fetchone()[0]
-            total_size = conn.execute("SELECT SUM(size) FROM file_state").fetchone()[0] or 0
+            total_size = (
+                conn.execute("SELECT SUM(size) FROM file_state").fetchone()[0] or 0
+            )
 
             return {
                 "files_indexed": file_count,
@@ -218,7 +220,9 @@ class IncrementalIndexer:
     """
 
     def __init__(
-        self, state_manager: Optional[IndexStateManager] = None, batch_size: int = BATCH_SIZE
+        self,
+        state_manager: Optional[IndexStateManager] = None,
+        batch_size: int = BATCH_SIZE,
     ):
         self.state_manager = state_manager or IndexStateManager()
         self.batch_size = batch_size
@@ -262,7 +266,11 @@ class IncrementalIndexer:
             prev_state = self.state_manager.get_file_state(filepath)
 
             # Skip if unchanged (unless forced)
-            if not force and prev_state and not prev_state.has_changed(current_sha, current_size):
+            if (
+                not force
+                and prev_state
+                and not prev_state.has_changed(current_sha, current_size)
+            ):
                 self.stats["files_skipped"] += 1
                 result["status"] = "unchanged"
                 return result
@@ -282,11 +290,15 @@ class IncrementalIndexer:
 
             # Filter out unchanged chunks if file structure is similar
             if prev_state and not force:
-                unchanged_chunks = self.state_manager.get_unchanged_chunks(filepath, current_sha)
+                unchanged_chunks = self.state_manager.get_unchanged_chunks(
+                    filepath, current_sha
+                )
 
                 # Filter to only changed chunks
                 changed_indices = [
-                    i for i, chunk_id in enumerate(ids) if chunk_id not in unchanged_chunks
+                    i
+                    for i, chunk_id in enumerate(ids)
+                    if chunk_id not in unchanged_chunks
                 ]
 
                 if changed_indices:
@@ -298,7 +310,9 @@ class IncrementalIndexer:
 
             # Index chunks if any
             if ids:
-                await upsert_chunks_dual(ids, texts, payloads, lang=payloads[0].get("lang", ""))
+                await upsert_chunks_dual(
+                    ids, texts, payloads, lang=payloads[0].get("lang", "")
+                )
                 self.stats["chunks_created"] += len(ids)
 
             # Update state
@@ -448,7 +462,9 @@ async def main():
     parser = argparse.ArgumentParser(description="Incremental code indexer")
     parser.add_argument("--root", default=".", help="Root directory")
     parser.add_argument("--force", action="store_true", help="Force re-indexing")
-    parser.add_argument("--priority", choices=["low", "medium", "high"], help="Priority level")
+    parser.add_argument(
+        "--priority", choices=["low", "medium", "high"], help="Priority level"
+    )
     parser.add_argument("--stats", action="store_true", help="Show index statistics")
 
     args = parser.parse_args()

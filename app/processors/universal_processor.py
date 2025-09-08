@@ -194,7 +194,9 @@ class FileProcessor(ABC):
         pass
 
     @abstractmethod
-    async def process(self, file_path: str, file_data: bytes = None) -> ProcessingResult:
+    async def process(
+        self, file_path: str, file_data: bytes = None
+    ) -> ProcessingResult:
         """Process the file and return results."""
         pass
 
@@ -224,7 +226,9 @@ class TextProcessor(FileProcessor):
     async def can_process(self, file_path: str, file_type: FileType) -> bool:
         return file_type in self.SUPPORTED_TYPES
 
-    async def process(self, file_path: str, file_data: bytes = None) -> ProcessingResult:
+    async def process(
+        self, file_path: str, file_data: bytes = None
+    ) -> ProcessingResult:
         start_time = time.time()
         result = ProcessingResult(
             file_path=file_path,
@@ -248,7 +252,9 @@ class TextProcessor(FileProcessor):
 
             # Extract metadata
             if self.config.extract_metadata:
-                result.metadata = await self._extract_metadata(file_path, content, result.file_type)
+                result.metadata = await self._extract_metadata(
+                    file_path, content, result.file_type
+                )
 
             # Process based on file type
             if result.file_type == FileType.HTML:
@@ -331,7 +337,9 @@ class TextProcessor(FileProcessor):
         if file_type == FileType.JSON:
             try:
                 parsed = json.loads(content)
-                metadata["json_keys"] = list(parsed.keys()) if isinstance(parsed, dict) else []
+                metadata["json_keys"] = (
+                    list(parsed.keys()) if isinstance(parsed, dict) else []
+                )
                 metadata["json_structure"] = type(parsed).__name__
             except:
                 pass
@@ -339,7 +347,9 @@ class TextProcessor(FileProcessor):
         elif file_type in {FileType.YAML, FileType.YML}:
             try:
                 parsed = yaml.safe_load(content)
-                metadata["yaml_keys"] = list(parsed.keys()) if isinstance(parsed, dict) else []
+                metadata["yaml_keys"] = (
+                    list(parsed.keys()) if isinstance(parsed, dict) else []
+                )
                 metadata["yaml_structure"] = type(parsed).__name__
             except:
                 pass
@@ -465,7 +475,9 @@ class TextProcessor(FileProcessor):
 
             for chunk in chunks:
                 embedding = await embedding_service.get_embedding(chunk)
-                embeddings.append(embedding.tolist() if hasattr(embedding, "tolist") else embedding)
+                embeddings.append(
+                    embedding.tolist() if hasattr(embedding, "tolist") else embedding
+                )
 
             return embeddings
 
@@ -482,7 +494,9 @@ class DocumentProcessor(FileProcessor):
     async def can_process(self, file_path: str, file_type: FileType) -> bool:
         return file_type in self.SUPPORTED_TYPES
 
-    async def process(self, file_path: str, file_data: bytes = None) -> ProcessingResult:
+    async def process(
+        self, file_path: str, file_data: bytes = None
+    ) -> ProcessingResult:
         start_time = time.time()
         file_type = self._detect_file_type(file_path)
 
@@ -514,7 +528,9 @@ class DocumentProcessor(FileProcessor):
         result.processing_time = time.time() - start_time
         return result
 
-    async def _process_pdf(self, file_path: str, file_data: bytes, result: ProcessingResult):
+    async def _process_pdf(
+        self, file_path: str, file_data: bytes, result: ProcessingResult
+    ):
         """Process PDF file."""
         self._report_progress("Processing PDF...", 0.2)
 
@@ -541,7 +557,8 @@ class DocumentProcessor(FileProcessor):
 
                 for i, page in enumerate(pdf.pages):
                     self._report_progress(
-                        f"Processing page {i+1}/{total_pages}...", 0.2 + 0.6 * (i + 1) / total_pages
+                        f"Processing page {i+1}/{total_pages}...",
+                        0.2 + 0.6 * (i + 1) / total_pages,
                     )
 
                     # Extract text
@@ -558,7 +575,9 @@ class DocumentProcessor(FileProcessor):
                                 # Would need more sophisticated image extraction
                                 pass
                         except Exception as e:
-                            result.warnings.append(f"Could not extract images from page {i+1}: {e}")
+                            result.warnings.append(
+                                f"Could not extract images from page {i+1}: {e}"
+                            )
 
             result.text_content = "\n\n".join(text_content)
             result.extracted_images = images
@@ -567,7 +586,9 @@ class DocumentProcessor(FileProcessor):
             if hasattr(pdf_file, "close"):
                 pdf_file.close()
 
-    async def _process_docx(self, file_path: str, file_data: bytes, result: ProcessingResult):
+    async def _process_docx(
+        self, file_path: str, file_data: bytes, result: ProcessingResult
+    ):
         """Process DOCX file."""
         self._report_progress("Processing DOCX...", 0.2)
 
@@ -647,7 +668,9 @@ class DocumentProcessor(FileProcessor):
                     chunk = content[start:end]
                 else:
                     # Look for sentence end
-                    last_sentence = max(chunk.rfind(". "), chunk.rfind("! "), chunk.rfind("? "))
+                    last_sentence = max(
+                        chunk.rfind(". "), chunk.rfind("! "), chunk.rfind("? ")
+                    )
                     if last_sentence > start + chunk_size * 0.7:
                         end = start + last_sentence + 1
                         chunk = content[start:end]
@@ -670,7 +693,9 @@ class DocumentProcessor(FileProcessor):
 
             for chunk in chunks:
                 embedding = await embedding_service.get_embedding(chunk)
-                embeddings.append(embedding.tolist() if hasattr(embedding, "tolist") else embedding)
+                embeddings.append(
+                    embedding.tolist() if hasattr(embedding, "tolist") else embedding
+                )
 
             return embeddings
 
@@ -696,7 +721,9 @@ class ImageProcessor(FileProcessor):
     async def can_process(self, file_path: str, file_type: FileType) -> bool:
         return file_type in self.SUPPORTED_TYPES
 
-    async def process(self, file_path: str, file_data: bytes = None) -> ProcessingResult:
+    async def process(
+        self, file_path: str, file_data: bytes = None
+    ) -> ProcessingResult:
         start_time = time.time()
         file_type = self._detect_file_type(file_path)
 
@@ -756,7 +783,9 @@ class ImageProcessor(FileProcessor):
         result.processing_time = time.time() - start_time
         return result
 
-    async def _extract_image_metadata(self, img: Image.Image, file_path: str) -> dict[str, Any]:
+    async def _extract_image_metadata(
+        self, img: Image.Image, file_path: str
+    ) -> dict[str, Any]:
         """Extract metadata from image."""
         metadata = {
             "width": img.width,
@@ -764,7 +793,8 @@ class ImageProcessor(FileProcessor):
             "mode": img.mode,
             "format": img.format,
             "file_name": Path(file_path).name,
-            "has_transparency": img.mode in ("RGBA", "LA") or "transparency" in img.info,
+            "has_transparency": img.mode in ("RGBA", "LA")
+            or "transparency" in img.info,
         }
 
         # Extract EXIF data if available
@@ -772,7 +802,9 @@ class ImageProcessor(FileProcessor):
             try:
                 exif = img._getexif()
                 if exif:
-                    metadata["exif"] = {str(k): str(v) for k, v in exif.items() if k and v}
+                    metadata["exif"] = {
+                        str(k): str(v) for k, v in exif.items() if k and v
+                    }
             except Exception as e:
                 metadata["exif_error"] = str(e)
 
@@ -979,7 +1011,10 @@ class UniversalFileProcessor:
         return result
 
     async def process_files_batch(
-        self, file_paths: list[str], config: ProcessingConfig = None, max_concurrent: int = 3
+        self,
+        file_paths: list[str],
+        config: ProcessingConfig = None,
+        max_concurrent: int = 3,
     ) -> list[ProcessingResult]:
         """Process multiple files in parallel."""
         semaphore = asyncio.Semaphore(max_concurrent)
@@ -1011,7 +1046,10 @@ class UniversalFileProcessor:
         return processed_results
 
     async def process_stream(
-        self, file_stream: AsyncIterator[bytes], file_name: str, config: ProcessingConfig = None
+        self,
+        file_stream: AsyncIterator[bytes],
+        file_name: str,
+        config: ProcessingConfig = None,
     ) -> ProcessingResult:
         """Process file from stream."""
         # Collect all data from stream

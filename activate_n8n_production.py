@@ -20,7 +20,10 @@ class N8NProductionActivator:
     """Handles production activation of n8n workflows"""
 
     def __init__(self):
-        self.headers = {"X-N8N-API-KEY": N8N_API_KEY, "Content-Type": "application/json"}
+        self.headers = {
+            "X-N8N-API-KEY": N8N_API_KEY,
+            "Content-Type": "application/json",
+        }
         self.activation_results = {
             "timestamp": datetime.now().isoformat(),
             "activated_workflows": [],
@@ -76,7 +79,9 @@ class N8NProductionActivator:
                     )
                     return True
                 else:
-                    error_msg = f"Failed to activate {workflow_name}: {response.status_code}"
+                    error_msg = (
+                        f"Failed to activate {workflow_name}: {response.status_code}"
+                    )
                     print(f"❌ {error_msg}")
                     self.activation_results["errors"].append(error_msg)
                     return False
@@ -113,7 +118,9 @@ class N8NProductionActivator:
 
             except Exception as e:
                 print(f"❌ Webhook validation error: {e}")
-                self.activation_results["errors"].append(f"Webhook validation error: {e}")
+                self.activation_results["errors"].append(
+                    f"Webhook validation error: {e}"
+                )
                 return False
 
     async def activate_gong_workflows(self):
@@ -160,7 +167,9 @@ class N8NProductionActivator:
         # Set overall status
         if activated_count > 0 and webhook_valid:
             self.activation_results["status"] = "success"
-            print(f"\n✅ Production activation complete: {activated_count} workflows activated")
+            print(
+                f"\n✅ Production activation complete: {activated_count} workflows activated"
+            )
         elif activated_count > 0:
             self.activation_results["status"] = "partial"
             print(
@@ -174,7 +183,9 @@ class N8NProductionActivator:
 
     def save_activation_report(self):
         """Save activation results to file"""
-        report_file = f"n8n_production_activation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_file = (
+            f"n8n_production_activation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
 
         with open(report_file, "w") as f:
             json.dump(self.activation_results, f, indent=2)

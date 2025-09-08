@@ -14,7 +14,10 @@ import streamlit as st
 
 # Page configuration
 st.set_page_config(
-    page_title="Sophia AI Chat", page_icon="🤖", layout="wide", initial_sidebar_state="expanded"
+    page_title="Sophia AI Chat",
+    page_icon="🤖",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # Custom CSS
@@ -80,7 +83,10 @@ def call_asip_chat(message: str, context: dict = None) -> dict:
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        return {"response": f"Error connecting to ASIP Bridge: {e!s}", "metadata": {"error": True}}
+        return {
+            "response": f"Error connecting to ASIP Bridge: {e!s}",
+            "metadata": {"error": True},
+        }
 
 
 def get_metrics() -> dict:
@@ -107,7 +113,14 @@ with st.sidebar:
     # GPU Instance Selection
     gpu_instance = st.selectbox(
         "GPU Instance",
-        ["Auto", "GH200 (141GB)", "A100 (80GB)", "RTX6000 (24GB)", "A6000 (48GB)", "A10 (24GB)"],
+        [
+            "Auto",
+            "GH200 (141GB)",
+            "A100 (80GB)",
+            "RTX6000 (24GB)",
+            "A6000 (48GB)",
+            "A10 (24GB)",
+        ],
         help="Select the Lambda Labs GPU instance",
     )
 
@@ -184,11 +197,16 @@ with tab1:
                     with st.expander("Details", expanded=False):
                         col1, col2, col3 = st.columns(3)
                         with col1:
-                            st.metric("Execution Mode", metadata.get("execution_mode", "N/A"))
+                            st.metric(
+                                "Execution Mode", metadata.get("execution_mode", "N/A")
+                            )
                         with col2:
                             st.metric("GPU", metadata.get("gpu_instance", "N/A"))
                         with col3:
-                            st.metric("Response Time", f"{metadata.get('processing_time', 0):.2f}s")
+                            st.metric(
+                                "Response Time",
+                                f"{metadata.get('processing_time', 0):.2f}s",
+                            )
 
                         st.json(metadata)
 
@@ -199,8 +217,12 @@ with tab1:
 
         # Get context
         context = {
-            "execution_mode": execution_mode.lower() if execution_mode != "Auto" else None,
-            "gpu_instance": gpu_instance.split()[0].lower() if gpu_instance != "Auto" else None,
+            "execution_mode": (
+                execution_mode.lower() if execution_mode != "Auto" else None
+            ),
+            "gpu_instance": (
+                gpu_instance.split()[0].lower() if gpu_instance != "Auto" else None
+            ),
             "priority": priority,
         }
 
@@ -236,18 +258,23 @@ with tab2:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric("Total Messages", st.session_state.metrics["total_messages"], delta=None)
+        st.metric(
+            "Total Messages", st.session_state.metrics["total_messages"], delta=None
+        )
 
     with col2:
         st.metric(
-            "Avg Response Time", f"{st.session_state.metrics['avg_response_time']:.2f}s", delta=None
+            "Avg Response Time",
+            f"{st.session_state.metrics['avg_response_time']:.2f}s",
+            delta=None,
         )
 
     with col3:
         cache_hit_rate = 0
         if st.session_state.metrics["total_messages"] > 0:
             cache_hit_rate = (
-                st.session_state.metrics["cache_hits"] / st.session_state.metrics["total_messages"]
+                st.session_state.metrics["cache_hits"]
+                / st.session_state.metrics["total_messages"]
             ) * 100
         st.metric("Cache Hit Rate", f"{cache_hit_rate:.1f}%", delta=None)
 
@@ -360,4 +387,6 @@ with tab3:
 
 # Footer
 st.divider()
-st.caption("Sophia AI Chat Interface - Powered by ASIP Architecture and Lambda Labs Infrastructure")
+st.caption(
+    "Sophia AI Chat Interface - Powered by ASIP Architecture and Lambda Labs Infrastructure"
+)

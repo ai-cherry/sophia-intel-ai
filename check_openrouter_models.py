@@ -39,7 +39,9 @@ def get_current_models():
                 elif "gpt" in model_id.lower() or "openai" in model_id.lower():
                     target_models["gpt"].append({"id": model_id, "name": model_name})
                 elif "deepseek" in model_id.lower():
-                    target_models["deepseek"].append({"id": model_id, "name": model_name})
+                    target_models["deepseek"].append(
+                        {"id": model_id, "name": model_name}
+                    )
                 elif "qwen" in model_id.lower():
                     target_models["qwen"].append({"id": model_id, "name": model_name})
                 elif "gemini" in model_id.lower() or "google" in model_id.lower():

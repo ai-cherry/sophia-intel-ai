@@ -381,7 +381,9 @@ class TestRetryManager:
             assert delays[-1] == 3.0
 
     @pytest.mark.asyncio
-    async def test_retry_exhaustion_raises_last_exception(self, exponential_retry_config):
+    async def test_retry_exhaustion_raises_last_exception(
+        self, exponential_retry_config
+    ):
         """Test that exhausting retries raises the last exception"""
         retry_manager = RetryManager(exponential_retry_config)
 
@@ -588,7 +590,9 @@ class TestMCPConnectionManager:
         assert "shared_indexing" in connection_manager.retry_managers
 
         # Check health status initialized
-        assert all(status is True for status in connection_manager.health_status.values())
+        assert all(
+            status is True for status in connection_manager.health_status.values()
+        )
 
     @pytest.mark.asyncio
     async def test_get_connection_with_circuit_breaker(self, connection_manager):
@@ -604,7 +608,9 @@ class TestMCPConnectionManager:
         connection = await connection_manager.get_connection("artemis_filesystem")
 
         assert connection == mock_connection
-        assert connection_manager.connection_metrics["artemis_filesystem"]["acquired"] == 1
+        assert (
+            connection_manager.connection_metrics["artemis_filesystem"]["acquired"] == 1
+        )
 
     @pytest.mark.asyncio
     async def test_get_connection_with_unhealthy_server(self, connection_manager):
@@ -649,7 +655,9 @@ class TestMCPConnectionManager:
         connection_manager.pools["artemis_filesystem"].release.assert_called_once_with(
             mock_connection
         )
-        assert connection_manager.connection_metrics["artemis_filesystem"]["released"] == 1
+        assert (
+            connection_manager.connection_metrics["artemis_filesystem"]["released"] == 1
+        )
 
     @pytest.mark.asyncio
     async def test_health_monitoring_status_change(self, connection_manager):
@@ -755,7 +763,9 @@ class TestMCPConnectionManager:
 
         # Force circuit open
         breaker.state = ConnectionState.OPEN
-        breaker.last_failure_time = datetime.utcnow() - timedelta(seconds=70)  # Past timeout
+        breaker.last_failure_time = datetime.utcnow() - timedelta(
+            seconds=70
+        )  # Past timeout
 
         # Mock successful connection
         mock_connection = MagicMock(spec=Connection, server_name="artemis_filesystem")

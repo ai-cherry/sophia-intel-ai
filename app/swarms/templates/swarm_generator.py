@@ -353,7 +353,8 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
 
         # Find coordinator and workers
         coordinator = next(
-            (a for a in template.agents if a.role.endswith("coordinator")), template.agents[0]
+            (a for a in template.agents if a.role.endswith("coordinator")),
+            template.agents[0],
         )
         workers = [a for a in template.agents if a != coordinator]
 
@@ -1168,10 +1169,14 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
 
         # Validate resource constraints (8-task limit)
         total_agents = len(template.agents)
-        max_concurrent = template.resource_limits.get("max_concurrent_tasks", total_agents)
+        max_concurrent = template.resource_limits.get(
+            "max_concurrent_tasks", total_agents
+        )
 
         if max_concurrent > 8:
-            errors.append(f"Template requests {max_concurrent} concurrent tasks, system limit is 8")
+            errors.append(
+                f"Template requests {max_concurrent} concurrent tasks, system limit is 8"
+            )
             return False, "", {}, errors
 
         if total_agents > 8:
@@ -1180,7 +1185,9 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
 
         try:
             # Generate code
-            code, metadata = self.generate_swarm_code(template, custom_config, swarm_name)
+            code, metadata = self.generate_swarm_code(
+                template, custom_config, swarm_name
+            )
 
             # Additional metadata
             metadata.update(
@@ -1188,8 +1195,12 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
                     "validation_passed": True,
                     "resource_compliance": True,
                     "factory_integrations": {
-                        "sophia": len([a for a in template.agents if a.factory_type == "sophia"]),
-                        "artemis": len([a for a in template.agents if a.factory_type == "artemis"]),
+                        "sophia": len(
+                            [a for a in template.agents if a.factory_type == "sophia"]
+                        ),
+                        "artemis": len(
+                            [a for a in template.agents if a.factory_type == "artemis"]
+                        ),
                     },
                 }
             )
@@ -1199,7 +1210,9 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
         except Exception as e:
             return False, "", {}, [f"Code generation failed: {str(e)}"]
 
-    def save_generated_swarm(self, swarm_name: str, code: str, metadata: dict[str, Any]) -> str:
+    def save_generated_swarm(
+        self, swarm_name: str, code: str, metadata: dict[str, Any]
+    ) -> str:
         """Save generated swarm code to file"""
 
         filename = f"{swarm_name.lower().replace('-', '_')}_swarm.py"
@@ -1211,7 +1224,8 @@ async def create_{swarm_name.replace("-", "_").lower()}() -> {swarm_name.replace
 
             # Save metadata
             metadata_file = (
-                self.base_template_dir / f"{swarm_name.lower().replace('-', '_')}_metadata.json"
+                self.base_template_dir
+                / f"{swarm_name.lower().replace('-', '_')}_metadata.json"
             )
             with open(metadata_file, "w") as f:
                 json.dump(metadata, f, indent=2)

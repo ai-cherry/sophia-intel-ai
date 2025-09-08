@@ -27,7 +27,11 @@ class SophiaAIMCPServer:
     def __init__(self):
         self.server = Server("sophia-ai-intelligence")
         self.lambda_labs_ip = "192.222.58.232"
-        self.domains = ["api.sophia-intel.ai", "chat.sophia-intel.ai", "dashboard.sophia-intel.ai"]
+        self.domains = [
+            "api.sophia-intel.ai",
+            "chat.sophia-intel.ai",
+            "dashboard.sophia-intel.ai",
+        ]
 
         # API configuration (masked for security)
         self.api_config = {
@@ -43,7 +47,10 @@ class SophiaAIMCPServer:
                 "key": os.getenv("BRAVE_API_KEY"),
                 "endpoint": "https://api.search.brave.com/res/v1/web/search",
             },
-            "exa": {"key": os.getenv("EXA_API_KEY"), "endpoint": "https://api.exa.ai/search"},
+            "exa": {
+                "key": os.getenv("EXA_API_KEY"),
+                "endpoint": "https://api.exa.ai/search",
+            },
             "tavily": {
                 "key": os.getenv("TAVILY_API_KEY"),
                 "endpoint": "https://api.tavily.com/search",
@@ -75,7 +82,13 @@ class SophiaAIMCPServer:
                         "properties": {
                             "service": {
                                 "type": "string",
-                                "enum": ["all", "search", "neural", "gateway", "infrastructure"],
+                                "enum": [
+                                    "all",
+                                    "search",
+                                    "neural",
+                                    "gateway",
+                                    "infrastructure",
+                                ],
                                 "description": "Specific service to check or 'all' for complete status",
                             },
                             "detailed": {
@@ -115,7 +128,14 @@ class SophiaAIMCPServer:
                         "properties": {
                             "api": {
                                 "type": "string",
-                                "enum": ["all", "serper", "perplexity", "brave", "exa", "tavily"],
+                                "enum": [
+                                    "all",
+                                    "serper",
+                                    "perplexity",
+                                    "brave",
+                                    "exa",
+                                    "tavily",
+                                ],
                                 "default": "all",
                                 "description": "Specific API to monitor",
                             },
@@ -190,7 +210,13 @@ class SophiaAIMCPServer:
                         "properties": {
                             "component": {
                                 "type": "string",
-                                "enum": ["dns", "lambda_labs", "services", "docker", "all"],
+                                "enum": [
+                                    "dns",
+                                    "lambda_labs",
+                                    "services",
+                                    "docker",
+                                    "all",
+                                ],
                                 "default": "all",
                                 "description": "Infrastructure component to check",
                             },
@@ -214,7 +240,13 @@ class SophiaAIMCPServer:
                             },
                             "service": {
                                 "type": "string",
-                                "enum": ["search", "neural", "api", "infrastructure", "unknown"],
+                                "enum": [
+                                    "search",
+                                    "neural",
+                                    "api",
+                                    "infrastructure",
+                                    "unknown",
+                                ],
                                 "default": "unknown",
                                 "description": "Service where the issue is occurring",
                             },
@@ -231,20 +263,25 @@ class SophiaAIMCPServer:
             ]
 
         @self.server.call_tool()
-        async def call_tool(name: str, arguments: Dict[str, Any]) -> List[types.TextContent]:
+        async def call_tool(
+            name: str, arguments: Dict[str, Any]
+        ) -> List[types.TextContent]:
             """Handle tool calls"""
             try:
                 if name == "sophia_health_check":
                     return await self.check_service_health(
-                        arguments.get("service", "all"), arguments.get("detailed", False)
+                        arguments.get("service", "all"),
+                        arguments.get("detailed", False),
                     )
                 elif name == "sophia_performance_metrics":
                     return await self.get_performance_metrics(
-                        arguments.get("timeframe", "1h"), arguments.get("service", "all")
+                        arguments.get("timeframe", "1h"),
+                        arguments.get("service", "all"),
                     )
                 elif name == "sophia_api_usage":
                     return await self.monitor_api_usage(
-                        arguments.get("api", "all"), arguments.get("include_costs", True)
+                        arguments.get("api", "all"),
+                        arguments.get("include_costs", True),
                     )
                 elif name == "sophia_search_test":
                     return await self.sophia_search_functionality(
@@ -260,7 +297,8 @@ class SophiaAIMCPServer:
                     )
                 elif name == "sophia_deployment_status":
                     return await self.check_deployment_status(
-                        arguments.get("component", "all"), arguments.get("include_history", False)
+                        arguments.get("component", "all"),
+                        arguments.get("include_history", False),
                     )
                 elif name == "sophia_troubleshoot":
                     return await self.troubleshoot_issue(
@@ -269,10 +307,16 @@ class SophiaAIMCPServer:
                         arguments.get("severity", "medium"),
                     )
                 else:
-                    return [types.TextContent(type="text", text=f"Unknown tool: {name}")]
+                    return [
+                        types.TextContent(type="text", text=f"Unknown tool: {name}")
+                    ]
             except Exception as e:
                 logger.error(f"Error in tool {name}: {str(e)}")
-                return [types.TextContent(type="text", text=f"Error executing {name}: {str(e)}")]
+                return [
+                    types.TextContent(
+                        type="text", text=f"Error executing {name}: {str(e)}"
+                    )
+                ]
 
         @self.server.list_resources()
         async def list_resources() -> List[types.Resource]:
@@ -334,7 +378,9 @@ class SophiaAIMCPServer:
             else:
                 raise ValueError(f"Unknown resource: {uri}")
 
-    async def check_service_health(self, service: str, detailed: bool) -> List[types.TextContent]:
+    async def check_service_health(
+        self, service: str, detailed: bool
+    ) -> List[types.TextContent]:
         """Check health of Sophia AI services"""
         health_data = {
             "timestamp": datetime.now().isoformat(),
@@ -342,11 +388,15 @@ class SophiaAIMCPServer:
             "services": {},
         }
 
-        services_to_check = self.service_endpoints.keys() if service == "all" else [service]
+        services_to_check = (
+            self.service_endpoints.keys() if service == "all" else [service]
+        )
         healthy_count = 0
         total_count = 0
 
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=10)
+        ) as session:
             for service_name in services_to_check:
                 if service_name in self.service_endpoints:
                     total_count += 1
@@ -355,7 +405,9 @@ class SophiaAIMCPServer:
                     try:
                         start_time = datetime.now()
                         async with session.get(endpoint) as resp:
-                            response_time = (datetime.now() - start_time).total_seconds() * 1000
+                            response_time = (
+                                datetime.now() - start_time
+                            ).total_seconds() * 1000
 
                             if resp.status == 200:
                                 data = await resp.json()
@@ -364,7 +416,9 @@ class SophiaAIMCPServer:
                                     "response_time_ms": round(response_time, 2),
                                     "http_status": resp.status,
                                     "data": (
-                                        data if detailed else {"status": data.get("status", "ok")}
+                                        data
+                                        if detailed
+                                        else {"status": data.get("status", "ok")}
                                     ),
                                 }
                                 healthy_count += 1
@@ -381,7 +435,10 @@ class SophiaAIMCPServer:
                             "error": "Request timeout (>10s)",
                         }
                     except Exception as e:
-                        health_data["services"][service_name] = {"status": "error", "error": str(e)}
+                        health_data["services"][service_name] = {
+                            "status": "error",
+                            "error": str(e),
+                        }
 
         # Determine overall status
         if healthy_count == total_count:
@@ -411,7 +468,9 @@ class SophiaAIMCPServer:
     ) -> List[types.TextContent]:
         """Test enhanced search with real query"""
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=30)
+            ) as session:
                 payload = {"query": query, "max_results": max_results}
 
                 if apis:
@@ -485,14 +544,18 @@ class SophiaAIMCPServer:
         }
 
         # Perform quick performance tests
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=15)
+        ) as session:
             for service_name, endpoint in self.service_endpoints.items():
                 if service == "all" or service in service_name:
                     try:
                         # Test response time
                         start_time = datetime.now()
                         async with session.get(f"{endpoint}/health") as resp:
-                            response_time = (datetime.now() - start_time).total_seconds() * 1000
+                            response_time = (
+                                datetime.now() - start_time
+                            ).total_seconds() * 1000
 
                             metrics["metrics"][service_name] = {
                                 "response_time_ms": round(response_time, 2),
@@ -514,12 +577,18 @@ class SophiaAIMCPServer:
             )
         ]
 
-    async def monitor_api_usage(self, api: str, include_costs: bool) -> List[types.TextContent]:
+    async def monitor_api_usage(
+        self, api: str, include_costs: bool
+    ) -> List[types.TextContent]:
         """Monitor external API usage"""
         # This would typically connect to usage tracking
         # For now, we'll provide configuration and status
 
-        usage_data = {"timestamp": datetime.now().isoformat(), "api_filter": api, "apis": {}}
+        usage_data = {
+            "timestamp": datetime.now().isoformat(),
+            "api_filter": api,
+            "apis": {},
+        }
 
         for api_name, config in self.api_config.items():
             if api == "all" or api == api_name:
@@ -541,7 +610,8 @@ class SophiaAIMCPServer:
 
         return [
             types.TextContent(
-                type="text", text=f"API Usage Report:\n\n{json.dumps(usage_data, indent=2)}"
+                type="text",
+                text=f"API Usage Report:\n\n{json.dumps(usage_data, indent=2)}",
             )
         ]
 
@@ -559,7 +629,14 @@ class SophiaAIMCPServer:
             deployment_status["status"]["dns"] = {
                 "provider": "DNSimple",
                 "domain": "sophia-intel.ai",
-                "configured_subdomains": ["api", "chat", "dashboard", "agents", "docs", "status"],
+                "configured_subdomains": [
+                    "api",
+                    "chat",
+                    "dashboard",
+                    "agents",
+                    "docs",
+                    "status",
+                ],
                 "status": "active",
             }
 
@@ -577,7 +654,8 @@ class SophiaAIMCPServer:
 
         return [
             types.TextContent(
-                type="text", text=f"Deployment Status:\n\n{json.dumps(deployment_status, indent=2)}"
+                type="text",
+                text=f"Deployment Status:\n\n{json.dumps(deployment_status, indent=2)}",
             )
         ]
 
@@ -586,7 +664,9 @@ class SophiaAIMCPServer:
     ) -> List[types.TextContent]:
         """Test neural inference capabilities"""
         try:
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=60)) as session:
+            async with aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=60)
+            ) as session:
                 payload = {"prompt": prompt, "model": model, "max_tokens": max_tokens}
 
                 start_time = datetime.now()
@@ -602,7 +682,9 @@ class SophiaAIMCPServer:
 
                         summary = {
                             "sophia_timestamp": datetime.now().isoformat(),
-                            "prompt": prompt[:100] + "..." if len(prompt) > 100 else prompt,
+                            "prompt": (
+                                prompt[:100] + "..." if len(prompt) > 100 else prompt
+                            ),
                             "model": model,
                             "status": "success",
                             "response_time_ms": round(response_time, 2),
@@ -630,7 +712,11 @@ class SophiaAIMCPServer:
                         ]
 
         except Exception as e:
-            return [types.TextContent(type="text", text=f"Neural inference test error: {str(e)}")]
+            return [
+                types.TextContent(
+                    type="text", text=f"Neural inference test error: {str(e)}"
+                )
+            ]
 
     async def troubleshoot_issue(
         self, issue: str, service: str, severity: str
@@ -677,9 +763,13 @@ class SophiaAIMCPServer:
 
         # Add service-specific recommendations
         if service == "search":
-            troubleshooting_guide["recommendations"].append("Test individual API integrations")
+            troubleshooting_guide["recommendations"].append(
+                "Test individual API integrations"
+            )
         elif service == "neural":
-            troubleshooting_guide["recommendations"].append("Check GPU memory usage on Lambda Labs")
+            troubleshooting_guide["recommendations"].append(
+                "Check GPU memory usage on Lambda Labs"
+            )
 
         return [
             types.TextContent(
@@ -710,7 +800,11 @@ class SophiaAIMCPServer:
                     "purpose": "Traffic routing and SSL termination",
                     "port": 80,
                 },
-                "data_layer": {"database": "PostgreSQL", "cache": "Redis", "vector_db": "Qdrant"},
+                "data_layer": {
+                    "database": "PostgreSQL",
+                    "cache": "Redis",
+                    "vector_db": "Qdrant",
+                },
             },
             "infrastructure": {
                 "compute": "Lambda Labs GPU Server",

@@ -64,7 +64,10 @@ async def test_unified_hybrid_memory():
             importance_weight=0.9,
             access_level="standard",
             domain="payready",
-            metadata={"source": "competitive_analysis_2025", "last_updated": "2025-01-01"},
+            metadata={
+                "source": "competitive_analysis_2025",
+                "last_updated": "2025-01-01",
+            },
         )
         print(f"✅ Stored foundational data with ID: {foundational_id}")
 
@@ -147,7 +150,9 @@ async def test_unified_hybrid_memory():
 
         # Test 7: Get cross-domain correlations
         print("\n📈 Test 7: Retrieving cross-domain correlations")
-        correlations = await memory_system.get_cross_domain_correlations("gong", "artemis")
+        correlations = await memory_system.get_cross_domain_correlations(
+            "gong", "artemis"
+        )
         print(f"✅ Found {len(correlations)} cross-domain correlations")
 
         # Test 8: Performance metrics

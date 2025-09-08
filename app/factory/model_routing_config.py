@@ -27,9 +27,13 @@ class ModelPerformanceTier(Enum):
 class SwarmModelProfile(Enum):
     """Model profiles for different swarm types"""
 
-    MYTHOLOGY_STRATEGIC = "mythology_strategic"  # High-quality models for strategic thinking
+    MYTHOLOGY_STRATEGIC = (
+        "mythology_strategic"  # High-quality models for strategic thinking
+    )
     MYTHOLOGY_ANALYTICAL = "mythology_analytical"  # Analysis-optimized models
-    MILITARY_TACTICAL = "military_tactical"  # Fast, precise models for tactical operations
+    MILITARY_TACTICAL = (
+        "military_tactical"  # Fast, precise models for tactical operations
+    )
     MILITARY_RECON = "military_recon"  # Efficient scanning and pattern recognition
     HYBRID_BALANCED = "hybrid_balanced"  # Balanced mix for hybrid swarms
     CUSTOM_CONFIGURABLE = "custom_configurable"  # User-configurable routing
@@ -106,8 +110,16 @@ class ModelRoutingEngine:
             agent_roles=[AgentRole.STRATEGIST],
             task_types=[TaskType.LONG_PLANNING, TaskType.ORCHESTRATION],
             swarm_profiles=[SwarmModelProfile.MYTHOLOGY_STRATEGIC],
-            primary_models=["openai/gpt-5-chat", "anthropic/claude-3-5-sonnet", "x-ai/grok-5"],
-            fallback_models=["openai/gpt-4o", "anthropic/claude-3-sonnet", "google/gemini-2.0-pro"],
+            primary_models=[
+                "openai/gpt-5-chat",
+                "anthropic/claude-3-5-sonnet",
+                "x-ai/grok-5",
+            ],
+            fallback_models=[
+                "openai/gpt-4o",
+                "anthropic/claude-3-sonnet",
+                "google/gemini-2.0-pro",
+            ],
             max_cost_per_1k_tokens=0.10,
             min_context_window=8000,
             min_performance_tier=ModelPerformanceTier.PREMIUM,
@@ -123,7 +135,11 @@ class ModelRoutingEngine:
             agent_roles=[AgentRole.ANALYST, AgentRole.VALIDATOR],
             task_types=[TaskType.WEB_RESEARCH, TaskType.CODE_REVIEW],
             swarm_profiles=[SwarmModelProfile.MYTHOLOGY_ANALYTICAL],
-            primary_models=["anthropic/claude-3-opus", "openai/gpt-4o", "deepseek/deepseek-chat"],
+            primary_models=[
+                "anthropic/claude-3-opus",
+                "openai/gpt-4o",
+                "deepseek/deepseek-chat",
+            ],
             fallback_models=[
                 "anthropic/claude-3-sonnet",
                 "google/gemini-2.0-pro",
@@ -196,8 +212,16 @@ class ModelRoutingEngine:
             agent_roles=[AgentRole.ANALYST, AgentRole.STRATEGIST, AgentRole.VALIDATOR],
             task_types=[TaskType.GENERAL, TaskType.LONG_PLANNING, TaskType.CODE_REVIEW],
             swarm_profiles=[SwarmModelProfile.HYBRID_BALANCED],
-            primary_models=["openai/gpt-4o", "anthropic/claude-3-sonnet", "google/gemini-2.0-pro"],
-            fallback_models=["deepseek/deepseek-chat", "qwen/qwen-3-70b", "x-ai/grok-4"],
+            primary_models=[
+                "openai/gpt-4o",
+                "anthropic/claude-3-sonnet",
+                "google/gemini-2.0-pro",
+            ],
+            fallback_models=[
+                "deepseek/deepseek-chat",
+                "qwen/qwen-3-70b",
+                "x-ai/grok-4",
+            ],
             max_cost_per_1k_tokens=0.04,
             min_context_window=6000,
             min_performance_tier=ModelPerformanceTier.BALANCED,
@@ -262,14 +286,18 @@ class ModelRoutingEngine:
 
         if not matching_rules:
             # Fallback to default routing
-            return self._get_default_routing(agent_role, task_type, estimated_tokens, cost_limit)
+            return self._get_default_routing(
+                agent_role, task_type, estimated_tokens, cost_limit
+            )
 
         # Select best rule (highest priority)
         best_rule = max(matching_rules, key=lambda r: r.priority)
 
         # Apply cost constraints
         if cost_limit:
-            best_rule = self._apply_cost_constraints(best_rule, cost_limit, estimated_tokens)
+            best_rule = self._apply_cost_constraints(
+                best_rule, cost_limit, estimated_tokens
+            )
 
         # Select primary model
         primary_model = self._select_primary_model(best_rule, context)
@@ -281,8 +309,11 @@ class ModelRoutingEngine:
         portkey_routing = self.portkey.route_request(
             task_type=task_type,
             estimated_tokens=estimated_tokens,
-            max_cost_usd=cost_limit or best_rule.max_cost_per_1k_tokens * (estimated_tokens / 1000),
-            prefer_provider=primary_model.split("/")[0] if "/" in primary_model else None,
+            max_cost_usd=cost_limit
+            or best_rule.max_cost_per_1k_tokens * (estimated_tokens / 1000),
+            prefer_provider=(
+                primary_model.split("/")[0] if "/" in primary_model else None
+            ),
         )
 
         routing_decision = {
@@ -295,7 +326,9 @@ class ModelRoutingEngine:
                 "virtual_key": portkey_routing.virtual_key,
                 "estimated_cost": portkey_routing.estimated_cost,
             },
-            "routing_rationale": self._generate_routing_rationale(best_rule, agent_role, task_type),
+            "routing_rationale": self._generate_routing_rationale(
+                best_rule, agent_role, task_type
+            ),
             "constraints_applied": {
                 "cost_limit": cost_limit,
                 "max_cost_per_1k": best_rule.max_cost_per_1k_tokens,
@@ -316,7 +349,10 @@ class ModelRoutingEngine:
         return routing_decision
 
     def _find_matching_rules(
-        self, agent_role: AgentRole, task_type: TaskType, swarm_profile: SwarmModelProfile
+        self,
+        agent_role: AgentRole,
+        task_type: TaskType,
+        swarm_profile: SwarmModelProfile,
     ) -> list[ModelRoutingRule]:
         """Find routing rules that match the request criteria"""
 
@@ -375,7 +411,9 @@ class ModelRoutingEngine:
 
         return rule
 
-    def _select_primary_model(self, rule: ModelRoutingRule, context: dict[str, Any]) -> str:
+    def _select_primary_model(
+        self, rule: ModelRoutingRule, context: dict[str, Any]
+    ) -> str:
         """Select the best primary model from the rule"""
 
         if not rule.primary_models:
@@ -398,7 +436,9 @@ class ModelRoutingEngine:
         # Default to first model in list
         return rule.primary_models[0]
 
-    def _prepare_fallbacks(self, rule: ModelRoutingRule, context: dict[str, Any]) -> list[str]:
+    def _prepare_fallbacks(
+        self, rule: ModelRoutingRule, context: dict[str, Any]
+    ) -> list[str]:
         """Prepare fallback model list"""
 
         fallbacks = []
@@ -420,20 +460,27 @@ class ModelRoutingEngine:
         return fallbacks[:3]  # Limit to top 3 fallbacks
 
     def _get_default_routing(
-        self, agent_role: AgentRole, task_type: TaskType, estimated_tokens: int, cost_limit: float
+        self,
+        agent_role: AgentRole,
+        task_type: TaskType,
+        estimated_tokens: int,
+        cost_limit: float,
     ) -> dict[str, Any]:
         """Get default routing when no rules match"""
 
         # Use Portkey's built-in routing
         portkey_routing = self.portkey.route_request(
-            task_type=task_type, estimated_tokens=estimated_tokens, max_cost_usd=cost_limit or 1.0
+            task_type=task_type,
+            estimated_tokens=estimated_tokens,
+            max_cost_usd=cost_limit or 1.0,
         )
 
         return {
             "rule_used": "default",
             "primary_model": f"{portkey_routing.provider}/{portkey_routing.model}",
             "fallback_models": [
-                config.provider + "/" + config.model for config in portkey_routing.fallbacks
+                config.provider + "/" + config.model
+                for config in portkey_routing.fallbacks
             ],
             "portkey_routing": {
                 "provider": portkey_routing.provider,
@@ -442,7 +489,10 @@ class ModelRoutingEngine:
                 "estimated_cost": portkey_routing.estimated_cost,
             },
             "routing_rationale": "No specific routing rules matched, using Portkey default routing",
-            "constraints_applied": {"cost_limit": cost_limit, "estimated_tokens": estimated_tokens},
+            "constraints_applied": {
+                "cost_limit": cost_limit,
+                "estimated_tokens": estimated_tokens,
+            },
             "metadata": {"rule_priority": 0, "fallback_routing": True},
         }
 
@@ -519,7 +569,9 @@ class ModelRoutingEngine:
             return True
         return False
 
-    def update_model_performance(self, model: str, performance_metrics: dict[str, float]):
+    def update_model_performance(
+        self, model: str, performance_metrics: dict[str, float]
+    ):
         """Update model performance cache"""
         self.model_performance_cache[model] = performance_metrics
 
@@ -567,7 +619,9 @@ def get_routing_engine() -> ModelRoutingEngine:
 
 
 # Convenience functions for creating common routing rules
-def create_cost_optimized_rule(rule_id: str, max_cost_per_1k: float = 0.005) -> ModelRoutingRule:
+def create_cost_optimized_rule(
+    rule_id: str, max_cost_per_1k: float = 0.005
+) -> ModelRoutingRule:
     """Create a cost-optimized routing rule"""
     return ModelRoutingRule(
         rule_id=rule_id,
@@ -585,7 +639,9 @@ def create_cost_optimized_rule(rule_id: str, max_cost_per_1k: float = 0.005) -> 
     )
 
 
-def create_quality_focused_rule(rule_id: str, agent_roles: list[AgentRole]) -> ModelRoutingRule:
+def create_quality_focused_rule(
+    rule_id: str, agent_roles: list[AgentRole]
+) -> ModelRoutingRule:
     """Create a quality-focused routing rule"""
     return ModelRoutingRule(
         rule_id=rule_id,
@@ -600,7 +656,9 @@ def create_quality_focused_rule(rule_id: str, agent_roles: list[AgentRole]) -> M
     )
 
 
-def create_speed_optimized_rule(rule_id: str, task_types: list[TaskType]) -> ModelRoutingRule:
+def create_speed_optimized_rule(
+    rule_id: str, task_types: list[TaskType]
+) -> ModelRoutingRule:
     """Create a speed-optimized routing rule"""
     return ModelRoutingRule(
         rule_id=rule_id,

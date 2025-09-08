@@ -110,7 +110,9 @@ def main():
             # Simple alerting - log if any endpoints are down
             unhealthy = report["summary"]["unhealthy_endpoints"]
             if unhealthy > 0:
-                log_message(f"⚠️  ALERT: {unhealthy} endpoints are unhealthy!", "WARNING")
+                log_message(
+                    f"⚠️  ALERT: {unhealthy} endpoints are unhealthy!", "WARNING"
+                )
             else:
                 log_message("✅ All endpoints healthy")
 

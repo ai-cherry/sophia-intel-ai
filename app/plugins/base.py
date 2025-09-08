@@ -25,7 +25,9 @@ class PluginMetadata(BaseModel):
     description: str = Field(..., description="Plugin description")
     author: str = Field(..., description="Plugin author")
     entry_points: list[str] = Field(default_factory=list, description="Entry points")
-    dependencies: list[str] = Field(default_factory=list, description="Required dependencies")
+    dependencies: list[str] = Field(
+        default_factory=list, description="Required dependencies"
+    )
     tags: list[str] = Field(default_factory=list, description="Plugin tags")
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -79,7 +81,9 @@ class SwarmPlugin(Plugin):
     """Base class for swarm plugins."""
 
     @abstractmethod
-    async def execute_task(self, task: str, context: dict[str, Any], stream: bool = False) -> Any:
+    async def execute_task(
+        self, task: str, context: dict[str, Any], stream: bool = False
+    ) -> Any:
         """Execute a swarm task.
 
         Args:
@@ -136,7 +140,9 @@ class MemoryPlugin(Plugin):
     """Base class for memory plugins."""
 
     @abstractmethod
-    async def store(self, key: str, value: Any, metadata: Optional[dict[str, Any]] = None) -> bool:
+    async def store(
+        self, key: str, value: Any, metadata: Optional[dict[str, Any]] = None
+    ) -> bool:
         """Store data in memory.
 
         Args:

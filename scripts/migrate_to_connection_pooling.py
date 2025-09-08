@@ -33,7 +33,10 @@ class ConnectionPoolingMigrator:
 
         for py_file in directory.rglob("*.py"):
             # Skip test files and migrations
-            if any(skip in str(py_file) for skip in ["test", "migration", "__pycache__", ".git"]):
+            if any(
+                skip in str(py_file)
+                for skip in ["test", "migration", "__pycache__", ".git"]
+            ):
                 continue
 
             self.migration_report["files_analyzed"] += 1
@@ -48,11 +51,15 @@ class ConnectionPoolingMigrator:
                 if re.search(r"\brequests\.(get|post|put|delete|patch)\b", content):
                     changes_needed.append("http")
                     self.migration_report["http_calls_migrated"] += len(
-                        re.findall(r"\brequests\.(get|post|put|delete|patch)\b", content)
+                        re.findall(
+                            r"\brequests\.(get|post|put|delete|patch)\b", content
+                        )
                     )
 
                 # Check for synchronous Redis usage
-                if re.search(r"\bredis\.Redis\(|redis\.StrictRedis\(|redis\.from_url\(", content):
+                if re.search(
+                    r"\bredis\.Redis\(|redis\.StrictRedis\(|redis\.from_url\(", content
+                ):
                     changes_needed.append("redis")
                     self.migration_report["redis_calls_migrated"] += len(
                         re.findall(r"\bredis\.(Redis|StrictRedis|from_url)\(", content)
@@ -140,7 +147,9 @@ class ConnectionPoolingMigrator:
         # Find the last import line
         last_import_idx = 0
         for i, line in enumerate(lines):
-            if line.startswith(("import ", "from ")) and not line.startswith("from __future__"):
+            if line.startswith(("import ", "from ")) and not line.startswith(
+                "from __future__"
+            ):
                 last_import_idx = i
 
         # Insert new import after last import
@@ -244,8 +253,12 @@ class ConnectionPoolingMigrator:
         logger.info(f"Files analyzed: {self.migration_report['files_analyzed']}")
         logger.info(f"Files to update: {len(self.files_to_update)}")
         logger.info(f"Files updated: {self.migration_report['files_updated']}")
-        logger.info(f"HTTP calls migrated: {self.migration_report['http_calls_migrated']}")
-        logger.info(f"Redis calls migrated: {self.migration_report['redis_calls_migrated']}")
+        logger.info(
+            f"HTTP calls migrated: {self.migration_report['http_calls_migrated']}"
+        )
+        logger.info(
+            f"Redis calls migrated: {self.migration_report['redis_calls_migrated']}"
+        )
 
         if self.migration_report["skipped_files"]:
             logger.info(
@@ -253,7 +266,9 @@ class ConnectionPoolingMigrator:
             )
 
         if self.migration_report["errors"]:
-            logger.info(f"\n⚠️  Errors encountered: {len(self.migration_report['errors'])}")
+            logger.info(
+                f"\n⚠️  Errors encountered: {len(self.migration_report['errors'])}"
+            )
             for error in self.migration_report["errors"][:5]:
                 logger.info(f"  - {error}")
 
@@ -291,7 +306,9 @@ def main():
     parser = argparse.ArgumentParser(
         description="Migrate synchronous calls to use ConnectionManager"
     )
-    parser.add_argument("--directory", default="app", help="Directory to scan (default: app)")
+    parser.add_argument(
+        "--directory", default="app", help="Directory to scan (default: app)"
+    )
     parser.add_argument(
         "--live", action="store_true", help="Run in live mode (actually modify files)"
     )

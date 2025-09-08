@@ -22,7 +22,11 @@ class DockerManager:
         """Run a Docker command and return the result."""
         try:
             result = subprocess.run(
-                command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+                command,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
             )
             return result
         except subprocess.CalledProcessError as e:
@@ -126,7 +130,10 @@ def main():
     # List command
     list_parser = subparsers.add_parser("list", help="List containers")
     list_parser.add_argument(
-        "-a", "--all", action="store_true", help="Show all containers (default shows just running)"
+        "-a",
+        "--all",
+        action="store_true",
+        help="Show all containers (default shows just running)",
     )
 
     # Stats command
@@ -161,7 +168,9 @@ def main():
     # Logs command
     logs_parser = subparsers.add_parser("logs", help="Get container logs")
     logs_parser.add_argument("container_id", help="Container ID or name")
-    logs_parser.add_argument("--tail", type=int, help="Number of lines to show from the end")
+    logs_parser.add_argument(
+        "--tail", type=int, help="Number of lines to show from the end"
+    )
 
     args = parser.parse_args()
     manager = DockerManager()
@@ -179,7 +188,11 @@ def main():
 
     elif args.command == "start":
         container_id = manager.start_container(
-            args.image, name=args.name, ports=args.ports, volumes=args.volumes, env_vars=args.env
+            args.image,
+            name=args.name,
+            ports=args.ports,
+            volumes=args.volumes,
+            env_vars=args.env,
         )
         print(f"Container started with ID: {container_id}")
 

@@ -65,7 +65,9 @@ class MCPLoggerAdapter(logging.LoggerAdapter):
             },
         )
 
-    def log_circuit_breaker_event(self, circuit_name: str, event: str, details: dict | None = None):
+    def log_circuit_breaker_event(
+        self, circuit_name: str, event: str, details: dict | None = None
+    ):
         """Log circuit breaker events"""
         details = details or {}
         self.warning(
@@ -100,7 +102,9 @@ class PerformanceLogger:
     def __init__(self, logger: logging.Logger):
         self.logger = logger
 
-    def log_execution_time(self, operation: str, execution_time: float, threshold: float = 1.0):
+    def log_execution_time(
+        self, operation: str, execution_time: float, threshold: float = 1.0
+    ):
         """Log execution time with performance warnings"""
         if execution_time > threshold:
             self.logger.warning(
@@ -148,7 +152,9 @@ class SecurityLogger:
             extra={"resource": resource, "auth_status": status, **user_context},
         )
 
-    def log_security_event(self, event_type: str, severity: str, details: dict | None = None):
+    def log_security_event(
+        self, event_type: str, severity: str, details: dict | None = None
+    ):
         """Log security events"""
         details = details or {}
         severity_emoji = {

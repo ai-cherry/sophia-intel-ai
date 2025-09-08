@@ -239,7 +239,9 @@ class AirtableSync:
             # Process records
             for record in records:
                 try:
-                    result = await self._process_record(record=record, table_name=table_name)
+                    result = await self._process_record(
+                        record=record, table_name=table_name
+                    )
 
                     if result == "created":
                         sync_op.records_created += 1
@@ -353,7 +355,10 @@ class AirtableSync:
         records = []
         url = f"{self.base_url}/{table_name}"
 
-        headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
 
         params = {"pageSize": self.batch_size, "timeZone": "UTC", "userLocale": "en"}
 
@@ -369,7 +374,9 @@ class AirtableSync:
             async with session.get(url, headers=headers, params=params) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    raise Exception(f"Airtable API error: {response.status} - {error_text}")
+                    raise Exception(
+                        f"Airtable API error: {response.status} - {error_text}"
+                    )
 
                 data = await response.json()
 
@@ -379,7 +386,9 @@ class AirtableSync:
                 # Handle pagination
                 if data.get("offset"):
                     next_records = await self._fetch_airtable_records(
-                        table_name=table_name, modified_since=modified_since, offset=data["offset"]
+                        table_name=table_name,
+                        modified_since=modified_since,
+                        offset=data["offset"],
                     )
                     records.extend(next_records)
 
@@ -407,7 +416,8 @@ class AirtableSync:
 
         # Check if record exists
         existing = await self.knowledge_manager.get_knowledge(
-            knowledge_id=self._generate_knowledge_id(record.id, table_name), use_cache=False
+            knowledge_id=self._generate_knowledge_id(record.id, table_name),
+            use_cache=False,
         )
 
         if existing:
@@ -416,7 +426,9 @@ class AirtableSync:
 
             if changes:
                 updated = await self.knowledge_manager.update_knowledge(
-                    knowledge_id=existing.id, updates=changes, updated_by="airtable_sync"
+                    knowledge_id=existing.id,
+                    updates=changes,
+                    updated_by="airtable_sync",
                 )
                 return "updated" if updated else "failed"
 
@@ -477,10 +489,15 @@ class AirtableSync:
             "category": mapping.get("category", "general"),
             "tags": classification_result.get("tags", []),
             "data_classification": classification_result.get(
-                "classification", mapping.get("default_classification", DataClassification.INTERNAL)
+                "classification",
+                mapping.get("default_classification", DataClassification.INTERNAL),
             ),
-            "sensitivity_level": classification_result.get("sensitivity", SensitivityLevel.MEDIUM),
-            "access_level": classification_result.get("access_level", AccessLevel.EMPLOYEE),
+            "sensitivity_level": classification_result.get(
+                "sensitivity", SensitivityLevel.MEDIUM
+            ),
+            "access_level": classification_result.get(
+                "access_level", AccessLevel.EMPLOYEE
+            ),
             "metadata": metadata,
             "last_synced_at": datetime.utcnow(),
         }
@@ -540,7 +557,9 @@ class AirtableSync:
 
         return changes
 
-    async def _handle_deletions(self, table_name: str, current_record_ids: list[str]) -> int:
+    async def _handle_deletions(
+        self, table_name: str, current_record_ids: list[str]
+    ) -> int:
         """
         Handle deletions for full sync
 
@@ -574,7 +593,9 @@ class AirtableSync:
             source_id=item.record_id, source_table=item.table_name, **item.data
         )
 
-        await self.knowledge_manager.create_knowledge(knowledge=knowledge, created_by="sync_queue")
+        await self.knowledge_manager.create_knowledge(
+            knowledge=knowledge, created_by="sync_queue"
+        )
 
     async def _update_knowledge_from_item(self, item: SyncQueueItem):
         """Update knowledge from queue item"""

@@ -81,8 +81,20 @@ class SophiaServerContract(BaseMCPServerContract):
             requirements=["data_source", "analysis_type"],
             dependencies=["memory", "embeddings"],
             configuration={
-                "supported_metrics": ["revenue", "sales", "customers", "growth", "churn"],
-                "analysis_periods": ["daily", "weekly", "monthly", "quarterly", "yearly"],
+                "supported_metrics": [
+                    "revenue",
+                    "sales",
+                    "customers",
+                    "growth",
+                    "churn",
+                ],
+                "analysis_periods": [
+                    "daily",
+                    "weekly",
+                    "monthly",
+                    "quarterly",
+                    "yearly",
+                ],
                 "output_formats": ["json", "dashboard", "report", "visualization"],
             },
         )
@@ -107,7 +119,13 @@ class SophiaServerContract(BaseMCPServerContract):
             configuration={
                 "scoring_models": ["lead_score", "deal_score", "churn_risk"],
                 "forecast_horizons": [30, 60, 90, 180, 365],
-                "pipeline_stages": ["prospect", "qualified", "proposal", "negotiation", "closed"],
+                "pipeline_stages": [
+                    "prospect",
+                    "qualified",
+                    "proposal",
+                    "negotiation",
+                    "closed",
+                ],
             },
         )
         await self.register_capability(sales_intelligence)
@@ -159,7 +177,12 @@ class SophiaServerContract(BaseMCPServerContract):
             configuration={
                 "storage_types": ["semantic", "episodic", "procedural", "contextual"],
                 "search_methods": ["semantic", "keyword", "hybrid", "neural"],
-                "retention_policies": ["permanent", "time_based", "usage_based", "priority_based"],
+                "retention_policies": [
+                    "permanent",
+                    "time_based",
+                    "usage_based",
+                    "priority_based",
+                ],
             },
         )
         await self.register_capability(memory_management)
@@ -191,12 +214,16 @@ class SophiaServerContract(BaseMCPServerContract):
     # Sophia-specific abstract methods
 
     @abstractmethod
-    async def analyze_business_data(self, request: BusinessAnalysisRequest) -> BusinessInsight:
+    async def analyze_business_data(
+        self, request: BusinessAnalysisRequest
+    ) -> BusinessInsight:
         """Analyze business data with Sophia intelligence"""
         pass
 
     @abstractmethod
-    async def generate_business_insights(self, context: dict[str, Any]) -> list[BusinessInsight]:
+    async def generate_business_insights(
+        self, context: dict[str, Any]
+    ) -> list[BusinessInsight]:
         """Generate actionable business insights"""
         pass
 
@@ -254,7 +281,9 @@ class SophiaServerContract(BaseMCPServerContract):
                     pass
 
             health_details["data_libraries"] = available_libraries
-            if len(available_libraries) >= len(data_libraries) * 0.8:  # At least 80% available
+            if (
+                len(available_libraries) >= len(data_libraries) * 0.8
+            ):  # At least 80% available
                 capabilities_status["business_analytics"] = CapabilityStatus.AVAILABLE
             else:
                 capabilities_status["business_analytics"] = CapabilityStatus.DEGRADED
@@ -268,9 +297,13 @@ class SophiaServerContract(BaseMCPServerContract):
                 avg = statistics.mean(test_data)
                 std_dev = statistics.stdev(test_data)
 
-                health_details["analytics_engine"] = f"operational (avg: {avg}, std: {std_dev:.2f})"
+                health_details["analytics_engine"] = (
+                    f"operational (avg: {avg}, std: {std_dev:.2f})"
+                )
                 capabilities_status["sales_intelligence"] = CapabilityStatus.AVAILABLE
-                capabilities_status["customer_intelligence"] = CapabilityStatus.AVAILABLE
+                capabilities_status["customer_intelligence"] = (
+                    CapabilityStatus.AVAILABLE
+                )
 
             except Exception as e:
                 health_details["analytics_engine"] = f"error: {str(e)}"
@@ -298,14 +331,18 @@ class SophiaServerContract(BaseMCPServerContract):
                 if status == CapabilityStatus.UNAVAILABLE
             )
             degraded_count = sum(
-                1 for status in capabilities_status.values() if status == CapabilityStatus.DEGRADED
+                1
+                for status in capabilities_status.values()
+                if status == CapabilityStatus.DEGRADED
             )
 
             total_capabilities = len(capabilities_status)
 
             if unavailable_count == 0 and degraded_count == 0:
                 overall_status = HealthStatus.HEALTHY
-            elif unavailable_count <= total_capabilities * 0.2:  # Less than 20% unavailable
+            elif (
+                unavailable_count <= total_capabilities * 0.2
+            ):  # Less than 20% unavailable
                 overall_status = HealthStatus.DEGRADED
             else:
                 overall_status = HealthStatus.UNHEALTHY
@@ -380,7 +417,10 @@ class SophiaServerContract(BaseMCPServerContract):
                 self.active_connections[request.client_id].error_count += 1
 
             return await self.create_error_response(
-                request, f"Internal server error: {str(e)}", "INTERNAL_ERROR", execution_time
+                request,
+                f"Internal server error: {str(e)}",
+                "INTERNAL_ERROR",
+                execution_time,
             )
 
     # Capability-specific handlers (to be implemented by concrete servers)
@@ -395,7 +435,9 @@ class SophiaServerContract(BaseMCPServerContract):
         # Default implementation - to be overridden
         return {"message": "Sales intelligence capability not implemented"}
 
-    async def _handle_customer_intelligence(self, request: MCPRequest) -> dict[str, Any]:
+    async def _handle_customer_intelligence(
+        self, request: MCPRequest
+    ) -> dict[str, Any]:
         """Handle customer intelligence requests"""
         # Default implementation - to be overridden
         return {"message": "Customer intelligence capability not implemented"}
@@ -429,7 +471,9 @@ class SophiaServerContract(BaseMCPServerContract):
                         "average": statistics.mean(revenue_data),
                         "median": statistics.median(revenue_data),
                         "trend": (
-                            "increasing" if revenue_data[-1] > revenue_data[0] else "decreasing"
+                            "increasing"
+                            if revenue_data[-1] > revenue_data[0]
+                            else "decreasing"
                         ),
                     }
 
@@ -451,7 +495,9 @@ class SophiaServerContract(BaseMCPServerContract):
 
         return results
 
-    async def generate_insights_from_data(self, data: dict[str, Any]) -> list[BusinessInsight]:
+    async def generate_insights_from_data(
+        self, data: dict[str, Any]
+    ) -> list[BusinessInsight]:
         """Generate business insights from raw data"""
         insights = []
 
@@ -460,7 +506,11 @@ class SophiaServerContract(BaseMCPServerContract):
             if "sales_data" in data:
                 sales_data = data["sales_data"]
                 if isinstance(sales_data, list) and len(sales_data) >= 2:
-                    recent_sales = sum(sales_data[-3:]) if len(sales_data) >= 3 else sum(sales_data)
+                    recent_sales = (
+                        sum(sales_data[-3:])
+                        if len(sales_data) >= 3
+                        else sum(sales_data)
+                    )
                     earlier_sales = sum(sales_data[:-3]) if len(sales_data) >= 6 else 0
 
                     if earlier_sales > 0:

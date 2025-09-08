@@ -107,7 +107,10 @@ ARTEMIS_MILITARY_UNITS = {
         "equipment": {
             "primary_tools": ["AST Parser", "Dependency Analyzer", "Conflict Detector"],
             "secondary_tools": ["Pattern Matcher", "Code Metrics Engine"],
-            "intelligence_systems": ["Repository Knowledge Base", "Historical Analysis DB"],
+            "intelligence_systems": [
+                "Repository Knowledge Base",
+                "Historical Analysis DB",
+            ],
         },
         "success_metrics": {
             "issues_detected": "integer",
@@ -207,7 +210,11 @@ ARTEMIS_MILITARY_UNITS = {
             "authorization_level": "maximum",
         },
         "communication_protocol": "COMMAND-PRIORITY-ALPHA",
-        "chain_of_command": ["Strategic Commander", "Tactical Advisor", "Intelligence Chief"],
+        "chain_of_command": [
+            "Strategic Commander",
+            "Tactical Advisor",
+            "Intelligence Chief",
+        ],
         "planning_phases": [
             "intelligence_briefing",
             "threat_assessment",
@@ -281,8 +288,16 @@ ARTEMIS_MILITARY_UNITS = {
         },
         "equipment": {
             "primary_tools": ["Advanced IDE", "Code Generator", "Refactoring Engine"],
-            "testing_tools": ["Unit Test Framework", "Integration Tester", "Performance Profiler"],
-            "deployment_tools": ["CI/CD Pipeline", "Version Control", "Rollback System"],
+            "testing_tools": [
+                "Unit Test Framework",
+                "Integration Tester",
+                "Performance Profiler",
+            ],
+            "deployment_tools": [
+                "CI/CD Pipeline",
+                "Version Control",
+                "Rollback System",
+            ],
         },
     },
     # 5. FINAL REVIEW BATTALION - "Artemis Shield"
@@ -338,7 +353,12 @@ ARTEMIS_MILITARY_UNITS = {
             "code_quality": ["syntax", "style", "complexity", "documentation"],
             "testing": ["unit_tests", "integration_tests", "coverage", "performance"],
             "security": ["vulnerabilities", "dependencies", "secrets", "permissions"],
-            "deployment": ["configuration", "environment", "rollback_plan", "monitoring"],
+            "deployment": [
+                "configuration",
+                "environment",
+                "rollback_plan",
+                "monitoring",
+            ],
         },
         "sign_off_requirements": {
             "all_tests_passing": True,
@@ -600,7 +620,11 @@ COMMAND_CENTER_CONFIG = {
         },
         "intelligence_feed": {
             "title": "Intelligence Feed",
-            "components": ["real_time_updates", "issue_discoveries", "progress_metrics"],
+            "components": [
+                "real_time_updates",
+                "issue_discoveries",
+                "progress_metrics",
+            ],
         },
         "command_controls": {
             "title": "Command Controls",
@@ -651,7 +675,9 @@ def calculate_mission_resources(units: list[str]) -> dict[str, Any]:
             for agent in squad.values():
                 if isinstance(agent, AgentProfile):
                     models_required.add(agent.model)
-                    max_clearance_required = max(max_clearance_required, agent.clearance_level)
+                    max_clearance_required = max(
+                        max_clearance_required, agent.clearance_level
+                    )
 
     return {
         "total_agents": total_agents,
@@ -753,7 +779,9 @@ Remember: {unit['motto']}""",
                         "unit": unit_designation,
                         "clearance_level": profile.clearance_level,
                         "specialty": profile.specialty,
-                        "communication_protocol": unit.get("communication_protocol", "STANDARD"),
+                        "communication_protocol": unit.get(
+                            "communication_protocol", "STANDARD"
+                        ),
                     },
                 }
                 agents.append(agent_config)

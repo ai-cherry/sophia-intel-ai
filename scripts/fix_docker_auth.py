@@ -422,7 +422,9 @@ if __name__ == "__main__":
 
         if not auth_working:
             print("\n⚠️ Current Docker authentication is not working.")
-            print("   Please update DOCKER_USERNAME and DOCKER_TOKEN environment variables")
+            print(
+                "   Please update DOCKER_USERNAME and DOCKER_TOKEN environment variables"
+            )
             print("   or GitHub repository secrets before running deployments.")
 
 

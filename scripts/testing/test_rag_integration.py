@@ -61,7 +61,8 @@ class RAGIntegrationTester:
                     "domain": sophia_service.get("domain") == "rag",
                     "port": sophia_service.get("port") == 8767,
                     "command": "sophia_memory" in sophia_service.get("command", ""),
-                    "health_endpoint": sophia_service.get("health_endpoint") == "/health",
+                    "health_endpoint": sophia_service.get("health_endpoint")
+                    == "/health",
                 }
 
                 if all(checks.values()):
@@ -81,7 +82,8 @@ class RAGIntegrationTester:
                     "domain": artemis_service.get("domain") == "rag",
                     "port": artemis_service.get("port") == 8768,
                     "command": "artemis_memory" in artemis_service.get("command", ""),
-                    "health_endpoint": artemis_service.get("health_endpoint") == "/health",
+                    "health_endpoint": artemis_service.get("health_endpoint")
+                    == "/health",
                 }
 
                 if all(checks.values()):
@@ -91,7 +93,9 @@ class RAGIntegrationTester:
                     self.test_results["artemis_memory_config"] = f"❌ FAIL: {checks}"
                     print(f"  ❌ artemis_memory config issues: {checks}")
             else:
-                self.test_results["artemis_memory_config"] = "❌ FAIL: Service not found"
+                self.test_results["artemis_memory_config"] = (
+                    "❌ FAIL: Service not found"
+                )
                 print("  ❌ artemis_memory service not found in config")
 
         except Exception as e:
@@ -116,7 +120,9 @@ class RAGIntegrationTester:
                         self.test_results[f"{service_name}_file"] = "✅ PASS"
                         print(f"  ✅ {service_name}.py exists and is executable")
                     else:
-                        self.test_results[f"{service_name}_file"] = "❌ FAIL: No main entry"
+                        self.test_results[f"{service_name}_file"] = (
+                            "❌ FAIL: No main entry"
+                        )
                         print(f"  ❌ {service_name}.py missing main entry point")
                 except Exception as e:
                     self.test_results[f"{service_name}_file"] = f"❌ ERROR: {e}"
@@ -131,7 +137,12 @@ class RAGIntegrationTester:
 
         try:
             result = subprocess.run(
-                [sys.executable, "scripts/unified_orchestrator.py", "--with-rag", "--dry-run"],
+                [
+                    sys.executable,
+                    "scripts/unified_orchestrator.py",
+                    "--with-rag",
+                    "--dry-run",
+                ],
                 capture_output=True,
                 text=True,
                 cwd=self.base_dir,
@@ -189,8 +200,12 @@ class RAGIntegrationTester:
 
             # Test --no-rag
             sys.argv = ["unified_orchestrator.py", "--no-rag"]
-            sophia_should_not_start = not orchestrator._should_start_optional("sophia_memory")
-            artemis_should_not_start = not orchestrator._should_start_optional("artemis_memory")
+            sophia_should_not_start = not orchestrator._should_start_optional(
+                "sophia_memory"
+            )
+            artemis_should_not_start = not orchestrator._should_start_optional(
+                "artemis_memory"
+            )
 
             if sophia_should_not_start and artemis_should_not_start:
                 print("  ✅ --no-rag properly disables both RAG services")
@@ -214,7 +229,9 @@ class RAGIntegrationTester:
         print("🧪 RAG INTEGRATION TEST SUMMARY")
         print("=" * 60)
 
-        passed = sum(1 for result in self.test_results.values() if result.startswith("✅"))
+        passed = sum(
+            1 for result in self.test_results.values() if result.startswith("✅")
+        )
         total = len(self.test_results)
 
         for test_name, result in self.test_results.items():

@@ -33,7 +33,9 @@ class TestMCPConnectionPoolLoad:
             # Try to acquire connection
             if len(active_connections) >= max_connections:
                 rejected_requests.append(request_id)
-                raise ConnectionError(f"Connection pool exhausted for request {request_id}")
+                raise ConnectionError(
+                    f"Connection pool exhausted for request {request_id}"
+                )
 
             # Simulate connection use
             connection_id = f"conn-{request_id}"
@@ -53,7 +55,10 @@ class TestMCPConnectionPoolLoad:
 
         # Act
         with benchmark_timer:
-            tasks = [mcp_connection_manager.execute(f"request-{i}") for i in range(num_requests)]
+            tasks = [
+                mcp_connection_manager.execute(f"request-{i}")
+                for i in range(num_requests)
+            ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Analyze results
@@ -103,11 +108,16 @@ class TestMCPConnectionPoolLoad:
 
         # Act
         with benchmark_timer:
-            tasks = [mcp_connection_manager.execute(f"reuse-{i}") for i in range(num_requests)]
+            tasks = [
+                mcp_connection_manager.execute(f"reuse-{i}")
+                for i in range(num_requests)
+            ]
             results = await asyncio.gather(*tasks)
 
         # Analyze connection reuse
-        avg_reuse = sum(len(uses) for uses in connection_usage.values()) / len(connection_usage)
+        avg_reuse = sum(len(uses) for uses in connection_usage.values()) / len(
+            connection_usage
+        )
         max_reuse = max(len(uses) for uses in connection_usage.values())
         min_reuse = min(len(uses) for uses in connection_usage.values())
 
@@ -173,7 +183,9 @@ class TestMCPConnectionPoolLoad:
                     task = mcp_router.route_request("artemis", "read", "filesystem")
                 elif i % 4 == 1:
                     # Artemis code analysis operation
-                    task = mcp_router.route_request("artemis", "analyze", "code_analysis")
+                    task = mcp_router.route_request(
+                        "artemis", "analyze", "code_analysis"
+                    )
                 elif i % 4 == 2:
                     # Sophia web search operation
                     task = mcp_router.route_request("sophia", "search", "web_search")
@@ -228,18 +240,25 @@ class TestMCPConnectionPoolLoad:
                 # Attempt reconnection
                 success = await mcp_connection_manager.reconnect()
                 if not success:
-                    raise ConnectionError(f"Failed to reconnect at request {request_num}")
+                    raise ConnectionError(
+                        f"Failed to reconnect at request {request_num}"
+                    )
 
             # Normal operation
             await asyncio.sleep(0.01)
             return {"request_id": request_id, "status": "success"}
 
         mcp_connection_manager.execute.side_effect = simulate_with_failures
-        mcp_connection_manager.reconnect.return_value = True  # Always succeed reconnection
+        mcp_connection_manager.reconnect.return_value = (
+            True  # Always succeed reconnection
+        )
 
         # Act
         with benchmark_timer:
-            tasks = [mcp_connection_manager.execute(f"recovery-{i}") for i in range(num_requests)]
+            tasks = [
+                mcp_connection_manager.execute(f"recovery-{i}")
+                for i in range(num_requests)
+            ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Analyze results
@@ -337,7 +356,9 @@ class TestMCPConnectionSpike:
             await asyncio.sleep(1 / baseline_load)
 
         # Wait for all tasks to complete
-        await asyncio.gather(*baseline_tasks, *spike_tasks, *recovery_tasks, return_exceptions=True)
+        await asyncio.gather(
+            *baseline_tasks, *spike_tasks, *recovery_tasks, return_exceptions=True
+        )
 
         # Analyze results
         for phase, data in metrics.items():
@@ -354,7 +375,9 @@ class TestMCPConnectionSpike:
 
         # Assert
         # System should maintain reasonable success rate even during spike
-        spike_success_rate = metrics["spike"]["successful"] / max(metrics["spike"]["requests"], 1)
+        spike_success_rate = metrics["spike"]["successful"] / max(
+            metrics["spike"]["requests"], 1
+        )
         assert spike_success_rate >= 0.7  # At least 70% success during spike
 
         # Recovery should return to baseline performance
@@ -365,9 +388,13 @@ class TestMCPConnectionSpike:
             baseline_avg = sum(metrics["baseline"]["latencies"]) / len(
                 metrics["baseline"]["latencies"]
             )
-            assert recovery_avg <= baseline_avg * 1.5  # Recovery latency within 150% of baseline
+            assert (
+                recovery_avg <= baseline_avg * 1.5
+            )  # Recovery latency within 150% of baseline
 
-    async def test_connection_pool_elasticity(self, mcp_connection_manager, benchmark_timer):
+    async def test_connection_pool_elasticity(
+        self, mcp_connection_manager, benchmark_timer
+    ):
         """Test connection pool's ability to scale up and down"""
         # Arrange
         min_connections = 2
@@ -420,9 +447,13 @@ class TestMCPConnectionSpike:
             current = mcp_connection_manager.active_connections
             if random.random() > 0.5:  # Simulate scaling decision
                 if current < max_connections:
-                    mcp_connection_manager.active_connections = min(current + 2, max_connections)
+                    mcp_connection_manager.active_connections = min(
+                        current + 2, max_connections
+                    )
                 elif current > min_connections:
-                    mcp_connection_manager.active_connections = max(current - 1, min_connections)
+                    mcp_connection_manager.active_connections = max(
+                        current - 1, min_connections
+                    )
             return mcp_connection_manager.active_connections
 
         mcp_connection_manager.get_connection.side_effect = lambda: update_pool_size()

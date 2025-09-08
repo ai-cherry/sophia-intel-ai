@@ -147,14 +147,18 @@ class PortkeySetup:
 
         # Additional Services
         content.append("# Additional Services")
-        content.append(f"TOGETHER_AI_API_KEY={variables.get('TOGETHER_AI_API_KEY', '')}")
+        content.append(
+            f"TOGETHER_AI_API_KEY={variables.get('TOGETHER_AI_API_KEY', '')}"
+        )
         content.append("")
 
         # System Configuration
         content.append("# System Configuration")
         content.append(f"MAX_RETRIES={variables.get('MAX_RETRIES', '3')}")
         content.append(f"REQUEST_TIMEOUT={variables.get('REQUEST_TIMEOUT', '60')}")
-        content.append(f"CONNECTION_TIMEOUT={variables.get('CONNECTION_TIMEOUT', '10')}")
+        content.append(
+            f"CONNECTION_TIMEOUT={variables.get('CONNECTION_TIMEOUT', '10')}"
+        )
         content.append("")
 
         content.append(f"CACHE_TTL={variables.get('CACHE_TTL', '3600')}")
@@ -167,9 +171,13 @@ class PortkeySetup:
         content.append("")
 
         content.append("# Feature Flags")
-        content.append(f"USE_PORTKEY_ROUTING={variables.get('USE_PORTKEY_ROUTING', 'true')}")
+        content.append(
+            f"USE_PORTKEY_ROUTING={variables.get('USE_PORTKEY_ROUTING', 'true')}"
+        )
         content.append(f"ENABLE_FALLBACK={variables.get('ENABLE_FALLBACK', 'true')}")
-        content.append(f"ENABLE_LOAD_BALANCING={variables.get('ENABLE_LOAD_BALANCING', 'true')}")
+        content.append(
+            f"ENABLE_LOAD_BALANCING={variables.get('ENABLE_LOAD_BALANCING', 'true')}"
+        )
 
         # Write to file
         with open(self.env_file, "w") as f:
@@ -204,7 +212,9 @@ class PortkeySetup:
 
         # Print summary
         print("\n📊 Configuration Summary:")
-        print(f"  - Portkey API Key: {'✓' if final_vars.get('PORTKEY_API_KEY') else '✗'}")
+        print(
+            f"  - Portkey API Key: {'✓' if final_vars.get('PORTKEY_API_KEY') else '✗'}"
+        )
 
         vk_count = sum(1 for k in final_vars if k.endswith("_VK") and final_vars[k])
         print(f"  - Virtual Keys: {vk_count} configured")

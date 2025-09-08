@@ -49,7 +49,9 @@ from datetime import datetime
 class LocalMemoryStore:
     """Lightweight SQLite FTS store used if Supermemory isn't importable."""
 
-    def __init__(self, db_path: str = str(REPO_ROOT / "tmp/supermemory_lite.db")) -> None:
+    def __init__(
+        self, db_path: str = str(REPO_ROOT / "tmp/supermemory_lite.db")
+    ) -> None:
         self.db_path = db_path
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         with sqlite3.connect(self.db_path) as conn:
@@ -262,7 +264,10 @@ class FsMemoryServer:
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             f.write(content)
-        return {"path": str(path.relative_to(REPO_ROOT)), "bytes": len(content.encode("utf-8"))}
+        return {
+            "path": str(path.relative_to(REPO_ROOT)),
+            "bytes": len(content.encode("utf-8")),
+        }
 
     def fs_list(self, params: Dict[str, Any]) -> Dict[str, Any]:
         rel = params.get("path", ".")
@@ -333,7 +338,9 @@ class FsMemoryServer:
                 tags=tags,
                 memory_type=_MemoryType(mtype),
             )
-            result = asyncio.get_event_loop().run_until_complete(self.memory.add_to_memory(entry))
+            result = asyncio.get_event_loop().run_until_complete(
+                self.memory.add_to_memory(entry)
+            )
             return {"result": result}
         else:
             result = self.memory.add_to_memory(topic, content, source, tags, mtype)
@@ -392,7 +399,9 @@ class FsMemoryServer:
                         tags=["repo", "index"],
                         memory_type=_MemoryType.SEMANTIC,
                     )
-                    asyncio.get_event_loop().run_until_complete(self.memory.add_to_memory(entry))
+                    asyncio.get_event_loop().run_until_complete(
+                        self.memory.add_to_memory(entry)
+                    )
                 else:
                     self.memory.add_to_memory(
                         topic=f"{rel}",

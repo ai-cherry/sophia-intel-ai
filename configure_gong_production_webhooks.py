@@ -35,7 +35,10 @@ class GongWebhookConfigurator:
         auth_bytes = auth_string.encode("ascii")
         auth_base64 = base64.b64encode(auth_bytes).decode("ascii")
 
-        self.headers = {"Authorization": f"Basic {auth_base64}", "Content-Type": "application/json"}
+        self.headers = {
+            "Authorization": f"Basic {auth_base64}",
+            "Content-Type": "application/json",
+        }
 
     def generate_manual_configuration_guide(self):
         """Generate detailed manual configuration guide"""
@@ -229,9 +232,7 @@ If needed, whitelist Gong's webhook IP ranges:
 """
 
         # Save guide to file
-        guide_file = (
-            f"gong_webhook_configuration_guide_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        )
+        guide_file = f"gong_webhook_configuration_guide_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
         with open(guide_file, "w") as f:
             f.write(guide)
 
@@ -258,7 +259,9 @@ If needed, whitelist Gong's webhook IP ranges:
         async with httpx.AsyncClient(timeout=15.0) as client:
             try:
                 # Test basic API access with user info endpoint
-                response = await client.get(f"{GONG_API_BASE}/v2/users", headers=self.headers)
+                response = await client.get(
+                    f"{GONG_API_BASE}/v2/users", headers=self.headers
+                )
 
                 if response.status_code == 200:
                     print("✅ Gong API access validated")
@@ -358,9 +361,7 @@ If needed, whitelist Gong's webhook IP ranges:
         }
 
         # Save test payloads to file
-        payloads_file = (
-            f"gong_webhook_test_payloads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        )
+        payloads_file = f"gong_webhook_test_payloads_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(payloads_file, "w") as f:
             json.dump(test_payloads, f, indent=2)
 

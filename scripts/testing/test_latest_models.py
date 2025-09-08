@@ -64,7 +64,9 @@ class ModelTestSuite:
         logger.info("🧪 Testing OpenRouterLatest Client")
         logger.info("=" * 60)
 
-        client = OpenRouterLatest(api_key=self.openrouter_key, app_name="Sophia-Intel-AI-Test")
+        client = OpenRouterLatest(
+            api_key=self.openrouter_key, app_name="Sophia-Intel-AI-Test"
+        )
 
         # Test model cache refresh
         logger.info("\n1. Testing model cache refresh...")
@@ -89,10 +91,14 @@ class ModelTestSuite:
             try:
                 model = await client.get_best_model(task, tier)
                 logger.info(f"✅ {task.value}/{tier.value}: {model}")
-                self._record_test(f"Model selection {task.value}/{tier.value}", True, model)
+                self._record_test(
+                    f"Model selection {task.value}/{tier.value}", True, model
+                )
             except Exception as e:
                 logger.info(f"❌ {task.value}/{tier.value}: {e}")
-                self._record_test(f"Model selection {task.value}/{tier.value}", False, str(e))
+                self._record_test(
+                    f"Model selection {task.value}/{tier.value}", False, str(e)
+                )
 
         # Test actual completion
         logger.info("\n3. Testing completions with fallback...")
@@ -132,7 +138,9 @@ class ModelTestSuite:
         try:
             await client.refresh_models()
             logger.info(f"✅ Models refreshed: {len(client.model_cache)} available")
-            self._record_test("Portkey model refresh", True, f"{len(client.model_cache)} models")
+            self._record_test(
+                "Portkey model refresh", True, f"{len(client.model_cache)} models"
+            )
         except Exception as e:
             logger.info(f"❌ Failed: {e}")
             self._record_test("Portkey model refresh", False, str(e))

@@ -224,7 +224,9 @@ class AsyncHTTPClient:
         start = time.perf_counter()
 
         async def _make_request():
-            return await self.client.post(url, json=json, data=data, headers=headers, **kwargs)
+            return await self.client.post(
+                url, json=json, data=data, headers=headers, **kwargs
+            )
 
         try:
             if self.enable_circuit_breaker:
@@ -297,7 +299,8 @@ class AsyncHTTPClient:
         return {
             **self.metrics,
             "circuit_breakers": {
-                name: breaker.get_status() for name, breaker in self.circuit_breakers.items()
+                name: breaker.get_status()
+                for name, breaker in self.circuit_breakers.items()
             },
         }
 

@@ -13,7 +13,10 @@ from typing import Any, Optional
 import pandas as pd
 
 from app.integrations.gong_csv_ingestion import GongCSVIngestionPipeline, GongCSVRecord
-from app.swarms.knowledge.brain_training import BrainTrainingPipeline, ContentIngestionResult
+from app.swarms.knowledge.brain_training import (
+    BrainTrainingPipeline,
+    ContentIngestionResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,9 @@ class GongBrainTrainingAdapter:
     """
 
     def __init__(
-        self, memory_system, brain_training_pipeline: Optional[BrainTrainingPipeline] = None
+        self,
+        memory_system,
+        brain_training_pipeline: Optional[BrainTrainingPipeline] = None,
     ):
         """
         Initialize the adapter
@@ -121,7 +126,10 @@ class GongBrainTrainingAdapter:
                 await self.brain_training.train_custom_response(
                     query=insight["pattern_query"],
                     desired_response=insight["pattern_response"],
-                    context={"source": "gong_sales_data", "type": insight["pattern_type"]},
+                    context={
+                        "source": "gong_sales_data",
+                        "type": insight["pattern_type"],
+                    },
                 )
 
             # End training session
@@ -133,16 +141,24 @@ class GongBrainTrainingAdapter:
                 "csv_file": csv_path,
                 "records_processed": len(records),
                 "training_results": {
-                    "successful_trainings": len([r for r in training_results if r.success]),
-                    "failed_trainings": len([r for r in training_results if not r.success]),
-                    "total_fragments_created": sum(r.fragments_created for r in training_results),
+                    "successful_trainings": len(
+                        [r for r in training_results if r.success]
+                    ),
+                    "failed_trainings": len(
+                        [r for r in training_results if not r.success]
+                    ),
+                    "total_fragments_created": sum(
+                        r.fragments_created for r in training_results
+                    ),
                     "total_concepts_identified": sum(
                         r.concepts_identified for r in training_results
                     ),
                 },
                 "sales_insights": {
                     "patterns_identified": len(sales_insights),
-                    "objection_handlers": self.training_stats["objection_handlers_learned"],
+                    "objection_handlers": self.training_stats[
+                        "objection_handlers_learned"
+                    ],
                     "success_stories": self.training_stats["success_stories_captured"],
                 },
                 "session_summary": session_summary,
@@ -235,7 +251,9 @@ class GongBrainTrainingAdapter:
 
         # Generate response based on learned patterns
         if search_results:
-            response = await self._generate_sales_insight_response(query, search_results)
+            response = await self._generate_sales_insight_response(
+                query, search_results
+            )
         else:
             response = {
                 "answer": "No relevant sales data found for this query.",
@@ -285,7 +303,9 @@ class GongBrainTrainingAdapter:
 
         return list(set(participants))  # Remove duplicates
 
-    async def _train_on_call_record(self, record: GongCSVRecord) -> ContentIngestionResult:
+    async def _train_on_call_record(
+        self, record: GongCSVRecord
+    ) -> ContentIngestionResult:
         """Train on a single call record"""
         # Format record as training content
         content = {
@@ -313,7 +333,9 @@ class GongBrainTrainingAdapter:
 
         return result
 
-    async def _extract_sales_insights(self, records: list[GongCSVRecord]) -> list[dict[str, Any]]:
+    async def _extract_sales_insights(
+        self, records: list[GongCSVRecord]
+    ) -> list[dict[str, Any]]:
         """Extract sales-specific insights from Gong records"""
         insights = []
 
@@ -331,7 +353,9 @@ class GongBrainTrainingAdapter:
                 insight = {
                     "pattern_type": "objection_handling",
                     "pattern_query": f"How to handle objection about {record.account_name}",
-                    "pattern_response": self._extract_objection_response(record.transcript),
+                    "pattern_response": self._extract_objection_response(
+                        record.transcript
+                    ),
                     "source_call": record.call_id,
                 }
                 insights.append(insight)
@@ -342,18 +366,25 @@ class GongBrainTrainingAdapter:
                 insight = {
                     "pattern_type": "successful_close",
                     "pattern_query": f"Successful closing technique for {record.deal_stage}",
-                    "pattern_response": self._extract_closing_technique(record.transcript),
+                    "pattern_response": self._extract_closing_technique(
+                        record.transcript
+                    ),
                     "source_call": record.call_id,
                 }
                 insights.append(insight)
                 self.training_stats["success_stories_captured"] += 1
 
             # Identify product positioning
-            if any(word in transcript_lower for word in ["feature", "benefit", "value", "roi"]):
+            if any(
+                word in transcript_lower
+                for word in ["feature", "benefit", "value", "roi"]
+            ):
                 insight = {
                     "pattern_type": "product_positioning",
                     "pattern_query": f"How to position product for {record.account_name}",
-                    "pattern_response": self._extract_value_proposition(record.transcript),
+                    "pattern_response": self._extract_value_proposition(
+                        record.transcript
+                    ),
                     "source_call": record.call_id,
                 }
                 insights.append(insight)
@@ -366,7 +397,9 @@ class GongBrainTrainingAdapter:
         # Simple extraction - can be enhanced with NLP
         lines = transcript.split("\n")
         for i, line in enumerate(lines):
-            if any(word in line.lower() for word in ["concern", "worried", "expensive"]):
+            if any(
+                word in line.lower() for word in ["concern", "worried", "expensive"]
+            ):
                 # Get the next few lines as the response
                 response_lines = lines[i + 1 : i + 4]
                 return " ".join(response_lines)
@@ -416,7 +449,9 @@ class GongBrainTrainingAdapter:
                     1.0, self.training_stats["objection_handlers_learned"] / 10
                 )
             elif "closing" in objective.lower():
-                progress[objective] = min(1.0, self.training_stats["success_stories_captured"] / 5)
+                progress[objective] = min(
+                    1.0, self.training_stats["success_stories_captured"] / 5
+                )
             elif "pattern" in objective.lower():
                 progress[objective] = min(
                     1.0, self.training_stats["sales_patterns_identified"] / 20
@@ -447,7 +482,10 @@ class GongBrainTrainingAdapter:
         # Add closing technique patterns
         closing_patterns = [
             ("trial close", "Would it make sense to explore a pilot program?"),
-            ("assumptive close", "When would be the best time to start implementation?"),
+            (
+                "assumptive close",
+                "When would be the best time to start implementation?",
+            ),
             ("urgency close", "This pricing is available until end of quarter"),
         ]
 
@@ -504,7 +542,8 @@ class GongBrainTrainingAdapter:
             "brain_training_metrics": brain_metrics,
             "integration_health": {
                 "csv_pipeline_ready": True,
-                "brain_training_active": self.brain_training.current_session is not None,
+                "brain_training_active": self.brain_training.current_session
+                is not None,
                 "memory_system_connected": self.memory_system is not None,
             },
         }

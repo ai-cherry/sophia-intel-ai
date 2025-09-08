@@ -178,7 +178,9 @@ class PerformanceDatabase:
         finally:
             conn.close()
 
-    def get_baseline(self, component: str, metric_name: str) -> Optional[PerformanceBaseline]:
+    def get_baseline(
+        self, component: str, metric_name: str
+    ) -> Optional[PerformanceBaseline]:
         """Get performance baseline"""
         conn = sqlite3.connect(self.db_path)
         try:
@@ -496,7 +498,9 @@ class PerformanceTester:
 
             if metric_name == "throughput":
                 # For throughput, lower is worse
-                regression_pct = (baseline.baseline_value - current_value) / baseline.baseline_value
+                regression_pct = (
+                    baseline.baseline_value - current_value
+                ) / baseline.baseline_value
                 is_regression = regression_pct > abs(threshold)
             elif metric_name == "error_rate":
                 # For error rate, use absolute difference
@@ -504,7 +508,9 @@ class PerformanceTester:
                 is_regression = regression_pct > threshold
             else:
                 # For response time and memory, higher is worse
-                regression_pct = (current_value - baseline.baseline_value) / baseline.baseline_value
+                regression_pct = (
+                    current_value - baseline.baseline_value
+                ) / baseline.baseline_value
                 is_regression = regression_pct > threshold
 
             if is_regression:
@@ -580,7 +586,10 @@ class TestUnifiedMCPServerPerformance:
             test_name="simple_routing",
             url=f"{base_url}/route",
             method="POST",
-            payload={"target": "artemis", "request": {"type": "simple_task", "data": "test"}},
+            payload={
+                "target": "artemis",
+                "request": {"type": "simple_task", "data": "test"},
+            },
             concurrent_requests=20,
             total_requests=200,
         )
@@ -595,8 +604,12 @@ class TestUnifiedMCPServerPerformance:
         assert (
             metrics.p95_response_time <= 0.2
         ), f"P95 response time {metrics.p95_response_time:.3f}s exceeds 200ms"
-        assert metrics.throughput >= 100, f"Throughput {metrics.throughput:.1f} RPS below 100 RPS"
-        assert metrics.error_rate <= 0.01, f"Error rate {metrics.error_rate:.1%} exceeds 1%"
+        assert (
+            metrics.throughput >= 100
+        ), f"Throughput {metrics.throughput:.1f} RPS below 100 RPS"
+        assert (
+            metrics.error_rate <= 0.01
+        ), f"Error rate {metrics.error_rate:.1%} exceeds 1%"
 
         # Check for critical regressions
         critical_regressions = [r for r in regressions if r.severity == "critical"]
@@ -632,8 +645,12 @@ class TestUnifiedMCPServerPerformance:
         )
 
         # Cache hits should be significantly faster
-        assert cache_hit_metrics.avg_response_time < cache_miss_metrics.avg_response_time
-        assert cache_hit_metrics.avg_response_time <= 0.005, "Cache hits should be under 5ms"
+        assert (
+            cache_hit_metrics.avg_response_time < cache_miss_metrics.avg_response_time
+        )
+        assert (
+            cache_hit_metrics.avg_response_time <= 0.005
+        ), "Cache hits should be under 5ms"
 
         # Analyze regressions
         hit_regressions = perf_tester.analyze_regression(
@@ -788,10 +805,16 @@ class TestArtemisSwarmPerformance:
                 total_requests=100,
             )
 
-            regressions = perf_tester.analyze_regression(f"artemis_agent_{agent_type}", metrics)
+            regressions = perf_tester.analyze_regression(
+                f"artemis_agent_{agent_type}", metrics
+            )
 
             allocation_results.append(
-                {"agent_type": agent_type, "metrics": metrics, "regressions": regressions}
+                {
+                    "agent_type": agent_type,
+                    "metrics": metrics,
+                    "regressions": regressions,
+                }
             )
 
             # Agent allocation should be very fast
@@ -810,7 +833,9 @@ class TestArtemisSwarmPerformance:
         # Create many workflows to test memory management
         workflow_payload = {
             "workflow_type": "memory_test",
-            "tasks": [{"agent": "plannr", "task": f"memory_task_{i}"} for i in range(10)],
+            "tasks": [
+                {"agent": "plannr", "task": f"memory_task_{i}"} for i in range(10)
+            ],
             "priority": "low",
         }
 
@@ -921,7 +946,9 @@ class TestMemorySystemPerformance:
 
             regressions = perf_tester.analyze_regression(f"mem0_search_{i}", metrics)
 
-            search_results.append({"query": query, "metrics": metrics, "regressions": regressions})
+            search_results.append(
+                {"query": query, "metrics": metrics, "regressions": regressions}
+            )
 
             # Search should be fast
             assert (
@@ -1004,7 +1031,11 @@ class TestBIServerPerformance:
             regressions = perf_tester.analyze_regression(f"bi_{query['type']}", metrics)
 
             query_results.append(
-                {"query_type": query["type"], "metrics": metrics, "regressions": regressions}
+                {
+                    "query_type": query["type"],
+                    "metrics": metrics,
+                    "regressions": regressions,
+                }
             )
 
             # Analytics queries can be slower
@@ -1051,7 +1082,8 @@ class TestBIServerPerformance:
 
             # Cache hits should be significantly faster
             cache_improvement = (
-                cache_miss_metrics.avg_response_time - cache_hit_metrics.avg_response_time
+                cache_miss_metrics.avg_response_time
+                - cache_hit_metrics.avg_response_time
             ) / cache_miss_metrics.avg_response_time
 
             integration_results.append(
@@ -1066,7 +1098,9 @@ class TestBIServerPerformance:
             assert (
                 cache_improvement >= 0.5
             ), f"{test['integration']} cache only improved by {cache_improvement:.1%}"
-            print(f"   {test['integration']} cache improvement: {cache_improvement:.1%}")
+            print(
+                f"   {test['integration']} cache improvement: {cache_improvement:.1%}"
+            )
 
         return integration_results
 
@@ -1102,7 +1136,10 @@ class TestSystemWidePerformance:
                 "name": "store_context",
                 "url": "http://localhost:8083/memories",
                 "method": "POST",
-                "payload": {"content": "Customer onboarding context", "memory_type": "episodic"},
+                "payload": {
+                    "content": "Customer onboarding context",
+                    "memory_type": "episodic",
+                },
             },
             # Step 3: Create workflow in Artemis
             {
@@ -1142,14 +1179,24 @@ class TestSystemWidePerformance:
             )
 
         # Calculate total workflow time
-        total_avg_time = sum(result["metrics"].avg_response_time for result in workflow_results)
-        total_p95_time = sum(result["metrics"].p95_response_time for result in workflow_results)
+        total_avg_time = sum(
+            result["metrics"].avg_response_time for result in workflow_results
+        )
+        total_p95_time = sum(
+            result["metrics"].p95_response_time for result in workflow_results
+        )
 
-        print(f"   Total E2E workflow time: {total_avg_time:.3f}s avg, {total_p95_time:.3f}s P95")
+        print(
+            f"   Total E2E workflow time: {total_avg_time:.3f}s avg, {total_p95_time:.3f}s P95"
+        )
 
         # End-to-end workflow should complete reasonably quickly
-        assert total_avg_time <= 2.0, f"E2E workflow avg {total_avg_time:.3f}s exceeds 2s"
-        assert total_p95_time <= 5.0, f"E2E workflow P95 {total_p95_time:.3f}s exceeds 5s"
+        assert (
+            total_avg_time <= 2.0
+        ), f"E2E workflow avg {total_avg_time:.3f}s exceeds 2s"
+        assert (
+            total_p95_time <= 5.0
+        ), f"E2E workflow P95 {total_p95_time:.3f}s exceeds 5s"
 
         return workflow_results
 
@@ -1210,7 +1257,9 @@ class TestSystemWidePerformance:
                 actual_rps >= requests_per_second * 0.8
             ), f"{service_name} RPS {actual_rps:.1f} below 80% of target"
 
-            print(f"     {service_name}: {actual_rps:.1f} RPS, {metrics.error_rate:.1%} errors")
+            print(
+                f"     {service_name}: {actual_rps:.1f} RPS, {metrics.error_rate:.1%} errors"
+            )
 
         return stability_results
 

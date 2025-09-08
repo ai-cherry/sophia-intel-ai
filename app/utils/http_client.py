@@ -25,7 +25,12 @@ class HttpClient:
             try:
                 async with httpx.AsyncClient(timeout=self.timeout) as client:
                     return await func(client, *args, **kwargs)
-            except (httpx.ConnectError, httpx.ReadTimeout, httpx.WriteTimeout, httpx.PoolTimeout) as e:
+            except (
+                httpx.ConnectError,
+                httpx.ReadTimeout,
+                httpx.WriteTimeout,
+                httpx.PoolTimeout,
+            ) as e:
                 last_exc = e
                 if attempt >= self.max_retries:
                     break
@@ -34,15 +39,25 @@ class HttpClient:
         assert last_exc is not None
         raise last_exc
 
-    async def get(self, url: str, headers: Optional[Dict[str, str]] = None, params: Optional[Dict[str, Any]] = None) -> httpx.Response:
+    async def get(
+        self,
+        url: str,
+        headers: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Any]] = None,
+    ) -> httpx.Response:
         async def _do(client: httpx.AsyncClient):
             return await client.get(url, headers=headers, params=params)
 
         return await self._with_retries(_do)
 
-    async def post(self, url: str, json: Any = None, data: Any = None, headers: Optional[Dict[str, str]] = None) -> httpx.Response:
+    async def post(
+        self,
+        url: str,
+        json: Any = None,
+        data: Any = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> httpx.Response:
         async def _do(client: httpx.AsyncClient):
             return await client.post(url, json=json, data=data, headers=headers)
 
         return await self._with_retries(_do)
-

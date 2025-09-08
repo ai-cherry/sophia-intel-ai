@@ -160,7 +160,10 @@ class MemoryGuardAgent(BaseMonitoringAgent):
                 value=ram_percent,
                 timestamp=datetime.now(),
                 status=ram_status,
-                metadata={"used_gb": memory.used / (1024**3), "total_gb": memory.total / (1024**3)},
+                metadata={
+                    "used_gb": memory.used / (1024**3),
+                    "total_gb": memory.total / (1024**3),
+                },
             )
         )
 
@@ -168,7 +171,10 @@ class MemoryGuardAgent(BaseMonitoringAgent):
         swap_status = "healthy" if swap.percent < 50 else "warning"
         metrics.append(
             HealthMetric(
-                name="swap_usage", value=swap.percent, timestamp=datetime.now(), status=swap_status
+                name="swap_usage",
+                value=swap.percent,
+                timestamp=datetime.now(),
+                status=swap_status,
             )
         )
 
@@ -277,18 +283,25 @@ class PerformanceAgent(BaseMonitoringAgent):
         # CPU usage
         cpu_percent = psutil.cpu_percent(interval=1)
         cpu_status = (
-            "healthy" if cpu_percent < 70 else "warning" if cpu_percent < 90 else "critical"
+            "healthy"
+            if cpu_percent < 70
+            else "warning" if cpu_percent < 90 else "critical"
         )
         metrics.append(
             HealthMetric(
-                name="cpu_usage", value=cpu_percent, timestamp=datetime.now(), status=cpu_status
+                name="cpu_usage",
+                value=cpu_percent,
+                timestamp=datetime.now(),
+                status=cpu_status,
             )
         )
 
         # Response time (if available)
         if self.response_times:
             avg_response = sum(self.response_times) / len(self.response_times)
-            p95_response = sorted(self.response_times)[int(len(self.response_times) * 0.95)]
+            p95_response = sorted(self.response_times)[
+                int(len(self.response_times) * 0.95)
+            ]
 
             response_status = (
                 "healthy"
@@ -310,7 +323,9 @@ class PerformanceAgent(BaseMonitoringAgent):
         if total_requests > 0:
             error_rate = (self.error_count / total_requests) * 100
             error_status = (
-                "healthy" if error_rate < 1 else "warning" if error_rate < 5 else "critical"
+                "healthy"
+                if error_rate < 1
+                else "warning" if error_rate < 5 else "critical"
             )
             metrics.append(
                 HealthMetric(
@@ -363,7 +378,11 @@ class LogMonitorAgent(BaseMonitoringAgent):
 
         # Create metrics
         total_errors = sum(self.error_counts.values())
-        status = "healthy" if total_errors < 10 else "warning" if total_errors < 50 else "critical"
+        status = (
+            "healthy"
+            if total_errors < 10
+            else "warning" if total_errors < 50 else "critical"
+        )
 
         metrics.append(
             HealthMetric(
@@ -489,13 +508,16 @@ class BackgroundAgentManager:
 
         for name, agent in self.agents.items():
             # Get latest metrics
-            latest_metrics = list(agent.metrics_history)[-10:] if agent.metrics_history else []
+            latest_metrics = (
+                list(agent.metrics_history)[-10:] if agent.metrics_history else []
+            )
 
             data["agents"][name] = {
                 "status": "running" if agent.running else "stopped",
                 "alerts": len(agent.alerts),
                 "latest_metrics": [
-                    {"name": m.name, "value": m.value, "status": m.status} for m in latest_metrics
+                    {"name": m.name, "value": m.value, "status": m.status}
+                    for m in latest_metrics
                 ],
             }
 

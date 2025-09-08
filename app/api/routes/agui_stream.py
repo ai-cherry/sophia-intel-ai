@@ -136,11 +136,14 @@ class AGUIStreamManager:
         # Update metrics
         self.metrics["connections_closed"] += 1
         self.metrics["average_connection_duration"] = (
-            self.metrics["average_connection_duration"] * (self.metrics["connections_closed"] - 1)
+            self.metrics["average_connection_duration"]
+            * (self.metrics["connections_closed"] - 1)
             + duration
         ) / self.metrics["connections_closed"]
 
-        logger.info(f"Closed AG-UI connection: {connection_id} (duration: {duration:.1f}s)")
+        logger.info(
+            f"Closed AG-UI connection: {connection_id} (duration: {duration:.1f}s)"
+        )
 
     async def broadcast_event(
         self,
@@ -171,11 +174,17 @@ class AGUIStreamManager:
             connection = self.connections[connection_id]
 
             # Check event type filter
-            if connection["event_types"] and event.type not in connection["event_types"]:
+            if (
+                connection["event_types"]
+                and event.type not in connection["event_types"]
+            ):
                 continue
 
             # Check domain filter
-            if connection["domains"] and event.metadata.domain.value not in connection["domains"]:
+            if (
+                connection["domains"]
+                and event.metadata.domain.value not in connection["domains"]
+            ):
                 continue
 
             # Check authentication requirements
@@ -200,7 +209,9 @@ class AGUIStreamManager:
                     # Update connection activity
                     if connection_id in self.connections:
                         self.connections[connection_id]["events_sent"] += 1
-                        self.connections[connection_id]["last_activity"] = datetime.utcnow()
+                        self.connections[connection_id][
+                            "last_activity"
+                        ] = datetime.utcnow()
 
             except Exception as e:
                 logger.error(f"Error queuing event for connection {connection_id}: {e}")
@@ -253,7 +264,9 @@ class AGUIStreamManager:
             "active_connections": len(self.connections),
             "active_queues": len(self.event_queues),
             "domain_subscriptions": self.metrics["domain_subscriptions"],
-            "queue_sizes": {conn_id: queue.qsize() for conn_id, queue in self.event_queues.items()},
+            "queue_sizes": {
+                conn_id: queue.qsize() for conn_id, queue in self.event_queues.items()
+            },
         }
 
 
@@ -275,8 +288,12 @@ async def get_current_user(auth_token: Optional[str] = None):
 @router.get("/stream")
 async def agui_event_stream(
     request: Request,
-    types: Optional[str] = Query(None, description="Comma-separated event types to filter"),
-    domains: Optional[str] = Query(None, description="Comma-separated domains to filter"),
+    types: Optional[str] = Query(
+        None, description="Comma-separated event types to filter"
+    ),
+    domains: Optional[str] = Query(
+        None, description="Comma-separated domains to filter"
+    ),
     session_id: Optional[str] = Query(None, description="Session identifier"),
     user_id: Optional[str] = Query(None, description="User identifier"),
     tenant_id: Optional[str] = Query(None, description="Tenant identifier"),
@@ -367,9 +384,14 @@ async def get_available_event_types():
     """Get list of available event types"""
     return {
         "event_types": [event_type.value for event_type in AGUIEventType],
-        "streaming_types": [AGUIEventType.TEXT_DELTA.value, AGUIEventType.TOOL_CALL_DELTA.value],
+        "streaming_types": [
+            AGUIEventType.TEXT_DELTA.value,
+            AGUIEventType.TOOL_CALL_DELTA.value,
+        ],
         "authenticated_types": [
-            event_type.value for event_type in AGUIEventType if requires_authentication(event_type)
+            event_type.value
+            for event_type in AGUIEventType
+            if requires_authentication(event_type)
         ],
     }
 
@@ -480,7 +502,9 @@ async def get_active_connections():
     return {
         "active_connections": len(connections),
         "connections": connections,
-        "total_queue_items": sum(queue.qsize() for queue in stream_manager.event_queues.values()),
+        "total_queue_items": sum(
+            queue.qsize() for queue in stream_manager.event_queues.values()
+        ),
     }
 
 
@@ -488,7 +512,9 @@ async def get_active_connections():
 async def broadcast_custom_event(
     event_data: dict[str, Any],
     target_domains: Optional[list[str]] = Query(None, description="Target domains"),
-    target_connections: Optional[list[str]] = Query(None, description="Target connection IDs"),
+    target_connections: Optional[list[str]] = Query(
+        None, description="Target connection IDs"
+    ),
 ):
     """Broadcast custom event to specified targets (admin only)"""
 
@@ -508,7 +534,9 @@ async def broadcast_custom_event(
                 try:
                     domains.append(DomainContext(domain_str))
                 except ValueError:
-                    raise HTTPException(status_code=400, detail=f"Invalid domain: {domain_str}")
+                    raise HTTPException(
+                        status_code=400, detail=f"Invalid domain: {domain_str}"
+                    )
 
         # Broadcast event
         await stream_manager.broadcast_event(
@@ -535,7 +563,9 @@ async def bridge_websocket_event(ws_event: dict[str, Any], session_id: str = Non
 
     try:
         # Convert to AG-UI event
-        agui_event = await event_adapter.convert_websocket_event(ws_event, session_id=session_id)
+        agui_event = await event_adapter.convert_websocket_event(
+            ws_event, session_id=session_id
+        )
 
         if agui_event:
             # Broadcast to relevant AG-UI connections

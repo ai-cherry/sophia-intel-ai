@@ -221,7 +221,9 @@ class LookerClient:
                     # Get query data if available
                     if element.query_id:
                         try:
-                            query_data = self.run_query(str(element.query_id), limit=100)
+                            query_data = self.run_query(
+                                str(element.query_id), limit=100
+                            )
                             element_data["data"] = query_data
                         except Exception as e:
                             element_data["data_error"] = str(e)
@@ -279,7 +281,9 @@ class LookerClient:
         """Run a Looker query and return results"""
         try:
             # Run query
-            result = self.sdk.run_query(query_id=query_id, result_format=format_type, limit=limit)
+            result = self.sdk.run_query(
+                query_id=query_id, result_format=format_type, limit=limit
+            )
 
             # Parse JSON results
             if format_type == "json" and result:
@@ -316,7 +320,9 @@ class LookerClient:
             created_query = self.sdk.create_query(query)
 
             # Run query and get results
-            result = self.sdk.run_query(query_id=str(created_query.id), result_format="json")
+            result = self.sdk.run_query(
+                query_id=str(created_query.id), result_format="json"
+            )
 
             # Parse results
             data = json.loads(result) if result else []
@@ -364,7 +370,9 @@ class LookerClient:
                     model_data["explores"] = [
                         {
                             "name": getattr(explore, "name", "Unknown"),
-                            "title": getattr(explore, "title", getattr(explore, "name", "Unknown")),
+                            "title": getattr(
+                                explore, "title", getattr(explore, "name", "Unknown")
+                            ),
                             "description": getattr(explore, "description", None),
                         }
                         for explore in explores[:10]  # Limit to first 10
@@ -387,7 +395,12 @@ class LookerClient:
             if types is None:
                 types = ["dashboard", "look", "query"]
 
-            organized_results = {"dashboards": [], "looks": [], "queries": [], "other": []}
+            organized_results = {
+                "dashboards": [],
+                "looks": [],
+                "queries": [],
+                "other": [],
+            }
 
             # Search dashboards by title
             if "dashboard" in types:

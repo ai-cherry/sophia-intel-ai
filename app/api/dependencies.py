@@ -59,7 +59,9 @@ class GlobalState:
 
                 if self.config.environment_name == "prod":
                     # Strict validation in production
-                    raise ValueError("Production environment has critical configuration issues")
+                    raise ValueError(
+                        "Production environment has critical configuration issues"
+                    )
 
         except Exception as e:
             logger.error(f"❌ Configuration loading failed: {e}")
@@ -88,7 +90,9 @@ def get_orchestrator(state: GlobalState = Depends(get_state)) -> Any:
     if not state.orchestrator:
         try:
             # Import the consolidated unified orchestrator
-            from pulumi.agent_orchestrator.src.unified_orchestrator import UnifiedSwarmOrchestrator
+            from pulumi.agent_orchestrator.src.unified_orchestrator import (
+                UnifiedSwarmOrchestrator,
+            )
 
             state.orchestrator = UnifiedSwarmOrchestrator()
             logger.info("✅ Real UnifiedSwarmOrchestrator initialized")
@@ -115,7 +119,9 @@ def get_memory_store(state: GlobalState = Depends(get_state)) -> Any:
         except ImportError as e:
             logger.error(f"❌ Failed to import UnifiedMemorySystem: {e}")
             if get_config().get("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
-                raise HTTPException(status_code=503, detail=f"Memory service unavailable: {e}")
+                raise HTTPException(
+                    status_code=503, detail=f"Memory service unavailable: {e}"
+                )
             raise ImportError(f"UnifiedMemorySystem not available: {e}")
 
     return state.supermemory
@@ -133,7 +139,9 @@ def get_search_engine(state: GlobalState = Depends(get_state)) -> Any:
         except ImportError as e:
             logger.error(f"❌ Failed to import ModernEmbeddingSystem: {e}")
             if get_config().get("FAIL_ON_MOCK_FALLBACK", "false").lower() == "true":
-                raise HTTPException(status_code=503, detail=f"Search service unavailable: {e}")
+                raise HTTPException(
+                    status_code=503, detail=f"Search service unavailable: {e}"
+                )
             raise ImportError(f"ModernEmbeddingSystem not available: {e}")
 
     return state.search_engine
@@ -196,13 +204,15 @@ def get_weaviate_client(state: GlobalState = Depends(get_state)):
             # Use local Weaviate for development, cloud for production
             if "localhost" in weaviate_url:
                 state.weaviate_client = weaviate.connect_to_local(
-                    host=weaviate_url.replace("http://", "").replace(":8080", ""), port=8080
+                    host=weaviate_url.replace("http://", "").replace(":8080", ""),
+                    port=8080,
                 )
             else:
                 if not weaviate_api_key:
                     raise ValueError("WEAVIATE_API_KEY required for cloud connection")
                 state.weaviate_client = weaviate.connect_to_weaviate_cloud(
-                    cluster_url=weaviate_url, auth_credentials=Auth.api_key(weaviate_api_key)
+                    cluster_url=weaviate_url,
+                    auth_credentials=Auth.api_key(weaviate_api_key),
                 )
 
             # Test connection
@@ -212,7 +222,9 @@ def get_weaviate_client(state: GlobalState = Depends(get_state)):
             logger.error(f"❌ Failed to connect to Weaviate: {e}")
             config = state.get_config()
             if config and config.environment_name == "prod":
-                raise HTTPException(status_code=503, detail=f"Weaviate unavailable: {e}")
+                raise HTTPException(
+                    status_code=503, detail=f"Weaviate unavailable: {e}"
+                )
             raise ConnectionError(f"Weaviate connection failed: {e}")
 
     return state.weaviate_client

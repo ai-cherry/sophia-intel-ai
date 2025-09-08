@@ -9,4 +9,10 @@ from .knowledge_store import KnowledgeStore
 from .pattern_store import PatternStore
 from .vector_store import VectorStore
 
-__all__ = ["IntelligenceStore", "ExecutionStore", "PatternStore", "KnowledgeStore", "VectorStore"]
+__all__ = [
+    "IntelligenceStore",
+    "ExecutionStore",
+    "PatternStore",
+    "KnowledgeStore",
+    "VectorStore",
+]

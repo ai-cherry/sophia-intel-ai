@@ -102,7 +102,8 @@ class ResourceBudget:
             ResourceType.API_CALLS: self.api_calls_used / max(self.api_calls, 1),
             ResourceType.MEMORY_MB: self.memory_used / max(self.memory_mb, 1),
             ResourceType.STORAGE_GB: self.storage_used / max(self.storage_gb, 1),
-            ResourceType.CONCURRENT_TASKS: self.active_tasks / max(self.concurrent_tasks, 1),
+            ResourceType.CONCURRENT_TASKS: self.active_tasks
+            / max(self.concurrent_tasks, 1),
             ResourceType.BUDGET_USD: self.budget_spent / max(self.budget_usd, 0.01),
         }
 
@@ -139,7 +140,9 @@ class AllocationRequest:
     user_id: Optional[str] = None
     task_id: Optional[str] = None
     cost_sensitivity: float = 0.5  # 0.0 = cost insensitive, 1.0 = very cost sensitive
-    performance_requirement: float = 0.5  # 0.0 = best effort, 1.0 = guaranteed performance
+    performance_requirement: float = (
+        0.5  # 0.0 = best effort, 1.0 = guaranteed performance
+    )
 
 
 @dataclass
@@ -265,13 +268,17 @@ class DynamicResourceAllocator:
         # Check if resources are available
         budget = self.budgets.get(request.orchestrator)
         if not budget:
-            return self._create_allocation_response(request, False, "Orchestrator not found")
+            return self._create_allocation_response(
+                request, False, "Orchestrator not found"
+            )
 
         available = budget.get_available_resources(request.resource_type)
 
         if available >= request.amount:
             # Allocate resources
-            success = self._allocate_resources(budget, request.resource_type, request.amount)
+            success = self._allocate_resources(
+                budget, request.resource_type, request.amount
+            )
 
             if success:
                 self.metrics["successful_allocations"] += 1
@@ -289,18 +296,26 @@ class DynamicResourceAllocator:
                     }
                 )
 
-                return self._create_allocation_response(request, True, "Resources allocated")
+                return self._create_allocation_response(
+                    request, True, "Resources allocated"
+                )
             else:
-                return self._create_allocation_response(request, False, "Allocation failed")
+                return self._create_allocation_response(
+                    request, False, "Allocation failed"
+                )
 
         else:
             # Try emergency rebalancing
             if request.priority in [ResourcePriority.CRITICAL, ResourcePriority.HIGH]:
-                logger.info("Attempting emergency rebalancing for high-priority request")
+                logger.info(
+                    "Attempting emergency rebalancing for high-priority request"
+                )
 
                 rebalanced = await self._emergency_rebalance(request)
                 if rebalanced:
-                    return await self.request_resources(request)  # Retry after rebalancing
+                    return await self.request_resources(
+                        request
+                    )  # Retry after rebalancing
 
             self.metrics["denied_allocations"] += 1
             self.metrics["total_allocations"] += 1
@@ -359,7 +374,9 @@ class DynamicResourceAllocator:
                 budget.budget_spent = max(0.0, budget.budget_spent - amount)
 
             budget.last_updated = datetime.now()
-            logger.info(f"Released {amount} {resource_type.value} from {orchestrator.value}")
+            logger.info(
+                f"Released {amount} {resource_type.value} from {orchestrator.value}"
+            )
             return True
 
         except Exception as e:
@@ -407,7 +424,9 @@ class DynamicResourceAllocator:
                 return
 
             # Calculate rebalancing based on current strategy
-            new_allocations = self._calculate_optimal_allocation(sophia_metrics, artemis_metrics)
+            new_allocations = self._calculate_optimal_allocation(
+                sophia_metrics, artemis_metrics
+            )
 
             # Apply new allocations
             await self._apply_allocations(new_allocations)
@@ -418,7 +437,9 @@ class DynamicResourceAllocator:
         except Exception as e:
             logger.error(f"Resource rebalancing failed: {e}")
 
-    def _get_latest_metrics(self, orchestrator: OrchestratorType) -> Optional[UsageMetrics]:
+    def _get_latest_metrics(
+        self, orchestrator: OrchestratorType
+    ) -> Optional[UsageMetrics]:
         """Get latest metrics for an orchestrator"""
         history = self.usage_history.get(orchestrator)
         return history[-1] if history else None
@@ -431,13 +452,17 @@ class DynamicResourceAllocator:
         total_resources = self._calculate_total_resources()
 
         if self.current_strategy == AllocationStrategy.DEMAND_BASED:
-            return self._demand_based_allocation(sophia_metrics, artemis_metrics, total_resources)
+            return self._demand_based_allocation(
+                sophia_metrics, artemis_metrics, total_resources
+            )
         elif self.current_strategy == AllocationStrategy.PERFORMANCE_OPTIMIZED:
             return self._performance_based_allocation(
                 sophia_metrics, artemis_metrics, total_resources
             )
         elif self.current_strategy == AllocationStrategy.COST_OPTIMIZED:
-            return self._cost_optimized_allocation(sophia_metrics, artemis_metrics, total_resources)
+            return self._cost_optimized_allocation(
+                sophia_metrics, artemis_metrics, total_resources
+            )
         else:
             return self._equal_split_allocation(total_resources)
 
@@ -449,8 +474,12 @@ class DynamicResourceAllocator:
     ) -> dict[OrchestratorType, ResourceBudget]:
         """Allocate resources based on demand (queue depth and throughput)"""
 
-        sophia_demand = sophia_metrics.queue_depth + sophia_metrics.tasks_completed_last_hour
-        artemis_demand = artemis_metrics.queue_depth + artemis_metrics.tasks_completed_last_hour
+        sophia_demand = (
+            sophia_metrics.queue_depth + sophia_metrics.tasks_completed_last_hour
+        )
+        artemis_demand = (
+            artemis_metrics.queue_depth + artemis_metrics.tasks_completed_last_hour
+        )
 
         total_demand = sophia_demand + artemis_demand
 
@@ -470,7 +499,9 @@ class DynamicResourceAllocator:
         )
 
         return {
-            OrchestratorType.SOPHIA: self._create_budget_from_ratio(sophia_ratio, total_resources),
+            OrchestratorType.SOPHIA: self._create_budget_from_ratio(
+                sophia_ratio, total_resources
+            ),
             OrchestratorType.ARTEMIS: self._create_budget_from_ratio(
                 artemis_ratio, total_resources
             ),
@@ -510,7 +541,9 @@ class DynamicResourceAllocator:
         )
 
         return {
-            OrchestratorType.SOPHIA: self._create_budget_from_ratio(sophia_ratio, total_resources),
+            OrchestratorType.SOPHIA: self._create_budget_from_ratio(
+                sophia_ratio, total_resources
+            ),
             OrchestratorType.ARTEMIS: self._create_budget_from_ratio(
                 artemis_ratio, total_resources
             ),
@@ -550,7 +583,9 @@ class DynamicResourceAllocator:
         )
 
         return {
-            OrchestratorType.SOPHIA: self._create_budget_from_ratio(sophia_ratio, total_resources),
+            OrchestratorType.SOPHIA: self._create_budget_from_ratio(
+                sophia_ratio, total_resources
+            ),
             OrchestratorType.ARTEMIS: self._create_budget_from_ratio(
                 artemis_ratio, total_resources
             ),
@@ -561,8 +596,12 @@ class DynamicResourceAllocator:
     ) -> dict[OrchestratorType, ResourceBudget]:
         """50/50 equal split allocation"""
         return {
-            OrchestratorType.SOPHIA: self._create_budget_from_ratio(0.5, total_resources),
-            OrchestratorType.ARTEMIS: self._create_budget_from_ratio(0.5, total_resources),
+            OrchestratorType.SOPHIA: self._create_budget_from_ratio(
+                0.5, total_resources
+            ),
+            OrchestratorType.ARTEMIS: self._create_budget_from_ratio(
+                0.5, total_resources
+            ),
         }
 
     def _create_budget_from_ratio(
@@ -570,7 +609,9 @@ class DynamicResourceAllocator:
     ) -> ResourceBudget:
         """Create resource budget from allocation ratio"""
         return ResourceBudget(
-            orchestrator=OrchestratorType.SOPHIA if ratio > 0.5 else OrchestratorType.ARTEMIS,
+            orchestrator=(
+                OrchestratorType.SOPHIA if ratio > 0.5 else OrchestratorType.ARTEMIS
+            ),
             compute_tokens=int(total_resources["compute_tokens"] * ratio),
             api_calls=int(total_resources["api_calls"] * ratio),
             memory_mb=int(total_resources["memory_mb"] * ratio),
@@ -590,15 +631,19 @@ class DynamicResourceAllocator:
             return {}
 
         return {
-            "compute_tokens": sophia_budget.compute_tokens + artemis_budget.compute_tokens,
+            "compute_tokens": sophia_budget.compute_tokens
+            + artemis_budget.compute_tokens,
             "api_calls": sophia_budget.api_calls + artemis_budget.api_calls,
             "memory_mb": sophia_budget.memory_mb + artemis_budget.memory_mb,
             "storage_gb": sophia_budget.storage_gb + artemis_budget.storage_gb,
-            "concurrent_tasks": sophia_budget.concurrent_tasks + artemis_budget.concurrent_tasks,
+            "concurrent_tasks": sophia_budget.concurrent_tasks
+            + artemis_budget.concurrent_tasks,
             "budget_usd": sophia_budget.budget_usd + artemis_budget.budget_usd,
         }
 
-    async def _apply_allocations(self, new_allocations: dict[OrchestratorType, ResourceBudget]):
+    async def _apply_allocations(
+        self, new_allocations: dict[OrchestratorType, ResourceBudget]
+    ):
         """Apply new resource allocations"""
         for orchestrator, new_budget in new_allocations.items():
             current_budget = self.budgets.get(orchestrator)
@@ -618,7 +663,9 @@ class DynamicResourceAllocator:
 
     async def _emergency_rebalance(self, urgent_request: AllocationRequest) -> bool:
         """Emergency resource rebalancing for critical requests"""
-        logger.warning(f"Emergency rebalancing for critical request: {urgent_request.id}")
+        logger.warning(
+            f"Emergency rebalancing for critical request: {urgent_request.id}"
+        )
 
         # Try to borrow resources from the other orchestrator
         other_orchestrator = (
@@ -632,8 +679,12 @@ class DynamicResourceAllocator:
             return False
 
         # Check if other orchestrator can spare resources
-        other_available = other_budget.get_available_resources(urgent_request.resource_type)
-        other_utilization = other_budget.get_utilization_rate(urgent_request.resource_type)
+        other_available = other_budget.get_available_resources(
+            urgent_request.resource_type
+        )
+        other_utilization = other_budget.get_utilization_rate(
+            urgent_request.resource_type
+        )
 
         # Only borrow if other orchestrator has low utilization and enough resources
         if other_utilization < 0.7 and other_available >= urgent_request.amount:
@@ -701,7 +752,9 @@ class DynamicResourceAllocator:
             "resource_type": request.resource_type.value,
             "amount_requested": request.amount,
             "timestamp": datetime.now().isoformat(),
-            "budget_status": self._get_budget_status(request.orchestrator) if success else None,
+            "budget_status": (
+                self._get_budget_status(request.orchestrator) if success else None
+            ),
         }
 
     def _get_budget_status(self, orchestrator: OrchestratorType) -> dict[str, Any]:
@@ -765,12 +818,12 @@ class DynamicResourceAllocator:
             return False
 
         # Calculate average utilization
-        sophia_util = sum(sophia_budget.get_utilization_rate(rt) for rt in ResourceType) / len(
-            ResourceType
-        )
-        artemis_util = sum(artemis_budget.get_utilization_rate(rt) for rt in ResourceType) / len(
-            ResourceType
-        )
+        sophia_util = sum(
+            sophia_budget.get_utilization_rate(rt) for rt in ResourceType
+        ) / len(ResourceType)
+        artemis_util = sum(
+            artemis_budget.get_utilization_rate(rt) for rt in ResourceType
+        ) / len(ResourceType)
 
         # Rebalance if utilization is significantly different
         utilization_diff = abs(sophia_util - artemis_util)
@@ -802,7 +855,9 @@ class DynamicResourceAllocator:
                 }
                 for orchestrator, budget in self.budgets.items()
             },
-            "recent_allocations": self.allocation_history[-10:] if self.allocation_history else [],
+            "recent_allocations": (
+                self.allocation_history[-10:] if self.allocation_history else []
+            ),
         }
 
     def predict_resource_needs(
@@ -820,19 +875,23 @@ class DynamicResourceAllocator:
 
             # Simple trend analysis (would use more sophisticated ML in production)
             recent_metrics = list(history)[-10:]
-            avg_queue_depth = sum(m.queue_depth for m in recent_metrics) / len(recent_metrics)
-            avg_tasks_completed = sum(m.tasks_completed_last_hour for m in recent_metrics) / len(
+            avg_queue_depth = sum(m.queue_depth for m in recent_metrics) / len(
                 recent_metrics
             )
+            avg_tasks_completed = sum(
+                m.tasks_completed_last_hour for m in recent_metrics
+            ) / len(recent_metrics)
 
             # Predict load based on trends
-            trend = (recent_metrics[-1].queue_depth - recent_metrics[0].queue_depth) / len(
-                recent_metrics
-            )
+            trend = (
+                recent_metrics[-1].queue_depth - recent_metrics[0].queue_depth
+            ) / len(recent_metrics)
             predicted_queue = max(0, avg_queue_depth + (trend * hours_ahead))
 
             predicted_load = min(1.0, predicted_queue / 10.0)  # Normalize to 0-1
-            confidence = min(1.0, len(history) / 100.0)  # Confidence based on data points
+            confidence = min(
+                1.0, len(history) / 100.0
+            )  # Confidence based on data points
 
             predictions[orchestrator] = {
                 "predicted_load": predicted_load,
@@ -895,7 +954,9 @@ async def request_budget(
 async def release_compute_tokens(orchestrator: OrchestratorType, amount: int) -> bool:
     """Release compute tokens back to the pool"""
     allocator = get_resource_allocator()
-    return allocator.release_resources(orchestrator, ResourceType.COMPUTE_TOKENS, amount)
+    return allocator.release_resources(
+        orchestrator, ResourceType.COMPUTE_TOKENS, amount
+    )
 
 
 def switch_to_cost_optimization():
@@ -923,7 +984,9 @@ async def example_resource_allocation():
     print("Sophia token request:", sophia_request)
 
     # Request resources for Artemis
-    artemis_request = await request_budget(OrchestratorType.ARTEMIS, 25.0, ResourcePriority.NORMAL)
+    artemis_request = await request_budget(
+        OrchestratorType.ARTEMIS, 25.0, ResourcePriority.NORMAL
+    )
     print("Artemis budget request:", artemis_request)
 
     # Check allocation status

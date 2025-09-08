@@ -126,19 +126,29 @@ def update_continue_config(models: List[Dict[str, Any]]) -> bool:
         # 3. Debug: DeepSeek (temp 0.1) - "Precision Debugger" for low-variance troubleshooting
 
         # Find appropriate models for each role
-        strategy_model = next((m for m in models if "claude" in m["id"].lower()), models[0])
+        strategy_model = next(
+            (m for m in models if "claude" in m["id"].lower()), models[0]
+        )
         coding_model = next(
-            (m for m in models if "coder" in m["id"].lower() or "code" in m["id"].lower()),
+            (
+                m
+                for m in models
+                if "coder" in m["id"].lower() or "code" in m["id"].lower()
+            ),
             models[0],
         )
-        debug_model = next((m for m in models if "deepseek" in m["id"].lower()), models[1])
+        debug_model = next(
+            (m for m in models if "deepseek" in m["id"].lower()), models[1]
+        )
 
         # Update model configurations
         if "models" not in config:
             config["models"] = []
 
         # Remove existing models (keep non-OpenRouter ones)
-        config["models"] = [m for m in config["models"] if not m.get("provider") == "openrouter"]
+        config["models"] = [
+            m for m in config["models"] if not m.get("provider") == "openrouter"
+        ]
 
         # Add updated models
         config["models"].extend(
@@ -257,11 +267,17 @@ def main():
 
             # Check if config has expected models
             model_count = len(
-                [m for m in config.get("models", []) if m.get("provider") == "openrouter"]
+                [
+                    m
+                    for m in config.get("models", [])
+                    if m.get("provider") == "openrouter"
+                ]
             )
 
             if model_count >= 3:
-                logger.info(f"Self-audit passed: {model_count} OpenRouter models configured")
+                logger.info(
+                    f"Self-audit passed: {model_count} OpenRouter models configured"
+                )
             else:
                 logger.warning(
                     f"Self-audit warning: Only {model_count} OpenRouter models configured"

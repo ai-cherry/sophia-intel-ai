@@ -80,7 +80,9 @@ class OptimizedCrossEncoderReranker:
     - Score combination strategies
     """
 
-    def __init__(self, redis_client: redis.Redis, config: Optional[RerankingConfig] = None):
+    def __init__(
+        self, redis_client: redis.Redis, config: Optional[RerankingConfig] = None
+    ):
         self.redis = redis_client
         self.config = config or RerankingConfig()
 
@@ -91,7 +93,8 @@ class OptimizedCrossEncoderReranker:
 
         # Thread pool for async inference
         self.executor = ThreadPoolExecutor(
-            max_workers=self.config.max_concurrent_batches, thread_name_prefix="reranker"
+            max_workers=self.config.max_concurrent_batches,
+            thread_name_prefix="reranker",
         )
 
         # Metrics tracking
@@ -314,7 +317,9 @@ class OptimizedCrossEncoderReranker:
         """Generate cache key for query-document pair"""
 
         # Create deterministic key from query and document content
-        content_hash = hashlib.md5(f"{result.title} {result.content}".encode()).hexdigest()
+        content_hash = hashlib.md5(
+            f"{result.title} {result.content}".encode()
+        ).hexdigest()
 
         query_hash = hashlib.md5(query.encode()).hexdigest()
 
@@ -348,7 +353,9 @@ class OptimizedCrossEncoderReranker:
 
         return prepared
 
-    def _filter_rerank_candidates(self, results: List[RerankingResult]) -> List[RerankingResult]:
+    def _filter_rerank_candidates(
+        self, results: List[RerankingResult]
+    ) -> List[RerankingResult]:
         """Filter results that should be reranked"""
 
         candidates = []
@@ -375,7 +382,9 @@ class OptimizedCrossEncoderReranker:
         """Combine reranked and non-reranked results"""
 
         # Sort reranked results by combined score
-        reranked.sort(key=lambda x: x.metadata.get("combined_score", x.rerank_score), reverse=True)
+        reranked.sort(
+            key=lambda x: x.metadata.get("combined_score", x.rerank_score), reverse=True
+        )
 
         # Preserve top K from original ranking if requested
         if preserve_top_k > 0:
@@ -395,7 +404,9 @@ class OptimizedCrossEncoderReranker:
 
         return final_results
 
-    def _fallback_ranking(self, results: List[RerankingResult]) -> List[RerankingResult]:
+    def _fallback_ranking(
+        self, results: List[RerankingResult]
+    ) -> List[RerankingResult]:
         """Fallback ranking when reranking is not available"""
 
         # Sort by original score
@@ -443,7 +454,9 @@ class OptimizedCrossEncoderReranker:
         """Load the cross-encoder model (runs in thread pool)"""
 
         model = CrossEncoder(
-            self.config.model_name, max_length=self.config.max_length, device=self.device
+            self.config.model_name,
+            max_length=self.config.max_length,
+            device=self.device,
         )
 
         # Set to evaluation mode
@@ -460,7 +473,9 @@ class OptimizedCrossEncoderReranker:
         """Generate comprehensive reranking metadata"""
 
         # Calculate ranking changes
-        original_top_10 = [r.get("id", f"result_{i}") for i, r in enumerate(original_results[:10])]
+        original_top_10 = [
+            r.get("id", f"result_{i}") for i, r in enumerate(original_results[:10])
+        ]
         final_top_10 = [r.id for r in final_results[:10]]
 
         top_10_changes = len(set(original_top_10) ^ set(final_top_10))
@@ -470,7 +485,9 @@ class OptimizedCrossEncoderReranker:
         score_changes = []
         for result in final_results:
             if "rerank_score_raw" in result.metadata:
-                score_change = result.metadata["rerank_score_raw"] - result.original_score
+                score_change = (
+                    result.metadata["rerank_score_raw"] - result.original_score
+                )
                 score_changes.append(score_change)
 
         self._metrics.avg_score_change = np.mean(score_changes) if score_changes else 0
@@ -501,7 +518,8 @@ class OptimizedCrossEncoderReranker:
             },
             "performance_metrics": {
                 "results_per_second": (
-                    self._metrics.reranked_results / max(0.001, self._metrics.total_time_ms / 1000)
+                    self._metrics.reranked_results
+                    / max(0.001, self._metrics.total_time_ms / 1000)
                 ),
                 "inference_efficiency": (
                     (
@@ -548,7 +566,9 @@ class OptimizedCrossEncoderReranker:
             },
         }
 
-    async def warm_up_model(self, sample_queries: List[str], sample_documents: List[str]):
+    async def warm_up_model(
+        self, sample_queries: List[str], sample_documents: List[str]
+    ):
         """Warm up the model with sample queries"""
 
         if not self.model or not sample_queries or not sample_documents:

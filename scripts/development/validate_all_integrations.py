@@ -115,14 +115,26 @@ def export_working_config():
         "timestamp": datetime.now().isoformat(),
         "working_providers": {
             "portkey": [
-                {"name": "OpenAI", "key": "openai-vk-190a60", "models": ["gpt-3.5-turbo", "gpt-4"]},
+                {
+                    "name": "OpenAI",
+                    "key": "openai-vk-190a60",
+                    "models": ["gpt-3.5-turbo", "gpt-4"],
+                },
                 {
                     "name": "Anthropic",
                     "key": "anthropic-vk-b42804",
                     "models": ["claude-3-haiku-20240307"],
                 },
-                {"name": "DeepSeek", "key": "deepseek-vk-24102f", "models": ["deepseek-chat"]},
-                {"name": "Mistral", "key": "mistral-vk-f92861", "models": ["mistral-small-latest"]},
+                {
+                    "name": "DeepSeek",
+                    "key": "deepseek-vk-24102f",
+                    "models": ["deepseek-chat"],
+                },
+                {
+                    "name": "Mistral",
+                    "key": "mistral-vk-f92861",
+                    "models": ["mistral-small-latest"],
+                },
                 {
                     "name": "Together",
                     "key": "together-ai-670469",
@@ -195,7 +207,9 @@ def main():
     total_count = len(portkey_results)
 
     print(f"\n✅ PORTKEY INTEGRATION: {working_count}/{total_count} providers working")
-    print(f"✅ UNIFIED KEYS: All {unified_status['total_virtual_keys']} virtual keys configured")
+    print(
+        f"✅ UNIFIED KEYS: All {unified_status['total_virtual_keys']} virtual keys configured"
+    )
     print(f"✅ DIRECT APIS: {unified_status['total_direct_keys']} keys available")
     print("✅ ORCHESTRATORS: Ready for production")
 

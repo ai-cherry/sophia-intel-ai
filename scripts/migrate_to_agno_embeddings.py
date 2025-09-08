@@ -30,9 +30,18 @@ MIGRATION_PATTERNS = [
     (r"DualTierEmbedder\(\)", "AgnoEmbeddingService()"),
     (r"AdvancedEmbeddingRouter\(\)", "AgnoEmbeddingService()"),
     # Method calls
-    (r"pipeline\.generate_embeddings\((.*?)\)", r"await service.embed(EmbeddingRequest(texts=\1))"),
-    (r"embedder\.embed_single\((.*?)\)", r"await service.embed(EmbeddingRequest(texts=[\1]))"),
-    (r"embedder\.embed_batch\((.*?)\)", r"await service.embed(EmbeddingRequest(texts=\1))"),
+    (
+        r"pipeline\.generate_embeddings\((.*?)\)",
+        r"await service.embed(EmbeddingRequest(texts=\1))",
+    ),
+    (
+        r"embedder\.embed_single\((.*?)\)",
+        r"await service.embed(EmbeddingRequest(texts=[\1]))",
+    ),
+    (
+        r"embedder\.embed_batch\((.*?)\)",
+        r"await service.embed(EmbeddingRequest(texts=\1))",
+    ),
 ]
 
 # Files to migrate
@@ -170,11 +179,15 @@ def update_method_signatures(content: str) -> str:
 
     # Update embedding method calls
     content = re.sub(
-        r"generate_embeddings\(\s*texts=([^,\)]+)", r"embed(EmbeddingRequest(texts=\1)", content
+        r"generate_embeddings\(\s*texts=([^,\)]+)",
+        r"embed(EmbeddingRequest(texts=\1)",
+        content,
     )
 
     # Update embedding response handling
-    content = re.sub(r"for result in results:", r"for embedding in response.embeddings:", content)
+    content = re.sub(
+        r"for result in results:", r"for embedding in response.embeddings:", content
+    )
 
     return content
 
@@ -360,7 +373,9 @@ def main():
 
     parser = argparse.ArgumentParser(description="Migrate to Agno embedding service")
     parser.add_argument("--dry-run", action="store_true", help="Don't write changes")
-    parser.add_argument("--create-examples", action="store_true", help="Create example files")
+    parser.add_argument(
+        "--create-examples", action="store_true", help="Create example files"
+    )
     parser.add_argument("--path", default=".", help="Base path to search")
 
     args = parser.parse_args()

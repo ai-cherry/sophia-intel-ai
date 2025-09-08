@@ -170,20 +170,18 @@ class MemoryIntegratedLearningSystem:
         metadata: Optional[dict[str, Any]] = None,
     ) -> MemoryVector:
         """Create vector embedding for learning content"""
-        with tracer.start_span("create_learning_vector", kind=SpanKind.INTERNAL) as span:
+        with tracer.start_span(
+            "create_learning_vector", kind=SpanKind.INTERNAL
+        ) as span:
             # Generate content hash and embedding
             if isinstance(content, str):
                 content_text = content
                 content_hash = str(hash(content))
             elif isinstance(content, LearningExperience):
-                content_text = (
-                    f"{content.problem_type} {content.solution} {content.problem_context}"
-                )
+                content_text = f"{content.problem_type} {content.solution} {content.problem_context}"
                 content_hash = content.id
             elif isinstance(content, LearnedKnowledge):
-                content_text = (
-                    f"{content.knowledge_type.value} {content.pattern} {content.conditions}"
-                )
+                content_text = f"{content.knowledge_type.value} {content.pattern} {content.conditions}"
                 content_hash = content.id
             else:
                 content_text = str(content)
@@ -223,7 +221,10 @@ class MemoryIntegratedLearningSystem:
             return vector
 
     async def find_similar_learning_vectors(
-        self, query_vector: MemoryVector, limit: int = 10, similarity_threshold: float = 0.5
+        self,
+        query_vector: MemoryVector,
+        limit: int = 10,
+        similarity_threshold: float = 0.5,
     ) -> list[tuple[MemoryVector, float]]:
         """Find similar learning vectors using cosine similarity"""
         with tracer.start_span("find_similar_vectors", kind=SpanKind.INTERNAL) as span:
@@ -253,7 +254,10 @@ class MemoryIntegratedLearningSystem:
             return results
 
     async def semantic_search(
-        self, query_text: str, content_types: Optional[list[str]] = None, limit: int = 10
+        self,
+        query_text: str,
+        content_types: Optional[list[str]] = None,
+        limit: int = 10,
     ) -> list[dict[str, Any]]:
         """Perform semantic search across learning content"""
         # Create query vector
@@ -291,9 +295,13 @@ class MemoryIntegratedLearningSystem:
                     result["vector_id"] = vector.vector_id
                     results.append(result)
             except Exception as e:
-                logger.warning(f"Failed to retrieve content for vector {vector.vector_id}: {e}")
+                logger.warning(
+                    f"Failed to retrieve content for vector {vector.vector_id}: {e}"
+                )
 
-        logger.debug(f"🔎 Semantic search for '{query_text}' returned {len(results)} results")
+        logger.debug(
+            f"🔎 Semantic search for '{query_text}' returned {len(results)} results"
+        )
         return results
 
     def _generate_embedding(self, text: str) -> np.ndarray:
@@ -407,7 +415,9 @@ class MemoryIntegratedLearningSystem:
         supporting_experience: Optional[str] = None,
     ) -> TemporalRelationship:
         """Create temporal relationship between knowledge nodes"""
-        with tracer.start_span("create_temporal_relationship", kind=SpanKind.INTERNAL) as span:
+        with tracer.start_span(
+            "create_temporal_relationship", kind=SpanKind.INTERNAL
+        ) as span:
             relationship = TemporalRelationship(
                 relationship_id=f"rel_{uuid4().hex[:8]}",
                 source_node=source_node_id,
@@ -415,7 +425,9 @@ class MemoryIntegratedLearningSystem:
                 relationship_type=relationship_type,
                 strength=strength,
                 confidence=0.7,  # Initial confidence
-                supporting_experiences=[supporting_experience] if supporting_experience else [],
+                supporting_experiences=(
+                    [supporting_experience] if supporting_experience else []
+                ),
             )
 
             # Add to relationships
@@ -424,9 +436,13 @@ class MemoryIntegratedLearningSystem:
 
             # Update node relationships
             if source_node_id in self.knowledge_graph:
-                self.knowledge_graph[source_node_id].related_nodes.append(target_node_id)
+                self.knowledge_graph[source_node_id].related_nodes.append(
+                    target_node_id
+                )
             if target_node_id in self.knowledge_graph:
-                self.knowledge_graph[target_node_id].related_nodes.append(source_node_id)
+                self.knowledge_graph[target_node_id].related_nodes.append(
+                    source_node_id
+                )
 
             # Persist to memory store
             await self.memory_store.store_memory(
@@ -445,7 +461,9 @@ class MemoryIntegratedLearningSystem:
             span.set_attribute("relationship.type", relationship_type)
             span.set_attribute("relationship.strength", strength)
 
-            logger.debug(f"🔗 Created temporal relationship {relationship.relationship_id}")
+            logger.debug(
+                f"🔗 Created temporal relationship {relationship.relationship_id}"
+            )
             return relationship
 
     async def find_knowledge_paths(
@@ -472,11 +490,16 @@ class MemoryIntegratedLearningSystem:
 
         dfs_paths(source_node_id, target_node_id, [source_node_id], 0)
 
-        logger.debug(f"🛤️ Found {len(paths)} paths from {source_node_id} to {target_node_id}")
+        logger.debug(
+            f"🛤️ Found {len(paths)} paths from {source_node_id} to {target_node_id}"
+        )
         return paths
 
     async def get_related_knowledge(
-        self, node_id: str, relationship_types: Optional[list[str]] = None, max_depth: int = 2
+        self,
+        node_id: str,
+        relationship_types: Optional[list[str]] = None,
+        max_depth: int = 2,
     ) -> list[KnowledgeNode]:
         """Get related knowledge nodes within specified depth"""
         if node_id not in self.knowledge_graph:
@@ -503,7 +526,9 @@ class MemoryIntegratedLearningSystem:
                     include_relationship = True
 
                     if relationship_types:
-                        include_relationship = relationship.relationship_type in relationship_types
+                        include_relationship = (
+                            relationship.relationship_type in relationship_types
+                        )
 
                     if include_relationship:
                         if relationship.source_node == current_id:
@@ -513,14 +538,18 @@ class MemoryIntegratedLearningSystem:
 
         collect_related(node_id, 0)
 
-        logger.debug(f"🔍 Found {len(related_nodes)} related knowledge nodes for {node_id}")
+        logger.debug(
+            f"🔍 Found {len(related_nodes)} related knowledge nodes for {node_id}"
+        )
         return related_nodes
 
     # =============================================================================
     # WORKING MEMORY OPERATIONS
     # =============================================================================
 
-    async def add_to_working_memory(self, content: dict[str, Any], importance: float = 0.5):
+    async def add_to_working_memory(
+        self, content: dict[str, Any], importance: float = 0.5
+    ):
         """Add content to working memory with importance weighting"""
         # Create working memory entry
         entry = {
@@ -546,7 +575,10 @@ class MemoryIntegratedLearningSystem:
         if len(self.working_memory) > self.max_working_memory_size:
             # Remove least important and least recently accessed items
             self.working_memory.sort(
-                key=lambda x: (x["importance"] + x["access_count"] * 0.1, x["last_accessed"])
+                key=lambda x: (
+                    x["importance"] + x["access_count"] * 0.1,
+                    x["last_accessed"],
+                )
             )
 
             # Remove oldest entries
@@ -561,9 +593,13 @@ class MemoryIntegratedLearningSystem:
                     if v.metadata.get("entry_id") != removed_entry["id"]
                 ]
 
-        logger.debug(f"📝 Added to working memory: {entry['id']} (importance: {importance})")
+        logger.debug(
+            f"📝 Added to working memory: {entry['id']} (importance: {importance})"
+        )
 
-    async def search_working_memory(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def search_working_memory(
+        self, query: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Search working memory using semantic similarity"""
         if not self.working_memory_vectors:
             return []
@@ -600,7 +636,9 @@ class MemoryIntegratedLearningSystem:
                     results.append(entry_copy)
                     break
 
-        logger.debug(f"💭 Working memory search for '{query}' returned {len(results)} results")
+        logger.debug(
+            f"💭 Working memory search for '{query}' returned {len(results)} results"
+        )
         return results
 
     # =============================================================================
@@ -608,7 +646,10 @@ class MemoryIntegratedLearningSystem:
     # =============================================================================
 
     async def store_learning_episode(
-        self, experience: LearningExperience, context: dict[str, Any], outcome: dict[str, Any]
+        self,
+        experience: LearningExperience,
+        context: dict[str, Any],
+        outcome: dict[str, Any],
     ) -> str:
         """Store a complete learning episode for later replay"""
         episode = {
@@ -738,7 +779,9 @@ class MemoryIntegratedLearningSystem:
                     vector = MemoryVector(
                         vector_id=vector_id,
                         content_hash=metadata.get("content_hash", ""),
-                        embedding=np.random.rand(self.vector_dimension).astype(np.float32),
+                        embedding=np.random.rand(self.vector_dimension).astype(
+                            np.float32
+                        ),
                         metadata=metadata.get("metadata", {}),
                     )
                     self.vector_index[vector_id] = vector
@@ -792,7 +835,9 @@ class MemoryIntegratedLearningSystem:
         # Update node effectiveness scores
         for node in self.knowledge_graph.values():
             if node.total_applications > 0:
-                node.effectiveness_score = node.success_applications / node.total_applications
+                node.effectiveness_score = (
+                    node.success_applications / node.total_applications
+                )
             else:
                 node.effectiveness_score = 0.5  # Neutral for unused nodes
 
@@ -802,19 +847,25 @@ class MemoryIntegratedLearningSystem:
         """Get insights about memory system performance"""
         # Calculate knowledge graph metrics
         avg_node_effectiveness = (
-            np.mean([node.effectiveness_score for node in self.knowledge_graph.values()])
+            np.mean(
+                [node.effectiveness_score for node in self.knowledge_graph.values()]
+            )
             if self.knowledge_graph
             else 0.0
         )
 
         # Calculate relationship strength distribution
-        relationship_strengths = [rel.strength for rel in self.temporal_relationships.values()]
+        relationship_strengths = [
+            rel.strength for rel in self.temporal_relationships.values()
+        ]
         avg_relationship_strength = (
             np.mean(relationship_strengths) if relationship_strengths else 0.0
         )
 
         # Working memory utilization
-        working_memory_utilization = len(self.working_memory) / self.max_working_memory_size
+        working_memory_utilization = (
+            len(self.working_memory) / self.max_working_memory_size
+        )
 
         return {
             "memory_metrics": self.memory_metrics,
@@ -854,7 +905,9 @@ async def create_memory_integrated_learning(
     system = MemoryIntegratedLearningSystem(
         memory_store=memory_store,
         vector_dimension=config.get("vector_dimension", 128) if config else 128,
-        max_working_memory_size=config.get("max_working_memory_size", 1000) if config else 1000,
+        max_working_memory_size=(
+            config.get("max_working_memory_size", 1000) if config else 1000
+        ),
         knowledge_graph_max_nodes=(
             config.get("knowledge_graph_max_nodes", 10000) if config else 10000
         ),
@@ -883,7 +936,8 @@ if __name__ == "__main__":
 
         # Create memory-integrated learning system
         learning_system = await create_memory_integrated_learning(
-            memory_store, config={"vector_dimension": 64, "max_working_memory_size": 100}
+            memory_store,
+            config={"vector_dimension": 64, "max_working_memory_size": 100},
         )
 
         print("🧠💾 Memory-integrated learning system initialized")
@@ -917,7 +971,9 @@ if __name__ == "__main__":
         )
 
         # Search working memory
-        wm_results = await learning_system.search_working_memory("optimization insights", limit=3)
+        wm_results = await learning_system.search_working_memory(
+            "optimization insights", limit=3
+        )
         print(f"💭 Working memory search results: {len(wm_results)}")
 
         # Perform semantic search

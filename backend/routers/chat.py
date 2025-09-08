@@ -37,8 +37,12 @@ class ChatQueryResponse(BaseModel):
     """Chat query response model"""
 
     response: str = Field(..., description="Generated response")
-    sources: List[Dict[str, Any]] = Field(default_factory=list, description="Information sources")
-    confidence: float = Field(..., ge=0.0, le=1.0, description="Response confidence score")
+    sources: List[Dict[str, Any]] = Field(
+        default_factory=list, description="Information sources"
+    )
+    confidence: float = Field(
+        ..., ge=0.0, le=1.0, description="Response confidence score"
+    )
     processing_time: float = Field(..., description="Processing time in seconds")
     intent: Dict[str, Any] = Field(default_factory=dict, description="Detected intent")
     cached: bool = Field(default=False, description="Whether response was cached")
@@ -117,7 +121,9 @@ async def chat_query(
             cached=result.get("cached", False),
         )
 
-        logger.info(f"✅ Query processed successfully: confidence={response.confidence:.2f}")
+        logger.info(
+            f"✅ Query processed successfully: confidence={response.confidence:.2f}"
+        )
         return response
 
     except Exception as e:
@@ -137,7 +143,9 @@ async def chat_query(
 @require_auth
 @require_permission("domains.chat")
 async def get_chat_history(
-    page: int = 1, page_size: int = 20, user_context: Dict[str, Any] = Depends(get_user_context)
+    page: int = 1,
+    page_size: int = 20,
+    user_context: Dict[str, Any] = Depends(get_user_context),
 ) -> ChatHistoryResponse:
     """
     Get chat history for the current user
@@ -243,7 +251,9 @@ async def get_service_stats() -> ServiceStatsResponse:
 
 
 @router.post(
-    "/feedback", summary="Submit feedback", description="Submit feedback for a chat response"
+    "/feedback",
+    summary="Submit feedback",
+    description="Submit feedback for a chat response",
 )
 @require_auth
 @require_permission("domains.chat")
@@ -260,12 +270,14 @@ async def submit_feedback(
 
         if not conversation_id:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="conversation_id is required"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="conversation_id is required",
             )
 
         if not (1 <= rating <= 5):
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="rating must be between 1 and 5"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="rating must be between 1 and 5",
             )
 
         # Store feedback (mock implementation)
@@ -335,7 +347,11 @@ async def chat_health_check():
 
     except Exception as e:
         logger.error(f"❌ Health check failed: {e}")
-        return {"status": "unhealthy", "timestamp": datetime.now().isoformat(), "error": str(e)}
+        return {
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e),
+        }
 
 
 # Register router

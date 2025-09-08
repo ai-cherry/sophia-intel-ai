@@ -93,7 +93,11 @@ class TestFramework:
                 "e2e": "playwright",
                 "command": "npm test {file}",
             },
-            "go": {"unit": "go test", "integration": "go test", "command": "go test {file} -v"},
+            "go": {
+                "unit": "go test",
+                "integration": "go test",
+                "command": "go test {file} -v",
+            },
             "rust": {
                 "unit": "cargo test",
                 "integration": "cargo test",
@@ -242,7 +246,9 @@ class TestFramework:
                             {
                                 "name": node.name,
                                 "methods": [
-                                    n.name for n in node.body if isinstance(n, ast.FunctionDef)
+                                    n.name
+                                    for n in node.body
+                                    if isinstance(n, ast.FunctionDef)
                                 ],
                             }
                         )
@@ -471,14 +477,18 @@ def test_performance():
     def _execute_command(self, command: str) -> Tuple[str, str, int]:
         """Execute shell command and return output"""
         try:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=60)
+            result = subprocess.run(
+                command, shell=True, capture_output=True, text=True, timeout=60
+            )
             return result.stdout, result.stderr, result.returncode
         except subprocess.TimeoutExpired:
             return "", "Test execution timed out", 1
         except Exception as e:
             return "", str(e), 1
 
-    def _parse_test_output(self, output: Tuple[str, str, int], request: TestRequest) -> TestResult:
+    def _parse_test_output(
+        self, output: Tuple[str, str, int], request: TestRequest
+    ) -> TestResult:
         """Parse test execution output"""
         stdout, stderr, return_code = output
 
@@ -502,7 +512,9 @@ def test_performance():
         """Check test coverage"""
         coverage_command = self.coverage_tools.get(request.language, "")
         if coverage_command:
-            output = self._execute_command(coverage_command.format(file=request.code_path))
+            output = self._execute_command(
+                coverage_command.format(file=request.code_path)
+            )
             return self._extract_coverage_percentage(output[0])
         return 0.0
 
@@ -514,7 +526,9 @@ def test_performance():
             return float(match.group(1))
         return 0.0
 
-    def _parse_coverage_output(self, output: Tuple[str, str, int], language: str) -> Dict:
+    def _parse_coverage_output(
+        self, output: Tuple[str, str, int], language: str
+    ) -> Dict:
         """Parse coverage tool output"""
         stdout = output[0]
         coverage_data = {"total": 0, "lines": 0, "branches": 0}
@@ -538,9 +552,13 @@ def test_performance():
         recommendations = []
 
         if gaps.get("lines"):
-            recommendations.append(f"Add tests for {len(gaps['lines'])} uncovered lines")
+            recommendations.append(
+                f"Add tests for {len(gaps['lines'])} uncovered lines"
+            )
 
         if gaps.get("functions"):
-            recommendations.append(f"Add tests for {len(gaps['functions'])} uncovered functions")
+            recommendations.append(
+                f"Add tests for {len(gaps['functions'])} uncovered functions"
+            )
 
         return recommendations

@@ -246,7 +246,9 @@ class ClassificationEngine:
         if scores[best_classification] < 3:
             best_classification = KnowledgeClassification.OPERATIONAL
 
-        logger.debug(f"Classified {entity.name} as {best_classification.value} (scores: {scores})")
+        logger.debug(
+            f"Classified {entity.name} as {best_classification.value} (scores: {scores})"
+        )
         return best_classification
 
     async def determine_priority(self, entity: KnowledgeEntity) -> KnowledgePriority:
@@ -346,7 +348,12 @@ class ClassificationEngine:
         }
 
         # Check for explicit confidentiality markers
-        confidential_markers = ["confidential", "proprietary", "internal only", "do not share"]
+        confidential_markers = [
+            "confidential",
+            "proprietary",
+            "internal only",
+            "do not share",
+        ]
         for marker in confidential_markers:
             if marker in text.lower():
                 sensitivity["is_confidential"] = True

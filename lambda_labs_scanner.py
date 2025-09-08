@@ -51,7 +51,9 @@ class LambdaLabsScanner:
             if method == "GET":
                 response = requests.get(url, headers=self.headers, timeout=30)
             elif method == "POST":
-                response = requests.post(url, headers=self.headers, json=data, timeout=30)
+                response = requests.post(
+                    url, headers=self.headers, json=data, timeout=30
+                )
             else:
                 self.log(f"Unsupported method: {method}", "ERROR")
                 return None
@@ -62,7 +64,10 @@ class LambdaLabsScanner:
                 self.log("Authentication failed - check API key", "ERROR")
                 return None
             else:
-                self.log(f"API request failed: {response.status_code} - {response.text}", "ERROR")
+                self.log(
+                    f"API request failed: {response.status_code} - {response.text}",
+                    "ERROR",
+                )
                 return None
 
         except requests.exceptions.RequestException as e:
@@ -145,7 +150,9 @@ class LambdaLabsScanner:
                 "id": key.get("id", "unknown"),
                 "name": key.get("name", "unnamed"),
                 "public_key": (
-                    key.get("public_key", "")[:50] + "..." if key.get("public_key") else "unknown"
+                    key.get("public_key", "")[:50] + "..."
+                    if key.get("public_key")
+                    else "unknown"
                 ),
             }
             self.scan_results["ssh_keys"].append(key_info)
@@ -234,17 +241,25 @@ class LambdaLabsScanner:
         # Test SSH (port 22)
         try:
             result = subprocess.run(
-                ["nc", "-z", "-w", "5", ip_address, "22"], capture_output=True, timeout=10
+                ["nc", "-z", "-w", "5", ip_address, "22"],
+                capture_output=True,
+                timeout=10,
             )
             connectivity["ssh"] = result.returncode == 0
         except:
             connectivity["ssh"] = False
 
         # Test HTTP ports
-        for port, key in [(8080, "http_8080"), (3000, "http_3000"), (9090, "http_9090")]:
+        for port, key in [
+            (8080, "http_8080"),
+            (3000, "http_3000"),
+            (9090, "http_9090"),
+        ]:
             try:
                 result = subprocess.run(
-                    ["nc", "-z", "-w", "3", ip_address, str(port)], capture_output=True, timeout=5
+                    ["nc", "-z", "-w", "3", ip_address, str(port)],
+                    capture_output=True,
+                    timeout=5,
                 )
                 connectivity[key] = result.returncode == 0
             except:
@@ -261,12 +276,20 @@ class LambdaLabsScanner:
                 connectivity = self.test_connectivity(instance["public_ip"])
                 instance["connectivity"] = connectivity
 
-                self.log(f"📡 Connectivity for {instance['name']} ({instance['public_ip']}):")
+                self.log(
+                    f"📡 Connectivity for {instance['name']} ({instance['public_ip']}):"
+                )
                 self.log(f"   Ping: {'✅' if connectivity['ping'] else '❌'}")
                 self.log(f"   SSH: {'✅' if connectivity['ssh'] else '❌'}")
-                self.log(f"   Dashboard (8080): {'✅' if connectivity['http_8080'] else '❌'}")
-                self.log(f"   Grafana (3000): {'✅' if connectivity['http_3000'] else '❌'}")
-                self.log(f"   Prometheus (9090): {'✅' if connectivity['http_9090'] else '❌'}")
+                self.log(
+                    f"   Dashboard (8080): {'✅' if connectivity['http_8080'] else '❌'}"
+                )
+                self.log(
+                    f"   Grafana (3000): {'✅' if connectivity['http_3000'] else '❌'}"
+                )
+                self.log(
+                    f"   Prometheus (9090): {'✅' if connectivity['http_9090'] else '❌'}"
+                )
 
     def generate_recommendations(self):
         """Generate optimization recommendations"""
@@ -275,7 +298,9 @@ class LambdaLabsScanner:
         recommendations = []
 
         # Check for active instances
-        active_instances = [i for i in self.scan_results["instances"] if i["status"] == "active"]
+        active_instances = [
+            i for i in self.scan_results["instances"] if i["status"] == "active"
+        ]
         if not active_instances:
             recommendations.append(
                 {
@@ -351,10 +376,14 @@ class LambdaLabsScanner:
         """Generate deployment configuration based on scan results"""
         self.log("⚙️ Generating deployment configuration...")
 
-        active_instances = [i for i in self.scan_results["instances"] if i["status"] == "active"]
+        active_instances = [
+            i for i in self.scan_results["instances"] if i["status"] == "active"
+        ]
 
         if not active_instances:
-            self.log("No active instances found for deployment configuration", "WARNING")
+            self.log(
+                "No active instances found for deployment configuration", "WARNING"
+            )
             return
 
         # Use the first active instance as primary
@@ -422,7 +451,9 @@ class LambdaLabsScanner:
             if active_instances:
                 self.log("🎯 Ready for deployment!")
                 primary = active_instances[0]
-                self.log(f"   Primary Instance: {primary['name']} ({primary['public_ip']})")
+                self.log(
+                    f"   Primary Instance: {primary['name']} ({primary['public_ip']})"
+                )
                 self.log(f"   SSH Command: ssh ubuntu@{primary['public_ip']}")
             else:
                 self.log("⚠️ No active instances found - need to launch instance first")

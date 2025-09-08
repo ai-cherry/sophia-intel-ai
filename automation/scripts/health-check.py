@@ -180,7 +180,9 @@ class HealthChecker:
 
             # Get database info
             db_size = await conn.fetchval("SELECT pg_database_size(current_database())")
-            active_connections = await conn.fetchval("SELECT count(*) FROM pg_stat_activity")
+            active_connections = await conn.fetchval(
+                "SELECT count(*) FROM pg_stat_activity"
+            )
             version = await conn.fetchval("SELECT version()")
 
             response_time = time.time() - start_time
@@ -219,12 +221,16 @@ class HealthChecker:
         try:
             async with aiohttp.ClientSession() as session:
                 # Check readiness
-                async with session.get(f"{url}/v1/.well-known/ready", timeout=10) as resp:
+                async with session.get(
+                    f"{url}/v1/.well-known/ready", timeout=10
+                ) as resp:
                     if resp.status != 200:
                         raise Exception(f"Weaviate not ready: HTTP {resp.status}")
 
                 # Check liveness
-                async with session.get(f"{url}/v1/.well-known/live", timeout=10) as resp:
+                async with session.get(
+                    f"{url}/v1/.well-known/live", timeout=10
+                ) as resp:
                     if resp.status != 200:
                         raise Exception(f"Weaviate not live: HTTP {resp.status}")
 
@@ -284,11 +290,16 @@ class HealthChecker:
                             service_info = data.get("info", {})
                         except:
                             data = await resp.text()
-                            service_status = "healthy" if "ok" in data.lower() else "unknown"
+                            service_status = (
+                                "healthy" if "ok" in data.lower() else "unknown"
+                            )
                             service_info = {}
 
                         status = HealthStatus.HEALTHY
-                        if response_time > 3.0 or service_status.lower() in ["degraded", "warning"]:
+                        if response_time > 3.0 or service_status.lower() in [
+                            "degraded",
+                            "warning",
+                        ]:
                             status = HealthStatus.DEGRADED
 
                         return ComponentHealth(
@@ -330,8 +341,12 @@ class HealthChecker:
             ),
             "weaviate": os.getenv("WEAVIATE_URL", "http://localhost:8080"),
             "unified-api": os.getenv("UNIFIED_API_URL", "http://localhost:8003"),
-            "sophia-orchestrator": os.getenv("SOPHIA_ORCHESTRATOR_URL", "http://localhost:8006"),
-            "artemis-orchestrator": os.getenv("ARTEMIS_ORCHESTRATOR_URL", "http://localhost:8007"),
+            "sophia-orchestrator": os.getenv(
+                "SOPHIA_ORCHESTRATOR_URL", "http://localhost:8006"
+            ),
+            "artemis-orchestrator": os.getenv(
+                "ARTEMIS_ORCHESTRATOR_URL", "http://localhost:8007"
+            ),
         }
 
         # Run health checks concurrently
@@ -376,12 +391,20 @@ class HealthChecker:
             }.get(comp.status, 0.0)
 
             self.metrics["health_status"].labels(component=comp.name).set(status_value)
-            self.metrics["response_time"].labels(component=comp.name).set(comp.response_time)
-            self.metrics["check_total"].labels(component=comp.name, status=comp.status.value).inc()
+            self.metrics["response_time"].labels(component=comp.name).set(
+                comp.response_time
+            )
+            self.metrics["check_total"].labels(
+                component=comp.name, status=comp.status.value
+            ).inc()
 
         # Determine overall status
-        unhealthy_count = sum(1 for c in valid_components if c.status == HealthStatus.UNHEALTHY)
-        degraded_count = sum(1 for c in valid_components if c.status == HealthStatus.DEGRADED)
+        unhealthy_count = sum(
+            1 for c in valid_components if c.status == HealthStatus.UNHEALTHY
+        )
+        degraded_count = sum(
+            1 for c in valid_components if c.status == HealthStatus.DEGRADED
+        )
 
         if unhealthy_count > 0:
             overall_status = HealthStatus.UNHEALTHY
@@ -410,7 +433,9 @@ class HealthChecker:
                 if valid_components
                 else 0
             ),
-            "max_response_time": max((c.response_time for c in valid_components), default=0),
+            "max_response_time": max(
+                (c.response_time for c in valid_components), default=0
+            ),
             "health_check_duration": sum(c.response_time for c in valid_components),
         }
 
@@ -468,10 +493,14 @@ async def readiness_check():
                         1 for c in health.components if c.status == HealthStatus.HEALTHY
                     ),
                     "degraded": sum(
-                        1 for c in health.components if c.status == HealthStatus.DEGRADED
+                        1
+                        for c in health.components
+                        if c.status == HealthStatus.DEGRADED
                     ),
                     "unhealthy": sum(
-                        1 for c in health.components if c.status == HealthStatus.UNHEALTHY
+                        1
+                        for c in health.components
+                        if c.status == HealthStatus.UNHEALTHY
                     ),
                 },
             },
@@ -485,7 +514,9 @@ async def readiness_check():
 @app.get("/liveness")
 async def liveness_check():
     """Kubernetes liveness probe endpoint"""
-    return JSONResponse(content={"alive": True, "timestamp": datetime.utcnow().isoformat()})
+    return JSONResponse(
+        content={"alive": True, "timestamp": datetime.utcnow().isoformat()}
+    )
 
 
 @app.get("/metrics")
@@ -510,7 +541,9 @@ async def component_health(component_name: str):
 
     component = next((c for c in health.components if c.name == component_name), None)
     if not component:
-        raise HTTPException(status_code=404, detail=f"Component {component_name} not found")
+        raise HTTPException(
+            status_code=404, detail=f"Component {component_name} not found"
+        )
 
     return component.to_dict()
 
@@ -524,7 +557,9 @@ async def main():
     parser.add_argument(
         "--check-only", action="store_true", help="Run single health check and exit"
     )
-    parser.add_argument("--format", choices=["json", "text"], default="json", help="Output format")
+    parser.add_argument(
+        "--format", choices=["json", "text"], default="json", help="Output format"
+    )
 
     args = parser.parse_args()
 

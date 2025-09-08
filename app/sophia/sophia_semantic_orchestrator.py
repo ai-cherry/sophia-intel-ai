@@ -138,7 +138,13 @@ class SemanticBusinessLayer:
             },
             "customer": {
                 "entities": ["customer", "segment", "cohort", "journey"],
-                "metrics": ["satisfaction", "nps", "churn", "retention", "health_score"],
+                "metrics": [
+                    "satisfaction",
+                    "nps",
+                    "churn",
+                    "retention",
+                    "health_score",
+                ],
             },
         }
 
@@ -306,12 +312,16 @@ class InsightSynthesizer:
         insights.extend(anomaly_insights)
 
         # Find correlations
-        correlation_insights = await self._find_correlations(data_sources, semantic_query)
+        correlation_insights = await self._find_correlations(
+            data_sources, semantic_query
+        )
         insights.extend(correlation_insights)
 
         # Generate predictions if enough data
         if self._has_sufficient_data(data_sources):
-            prediction_insights = await self._generate_predictions(data_sources, semantic_query)
+            prediction_insights = await self._generate_predictions(
+                data_sources, semantic_query
+            )
             insights.extend(prediction_insights)
 
         # Identify opportunities and risks
@@ -479,7 +489,9 @@ class InsightSynthesizer:
         # Simplified check
         return len(data_sources) >= 2
 
-    def _validate_insights(self, insights: list[SemanticInsight]) -> list[SemanticInsight]:
+    def _validate_insights(
+        self, insights: list[SemanticInsight]
+    ) -> list[SemanticInsight]:
         """Validate and cross-reference insights"""
         validated = []
 
@@ -494,7 +506,9 @@ class InsightSynthesizer:
 
         return validated
 
-    def _contradicts(self, insight1: SemanticInsight, insight2: SemanticInsight) -> bool:
+    def _contradicts(
+        self, insight1: SemanticInsight, insight2: SemanticInsight
+    ) -> bool:
         """Check if two insights contradict each other"""
         # Simplified contradiction check
         return False
@@ -618,7 +632,9 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             domain=self._determine_domain(semantic_query),
             task_type="business_analysis",
             user_expertise=(
-                context.get("user_expertise", "intermediate") if context else "intermediate"
+                context.get("user_expertise", "intermediate")
+                if context
+                else "intermediate"
             ),
             constraints=["accuracy", "timeliness", "actionability"],
         )
@@ -631,7 +647,9 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         data_results = await self._gather_multi_source_data(gathering_plan)
 
         # Synthesize insights
-        insights = await self.insight_synthesizer.synthesize(data_results, semantic_query)
+        insights = await self.insight_synthesizer.synthesize(
+            data_results, semantic_query
+        )
 
         # Generate report
         report = self._generate_insight_report(semantic_query, insights, data_results)
@@ -675,7 +693,9 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
 
         if any(m in ["revenue", "profit", "expense"] for m in query.metrics):
             sources.append(DataSourceType.FINANCIAL)
-            queries[DataSourceType.FINANCIAL] = [f"GET /metrics/{m}" for m in query.metrics]
+            queries[DataSourceType.FINANCIAL] = [
+                f"GET /metrics/{m}" for m in query.metrics
+            ]
 
         if "campaign" in query.entities or "marketing" in str(query.intent):
             sources.append(DataSourceType.ANALYTICS)
@@ -689,7 +709,9 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             parallel=True,
         )
 
-    async def _gather_multi_source_data(self, plan: DataGatheringPlan) -> dict[DataSourceType, Any]:
+    async def _gather_multi_source_data(
+        self, plan: DataGatheringPlan
+    ) -> dict[DataSourceType, Any]:
         """Gather data from multiple sources according to plan"""
         results = {}
 
@@ -711,14 +733,18 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             for source in sorted(plan.sources, key=lambda s: plan.priority.get(s, 999)):
                 if source in self.data_sources:
                     try:
-                        data = await self._fetch_from_source(source, plan.queries.get(source, []))
+                        data = await self._fetch_from_source(
+                            source, plan.queries.get(source, [])
+                        )
                         results[source] = data
                     except Exception as e:
                         logger.error(f"Failed to fetch from {source}: {e}")
 
         return results
 
-    async def _fetch_from_source(self, source: DataSourceType, queries: list[str]) -> Any:
+    async def _fetch_from_source(
+        self, source: DataSourceType, queries: list[str]
+    ) -> Any:
         """Fetch data from a specific source"""
         # This would use actual connectors
         # Returning mock data for now
@@ -791,13 +817,19 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
             supporting_data.append(
                 {
                     "source": source.value,
-                    "records": len(data.get("data", [])) if isinstance(data, dict) else 0,
-                    "timestamp": data.get("timestamp") if isinstance(data, dict) else None,
+                    "records": (
+                        len(data.get("data", [])) if isinstance(data, dict) else 0
+                    ),
+                    "timestamp": (
+                        data.get("timestamp") if isinstance(data, dict) else None
+                    ),
                 }
             )
 
         # Calculate overall confidence
-        avg_confidence = sum(i.confidence for i in insights) / len(insights) if insights else 0.5
+        avg_confidence = (
+            sum(i.confidence for i in insights) / len(insights) if insights else 0.5
+        )
 
         return InsightReport(
             executive_summary=exec_summary,
@@ -820,7 +852,9 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         summary = f"Analysis of {', '.join(query.metrics)} "
 
         if query.time_range:
-            summary += f"from {query.time_range[0].date()} to {query.time_range[1].date()} "
+            summary += (
+                f"from {query.time_range[0].date()} to {query.time_range[1].date()} "
+            )
 
         summary += f"reveals {len(insights)} key insights. "
 
@@ -829,15 +863,21 @@ class SophiaSemanticOrchestrator(BaseOrchestrator):
         summary += f"Most notably, {top_insight.description.lower()}. "
 
         # Add overall sentiment
-        positive_insights = sum(1 for i in insights if i.type == InsightType.OPPORTUNITY)
+        positive_insights = sum(
+            1 for i in insights if i.type == InsightType.OPPORTUNITY
+        )
         negative_insights = sum(1 for i in insights if i.type == InsightType.RISK)
 
         if positive_insights > negative_insights:
-            summary += "Overall outlook is positive with significant growth opportunities."
+            summary += (
+                "Overall outlook is positive with significant growth opportunities."
+            )
         elif negative_insights > positive_insights:
             summary += "Several risks require immediate attention and mitigation."
         else:
-            summary += "Mixed signals suggest careful monitoring and strategic adjustment."
+            summary += (
+                "Mixed signals suggest careful monitoring and strategic adjustment."
+            )
 
         return summary
 

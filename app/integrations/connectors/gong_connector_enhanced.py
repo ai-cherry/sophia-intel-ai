@@ -166,7 +166,8 @@ class GongConnectorEnhanced:
         # HTTP session
         auth = BasicAuth(self.access_key, self.client_secret)
         self.session = aiohttp.ClientSession(
-            auth=auth, headers={"Accept": "application/json", "Content-Type": "application/json"}
+            auth=auth,
+            headers={"Accept": "application/json", "Content-Type": "application/json"},
         )
 
         # Ensure database schema exists
@@ -287,7 +288,9 @@ class GongConnectorEnhanced:
             }
 
             # Check if class exists
-            existing_classes = [c["class"] for c in self.weaviate_client.schema.get()["classes"]]
+            existing_classes = [
+                c["class"] for c in self.weaviate_client.schema.get()["classes"]
+            ]
             if "GongTranscriptChunk" not in existing_classes:
                 self.weaviate_client.schema.create_class(schema)
                 logger.info("Weaviate schema created for GongTranscriptChunk")
@@ -308,13 +311,17 @@ class GongConnectorEnhanced:
                 self.request_times[0] + timedelta(seconds=self.rate_limit_period) - now
             ).total_seconds()
             if sleep_time > 0:
-                logger.info(f"Rate limit reached, sleeping for {sleep_time:.2f} seconds")
+                logger.info(
+                    f"Rate limit reached, sleeping for {sleep_time:.2f} seconds"
+                )
                 await asyncio.sleep(sleep_time)
 
         # Record this request
         self.request_times.append(now)
 
-    @retry(wait=wait_exponential(multiplier=1, min=1, max=60), stop=stop_after_attempt(3))
+    @retry(
+        wait=wait_exponential(multiplier=1, min=1, max=60), stop=stop_after_attempt(3)
+    )
     async def _make_request(
         self,
         endpoint: GongEndpoint,
@@ -373,7 +380,9 @@ class GongConnectorEnhanced:
 
         # Cache response
         if use_cache and response:
-            await self.redis_client.setex(cache_key, self.cache_ttl, json.dumps(response))
+            await self.redis_client.setex(
+                cache_key, self.cache_ttl, json.dumps(response)
+            )
 
         return response
 
@@ -414,7 +423,9 @@ class GongConnectorEnhanced:
 
         # Cache response
         if use_cache and response:
-            await self.redis_client.setex(cache_key, self.cache_ttl, json.dumps(response))
+            await self.redis_client.setex(
+                cache_key, self.cache_ttl, json.dumps(response)
+            )
 
         return response
 
@@ -430,7 +441,9 @@ class GongConnectorEnhanced:
         if not to_date:
             to_date = datetime.now()
 
-        call_filter = CallFilter(fromDateTime=from_date.isoformat(), toDateTime=to_date.isoformat())
+        call_filter = CallFilter(
+            fromDateTime=from_date.isoformat(), toDateTime=to_date.isoformat()
+        )
 
         request_body = {**call_filter.to_dict(), "cursor": None, "limit": limit}
 
@@ -469,7 +482,9 @@ class GongConnectorEnhanced:
             if current_speaker and speaker != current_speaker:
                 # Save current chunk
                 if current_text:
-                    chunk_id = hashlib.md5(f"{call_id}_{chunk_index}".encode()).hexdigest()
+                    chunk_id = hashlib.md5(
+                        f"{call_id}_{chunk_index}".encode()
+                    ).hexdigest()
                     chunks.append(
                         TranscriptChunk(
                             call_id=call_id,
@@ -582,7 +597,9 @@ class GongConnectorEnhanced:
                 call_data.get("id"),
                 call_data.get("id"),
                 call_data.get("title", ""),
-                datetime.fromisoformat(call_data.get("scheduled", datetime.now().isoformat())),
+                datetime.fromisoformat(
+                    call_data.get("scheduled", datetime.now().isoformat())
+                ),
                 call_data.get("duration", 0),
                 call_data.get("direction", "unknown"),
                 call_data.get("outcome", ""),
@@ -610,7 +627,9 @@ class GongConnectorEnhanced:
 
     async def process_webhook(self, event_type: str, payload: dict[str, Any]):
         """Process incoming webhook from Gong"""
-        webhook_id = payload.get("webhookId", hashlib.md5(json.dumps(payload).encode()).hexdigest())
+        webhook_id = payload.get(
+            "webhookId", hashlib.md5(json.dumps(payload).encode()).hexdigest()
+        )
         call_id = payload.get("callId")
 
         async with self.pg_pool.acquire() as conn:
@@ -688,7 +707,9 @@ class GongConnectorEnhanced:
 
             # Get call metadata for context
             extensive_data = await self.get_extensive_calls(call_filter)
-            call_metadata = extensive_data.get("calls", [{}])[0] if extensive_data else {}
+            call_metadata = (
+                extensive_data.get("calls", [{}])[0] if extensive_data else {}
+            )
 
             # Store in Weaviate
             await self.store_chunks_in_weaviate(chunks, call_metadata)
@@ -727,7 +748,12 @@ class GongConnectorEnhanced:
         include_extensive: bool = True,
     ) -> dict[str, Any]:
         """Batch process multiple calls efficiently"""
-        results = {"processed": [], "failed": [], "transcripts": {}, "extensive_data": {}}
+        results = {
+            "processed": [],
+            "failed": [],
+            "transcripts": {},
+            "extensive_data": {},
+        }
 
         # Process in batches
         for i in range(0, len(call_ids), batch_size):
@@ -773,11 +799,19 @@ class GongConnectorEnhanced:
             conditions = []
             if "speaker" in filters:
                 conditions.append(
-                    {"path": ["speaker"], "operator": "Equal", "valueString": filters["speaker"]}
+                    {
+                        "path": ["speaker"],
+                        "operator": "Equal",
+                        "valueString": filters["speaker"],
+                    }
                 )
             if "call_id" in filters:
                 conditions.append(
-                    {"path": ["callId"], "operator": "Equal", "valueString": filters["call_id"]}
+                    {
+                        "path": ["callId"],
+                        "operator": "Equal",
+                        "valueString": filters["call_id"],
+                    }
                 )
 
             if conditions:
@@ -851,7 +885,12 @@ class GongConnectorEnhanced:
 
     async def health_check(self) -> dict[str, bool]:
         """Check health of all connections"""
-        health = {"gong_api": False, "postgres": False, "redis": False, "weaviate": False}
+        health = {
+            "gong_api": False,
+            "postgres": False,
+            "redis": False,
+            "weaviate": False,
+        }
 
         # Check Gong API
         try:
@@ -898,7 +937,8 @@ async def create_gong_connector(
             "GONG_CLIENT_SECRET",
             "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwNTQxNTA4ODUsImFjY2Vzc0tleSI6IlRWMzNCUFo1VU40NVFLWkNaMlVDQUtSWEhRNlEzTDVOIn0.zgPvDQQIvU1kvF_9ctjcKuqC5xKhlpZo7MH5v7AYufU",
         ),
-        postgres_url=postgres_url or os.getenv("DATABASE_URL", "postgresql://localhost/sophia"),
+        postgres_url=postgres_url
+        or os.getenv("DATABASE_URL", "postgresql://localhost/sophia"),
         redis_url=redis_url or os.getenv("REDIS_URL", "redis://localhost:6379"),
         weaviate_url=weaviate_url or os.getenv("WEAVIATE_URL", "http://localhost:8080"),
         openai_api_key=os.getenv("OPENAI_API_KEY"),

@@ -60,7 +60,9 @@ class CircuitBreaker:
     Intelligent circuit breaker with adaptive recovery and comprehensive monitoring
     """
 
-    def __init__(self, name: str = "default", config: Optional[CircuitBreakerConfig] = None):
+    def __init__(
+        self, name: str = "default", config: Optional[CircuitBreakerConfig] = None
+    ):
         self.name = name
         self.config = config or CircuitBreakerConfig()
         self.stats = CircuitBreakerStats()
@@ -99,7 +101,8 @@ class CircuitBreaker:
             try:
                 # Execute function with timeout
                 result = await asyncio.wait_for(
-                    self._execute_function(func, *args, **kwargs), timeout=self.config.timeout
+                    self._execute_function(func, *args, **kwargs),
+                    timeout=self.config.timeout,
                 )
 
                 # Handle success
@@ -187,7 +190,9 @@ class CircuitBreaker:
             "successful_calls": self.stats.successful_calls,
             "failed_calls": self.stats.failed_calls,
             "circuit_opens": self.stats.circuit_opens,
-            "success_rate": (self.stats.successful_calls / max(self.stats.total_calls, 1) * 100),
+            "success_rate": (
+                self.stats.successful_calls / max(self.stats.total_calls, 1) * 100
+            ),
             "last_failure_time": self.stats.last_failure_time,
             "recent_failures": list(self.stats.failures),
         }

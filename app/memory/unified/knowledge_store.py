@@ -124,7 +124,9 @@ class KnowledgeStore:
         self.memory_interface = unified_memory
         self.namespace = "knowledge"
 
-    async def store_entity(self, entity: KnowledgeEntity, domain: Optional[str] = None) -> str:
+    async def store_entity(
+        self, entity: KnowledgeEntity, domain: Optional[str] = None
+    ) -> str:
         """Store a knowledge entity"""
 
         # Create comprehensive content for storage
@@ -160,7 +162,9 @@ class KnowledgeStore:
         logger.debug(f"Stored knowledge entity: {entity.name} ({memory_id})")
         return memory_id
 
-    async def store_fact(self, fact: FactualKnowledge, domain: Optional[str] = None) -> str:
+    async def store_fact(
+        self, fact: FactualKnowledge, domain: Optional[str] = None
+    ) -> str:
         """Store factual knowledge"""
 
         # Create comprehensive content for storage
@@ -190,7 +194,9 @@ class KnowledgeStore:
         # Store structured fact data
         await self._store_structured_fact(memory_id, fact)
 
-        logger.debug(f"Stored factual knowledge: {fact.statement[:50]}... ({memory_id})")
+        logger.debug(
+            f"Stored factual knowledge: {fact.statement[:50]}... ({memory_id})"
+        )
         return memory_id
 
     async def search_entities(
@@ -299,7 +305,10 @@ class KnowledgeStore:
         return enhanced_results
 
     async def get_entity_relationships(
-        self, entity_id: str, relationship_types: Optional[list[str]] = None, max_depth: int = 2
+        self,
+        entity_id: str,
+        relationship_types: Optional[list[str]] = None,
+        max_depth: int = 2,
     ) -> dict[str, Any]:
         """Get entity relationships as a graph"""
 
@@ -322,7 +331,10 @@ class KnowledgeStore:
         # Get direct relationships
         relationships = entity_data.get("relationships", [])
         for rel in relationships:
-            if not relationship_types or rel.get("relationship_type") in relationship_types:
+            if (
+                not relationship_types
+                or rel.get("relationship_type") in relationship_types
+            ):
                 graph["relationships"].append(rel)
 
                 # Add connected entity info if we have it
@@ -337,7 +349,9 @@ class KnowledgeStore:
 
         return graph
 
-    async def get_knowledge_summary(self, domain: Optional[str] = None) -> dict[str, Any]:
+    async def get_knowledge_summary(
+        self, domain: Optional[str] = None
+    ) -> dict[str, Any]:
         """Get summary of knowledge store contents"""
 
         # This would be implemented with more efficient aggregation queries
@@ -386,7 +400,9 @@ class KnowledgeStore:
         # Store updated data
         await self._store_structured_fact(fact_id, None, structured_data)
 
-        logger.info(f"Updated fact verification: {fact_id} -> {verification_status.value}")
+        logger.info(
+            f"Updated fact verification: {fact_id} -> {verification_status.value}"
+        )
         return True
 
     # Private helper methods
@@ -408,7 +424,11 @@ class KnowledgeStore:
 
         if entity.properties:
             content_parts.extend(
-                ["PROPERTIES:", *[f"• {k}: {v}" for k, v in entity.properties.items()], ""]
+                [
+                    "PROPERTIES:",
+                    *[f"• {k}: {v}" for k, v in entity.properties.items()],
+                    "",
+                ]
             )
 
         if entity.aliases:
@@ -427,7 +447,9 @@ class KnowledgeStore:
             )
 
         if entity.sources:
-            content_parts.extend(["SOURCES:", *[f"• {source}" for source in entity.sources], ""])
+            content_parts.extend(
+                ["SOURCES:", *[f"• {source}" for source in entity.sources], ""]
+            )
 
         return "\n".join(content_parts)
 
@@ -446,7 +468,9 @@ class KnowledgeStore:
         ]
 
         if fact.subject_entities:
-            content_parts.extend([f"SUBJECT ENTITIES: {', '.join(fact.subject_entities)}", ""])
+            content_parts.extend(
+                [f"SUBJECT ENTITIES: {', '.join(fact.subject_entities)}", ""]
+            )
 
         if fact.evidence:
             content_parts.extend(
@@ -454,10 +478,15 @@ class KnowledgeStore:
             )
 
         if fact.sources:
-            content_parts.extend(["SOURCES:", *[f"• {source}" for source in fact.sources], ""])
+            content_parts.extend(
+                ["SOURCES:", *[f"• {source}" for source in fact.sources], ""]
+            )
 
         content_parts.extend(
-            [f"CREATED: {fact.created_at.isoformat()}", f"UPDATED: {fact.updated_at.isoformat()}"]
+            [
+                f"CREATED: {fact.created_at.isoformat()}",
+                f"UPDATED: {fact.updated_at.isoformat()}",
+            ]
         )
 
         return "\n".join(content_parts)
@@ -476,7 +505,10 @@ class KnowledgeStore:
 
     def _determine_fact_priority(self, fact: FactualKnowledge) -> MemoryPriority:
         """Determine memory priority for facts"""
-        if fact.verification_status == VerificationStatus.VERIFIED and fact.confidence_score >= 0.9:
+        if (
+            fact.verification_status == VerificationStatus.VERIFIED
+            and fact.confidence_score >= 0.9
+        ):
             return MemoryPriority.HIGH
         elif fact.confidence_score >= 0.7:
             return MemoryPriority.STANDARD
@@ -529,8 +561,12 @@ class KnowledgeStore:
                 "verification_status": entity.verification_status.value,
                 "confidence_score": entity.confidence_score,
                 "sources": entity.sources,
-                "valid_from": entity.valid_from.isoformat() if entity.valid_from else None,
-                "valid_until": entity.valid_until.isoformat() if entity.valid_until else None,
+                "valid_from": (
+                    entity.valid_from.isoformat() if entity.valid_from else None
+                ),
+                "valid_until": (
+                    entity.valid_until.isoformat() if entity.valid_until else None
+                ),
                 "last_updated": entity.last_updated.isoformat(),
                 "domains": list(entity.domains),
                 "tags": list(entity.tags),
@@ -580,7 +616,9 @@ class KnowledgeStore:
             key, structured_data, ttl=86400 * 30, namespace="knowledge"  # 30 days
         )
 
-    async def _retrieve_structured_entity(self, entity_id: str) -> Optional[dict[str, Any]]:
+    async def _retrieve_structured_entity(
+        self, entity_id: str
+    ) -> Optional[dict[str, Any]]:
         """Retrieve structured entity data"""
 
         if not self.memory_interface.redis_manager:
@@ -588,7 +626,9 @@ class KnowledgeStore:
 
         try:
             key = f"entity_structured:{entity_id}"
-            data = await self.memory_interface.redis_manager.get(key, namespace="knowledge")
+            data = await self.memory_interface.redis_manager.get(
+                key, namespace="knowledge"
+            )
 
             if data:
                 import json
@@ -608,7 +648,9 @@ class KnowledgeStore:
 
         try:
             key = f"fact_structured:{fact_id}"
-            data = await self.memory_interface.redis_manager.get(key, namespace="knowledge")
+            data = await self.memory_interface.redis_manager.get(
+                key, namespace="knowledge"
+            )
 
             if data:
                 import json
@@ -630,11 +672,17 @@ class KnowledgeStore:
         for rel in entity.relationships:
             # Forward relationship: source -> target
             forward_key = f"relationships:{entity.entity_id}:{rel.relationship_type}"
-            await self.memory_interface.redis_manager.redis.sadd(forward_key, rel.target_entity)
+            await self.memory_interface.redis_manager.redis.sadd(
+                forward_key, rel.target_entity
+            )
 
             # Reverse relationship index: target <- source
-            reverse_key = f"reverse_relationships:{rel.target_entity}:{rel.relationship_type}"
-            await self.memory_interface.redis_manager.redis.sadd(reverse_key, entity.entity_id)
+            reverse_key = (
+                f"reverse_relationships:{rel.target_entity}:{rel.relationship_type}"
+            )
+            await self.memory_interface.redis_manager.redis.sadd(
+                reverse_key, entity.entity_id
+            )
 
 
 # Global knowledge store instance

@@ -33,7 +33,10 @@ class DynamicPortkeyClient:
 
     @with_circuit_breaker("external_api")
     def __init__(
-        self, portkey_api_key: str, openrouter_api_key: str, config_path: Optional[str] = None
+        self,
+        portkey_api_key: str,
+        openrouter_api_key: str,
+        config_path: Optional[str] = None,
     ):
         """
         Initialize dynamic Portkey client.
@@ -52,21 +55,29 @@ class DynamicPortkeyClient:
                 self.config = json.load(f)
         else:
             # Load default config
-            default_config_path = Path(__file__).parent.parent / "config" / "portkey_dynamic.json"
+            default_config_path = (
+                Path(__file__).parent.parent / "config" / "portkey_dynamic.json"
+            )
             with open(default_config_path) as f:
                 self.config = json.load(f)
 
         # Initialize OpenRouter client for model management
-        self.openrouter = OpenRouterLatest(api_key=openrouter_api_key, app_name="Sophia-Intel-AI")
+        self.openrouter = OpenRouterLatest(
+            api_key=openrouter_api_key, app_name="Sophia-Intel-AI"
+        )
 
         # Initialize Portkey client
-        self.client = Portkey(api_key=portkey_api_key, config=self._generate_portkey_config())
+        self.client = Portkey(
+            api_key=portkey_api_key, config=self._generate_portkey_config()
+        )
 
         # Alternative: Use OpenAI client with Portkey headers
         self.openai_client = AsyncOpenAI(
             api_key=portkey_api_key,
             base_url=PORTKEY_GATEWAY_URL,
-            default_headers={"x-portkey-config": json.dumps(self._generate_portkey_config())},
+            default_headers={
+                "x-portkey-config": json.dumps(self._generate_portkey_config())
+            },
         )
 
         # Model cache and health tracking
@@ -81,7 +92,10 @@ class DynamicPortkeyClient:
             "provider": "openrouter",
             "api_key": self.openrouter_key,
             "override_params": {
-                "headers": {"HTTP-Referer": "http://localhost:3000", "X-Title": "Sophia-Intel-AI"}
+                "headers": {
+                    "HTTP-Referer": "http://localhost:3000",
+                    "X-Title": "Sophia-Intel-AI",
+                }
             },
             "retry": {"attempts": 3, "on_status_codes": [429, 502, 503]},
         }
@@ -298,7 +312,9 @@ class DynamicPortkeyClient:
         return report
 
     @with_circuit_breaker("external_api")
-    def estimate_cost(self, model_id: str, prompt_tokens: int, completion_tokens: int) -> float:
+    def estimate_cost(
+        self, model_id: str, prompt_tokens: int, completion_tokens: int
+    ) -> float:
         """
         Estimate cost for a completion.
 
@@ -314,7 +330,9 @@ class DynamicPortkeyClient:
 
     @with_circuit_breaker("external_api")
     async def get_available_models(
-        self, tier: Optional[Union[str, ModelTier]] = None, max_cost: Optional[float] = None
+        self,
+        tier: Optional[Union[str, ModelTier]] = None,
+        max_cost: Optional[float] = None,
     ) -> list[str]:
         """
         Get list of available models matching criteria.
@@ -404,7 +422,9 @@ async def create_dynamic_client() -> DynamicPortkeyClient:
     )
 
 
-async def quick_completion(prompt: str, task: str = "general", budget: str = "balanced") -> str:
+async def quick_completion(
+    prompt: str, task: str = "general", budget: str = "balanced"
+) -> str:
     """Quick helper for single completions."""
     client = await create_dynamic_client()
 

@@ -141,19 +141,27 @@ class UnifiedConfigManager:
             return json.loads(override_file.read_text())
         return {}
 
-    def _merge_configs(self, base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+    def _merge_configs(
+        self, base: dict[str, Any], overlay: dict[str, Any]
+    ) -> dict[str, Any]:
         """Deep merge two configuration dictionaries"""
         result = base.copy()
 
         for key, value in overlay.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._merge_configs(result[key], value)
             else:
                 result[key] = value
 
         return result
 
-    def _overlay_env_vars(self, config: dict[str, Any], env_vars: dict[str, str]) -> dict[str, Any]:
+    def _overlay_env_vars(
+        self, config: dict[str, Any], env_vars: dict[str, str]
+    ) -> dict[str, Any]:
         """Overlay environment variables onto configuration"""
         result = config.copy()
 
@@ -191,7 +199,9 @@ class UnifiedConfigManager:
         else:
             current[final_key] = value
 
-    def get_service_config(self, service: str, environment: str = "development") -> dict[str, Any]:
+    def get_service_config(
+        self, service: str, environment: str = "development"
+    ) -> dict[str, Any]:
         """Get configuration for a specific service"""
         context = ConfigContext(environment=environment, service=service)
         return self.get_config(context)

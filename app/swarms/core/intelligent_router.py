@@ -200,7 +200,11 @@ class IntelligentRouter:
         """Initialize agent-specific model preferences"""
         return {
             AgentRole.ANALYST: {
-                "preferred_tiers": [ModelTier.SPECIALIZED, ModelTier.STANDARD, ModelTier.PREMIUM],
+                "preferred_tiers": [
+                    ModelTier.SPECIALIZED,
+                    ModelTier.STANDARD,
+                    ModelTier.PREMIUM,
+                ],
                 "quality_threshold": 0.85,
                 "cost_sensitivity": 0.6,
                 "specializations": ["research", "analysis"],
@@ -223,7 +227,9 @@ class IntelligentRouter:
         }
 
     async def route_request(
-        self, context: RoutingContext, strategy: RoutingStrategy = RoutingStrategy.BALANCED
+        self,
+        context: RoutingContext,
+        strategy: RoutingStrategy = RoutingStrategy.BALANCED,
     ) -> EnhancedRoutingDecision:
         """
         Route LLM request with intelligent decision making
@@ -260,7 +266,9 @@ class IntelligentRouter:
             # Fallback to basic routing
             basic_routing = self.portkey.route_request(
                 task_type=context.task_type,
-                estimated_tokens=context.workload_characteristics.get("estimated_tokens", 1000),
+                estimated_tokens=context.workload_characteristics.get(
+                    "estimated_tokens", 1000
+                ),
                 max_cost_usd=context.swarm_budget,
             )
 
@@ -275,12 +283,16 @@ class IntelligentRouter:
                 routing_strategy_used=RoutingStrategy.BALANCED,
             )
 
-    async def _route_cost_optimized(self, context: RoutingContext) -> EnhancedRoutingDecision:
+    async def _route_cost_optimized(
+        self, context: RoutingContext
+    ) -> EnhancedRoutingDecision:
         """Route with cost optimization priority"""
 
         # Get cheapest models that meet minimum quality threshold
         candidate_models = []
-        min_quality = max(0.7, context.quality_requirement - 0.1)  # Allow slightly lower quality
+        min_quality = max(
+            0.7, context.quality_requirement - 0.1
+        )  # Allow slightly lower quality
 
         for tier in [ModelTier.FAST, ModelTier.STANDARD, ModelTier.SPECIALIZED]:
             for model_config in self.model_tiers[tier]:
@@ -300,7 +312,9 @@ class IntelligentRouter:
 
         fallbacks = []
         for model_config, tier in candidate_models[1:3]:  # Up to 2 fallbacks
-            fallback_routing = await self._create_routing_decision(model_config, context)
+            fallback_routing = await self._create_routing_decision(
+                model_config, context
+            )
             fallbacks.append(fallback_routing)
 
         return EnhancedRoutingDecision(
@@ -308,7 +322,9 @@ class IntelligentRouter:
             fallback_choices=fallbacks,
             reasoning=f"Cost-optimized routing selected {primary_model['model']} for lowest cost while meeting quality threshold {min_quality}",
             confidence=0.8,
-            expected_performance=await self._get_model_performance(primary_model["model"]),
+            expected_performance=await self._get_model_performance(
+                primary_model["model"]
+            ),
             cost_estimation={
                 "primary": primary_routing.estimated_cost,
                 "fallbacks": [fb.estimated_cost for fb in fallbacks],
@@ -328,7 +344,9 @@ class IntelligentRouter:
 
         for tier in [ModelTier.PREMIUM, ModelTier.STANDARD, ModelTier.SPECIALIZED]:
             for model_config in self.model_tiers[tier]:
-                estimated_cost = model_config["cost_multiplier"] * 0.01  # Base cost estimate
+                estimated_cost = (
+                    model_config["cost_multiplier"] * 0.01
+                )  # Base cost estimate
                 if estimated_cost <= budget_per_request:
                     candidate_models.append((model_config, tier))
 
@@ -337,14 +355,18 @@ class IntelligentRouter:
 
         if not candidate_models:
             # Use premium models anyway, but flag budget risk
-            candidate_models = [(self.model_tiers[ModelTier.PREMIUM][0], ModelTier.PREMIUM)]
+            candidate_models = [
+                (self.model_tiers[ModelTier.PREMIUM][0], ModelTier.PREMIUM)
+            ]
 
         primary_model, primary_tier = candidate_models[0]
         primary_routing = await self._create_routing_decision(primary_model, context)
 
         fallbacks = []
         for model_config, tier in candidate_models[1:3]:
-            fallback_routing = await self._create_routing_decision(model_config, context)
+            fallback_routing = await self._create_routing_decision(
+                model_config, context
+            )
             fallbacks.append(fallback_routing)
 
         return EnhancedRoutingDecision(
@@ -352,16 +374,21 @@ class IntelligentRouter:
             fallback_choices=fallbacks,
             reasoning=f"Performance-optimized routing selected {primary_model['model']} for highest quality score {primary_model['quality_score']}",
             confidence=0.9,
-            expected_performance=await self._get_model_performance(primary_model["model"]),
+            expected_performance=await self._get_model_performance(
+                primary_model["model"]
+            ),
             cost_estimation={
                 "primary": primary_routing.estimated_cost,
-                "total_budget_usage": primary_routing.estimated_cost / context.swarm_budget,
+                "total_budget_usage": primary_routing.estimated_cost
+                / context.swarm_budget,
             },
             risk_assessment={"cost_overrun_risk": 0.4, "quality_risk": 0.1},
             routing_strategy_used=RoutingStrategy.PERFORMANCE_OPTIMIZED,
         )
 
-    async def _route_agent_specialized(self, context: RoutingContext) -> EnhancedRoutingDecision:
+    async def _route_agent_specialized(
+        self, context: RoutingContext
+    ) -> EnhancedRoutingDecision:
         """Route based on agent role specialization"""
 
         agent_prefs = self.agent_model_preferences.get(context.agent_role, {})
@@ -407,7 +434,9 @@ class IntelligentRouter:
 
         fallbacks = []
         for model_config, tier in candidate_models[1:2]:  # 1 fallback
-            fallback_routing = await self._create_routing_decision(model_config, context)
+            fallback_routing = await self._create_routing_decision(
+                model_config, context
+            )
             fallbacks.append(fallback_routing)
 
         return EnhancedRoutingDecision(
@@ -415,7 +444,9 @@ class IntelligentRouter:
             fallback_choices=fallbacks,
             reasoning=f"Agent-specialized routing for {context.agent_role.value} selected {primary_model['model']} based on role preferences and historical performance",
             confidence=0.85,
-            expected_performance=await self._get_model_performance(primary_model["model"]),
+            expected_performance=await self._get_model_performance(
+                primary_model["model"]
+            ),
             cost_estimation={"primary": primary_routing.estimated_cost},
             risk_assessment={"specialization_mismatch_risk": 0.2},
             routing_strategy_used=RoutingStrategy.AGENT_SPECIALIZED,
@@ -443,7 +474,9 @@ class IntelligentRouter:
                 cost_penalty = model_config["cost_multiplier"] / 10.0
 
                 # Combined score (weighted)
-                combined_score = 0.4 * base_score + 0.5 * adaptive_score - 0.1 * cost_penalty
+                combined_score = (
+                    0.4 * base_score + 0.5 * adaptive_score - 0.1 * cost_penalty
+                )
 
                 scored_models.append((model_config, tier, combined_score))
 
@@ -455,7 +488,9 @@ class IntelligentRouter:
 
         fallbacks = []
         for model_config, tier, _score in scored_models[1:3]:
-            fallback_routing = await self._create_routing_decision(model_config, context)
+            fallback_routing = await self._create_routing_decision(
+                model_config, context
+            )
             fallbacks.append(fallback_routing)
 
         return EnhancedRoutingDecision(
@@ -463,7 +498,9 @@ class IntelligentRouter:
             fallback_choices=fallbacks,
             reasoning=f"Adaptive routing selected {primary_model['model']} with combined score {primary_score:.2f} based on historical performance and current context",
             confidence=0.88,
-            expected_performance=await self._get_model_performance(primary_model["model"]),
+            expected_performance=await self._get_model_performance(
+                primary_model["model"]
+            ),
             cost_estimation={"primary": primary_routing.estimated_cost},
             risk_assessment={"adaptation_uncertainty": 0.15},
             routing_strategy_used=RoutingStrategy.ADAPTIVE,
@@ -484,11 +521,15 @@ class IntelligentRouter:
 
                 # Budget penalty if over target
                 budget_penalty = max(
-                    0, (estimated_cost - target_budget_per_request) / target_budget_per_request
+                    0,
+                    (estimated_cost - target_budget_per_request)
+                    / target_budget_per_request,
                 )
 
                 # Balanced score (equal weight to quality and cost efficiency)
-                balanced_score = 0.6 * quality_score + 0.4 * cost_score - 0.2 * budget_penalty
+                balanced_score = (
+                    0.6 * quality_score + 0.4 * cost_score - 0.2 * budget_penalty
+                )
 
                 scored_models.append((model_config, tier, balanced_score))
 
@@ -500,7 +541,9 @@ class IntelligentRouter:
 
         fallbacks = []
         for model_config, tier, _score in scored_models[1:3]:
-            fallback_routing = await self._create_routing_decision(model_config, context)
+            fallback_routing = await self._create_routing_decision(
+                model_config, context
+            )
             fallbacks.append(fallback_routing)
 
         return EnhancedRoutingDecision(
@@ -508,10 +551,13 @@ class IntelligentRouter:
             fallback_choices=fallbacks,
             reasoning=f"Balanced routing selected {primary_model['model']} with score {primary_score:.2f} optimizing for both cost and performance",
             confidence=0.82,
-            expected_performance=await self._get_model_performance(primary_model["model"]),
+            expected_performance=await self._get_model_performance(
+                primary_model["model"]
+            ),
             cost_estimation={
                 "primary": primary_routing.estimated_cost,
-                "budget_utilization": primary_routing.estimated_cost / context.swarm_budget,
+                "budget_utilization": primary_routing.estimated_cost
+                / context.swarm_budget,
             },
             risk_assessment={"balanced_tradeoff_risk": 0.25},
             routing_strategy_used=RoutingStrategy.BALANCED,
@@ -525,7 +571,9 @@ class IntelligentRouter:
         # Use portkey manager to get actual routing decision
         basic_routing = self.portkey.route_request(
             task_type=context.task_type,
-            estimated_tokens=context.workload_characteristics.get("estimated_tokens", 1000),
+            estimated_tokens=context.workload_characteristics.get(
+                "estimated_tokens", 1000
+            ),
             max_cost_usd=context.swarm_budget,
             prefer_provider=model_config.get("provider"),
         )
@@ -547,7 +595,9 @@ class IntelligentRouter:
                 avg_confidence_score=0.75,
             )
 
-    async def _get_recent_performance(self, context: RoutingContext) -> dict[str, float]:
+    async def _get_recent_performance(
+        self, context: RoutingContext
+    ) -> dict[str, float]:
         """Get recent performance data for models with this agent/task combination"""
 
         # Filter routing history for relevant entries
@@ -571,8 +621,12 @@ class IntelligentRouter:
             confidence = entry.get("confidence", 0.7)
 
             # Calculate performance score (higher is better)
-            time_score = max(0, 1.0 - (response_time - 1000) / 5000)  # Normalize response time
-            perf_score = 0.5 * (1.0 if success else 0.0) + 0.3 * confidence + 0.2 * time_score
+            time_score = max(
+                0, 1.0 - (response_time - 1000) / 5000
+            )  # Normalize response time
+            perf_score = (
+                0.5 * (1.0 if success else 0.0) + 0.3 * confidence + 0.2 * time_score
+            )
 
             if model_name not in performance:
                 performance[model_name] = []
@@ -586,7 +640,10 @@ class IntelligentRouter:
         return avg_performance
 
     async def _record_routing_decision(
-        self, context: RoutingContext, decision: EnhancedRoutingDecision, start_time: datetime
+        self,
+        context: RoutingContext,
+        decision: EnhancedRoutingDecision,
+        start_time: datetime,
     ) -> None:
         """Record routing decision for learning"""
 
@@ -702,7 +759,8 @@ class IntelligentRouter:
 
         agent_perf_score = 0.5 * (1.0 if success else 0.0) + 0.5 * confidence
         metrics.agent_performance[agent_role] = (
-            alpha * agent_perf_score + (1 - alpha) * metrics.agent_performance[agent_role]
+            alpha * agent_perf_score
+            + (1 - alpha) * metrics.agent_performance[agent_role]
         )
 
         # Update task-specific performance
@@ -745,7 +803,11 @@ class IntelligentRouter:
         for record in recent_history:
             strategy = record["routing_strategy"].value
             if strategy not in strategy_performance:
-                strategy_performance[strategy] = {"count": 0, "success_rate": 0.0, "avg_cost": 0.0}
+                strategy_performance[strategy] = {
+                    "count": 0,
+                    "success_rate": 0.0,
+                    "avg_cost": 0.0,
+                }
 
             strategy_performance[strategy]["count"] += 1
             success = record.get("success", False)

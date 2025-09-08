@@ -100,8 +100,13 @@ class SemanticClassifier:
     ) -> dict[SemanticRole, dict[AnalysisContext, list[tuple[Pattern, float]]]]:
         """Initialize comprehensive role-based pattern matching."""
 
-        def compile_patterns(patterns: list[tuple[str, float]]) -> list[tuple[Pattern, float]]:
-            return [(re.compile(pattern, re.IGNORECASE), weight) for pattern, weight in patterns]
+        def compile_patterns(
+            patterns: list[tuple[str, float]],
+        ) -> list[tuple[Pattern, float]]:
+            return [
+                (re.compile(pattern, re.IGNORECASE), weight)
+                for pattern, weight in patterns
+            ]
 
         return {
             SemanticRole.ORCHESTRATOR: {
@@ -188,7 +193,12 @@ class SemanticClassifier:
                     ]
                 ),
                 AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
-                    [(r"fastapi", 0.8), (r"flask", 0.8), (r"django", 0.7), (r"APIRouter", 0.9)]
+                    [
+                        (r"fastapi", 0.8),
+                        (r"flask", 0.8),
+                        (r"django", 0.7),
+                        (r"APIRouter", 0.9),
+                    ]
                 ),
             },
             SemanticRole.AGENT: {
@@ -203,10 +213,20 @@ class SemanticClassifier:
                     ]
                 ),
                 AnalysisContext.CLASS_NAME: compile_patterns(
-                    [(r".*Agent$", 0.95), (r".*Swarm$", 0.9), (r".*Bot$", 0.7), (r"AI.*", 0.8)]
+                    [
+                        (r".*Agent$", 0.95),
+                        (r".*Swarm$", 0.9),
+                        (r".*Bot$", 0.7),
+                        (r"AI.*", 0.8),
+                    ]
                 ),
                 AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
-                    [(r"langchain", 0.8), (r"openai", 0.7), (r"anthropic", 0.7), (r"swarms", 0.9)]
+                    [
+                        (r"langchain", 0.8),
+                        (r"openai", 0.7),
+                        (r"anthropic", 0.7),
+                        (r"swarms", 0.9),
+                    ]
                 ),
             },
             SemanticRole.MODEL: {
@@ -253,12 +273,22 @@ class SemanticClassifier:
                     ]
                 ),
                 AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
-                    [(r"sqlalchemy", 0.8), (r"pymongo", 0.8), (r"redis", 0.6), (r"sqlite", 0.7)]
+                    [
+                        (r"sqlalchemy", 0.8),
+                        (r"pymongo", 0.8),
+                        (r"redis", 0.6),
+                        (r"sqlite", 0.7),
+                    ]
                 ),
             },
             SemanticRole.SERVICE: {
                 AnalysisContext.FILE_NAME: compile_patterns(
-                    [(r"service", 0.9), (r"business", 0.6), (r"logic", 0.5), (r"operation", 0.6)]
+                    [
+                        (r"service", 0.9),
+                        (r"business", 0.6),
+                        (r"logic", 0.5),
+                        (r"operation", 0.6),
+                    ]
                 ),
                 AnalysisContext.CLASS_NAME: compile_patterns(
                     [(r".*Service$", 0.95), (r".*Logic$", 0.7), (r".*Operations$", 0.7)]
@@ -293,7 +323,12 @@ class SemanticClassifier:
             },
             SemanticRole.TEST: {
                 AnalysisContext.FILE_NAME: compile_patterns(
-                    [(r"test", 0.9), (r"spec", 0.7), (r"_test\.py$", 0.95), (r"test_.*\.py$", 0.95)]
+                    [
+                        (r"test", 0.9),
+                        (r"spec", 0.7),
+                        (r"_test\.py$", 0.95),
+                        (r"test_.*\.py$", 0.95),
+                    ]
                 ),
                 AnalysisContext.IMPORT_STATEMENTS: compile_patterns(
                     [(r"pytest", 0.9), (r"unittest", 0.8), (r"mock", 0.7)]
@@ -304,12 +339,22 @@ class SemanticClassifier:
     def _initialize_capability_patterns(self) -> dict[str, list[tuple[Pattern, float]]]:
         """Initialize capability detection patterns."""
 
-        def compile_patterns(patterns: list[tuple[str, float]]) -> list[tuple[Pattern, float]]:
-            return [(re.compile(pattern, re.IGNORECASE), weight) for pattern, weight in patterns]
+        def compile_patterns(
+            patterns: list[tuple[str, float]],
+        ) -> list[tuple[Pattern, float]]:
+            return [
+                (re.compile(pattern, re.IGNORECASE), weight)
+                for pattern, weight in patterns
+            ]
 
         return {
             "async": compile_patterns(
-                [(r"async\s+def", 0.9), (r"await\s+", 0.8), (r"asyncio", 0.7), (r"aiohttp", 0.7)]
+                [
+                    (r"async\s+def", 0.9),
+                    (r"await\s+", 0.8),
+                    (r"asyncio", 0.7),
+                    (r"aiohttp", 0.7),
+                ]
             ),
             "api": compile_patterns(
                 [
@@ -341,12 +386,24 @@ class SemanticClassifier:
                 ]
             ),
             "caching": compile_patterns(
-                [(r"cache", 0.8), (r"redis", 0.9), (r"memcache", 0.9), (r"@lru_cache", 0.8)]
+                [
+                    (r"cache", 0.8),
+                    (r"redis", 0.9),
+                    (r"memcache", 0.9),
+                    (r"@lru_cache", 0.8),
+                ]
             ),
             "validation": compile_patterns(
-                [(r"valid", 0.6), (r"schema", 0.7), (r"pydantic", 0.9), (r"BaseModel", 0.8)]
+                [
+                    (r"valid", 0.6),
+                    (r"schema", 0.7),
+                    (r"pydantic", 0.9),
+                    (r"BaseModel", 0.8),
+                ]
             ),
-            "logging": compile_patterns([(r"log", 0.7), (r"logger", 0.8), (r"logging", 0.8)]),
+            "logging": compile_patterns(
+                [(r"log", 0.7), (r"logger", 0.8), (r"logging", 0.8)]
+            ),
             "config": compile_patterns(
                 [(r"config", 0.8), (r"settings", 0.7), (r"environment", 0.6)]
             ),
@@ -364,19 +421,29 @@ class SemanticClassifier:
                 ]
             ),
             "monitoring": compile_patterns(
-                [(r"monitor", 0.8), (r"metric", 0.7), (r"telemetry", 0.8), (r"observability", 0.8)]
+                [
+                    (r"monitor", 0.8),
+                    (r"metric", 0.7),
+                    (r"telemetry", 0.8),
+                    (r"observability", 0.8),
+                ]
             ),
             "websocket": compile_patterns(
                 [(r"websocket", 0.9), (r"ws", 0.6), (r"socket\.io", 0.8)]
             ),
-            "streaming": compile_patterns([(r"stream", 0.7), (r"chunk", 0.6), (r"yield", 0.5)]),
+            "streaming": compile_patterns(
+                [(r"stream", 0.7), (r"chunk", 0.6), (r"yield", 0.5)]
+            ),
         }
 
     def _initialize_complexity_indicators(self) -> dict[str, tuple[Pattern, float]]:
         """Initialize complexity assessment patterns."""
         return {
             "high_nesting": (re.compile(r"(\s{12,})", re.MULTILINE), 0.7),
-            "many_conditionals": (re.compile(r"\bif\b.*\belse\b.*\belif\b", re.IGNORECASE), 0.6),
+            "many_conditionals": (
+                re.compile(r"\bif\b.*\belse\b.*\belif\b", re.IGNORECASE),
+                0.6,
+            ),
             "exception_handling": (re.compile(r"try:.*except.*:", re.DOTALL), 0.5),
             "recursion": (re.compile(r"def\s+(\w+).*\1\s*\(", re.MULTILINE), 0.8),
             "metaclasses": (re.compile(r"metaclass=", re.IGNORECASE), 0.9),
@@ -390,16 +457,32 @@ class SemanticClassifier:
         return {
             "global_state": (re.compile(r"global\s+\w+", re.IGNORECASE), 0.7),
             "exec_eval": (re.compile(r"\b(exec|eval)\s*\(", re.IGNORECASE), 0.9),
-            "dynamic_imports": (re.compile(r"__import__|importlib", re.IGNORECASE), 0.6),
+            "dynamic_imports": (
+                re.compile(r"__import__|importlib", re.IGNORECASE),
+                0.6,
+            ),
             "file_operations": (re.compile(r"open\s*\(|file\s*=", re.IGNORECASE), 0.4),
-            "network_calls": (re.compile(r"requests\.|urllib|http", re.IGNORECASE), 0.5),
-            "subprocess": (re.compile(r"subprocess|os\.system|os\.popen", re.IGNORECASE), 0.8),
-            "database_writes": (re.compile(r"INSERT|UPDATE|DELETE|DROP", re.IGNORECASE), 0.6),
+            "network_calls": (
+                re.compile(r"requests\.|urllib|http", re.IGNORECASE),
+                0.5,
+            ),
+            "subprocess": (
+                re.compile(r"subprocess|os\.system|os\.popen", re.IGNORECASE),
+                0.8,
+            ),
+            "database_writes": (
+                re.compile(r"INSERT|UPDATE|DELETE|DROP", re.IGNORECASE),
+                0.6,
+            ),
             "environment_vars": (re.compile(r"os\.environ|getenv", re.IGNORECASE), 0.3),
         }
 
     def classify_component(
-        self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+        self,
+        component_name: str,
+        file_path: str,
+        content: str,
+        ast_node: Optional[ast.AST] = None,
     ) -> ClassificationResult:
         """Classify a component with comprehensive analysis."""
 
@@ -417,7 +500,8 @@ class SemanticClassifier:
 
                 # Calculate weighted score for this role
                 role_score = sum(
-                    match.confidence * self.context_weights[match.context] for match in role_matches
+                    match.confidence * self.context_weights[match.context]
+                    for match in role_matches
                 )
                 role_scores[role] = role_score
 
@@ -436,9 +520,13 @@ class SemanticClassifier:
 
             # Separate primary and secondary matches
             role_matches = [
-                m for m in all_matches if self._get_role_for_pattern(m.pattern) == best_role
+                m
+                for m in all_matches
+                if self._get_role_for_pattern(m.pattern) == best_role
             ]
-            primary_matches = sorted(role_matches, key=lambda m: m.confidence, reverse=True)[:3]
+            primary_matches = sorted(
+                role_matches, key=lambda m: m.confidence, reverse=True
+            )[:3]
 
             reasoning = self._generate_reasoning(best_role, primary_matches, contexts)
 
@@ -446,7 +534,9 @@ class SemanticClassifier:
         secondary_matches = [
             m for m in all_matches if self._get_role_for_pattern(m.pattern) != best_role
         ]
-        secondary_matches = sorted(secondary_matches, key=lambda m: m.confidence, reverse=True)[:3]
+        secondary_matches = sorted(
+            secondary_matches, key=lambda m: m.confidence, reverse=True
+        )[:3]
 
         return ClassificationResult(
             semantic_role=best_role,
@@ -457,17 +547,25 @@ class SemanticClassifier:
         )
 
     def _extract_contexts(
-        self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+        self,
+        component_name: str,
+        file_path: str,
+        content: str,
+        ast_node: Optional[ast.AST] = None,
     ) -> dict[AnalysisContext, str]:
         """Extract all analysis contexts from the component."""
 
         contexts = {
             AnalysisContext.FILE_NAME: Path(file_path).name,
             AnalysisContext.CLASS_NAME: (
-                component_name if ast_node and isinstance(ast_node, ast.ClassDef) else ""
+                component_name
+                if ast_node and isinstance(ast_node, ast.ClassDef)
+                else ""
             ),
             AnalysisContext.FUNCTION_NAME: (
-                component_name if ast_node and isinstance(ast_node, ast.FunctionDef) else ""
+                component_name
+                if ast_node and isinstance(ast_node, ast.FunctionDef)
+                else ""
             ),
             AnalysisContext.COMMENTS: self._extract_comments(content),
             AnalysisContext.CODE_STRUCTURE: content,
@@ -492,7 +590,8 @@ class SemanticClassifier:
         # Extract inheritance info
         if ast_node and isinstance(ast_node, ast.ClassDef):
             inheritance = [
-                base.id if isinstance(base, ast.Name) else str(base) for base in ast_node.bases
+                base.id if isinstance(base, ast.Name) else str(base)
+                for base in ast_node.bases
             ]
             contexts[AnalysisContext.INHERITANCE] = " ".join(inheritance)
         else:
@@ -567,7 +666,10 @@ class SemanticClassifier:
         return SemanticRole.UNKNOWN
 
     def _generate_reasoning(
-        self, role: SemanticRole, matches: list[PatternMatch], contexts: dict[AnalysisContext, str]
+        self,
+        role: SemanticRole,
+        matches: list[PatternMatch],
+        contexts: dict[AnalysisContext, str],
     ) -> list[str]:
         """Generate human-readable reasoning for classification."""
         reasoning = []
@@ -582,7 +684,9 @@ class SemanticClassifier:
         if role == SemanticRole.ORCHESTRATOR and any(
             "manage" in str(m.match_text).lower() for m in matches
         ):
-            reasoning.append("Contains management/coordination patterns typical of orchestrators")
+            reasoning.append(
+                "Contains management/coordination patterns typical of orchestrators"
+            )
 
         if role == SemanticRole.AGENT and contexts[AnalysisContext.IMPORT_STATEMENTS]:
             ai_imports = ["openai", "anthropic", "langchain", "swarms"]
@@ -597,7 +701,9 @@ class SemanticClassifier:
         if role == SemanticRole.GATEWAY and contexts[AnalysisContext.DECORATORS]:
             api_decorators = ["@app.", "@router.", "@route"]
             found_decorators = [
-                dec for dec in api_decorators if dec in contexts[AnalysisContext.DECORATORS]
+                dec
+                for dec in api_decorators
+                if dec in contexts[AnalysisContext.DECORATORS]
             ]
             if found_decorators:
                 reasoning.append(f"API decorators found: {', '.join(found_decorators)}")
@@ -734,7 +840,11 @@ class SemanticClassifier:
         reasoning = []
 
         # Role-based priority
-        high_priority_roles = [SemanticRole.ORCHESTRATOR, SemanticRole.GATEWAY, SemanticRole.AGENT]
+        high_priority_roles = [
+            SemanticRole.ORCHESTRATOR,
+            SemanticRole.GATEWAY,
+            SemanticRole.AGENT,
+        ]
         if semantic_role in high_priority_roles:
             priority_score += 1.0
             reasoning.append(f"{semantic_role.value} is high-priority role")
@@ -769,7 +879,11 @@ class SemanticClassifier:
         return priority, reasoning
 
     def enhanced_classify(
-        self, component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+        self,
+        component_name: str,
+        file_path: str,
+        content: str,
+        ast_node: Optional[ast.AST] = None,
     ) -> dict[str, Any]:
         """Perform comprehensive classification with all metrics."""
 
@@ -777,7 +891,9 @@ class SemanticClassifier:
         contexts = self._extract_contexts(component_name, file_path, content, ast_node)
 
         # Primary classification
-        classification = self.classify_component(component_name, file_path, content, ast_node)
+        classification = self.classify_component(
+            component_name, file_path, content, ast_node
+        )
 
         # Capability identification
         capabilities = self.identify_capabilities(content)
@@ -819,7 +935,10 @@ def quick_classify(component_name: str, file_path: str, content: str) -> Semanti
 
 
 def detailed_analysis(
-    component_name: str, file_path: str, content: str, ast_node: Optional[ast.AST] = None
+    component_name: str,
+    file_path: str,
+    content: str,
+    ast_node: Optional[ast.AST] = None,
 ) -> dict[str, Any]:
     """Comprehensive analysis for detailed insights."""
     classifier = SemanticClassifier()

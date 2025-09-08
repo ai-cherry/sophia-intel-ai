@@ -201,18 +201,24 @@ class HRDirectorAgent(BaseAgent):
             context={"business_objectives": business_objectives},
         )
 
-        result = await self.domain_specialists[HRDomain.STRATEGIC_PLANNING].execute_task(
-            planning_task
-        )
+        result = await self.domain_specialists[
+            HRDomain.STRATEGIC_PLANNING
+        ].execute_task(planning_task)
 
         return {
             "strategic_plan": result,
-            "implementation_timeline": await self._create_implementation_timeline(result),
-            "resource_requirements": await self._calculate_resource_requirements(result),
+            "implementation_timeline": await self._create_implementation_timeline(
+                result
+            ),
+            "resource_requirements": await self._calculate_resource_requirements(
+                result
+            ),
             "success_metrics": await self._define_success_metrics(result),
         }
 
-    async def manage_performance_cycle(self, cycle_type: str = "quarterly") -> dict[str, Any]:
+    async def manage_performance_cycle(
+        self, cycle_type: str = "quarterly"
+    ) -> dict[str, Any]:
         """Manage complete performance review cycle"""
         performance_task = HRTask(
             task_id=f"performance_cycle_{cycle_type}_{datetime.now().strftime('%Y%m%d')}",
@@ -222,14 +228,16 @@ class HRDirectorAgent(BaseAgent):
             context={"cycle_type": cycle_type},
         )
 
-        result = await self.domain_specialists[HRDomain.PERFORMANCE_MANAGEMENT].execute_task(
-            performance_task
-        )
+        result = await self.domain_specialists[
+            HRDomain.PERFORMANCE_MANAGEMENT
+        ].execute_task(performance_task)
 
         return {
             "cycle_results": result,
             "performance_insights": await self._analyze_performance_trends(result),
-            "development_recommendations": await self._generate_development_recommendations(result),
+            "development_recommendations": await self._generate_development_recommendations(
+                result
+            ),
             "succession_planning": await self._update_succession_planning(result),
         }
 
@@ -243,13 +251,15 @@ class HRDirectorAgent(BaseAgent):
             context={"optimization_focus": "end_to_end"},
         )
 
-        result = await self.domain_specialists[HRDomain.TALENT_ACQUISITION].execute_task(
-            talent_task
-        )
+        result = await self.domain_specialists[
+            HRDomain.TALENT_ACQUISITION
+        ].execute_task(talent_task)
 
         return {
             "pipeline_analysis": result,
-            "hiring_recommendations": await self._generate_hiring_recommendations(result),
+            "hiring_recommendations": await self._generate_hiring_recommendations(
+                result
+            ),
             "retention_strategies": await self._develop_retention_strategies(result),
             "talent_forecasting": await self._forecast_talent_needs(result),
         }
@@ -264,7 +274,9 @@ class HRDirectorAgent(BaseAgent):
             context={"audit_scope": "comprehensive"},
         )
 
-        result = await self.domain_specialists[HRDomain.COMPLIANCE].execute_task(compliance_task)
+        result = await self.domain_specialists[HRDomain.COMPLIANCE].execute_task(
+            compliance_task
+        )
 
         return {
             "compliance_status": result,
@@ -283,12 +295,16 @@ class HRDirectorAgent(BaseAgent):
             context={"dashboard_type": "executive"},
         )
 
-        result = await self.domain_specialists[HRDomain.ANALYTICS].execute_task(analytics_task)
+        result = await self.domain_specialists[HRDomain.ANALYTICS].execute_task(
+            analytics_task
+        )
 
         return {
             "dashboard_data": result,
             "key_insights": await self._extract_key_insights(result),
-            "strategic_recommendations": await self._generate_strategic_recommendations(result),
+            "strategic_recommendations": await self._generate_strategic_recommendations(
+                result
+            ),
             "action_items": await self._prioritize_action_items(result),
         }
 
@@ -399,12 +415,16 @@ class HRDirectorAgent(BaseAgent):
         if task.domain == HRDomain.EMPLOYEE_RELATIONS:
             # Update employee satisfaction if available
             if "satisfaction_score" in result:
-                self.performance_metrics["employee_satisfaction"] = result["satisfaction_score"]
+                self.performance_metrics["employee_satisfaction"] = result[
+                    "satisfaction_score"
+                ]
 
         elif task.domain == HRDomain.COMPLIANCE:
             # Update compliance score
             if "compliance_score" in result:
-                self.performance_metrics["compliance_score"] = result["compliance_score"]
+                self.performance_metrics["compliance_score"] = result[
+                    "compliance_score"
+                ]
 
     async def _generate_strategic_insights(
         self, task: HRTask, result: dict[str, Any]
@@ -437,7 +457,9 @@ class HRDirectorAgent(BaseAgent):
         except:
             return {"insights": response}
 
-    async def _assess_performance_impact(self, result: dict[str, Any]) -> dict[str, Any]:
+    async def _assess_performance_impact(
+        self, result: dict[str, Any]
+    ) -> dict[str, Any]:
         """Assess the performance impact of HR actions"""
         return {
             "productivity_impact": "positive",
@@ -613,7 +635,9 @@ async def main():
         "product_launches": 3,
     }
 
-    strategic_plan = await hr_director_agent.conduct_strategic_hr_planning(business_objectives)
+    strategic_plan = await hr_director_agent.conduct_strategic_hr_planning(
+        business_objectives
+    )
     print(f"Strategic Plan: {strategic_plan}")
 
     # Test performance cycle

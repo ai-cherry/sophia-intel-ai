@@ -174,7 +174,9 @@ Host lambda-sophia-staging
 
             # Filter out None values
             instances = {
-                k: v for k, v in instances.items() if v and v != f"LAMBDA_{k.upper()}_IP_NOT_SET"
+                k: v
+                for k, v in instances.items()
+                if v and v != f"LAMBDA_{k.upper()}_IP_NOT_SET"
             }
 
             if not instances:
@@ -202,7 +204,9 @@ Host lambda-sophia-staging
             # Map instances by type
             for instance in api_instances:
                 if "sophia" in instance.get("name", "").lower():
-                    instance_type = instance.get("instance_type", {}).get("name", "unknown")
+                    instance_type = instance.get("instance_type", {}).get(
+                        "name", "unknown"
+                    )
                     if "h100" in instance_type.lower():
                         self.instances["h100"] = instance.get("ip")
                     elif "a100" in instance_type.lower():
@@ -255,10 +259,15 @@ Host lambda-sophia-staging
                     }
                 else:
                     # Fallback: manual deployment
-                    deployment_results[instance_name] = self.manual_key_deployment(ip, public_key)
+                    deployment_results[instance_name] = self.manual_key_deployment(
+                        ip, public_key
+                    )
 
             except Exception as e:
-                deployment_results[instance_name] = {"status": "failed", "error": str(e)}
+                deployment_results[instance_name] = {
+                    "status": "failed",
+                    "error": str(e),
+                }
 
         return deployment_results
 
@@ -281,7 +290,10 @@ Host lambda-sophia-staging
                 try:
                     if auth["password"]:
                         ssh.connect(
-                            ip, username=auth["username"], password=auth["password"], timeout=10
+                            ip,
+                            username=auth["username"],
+                            password=auth["password"],
+                            timeout=10,
                         )
                     else:
                         ssh.connect(ip, username=auth["username"], timeout=10)
@@ -354,7 +366,11 @@ Host lambda-sophia-staging
                     }
 
             except Exception as e:
-                connection_results[instance_name] = {"status": "failed", "error": str(e), "ip": ip}
+                connection_results[instance_name] = {
+                    "status": "failed",
+                    "error": str(e),
+                    "ip": ip,
+                }
 
         return connection_results
 
@@ -470,7 +486,11 @@ echo "✅ Environment setup complete on $(hostname)"
                     }
 
             except Exception as e:
-                setup_results[instance_name] = {"status": "failed", "error": str(e), "ip": ip}
+                setup_results[instance_name] = {
+                    "status": "failed",
+                    "error": str(e),
+                    "ip": ip,
+                }
 
         return setup_results
 
@@ -578,7 +598,11 @@ echo "✅ Sophia AI Platform deployed to $(hostname)"
                     }
 
             except Exception as e:
-                deployment_results[instance_name] = {"status": "failed", "error": str(e), "ip": ip}
+                deployment_results[instance_name] = {
+                    "status": "failed",
+                    "error": str(e),
+                    "ip": ip,
+                }
 
         return deployment_results
 
@@ -627,7 +651,11 @@ echo "✅ Verification complete on $(hostname)"
                 ]
 
                 result = subprocess.run(
-                    cmd, input=verification_script, capture_output=True, text=True, timeout=120
+                    cmd,
+                    input=verification_script,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
                 )
 
                 verification_results[instance_name] = {
@@ -667,7 +695,9 @@ echo "✅ Verification complete on $(hostname)"
         """Generate comprehensive setup report"""
 
         successful_steps = sum(
-            1 for result in self.setup_results.values() if result["status"] in ["SUCCESS", "FIXED"]
+            1
+            for result in self.setup_results.values()
+            if result["status"] in ["SUCCESS", "FIXED"]
         )
         total_steps = len(self.setup_results)
 
@@ -681,7 +711,9 @@ echo "✅ Verification complete on $(hostname)"
                 "setup_remote_environment",
                 "deploy_sophia_platform",
             ]:
-                if result["status"] == "SUCCESS" and isinstance(result.get("result"), dict):
+                if result["status"] == "SUCCESS" and isinstance(
+                    result.get("result"), dict
+                ):
                     successful_instances += sum(
                         1
                         for instance_result in result["result"].values()
@@ -721,7 +753,9 @@ echo "✅ Verification complete on $(hostname)"
         actions = []
 
         failed_steps = [
-            name for name, result in self.setup_results.items() if result["status"] == "FAILED"
+            name
+            for name, result in self.setup_results.items()
+            if result["status"] == "FAILED"
         ]
 
         if failed_steps:

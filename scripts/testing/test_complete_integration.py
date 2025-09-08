@@ -18,7 +18,9 @@ import logging
 from app.core.portkey_config import AgentRole, ModelProvider, portkey_manager
 from app.core.vector_db_config import VectorDBType, vector_db_manager
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -47,7 +49,8 @@ def test_portkey_providers():
         try:
             client = portkey_manager.get_client_for_provider(provider, model=model)
             response = client.chat.completions.create(
-                messages=[{"role": "user", "content": "Say 'connected' in one word"}], max_tokens=10
+                messages=[{"role": "user", "content": "Say 'connected' in one word"}],
+                max_tokens=10,
             )
             if response and response.choices:
                 print(f"✓ Success - Response: {response.choices[0].message.content}")
@@ -104,10 +107,15 @@ def test_vector_operations():
 
             # Search vectors
             search_results = vector_db_manager.search_vectors(
-                VectorDBType.QDRANT, test_vector, top_k=1, collection_name="test_collection"
+                VectorDBType.QDRANT,
+                test_vector,
+                top_k=1,
+                collection_name="test_collection",
             )
             if search_results:
-                print(f"  ✓ Vector search successful (found {len(search_results)} results)")
+                print(
+                    f"  ✓ Vector search successful (found {len(search_results)} results)"
+                )
             else:
                 print("  ✗ Vector search failed")
         else:
@@ -164,7 +172,8 @@ def test_agent_role_routing():
                 print("✓ Success")
                 results[role.value] = {
                     "status": "success",
-                    "response_preview": response.choices[0].message.content[:50] + "...",
+                    "response_preview": response.choices[0].message.content[:50]
+                    + "...",
                 }
             else:
                 print("✗ No response")
@@ -223,7 +232,9 @@ def generate_integration_report(all_results: Dict[str, Any]):
                 if r.get("status") == "success"
             ),
             "vector_databases": sum(
-                1 for connected in all_results.get("vector_databases", {}).values() if connected
+                1
+                for connected in all_results.get("vector_databases", {}).values()
+                if connected
             ),
             "vector_operations": sum(
                 1
@@ -244,7 +255,9 @@ def generate_integration_report(all_results: Dict[str, Any]):
     }
 
     # Save report
-    report_file = f"integration_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_file = (
+        f"integration_test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
@@ -304,7 +317,9 @@ def main():
     success_rate = (total_passed / total_tests) * 100
 
     print(f"\n{'='*60}")
-    print(f"Overall Success Rate: {success_rate:.1f}% ({total_passed}/{total_tests} tests passed)")
+    print(
+        f"Overall Success Rate: {success_rate:.1f}% ({total_passed}/{total_tests} tests passed)"
+    )
 
     if success_rate >= 80:
         print("✓ Integration tests PASSED")

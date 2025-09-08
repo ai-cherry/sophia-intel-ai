@@ -120,7 +120,9 @@ class AdvancedEmbeddingRouter:
         """Initialize Portkey AI gateway client"""
         try:
             # Mock implementation until portkey-ai is installed
-            logger.info(f"Initializing Portkey gateway with key: {self.portkey_api_key[:10]}...")
+            logger.info(
+                f"Initializing Portkey gateway with key: {self.portkey_api_key[:10]}..."
+            )
             self.portkey_client = None  # Will be replaced with actual Portkey client
         except Exception as e:
             logger.error(f"Failed to initialize Portkey: {e}")

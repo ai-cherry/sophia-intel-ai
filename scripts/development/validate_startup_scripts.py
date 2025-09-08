@@ -41,7 +41,9 @@ class StartupValidator:
 
             # Check syntax
             try:
-                subprocess.run(["bash", "-n", str(script)], check=True, capture_output=True)
+                subprocess.run(
+                    ["bash", "-n", str(script)], check=True, capture_output=True
+                )
                 script_results["syntax_valid"] = True
                 print(f"  ✅ {script.name}: Syntax OK")
             except subprocess.CalledProcessError as e:
@@ -68,7 +70,9 @@ class StartupValidator:
                     print(f"  ❌ {script.name}: Missing command {cmd}")
 
             # Check for hardcoded paths
-            hardcoded = re.findall(r"(/home/[^/\s]+/|/Users/|C:\\|/mnt/|/opt/)", content)
+            hardcoded = re.findall(
+                r"(/home/[^/\s]+/|/Users/|C:\\|/mnt/|/opt/)", content
+            )
             if hardcoded:
                 script_results["hardcoded_paths"] = hardcoded
                 self.warnings.append(f"Hardcoded paths in {script}: {hardcoded}")
@@ -153,7 +157,11 @@ class StartupValidator:
 
         for env_file in env_files:
             env_path = self.repo_path / env_file
-            file_results = {"exists": env_path.exists(), "variables": [], "missing_critical": []}
+            file_results = {
+                "exists": env_path.exists(),
+                "variables": [],
+                "missing_critical": [],
+            }
 
             if file_results["exists"]:
                 content = env_path.read_text()
@@ -312,7 +320,11 @@ LOG_LEVEL=INFO
 
         for script_path, results in self.results.get("shell_scripts", {}).items():
             script_name = Path(script_path).name
-            status = "✅" if results["syntax_valid"] and not results["missing_commands"] else "❌"
+            status = (
+                "✅"
+                if results["syntax_valid"] and not results["missing_commands"]
+                else "❌"
+            )
             report += f"- {status} **{script_name}**\n"
 
             if not results["syntax_valid"]:
@@ -330,7 +342,9 @@ LOG_LEVEL=INFO
         devcontainer = self.results.get("devcontainer", {})
         if devcontainer.get("exists"):
             status = (
-                "✅" if devcontainer.get("valid_json") and not devcontainer.get("issues") else "⚠️"
+                "✅"
+                if devcontainer.get("valid_json") and not devcontainer.get("issues")
+                else "⚠️"
             )
             report += f"- {status} Configuration exists\n"
             for issue in devcontainer.get("issues", []):
@@ -345,9 +359,7 @@ LOG_LEVEL=INFO
             status = "✅" if results["exists"] else "❌"
             report += f"- {status} **{env_file}**\n"
             if results.get("missing_critical"):
-                report += (
-                    f"  - ⚠️ Missing critical variables: {', '.join(results['missing_critical'])}\n"
-                )
+                report += f"  - ⚠️ Missing critical variables: {', '.join(results['missing_critical'])}\n"
 
         if self.errors:
             report += """

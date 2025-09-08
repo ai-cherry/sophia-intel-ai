@@ -132,7 +132,9 @@ class ReActStrategy(ReasoningStrategy):
         prompt = self._build_thought_prompt(context)
         response = await self.model_client.generate(prompt)
 
-        return ReasoningStep(step_type=ReasoningStepType.THOUGHT, content=response, confidence=0.8)
+        return ReasoningStep(
+            step_type=ReasoningStepType.THOUGHT, content=response, confidence=0.8
+        )
 
     async def _generate_action(self, context: ReasoningContext) -> ReasoningStep:
         """Generate an action step"""
@@ -190,7 +192,9 @@ class ReActStrategy(ReasoningStrategy):
             return False
 
         recent_actions = sum(
-            1 for step in context.previous_steps[-3:] if step.step_type == ReasoningStepType.ACTION
+            1
+            for step in context.previous_steps[-3:]
+            if step.step_type == ReasoningStepType.ACTION
         )
 
         return recent_actions < 1
@@ -289,7 +293,9 @@ class ChainOfThoughtStrategy(ReasoningStrategy):
 
     async def should_continue(self, context: ReasoningContext) -> bool:
         """Check if reasoning should continue"""
-        return context.current_step < context.max_steps and not self._has_conclusion(context)
+        return context.current_step < context.max_steps and not self._has_conclusion(
+            context
+        )
 
     async def extract_conclusion(self, context: ReasoningContext) -> str:
         """Extract conclusion from reasoning"""
@@ -324,7 +330,9 @@ What's the next logical step in our thinking?
 """
         response = await self.model_client.generate(prompt)
 
-        return ReasoningStep(step_type=ReasoningStepType.THOUGHT, content=response, confidence=0.8)
+        return ReasoningStep(
+            step_type=ReasoningStepType.THOUGHT, content=response, confidence=0.8
+        )
 
     async def _generate_conclusion(self, context: ReasoningContext) -> ReasoningStep:
         """Generate conclusion"""
@@ -352,7 +360,8 @@ What's our final conclusion?
     def _has_conclusion(self, context: ReasoningContext) -> bool:
         """Check if conclusion exists"""
         return any(
-            step.step_type == ReasoningStepType.CONCLUSION for step in context.previous_steps
+            step.step_type == ReasoningStepType.CONCLUSION
+            for step in context.previous_steps
         )
 
 
@@ -360,7 +369,10 @@ class ReasoningEngine:
     """Main reasoning engine that orchestrates strategies"""
 
     def __init__(
-        self, strategy: ReasoningStrategy, enable_logging: bool = True, enable_metrics: bool = True
+        self,
+        strategy: ReasoningStrategy,
+        enable_logging: bool = True,
+        enable_metrics: bool = True,
     ):
         self.strategy = strategy
         self.enable_logging = enable_logging
@@ -395,7 +407,9 @@ class ReasoningEngine:
                     context.current_step += 1
 
                     if self.enable_logging:
-                        logger.debug(f"Reasoning step {context.current_step}: {step.step_type}")
+                        logger.debug(
+                            f"Reasoning step {context.current_step}: {step.step_type}"
+                        )
                 else:
                     break
 
@@ -418,13 +432,18 @@ class ReasoningEngine:
         metrics = {
             "total_steps": len(context.previous_steps),
             "thought_steps": sum(
-                1 for s in context.previous_steps if s.step_type == ReasoningStepType.THOUGHT
+                1
+                for s in context.previous_steps
+                if s.step_type == ReasoningStepType.THOUGHT
             ),
             "action_steps": sum(
-                1 for s in context.previous_steps if s.step_type == ReasoningStepType.ACTION
+                1
+                for s in context.previous_steps
+                if s.step_type == ReasoningStepType.ACTION
             ),
             "average_confidence": (
-                sum(s.confidence for s in context.previous_steps) / len(context.previous_steps)
+                sum(s.confidence for s in context.previous_steps)
+                / len(context.previous_steps)
                 if context.previous_steps
                 else 0
             ),

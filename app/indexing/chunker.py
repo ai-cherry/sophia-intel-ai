@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 
-def chunk_text(text: str, max_chunk_size: int = 1000, max_chunks: int = 1000) -> list[str]:
+def chunk_text(
+    text: str, max_chunk_size: int = 1000, max_chunks: int = 1000
+) -> list[str]:
     """
     Simple, stable text chunker that splits text into manageable chunks.
 

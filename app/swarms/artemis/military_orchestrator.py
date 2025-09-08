@@ -163,7 +163,9 @@ class ArtemisMillitaryOrchestrator:
             total_issues_found += phase_result.issues_found
             total_issues_resolved += phase_result.issues_resolved
 
-            logger.info(f"Phase {phase_config['phase']} complete - Success: {phase_result.success}")
+            logger.info(
+                f"Phase {phase_config['phase']} complete - Success: {phase_result.success}"
+            )
 
             # Check for mission abort conditions
             if not phase_result.success and priority == "CRITICAL":
@@ -226,18 +228,25 @@ class ArtemisMillitaryOrchestrator:
 
         if "reconnaissance" in phase_config["name"].lower():
             # Reconnaissance phase
-            deliverables, issues_found = await self._execute_reconnaissance(deployed_agents, target)
+            deliverables, issues_found = await self._execute_reconnaissance(
+                deployed_agents, target
+            )
 
         elif "analysis" in phase_config["name"].lower():
             # Analysis phase
-            deliverables = await self._execute_analysis(deployed_agents, self.intelligence_buffer)
+            deliverables = await self._execute_analysis(
+                deployed_agents, self.intelligence_buffer
+            )
 
         elif "planning" in phase_config["name"].lower():
             # Planning phase
-            deliverables = await self._execute_planning(deployed_agents, self.intelligence_buffer)
+            deliverables = await self._execute_planning(
+                deployed_agents, self.intelligence_buffer
+            )
 
         elif (
-            "execution" in phase_config["name"].lower() or "strike" in phase_config["name"].lower()
+            "execution" in phase_config["name"].lower()
+            or "strike" in phase_config["name"].lower()
         ):
             # Execution/Strike phase
             deliverables, issues_resolved = await self._execute_strike(
@@ -293,8 +302,16 @@ class ArtemisMillitaryOrchestrator:
             },
             "issues": {
                 "conflicts": [
-                    {"file": "app/core/auth.py", "type": "merge_conflict", "severity": "high"},
-                    {"file": "app/api/routes.py", "type": "import_error", "severity": "medium"},
+                    {
+                        "file": "app/core/auth.py",
+                        "type": "merge_conflict",
+                        "severity": "high",
+                    },
+                    {
+                        "file": "app/api/routes.py",
+                        "type": "import_error",
+                        "severity": "medium",
+                    },
                 ],
                 "architectural": [
                     {
@@ -315,11 +332,23 @@ class ArtemisMillitaryOrchestrator:
                         "current": "2.25.1",
                         "latest": "2.31.0",
                     },
-                    {"package": "numpy", "issue": "security_vulnerability", "cve": "CVE-2024-1234"},
+                    {
+                        "package": "numpy",
+                        "issue": "security_vulnerability",
+                        "cve": "CVE-2024-1234",
+                    },
                 ],
                 "documentation": [
-                    {"file": "README.md", "issue": "outdated", "last_updated": "2023-01-01"},
-                    {"module": "app/swarms", "issue": "missing_docs", "coverage": "12%"},
+                    {
+                        "file": "README.md",
+                        "issue": "outdated",
+                        "last_updated": "2023-01-01",
+                    },
+                    {
+                        "module": "app/swarms",
+                        "issue": "missing_docs",
+                        "coverage": "12%",
+                    },
                 ],
             },
         }
@@ -332,7 +361,9 @@ class ArtemisMillitaryOrchestrator:
                     unit="recon_battalion",
                     agent="SCOUT-1",
                     findings=[item],
-                    priority="PRIORITY" if item.get("severity") == "high" else "ROUTINE",
+                    priority=(
+                        "PRIORITY" if item.get("severity") == "high" else "ROUTINE"
+                    ),
                     confidence=0.95,
                 )
                 self.intelligence_buffer.append(intel)
@@ -352,7 +383,10 @@ class ArtemisMillitaryOrchestrator:
 
         analysis_report = {
             "priority_matrix": {
-                "critical": ["merge_conflict in app/core/auth.py", "security_vulnerability numpy"],
+                "critical": [
+                    "merge_conflict in app/core/auth.py",
+                    "security_vulnerability numpy",
+                ],
                 "high": ["circular_dependency core-api"],
                 "medium": ["import_error app/api/routes.py", "outdated requests"],
                 "low": ["monolithic_service unified_server", "missing_docs app/swarms"],
@@ -522,11 +556,15 @@ class ArtemisMillitaryOrchestrator:
             "final_score": 97.5,
         }
 
-        logger.info(f"Verification complete - Final score: {verification_report['final_score']}")
+        logger.info(
+            f"Verification complete - Final score: {verification_report['final_score']}"
+        )
 
         return verification_report
 
-    def _generate_recommendations(self, phase_results: list[MissionPhaseResult]) -> list[str]:
+    def _generate_recommendations(
+        self, phase_results: list[MissionPhaseResult]
+    ) -> list[str]:
         """Generate recommendations based on mission results"""
         recommendations = [
             "Implement automated dependency scanning in CI/CD pipeline",
@@ -616,7 +654,9 @@ async def main():
 
     # Deploy a full remediation mission
     report = await orchestrator.deploy_mission(
-        mission_type="operation_clean_sweep", target="/Users/example/project", priority="HIGH"
+        mission_type="operation_clean_sweep",
+        target="/Users/example/project",
+        priority="HIGH",
     )
 
     # Print mission summary
@@ -630,7 +670,9 @@ async def main():
     if report.commendations:
         print("\nCommendations:")
         for commendation in report.commendations:
-            print(f"  • {commendation['agent']} ({commendation['unit']}): {commendation['medal']}")
+            print(
+                f"  • {commendation['agent']} ({commendation['unit']}): {commendation['medal']}"
+            )
 
 
 if __name__ == "__main__":

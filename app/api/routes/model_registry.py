@@ -53,7 +53,9 @@ class ProviderHealthStatus(BaseModel):
     status: str = Field(..., description="Health status: active, degraded, offline")
     last_success: datetime = Field(..., description="Last successful request timestamp")
     success_rate: float = Field(..., description="Success rate percentage (0-100)")
-    avg_latency_ms: float = Field(..., description="Average response latency in milliseconds")
+    avg_latency_ms: float = Field(
+        ..., description="Average response latency in milliseconds"
+    )
     error_count: int = Field(..., description="Recent error count")
     cost_per_1k_tokens: float = Field(..., description="Cost per 1000 tokens in USD")
 
@@ -72,7 +74,9 @@ class CostAnalytics(BaseModel):
     daily_cost: float = Field(..., description="Total cost today in USD")
     weekly_cost: float = Field(..., description="Total cost this week in USD")
     monthly_cost: float = Field(..., description="Total cost this month in USD")
-    cost_by_provider: dict[str, float] = Field(..., description="Cost breakdown by provider")
+    cost_by_provider: dict[str, float] = Field(
+        ..., description="Cost breakdown by provider"
+    )
     token_usage: dict[str, int] = Field(..., description="Token usage by provider")
     request_count: int = Field(..., description="Total requests today")
 
@@ -152,12 +156,18 @@ async def get_provider_health():
                     status=status,
                     last_success=metrics.last_success if metrics else datetime.now(),
                     success_rate=(
-                        (metrics.success_rate * 100) if metrics else (95.0 if is_healthy else 0.0)
+                        (metrics.success_rate * 100)
+                        if metrics
+                        else (95.0 if is_healthy else 0.0)
                     ),
                     avg_latency_ms=(
-                        metrics.avg_latency_ms if metrics else (1000.0 if is_healthy else 0.0)
+                        metrics.avg_latency_ms
+                        if metrics
+                        else (1000.0 if is_healthy else 0.0)
                     ),
-                    error_count=metrics.error_count if metrics else (0 if is_healthy else 10),
+                    error_count=(
+                        metrics.error_count if metrics else (0 if is_healthy else 10)
+                    ),
                     cost_per_1k_tokens=cost_estimates.get(provider, 0.002),
                 )
                 provider_statuses.append(provider_status)
@@ -181,7 +191,9 @@ async def get_provider_health():
 
     except Exception as e:
         logger.error(f"Error getting provider health: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get provider health: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get provider health: {str(e)}"
+        )
 
 
 @router.get("/virtual-keys", response_model=list[VirtualKeyConfig])
@@ -206,7 +218,9 @@ async def get_virtual_keys():
 
     except Exception as e:
         logger.error(f"Error getting virtual keys: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get virtual keys: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get virtual keys: {str(e)}"
+        )
 
 
 @router.post("/virtual-keys/{provider}")
@@ -239,7 +253,9 @@ async def update_virtual_key(provider: str, config: VirtualKeyConfig):
         raise HTTPException(status_code=400, detail=f"Invalid provider: {provider}")
     except Exception as e:
         logger.error(f"Error updating virtual key: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update virtual key: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update virtual key: {str(e)}"
+        )
 
 
 @router.get("/cost-analytics", response_model=CostAnalytics)
@@ -283,7 +299,9 @@ async def get_cost_analytics():
 
     except Exception as e:
         logger.error(f"Error getting cost analytics: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get cost analytics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get cost analytics: {str(e)}"
+        )
 
 
 @router.get("/fallback-chains", response_model=dict[str, FallbackChainConfig])
@@ -304,7 +322,9 @@ async def get_fallback_chains():
 
     except Exception as e:
         logger.error(f"Error getting fallback chains: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get fallback chains: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get fallback chains: {str(e)}"
+        )
 
 
 @router.post("/fallback-chains/{provider}")
@@ -330,7 +350,9 @@ async def update_fallback_chain(provider: str, config: FallbackChainConfig):
         raise HTTPException(status_code=400, detail=f"Invalid provider: {provider}")
     except Exception as e:
         logger.error(f"Error updating fallback chain: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update fallback chain: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update fallback chain: {str(e)}"
+        )
 
 
 @router.post("/test-model", response_model=dict[str, Any])
@@ -360,7 +382,9 @@ async def test_model(request: ModelTestRequest):
         return result
 
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid provider: {request.provider}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid provider: {request.provider}"
+        )
     except Exception as e:
         logger.error(f"Error testing model: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to test model: {str(e)}")
@@ -389,7 +413,9 @@ async def get_performance_metrics():
 
     except Exception as e:
         logger.error(f"Error getting performance metrics: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get performance metrics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get performance metrics: {str(e)}"
+        )
 
 
 @router.get("/routing-strategies")

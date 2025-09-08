@@ -145,7 +145,9 @@ class MetadataStore:
         """Get metadata by embedding ID"""
         return self._metadata.get(embedding_id)
 
-    def get_by_faiss_index(self, faiss_index: int) -> Optional[tuple[str, EmbeddingMetadata]]:
+    def get_by_faiss_index(
+        self, faiss_index: int
+    ) -> Optional[tuple[str, EmbeddingMetadata]]:
         """Get embedding ID and metadata by FAISS index"""
         embedding_id = self._index_to_id.get(faiss_index)
         if embedding_id:
@@ -235,11 +237,15 @@ class LevelIndex:
         self.index_type = index_type
 
         if faiss is None:
-            raise ImportError("FAISS not available. Install with: pip install faiss-cpu")
+            raise ImportError(
+                "FAISS not available. Install with: pip install faiss-cpu"
+            )
 
         # Create FAISS index based on type
         if index_type == "flat":
-            self.index = faiss.IndexFlatIP(dimensions)  # Inner product (cosine similarity)
+            self.index = faiss.IndexFlatIP(
+                dimensions
+            )  # Inner product (cosine similarity)
         elif index_type == "hnsw":
             self.index = faiss.IndexHNSWFlat(dimensions, 32)
             self.index.hnsw.efConstruction = 200
@@ -385,7 +391,9 @@ class HierarchicalIndex:
     Provides efficient similarity search across different hierarchy levels.
     """
 
-    def __init__(self, storage_dir: str, dimensions: int = 1536, index_type: str = "flat"):
+    def __init__(
+        self, storage_dir: str, dimensions: int = 1536, index_type: str = "flat"
+    ):
         """
         Initialize hierarchical index
 
@@ -400,7 +408,9 @@ class HierarchicalIndex:
         self.index_type = index_type
 
         if faiss is None:
-            raise ImportError("FAISS not available. Install with: pip install faiss-cpu")
+            raise ImportError(
+                "FAISS not available. Install with: pip install faiss-cpu"
+            )
 
         # Initialize metadata store
         self.metadata_store = MetadataStore(self.storage_dir / "metadata")
@@ -413,7 +423,9 @@ class HierarchicalIndex:
         # Load existing indices
         self._load_indices()
 
-        logger.info(f"Initialized hierarchical index with {dimensions}D vectors, {index_type} type")
+        logger.info(
+            f"Initialized hierarchical index with {dimensions}D vectors, {index_type} type"
+        )
 
     def add_embedding(
         self, embedding_id: str, vector: np.ndarray, metadata: EmbeddingMetadata
@@ -463,7 +475,9 @@ class HierarchicalIndex:
             return 0
 
         # Group by hierarchy level
-        level_groups: dict[IndexLevel, list[tuple[str, np.ndarray, EmbeddingMetadata]]] = {}
+        level_groups: dict[
+            IndexLevel, list[tuple[str, np.ndarray, EmbeddingMetadata]]
+        ] = {}
 
         for embedding_id, vector, metadata in embeddings:
             level = IndexLevel(metadata.hierarchy_level.value)
@@ -495,7 +509,9 @@ class HierarchicalIndex:
                 self.level_indices[level].add_vectors(vector_array, embedding_ids)
 
                 added_count += len(group_embeddings)
-                logger.info(f"Added {len(group_embeddings)} embeddings to {level.value} index")
+                logger.info(
+                    f"Added {len(group_embeddings)} embeddings to {level.value} index"
+                )
 
             except Exception as e:
                 logger.error(f"Failed to add batch for level {level.value}: {e}")
@@ -551,7 +567,10 @@ class HierarchicalIndex:
                         continue
 
                     # Apply filters
-                    if embedding_types and metadata.embedding_type not in embedding_types:
+                    if (
+                        embedding_types
+                        and metadata.embedding_type not in embedding_types
+                    ):
                         continue
 
                     if metadata_filters:
@@ -605,13 +624,16 @@ class HierarchicalIndex:
             class_results = []
             for file_path in relevant_files:
                 file_class_results = self.search(
-                    query_vector, k, [IndexLevel.CLASS], metadata_filters={"file_path": file_path}
+                    query_vector,
+                    k,
+                    [IndexLevel.CLASS],
+                    metadata_filters={"file_path": file_path},
                 )
                 class_results.extend(file_class_results)
 
-            results[IndexLevel.CLASS] = sorted(class_results, key=lambda x: x.score, reverse=True)[
-                :k
-            ]
+            results[IndexLevel.CLASS] = sorted(
+                class_results, key=lambda x: x.score, reverse=True
+            )[:k]
 
             # Search method level for relevant classes
             method_results = []
@@ -636,7 +658,9 @@ class HierarchicalIndex:
 
         return results
 
-    def _matches_filters(self, metadata: EmbeddingMetadata, filters: dict[str, Any]) -> bool:
+    def _matches_filters(
+        self, metadata: EmbeddingMetadata, filters: dict[str, Any]
+    ) -> bool:
         """Check if metadata matches filters"""
         for key, value in filters.items():
             if hasattr(metadata, key):
@@ -669,7 +693,9 @@ class HierarchicalIndex:
 
         return " > ".join(parts)
 
-    def get_embedding(self, embedding_id: str) -> Optional[tuple[EmbeddingMetadata, np.ndarray]]:
+    def get_embedding(
+        self, embedding_id: str
+    ) -> Optional[tuple[EmbeddingMetadata, np.ndarray]]:
         """Get embedding metadata and vector by ID"""
         metadata = self.metadata_store.get(embedding_id)
         if metadata is None:
@@ -737,7 +763,9 @@ class HierarchicalIndex:
 
             # Validate configuration compatibility
             if config["dimensions"] != self.dimensions:
-                logger.warning(f"Dimension mismatch: {config['dimensions']} != {self.dimensions}")
+                logger.warning(
+                    f"Dimension mismatch: {config['dimensions']} != {self.dimensions}"
+                )
                 return
 
             # Load each level index
@@ -794,7 +822,9 @@ class HierarchicalIndex:
         """Rebuild a specific level index"""
         try:
             # Get all embeddings for this level
-            embedding_ids = self.metadata_store.search_metadata(hierarchy_level=level.value)
+            embedding_ids = self.metadata_store.search_metadata(
+                hierarchy_level=level.value
+            )
 
             if not embedding_ids:
                 logger.info(f"No embeddings found for level {level.value}")

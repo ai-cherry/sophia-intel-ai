@@ -107,7 +107,9 @@ PROPTECH_COMPREHENSIVE = ResearchTemplate(
         "How are large real estate companies responding to proptech disruption?",
     ],
     data_sources=[
-        ResearchSource("Crunchbase API", "api", "https://api.crunchbase.com", priority=1),
+        ResearchSource(
+            "Crunchbase API", "api", "https://api.crunchbase.com", priority=1
+        ),
         ResearchSource("CB Insights", "web", "https://cbinsights.com", priority=1),
         ResearchSource("PitchBook", "api", priority=1, cost_per_query=0.50),
         ResearchSource("PropTech News", "web", "https://proptechnews.com", priority=2),
@@ -217,7 +219,9 @@ AI_TECHNOLOGY_TRENDS = ResearchTemplate(
         "Which AI tools and platforms are gaining enterprise adoption?",
     ],
     data_sources=[
-        ResearchSource("arXiv AI Papers", "api", "https://arxiv.org/list/cs.AI/recent", priority=1),
+        ResearchSource(
+            "arXiv AI Papers", "api", "https://arxiv.org/list/cs.AI/recent", priority=1
+        ),
         ResearchSource("Google AI Blog", "web", priority=1),
         ResearchSource("OpenAI Research", "web", priority=1),
         ResearchSource("AI Investment Database", "api", priority=1),
@@ -324,10 +328,14 @@ def get_template_by_id(template_id: str) -> ResearchTemplate | None:
 def get_templates_for_industry(industry: IndustryDomain) -> list[ResearchTemplate]:
     """Get all templates for specific industry"""
     template_ids = TEMPLATES_BY_INDUSTRY.get(industry, [])
-    return [RESEARCH_TEMPLATES[tid] for tid in template_ids if tid in RESEARCH_TEMPLATES]
+    return [
+        RESEARCH_TEMPLATES[tid] for tid in template_ids if tid in RESEARCH_TEMPLATES
+    ]
 
 
-def get_recommended_template(industry: str, depth: str = "standard") -> ResearchTemplate | None:
+def get_recommended_template(
+    industry: str, depth: str = "standard"
+) -> ResearchTemplate | None:
     """Get recommended template for industry and depth"""
     try:
         industry_enum = IndustryDomain(industry.lower())
@@ -346,7 +354,9 @@ def get_recommended_template(industry: str, depth: str = "standard") -> Research
         return None
 
 
-def estimate_research_cost(template: ResearchTemplate, depth: ResearchDepth) -> dict[str, float]:
+def estimate_research_cost(
+    template: ResearchTemplate, depth: ResearchDepth
+) -> dict[str, float]:
     """Estimate research execution cost"""
 
     # Base costs by depth level
@@ -405,7 +415,9 @@ class TemplateOrchestrator:
             name=customizations.get("name", f"{base.name} (Custom)"),
             industry=base.industry,
             description=customizations.get("description", base.description),
-            default_depth=ResearchDepth(customizations.get("depth", base.default_depth.value)),
+            default_depth=ResearchDepth(
+                customizations.get("depth", base.default_depth.value)
+            ),
             estimated_duration=customizations.get("duration", base.estimated_duration),
             agent_count=customizations.get("agent_count", base.agent_count),
             premium_models_required=customizations.get(
@@ -413,9 +425,13 @@ class TemplateOrchestrator:
             ),
             key_questions=customizations.get("questions", base.key_questions),
             data_sources=customizations.get("sources", base.data_sources),
-            analysis_frameworks=customizations.get("frameworks", base.analysis_frameworks),
+            analysis_frameworks=customizations.get(
+                "frameworks", base.analysis_frameworks
+            ),
             output_formats=customizations.get("outputs", base.output_formats),
-            scheduling_enabled=customizations.get("scheduling", base.scheduling_enabled),
+            scheduling_enabled=customizations.get(
+                "scheduling", base.scheduling_enabled
+            ),
             alert_thresholds=customizations.get("alerts", base.alert_thresholds),
             stakeholder_notifications=customizations.get(
                 "notifications", base.stakeholder_notifications
@@ -446,11 +462,15 @@ class TemplateOrchestrator:
         # Validate cost implications
         cost_estimate = estimate_research_cost(template, template.default_depth)
         if cost_estimate["estimated_total"] > 1000:
-            warnings.append(f"High cost estimate: ${cost_estimate['estimated_total']:.2f}")
+            warnings.append(
+                f"High cost estimate: ${cost_estimate['estimated_total']:.2f}"
+            )
 
         # Validate duration
         if template.premium_models_required and template.agent_count > 10:
-            warnings.append("High agent count with premium models may cause rate limiting")
+            warnings.append(
+                "High agent count with premium models may cause rate limiting"
+            )
 
         return {
             "valid": len(issues) == 0,

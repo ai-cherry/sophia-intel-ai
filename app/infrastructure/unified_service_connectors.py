@@ -44,7 +44,9 @@ class ServiceStatus:
 class BaseServiceClient:
     """Base class for service clients"""
 
-    def __init__(self, name: str, base_url: str, api_key: str, client: httpx.AsyncClient):
+    def __init__(
+        self, name: str, base_url: str, api_key: str, client: httpx.AsyncClient
+    ):
         self.name = name
         self.base_url = base_url
         self.api_key = api_key
@@ -58,7 +60,9 @@ class BaseServiceClient:
 
         try:
             response = await self.client.get(
-                f"{self.base_url}{self.health_endpoint}", headers=self._get_headers(), timeout=5.0
+                f"{self.base_url}{self.health_endpoint}",
+                headers=self._get_headers(),
+                timeout=5.0,
             )
 
             latency = (time.perf_counter() - start) * 1000
@@ -90,7 +94,10 @@ class BaseServiceClient:
 
     def _get_headers(self) -> dict[str, str]:
         """Get request headers with authentication"""
-        return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
 
     def _update_metrics(self, latency: float, success: bool):
         """Update client metrics"""
@@ -141,7 +148,11 @@ class LambdaLabsClient(BaseServiceClient):
             response = await self.client.post(
                 f"{self.base_url}/api/v1/instances",
                 headers=self._get_headers(),
-                json={"instance_type": instance_type, "region": region, "ssh_key": ssh_key},
+                json={
+                    "instance_type": instance_type,
+                    "region": region,
+                    "ssh_key": ssh_key,
+                },
             )
 
             self._update_metrics((time.perf_counter() - start) * 1000, True)
@@ -161,7 +172,8 @@ class LambdaLabsClient(BaseServiceClient):
 
         try:
             response = await self.client.delete(
-                f"{self.base_url}/api/v1/instances/{instance_id}", headers=self._get_headers()
+                f"{self.base_url}/api/v1/instances/{instance_id}",
+                headers=self._get_headers(),
             )
 
             self._update_metrics((time.perf_counter() - start) * 1000, True)
@@ -241,7 +253,8 @@ class NeonAdminClient(BaseServiceClient):
 
         try:
             response = await self.client.get(
-                f"{self.base_url}/api/v2/projects/{self.project_id}", headers=self._get_headers()
+                f"{self.base_url}/api/v2/projects/{self.project_id}",
+                headers=self._get_headers(),
             )
 
             self._update_metrics((time.perf_counter() - start) * 1000, True)
@@ -303,7 +316,11 @@ class GitHubClient(BaseServiceClient):
         }
 
     async def trigger_workflow(
-        self, repo: str, workflow_id: str, ref: str = "main", inputs: Optional[dict] = None
+        self,
+        repo: str,
+        workflow_id: str,
+        ref: str = "main",
+        inputs: Optional[dict] = None,
     ) -> bool:
         """Trigger GitHub Actions workflow"""
         start = time.perf_counter()
@@ -368,7 +385,9 @@ class UnifiedServiceConnector:
         """Initialize unified service connector"""
         self.config = config
         self.client = httpx.AsyncClient(
-            timeout=30.0, limits=httpx.Limits(max_connections=100), follow_redirects=True
+            timeout=30.0,
+            limits=httpx.Limits(max_connections=100),
+            follow_redirects=True,
         )
 
         # Initialize secrets manager
@@ -389,7 +408,9 @@ class UnifiedServiceConnector:
         if "lambda-labs" not in self._clients:
             api_key = await self._get_rotated_secret("lambda-labs", "api_key")
             self._clients["lambda-labs"] = LambdaLabsClient(
-                api_key=api_key, base_url="https://cloud.lambdalabs.com", client=self.client
+                api_key=api_key,
+                base_url="https://cloud.lambdalabs.com",
+                client=self.client,
             )
         return self._clients["lambda-labs"]
 
@@ -438,7 +459,9 @@ class UnifiedServiceConnector:
 
         return statuses
 
-    async def _check_service_health(self, service_name: str, connector_func) -> ServiceStatus:
+    async def _check_service_health(
+        self, service_name: str, connector_func
+    ) -> ServiceStatus:
         """Check health of a specific service"""
         # Check cache first
         if service_name in self.health_cache:
@@ -487,7 +510,9 @@ class UnifiedServiceConnector:
 
         # Check if circuit is open
         if breaker["state"] == "open" and breaker["last_failure"]:
-            time_since_failure = (datetime.now() - breaker["last_failure"]).total_seconds()
+            time_since_failure = (
+                datetime.now() - breaker["last_failure"]
+            ).total_seconds()
             if time_since_failure > 60:  # Try again after 60 seconds
                 breaker["state"] = "half-open"
             else:
@@ -528,7 +553,9 @@ if __name__ == "__main__":
         logger.info("Monitoring all services...")
         statuses = await connector.monitor_all_services()
         for status in statuses:
-            logger.info(f"  {status.name}: {status.health.value} ({status.latency_ms:.2f}ms)")
+            logger.info(
+                f"  {status.name}: {status.health.value} ({status.latency_ms:.2f}ms)"
+            )
 
         # Test Lambda Labs
         lambda_client = await connector.lambda_labs_connector()

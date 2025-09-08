@@ -81,8 +81,12 @@ class DependencyGraph:
 
     nodes: dict[str, CodeNode] = field(default_factory=dict)
     relationships: list[CodeRelationship] = field(default_factory=list)
-    adjacency_list: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
-    reverse_adjacency: dict[str, list[str]] = field(default_factory=lambda: defaultdict(list))
+    adjacency_list: dict[str, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
+    reverse_adjacency: dict[str, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
 
 
 class PythonASTAnalyzer:
@@ -209,7 +213,9 @@ class PythonASTAnalyzer:
                 else f"module:{self.current_file}"
             ),
             metadata={
-                "decorators": [self._get_decorator_name(d) for d in node.decorator_list],
+                "decorators": [
+                    self._get_decorator_name(d) for d in node.decorator_list
+                ],
                 "bases": [self._get_name(base) for base in node.bases],
             },
         )
@@ -270,7 +276,9 @@ class PythonASTAnalyzer:
             docstring=ast.get_docstring(node),
             parent_id=parent_id,
             metadata={
-                "decorators": [self._get_decorator_name(d) for d in node.decorator_list],
+                "decorators": [
+                    self._get_decorator_name(d) for d in node.decorator_list
+                ],
                 "arguments": [arg.arg for arg in node.args.args],
                 "returns": self._get_annotation(node.returns) if node.returns else None,
             },
@@ -466,7 +474,9 @@ class GraphAnalyzer:
         # Resolve references
         self._resolve_references()
 
-        logger.info(f"Built graph: {len(all_nodes)} nodes, {len(all_relationships)} relationships")
+        logger.info(
+            f"Built graph: {len(all_nodes)} nodes, {len(all_relationships)} relationships"
+        )
         return self.graph
 
     def _build_adjacency_lists(self):
@@ -733,7 +743,9 @@ class ContextualEmbeddings:
         self.centrality_metrics = {}
         self.code_clusters = {}
 
-    async def build_contextual_index(self, file_contents: dict[str, str]) -> dict[str, Any]:
+    async def build_contextual_index(
+        self, file_contents: dict[str, str]
+    ) -> dict[str, Any]:
         """
         Build contextual embeddings for a codebase
 
@@ -761,8 +773,10 @@ class ContextualEmbeddings:
                 node_content = self._extract_node_content(node, file_contents)
 
                 if node_content:
-                    base_embedding, metadata = await self.embedding_system.generate_embedding(
-                        node_content, EmbeddingType.CODE, metadata=None
+                    base_embedding, metadata = (
+                        await self.embedding_system.generate_embedding(
+                            node_content, EmbeddingType.CODE, metadata=None
+                        )
                     )
 
                     # Get contextual information
@@ -783,7 +797,9 @@ class ContextualEmbeddings:
                     }
 
             except Exception as e:
-                logger.warning(f"Failed to generate contextual embedding for {node_id}: {e}")
+                logger.warning(
+                    f"Failed to generate contextual embedding for {node_id}: {e}"
+                )
 
         logger.info(f"Generated {len(contextual_embeddings)} contextual embeddings")
 
@@ -795,7 +811,9 @@ class ContextualEmbeddings:
             "stats": self._compute_contextual_stats(),
         }
 
-    def _extract_node_content(self, node: CodeNode, file_contents: dict[str, str]) -> Optional[str]:
+    def _extract_node_content(
+        self, node: CodeNode, file_contents: dict[str, str]
+    ) -> Optional[str]:
         """Extract content for a specific node"""
         if node.file_path not in file_contents:
             return None
@@ -934,7 +952,9 @@ class ContextualEmbeddings:
             ),
         }
 
-    def find_similar_contexts(self, node_id: str, k: int = 5) -> list[tuple[str, float]]:
+    def find_similar_contexts(
+        self, node_id: str, k: int = 5
+    ) -> list[tuple[str, float]]:
         """Find nodes with similar contextual patterns"""
         if not self.dependency_graph or node_id not in self.dependency_graph.nodes:
             return []
@@ -951,7 +971,9 @@ class ContextualEmbeddings:
             other_context = self.graph_analyzer.get_node_context(other_id)
 
             # Compute contextual similarity
-            similarity = self._compute_contextual_similarity(target_context, other_context)
+            similarity = self._compute_contextual_similarity(
+                target_context, other_context
+            )
 
             if similarity > 0:
                 similarities.append((other_id, similarity))
@@ -969,11 +991,13 @@ class ContextualEmbeddings:
         # Compare relationship types
         rel_types1 = {
             rel.relationship_type
-            for rel in context1["incoming_relationships"] + context1["outgoing_relationships"]
+            for rel in context1["incoming_relationships"]
+            + context1["outgoing_relationships"]
         }
         rel_types2 = {
             rel.relationship_type
-            for rel in context2["incoming_relationships"] + context2["outgoing_relationships"]
+            for rel in context2["incoming_relationships"]
+            + context2["outgoing_relationships"]
         }
 
         if not rel_types1 and not rel_types2:

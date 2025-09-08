@@ -29,7 +29,11 @@ def list_directory(dir_path: str = ".") -> dict[str, Any]:
                     {
                         "name": item,
                         "type": "directory" if os.path.isdir(full_path) else "file",
-                        "size": os.path.getsize(full_path) if os.path.isfile(full_path) else 0,
+                        "size": (
+                            os.path.getsize(full_path)
+                            if os.path.isfile(full_path)
+                            else 0
+                        ),
                     }
                 )
             except (OSError, PermissionError):
@@ -43,4 +47,10 @@ def list_directory(dir_path: str = ".") -> dict[str, Any]:
             "success": True,
         }
     except Exception as e:
-        return {"directory": dir_path, "error": str(e), "items": [], "total": 0, "success": False}
+        return {
+            "directory": dir_path,
+            "error": str(e),
+            "items": [],
+            "total": 0,
+            "success": False,
+        }

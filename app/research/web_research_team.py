@@ -207,7 +207,9 @@ class BaseResearchProvider(ABC):
         self.portkey_manager = get_portkey_manager()
 
     @abstractmethod
-    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> list[ResearchFinding]:
+    async def search(
+        self, query: str, domain: ResearchDomain, **kwargs
+    ) -> list[ResearchFinding]:
         """Execute search with provider"""
         pass
 
@@ -241,7 +243,9 @@ class PerplexityProvider(BaseResearchProvider):
         super().__init__(ResearchProvider.PERPLEXITY)
         self.api_key = self.portkey_manager.get_virtual_key("perplexity")
 
-    async def search(self, query: str, domain: ResearchDomain, **kwargs) -> list[ResearchFinding]:
+    async def search(
+        self, query: str, domain: ResearchDomain, **kwargs
+    ) -> list[ResearchFinding]:
         """Execute Perplexity search"""
         try:
             # Use Portkey to call Perplexity with citations
@@ -254,7 +258,10 @@ class PerplexityProvider(BaseResearchProvider):
             ]
 
             result = await self.portkey_manager.execute_with_fallback(
-                task_type=TaskType.RESEARCH, messages=messages, provider="perplexity", **kwargs
+                task_type=TaskType.RESEARCH,
+                messages=messages,
+                provider="perplexity",
+                **kwargs,
             )
 
             # Parse Perplexity response with citations
@@ -347,7 +354,9 @@ class FactChecker:
     def __init__(self):
         self.portkey_manager = get_portkey_manager()
 
-    async def check_facts(self, findings: list[ResearchFinding]) -> list[ResearchFinding]:
+    async def check_facts(
+        self, findings: list[ResearchFinding]
+    ) -> list[ResearchFinding]:
         """Check facts and identify contradictions"""
         if len(findings) < 2:
             return findings
@@ -388,7 +397,9 @@ class FactChecker:
                 task_type=TaskType.RESEARCH, messages=messages, model="fast"
             )
 
-            response = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            response = (
+                result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            )
             if response and response.lower() != "none":
                 contradictions.append(response)
 
@@ -467,7 +478,9 @@ class WebResearchTeam:
         summary = await self._generate_summary(checked_findings)
 
         # Calculate total confidence
-        total_confidence = sum(f.confidence for f in checked_findings) / len(checked_findings)
+        total_confidence = sum(f.confidence for f in checked_findings) / len(
+            checked_findings
+        )
 
         # Create report
         report = ResearchReport(
@@ -544,9 +557,13 @@ class SophiaResearchTeam(WebResearchTeam):
     def __init__(self):
         super().__init__(ResearchDomain.BUSINESS)
 
-    async def market_research(self, companies: list[str], topics: list[str]) -> ResearchReport:
+    async def market_research(
+        self, companies: list[str], topics: list[str]
+    ) -> ResearchReport:
         """Specialized market research"""
-        query = f"Market analysis for {', '.join(companies)} regarding {', '.join(topics)}"
+        query = (
+            f"Market analysis for {', '.join(companies)} regarding {', '.join(topics)}"
+        )
         report = await self.research(query, deep_search=True)
 
         # Enhance with business-specific analysis
@@ -556,7 +573,9 @@ class SophiaResearchTeam(WebResearchTeam):
 
         return report
 
-    async def competitive_analysis(self, company: str, competitors: list[str]) -> ResearchReport:
+    async def competitive_analysis(
+        self, company: str, competitors: list[str]
+    ) -> ResearchReport:
         """Competitive analysis research"""
         query = f"Competitive analysis: {company} vs {', '.join(competitors)}"
         report = await self.research(query, deep_search=True)
@@ -574,7 +593,9 @@ class ArtemisResearchTeam(WebResearchTeam):
     def __init__(self):
         super().__init__(ResearchDomain.TECHNICAL)
 
-    async def api_research(self, api_name: str, version: Optional[str] = None) -> ResearchReport:
+    async def api_research(
+        self, api_name: str, version: Optional[str] = None
+    ) -> ResearchReport:
         """Research API changes and documentation"""
         query = f"{api_name} API documentation"
         if version:

@@ -53,7 +53,11 @@ class SophiaIntelCloudFlareConfig:
                 "cache_ttl": 14400,
                 "minify": True,
             },
-            "status": {"target": "status-page", "cache_level": "standard", "cache_ttl": 300},
+            "status": {
+                "target": "status-page",
+                "cache_level": "standard",
+                "cache_ttl": 300,
+            },
         }
 
     def get_dns_records(self) -> List[Dict[str, Any]]:
@@ -625,7 +629,9 @@ if __name__ == "__main__":
 
     print("\nPage Rules:")
     for rule in config.get_page_rules():
-        print(f"  Priority {rule['priority']}: {rule['targets'][0]['constraint']['value']}")
+        print(
+            f"  Priority {rule['priority']}: {rule['targets'][0]['constraint']['value']}"
+        )
 
     print("\nWorker Script generated successfully")
     print(f"Security settings configured for {config.domain}")

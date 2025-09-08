@@ -111,7 +111,8 @@ class ESCMigrationRollback:
         # Initialize audit logger
         audit_backends = [
             AuditStorageBackend(
-                backend_type="file", connection_params={"file_path": "logs/rollback_audit.log"}
+                backend_type="file",
+                connection_params={"file_path": "logs/rollback_audit.log"},
             )
         ]
         self.audit_logger = ESCAuditLogger(audit_backends)
@@ -202,7 +203,9 @@ class ESCMigrationRollback:
         # Sort by timestamp (newest first)
         self.available_backups.sort(key=lambda b: b.timestamp, reverse=True)
 
-        console.print(f"[green]✓[/green] Found {len(self.available_backups)} available backups")
+        console.print(
+            f"[green]✓[/green] Found {len(self.available_backups)} available backups"
+        )
 
         # Display available backups
         table = Table(title="Available Backups")
@@ -306,7 +309,9 @@ class ESCMigrationRollback:
                     break
 
             if not self.selected_backup:
-                raise ValueError(f"Specified backup not found: {self.config.target_backup}")
+                raise ValueError(
+                    f"Specified backup not found: {self.config.target_backup}"
+                )
         else:
             # Use most recent backup
             self.selected_backup = self.available_backups[0]
@@ -319,7 +324,9 @@ class ESCMigrationRollback:
                     console.print("[red]Rollback cancelled by user[/red]")
                     return False
 
-        console.print(f"[green]✓[/green] Selected backup: {self.selected_backup.timestamp}")
+        console.print(
+            f"[green]✓[/green] Selected backup: {self.selected_backup.timestamp}"
+        )
         console.print(f"  Path: {self.selected_backup.backup_path}")
         console.print(f"  Files: {len(self.selected_backup.source_files)}")
         console.print(f"  Secrets: {self.selected_backup.secrets_count}")
@@ -346,7 +353,9 @@ class ESCMigrationRollback:
                 current_files.append(source_file)
 
         if current_files:
-            console.print(f"[yellow]⚠[/yellow] {len(current_files)} files will be overwritten")
+            console.print(
+                f"[yellow]⚠[/yellow] {len(current_files)} files will be overwritten"
+            )
             safety_issues.append(f"{len(current_files)} files will be overwritten")
 
         # Check ESC secrets (if removal requested)
@@ -359,7 +368,9 @@ class ESCMigrationRollback:
                             console.print(
                                 f"[yellow]⚠[/yellow] ESC secrets in {env} will be removed"
                             )
-                            safety_issues.append(f"ESC secrets in {env} will be removed")
+                            safety_issues.append(
+                                f"ESC secrets in {env} will be removed"
+                            )
             except Exception as e:
                 logger.warning(f"Could not check ESC secrets: {e}")
 
@@ -376,7 +387,9 @@ class ESCMigrationRollback:
                 console.print(f"  • {issue}")
 
             if not self.config.force_rollback:
-                console.print("\n[red]This rollback operation has safety implications.[/red]")
+                console.print(
+                    "\n[red]This rollback operation has safety implications.[/red]"
+                )
                 if not Confirm.ask("Do you want to continue?"):
                     console.print("[red]Rollback cancelled by user[/red]")
                     raise SystemExit("Rollback cancelled for safety")
@@ -397,7 +410,9 @@ class ESCMigrationRollback:
         console.print("\n[bold]Step 4: Creating rollback backup...[/bold]")
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        rollback_backup_dir = Path(self.config.backup_directory) / f"rollback_backup_{timestamp}"
+        rollback_backup_dir = (
+            Path(self.config.backup_directory) / f"rollback_backup_{timestamp}"
+        )
         rollback_backup_dir.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -430,7 +445,9 @@ class ESCMigrationRollback:
                 await f.write(json.dumps(rollback_manifest, indent=2))
 
             self.rollback_result.rollback_backup_path = str(rollback_backup_dir)
-            console.print(f"[green]✓[/green] Rollback backup created: {rollback_backup_dir}")
+            console.print(
+                f"[green]✓[/green] Rollback backup created: {rollback_backup_dir}"
+            )
             console.print(f"  Files backed up: {len(backed_up_files)}")
 
             await self.audit_logger.log_event(
@@ -535,7 +552,9 @@ class ESCMigrationRollback:
             self.rollback_result.warnings.append(
                 "No ESC manager available - skipping secret removal"
             )
-            console.print("[yellow]⚠[/yellow] No ESC manager available - skipping secret removal")
+            console.print(
+                "[yellow]⚠[/yellow] No ESC manager available - skipping secret removal"
+            )
             return
 
         # Load secrets to remove from manifest
@@ -602,13 +621,17 @@ class ESCMigrationRollback:
                                     success=True,
                                 )
 
-                                console.print(f"[red]Removed: {environment}.{secret_key}[/red]")
+                                console.print(
+                                    f"[red]Removed: {environment}.{secret_key}[/red]"
+                                )
 
                             self.rollback_result.total_operations += 1
                             self.rollback_result.successful_operations += 1
 
                         except Exception as e:
-                            error_msg = f"Failed to remove {secret_key} from {environment}: {e}"
+                            error_msg = (
+                                f"Failed to remove {secret_key} from {environment}: {e}"
+                            )
                             self.rollback_result.failed_operations += 1
                             self.rollback_result.errors.append(error_msg)
                             logger.error(error_msg)
@@ -633,7 +656,9 @@ class ESCMigrationRollback:
             try:
                 file_path = Path(restored_file)
                 if not file_path.exists():
-                    verification_issues.append(f"Restored file missing: {restored_file}")
+                    verification_issues.append(
+                        f"Restored file missing: {restored_file}"
+                    )
                 elif file_path.stat().st_size == 0:
                     verification_issues.append(f"Restored file empty: {restored_file}")
             except Exception as e:
@@ -717,17 +742,27 @@ class ESCMigrationRollback:
         table.add_column("Count", justify="right", style="green")
         table.add_column("Status", style="yellow")
 
-        table.add_row("Total Operations", str(self.rollback_result.total_operations), "")
         table.add_row(
-            "Successful", str(self.rollback_result.successful_operations), "[green]✓[/green]"
+            "Total Operations", str(self.rollback_result.total_operations), ""
+        )
+        table.add_row(
+            "Successful",
+            str(self.rollback_result.successful_operations),
+            "[green]✓[/green]",
         )
         table.add_row(
             "Failed",
             str(self.rollback_result.failed_operations),
-            "[red]✗[/red]" if self.rollback_result.failed_operations > 0 else "[green]✓[/green]",
+            (
+                "[red]✗[/red]"
+                if self.rollback_result.failed_operations > 0
+                else "[green]✓[/green]"
+            ),
         )
         table.add_row(
-            "Files Restored", str(len(self.rollback_result.restored_files)), "[green]✓[/green]"
+            "Files Restored",
+            str(len(self.rollback_result.restored_files)),
+            "[green]✓[/green]",
         )
         table.add_row(
             "Secrets Removed",
@@ -739,7 +774,9 @@ class ESCMigrationRollback:
         console.print(table)
 
         if self.rollback_result.successful_operations > 0:
-            console.print("\n[bold green]✓ Rollback completed successfully![/bold green]")
+            console.print(
+                "\n[bold green]✓ Rollback completed successfully![/bold green]"
+            )
         else:
             console.print("\n[bold red]✗ Rollback completed with issues[/bold red]")
 
@@ -751,11 +788,15 @@ class ESCMigrationRollback:
                 console.print(f"  ... and {len(self.rollback_result.errors) - 3} more")
 
         if self.rollback_result.warnings:
-            console.print(f"\n[yellow]Warnings ({len(self.rollback_result.warnings)}):[/yellow]")
+            console.print(
+                f"\n[yellow]Warnings ({len(self.rollback_result.warnings)}):[/yellow]"
+            )
             for warning in self.rollback_result.warnings[:3]:
                 console.print(f"  • {warning}")
             if len(self.rollback_result.warnings) > 3:
-                console.print(f"  ... and {len(self.rollback_result.warnings) - 3} more")
+                console.print(
+                    f"  ... and {len(self.rollback_result.warnings) - 3} more"
+                )
 
         console.print(f"\n[green]✓[/green] Rollback report saved: {report_file}")
 
@@ -783,16 +824,26 @@ async def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Rollback ESC migration")
-    parser.add_argument("--backup-dir", default="backup_configs/migration", help="Backup directory")
+    parser.add_argument(
+        "--backup-dir", default="backup_configs/migration", help="Backup directory"
+    )
     parser.add_argument("--target-backup", help="Specific backup timestamp to restore")
     parser.add_argument(
-        "--no-restore-files", action="store_true", help="Skip restoring configuration files"
+        "--no-restore-files",
+        action="store_true",
+        help="Skip restoring configuration files",
     )
-    parser.add_argument("--remove-esc-secrets", action="store_true", help="Remove secrets from ESC")
     parser.add_argument(
-        "--no-rollback-backup", action="store_true", help="Skip creating rollback backup"
+        "--remove-esc-secrets", action="store_true", help="Remove secrets from ESC"
     )
-    parser.add_argument("--force", action="store_true", help="Force rollback without safety checks")
+    parser.add_argument(
+        "--no-rollback-backup",
+        action="store_true",
+        help="Skip creating rollback backup",
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force rollback without safety checks"
+    )
     parser.add_argument("--pulumi-token", help="Pulumi API token")
     parser.add_argument("--org", default="sophia-intel", help="Pulumi organization")
     parser.add_argument(
@@ -806,7 +857,8 @@ async def main():
 
     # Setup logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Create rollback configuration
@@ -824,7 +876,9 @@ async def main():
 
     # Confirm destructive operation
     if not config.force_rollback:
-        console.print("\n[bold red]⚠️  WARNING: This will rollback your ESC migration![/bold red]")
+        console.print(
+            "\n[bold red]⚠️  WARNING: This will rollback your ESC migration![/bold red]"
+        )
         console.print("This operation will:")
         if config.restore_env_files:
             console.print("  • Restore original configuration files")
@@ -843,10 +897,14 @@ async def main():
         result = await rollback_tool.execute_rollback()
 
         if result.success_rate > 80:
-            console.print("\n[bold green]🎉 Rollback completed successfully![/bold green]")
+            console.print(
+                "\n[bold green]🎉 Rollback completed successfully![/bold green]"
+            )
             return 0
         else:
-            console.print("\n[bold yellow]⚠️  Rollback completed with issues[/bold yellow]")
+            console.print(
+                "\n[bold yellow]⚠️  Rollback completed with issues[/bold yellow]"
+            )
             return 1
 
     except Exception as e:

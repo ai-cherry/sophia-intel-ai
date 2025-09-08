@@ -33,7 +33,9 @@ class BasePersonalityAnalyzer(ABC):
         self.agent_id = agent_id
         self.config = config or {}
         self.analysis_cache: dict[str, dict[str, Any]] = {}
-        self.confidence_threshold = config.get("confidence_threshold", 0.6) if config else 0.6
+        self.confidence_threshold = (
+            config.get("confidence_threshold", 0.6) if config else 0.6
+        )
 
     @abstractmethod
     async def analyze_personality(
@@ -60,7 +62,9 @@ class BasePersonalityAnalyzer(ABC):
 
         # Calculate average sentence length
         if patterns["sentence_count"] > 0:
-            patterns["avg_sentence_length"] = patterns["word_count"] / patterns["sentence_count"]
+            patterns["avg_sentence_length"] = (
+                patterns["word_count"] / patterns["sentence_count"]
+            )
 
         # Analyze language style
         formal_indicators = [
@@ -121,11 +125,21 @@ class BasePersonalityAnalyzer(ABC):
 
         text_lower = text.lower()
 
-        patterns["formal_language"] = sum(1 for word in formal_indicators if word in text_lower)
-        patterns["casual_language"] = sum(1 for word in casual_indicators if word in text_lower)
-        patterns["technical_terms"] = sum(1 for word in technical_indicators if word in text_lower)
-        patterns["emotional_words"] = sum(1 for word in emotional_indicators if word in text_lower)
-        patterns["action_words"] = sum(1 for word in action_indicators if word in text_lower)
+        patterns["formal_language"] = sum(
+            1 for word in formal_indicators if word in text_lower
+        )
+        patterns["casual_language"] = sum(
+            1 for word in casual_indicators if word in text_lower
+        )
+        patterns["technical_terms"] = sum(
+            1 for word in technical_indicators if word in text_lower
+        )
+        patterns["emotional_words"] = sum(
+            1 for word in emotional_indicators if word in text_lower
+        )
+        patterns["action_words"] = sum(
+            1 for word in action_indicators if word in text_lower
+        )
 
         return patterns
 
@@ -138,7 +152,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
     personality and communication style indicators.
     """
 
-    def __init__(self, agent_id: str = "basic_personality", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "basic_personality", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
         self.analysis_version = "basic_v1.0"
 
@@ -221,7 +237,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
             network_patterns = await self._analyze_network_patterns(connections)
             profile.activity_patterns["network_characteristics"] = network_patterns
 
-    async def _analyze_posting_patterns(self, posts: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _analyze_posting_patterns(
+        self, posts: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Analyze posting patterns and content themes"""
         patterns = {
             "posting_frequency": "low",
@@ -253,13 +271,23 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
             content = post.get("content", "").lower()
 
             # Categorize content
-            if any(word in content for word in ["industry", "market", "trend", "insight"]):
+            if any(
+                word in content for word in ["industry", "market", "trend", "insight"]
+            ):
                 content_themes["industry_insights"] += 1
-            if any(word in content for word in ["company", "team", "organization", "we"]):
+            if any(
+                word in content for word in ["company", "team", "organization", "we"]
+            ):
                 content_themes["company_updates"] += 1
-            if any(word in content for word in ["achieved", "accomplished", "proud", "excited"]):
+            if any(
+                word in content
+                for word in ["achieved", "accomplished", "proud", "excited"]
+            ):
                 content_themes["personal_achievements"] += 1
-            if any(word in content for word in ["believe", "think", "perspective", "opinion"]):
+            if any(
+                word in content
+                for word in ["believe", "think", "perspective", "opinion"]
+            ):
                 content_themes["thought_leadership"] += 1
             if any(
                 word in content
@@ -277,12 +305,18 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
             post.get("likes", 0) > 10 or post.get("comments", 0) > 3 for post in posts
         )
 
-        patterns["thought_leadership"] = content_themes["thought_leadership"] > len(posts) * 0.3
-        patterns["personal_sharing"] = content_themes["personal_achievements"] > len(posts) * 0.2
+        patterns["thought_leadership"] = (
+            content_themes["thought_leadership"] > len(posts) * 0.3
+        )
+        patterns["personal_sharing"] = (
+            content_themes["personal_achievements"] > len(posts) * 0.2
+        )
 
         return patterns
 
-    async def _analyze_engagement_patterns(self, comments: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _analyze_engagement_patterns(
+        self, comments: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Analyze how prospect engages with others' content"""
         patterns = {
             "engagement_frequency": "low",
@@ -315,13 +349,25 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
             if any(
                 word in content.lower()
-                for word in ["experience", "suggest", "recommend", "consider", "approach"]
+                for word in [
+                    "experience",
+                    "suggest",
+                    "recommend",
+                    "consider",
+                    "approach",
+                ]
             ):
                 value_providing_count += 1
 
             if any(
                 word in content.lower()
-                for word in ["agree", "exactly", "great", "excellent", "congratulations"]
+                for word in [
+                    "agree",
+                    "exactly",
+                    "great",
+                    "excellent",
+                    "congratulations",
+                ]
             ):
                 supportive_count += 1
 
@@ -332,7 +378,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         patterns["asks_questions"] = question_count > total_comments * 0.2
         patterns["provides_value"] = value_providing_count > total_comments * 0.3
-        patterns["initiates_discussions"] = discussion_initiating_count > total_comments * 0.2
+        patterns["initiates_discussions"] = (
+            discussion_initiating_count > total_comments * 0.2
+        )
 
         # Determine dominant engagement style
         if value_providing_count > supportive_count:
@@ -346,7 +394,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         return patterns
 
-    async def _analyze_network_patterns(self, connections: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _analyze_network_patterns(
+        self, connections: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Analyze professional network characteristics"""
         patterns = {
             "network_size": len(connections),
@@ -437,7 +487,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         profile.behavior_patterns.append(email_behavior)
 
-    async def _analyze_response_patterns(self, messages: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _analyze_response_patterns(
+        self, messages: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Analyze email response timing and patterns"""
         patterns = {
             "avg_response_time_hours": 24.0,
@@ -465,7 +517,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         # Calculate averages
         if response_times:
-            patterns["avg_response_time_hours"] = sum(response_times) / len(response_times)
+            patterns["avg_response_time_hours"] = sum(response_times) / len(
+                response_times
+            )
 
             # Determine consistency (lower standard deviation = higher consistency)
             import statistics
@@ -498,7 +552,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
 
         return patterns
 
-    async def _analyze_web_behavior(self, profile: PersonalityProfile, web_data: dict[str, Any]):
+    async def _analyze_web_behavior(
+        self, profile: PersonalityProfile, web_data: dict[str, Any]
+    ):
         """Analyze web behavior patterns"""
         sessions = web_data.get("sessions", [])
 
@@ -525,7 +581,12 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
             pages_visited.extend(session.get("pages", []))
 
         # Categorize page types
-        content_interests = {"technical": 0, "business": 0, "educational": 0, "social": 0}
+        content_interests = {
+            "technical": 0,
+            "business": 0,
+            "educational": 0,
+            "social": 0,
+        }
 
         for page in pages_visited:
             url = page.get("url", "").lower()
@@ -533,9 +594,13 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
                 content_interests["technical"] += 1
             elif any(term in url for term in ["blog", "news", "article", "resource"]):
                 content_interests["educational"] += 1
-            elif any(term in url for term in ["pricing", "product", "solution", "business"]):
+            elif any(
+                term in url for term in ["pricing", "product", "solution", "business"]
+            ):
                 content_interests["business"] += 1
-            elif any(term in url for term in ["linkedin", "twitter", "facebook", "social"]):
+            elif any(
+                term in url for term in ["linkedin", "twitter", "facebook", "social"]
+            ):
                 content_interests["social"] += 1
 
         # Determine engagement characteristics
@@ -558,16 +623,30 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
         # Score based on communication style
         comm_style_mapping = {
             CommunicationStyle.DIRECT: {"D": 0.7, "I": 0.2, "S": 0.1, "C": 0.3},
-            CommunicationStyle.RESULTS_FOCUSED: {"D": 0.8, "I": 0.3, "S": 0.2, "C": 0.4},
-            CommunicationStyle.RELATIONSHIP_FOCUSED: {"D": 0.2, "I": 0.8, "S": 0.7, "C": 0.1},
+            CommunicationStyle.RESULTS_FOCUSED: {
+                "D": 0.8,
+                "I": 0.3,
+                "S": 0.2,
+                "C": 0.4,
+            },
+            CommunicationStyle.RELATIONSHIP_FOCUSED: {
+                "D": 0.2,
+                "I": 0.8,
+                "S": 0.7,
+                "C": 0.1,
+            },
             CommunicationStyle.COLLABORATIVE: {"D": 0.3, "I": 0.7, "S": 0.6, "C": 0.3},
             CommunicationStyle.SUPPORTIVE: {"D": 0.1, "I": 0.4, "S": 0.8, "C": 0.3},
             CommunicationStyle.ANALYTICAL: {"D": 0.3, "I": 0.2, "S": 0.3, "C": 0.9},
         }
 
         if profile.communication_style in comm_style_mapping:
-            for disc_type, score in comm_style_mapping[profile.communication_style].items():
-                disc_scores[disc_type] += score * 0.4  # 40% weight from communication style
+            for disc_type, score in comm_style_mapping[
+                profile.communication_style
+            ].items():
+                disc_scores[disc_type] += (
+                    score * 0.4
+                )  # 40% weight from communication style
 
         # Score based on behavior patterns
         for pattern in profile.behavior_patterns:
@@ -606,7 +685,9 @@ class BasicPersonalityAgent(BasePersonalityAnalyzer):
         # Normalize scores to 0-1 range
         max_possible_score = 1.5  # Theoretical maximum from all sources
         for disc_type in disc_scores:
-            disc_scores[disc_type] = min(disc_scores[disc_type] / max_possible_score, 1.0)
+            disc_scores[disc_type] = min(
+                disc_scores[disc_type] / max_possible_score, 1.0
+            )
 
         profile.disc_scores = disc_scores
 
@@ -681,7 +762,9 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
         steadiness_score = await self._analyze_steadiness_indicators(data_sources)
 
         # Analyze detail orientation for Conscientiousness
-        conscientiousness_score = await self._analyze_conscientiousness_indicators(data_sources)
+        conscientiousness_score = await self._analyze_conscientiousness_indicators(
+            data_sources
+        )
 
         # Update DISC scores with enhanced analysis
         enhanced_scores = {
@@ -696,14 +779,18 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
             for disc_type, new_score in enhanced_scores.items():
                 existing_score = profile.disc_scores.get(disc_type, 0.0)
                 # Weighted average: 60% new analysis, 40% existing
-                profile.disc_scores[disc_type] = (new_score * 0.6) + (existing_score * 0.4)
+                profile.disc_scores[disc_type] = (new_score * 0.6) + (
+                    existing_score * 0.4
+                )
         else:
             profile.disc_scores = enhanced_scores
 
         # Update primary/secondary types
         self._update_disc_types(profile)
 
-    async def _analyze_dominance_indicators(self, data_sources: dict[str, Any]) -> float:
+    async def _analyze_dominance_indicators(
+        self, data_sources: dict[str, Any]
+    ) -> float:
         """Analyze indicators of Dominance (D) traits"""
         dominance_score = 0.0
         indicators = []
@@ -745,7 +832,9 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
             direct_count = 0
             for post in posts:
                 content = post.get("content", "").lower()
-                direct_count += sum(1 for indicator in direct_indicators if indicator in content)
+                direct_count += sum(
+                    1 for indicator in direct_indicators if indicator in content
+                )
 
             if posts and direct_count > len(posts) * 0.4:
                 dominance_score += 0.2
@@ -793,7 +882,9 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
         return min(dominance_score, 1.0)
 
-    async def _analyze_influence_indicators(self, data_sources: dict[str, Any]) -> float:
+    async def _analyze_influence_indicators(
+        self, data_sources: dict[str, Any]
+    ) -> float:
         """Analyze indicators of Influence (I) traits"""
         influence_score = 0.0
 
@@ -826,12 +917,20 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
                 influence_score += 0.4
 
             # High engagement seeking
-            avg_likes = sum(post.get("likes", 0) for post in posts) / len(posts) if posts else 0
+            avg_likes = (
+                sum(post.get("likes", 0) for post in posts) / len(posts) if posts else 0
+            )
             if avg_likes > 20:
                 influence_score += 0.2
 
             # Storytelling and personal anecdotes
-            storytelling_indicators = ["story", "experience", "remember", "happened", "learned"]
+            storytelling_indicators = [
+                "story",
+                "experience",
+                "remember",
+                "happened",
+                "learned",
+            ]
             storytelling_count = sum(
                 1
                 for post in posts
@@ -849,7 +948,9 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
         return min(influence_score, 1.0)
 
-    async def _analyze_steadiness_indicators(self, data_sources: dict[str, Any]) -> float:
+    async def _analyze_steadiness_indicators(
+        self, data_sources: dict[str, Any]
+    ) -> float:
         """Analyze indicators of Steadiness (S) traits"""
         steadiness_score = 0.0
 
@@ -897,7 +998,13 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
             # Supportive commenting
             comments = linkedin_data.get("comments", [])
-            supportive_keywords = ["great", "excellent", "agree", "exactly", "well said"]
+            supportive_keywords = [
+                "great",
+                "excellent",
+                "agree",
+                "exactly",
+                "well said",
+            ]
             supportive_comments = sum(
                 1
                 for comment in comments
@@ -910,7 +1017,9 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
         return min(steadiness_score, 1.0)
 
-    async def _analyze_conscientiousness_indicators(self, data_sources: dict[str, Any]) -> float:
+    async def _analyze_conscientiousness_indicators(
+        self, data_sources: dict[str, Any]
+    ) -> float:
         """Analyze indicators of Conscientiousness (C) traits"""
         conscientiousness_score = 0.0
 
@@ -945,7 +1054,9 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
 
             # Longer, detailed posts
             avg_post_length = (
-                sum(len(post.get("content", "")) for post in posts) / len(posts) if posts else 0
+                sum(len(post.get("content", "")) for post in posts) / len(posts)
+                if posts
+                else 0
             )
             if avg_post_length > 300:
                 conscientiousness_score += 0.3
@@ -977,7 +1088,13 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
                 conscientiousness_score += 0.2
 
             # Formal language usage
-            formal_indicators = ["furthermore", "however", "therefore", "regarding", "pursuant"]
+            formal_indicators = [
+                "furthermore",
+                "however",
+                "therefore",
+                "regarding",
+                "pursuant",
+            ]
             formal_count = sum(
                 1
                 for msg in messages
@@ -995,7 +1112,9 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
         if not profile.disc_scores:
             return
 
-        sorted_scores = sorted(profile.disc_scores.items(), key=lambda x: x[1], reverse=True)
+        sorted_scores = sorted(
+            profile.disc_scores.items(), key=lambda x: x[1], reverse=True
+        )
 
         type_mapping = {
             "D": PersonalityType.DOMINANT,
@@ -1074,28 +1193,48 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
                 "message_style": "brief_and_direct",
                 "timing": "business_hours_immediate",
                 "follow_up_frequency": "weekly",
-                "decision_factors": ["ROI", "efficiency", "results", "competitive_advantage"],
+                "decision_factors": [
+                    "ROI",
+                    "efficiency",
+                    "results",
+                    "competitive_advantage",
+                ],
             },
             PersonalityType.INFLUENTIAL: {
                 "contact_methods": ["linkedin", "phone", "video_call", "email"],
                 "message_style": "enthusiastic_and_personal",
                 "timing": "flexible_with_personal_touch",
                 "follow_up_frequency": "bi_weekly",
-                "decision_factors": ["innovation", "relationships", "recognition", "social_impact"],
+                "decision_factors": [
+                    "innovation",
+                    "relationships",
+                    "recognition",
+                    "social_impact",
+                ],
             },
             PersonalityType.STEADY: {
                 "contact_methods": ["email", "scheduled_calls", "referral"],
                 "message_style": "supportive_and_reliable",
                 "timing": "consistent_and_predictable",
                 "follow_up_frequency": "monthly",
-                "decision_factors": ["stability", "support", "team_impact", "long_term_benefits"],
+                "decision_factors": [
+                    "stability",
+                    "support",
+                    "team_impact",
+                    "long_term_benefits",
+                ],
             },
             PersonalityType.CONSCIENTIOUS: {
                 "contact_methods": ["email", "documentation", "detailed_proposals"],
                 "message_style": "detailed_and_analytical",
                 "timing": "planned_and_structured",
                 "follow_up_frequency": "bi_weekly",
-                "decision_factors": ["accuracy", "quality", "methodology", "risk_mitigation"],
+                "decision_factors": [
+                    "accuracy",
+                    "quality",
+                    "methodology",
+                    "risk_mitigation",
+                ],
             },
         }
 
@@ -1131,7 +1270,10 @@ class DISCProfileAnalyzer(BasePersonalityAnalyzer):
             influencers = []
             for connection in connections:
                 title = connection.get("title", "").lower()
-                if any(term in title for term in ["ceo", "president", "vp", "director", "head"]):
+                if any(
+                    term in title
+                    for term in ["ceo", "president", "vp", "director", "head"]
+                ):
                     influencers.append(connection.get("name", ""))
 
             profile.influence_network = influencers[:10]  # Top 10 potential influencers
@@ -1145,7 +1287,9 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
     optimal outreach timing, and decision-making preferences.
     """
 
-    def __init__(self, agent_id: str = "predictive_personality", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "predictive_personality", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
         self.analysis_version = "predictive_v1.0"
         self.historical_patterns = {}  # Would load from database
@@ -1169,7 +1313,9 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         await self._predict_content_resonance(profile, data_sources)
 
         # Predict decision timeline
-        await self._predict_decision_timeline(profile, historical_similar_profiles or [])
+        await self._predict_decision_timeline(
+            profile, historical_similar_profiles or []
+        )
 
         # Predict stakeholder influence
         await self._predict_stakeholder_dynamics(profile, data_sources)
@@ -1216,7 +1362,9 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
                 for hour in post_times:
                     hour_counts[hour] = hour_counts.get(hour, 0) + 1
 
-                sorted_hours = sorted(hour_counts.items(), key=lambda x: x[1], reverse=True)
+                sorted_hours = sorted(
+                    hour_counts.items(), key=lambda x: x[1], reverse=True
+                )
                 timing_patterns["linkedin_optimal_hours"] = [
                     f"{hour}:00" for hour, _ in sorted_hours[:3]
                 ]
@@ -1309,19 +1457,58 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
                     ],
                 },
                 PersonalityType.INFLUENTIAL: {
-                    "preferred_formats": ["case_studies", "success_stories", "testimonials"],
-                    "message_themes": ["innovation", "collaboration", "recognition", "vision"],
-                    "avoid_themes": ["technical_details", "risk_analysis", "lengthy_data"],
+                    "preferred_formats": [
+                        "case_studies",
+                        "success_stories",
+                        "testimonials",
+                    ],
+                    "message_themes": [
+                        "innovation",
+                        "collaboration",
+                        "recognition",
+                        "vision",
+                    ],
+                    "avoid_themes": [
+                        "technical_details",
+                        "risk_analysis",
+                        "lengthy_data",
+                    ],
                 },
                 PersonalityType.STEADY: {
-                    "preferred_formats": ["step_by_step_guides", "testimonials", "support_stories"],
-                    "message_themes": ["reliability", "support", "stability", "team_success"],
-                    "avoid_themes": ["aggressive_sales", "urgent_pressure", "major_changes"],
+                    "preferred_formats": [
+                        "step_by_step_guides",
+                        "testimonials",
+                        "support_stories",
+                    ],
+                    "message_themes": [
+                        "reliability",
+                        "support",
+                        "stability",
+                        "team_success",
+                    ],
+                    "avoid_themes": [
+                        "aggressive_sales",
+                        "urgent_pressure",
+                        "major_changes",
+                    ],
                 },
                 PersonalityType.CONSCIENTIOUS: {
-                    "preferred_formats": ["detailed_analysis", "white_papers", "methodology_docs"],
-                    "message_themes": ["accuracy", "quality", "research", "methodology"],
-                    "avoid_themes": ["emotional_appeals", "rushed_decisions", "incomplete_data"],
+                    "preferred_formats": [
+                        "detailed_analysis",
+                        "white_papers",
+                        "methodology_docs",
+                    ],
+                    "message_themes": [
+                        "accuracy",
+                        "quality",
+                        "research",
+                        "methodology",
+                    ],
+                    "avoid_themes": [
+                        "emotional_appeals",
+                        "rushed_decisions",
+                        "incomplete_data",
+                    ],
                 },
             }
 
@@ -1355,14 +1542,68 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         }
 
         theme_keywords = {
-            "leadership": ["lead", "leadership", "manage", "direct", "guide", "inspire"],
-            "innovation": ["innovation", "innovative", "new", "future", "transform", "disrupt"],
-            "teamwork": ["team", "collaborate", "together", "partnership", "collective"],
-            "results": ["results", "achieve", "accomplish", "deliver", "success", "goal"],
-            "technology": ["technology", "digital", "software", "platform", "tech", "automation"],
-            "industry_insights": ["industry", "market", "trend", "analysis", "insight", "outlook"],
-            "personal_development": ["learning", "growth", "development", "skill", "career"],
-            "company_culture": ["culture", "values", "mission", "vision", "purpose", "employee"],
+            "leadership": [
+                "lead",
+                "leadership",
+                "manage",
+                "direct",
+                "guide",
+                "inspire",
+            ],
+            "innovation": [
+                "innovation",
+                "innovative",
+                "new",
+                "future",
+                "transform",
+                "disrupt",
+            ],
+            "teamwork": [
+                "team",
+                "collaborate",
+                "together",
+                "partnership",
+                "collective",
+            ],
+            "results": [
+                "results",
+                "achieve",
+                "accomplish",
+                "deliver",
+                "success",
+                "goal",
+            ],
+            "technology": [
+                "technology",
+                "digital",
+                "software",
+                "platform",
+                "tech",
+                "automation",
+            ],
+            "industry_insights": [
+                "industry",
+                "market",
+                "trend",
+                "analysis",
+                "insight",
+                "outlook",
+            ],
+            "personal_development": [
+                "learning",
+                "growth",
+                "development",
+                "skill",
+                "career",
+            ],
+            "company_culture": [
+                "culture",
+                "values",
+                "mission",
+                "vision",
+                "purpose",
+                "employee",
+            ],
         }
 
         for item in content_items:
@@ -1379,7 +1620,9 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
         return [theme for theme, count in sorted_themes[:3] if count > 0]
 
     async def _predict_decision_timeline(
-        self, profile: PersonalityProfile, historical_similar_profiles: list[dict[str, Any]]
+        self,
+        profile: PersonalityProfile,
+        historical_similar_profiles: list[dict[str, Any]],
     ):
         """Predict decision-making timeline based on similar profiles"""
         # Default timeline based on personality type
@@ -1390,7 +1633,9 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
             PersonalityType.CONSCIENTIOUS: "3-6 months",
         }
 
-        predicted_timeline = timeline_mapping.get(profile.primary_disc_type, "3-6 months")
+        predicted_timeline = timeline_mapping.get(
+            profile.primary_disc_type, "3-6 months"
+        )
 
         # Adjust based on historical similar profiles
         if historical_similar_profiles:
@@ -1444,11 +1689,15 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
 
                 # Internal company connections (potential stakeholders)
                 if company == profile.prospect_id:  # Same company
-                    if any(role in title for role in ["ceo", "president", "vp", "director"]):
+                    if any(
+                        role in title for role in ["ceo", "president", "vp", "director"]
+                    ):
                         internal_influencers.append(connection.get("name", ""))
 
                 # External influencers (consultants, advisors)
-                elif any(role in title for role in ["consultant", "advisor", "partner"]):
+                elif any(
+                    role in title for role in ["consultant", "advisor", "partner"]
+                ):
                     external_influencers.append(connection.get("name", ""))
 
             stakeholder_predictions["internal_influencers"] = internal_influencers[:5]
@@ -1496,7 +1745,9 @@ class PredictivePersonalityEngine(BasePersonalityAnalyzer):
             source=ResearchSource.LINKEDIN,
         )
 
-        stakeholder_pattern.add_evidence({"stakeholder_predictions": stakeholder_predictions})
+        stakeholder_pattern.add_evidence(
+            {"stakeholder_predictions": stakeholder_predictions}
+        )
         profile.behavior_patterns.append(stakeholder_pattern)
 
 
@@ -1508,7 +1759,9 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
     cognitive style analysis, and relationship mapping capabilities.
     """
 
-    def __init__(self, agent_id: str = "advanced_psych_profile", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "advanced_psych_profile", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
         self.analysis_version = "advanced_v1.0"
 
@@ -1570,7 +1823,14 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
                     cognitive_indicators["analytical"] += 0.1
 
                 # Intuitive indicators
-                intuitive_keywords = ["feel", "sense", "believe", "instinct", "intuition", "gut"]
+                intuitive_keywords = [
+                    "feel",
+                    "sense",
+                    "believe",
+                    "instinct",
+                    "intuition",
+                    "gut",
+                ]
                 if any(keyword in content for keyword in intuitive_keywords):
                     cognitive_indicators["intuitive"] += 0.1
 
@@ -1599,7 +1859,9 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
                     cognitive_indicators["creative"] += 0.1
 
         # Normalize scores
-        max_score = max(cognitive_indicators.values()) if cognitive_indicators.values() else 0
+        max_score = (
+            max(cognitive_indicators.values()) if cognitive_indicators.values() else 0
+        )
         if max_score > 0:
             for style, score in cognitive_indicators.items():
                 cognitive_indicators[style] = score / max_score
@@ -1647,14 +1909,28 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
                 # Risk-taking language
                 if any(
                     word in content
-                    for word in ["bold", "venture", "pioneer", "experiment", "disrupt", "challenge"]
+                    for word in [
+                        "bold",
+                        "venture",
+                        "pioneer",
+                        "experiment",
+                        "disrupt",
+                        "challenge",
+                    ]
                 ):
                     risk_taking_indicators += 1
 
                 # Risk-averse language
                 if any(
                     word in content
-                    for word in ["careful", "cautious", "safe", "secure", "stable", "proven"]
+                    for word in [
+                        "careful",
+                        "cautious",
+                        "safe",
+                        "secure",
+                        "stable",
+                        "proven",
+                    ]
                 ):
                     risk_averse_indicators += 1
 
@@ -1746,7 +2022,9 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
                 PersonalityType.STEADY: 0.7,  # Moderate-high (consensus-seeking)
                 PersonalityType.CONSCIENTIOUS: 0.4,  # Moderate (evidence-based)
             }
-            social_proof_score = social_proof_mapping.get(profile.primary_disc_type, 0.5)
+            social_proof_score = social_proof_mapping.get(
+                profile.primary_disc_type, 0.5
+            )
 
         # Analyze social proof indicators in content
         linkedin_data = data_sources.get("linkedin", {})
@@ -1842,7 +2120,10 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
             for connection in connections:
                 title = connection.get("title", "").lower()
 
-                if any(term in title for term in ["ceo", "president", "vp", "director", "head"]):
+                if any(
+                    term in title
+                    for term in ["ceo", "president", "vp", "director", "head"]
+                ):
                     senior_connections += 1
                 elif any(term in title for term in ["manager", "lead", "senior"]):
                     peer_connections += 1
@@ -1873,7 +2154,9 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
             source=ResearchSource.LINKEDIN,
         )
 
-        relationship_pattern.add_evidence({"relationship_mapping": relationship_mapping})
+        relationship_pattern.add_evidence(
+            {"relationship_mapping": relationship_mapping}
+        )
         profile.behavior_patterns.append(relationship_pattern)
 
     async def _predict_negotiation_style(
@@ -1915,7 +2198,9 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
                 },
             }
 
-            negotiation_predictions = negotiation_mapping.get(profile.primary_disc_type, {})
+            negotiation_predictions = negotiation_mapping.get(
+                profile.primary_disc_type, {}
+            )
 
         # Enhance with risk tolerance
         if profile.risk_tolerance:
@@ -1936,7 +2221,9 @@ class AdvancedPsychProfileAgent(BasePersonalityAnalyzer):
             source=ResearchSource.LINKEDIN,
         )
 
-        negotiation_pattern.add_evidence({"negotiation_predictions": negotiation_predictions})
+        negotiation_pattern.add_evidence(
+            {"negotiation_predictions": negotiation_predictions}
+        )
         negotiation_pattern.predicts = [
             "negotiation_style",
             "concession_patterns",

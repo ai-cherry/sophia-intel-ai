@@ -64,7 +64,9 @@ class SophiaArtemisBridge:
             "performance",
         ),
         TranslationMapping(
-            "reduce operational costs", "optimize cloud resource utilization and API calls", "cost"
+            "reduce operational costs",
+            "optimize cloud resource utilization and API calls",
+            "cost",
         ),
         # Reliability mappings
         TranslationMapping(
@@ -84,7 +86,9 @@ class SophiaArtemisBridge:
         ),
         # Efficiency mappings
         TranslationMapping(
-            "reduce manual work", "implement automation pipelines and CI/CD", "efficiency"
+            "reduce manual work",
+            "implement automation pipelines and CI/CD",
+            "efficiency",
         ),
         TranslationMapping(
             "accelerate team velocity",
@@ -98,10 +102,14 @@ class SophiaArtemisBridge:
         ),
         # Scale mappings
         TranslationMapping(
-            "support business growth", "implement horizontal scaling and load balancing", "scale"
+            "support business growth",
+            "implement horizontal scaling and load balancing",
+            "scale",
         ),
         TranslationMapping(
-            "handle peak demand", "implement auto-scaling and caching strategies", "scale"
+            "handle peak demand",
+            "implement auto-scaling and caching strategies",
+            "scale",
         ),
     ]
 
@@ -141,7 +149,8 @@ class SophiaArtemisBridge:
             api_key = os.environ.get("PORTKEY_API_KEY")
             if api_key:
                 return Portkey(
-                    api_key=api_key, virtual_key="openai-vk-190a60"  # Use OpenAI for translations
+                    api_key=api_key,
+                    virtual_key="openai-vk-190a60",  # Use OpenAI for translations
                 )
         except Exception as e:
             logger.warning(f"Portkey initialization failed: {e}")
@@ -177,7 +186,9 @@ class SophiaArtemisBridge:
 
         # Use LLM for complex translations
         if self.portkey_client:
-            technical_spec = self._llm_translate(business_request, "business_to_technical")
+            technical_spec = self._llm_translate(
+                business_request, "business_to_technical"
+            )
             insight = CrossDomainInsight(
                 source_domain=DomainType.BUSINESS,
                 target_domain=DomainType.TECHNICAL,
@@ -202,7 +213,9 @@ class SophiaArtemisBridge:
         self.learning_history.append(insight)
         return insight
 
-    def translate_to_business(self, technical_metric: dict[str, Any]) -> CrossDomainInsight:
+    def translate_to_business(
+        self, technical_metric: dict[str, Any]
+    ) -> CrossDomainInsight:
         """
         Translate technical metrics to business impact
 
@@ -327,11 +340,17 @@ Business impact:"""
                     f"Service reliability at {value}, ensuring continuous business operations"
                 )
             elif "error" in key.lower():
-                narratives.append(f"Failure rate reduced to {value}, improving customer trust")
+                narratives.append(
+                    f"Failure rate reduced to {value}, improving customer trust"
+                )
             elif "cost" in key.lower():
-                narratives.append(f"Operational costs reduced by {value}, improving margins")
+                narratives.append(
+                    f"Operational costs reduced by {value}, improving margins"
+                )
             elif "coverage" in key.lower():
-                narratives.append(f"Quality assurance at {value}, reducing customer issues")
+                narratives.append(
+                    f"Quality assurance at {value}, reducing customer issues"
+                )
             else:
                 narratives.append(f"{business_term}: {value}")
 
@@ -353,8 +372,12 @@ Business impact:"""
                 "specifications": technical_context.get("specifications", {}),
                 "requirements": technical_context.get("requirements", []),
             },
-            "correlations": self._find_correlations(business_context, technical_context),
-            "recommendations": self._generate_recommendations(business_context, technical_context),
+            "correlations": self._find_correlations(
+                business_context, technical_context
+            ),
+            "recommendations": self._generate_recommendations(
+                business_context, technical_context
+            ),
         }
 
     def _find_correlations(
@@ -373,7 +396,9 @@ Business impact:"""
                 }
             )
 
-        if business_context.get("customer_satisfaction") and technical_context.get("latency"):
+        if business_context.get("customer_satisfaction") and technical_context.get(
+            "latency"
+        ):
             correlations.append(
                 {
                     "type": "performance_satisfaction",
@@ -403,10 +428,14 @@ Business impact:"""
 
         # Technical-driven business recommendations
         if technical_context.get("tech_debt_high"):
-            recommendations.append("Allocate resources for refactoring to prevent future delays")
+            recommendations.append(
+                "Allocate resources for refactoring to prevent future delays"
+            )
 
         if technical_context.get("security_vulnerabilities"):
-            recommendations.append("Prioritize security updates to maintain compliance and trust")
+            recommendations.append(
+                "Prioritize security updates to maintain compliance and trust"
+            )
 
         return recommendations
 
@@ -430,10 +459,14 @@ Business impact:"""
             / len(self.learning_history),
             "domains": {
                 "business_to_technical": sum(
-                    1 for i in self.learning_history if i.source_domain == DomainType.BUSINESS
+                    1
+                    for i in self.learning_history
+                    if i.source_domain == DomainType.BUSINESS
                 ),
                 "technical_to_business": sum(
-                    1 for i in self.learning_history if i.source_domain == DomainType.TECHNICAL
+                    1
+                    for i in self.learning_history
+                    if i.source_domain == DomainType.TECHNICAL
                 ),
             },
         }

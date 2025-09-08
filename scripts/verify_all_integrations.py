@@ -272,7 +272,9 @@ class IntegrationVerifier:
         summary_table.add_row("Total Integrations", str(total))
         summary_table.add_row("Connected", f"[green]{connected}[/green]")
         summary_table.add_row("Needs Setup", f"[yellow]{pending}[/yellow]")
-        summary_table.add_row("Success Rate", f"[blue]{(connected/total*100):.1f}%[/blue]")
+        summary_table.add_row(
+            "Success Rate", f"[blue]{(connected/total*100):.1f}%[/blue]"
+        )
 
         console.print("\n")
         console.print(summary_table)
@@ -284,7 +286,11 @@ class IntegrationVerifier:
         detail_table.add_column("Message", style="yellow")
 
         for service, (success, message) in results.items():
-            status = "[green]✅ Connected[/green]" if success else "[red]❌ Needs Setup[/red]"
+            status = (
+                "[green]✅ Connected[/green]"
+                if success
+                else "[red]❌ Needs Setup[/red]"
+            )
             detail_table.add_row(service, status, message)
 
         console.print("\n")
@@ -307,7 +313,9 @@ class IntegrationVerifier:
 
         # Check for failed integrations
         failed = [
-            (service, message) for service, (success, message) in results.items() if not success
+            (service, message)
+            for service, (success, message) in results.items()
+            if not success
         ]
 
         if failed:
@@ -315,7 +323,9 @@ class IntegrationVerifier:
 
             for service, message in failed:
                 if "token expired" in message.lower():
-                    recommendations.append(f"  • [red]{service}[/red]: Refresh OAuth tokens")
+                    recommendations.append(
+                        f"  • [red]{service}[/red]: Refresh OAuth tokens"
+                    )
                 elif "setup required" in message.lower():
                     recommendations.append(
                         f"  • [yellow]{service}[/yellow]: Complete initial setup"
@@ -325,7 +335,9 @@ class IntegrationVerifier:
                         f"  • [blue]{service}[/blue]: Add credentials to .env.local"
                     )
                 else:
-                    recommendations.append(f"  • [magenta]{service}[/magenta]: {message}")
+                    recommendations.append(
+                        f"  • [magenta]{service}[/magenta]: {message}"
+                    )
 
         recommendations.extend(
             [

@@ -23,7 +23,9 @@ class MCPMemoryClient:
         response = await self.client.get(f"{self.base_url}/health")
         return response.json()
 
-    async def store_memory(self, key: str, value: Any, ttl: Optional[int] = None) -> Dict[str, Any]:
+    async def store_memory(
+        self, key: str, value: Any, ttl: Optional[int] = None
+    ) -> Dict[str, Any]:
         """Store an item in memory"""
         payload = {"key": key, "value": value}
         if ttl is not None:
@@ -51,25 +53,41 @@ class MCPMemoryClient:
         response = await self.client.post(f"{self.base_url}/vector/store", json=payload)
         return response.json()
 
-    async def search_vector(self, embedding: List[float], limit: int = 10) -> Dict[str, Any]:
+    async def search_vector(
+        self, embedding: List[float], limit: int = 10
+    ) -> Dict[str, Any]:
         """Search for similar vectors"""
-        payload = {"text": "", "embedding": embedding, "metadata": {"limit": limit}}  # Placeholder
+        payload = {
+            "text": "",
+            "embedding": embedding,
+            "metadata": {"limit": limit},
+        }  # Placeholder
 
-        response = await self.client.post(f"{self.base_url}/vector/search", json=payload)
+        response = await self.client.post(
+            f"{self.base_url}/vector/search", json=payload
+        )
         return response.json()
 
     async def store_context(
         self, agent_id: str, context_type: str, content: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Store context information"""
-        payload = {"agent_id": agent_id, "context_type": context_type, "content": content}
+        payload = {
+            "agent_id": agent_id,
+            "context_type": context_type,
+            "content": content,
+        }
 
-        response = await self.client.post(f"{self.base_url}/context/store", json=payload)
+        response = await self.client.post(
+            f"{self.base_url}/context/store", json=payload
+        )
         return response.json()
 
     async def get_context(self, agent_id: str, context_type: str) -> Dict[str, Any]:
         """Retrieve context for a specific agent and type"""
-        response = await self.client.get(f"{self.base_url}/context/{agent_id}/{context_type}")
+        response = await self.client.get(
+            f"{self.base_url}/context/{agent_id}/{context_type}"
+        )
         return response.json()
 
     # Synchronous version of the client for simpler usage
@@ -95,7 +113,9 @@ class MCPMemoryClientSync:
         response = self.client.get(f"{self.base_url}/health")
         return response.json()
 
-    def store_memory(self, key: str, value: Any, ttl: Optional[int] = None) -> Dict[str, Any]:
+    def store_memory(
+        self, key: str, value: Any, ttl: Optional[int] = None
+    ) -> Dict[str, Any]:
         """Store an item in memory"""
         payload = {"key": key, "value": value}
         if ttl is not None:
@@ -125,7 +145,11 @@ class MCPMemoryClientSync:
 
     def search_vector(self, embedding: List[float], limit: int = 10) -> Dict[str, Any]:
         """Search for similar vectors"""
-        payload = {"text": "", "embedding": embedding, "metadata": {"limit": limit}}  # Placeholder
+        payload = {
+            "text": "",
+            "embedding": embedding,
+            "metadata": {"limit": limit},
+        }  # Placeholder
 
         response = self.client.post(f"{self.base_url}/vector/search", json=payload)
         return response.json()
@@ -134,7 +158,11 @@ class MCPMemoryClientSync:
         self, agent_id: str, context_type: str, content: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Store context information"""
-        payload = {"agent_id": agent_id, "context_type": context_type, "content": content}
+        payload = {
+            "agent_id": agent_id,
+            "context_type": context_type,
+            "content": content,
+        }
 
         response = self.client.post(f"{self.base_url}/context/store", json=payload)
         return response.json()

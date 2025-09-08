@@ -21,7 +21,10 @@ import aiohttp
 logging.basicConfig(
     level=logging.INFO,
     format="[%(asctime)s] %(levelname)s: %(message)s",
-    handlers=[logging.FileHandler("/tmp/monitor-production.log"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler("/tmp/monitor-production.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -110,7 +113,9 @@ class ProductionMonitor:
                         logger.info(f"Discovered {len(instances)} Sophia AI instances")
                         return instances
                     else:
-                        logger.error(f"Failed to fetch instances: HTTP {response.status}")
+                        logger.error(
+                            f"Failed to fetch instances: HTTP {response.status}"
+                        )
         except Exception as e:
             logger.error(f"Error discovering instances: {e}")
 
@@ -125,7 +130,9 @@ class ProductionMonitor:
 
         try:
             async with aiohttp.ClientSession() as session:
-                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                async with session.get(
+                    url, timeout=aiohttp.ClientTimeout(total=10)
+                ) as response:
                     response_time = (time.time() - start_time) * 1000
 
                     if response.status == 200:
@@ -163,7 +170,8 @@ class ProductionMonitor:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"http://{instance_ip}:9090/metrics", timeout=aiohttp.ClientTimeout(total=10)
+                    f"http://{instance_ip}:9090/metrics",
+                    timeout=aiohttp.ClientTimeout(total=10),
                 ) as response:
                     if response.status == 200:
                         data = await response.json()
@@ -215,7 +223,9 @@ class ProductionMonitor:
 
         return None
 
-    async def send_alert(self, alert_type: str, message: str, severity: str = "warning"):
+    async def send_alert(
+        self, alert_type: str, message: str, severity: str = "warning"
+    ):
         """Send alert notification"""
         alert_key = f"{alert_type}_{severity}"
         current_time = time.time()
@@ -253,14 +263,20 @@ class ProductionMonitor:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.post(
-                    self.slack_webhook, json=payload, timeout=aiohttp.ClientTimeout(total=10)
+                    self.slack_webhook,
+                    json=payload,
+                    timeout=aiohttp.ClientTimeout(total=10),
                 ) as response:
                     if response.status != 200:
-                        logger.error(f"Failed to send Slack alert: HTTP {response.status}")
+                        logger.error(
+                            f"Failed to send Slack alert: HTTP {response.status}"
+                        )
         except Exception as e:
             logger.error(f"Error sending Slack alert: {e}")
 
-    async def check_alerts(self, metrics: InstanceMetrics, cost_metrics: Optional[CostMetrics]):
+    async def check_alerts(
+        self, metrics: InstanceMetrics, cost_metrics: Optional[CostMetrics]
+    ):
         """Check for alert conditions"""
 
         # CPU alert
@@ -343,12 +359,20 @@ class ProductionMonitor:
             if (current_time - m.timestamp).total_seconds() < 3600  # Last hour
         ]
 
-        avg_cpu = statistics.mean([m.cpu_percent for m in recent_metrics]) if recent_metrics else 0
+        avg_cpu = (
+            statistics.mean([m.cpu_percent for m in recent_metrics])
+            if recent_metrics
+            else 0
+        )
         avg_memory = (
-            statistics.mean([m.memory_percent for m in recent_metrics]) if recent_metrics else 0
+            statistics.mean([m.memory_percent for m in recent_metrics])
+            if recent_metrics
+            else 0
         )
         avg_gpu = (
-            statistics.mean([m.gpu_utilization for m in recent_metrics]) if recent_metrics else 0
+            statistics.mean([m.gpu_utilization for m in recent_metrics])
+            if recent_metrics
+            else 0
         )
 
         # Service health summary
@@ -366,8 +390,12 @@ class ProductionMonitor:
                 "avg_cpu_percent": round(avg_cpu, 1),
                 "avg_memory_percent": round(avg_memory, 1),
                 "avg_gpu_utilization": round(avg_gpu, 1),
-                "current_cost_per_hour": latest_cost.current_cost_per_hour if latest_cost else 0,
-                "projected_monthly_cost": latest_cost.projected_monthly_cost if latest_cost else 0,
+                "current_cost_per_hour": (
+                    latest_cost.current_cost_per_hour if latest_cost else 0
+                ),
+                "projected_monthly_cost": (
+                    latest_cost.projected_monthly_cost if latest_cost else 0
+                ),
             },
             "instances": [
                 {
@@ -380,7 +408,9 @@ class ProductionMonitor:
                 for inst in self.instances
             ],
             "services": [asdict(s) for s in self.service_health],
-            "recent_metrics": [asdict(m) for m in recent_metrics[-10:]],  # Last 10 metrics
+            "recent_metrics": [
+                asdict(m) for m in recent_metrics[-10:]
+            ],  # Last 10 metrics
             "cost_metrics": asdict(latest_cost) if latest_cost else None,
         }
 
@@ -434,7 +464,10 @@ class ProductionMonitor:
                     await self.check_alerts(metrics, cost_metrics)
 
                     # Emergency shutdown conditions
-                    if cost_metrics and cost_metrics.current_cost_per_hour > self.cost_limit * 1.5:
+                    if (
+                        cost_metrics
+                        and cost_metrics.current_cost_per_hour > self.cost_limit * 1.5
+                    ):
                         await self.emergency_shutdown(
                             instance_id,
                             f"Cost exceeded 150% of limit: ${cost_metrics.current_cost_per_hour:.2f}/hour",
@@ -448,7 +481,9 @@ class ProductionMonitor:
 
         # Cleanup old data (keep last 24 hours)
         cutoff_time = datetime.now() - timedelta(hours=24)
-        self.metrics_history = [m for m in self.metrics_history if m.timestamp > cutoff_time]
+        self.metrics_history = [
+            m for m in self.metrics_history if m.timestamp > cutoff_time
+        ]
         self.cost_history = [c for c in self.cost_history if c.timestamp > cutoff_time]
 
         logger.info("Monitoring cycle complete")
@@ -492,8 +527,12 @@ class ProductionMonitor:
 async def main():
     """Main function"""
     parser = argparse.ArgumentParser(description="Sophia AI Production Monitor")
-    parser.add_argument("--continuous", action="store_true", help="Run continuous monitoring")
-    parser.add_argument("--interval", type=int, default=60, help="Monitoring interval in seconds")
+    parser.add_argument(
+        "--continuous", action="store_true", help="Run continuous monitoring"
+    )
+    parser.add_argument(
+        "--interval", type=int, default=60, help="Monitoring interval in seconds"
+    )
     parser.add_argument("--once", action="store_true", help="Run once and exit")
 
     args = parser.parse_args()

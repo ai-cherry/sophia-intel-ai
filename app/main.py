@@ -41,7 +41,10 @@ from app.security.tenant import TenantMiddleware
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.StreamHandler(sys.stdout), logging.FileHandler("sophia_memory.log")],
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler("sophia_memory.log"),
+    ],
 )
 logger = logging.getLogger(__name__)
 
@@ -65,7 +68,8 @@ async def lifespan(app: FastAPI):
 
         # Neon PostgreSQL connection with autoscaling
         neon_dsn = get_config_value("neon_database_url") or os.getenv(
-            "NEON_DATABASE_URL", "postgresql://user:pass@neon-host/sophia_ai?sslmode=require"
+            "NEON_DATABASE_URL",
+            "postgresql://user:pass@neon-host/sophia_ai?sslmode=require",
         )
 
         pg_pool = await asyncpg.create_pool(
@@ -82,7 +86,9 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Neon PostgreSQL pool initialized")
 
         # Redis with client-side tracking (Jul '25 optimization)
-        redis_url = get_config_value("redis_url") or os.getenv("REDIS_URL", "${REDIS_URL}")
+        redis_url = get_config_value("redis_url") or os.getenv(
+            "REDIS_URL", "${REDIS_URL}"
+        )
 
         redis_client = aioredis.from_url(
             redis_url,
@@ -106,7 +112,9 @@ async def lifespan(app: FastAPI):
 
         # Test Qdrant connection
         collections = await qdrant_client.get_collections()
-        logger.info(f"✅ Qdrant initialized with {len(collections.collections)} collections")
+        logger.info(
+            f"✅ Qdrant initialized with {len(collections.collections)} collections"
+        )
 
         # Create unified memory bus (eliminates all legacy memory systems)
         memory_bus = await create_memory_bus(pg_pool, redis_client, qdrant_client)
@@ -226,7 +234,8 @@ async def health_check():
         return {
             "status": "healthy",
             "timestamp": asyncio.get_event_loop().time(),
-            "uptime_seconds": asyncio.get_event_loop().time() - app_state.get("startup_time", 0),
+            "uptime_seconds": asyncio.get_event_loop().time()
+            - app_state.get("startup_time", 0),
             "memory_metrics": metrics,
             "version": "1.0.0",
             "architecture": "unified_memory_hellfire",
@@ -270,7 +279,9 @@ async def readiness_check():
         }
     except Exception as e:
         logger.error(f"Readiness check failed: {e}")
-        return JSONResponse(status_code=503, content={"status": "not_ready", "error": str(e)})
+        return JSONResponse(
+            status_code=503, content={"status": "not_ready", "error": str(e)}
+        )
 
 
 @app.get("/health/live")
@@ -295,19 +306,27 @@ async def get_metrics():
 
         # Cache hits by tier
         for tier, hits in metrics["cache_hits_by_tier"].items():
-            prometheus_metrics.append(f'sophia_cache_hits_total{{tier="{tier}"}} {hits}')
+            prometheus_metrics.append(
+                f'sophia_cache_hits_total{{tier="{tier}"}} {hits}'
+            )
 
         # Latency metric
-        prometheus_metrics.append(f"sophia_memory_latency_ms {metrics['avg_latency_ms']}")
+        prometheus_metrics.append(
+            f"sophia_memory_latency_ms {metrics['avg_latency_ms']}"
+        )
 
         # Operations total
-        prometheus_metrics.append(f"sophia_memory_operations_total {metrics['operations_total']}")
+        prometheus_metrics.append(
+            f"sophia_memory_operations_total {metrics['operations_total']}"
+        )
 
         return "\n".join(prometheus_metrics)
 
     except Exception as e:
         logger.error(f"Metrics collection failed: {e}")
-        return JSONResponse(status_code=500, content={"error": "Metrics collection failed"})
+        return JSONResponse(
+            status_code=500, content={"error": "Metrics collection failed"}
+        )
 
 
 # Include API routes (eliminates scattered route definitions)

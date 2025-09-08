@@ -13,7 +13,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Optional
 
-from .base_persona import BasePersonaAgent, ConversationStyle, PersonalityTrait, PersonaProfile
+from .base_persona import (
+    BasePersonaAgent,
+    ConversationStyle,
+    PersonalityTrait,
+    PersonaProfile,
+)
 
 
 @dataclass
@@ -144,7 +149,9 @@ class SalesCoachAgent(BasePersonaAgent):
         # Sales-specific attributes
         self.rep_assessments: dict[str, SalesSkillAssessment] = {}
         self.deal_coaching_history: list[DealCoaching] = []
-        self.sales_methodologies: dict[str, dict[str, Any]] = self._initialize_methodologies()
+        self.sales_methodologies: dict[str, dict[str, Any]] = (
+            self._initialize_methodologies()
+        )
         self.performance_trends: dict[str, list[SalesMetric]] = {}
         self.coaching_templates: dict[str, str] = self._initialize_coaching_templates()
 
@@ -153,7 +160,9 @@ class SalesCoachAgent(BasePersonaAgent):
         self.rep_learning_styles: dict[str, str] = {}  # Visual, auditory, kinesthetic
         self.industry_insights: dict[str, Any] = {}
 
-    async def process_interaction(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
+    async def process_interaction(
+        self, user_input: str, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Process sales coaching interaction"""
         interaction_type = context.get("type", "general_coaching")
         rep_id = context.get("rep_id")
@@ -163,7 +172,11 @@ class SalesCoachAgent(BasePersonaAgent):
             content=f"Coaching interaction: {user_input}",
             context=f"rep_{rep_id}_{interaction_type}",
             importance_score=0.7,
-            metadata={"rep_id": rep_id, "interaction_type": interaction_type, "context": context},
+            metadata={
+                "rep_id": rep_id,
+                "interaction_type": interaction_type,
+                "context": context,
+            },
         )
 
         # Route to appropriate coaching method
@@ -202,7 +215,9 @@ class SalesCoachAgent(BasePersonaAgent):
 
         return f"{base_greeting}{time_context}"
 
-    async def analyze_domain_specific_data(self, data: dict[str, Any]) -> dict[str, Any]:
+    async def analyze_domain_specific_data(
+        self, data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze sales data for coaching insights"""
         analysis_type = data.get("type", "performance")
 
@@ -231,7 +246,9 @@ class SalesCoachAgent(BasePersonaAgent):
         )
 
         # Generate coaching recommendations
-        coaching_points = await self._generate_deal_coaching_points(deal_data, user_input)
+        coaching_points = await self._generate_deal_coaching_points(
+            deal_data, user_input
+        )
         risk_assessment = self._assess_deal_risk(deal_data)
         next_actions = await self._recommend_next_actions(deal_data, user_input)
 
@@ -263,7 +280,9 @@ class SalesCoachAgent(BasePersonaAgent):
 
         # Get or create skill assessment
         if rep_id not in self.rep_assessments:
-            self.rep_assessments[rep_id] = await self._assess_rep_skills(rep_id, context)
+            self.rep_assessments[rep_id] = await self._assess_rep_skills(
+                rep_id, context
+            )
 
         assessment = self.rep_assessments[rep_id]
 
@@ -273,9 +292,13 @@ class SalesCoachAgent(BasePersonaAgent):
         )
 
         # Create practice exercises
-        exercises = self._generate_practice_exercises(skill_area, assessment.current_level)
+        exercises = self._generate_practice_exercises(
+            skill_area, assessment.current_level
+        )
 
-        response = self._format_skill_coaching_response(development_plan, exercises, assessment)
+        response = self._format_skill_coaching_response(
+            development_plan, exercises, assessment
+        )
 
         return {
             "response": self.generate_response_with_personality(response, context),
@@ -318,7 +341,9 @@ class SalesCoachAgent(BasePersonaAgent):
             "recommendations": recommendations,
         }
 
-    async def _provide_motivation(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
+    async def _provide_motivation(
+        self, user_input: str, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Provide motivational coaching"""
         motivation_type = context.get("motivation_type", "general")
         current_mood = context.get("mood", "neutral")
@@ -348,13 +373,17 @@ class SalesCoachAgent(BasePersonaAgent):
             "follow_up_action": "Check in within 24 hours",
         }
 
-    async def _general_coaching(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
+    async def _general_coaching(
+        self, user_input: str, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Provide general sales coaching"""
         # Extract coaching topic from input
         coaching_topic = self._extract_coaching_topic(user_input)
 
         # Get relevant coaching template
-        template = self.coaching_templates.get(coaching_topic, self.coaching_templates["general"])
+        template = self.coaching_templates.get(
+            coaching_topic, self.coaching_templates["general"]
+        )
 
         # Personalize response based on user history
         personalized_response = await self._personalize_coaching_response(
@@ -362,7 +391,9 @@ class SalesCoachAgent(BasePersonaAgent):
         )
 
         return {
-            "response": self.generate_response_with_personality(personalized_response, context),
+            "response": self.generate_response_with_personality(
+                personalized_response, context
+            ),
             "coaching_type": "general",
             "topic": coaching_topic,
         }
@@ -395,7 +426,11 @@ class SalesCoachAgent(BasePersonaAgent):
             "consultative_selling": {
                 "name": "Consultative Selling",
                 "focus": "Problem-solving partnership",
-                "techniques": ["Active listening", "Diagnostic questioning", "Solution crafting"],
+                "techniques": [
+                    "Active listening",
+                    "Diagnostic questioning",
+                    "Solution crafting",
+                ],
             },
             "challenger_sale": {
                 "name": "Challenger Sale",
@@ -518,7 +553,9 @@ class SalesCoachAgent(BasePersonaAgent):
 
         return points
 
-    async def _recommend_next_actions(self, deal_data: dict[str, Any], context: str) -> list[str]:
+    async def _recommend_next_actions(
+        self, deal_data: dict[str, Any], context: str
+    ) -> list[str]:
         """Recommend specific next actions for a deal"""
         actions = []
         stage = deal_data.get("stage", "")
@@ -570,7 +607,9 @@ class SalesCoachAgent(BasePersonaAgent):
 
         return response.strip()
 
-    def _generate_motivational_message(self, motivation_type: str, mood: str, context: str) -> str:
+    def _generate_motivational_message(
+        self, motivation_type: str, mood: str, context: str
+    ) -> str:
         """Generate personalized motivational message"""
         if mood == "discouraged":
             return """
@@ -680,7 +719,9 @@ class SalesCoachAgent(BasePersonaAgent):
             "Implement new techniques in next 3 calls",
         ]
 
-    def _generate_practice_exercises(self, skill_area: str, current_level: float) -> list[str]:
+    def _generate_practice_exercises(
+        self, skill_area: str, current_level: float
+    ) -> list[str]:
         """Generate practice exercises based on skill area and level"""
         exercises = {
             "discovery": [
@@ -719,7 +760,9 @@ class SalesCoachAgent(BasePersonaAgent):
 
         return response.strip()
 
-    def _analyze_performance_trends(self, rep_id: str, data: dict[str, Any]) -> dict[str, Any]:
+    def _analyze_performance_trends(
+        self, rep_id: str, data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze rep performance trends"""
         return {
             "trend": "improving",
@@ -738,7 +781,9 @@ class SalesCoachAgent(BasePersonaAgent):
             "Good at identifying decision makers",
         ]
 
-    def _identify_improvement_areas(self, performance_data: dict[str, Any]) -> list[str]:
+    def _identify_improvement_areas(
+        self, performance_data: dict[str, Any]
+    ) -> list[str]:
         """Identify areas for improvement"""
         return [
             "Discovery questioning depth",
@@ -747,7 +792,11 @@ class SalesCoachAgent(BasePersonaAgent):
         ]
 
     async def _generate_performance_recommendations(
-        self, rep_id: str, trends: dict[str, Any], strengths: list[str], improvements: list[str]
+        self,
+        rep_id: str,
+        trends: dict[str, Any],
+        strengths: list[str],
+        improvements: list[str],
     ) -> list[str]:
         """Generate specific performance recommendations"""
         return [
@@ -793,15 +842,21 @@ class SalesCoachAgent(BasePersonaAgent):
 
         # Analyze deal stage
         if deal_analysis.stage.lower() in ["discovery", "qualification"]:
-            coaching_points.append("Focus on understanding the client's business impact")
-            recommended_actions.append("Schedule a discovery call with key stakeholders")
+            coaching_points.append(
+                "Focus on understanding the client's business impact"
+            )
+            recommended_actions.append(
+                "Schedule a discovery call with key stakeholders"
+            )
         elif deal_analysis.stage.lower() in ["proposal", "negotiation"]:
             coaching_points.append("Emphasize value over price in your positioning")
             recommended_actions.append("Create a business case with clear ROI metrics")
 
         # Analyze probability
         if deal_analysis.probability < 0.3:
-            coaching_points.append("This deal needs immediate attention or qualification out")
+            coaching_points.append(
+                "This deal needs immediate attention or qualification out"
+            )
             recommended_actions.append("Identify and address the main blockers")
         elif deal_analysis.probability > 0.7:
             coaching_points.append("Strong position - focus on closing activities")
@@ -825,7 +880,9 @@ class SalesCoachAgent(BasePersonaAgent):
                 else "medium" if deal_analysis.probability < 0.7 else "low"
             ),
             "next_best_action": (
-                recommended_actions[0] if recommended_actions else "Schedule strategic review"
+                recommended_actions[0]
+                if recommended_actions
+                else "Schedule strategic review"
             ),
         }
 
@@ -889,7 +946,10 @@ class SalesCoachAgent(BasePersonaAgent):
                 "timeline": "Week 1-2",
             },
             "discovery": {
-                "activities": ["Question framework training", "Active listening exercises"],
+                "activities": [
+                    "Question framework training",
+                    "Active listening exercises",
+                ],
                 "resources": ["Discovery call recordings", "SPIN selling guide"],
                 "timeline": "Week 2-3",
             },
@@ -899,7 +959,10 @@ class SalesCoachAgent(BasePersonaAgent):
                 "timeline": "Week 3-4",
             },
             "closing": {
-                "activities": ["Closing techniques workshop", "Objection handling practice"],
+                "activities": [
+                    "Closing techniques workshop",
+                    "Objection handling practice",
+                ],
                 "resources": ["Closing framework", "Common objections guide"],
                 "timeline": "Week 4-5",
             },

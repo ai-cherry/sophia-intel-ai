@@ -14,14 +14,19 @@ class DNSimpleSetup:
         self.api_token = api_token
         self.account_id = account_id
         self.base_url = "https://api.dnsimple.com/v2"
-        self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+        self.headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json",
+        }
         self.domain = "sophia-intel.ai"
         self.lambda_ip = "192.222.58.232"
 
     def sophia_api_connection(self):
         """Test DNSimple API connection"""
         try:
-            response = requests.get(f"{self.base_url}/whoami", headers=self.headers, timeout=10)
+            response = requests.get(
+                f"{self.base_url}/whoami", headers=self.headers, timeout=10
+            )
 
             if response.status_code == 200:
                 data = response.json()
@@ -153,7 +158,9 @@ class DNSimpleSetup:
 
         print()
         print("🎉 DNS Setup Complete!")
-        print(f"✅ {success_count}/{len(records_to_create)} records created successfully")
+        print(
+            f"✅ {success_count}/{len(records_to_create)} records created successfully"
+        )
 
         if success_count == len(records_to_create):
             print()
@@ -242,9 +249,13 @@ def main():
 
     if nameservers:
         print()
-        proceed = input("Have you updated nameservers at NameCheap? (y/n): ").strip().lower()
+        proceed = (
+            input("Have you updated nameservers at NameCheap? (y/n): ").strip().lower()
+        )
         if proceed != "y":
-            print("⚠️  Update nameservers at NameCheap first, then run this script again.")
+            print(
+                "⚠️  Update nameservers at NameCheap first, then run this script again."
+            )
             return
 
     # Set up DNS records

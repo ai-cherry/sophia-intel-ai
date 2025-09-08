@@ -15,7 +15,10 @@ from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.instrumentation.logging import LoggingInstrumentor
 from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import ConsoleMetricExporter, PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
@@ -33,7 +36,9 @@ SERVICE_VERSION_VALUE = "3.0.0"
 
 
 def configure_opentelemetry(
-    app: Any, enable_console_exporter: bool = False, otel_endpoint: str = "grpc://localhost:4317"
+    app: Any,
+    enable_console_exporter: bool = False,
+    otel_endpoint: str = "grpc://localhost:4317",
 ) -> None:
     """
     Configures OpenTelemetry for the FastAPI application.
@@ -77,7 +82,9 @@ def configure_opentelemetry(
     trace.set_tracer_provider(trace_provider)
 
     # 3. Metrics Provider configuration
-    metric_reader = PeriodicExportingMetricReader(OTLPMetricExporter(endpoint=otel_endpoint))
+    metric_reader = PeriodicExportingMetricReader(
+        OTLPMetricExporter(endpoint=otel_endpoint)
+    )
     if enable_console_exporter:
         metric_reader.add_metrics_exporter(ConsoleMetricExporter())
         logger.info("OpenTelemetry console metric exporter enabled.")
@@ -152,7 +159,8 @@ def trace_llm_call(
             for i, tool_call in enumerate(tool_calls):
                 span.set_attribute(f"llm.tool_calls.{i}.name", tool_call.get("name"))
                 span.set_attribute(
-                    f"llm.tool_calls.{i}.arguments", json.dumps(tool_call.get("arguments"))
+                    f"llm.tool_calls.{i}.arguments",
+                    json.dumps(tool_call.get("arguments")),
                 )
 
         # Log input/output, but be cautious with sensitive data

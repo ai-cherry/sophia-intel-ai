@@ -29,7 +29,11 @@ class RateLimiter:
         self.last_cleanup = time.time()
 
     async def is_rate_limited(
-        self, identifier: str, limit: int, window_seconds: int, burst_limit: Optional[int] = None
+        self,
+        identifier: str,
+        limit: int,
+        window_seconds: int,
+        burst_limit: Optional[int] = None,
     ) -> tuple[bool, dict[str, int]]:
         """
         Check if request should be rate limited
@@ -173,7 +177,10 @@ class JWTHandler:
                 token = token[7:]
 
             payload = jwt.decode(
-                token, self.secret_key, algorithms=[self.algorithm], options={"verify_exp": True}
+                token,
+                self.secret_key,
+                algorithms=[self.algorithm],
+                options={"verify_exp": True},
             )
 
             return payload
@@ -202,7 +209,14 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         self.rate_limiter = RateLimiter()
 
         # Paths that don't require authentication
-        self.public_paths = {"/", "/health", "/metrics", "/docs", "/redoc", "/openapi.json"}
+        self.public_paths = {
+            "/",
+            "/health",
+            "/metrics",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+        }
 
         # Admin-only paths
         self.admin_paths = {"/admin", "/internal", "/debug"}
@@ -367,7 +381,9 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             },
             headers={
                 "X-RateLimit-Limit": str(rate_info["limit"]),
-                "X-RateLimit-Remaining": str(max(0, rate_info["limit"] - rate_info["requests"])),
+                "X-RateLimit-Remaining": str(
+                    max(0, rate_info["limit"] - rate_info["requests"])
+                ),
                 "X-RateLimit-Reset": str(rate_info["reset_at"]),
                 "Retry-After": str(rate_info.get("window_seconds", 60)),
             },
@@ -399,7 +415,9 @@ async def verify_admin_access(request: Request) -> bool:
         return False
 
     auth_info = request.state.auth
-    return auth_info.get("authenticated", False) and "admin" in auth_info.get("permissions", set())
+    return auth_info.get("authenticated", False) and "admin" in auth_info.get(
+        "permissions", set()
+    )
 
 
 async def get_current_user(request: Request) -> Optional[dict]:

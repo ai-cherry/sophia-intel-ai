@@ -572,7 +572,9 @@ class CrossPlatformEntityCorrelator:
         self.confidence_threshold = 0.8
 
     async def correlate_entities(
-        self, entity_type: EntityCorrelationType, platform_data: dict[str, list[dict[str, Any]]]
+        self,
+        entity_type: EntityCorrelationType,
+        platform_data: dict[str, list[dict[str, Any]]],
     ) -> dict[str, Any]:
         """Correlate entities across platforms"""
 
@@ -609,7 +611,9 @@ class CrossPlatformEntityCorrelator:
         return correlations
 
     async def _correlate_people(
-        self, platform_data: dict[str, list[dict[str, Any]]], correlations: dict[str, Any]
+        self,
+        platform_data: dict[str, list[dict[str, Any]]],
+        correlations: dict[str, Any],
     ) -> dict[str, Any]:
         """Correlate people across platforms using email, name, and ID matching"""
 
@@ -632,7 +636,9 @@ class CrossPlatformEntityCorrelator:
         return correlations
 
     async def _correlate_projects(
-        self, platform_data: dict[str, list[dict[str, Any]]], correlations: dict[str, Any]
+        self,
+        platform_data: dict[str, list[dict[str, Any]]],
+        correlations: dict[str, Any],
     ) -> dict[str, Any]:
         """Correlate projects/tasks across platforms"""
 
@@ -649,7 +655,9 @@ class CrossPlatformEntityCorrelator:
         return correlations
 
     async def _correlate_revenue(
-        self, platform_data: dict[str, list[dict[str, Any]]], correlations: dict[str, Any]
+        self,
+        platform_data: dict[str, list[dict[str, Any]]],
+        correlations: dict[str, Any],
     ) -> dict[str, Any]:
         """Correlate revenue attribution across platforms"""
 
@@ -666,7 +674,9 @@ class CrossPlatformEntityCorrelator:
         return correlations
 
     async def _correlate_customers(
-        self, platform_data: dict[str, list[dict[str, Any]]], correlations: dict[str, Any]
+        self,
+        platform_data: dict[str, list[dict[str, Any]]],
+        correlations: dict[str, Any],
     ) -> dict[str, Any]:
         """Correlate customer journey touchpoints"""
 
@@ -683,7 +693,9 @@ class CrossPlatformEntityCorrelator:
         return correlations
 
     async def _correlate_knowledge(
-        self, platform_data: dict[str, list[dict[str, Any]]], correlations: dict[str, Any]
+        self,
+        platform_data: dict[str, list[dict[str, Any]]],
+        correlations: dict[str, Any],
     ) -> dict[str, Any]:
         """Correlate knowledge and documentation across platforms"""
 
@@ -756,22 +768,30 @@ class IntegrationOrchestrator:
 
         if analysis_scope in ["full", "business"]:
             team_tasks.append(
-                self._execute_business_intelligence_analysis(platform_data, analysis_results)
+                self._execute_business_intelligence_analysis(
+                    platform_data, analysis_results
+                )
             )
 
         if analysis_scope in ["full", "sales"]:
             team_tasks.append(
-                self._execute_sales_intelligence_analysis(platform_data, analysis_results)
+                self._execute_sales_intelligence_analysis(
+                    platform_data, analysis_results
+                )
             )
 
         if analysis_scope in ["full", "development"]:
             team_tasks.append(
-                self._execute_development_intelligence_analysis(platform_data, analysis_results)
+                self._execute_development_intelligence_analysis(
+                    platform_data, analysis_results
+                )
             )
 
         if analysis_scope in ["full", "knowledge"]:
             team_tasks.append(
-                self._execute_knowledge_management_analysis(platform_data, analysis_results)
+                self._execute_knowledge_management_analysis(
+                    platform_data, analysis_results
+                )
             )
 
         # Execute all team analyses concurrently
@@ -783,10 +803,14 @@ class IntegrationOrchestrator:
         )
 
         # Calculate OKR insights
-        analysis_results["okr_insights"] = await self._calculate_okr_insights(analysis_results)
+        analysis_results["okr_insights"] = await self._calculate_okr_insights(
+            analysis_results
+        )
 
         # Synthesize final recommendations
-        analysis_results["synthesis"] = await self._synthesize_recommendations(analysis_results)
+        analysis_results["synthesis"] = await self._synthesize_recommendations(
+            analysis_results
+        )
 
         return analysis_results
 
@@ -827,7 +851,9 @@ class IntegrationOrchestrator:
                 "meeting_data": platform_data.get("zoom", {}),
             }
 
-            sales_result = await sales_team.analyze_customer_journey_intelligence(customer_data)
+            sales_result = await sales_team.analyze_customer_journey_intelligence(
+                customer_data
+            )
             results["team_results"]["sales_intelligence"] = sales_result
 
         except Exception as e:
@@ -849,7 +875,9 @@ class IntegrationOrchestrator:
                 "workflow_data": platform_data.get("asana", {}),
             }
 
-            dev_result = await dev_team.analyze_development_contribution_to_revenue(dev_data)
+            dev_result = await dev_team.analyze_development_contribution_to_revenue(
+                dev_data
+            )
             results["team_results"]["development_intelligence"] = dev_result
 
         except Exception as e:
@@ -871,7 +899,9 @@ class IntegrationOrchestrator:
                 "repository_data": platform_data.get("github", {}),
             }
 
-            km_result = await km_team.analyze_knowledge_contribution_to_efficiency(knowledge_data)
+            km_result = await km_team.analyze_knowledge_contribution_to_efficiency(
+                knowledge_data
+            )
             results["team_results"]["knowledge_management"] = km_result
 
         except Exception as e:
@@ -906,7 +936,9 @@ class IntegrationOrchestrator:
 
         return correlations
 
-    async def _calculate_okr_insights(self, analysis_results: dict[str, Any]) -> dict[str, Any]:
+    async def _calculate_okr_insights(
+        self, analysis_results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Calculate revenue per employee OKR insights from all team results"""
 
         okr_insights = {
@@ -919,7 +951,9 @@ class IntegrationOrchestrator:
         }
 
         # Extract revenue insights from business intelligence team
-        bi_results = analysis_results.get("team_results", {}).get("business_intelligence", {})
+        bi_results = analysis_results.get("team_results", {}).get(
+            "business_intelligence", {}
+        )
         if bi_results.get("success"):
             # Extract OKR metrics from BI analysis
             okr_insights["current_revenue_per_employee"] = (
@@ -947,7 +981,9 @@ class IntegrationOrchestrator:
 
         return okr_insights
 
-    async def _synthesize_recommendations(self, analysis_results: dict[str, Any]) -> dict[str, Any]:
+    async def _synthesize_recommendations(
+        self, analysis_results: dict[str, Any]
+    ) -> dict[str, Any]:
         """Synthesize cross-team recommendations for revenue per employee optimization"""
 
         synthesis = {
@@ -1002,7 +1038,9 @@ class IntegrationOrchestrator:
 
         return synthesis
 
-    def _determine_processing_mode(self, platform_data: dict[str, Any]) -> ProcessingMode:
+    def _determine_processing_mode(
+        self, platform_data: dict[str, Any]
+    ) -> ProcessingMode:
         """Determine appropriate processing mode based on data characteristics"""
         # platform_data will be used in future implementations for more sophisticated analysis
         _ = platform_data  # Mark as intentionally unused for now
@@ -1037,7 +1075,9 @@ class IntegrationOrchestrator:
                     if self.okr_tracker.target_revenue_per_employee > 0
                     else 0
                 ),
-                "trend": "improving" if self.okr_tracker.growth_rate > 0 else "declining",
+                "trend": (
+                    "improving" if self.okr_tracker.growth_rate > 0 else "declining"
+                ),
             },
             "team_contributions": {},
             "correlation_insights": {},
@@ -1046,7 +1086,9 @@ class IntegrationOrchestrator:
 
         # Get recent team analyses from memory
         for team_name in self.teams:
-            team_memories = await search_memory(query=team_name, filters={"team": team_name})
+            team_memories = await search_memory(
+                query=team_name, filters={"team": team_name}
+            )
             dashboard["team_contributions"][team_name] = len(team_memories)
 
         return dashboard

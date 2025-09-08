@@ -54,7 +54,10 @@ class SophiaV7TestSuite:
                     "traceback": traceback.format_exc(),
                     "timestamp": datetime.now().isoformat(),
                 }
-                self.test_results[test_name] = {"status": "FAILED", "error": error_details}
+                self.test_results[test_name] = {
+                    "status": "FAILED",
+                    "error": error_details,
+                }
                 print(f"❌ {test_name}: FAILED - {str(e)}")
 
         # Generate final report
@@ -63,13 +66,18 @@ class SophiaV7TestSuite:
     async def test_claude_mal_router(self) -> Dict[str, Any]:
         """Test Claude MAL router functionality"""
 
-        config = {"portkey_api_key": "test-key", "portkey_base_url": "https://api.portkey.ai/v1"}
+        config = {
+            "portkey_api_key": "test-key",
+            "portkey_base_url": "https://api.portkey.ai/v1",
+        }
 
         router = ClaudeMALRouter(config)
 
         # Test model selection
         decision = await router.select_model_with_mal(
-            query="Analyze sales performance data", domain="gong", context={"urgency": "high"}
+            query="Analyze sales performance data",
+            domain="gong",
+            context={"urgency": "high"},
         )
 
         assert decision.selected_model is not None
@@ -169,7 +177,10 @@ class SophiaV7TestSuite:
         }
 
         result = await rbac_engine.check_contextual_permission(
-            user_id="test_user", resource="sophia:test:resource", action="read", context=context
+            user_id="test_user",
+            resource="sophia:test:resource",
+            action="read",
+            context=context,
         )
 
         # Test audit log
@@ -195,7 +206,10 @@ class SophiaV7TestSuite:
                 "neo4j": {"url": "bolt://localhost:7687"},
                 "zep": {"api_url": "http://localhost:8000"},
             },
-            "routing": {"default_model": "claude-3-5-sonnet", "fallback_model": "gpt-4o-mini"},
+            "routing": {
+                "default_model": "claude-3-5-sonnet",
+                "fallback_model": "gpt-4o-mini",
+            },
             "auth": {"cerbos_endpoint": "http://localhost:3593"},
             "portkey": {"api_key": "test-key", "base_url": "https://api.portkey.ai/v1"},
         }
@@ -245,7 +259,9 @@ class SophiaV7TestSuite:
                 "total_tests": total_tests,
                 "passed_tests": passed_tests,
                 "failed_tests": total_tests - passed_tests,
-                "success_rate": (passed_tests / total_tests) * 100 if total_tests > 0 else 0,
+                "success_rate": (
+                    (passed_tests / total_tests) * 100 if total_tests > 0 else 0
+                ),
                 "test_results": self.test_results,
             }
         }
@@ -295,7 +311,9 @@ async def main():
             print("\n🚀 Phase 1 implementation COMPLETE and VERIFIED!")
             return 0
         else:
-            print(f"\n⚠️  Phase 1 implementation has issues (success rate: {success_rate:.1f}%)")
+            print(
+                f"\n⚠️  Phase 1 implementation has issues (success rate: {success_rate:.1f}%)"
+            )
             return 1
 
     except Exception as e:

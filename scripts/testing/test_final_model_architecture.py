@@ -85,7 +85,9 @@ def test_swarm_configurations():
 
     # Test Coding Swarm
     print("\n🔧 Coding Swarm:")
-    coding_swarm = prioritized_swarm_factory.create_coding_swarm("Implement new feature")
+    coding_swarm = prioritized_swarm_factory.create_coding_swarm(
+        "Implement new feature"
+    )
     print(f"  Agents: {len(coding_swarm['agents'])}")
     for agent in coding_swarm["agents"]:
         print(f"    • {agent['name']}: {agent['model']} (Priority {agent['priority']})")

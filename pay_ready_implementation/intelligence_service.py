@@ -30,7 +30,9 @@ class PayReadyIntelligenceService:
                         "account_id": account["id"],
                         "risk_score": risk_factors["risk_score"],
                         "predicted_stuck_date": risk_factors["predicted_date"],
-                        "prevention_actions": self._generate_prevention_actions(risk_factors),
+                        "prevention_actions": self._generate_prevention_actions(
+                            risk_factors
+                        ),
                         "confidence": risk_factors["confidence"],
                     }
                 )
@@ -56,16 +58,24 @@ class PayReadyIntelligenceService:
 
         risk_score = age_factor * 0.5 + amount_factor * 0.2 + activity_factor * 0.3
 
-        predicted_date = datetime.now() + timedelta(days=int(avg_days - account.get("age_days", 0)))
+        predicted_date = datetime.now() + timedelta(
+            days=int(avg_days - account.get("age_days", 0))
+        )
 
         return {
             "risk_score": risk_score,
             "confidence": min(len(similar_accounts) / 10, 1.0),
             "predicted_date": predicted_date,
-            "factors": {"age": age_factor, "amount": amount_factor, "activity": activity_factor},
+            "factors": {
+                "age": age_factor,
+                "amount": amount_factor,
+                "activity": activity_factor,
+            },
         }
 
-    def _find_similar_accounts(self, account: Dict, historical: List[Dict]) -> List[Dict]:
+    def _find_similar_accounts(
+        self, account: Dict, historical: List[Dict]
+    ) -> List[Dict]:
         """Find historically similar accounts"""
         similar = []
 
@@ -108,9 +118,15 @@ class PayReadyIntelligenceService:
 
         return actions
 
-    async def optimize_team_workload(self, teams: List[Dict], pending_tasks: List[Dict]) -> Dict:
+    async def optimize_team_workload(
+        self, teams: List[Dict], pending_tasks: List[Dict]
+    ) -> Dict:
         """Optimize workload distribution across teams"""
-        optimizations = {"reassignments": [], "priority_changes": [], "resource_requests": []}
+        optimizations = {
+            "reassignments": [],
+            "priority_changes": [],
+            "resource_requests": [],
+        }
 
         # Calculate team capacities
         team_scores = {}
@@ -143,7 +159,9 @@ class PayReadyIntelligenceService:
         if overloaded_teams and underutilized_teams:
             for task in pending_tasks:
                 if task.get("team") in overloaded_teams:
-                    best_team = max(underutilized_teams, key=lambda t: team_scores[t]["efficiency"])
+                    best_team = max(
+                        underutilized_teams, key=lambda t: team_scores[t]["efficiency"]
+                    )
                     optimizations["reassignments"].append(
                         {
                             "task_id": task["id"],
@@ -163,7 +181,9 @@ class PayReadyIntelligenceService:
         if "stuck_accounts" in data:
             stuck_count = len(data["stuck_accounts"])
             if stuck_count > 10:
-                insights.append(f"Alert: {stuck_count} accounts stuck - 40% above normal")
+                insights.append(
+                    f"Alert: {stuck_count} accounts stuck - 40% above normal"
+                )
 
             high_value_stuck = [
                 acc for acc in data["stuck_accounts"] if acc.get("amount", 0) > 50000
@@ -178,12 +198,18 @@ class PayReadyIntelligenceService:
                 team for team in data["teams"] if team.get("completion_rate", 100) < 30
             ]
             if poor_performers:
-                insights.append(f"{len(poor_performers)} teams below 30% completion rate")
+                insights.append(
+                    f"{len(poor_performers)} teams below 30% completion rate"
+                )
 
         # Predictive insights
         if "predictions" in data:
-            high_risk = [pred for pred in data["predictions"] if pred.get("risk_score", 0) > 0.8]
+            high_risk = [
+                pred for pred in data["predictions"] if pred.get("risk_score", 0) > 0.8
+            ]
             if high_risk:
-                insights.append(f"{len(high_risk)} accounts at high risk of becoming stuck")
+                insights.append(
+                    f"{len(high_risk)} accounts at high risk of becoming stuck"
+                )
 
         return insights

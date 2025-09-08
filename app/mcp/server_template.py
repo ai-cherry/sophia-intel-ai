@@ -103,7 +103,9 @@ class MCPServerBase(ABC):
 
         @self.app.post("/tools/call")
         async def call_tool(tool_call: MCPToolCall):
-            return await self.handle_tool_call(tool_call.tool, tool_call.params, tool_call.call_id)
+            return await self.handle_tool_call(
+                tool_call.tool, tool_call.params, tool_call.call_id
+            )
 
         @self.app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
@@ -115,7 +117,9 @@ class MCPServerBase(ABC):
 
                     if message.get("type") == "tool_call":
                         result = await self.handle_tool_call(
-                            message["tool"], message["params"], message.get("call_id", str(uuid4()))
+                            message["tool"],
+                            message["params"],
+                            message.get("call_id", str(uuid4())),
                         )
                         await websocket.send_text(json.dumps(asdict(result)))
 
@@ -178,7 +182,11 @@ class MCPServerBase(ABC):
                 self.metrics.slo_violation(self.domain, tool, latency_ms)
 
             return MCPToolResult(
-                call_id=call_id, success=True, result=result, latency_ms=latency_ms, cache_hit=False
+                call_id=call_id,
+                success=True,
+                result=result,
+                latency_ms=latency_ms,
+                cache_hit=False,
             )
 
         except Exception as e:
@@ -261,7 +269,9 @@ class MCPServerManager:
                 try:
                     # Call server health endpoint
                     async with httpx.AsyncClient() as client:
-                        response = await client.get(f"http://localhost:{server.port}/health")
+                        response = await client.get(
+                            f"http://localhost:{server.port}/health"
+                        )
                         server_health[domain] = response.json()
                 except Exception as e:
                     server_health[domain] = {"status": "unhealthy", "error": str(e)}
@@ -291,7 +301,9 @@ class MCPServerManager:
         @self.app.post("/tools/call/{domain}")
         async def call_domain_tool(domain: str, tool_call: MCPToolCall):
             if domain not in self.servers:
-                raise HTTPException(status_code=404, detail=f"Domain '{domain}' not found")
+                raise HTTPException(
+                    status_code=404, detail=f"Domain '{domain}' not found"
+                )
 
             server = self.servers[domain]
             return await server.handle_tool_call(
@@ -442,7 +454,9 @@ class SophiaMCPServer(MCPServerBase):
             """Get detailed system metrics"""
             metrics = {
                 "server": {
-                    "uptime_seconds": (datetime.utcnow() - self.start_time).total_seconds(),
+                    "uptime_seconds": (
+                        datetime.utcnow() - self.start_time
+                    ).total_seconds(),
                     "request_count": self.request_count,
                     "error_count": self.error_count,
                     "error_rate": self.error_count / max(self.request_count, 1),
@@ -467,7 +481,11 @@ class SophiaMCPServer(MCPServerBase):
             """Generate unique identifier"""
             unique_id = f"{prefix}_{uuid4().hex[:8]}"
 
-            return {"id": unique_id, "prefix": prefix, "timestamp": datetime.utcnow().isoformat()}
+            return {
+                "id": unique_id,
+                "prefix": prefix,
+                "timestamp": datetime.utcnow().isoformat(),
+            }
 
         @self.mcp_tool("util.timestamp")
         async def get_timestamp(format_type: str = "iso") -> Dict[str, Any]:
@@ -529,14 +547,18 @@ class SophiaMCPServer(MCPServerBase):
                 {
                     "name": tool_name,
                     "description": func.__doc__ or f"{tool_name} tool",
-                    "category": tool_name.split(".")[0] if "." in tool_name else "general",
+                    "category": (
+                        tool_name.split(".")[0] if "." in tool_name else "general"
+                    ),
                 }
             )
 
         return {
             "tools": tools_list,
             "total_count": len(tools_list),
-            "categories": list(set(tool.get("category", "general") for tool in tools_list)),
+            "categories": list(
+                set(tool.get("category", "general") for tool in tools_list)
+            ),
             "server_info": {
                 "uptime_seconds": (datetime.utcnow() - self.start_time).total_seconds(),
                 "total_requests": self.request_count,
@@ -564,7 +586,11 @@ class SophiaMCPServer(MCPServerBase):
                 sophia_result = await self.memory_bus.get("health_check_test")
                 health["memory_bus"] = {"status": "healthy", "connected": True}
             except Exception as e:
-                health["memory_bus"] = {"status": "unhealthy", "error": str(e), "connected": False}
+                health["memory_bus"] = {
+                    "status": "unhealthy",
+                    "error": str(e),
+                    "connected": False,
+                }
                 health["status"] = "degraded"
         else:
             health["memory_bus"] = {"status": "not_configured", "connected": False}
@@ -603,7 +629,9 @@ async def with_retry(func: Callable, max_retries: int = 3, delay: float = 1.0):
                 raise
 
             wait_time = delay * (2**attempt)
-            logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s")
+            logger.warning(
+                f"Attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s"
+            )
             await asyncio.sleep(wait_time)
 
 
@@ -634,7 +662,9 @@ if __name__ == "__main__":
         await server.initialize()
 
         # Test tool call
-        result = await server.handle_tool_call("test.echo", {"message": "Hello Sophia"}, "test-123")
+        result = await server.handle_tool_call(
+            "test.echo", {"message": "Hello Sophia"}, "test-123"
+        )
         print(f"Test result: {result}")
 
     # Run test

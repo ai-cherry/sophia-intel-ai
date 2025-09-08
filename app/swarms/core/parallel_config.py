@@ -329,7 +329,11 @@ class ParallelSwarmConfig:
                 total_tpm += all_keys[key].get("tpm_limit", 0)
                 total_rpm += all_keys[key].get("rpm_limit", 0)
 
-        return {"total_tpm": total_tpm, "total_rpm": total_rpm, "parallel_agents": self.agent_count}
+        return {
+            "total_tpm": total_tpm,
+            "total_rpm": total_rpm,
+            "parallel_agents": self.agent_count,
+        }
 
 
 # =============================================================================
@@ -519,7 +523,9 @@ if __name__ == "__main__":
 
     print("\n✅ Swarm Configuration:")
     print(f"   Agents: {coding_config.agent_count}")
-    print(f"   Unique Virtual Keys: {len(set(coding_config.virtual_key_allocation.values()))}")
+    print(
+        f"   Unique Virtual Keys: {len(set(coding_config.virtual_key_allocation.values()))}"
+    )
 
     capacity = coding_config.get_total_capacity()
     print("\n💪 Total Parallel Capacity:")

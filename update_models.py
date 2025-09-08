@@ -82,7 +82,9 @@ def get_model_rankings() -> List[Dict]:
                 continue
 
             if cost_per_million > 0:
-                score = (tokens_processed * PERFORMANCE_WEIGHT) - (cost_per_million * COST_WEIGHT)
+                score = (tokens_processed * PERFORMANCE_WEIGHT) - (
+                    cost_per_million * COST_WEIGHT
+                )
             else:
                 score = tokens_processed * PERFORMANCE_WEIGHT
 
@@ -161,7 +163,11 @@ def update_continue_config(models: List[Dict]) -> bool:
             # Add any remaining best models as new entries
             for category, model in best_models.items():
                 category_title = category.capitalize()
-                temp = 0.3 if category == "strategy" else (0.2 if category == "coding" else 0.1)
+                temp = (
+                    0.3
+                    if category == "strategy"
+                    else (0.2 if category == "coding" else 0.1)
+                )
 
                 system_prompt = {
                     "strategy": "Deep Strategist: Use step-by-step reasoning to break down complex problems. Consider various approaches, analyzing pros and cons of each option.",
@@ -182,7 +188,9 @@ def update_continue_config(models: List[Dict]) -> bool:
                 }
 
                 updated_models.append(new_model)
-                logger.info(f"Added new model {new_model['title']} using {new_model['model']}")
+                logger.info(
+                    f"Added new model {new_model['title']} using {new_model['model']}"
+                )
 
             config["models"] = updated_models
 
@@ -190,7 +198,9 @@ def update_continue_config(models: List[Dict]) -> bool:
             strategy_data = {
                 "updated_at": datetime.now().isoformat(),
                 "models": {m["id"]: m["score"] for m in models[:10]},
-                "categories": {category: best["id"] for category, best in best_models.items()},
+                "categories": {
+                    category: best["id"] for category, best in best_models.items()
+                },
                 "formula": f"{PERFORMANCE_WEIGHT} * performance - {COST_WEIGHT} * cost",
                 "max_cost_threshold": MAX_COST_THRESHOLD,
             }
@@ -287,7 +297,9 @@ def main():
             top_models = models[:5]
             logger.info("Top 5 models by score:")
             for i, model in enumerate(top_models):
-                logger.info(f"{i+1}. {model['name']} (ID: {model['id']}) - Score: {model['score']}")
+                logger.info(
+                    f"{i+1}. {model['name']} (ID: {model['id']}) - Score: {model['score']}"
+                )
 
             logger.info("Updating Continue.dev configuration...")
             success = update_continue_config(models)

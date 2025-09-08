@@ -77,7 +77,9 @@ class RunTypeCheck(Tool):
                 return "mypy is not installed. Install it with: pip install mypy"
 
             # Run type checking
-            result = subprocess.run(["python", "-m", "mypy", path], capture_output=True, text=True)
+            result = subprocess.run(
+                ["python", "-m", "mypy", path], capture_output=True, text=True
+            )
 
             if result.returncode == 0:
                 return f"Type checking passed for {path}"

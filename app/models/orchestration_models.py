@@ -76,8 +76,12 @@ class BaseRequest(BaseModel):
     request_id: str = Field(
         default_factory=lambda: str(uuid4()), description="Unique request identifier"
     )
-    timestamp: datetime = Field(default_factory=datetime.now, description="Request timestamp")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    timestamp: datetime = Field(
+        default_factory=datetime.now, description="Request timestamp"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
     timeout_seconds: Optional[int] = Field(
         default=300, ge=1, le=3600, description="Request timeout"
     )
@@ -90,13 +94,19 @@ class BaseRequest(BaseModel):
 class ChatRequest(BaseRequest):
     """Chat interaction request"""
 
-    message: str = Field(..., min_length=1, max_length=10000, description="User message")
-    conversation_id: Optional[str] = Field(default=None, description="Conversation identifier")
+    message: str = Field(
+        ..., min_length=1, max_length=10000, description="User message"
+    )
+    conversation_id: Optional[str] = Field(
+        default=None, description="Conversation identifier"
+    )
     model_preference: Optional[str] = Field(default=None, description="Preferred model")
     temperature: Optional[float] = Field(
         default=0.7, ge=0.0, le=2.0, description="Model temperature"
     )
-    max_tokens: Optional[int] = Field(default=4000, ge=1, le=32000, description="Maximum tokens")
+    max_tokens: Optional[int] = Field(
+        default=4000, ge=1, le=32000, description="Maximum tokens"
+    )
 
     @validator("message")
     def validate_message(cls, v):
@@ -109,7 +119,9 @@ class CommandRequest(BaseRequest):
     """System command request"""
 
     command: str = Field(..., min_length=1, description="Command to execute")
-    parameters: dict[str, Any] = Field(default_factory=dict, description="Command parameters")
+    parameters: dict[str, Any] = Field(
+        default_factory=dict, description="Command parameters"
+    )
     require_confirmation: bool = Field(
         default=False, description="Whether command requires confirmation"
     )
@@ -131,7 +143,9 @@ class CommandRequest(BaseRequest):
             "clean",
         }
         if v.lower() not in allowed_commands:
-            raise ValueError(f"Command '{v}' not in allowed commands: {allowed_commands}")
+            raise ValueError(
+                f"Command '{v}' not in allowed commands: {allowed_commands}"
+            )
         return v.lower()
 
 
@@ -139,9 +153,13 @@ class QueryRequest(BaseRequest):
     """Data query request"""
 
     query_type: str = Field(..., description="Type of query")
-    parameters: dict[str, Any] = Field(default_factory=dict, description="Query parameters")
+    parameters: dict[str, Any] = Field(
+        default_factory=dict, description="Query parameters"
+    )
     filters: dict[str, Any] = Field(default_factory=dict, description="Query filters")
-    limit: Optional[int] = Field(default=100, ge=1, le=10000, description="Result limit")
+    limit: Optional[int] = Field(
+        default=100, ge=1, le=10000, description="Result limit"
+    )
     offset: Optional[int] = Field(default=0, ge=0, description="Result offset")
 
     @validator("query_type")
@@ -156,7 +174,9 @@ class AgentRequest(BaseRequest):
     """Agent management request"""
 
     action: str = Field(..., description="Agent action")
-    agent_config: dict[str, Any] = Field(default_factory=dict, description="Agent configuration")
+    agent_config: dict[str, Any] = Field(
+        default_factory=dict, description="Agent configuration"
+    )
     agent_id: Optional[str] = Field(default=None, description="Target agent ID")
 
     @validator("action")
@@ -172,11 +192,15 @@ class OrchestrationRequest(BaseRequest):
 
     type: TaskType = Field(..., description="Request type")
     content: str = Field(..., min_length=1, description="Request content")
-    priority: TaskPriority = Field(default=TaskPriority.NORMAL, description="Task priority")
+    priority: TaskPriority = Field(
+        default=TaskPriority.NORMAL, description="Task priority"
+    )
     orchestrator: OrchestratorType = Field(
         default=OrchestratorType.SUPER, description="Target orchestrator"
     )
-    context: dict[str, Any] = Field(default_factory=dict, description="Additional context")
+    context: dict[str, Any] = Field(
+        default_factory=dict, description="Additional context"
+    )
     budget: dict[str, Union[int, float]] = Field(
         default_factory=dict, description="Resource budget"
     )
@@ -192,11 +216,15 @@ class BaseResponse(BaseModel):
 
     request_id: str = Field(..., description="Request identifier")
     status: str = Field(..., description="Response status")
-    timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+    timestamp: datetime = Field(
+        default_factory=datetime.now, description="Response timestamp"
+    )
     processing_time_ms: Optional[float] = Field(
         default=None, description="Processing time in milliseconds"
     )
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Response metadata")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Response metadata"
+    )
 
     class Config:
         use_enum_values = True
@@ -206,13 +234,19 @@ class ChatResponse(BaseResponse):
     """Chat response model"""
 
     message: str = Field(..., description="AI response message")
-    conversation_id: Optional[str] = Field(default=None, description="Conversation identifier")
-    model_used: Optional[str] = Field(default=None, description="Model that generated response")
+    conversation_id: Optional[str] = Field(
+        default=None, description="Conversation identifier"
+    )
+    model_used: Optional[str] = Field(
+        default=None, description="Model that generated response"
+    )
     tokens_used: Optional[int] = Field(default=None, description="Tokens consumed")
     confidence_score: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Confidence score"
     )
-    citations: list[dict[str, Any]] = Field(default_factory=list, description="Source citations")
+    citations: list[dict[str, Any]] = Field(
+        default_factory=list, description="Source citations"
+    )
     needs_confirmation: bool = Field(
         default=False, description="Whether response needs user confirmation"
     )
@@ -224,7 +258,9 @@ class CommandResponse(BaseResponse):
     command: str = Field(..., description="Executed command")
     result: dict[str, Any] = Field(..., description="Command execution result")
     success: bool = Field(..., description="Whether command succeeded")
-    error_message: Optional[str] = Field(default=None, description="Error message if failed")
+    error_message: Optional[str] = Field(
+        default=None, description="Error message if failed"
+    )
     affected_resources: list[str] = Field(
         default_factory=list, description="Resources affected by command"
     )
@@ -235,8 +271,12 @@ class QueryResponse(BaseResponse):
 
     query_type: str = Field(..., description="Query type")
     data: Union[dict[str, Any], list[Any]] = Field(..., description="Query result data")
-    total_count: Optional[int] = Field(default=None, description="Total available results")
-    page_info: Optional[dict[str, Any]] = Field(default=None, description="Pagination information")
+    total_count: Optional[int] = Field(
+        default=None, description="Total available results"
+    )
+    page_info: Optional[dict[str, Any]] = Field(
+        default=None, description="Pagination information"
+    )
 
 
 class OrchestrationResponse(BaseResponse):
@@ -246,12 +286,18 @@ class OrchestrationResponse(BaseResponse):
     type: TaskType = Field(..., description="Task type")
     status: TaskStatus = Field(..., description="Task status")
     result: Optional[dict[str, Any]] = Field(default=None, description="Task result")
-    orchestrator_used: str = Field(..., description="Orchestrator that handled the task")
+    orchestrator_used: str = Field(
+        ..., description="Orchestrator that handled the task"
+    )
     confidence_score: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Result confidence"
     )
-    citations: list[dict[str, Any]] = Field(default_factory=list, description="Source citations")
-    cost_estimate: Optional[dict[str, float]] = Field(default=None, description="Cost breakdown")
+    citations: list[dict[str, Any]] = Field(
+        default_factory=list, description="Source citations"
+    )
+    cost_estimate: Optional[dict[str, float]] = Field(
+        default=None, description="Cost breakdown"
+    )
 
 
 class ErrorResponse(BaseResponse):
@@ -279,12 +325,20 @@ class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()), description="Task ID")
     type: TaskType = Field(..., description="Task type")
     content: str = Field(..., description="Task content")
-    priority: TaskPriority = Field(default=TaskPriority.NORMAL, description="Task priority")
+    priority: TaskPriority = Field(
+        default=TaskPriority.NORMAL, description="Task priority"
+    )
     status: TaskStatus = Field(default=TaskStatus.PENDING, description="Task status")
-    created_at: datetime = Field(default_factory=datetime.now, description="Creation timestamp")
-    updated_at: Optional[datetime] = Field(default=None, description="Last update timestamp")
+    created_at: datetime = Field(
+        default_factory=datetime.now, description="Creation timestamp"
+    )
+    updated_at: Optional[datetime] = Field(
+        default=None, description="Last update timestamp"
+    )
     started_at: Optional[datetime] = Field(default=None, description="Start timestamp")
-    completed_at: Optional[datetime] = Field(default=None, description="Completion timestamp")
+    completed_at: Optional[datetime] = Field(
+        default=None, description="Completion timestamp"
+    )
     metadata: dict[str, Any] = Field(default_factory=dict, description="Task metadata")
     budget: dict[str, Union[int, float]] = Field(
         default_factory=dict, description="Resource budget"
@@ -319,23 +373,33 @@ class ExecutionResult(BaseModel):
     content: Optional[Any] = Field(default=None, description="Result content")
     errors: list[str] = Field(default_factory=list, description="Error messages")
     warnings: list[str] = Field(default_factory=list, description="Warning messages")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Result metadata")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Result metadata"
+    )
     tokens_used: Optional[int] = Field(default=None, description="Tokens consumed")
     cost: Optional[float] = Field(default=None, description="Execution cost")
     confidence: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Result confidence"
     )
-    citations: list[dict[str, Any]] = Field(default_factory=list, description="Source citations")
-    processing_time_ms: Optional[float] = Field(default=None, description="Processing time")
+    citations: list[dict[str, Any]] = Field(
+        default_factory=list, description="Source citations"
+    )
+    processing_time_ms: Optional[float] = Field(
+        default=None, description="Processing time"
+    )
 
 
 class SystemHealth(BaseModel):
     """System health status model"""
 
     status: SystemStatus = Field(..., description="Overall system status")
-    components: dict[str, dict[str, Any]] = Field(..., description="Component health details")
+    components: dict[str, dict[str, Any]] = Field(
+        ..., description="Component health details"
+    )
     metrics: dict[str, Union[int, float]] = Field(..., description="System metrics")
-    last_check: datetime = Field(default_factory=datetime.now, description="Last health check")
+    last_check: datetime = Field(
+        default_factory=datetime.now, description="Last health check"
+    )
     uptime_seconds: Optional[int] = Field(default=None, description="System uptime")
     version: str = Field(default="2.1.0", description="System version")
 
@@ -362,7 +426,9 @@ class ConnectionMetrics(BaseModel):
 # ============================================
 
 
-def validate_task_budget(budget: dict[str, Union[int, float]]) -> dict[str, Union[int, float]]:
+def validate_task_budget(
+    budget: dict[str, Union[int, float]],
+) -> dict[str, Union[int, float]]:
     """Validate task budget constraints"""
     if not budget:
         return {}
@@ -370,14 +436,20 @@ def validate_task_budget(budget: dict[str, Union[int, float]]) -> dict[str, Unio
     # Set reasonable defaults and limits
     defaults = {"tokens": 4000, "cost_usd": 5.0, "timeout_seconds": 300}
 
-    limits = {"tokens": (1, 50000), "cost_usd": (0.01, 100.0), "timeout_seconds": (1, 3600)}
+    limits = {
+        "tokens": (1, 50000),
+        "cost_usd": (0.01, 100.0),
+        "timeout_seconds": (1, 3600),
+    }
 
     validated = {}
     for key, value in budget.items():
         if key in limits:
             min_val, max_val = limits[key]
             if not min_val <= value <= max_val:
-                raise ValueError(f"Budget {key} must be between {min_val} and {max_val}")
+                raise ValueError(
+                    f"Budget {key} must be between {min_val} and {max_val}"
+                )
         validated[key] = value
 
     # Apply defaults for missing values

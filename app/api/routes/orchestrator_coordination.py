@@ -126,7 +126,11 @@ def get_mock_orchestrator_status() -> list[OrchestratorStatus]:
             uptime_hours=168.5,
             last_heartbeat=datetime.utcnow(),
             domain="Business Intelligence & Analytics",
-            resource_usage={"cpu_percent": 67.3, "memory_percent": 72.1, "io_percent": 34.6},
+            resource_usage={
+                "cpu_percent": 67.3,
+                "memory_percent": 72.1,
+                "io_percent": 34.6,
+            },
         ),
         OrchestratorStatus(
             id="artemis-001",
@@ -140,7 +144,11 @@ def get_mock_orchestrator_status() -> list[OrchestratorStatus]:
             uptime_hours=165.2,
             last_heartbeat=datetime.utcnow(),
             domain="Software Development & Technical Excellence",
-            resource_usage={"cpu_percent": 54.7, "memory_percent": 68.9, "io_percent": 42.1},
+            resource_usage={
+                "cpu_percent": 54.7,
+                "memory_percent": 68.9,
+                "io_percent": 42.1,
+            },
         ),
     ]
 
@@ -291,7 +299,9 @@ async def get_task_bridges(
 
 
 @router.get("/metrics", response_model=CoordinationMetrics)
-async def get_coordination_metrics(time_range: str = "1h", current_user=Depends(get_current_user)):
+async def get_coordination_metrics(
+    time_range: str = "1h", current_user=Depends(get_current_user)
+):
     """
     Get overall coordination system metrics
 
@@ -310,7 +320,9 @@ async def get_coordination_metrics(time_range: str = "1h", current_user=Depends(
 
 
 @router.get("/analytics", response_model=TaskFlowAnalytics)
-async def get_task_flow_analytics(time_range: str = "1h", current_user=Depends(get_current_user)):
+async def get_task_flow_analytics(
+    time_range: str = "1h", current_user=Depends(get_current_user)
+):
     """
     Get detailed task flow analytics for visualization
 
@@ -341,8 +353,18 @@ async def get_task_flow_analytics(time_range: str = "1h", current_user=Depends(g
             },
             flow_efficiency=87.3,
             resource_allocation={
-                "sophia-001": {"allocated": 6, "available": 2, "utilization": 0.75, "queue": 3},
-                "artemis-001": {"allocated": 4, "available": 4, "utilization": 0.50, "queue": 7},
+                "sophia-001": {
+                    "allocated": 6,
+                    "available": 2,
+                    "utilization": 0.75,
+                    "queue": 3,
+                },
+                "artemis-001": {
+                    "allocated": 4,
+                    "available": 4,
+                    "utilization": 0.50,
+                    "queue": 7,
+                },
             },
         )
 
@@ -388,7 +410,9 @@ async def get_resource_allocation(current_user=Depends(get_current_user)):
             ),
         ]
 
-        logger.info(f"Retrieved resource allocation for {len(allocations)} orchestrators")
+        logger.info(
+            f"Retrieved resource allocation for {len(allocations)} orchestrators"
+        )
         return allocations
     except Exception as e:
         logger.error(f"Error retrieving resource allocation: {e}")

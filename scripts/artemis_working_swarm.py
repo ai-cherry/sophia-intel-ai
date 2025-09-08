@@ -273,7 +273,9 @@ async def main():
     # Display results
     for agent_result in results["agents"]:
         print(f"\n{'='*70}")
-        print(f" AGENT {agent_result['agent_number']}: {agent_result.get('agent_name', 'Unknown')}")
+        print(
+            f" AGENT {agent_result['agent_number']}: {agent_result.get('agent_name', 'Unknown')}"
+        )
         print(f" Model: {agent_result.get('model', 'Unknown')}")
         print(f" Execution Time: {agent_result.get('execution_time', 0):.1f}s")
         print(f"{'='*70}")

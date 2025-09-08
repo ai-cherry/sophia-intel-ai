@@ -10,7 +10,12 @@ import re
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from .env import get_database_settings, get_feature_flags, get_llm_settings, get_settings
+from .env import (
+    get_database_settings,
+    get_feature_flags,
+    get_llm_settings,
+    get_settings,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +52,9 @@ def is_provider_enabled(provider: Union[str, LLMProvider]) -> bool:
     try:
         # Convert to string if enum
         provider_name = (
-            provider.value if isinstance(provider, LLMProvider) else str(provider).lower()
+            provider.value
+            if isinstance(provider, LLMProvider)
+            else str(provider).lower()
         )
 
         # Check if provider is in enabled list
@@ -63,12 +70,16 @@ def is_provider_enabled(provider: Union[str, LLMProvider]) -> bool:
         if hasattr(llm_settings, api_key_attr):
             api_key = getattr(llm_settings, api_key_attr)
             if api_key is None:
-                logger.warning(f"Provider {provider_name} enabled but no API key configured")
+                logger.warning(
+                    f"Provider {provider_name} enabled but no API key configured"
+                )
                 return False
 
             # Check if key is not empty
             key_value = (
-                api_key.get_secret_value() if hasattr(api_key, "get_secret_value") else api_key
+                api_key.get_secret_value()
+                if hasattr(api_key, "get_secret_value")
+                else api_key
             )
             if not key_value or key_value.strip() == "":
                 logger.warning(f"Provider {provider_name} has empty API key")
@@ -150,7 +161,8 @@ def get_primary_provider() -> Optional[LLMProvider]:
 # Sensitive data patterns for redaction
 SENSITIVE_PATTERNS = {
     "api_key": re.compile(
-        r'(api[_-]?key|token|secret)["\']?\s*[:=]\s*["\']?([a-zA-Z0-9_\-]{20,})', re.IGNORECASE
+        r'(api[_-]?key|token|secret)["\']?\s*[:=]\s*["\']?([a-zA-Z0-9_\-]{20,})',
+        re.IGNORECASE,
     ),
     "password": re.compile(
         r'(password|passwd|pwd)["\']?\s*[:=]\s*["\']?([^"\'\s]{3,})', re.IGNORECASE
@@ -189,7 +201,9 @@ def redact_sensitive_data(
         elif isinstance(data, dict):
             return _redact_dict(data, patterns, replacement)
         elif isinstance(data, (list, tuple)):
-            return type(data)([redact_sensitive_data(item, patterns, replacement) for item in data])
+            return type(data)(
+                [redact_sensitive_data(item, patterns, replacement) for item in data]
+            )
         else:
             return data
     except Exception as e:
@@ -220,7 +234,8 @@ def _redact_dict(
         # Check if key name suggests sensitive data
         key_lower = key.lower()
         if any(
-            sensitive in key_lower for sensitive in ["key", "token", "secret", "password", "passwd"]
+            sensitive in key_lower
+            for sensitive in ["key", "token", "secret", "password", "passwd"]
         ):
             redacted[key] = replacement
         elif isinstance(value, str):
@@ -325,7 +340,10 @@ def validate_config() -> List[str]:
         if feature_flags.enable_swarm_mode and not feature_flags.enable_memory_system:
             issues.append("Swarm mode requires memory system to be enabled")
 
-        if feature_flags.enable_distributed_mode and not feature_flags.enable_swarm_mode:
+        if (
+            feature_flags.enable_distributed_mode
+            and not feature_flags.enable_swarm_mode
+        ):
             issues.append("Distributed mode requires swarm mode to be enabled")
 
         # Environment-specific validations
@@ -357,10 +375,14 @@ def get_provider_config(provider: Union[str, LLMProvider]) -> Dict[str, Any]:
     Raises:
         ValueError: If provider is not enabled or configured
     """
-    provider_name = provider.value if isinstance(provider, LLMProvider) else str(provider).lower()
+    provider_name = (
+        provider.value if isinstance(provider, LLMProvider) else str(provider).lower()
+    )
 
     if not is_provider_enabled(provider_name):
-        raise ValueError(f"Provider {provider_name} is not enabled or properly configured")
+        raise ValueError(
+            f"Provider {provider_name} is not enabled or properly configured"
+        )
 
     llm_settings = get_llm_settings()
 

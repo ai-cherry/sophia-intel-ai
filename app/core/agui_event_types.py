@@ -186,7 +186,9 @@ class AGUIEvent:
         else:
             # Convert dataclass to dict
             if hasattr(self.data, "__dict__"):
-                result["data"] = {k: v for k, v in self.data.__dict__.items() if v is not None}
+                result["data"] = {
+                    k: v for k, v in self.data.__dict__.items() if v is not None
+                }
             else:
                 result["data"] = self.data
 

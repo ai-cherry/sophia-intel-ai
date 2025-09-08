@@ -24,7 +24,9 @@ try:
 except NameError:
     INTEGRATIONS = {}
 
-router = APIRouter(prefix="/api/slack", tags=["slack", "business-intelligence", "sophia-ai"])
+router = APIRouter(
+    prefix="/api/slack", tags=["slack", "business-intelligence", "sophia-ai"]
+)
 
 
 def get_sophia_slack() -> SophiaSlackIntelligence:
@@ -35,7 +37,9 @@ def get_sophia_slack() -> SophiaSlackIntelligence:
         return SophiaSlackIntelligence()
     except Exception as e:
         logger.error(f"Failed to get Sophia Slack Intelligence: {str(e)}")
-        raise HTTPException(status_code=503, detail=f"Slack service unavailable: {str(e)}")
+        raise HTTPException(
+            status_code=503, detail=f"Slack service unavailable: {str(e)}"
+        )
 
 
 @router.post("/webhook", summary="Slack Events Webhook")
@@ -77,7 +81,9 @@ async def handle_slash_command(form_data: dict[str, Any]) -> dict[str, Any]:
 
         # Handle the command
         full_command = f"{command} {text}".strip()
-        response_text = await sophia_slack.handle_slack_command(full_command, user_id, channel_id)
+        response_text = await sophia_slack.handle_slack_command(
+            full_command, user_id, channel_id
+        )
 
         return {"response_type": "in_channel", "text": response_text}
 
@@ -128,7 +134,9 @@ async def handle_app_mention(event: dict[str, Any]):
         command_text = text.replace("<@", "").split(">", 1)
         command = command_text[1].strip() if len(command_text) > 1 else "help"
 
-        response = await sophia_slack.handle_slack_command(f"/sophia {command}", user, channel)
+        response = await sophia_slack.handle_slack_command(
+            f"/sophia {command}", user, channel
+        )
 
         # Send response back to channel (would need proper bot token)
         logger.info(f"App mention response: {response[:100]}...")
@@ -328,7 +336,8 @@ async def get_reports_status(
 
 @router.post("/test-integration", summary="Test Slack Integration")
 async def test_slack_integration(
-    channel: str = "#general", sophia_slack: SophiaSlackIntelligence = Depends(get_sophia_slack)
+    channel: str = "#general",
+    sophia_slack: SophiaSlackIntelligence = Depends(get_sophia_slack),
 ) -> dict[str, Any]:
     """
     Test the Slack integration by sending a test message

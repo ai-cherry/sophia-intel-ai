@@ -69,7 +69,9 @@ class AIScaffoldingInitializer:
                 ("Cross-Learning", self._init_cross_learning),
             ]
 
-            main_task = progress.add_task("[cyan]Initializing AI Scaffolding...", total=len(tasks))
+            main_task = progress.add_task(
+                "[cyan]Initializing AI Scaffolding...", total=len(tasks)
+            )
 
             for task_name, task_func, *args in tasks:
                 try:
@@ -77,11 +79,15 @@ class AIScaffoldingInitializer:
 
                     # Run initialization
                     if args:
-                        success = await task_func(*args, progress=progress, task_id=sub_task)
+                        success = await task_func(
+                            *args, progress=progress, task_id=sub_task
+                        )
                     else:
                         success = await task_func(progress=progress, task_id=sub_task)
 
-                    self.components_status[task_name] = "✅ Success" if success else "❌ Failed"
+                    self.components_status[task_name] = (
+                        "✅ Success" if success else "❌ Failed"
+                    )
                     progress.update(sub_task, completed=100)
 
                 except Exception as e:
@@ -100,12 +106,16 @@ class AIScaffoldingInitializer:
         """Initialize the integration hub"""
         try:
             if progress:
-                progress.update(task_id, description="[yellow]Creating Integration Hub...")
+                progress.update(
+                    task_id, description="[yellow]Creating Integration Hub..."
+                )
 
             hub = await create_integration_hub()
 
             if progress:
-                progress.update(task_id, description="[yellow]Starting components...", completed=50)
+                progress.update(
+                    task_id, description="[yellow]Starting components...", completed=50
+                )
 
             await hub.start()
 
@@ -117,7 +127,9 @@ class AIScaffoldingInitializer:
             logger.error(f"Failed to initialize Integration Hub: {e}")
             return False
 
-    async def _init_meta_tagging(self, root_path: Path, progress=None, task_id=None) -> bool:
+    async def _init_meta_tagging(
+        self, root_path: Path, progress=None, task_id=None
+    ) -> bool:
         """Initialize meta-tagging system"""
         try:
             if progress:
@@ -130,7 +142,9 @@ class AIScaffoldingInitializer:
             py_files = list(root_path.rglob("*.py"))
             if progress:
                 progress.update(
-                    task_id, description=f"[yellow]Tagging {len(py_files)} files...", completed=25
+                    task_id,
+                    description=f"[yellow]Tagging {len(py_files)} files...",
+                    completed=25,
                 )
 
             tagged_count = 0
@@ -142,7 +156,9 @@ class AIScaffoldingInitializer:
                     tagged_count += len(tags)
 
                 if progress and i % 10 == 0:
-                    progress.update(task_id, completed=25 + (50 * i / min(100, len(py_files))))
+                    progress.update(
+                        task_id, completed=25 + (50 * i / min(100, len(py_files)))
+                    )
 
             # Save registry
             registry.save()
@@ -155,17 +171,23 @@ class AIScaffoldingInitializer:
             logger.error(f"Failed to initialize meta-tagging: {e}")
             return False
 
-    async def _init_embeddings(self, root_path: Path, progress=None, task_id=None) -> bool:
+    async def _init_embeddings(
+        self, root_path: Path, progress=None, task_id=None
+    ) -> bool:
         """Initialize embedding infrastructure"""
         try:
             if progress:
-                progress.update(task_id, description="[yellow]Creating embedding system...")
+                progress.update(
+                    task_id, description="[yellow]Creating embedding system..."
+                )
 
             system = MultiModalEmbeddingSystem()
 
             if progress:
                 progress.update(
-                    task_id, description="[yellow]Generating initial embeddings...", completed=50
+                    task_id,
+                    description="[yellow]Generating initial embeddings...",
+                    completed=50,
                 )
 
             # Generate embeddings for key files
@@ -201,7 +223,9 @@ class AIScaffoldingInitializer:
 
             if progress:
                 progress.update(
-                    task_id, description="[yellow]Configuring evolution...", completed=75
+                    task_id,
+                    description="[yellow]Configuring evolution...",
+                    completed=75,
                 )
 
             if self.verbose:
@@ -216,14 +240,18 @@ class AIScaffoldingInitializer:
         """Initialize hierarchical memory system"""
         try:
             if progress:
-                progress.update(task_id, description="[yellow]Setting up memory tiers...")
+                progress.update(
+                    task_id, description="[yellow]Setting up memory tiers..."
+                )
 
             memory = HierarchicalMemorySystem()
             await memory.initialize()
 
             if progress:
                 progress.update(
-                    task_id, description="[yellow]Testing memory operations...", completed=75
+                    task_id,
+                    description="[yellow]Testing memory operations...",
+                    completed=75,
                 )
 
             # Test basic operations
@@ -238,17 +266,23 @@ class AIScaffoldingInitializer:
             logger.error(f"Failed to initialize memory: {e}")
             return False
 
-    async def _init_documentation(self, root_path: Path, progress=None, task_id=None) -> bool:
+    async def _init_documentation(
+        self, root_path: Path, progress=None, task_id=None
+    ) -> bool:
         """Initialize living documentation system"""
         try:
             if progress:
-                progress.update(task_id, description="[yellow]Creating documentation system...")
+                progress.update(
+                    task_id, description="[yellow]Creating documentation system..."
+                )
 
             docs = LivingDocumentationSystem()
 
             if progress:
                 progress.update(
-                    task_id, description="[yellow]Generating initial docs...", completed=50
+                    task_id,
+                    description="[yellow]Generating initial docs...",
+                    completed=50,
                 )
 
             # Generate docs for key modules
@@ -270,7 +304,9 @@ class AIScaffoldingInitializer:
         """Initialize MCP orchestration"""
         try:
             if progress:
-                progress.update(task_id, description="[yellow]Setting up MCP servers...")
+                progress.update(
+                    task_id, description="[yellow]Setting up MCP servers..."
+                )
 
             # MCP initialization would go here
             # For now, we'll simulate success
@@ -288,7 +324,9 @@ class AIScaffoldingInitializer:
         """Initialize cross-learning system"""
         try:
             if progress:
-                progress.update(task_id, description="[yellow]Enabling cross-learning...")
+                progress.update(
+                    task_id, description="[yellow]Enabling cross-learning..."
+                )
 
             # Cross-learning initialization would go here
             await asyncio.sleep(0.5)

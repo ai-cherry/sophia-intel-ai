@@ -12,7 +12,10 @@ from enum import Enum
 from typing import Any, Optional
 
 from app.core.ai_logger import logger
-from app.embeddings.agno_embedding_service import AgnoEmbeddingRequest, AgnoEmbeddingService
+from app.embeddings.agno_embedding_service import (
+    AgnoEmbeddingRequest,
+    AgnoEmbeddingService,
+)
 from app.memory.crdt_memory_sync import CRDTMemoryStore
 from app.memory.hybrid_vector_manager import (
     CollectionConfig,
@@ -207,7 +210,12 @@ class UnifiedMemoryStore:
         if self.crdt_store:
             await self.crdt_store.add_memory(
                 memory_id,
-                {"content": content, "metadata": metadata, "tags": tags, "embeddings": embeddings},
+                {
+                    "content": content,
+                    "metadata": metadata,
+                    "tags": tags,
+                    "embeddings": embeddings,
+                },
             )
 
         # Update cache
@@ -395,7 +403,10 @@ class UnifiedMemoryStore:
         return snippet_results[:limit]
 
     async def update(
-        self, memory_id: str, updates: dict[str, Any], regenerate_embeddings: bool = True
+        self,
+        memory_id: str,
+        updates: dict[str, Any],
+        regenerate_embeddings: bool = True,
     ) -> bool:
         """
         Update existing memory
@@ -444,7 +455,9 @@ class UnifiedMemoryStore:
             await self.crdt_store.delete_memory(memory_id)
 
         # Delete from vector databases
-        await self.vector_manager.weaviate_client.delete_object("sophia_unified_memory", memory_id)
+        await self.vector_manager.weaviate_client.delete_object(
+            "sophia_unified_memory", memory_id
+        )
 
         # Invalidate cache
         self._invalidate_cache(memory_id)
@@ -502,7 +515,9 @@ class UnifiedMemoryStore:
             "level": content.get("level", "document"),
         }
 
-    def _extract_snippets(self, text: str, query: str, snippet_size: int = 200) -> list[str]:
+    def _extract_snippets(
+        self, text: str, query: str, snippet_size: int = 200
+    ) -> list[str]:
         """Extract relevant snippets from text"""
         words = text.split()
         query_words = set(query.lower().split())
@@ -521,7 +536,9 @@ class UnifiedMemoryStore:
 
         return [s[0] for s in snippets[:5]]
 
-    async def _auto_generate_tags(self, content: dict[str, Any], text: str) -> list[str]:
+    async def _auto_generate_tags(
+        self, content: dict[str, Any], text: str
+    ) -> list[str]:
         """Auto-generate tags from content"""
         tags = []
 
@@ -572,7 +589,9 @@ class UnifiedMemoryStore:
             self.metrics["total_retrievals"] += 1
             n = self.metrics["total_retrievals"]
             prev_avg = self.metrics["avg_retrieval_latency_ms"]
-            self.metrics["avg_retrieval_latency_ms"] = (prev_avg * (n - 1) + latency_ms) / n
+            self.metrics["avg_retrieval_latency_ms"] = (
+                prev_avg * (n - 1) + latency_ms
+            ) / n
 
     def get_metrics(self) -> dict[str, Any]:
         """Get comprehensive metrics"""
@@ -627,7 +646,9 @@ if __name__ == "__main__":
         )
         logger.info(f"Document results: {doc_results.total_results}")
 
-        section_results = await store.retrieve("algorithms", level=RetrievalLevel.SECTION, limit=5)
+        section_results = await store.retrieve(
+            "algorithms", level=RetrievalLevel.SECTION, limit=5
+        )
         logger.info(f"Section results: {section_results.total_results}")
 
         # Show metrics

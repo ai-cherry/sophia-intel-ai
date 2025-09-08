@@ -102,7 +102,9 @@ class GongCSVIngestionPipeline:
 
             if response.status_code == 200:
                 data = response.json()
-                chunks = data.get("data", {}).get("Get", {}).get("GongTranscriptChunk", [])
+                chunks = (
+                    data.get("data", {}).get("Get", {}).get("GongTranscriptChunk", [])
+                )
                 self.existing_call_ids = {
                     chunk["callId"] for chunk in chunks if chunk.get("callId")
                 }
@@ -110,7 +112,9 @@ class GongCSVIngestionPipeline:
         except Exception as e:
             logger.warning(f"Could not load existing calls: {e}")
 
-    def process_csv_file(self, csv_path: str, format_type: str = "auto") -> dict[str, Any]:
+    def process_csv_file(
+        self, csv_path: str, format_type: str = "auto"
+    ) -> dict[str, Any]:
         """
         Process a Gong CSV export file
 
@@ -191,7 +195,9 @@ class GongCSVIngestionPipeline:
 
         for _, row in df.iterrows():
             # Extract fields (handle various column name variations)
-            call_id = str(row.get("call_id", row.get("id", row.get("gong_call_id", ""))))
+            call_id = str(
+                row.get("call_id", row.get("id", row.get("gong_call_id", "")))
+            )
 
             if not call_id:
                 continue
@@ -199,11 +205,17 @@ class GongCSVIngestionPipeline:
             record = GongCSVRecord(
                 call_id=call_id,
                 title=row.get("title", row.get("call_title", "Unknown")),
-                date=str(row.get("date", row.get("scheduled", row.get("call_date", "")))),
+                date=str(
+                    row.get("date", row.get("scheduled", row.get("call_date", "")))
+                ),
                 duration=int(row.get("duration", row.get("duration_minutes", 0)) or 0),
                 participants=self._parse_participants(row),
-                transcript=row.get("notes", row.get("summary", "")),  # May not have full transcript
-                account_name=row.get("account", row.get("account_name", row.get("company", ""))),
+                transcript=row.get(
+                    "notes", row.get("summary", "")
+                ),  # May not have full transcript
+                account_name=row.get(
+                    "account", row.get("account_name", row.get("company", ""))
+                ),
                 deal_stage=row.get("deal_stage", row.get("stage", "")),
                 call_outcome=row.get("outcome", row.get("result", "")),
             )
@@ -230,7 +242,9 @@ class GongCSVIngestionPipeline:
 
                 for _, row in group.iterrows():
                     speaker = row.get("speaker", row.get("speaker_name", "Unknown"))
-                    text = row.get("transcript", row.get("text", row.get("segment", "")))
+                    text = row.get(
+                        "transcript", row.get("text", row.get("segment", ""))
+                    )
 
                     if speaker and text:
                         transcript_parts.append(f"{speaker}: {text}")
@@ -243,12 +257,16 @@ class GongCSVIngestionPipeline:
 
                 record = GongCSVRecord(
                     call_id=str(call_id),
-                    title=first_row.get("title", first_row.get("call_title", f"Call {call_id}")),
+                    title=first_row.get(
+                        "title", first_row.get("call_title", f"Call {call_id}")
+                    ),
                     date=str(first_row.get("date", first_row.get("call_date", ""))),
                     duration=int(first_row.get("duration", 0) or 0),
                     participants=list(participants),
                     transcript=full_transcript,
-                    account_name=first_row.get("account", first_row.get("account_name", "")),
+                    account_name=first_row.get(
+                        "account", first_row.get("account_name", "")
+                    ),
                 )
 
                 records.append(record)
@@ -258,7 +276,10 @@ class GongCSVIngestionPipeline:
                 record = GongCSVRecord(
                     call_id=str(
                         row.get(
-                            "id", row.get("call_id", hashlib.md5(str(row).encode()).hexdigest())
+                            "id",
+                            row.get(
+                                "call_id", hashlib.md5(str(row).encode()).hexdigest()
+                            ),
                         )
                     ),
                     title=row.get("title", "Unknown"),
@@ -345,7 +366,9 @@ class GongCSVIngestionPipeline:
                         participants = json.loads(value)
                 else:
                     # Delimited string
-                    participants = [p.strip() for p in value.replace(";", ",").split(",")]
+                    participants = [
+                        p.strip() for p in value.replace(";", ",").split(",")
+                    ]
                 break
 
         return participants
@@ -395,7 +418,9 @@ class GongCSVIngestionPipeline:
                 chunk_text = "\n".join(current_chunk)
                 chunks.append(
                     {
-                        "chunk_id": hashlib.md5(f"{call_id}_{chunk_index}".encode()).hexdigest(),
+                        "chunk_id": hashlib.md5(
+                            f"{call_id}_{chunk_index}".encode()
+                        ).hexdigest(),
                         "text": chunk_text,
                         "index": chunk_index,
                     }
@@ -423,7 +448,9 @@ class GongCSVIngestionPipeline:
             chunk_text = "\n".join(current_chunk)
             chunks.append(
                 {
-                    "chunk_id": hashlib.md5(f"{call_id}_{chunk_index}".encode()).hexdigest(),
+                    "chunk_id": hashlib.md5(
+                        f"{call_id}_{chunk_index}".encode()
+                    ).hexdigest(),
                     "text": chunk_text,
                     "index": chunk_index,
                 }
@@ -434,7 +461,9 @@ class GongCSVIngestionPipeline:
     def _create_embeddings(self, texts: list[str]) -> list[list[float]]:
         """Create embeddings using OpenAI"""
         try:
-            response = openai.embeddings.create(model="text-embedding-3-small", input=texts)
+            response = openai.embeddings.create(
+                model="text-embedding-3-small", input=texts
+            )
             return [item.embedding for item in response.data]
         except Exception as e:
             logger.error(f"Embedding error: {e}")
@@ -461,7 +490,9 @@ class GongCSVIngestionPipeline:
                     "speaker": (
                         "Multiple"
                         if len(record.participants) > 1
-                        else record.participants[0] if record.participants else "Unknown"
+                        else (
+                            record.participants[0] if record.participants else "Unknown"
+                        )
                     ),
                     "chunkIndex": chunk["index"],
                     "callTitle": record.title,
@@ -482,11 +513,15 @@ class GongCSVIngestionPipeline:
 
         try:
             response = requests.post(
-                f"{self.weaviate_endpoint}/v1/batch/objects", headers=headers, json=batch_data
+                f"{self.weaviate_endpoint}/v1/batch/objects",
+                headers=headers,
+                json=batch_data,
             )
 
             if response.status_code in [200, 201]:
-                logger.info(f"✅ Stored {len(objects)} chunks for call {record.call_id}")
+                logger.info(
+                    f"✅ Stored {len(objects)} chunks for call {record.call_id}"
+                )
             else:
                 logger.error(f"Storage error: {response.status_code}")
         except Exception as e:

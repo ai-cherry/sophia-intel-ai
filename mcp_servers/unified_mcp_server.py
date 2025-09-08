@@ -96,7 +96,10 @@ class UnifiedMCPServer:
         try:
             ttl = ttl or self.config.cache_ttl
             await asyncio.get_event_loop().run_in_executor(
-                None, lambda: self.redis_client.setex(key, ttl, json.dumps(data, default=str))
+                None,
+                lambda: self.redis_client.setex(
+                    key, ttl, json.dumps(data, default=str)
+                ),
             )
         except Exception as e:
             logger.warning(f"Cache write error: {e}")
@@ -143,9 +146,16 @@ class UnifiedMCPServer:
                 )
 
                 if response.status_code == 200:
-                    return {"success": True, "data": response.json(), "source": "lambda_labs"}
+                    return {
+                        "success": True,
+                        "data": response.json(),
+                        "source": "lambda_labs",
+                    }
                 else:
-                    return {"success": False, "error": f"Lambda Labs error: {response.status_code}"}
+                    return {
+                        "success": False,
+                        "error": f"Lambda Labs error: {response.status_code}",
+                    }
 
         except Exception as e:
             logger.error(f"Lambda Labs routing error: {e}")
@@ -191,21 +201,34 @@ class UnifiedMCPServer:
                 )
 
                 if response.status_code == 200:
-                    return {"success": True, "data": response.json(), "source": "openrouter"}
+                    return {
+                        "success": True,
+                        "data": response.json(),
+                        "source": "openrouter",
+                    }
                 else:
-                    return {"success": False, "error": f"OpenRouter error: {response.status_code}"}
+                    return {
+                        "success": False,
+                        "error": f"OpenRouter error: {response.status_code}",
+                    }
 
         except Exception as e:
             logger.error(f"OpenRouter routing error: {e}")
             return {"success": False, "error": str(e)}
 
-    async def route_to_local_processing(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def route_to_local_processing(
+        self, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Route simple tasks to local processing"""
         try:
             # Simple local processing
             result = {
                 "success": True,
-                "data": {"processed": True, "payload_size": len(str(payload)), "source": "local"},
+                "data": {
+                    "processed": True,
+                    "payload_size": len(str(payload)),
+                    "source": "local",
+                },
                 "timestamp": datetime.now().isoformat(),
             }
             return result
@@ -270,7 +293,9 @@ class UnifiedMCPServer:
             """Clear MCP cache"""
             try:
                 if self.redis_client:
-                    await asyncio.get_event_loop().run_in_executor(None, self.redis_client.flushdb)
+                    await asyncio.get_event_loop().run_in_executor(
+                        None, self.redis_client.flushdb
+                    )
                     return {"success": True, "message": "Cache cleared"}
                 else:
                     return {"success": False, "message": "Redis not connected"}
@@ -298,5 +323,8 @@ if __name__ == "__main__":
 
     # Run server
     uvicorn.run(
-        server.app, host="${BIND_IP}", port=int(os.getenv("MCP_PORT", "8001")), log_level="info"
+        server.app,
+        host="${BIND_IP}",
+        port=int(os.getenv("MCP_PORT", "8001")),
+        log_level="info",
     )

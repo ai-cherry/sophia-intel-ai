@@ -19,7 +19,9 @@ class TestScoutIntegration:
         import subprocess
 
         result = subprocess.run(
-            ["python3", "scripts/scout_readiness_check.py"], capture_output=True, text=True
+            ["python3", "scripts/scout_readiness_check.py"],
+            capture_output=True,
+            text=True,
         )
 
         output = json.loads(result.stdout)
@@ -39,7 +41,9 @@ class TestScoutIntegration:
         os.environ["SCOUT_PREFETCH_MAX_FILES"] = "5"
         os.environ["SCOUT_PREFETCH_MAX_BYTES"] = "1000"
 
-        result = await prefetch_and_index(repo_root=".", max_files=5, max_bytes_per_file=1000)
+        result = await prefetch_and_index(
+            repo_root=".", max_files=5, max_bytes_per_file=1000
+        )
 
         assert result["ok"] in [True, False]  # Can fail if no services
         if result.get("files_considered"):

@@ -57,7 +57,9 @@ class UnifiedTask:
     status: TaskStatus = TaskStatus.PENDING
     retries: int = 0
     max_retries: int = 3
-    budget: dict[str, float] = field(default_factory=lambda: {"cost_usd": 1.0, "tokens": 10000})
+    budget: dict[str, float] = field(
+        default_factory=lambda: {"cost_usd": 1.0, "tokens": 10000}
+    )
 
     # Enhanced fields
     persona_context: Optional[PersonaContext] = None
@@ -115,7 +117,11 @@ class OrchestratorConfig:
     integration_configs: dict[str, dict[str, Any]] = field(default_factory=dict)
     data_sources: list[str] = field(default_factory=list)
     quality_thresholds: dict[str, float] = field(
-        default_factory=lambda: {"confidence_min": 0.6, "citation_min": 2, "source_diversity": 0.8}
+        default_factory=lambda: {
+            "confidence_min": 0.6,
+            "citation_min": 2,
+            "source_diversity": 0.8,
+        }
     )
 
 
@@ -178,7 +184,9 @@ class UnifiedBaseOrchestrator(ABC):
         # Integration connectors (to be initialized by subclasses)
         self.connectors = {}
 
-        logger.info(f"Initialized {self.config.name} orchestrator for {self.domain.value} domain")
+        logger.info(
+            f"Initialized {self.config.name} orchestrator for {self.domain.value} domain"
+        )
 
     async def execute(self, task: UnifiedTask) -> UnifiedResult:
         """
@@ -236,7 +244,9 @@ class UnifiedBaseOrchestrator(ABC):
             task.completed_at = datetime.now()
 
             # Calculate execution time
-            result.execution_time_ms = (task.completed_at - start_time).total_seconds() * 1000
+            result.execution_time_ms = (
+                task.completed_at - start_time
+            ).total_seconds() * 1000
 
             # Track costs
             self._update_cost_tracking(result.cost)
@@ -257,7 +267,9 @@ class UnifiedBaseOrchestrator(ABC):
                 task.retries += 1
                 task.status = TaskStatus.PENDING
                 await self._task_queue.put(task)
-                logger.info(f"Retrying task {task.id} (attempt {task.retries}/{task.max_retries})")
+                logger.info(
+                    f"Retrying task {task.id} (attempt {task.retries}/{task.max_retries})"
+                )
 
         finally:
             # Clean up
@@ -265,7 +277,9 @@ class UnifiedBaseOrchestrator(ABC):
                 del self._active_tasks[task.id]
 
             # Store in history
-            self._task_history.append({"task": task, "result": result, "timestamp": datetime.now()})
+            self._task_history.append(
+                {"task": task, "result": result, "timestamp": datetime.now()}
+            )
 
             # Emit metrics
             if self.metrics:
@@ -279,7 +293,9 @@ class UnifiedBaseOrchestrator(ABC):
 
         return result
 
-    async def _execute_with_circuit_breaker(self, task: UnifiedTask, routing: Any) -> UnifiedResult:
+    async def _execute_with_circuit_breaker(
+        self, task: UnifiedTask, routing: Any
+    ) -> UnifiedResult:
         """Execute task with circuit breaker protection"""
 
         async def _execute():
@@ -417,7 +433,9 @@ class UnifiedBaseOrchestrator(ABC):
 
         return context
 
-    async def _store_enhanced_results(self, task: UnifiedTask, result: UnifiedResult) -> None:
+    async def _store_enhanced_results(
+        self, task: UnifiedTask, result: UnifiedResult
+    ) -> None:
         """
         Store task results with enhanced metadata and tagging
 
@@ -428,7 +446,11 @@ class UnifiedBaseOrchestrator(ABC):
         # Create enhanced document chunk
         enhanced_content = {
             "task": task.content,
-            "result": result.content if isinstance(result.content, str) else str(result.content),
+            "result": (
+                result.content
+                if isinstance(result.content, str)
+                else str(result.content)
+            ),
             "insights": result.insights,
             "recommendations": result.recommendations,
             "execution_metadata": {
@@ -483,7 +505,9 @@ class UnifiedBaseOrchestrator(ABC):
             },
         )
 
-    async def _apply_quality_assurance(self, task: UnifiedTask, result: UnifiedResult) -> None:
+    async def _apply_quality_assurance(
+        self, task: UnifiedTask, result: UnifiedResult
+    ) -> None:
         """
         Apply quality assurance checks to results
 
@@ -520,9 +544,26 @@ class UnifiedBaseOrchestrator(ABC):
 
         # Domain-specific tags
         domain_tags = {
-            MemoryDomain.SOPHIA: ["business", "intelligence", "analytics", "sales", "strategy"],
-            MemoryDomain.ARTEMIS: ["code", "development", "technical", "engineering", "quality"],
-            MemoryDomain.SHARED: ["shared", "knowledge", "cross-domain", "collaboration"],
+            MemoryDomain.SOPHIA: [
+                "business",
+                "intelligence",
+                "analytics",
+                "sales",
+                "strategy",
+            ],
+            MemoryDomain.ARTEMIS: [
+                "code",
+                "development",
+                "technical",
+                "engineering",
+                "quality",
+            ],
+            MemoryDomain.SHARED: [
+                "shared",
+                "knowledge",
+                "cross-domain",
+                "collaboration",
+            ],
         }
 
         # Add domain-relevant tags
@@ -549,7 +590,9 @@ class UnifiedBaseOrchestrator(ABC):
         elif task.priority == ExecutionPriority.HIGH:
             task.tags.append("high-priority")
 
-    async def _update_cross_learning(self, task: UnifiedTask, result: UnifiedResult) -> None:
+    async def _update_cross_learning(
+        self, task: UnifiedTask, result: UnifiedResult
+    ) -> None:
         """
         Update cross-orchestrator learning patterns
 
@@ -584,7 +627,9 @@ class UnifiedBaseOrchestrator(ABC):
                     {
                         "pattern": pattern,
                         "insights": result.insights[:3],  # Top insights
-                        "best_practices": result.recommendations[:3],  # Top recommendations
+                        "best_practices": result.recommendations[
+                            :3
+                        ],  # Top recommendations
                     }
                 ),
                 source_uri=f"cross-learning://{task.id}",
@@ -592,7 +637,8 @@ class UnifiedBaseOrchestrator(ABC):
                 metadata={
                     "type": "learning_pattern",
                     "source_domain": self.domain.value,
-                    "success_score": (result.confidence + result.data_quality_score) / 2,
+                    "success_score": (result.confidence + result.data_quality_score)
+                    / 2,
                 },
                 confidence=result.confidence,
             )
@@ -697,13 +743,19 @@ class UnifiedBaseOrchestrator(ABC):
     def _calculate_context_quality(self, context: dict[str, Any]) -> dict[str, float]:
         """Calculate quality metrics for loaded context"""
         return {
-            "relevance_score": sum(item.get("score", 0) for item in context.get("related_info", []))
+            "relevance_score": sum(
+                item.get("score", 0) for item in context.get("related_info", [])
+            )
             / max(len(context.get("related_info", [])), 1),
             "source_diversity": len(
                 {item.get("source", "") for item in context.get("related_info", [])}
             ),
             "recency_score": len(
-                [task for task in context.get("recent_tasks", []) if task.get("success", False)]
+                [
+                    task
+                    for task in context.get("recent_tasks", [])
+                    if task.get("success", False)
+                ]
             )
             / max(len(context.get("recent_tasks", [])), 1),
         }
@@ -731,12 +783,18 @@ class UnifiedBaseOrchestrator(ABC):
         task_cost = task.budget.get("cost_usd", 0)
 
         # Check hourly limit
-        if self._cost_tracker["hourly"] + task_cost > self.config.budget_limits["hourly_cost_usd"]:
+        if (
+            self._cost_tracker["hourly"] + task_cost
+            > self.config.budget_limits["hourly_cost_usd"]
+        ):
             logger.warning(f"Task {task.id} would exceed hourly budget limit")
             return False
 
         # Check daily limit
-        if self._cost_tracker["daily"] + task_cost > self.config.budget_limits["daily_cost_usd"]:
+        if (
+            self._cost_tracker["daily"] + task_cost
+            > self.config.budget_limits["daily_cost_usd"]
+        ):
             logger.warning(f"Task {task.id} would exceed daily budget limit")
             return False
 
@@ -761,7 +819,9 @@ class UnifiedBaseOrchestrator(ABC):
         ]
 
         combined = "|".join(key_parts)
-        return f"unified_task_cache:{hashlib.sha256(combined.encode()).hexdigest()[:16]}"
+        return (
+            f"unified_task_cache:{hashlib.sha256(combined.encode()).hexdigest()[:16]}"
+        )
 
     async def submit_task(self, task: UnifiedTask) -> str:
         """Submit a task to the queue"""
@@ -795,18 +855,25 @@ class UnifiedBaseOrchestrator(ABC):
             "total_processed": len(self._task_history),
             "cost_tracking": self._cost_tracker,
             "circuit_breaker_state": self.circuit_breaker.state,
-            "cache_hit_rate": self.memory.metrics.get_cache_hit_rate() if self.memory else 0.0,
+            "cache_hit_rate": (
+                self.memory.metrics.get_cache_hit_rate() if self.memory else 0.0
+            ),
             "learning_patterns": len(self._learning_patterns),
             "integration_count": len(self.connectors),
             "quality_metrics": {
                 "avg_confidence": (
-                    sum(entry["result"].confidence for entry in self._task_history[-10:])
+                    sum(
+                        entry["result"].confidence for entry in self._task_history[-10:]
+                    )
                     / min(len(self._task_history), 10)
                     if self._task_history
                     else 0
                 ),
                 "avg_quality_score": (
-                    sum(entry["result"].data_quality_score for entry in self._task_history[-10:])
+                    sum(
+                        entry["result"].data_quality_score
+                        for entry in self._task_history[-10:]
+                    )
                     / min(len(self._task_history), 10)
                     if self._task_history
                     else 0

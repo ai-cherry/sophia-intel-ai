@@ -165,7 +165,9 @@ class KEDALoadTester:
             wave_value = math.sin(2 * math.pi * i / self.config.wave_period)
             current_load = int(base_load + self.config.wave_amplitude * wave_value)
 
-            tasks = [f"task_wave_{i}_{time.time()}" for _ in range(max(1, current_load))]
+            tasks = [
+                f"task_wave_{i}_{time.time()}" for _ in range(max(1, current_load))
+            ]
 
             for task in tasks:
                 self.redis_client.rpush(
@@ -303,7 +305,9 @@ class KEDALoadTester:
 
         # Calculate metrics
         avg_scaling_time = (
-            sum(scaling_times.values()) / len(scaling_times) if scaling_times else float("inf")
+            sum(scaling_times.values()) / len(scaling_times)
+            if scaling_times
+            else float("inf")
         )
         improvement = (
             (
@@ -349,7 +353,8 @@ class KEDALoadTester:
                 query = "rate(keda_scaled_object_events_total[1m])"
                 try:
                     async with session.get(
-                        f"{self.config.prometheus_url}/api/v1/query", params={"query": query}
+                        f"{self.config.prometheus_url}/api/v1/query",
+                        params={"query": query},
                     ) as response:
                         if response.status == 200:
                             data = await response.json()
@@ -357,7 +362,9 @@ class KEDALoadTester:
                                 rate = float(data["data"]["result"][0]["value"][1])
                                 if rate > 3:
                                     circuit_breaker_triggered = True
-                                    logger.info(f"Circuit breaker triggered at {rate} events/min")
+                                    logger.info(
+                                        f"Circuit breaker triggered at {rate} events/min"
+                                    )
                                     break
                 except Exception as e:
                     logger.error(f"Failed to query Prometheus: {e}")
@@ -383,7 +390,9 @@ class KEDALoadTester:
 
         # Test 1: Burst load scaling
         logger.info("Test 1: Burst load scaling")
-        test_results["tests"]["burst_scaling"] = await self.measure_scaling_performance()
+        test_results["tests"][
+            "burst_scaling"
+        ] = await self.measure_scaling_performance()
         await asyncio.sleep(30)  # Cool down
 
         # Test 2: Circuit breaker
@@ -401,7 +410,9 @@ class KEDALoadTester:
 
         test_results["tests"]["sustained_load"] = {
             "iterations": sustained_results,
-            "average_scaling_time": sum(r["average_scaling_time"] for r in sustained_results)
+            "average_scaling_time": sum(
+                r["average_scaling_time"] for r in sustained_results
+            )
             / len(sustained_results),
             "all_targets_met": all(r["target_met"] for r in sustained_results),
         }
@@ -448,12 +459,16 @@ class KEDALoadTester:
         sustained = results["tests"]["sustained_load"]
         logger.info("Sustained Load Test:")
         logger.info(f"  Average Scaling Time: {sustained['average_scaling_time']:.2f}s")
-        logger.info(f"  All Targets Met: {'✅' if sustained['all_targets_met'] else '❌'}")
+        logger.info(
+            f"  All Targets Met: {'✅' if sustained['all_targets_met'] else '❌'}"
+        )
 
         logger.info("=" * 60 + "\n")
 
         # Save detailed results to file
-        with open(f"load_test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json", "w") as f:
+        with open(
+            f"load_test_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json", "w"
+        ) as f:
             json.dump(results, f, indent=2)
 
 
@@ -461,14 +476,18 @@ async def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description="KEDA Load Testing Suite")
     parser.add_argument(
-        "--redis-host", default="redis.artemis-system.svc.cluster.local", help="Redis host address"
+        "--redis-host",
+        default="redis.artemis-system.svc.cluster.local",
+        help="Redis host address",
     )
     parser.add_argument(
         "--prometheus-url",
         default="http://prometheus.monitoring.svc.cluster.local:9090",
         help="Prometheus URL",
     )
-    parser.add_argument("--test-duration", type=int, default=300, help="Test duration in seconds")
+    parser.add_argument(
+        "--test-duration", type=int, default=300, help="Test duration in seconds"
+    )
     parser.add_argument(
         "--pattern",
         choices=["burst", "gradual", "wave", "mixed", "comprehensive"],

@@ -94,7 +94,11 @@ class PortkeyVirtualKeyManager:
 
     def get_active_providers(self) -> list[str]:
         """Get list of active providers"""
-        return [provider for provider, config in self.virtual_keys.items() if config.is_active]
+        return [
+            provider
+            for provider, config in self.virtual_keys.items()
+            if config.is_active
+        ]
 
 
 # ============================================
@@ -110,7 +114,10 @@ class PortkeyConfigBuilder:
 
     @staticmethod
     def build_embedding_config(
-        provider: str, virtual_key: str, cache_enabled: bool = True, retry_enabled: bool = True
+        provider: str,
+        virtual_key: str,
+        cache_enabled: bool = True,
+        retry_enabled: bool = True,
     ) -> dict[str, Any]:
         """
         Build Portkey configuration for embeddings
@@ -262,7 +269,11 @@ class PortkeyGateway:
             self._client = None
 
     async def create_embeddings(
-        self, texts: list[str], model: str, provider: str = "together", use_cache: bool = True
+        self,
+        texts: list[str],
+        model: str,
+        provider: str = "together",
+        use_cache: bool = True,
     ) -> PortkeyResponse:
         """
         Create embeddings through Portkey gateway
@@ -291,7 +302,11 @@ class PortkeyGateway:
             model=model,
             input=texts,
             portkey_config=portkey_config,
-            metadata={"source": "sophia-intel-ai", "type": "embedding", "batch_size": len(texts)},
+            metadata={
+                "source": "sophia-intel-ai",
+                "type": "embedding",
+                "batch_size": len(texts),
+            },
         )
 
         # Execute request
@@ -459,7 +474,9 @@ async def example_usage():
 
     # Create embeddings via Together AI
     embedding_response = await gateway.create_embeddings(
-        texts=["Hello world", "Test embedding"], model="BAAI/bge-large-en-v1.5", provider="together"
+        texts=["Hello world", "Test embedding"],
+        model="BAAI/bge-large-en-v1.5",
+        provider="together",
     )
 
     logger.info(f"Embeddings created: {len(embedding_response.data)} vectors")

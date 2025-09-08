@@ -178,7 +178,12 @@ class MCPServerRegistry:
             MCPCapability(
                 server_type=MCPServerType.FILESYSTEM,
                 server_url="mcp://filesystem",
-                capabilities=["read_file", "write_file", "list_directory", "search_files"],
+                capabilities=[
+                    "read_file",
+                    "write_file",
+                    "list_directory",
+                    "search_files",
+                ],
                 max_concurrent=10,
             ),
             MCPCapability(
@@ -220,7 +225,11 @@ class MCPServerRegistry:
 
     def get_servers(self, server_type: MCPServerType) -> list[MCPCapability]:
         """Get available servers for type"""
-        return [s for s in self.servers[server_type] if self.server_health.get(s.server_url, False)]
+        return [
+            s
+            for s in self.servers[server_type]
+            if self.server_health.get(s.server_url, False)
+        ]
 
     def get_server_for_capability(
         self, server_type: MCPServerType, method: str
@@ -526,7 +535,9 @@ class MCPOrchestrator:
                 if node.retry_count < 3:
                     node.retry_count += 1
                     node.status = ExecutionStatus.RETRYING
-                    logger.warning(f"Retrying node {node.id}, attempt {node.retry_count}")
+                    logger.warning(
+                        f"Retrying node {node.id}, attempt {node.retry_count}"
+                    )
 
                     # Exponential backoff
                     await asyncio.sleep(2**node.retry_count)
@@ -536,10 +547,14 @@ class MCPOrchestrator:
 
     async def _execute_mcp_call(self, node: DAGNode, plan: ExecutionPlan) -> Any:
         """Execute MCP server call"""
-        server = self.server_registry.get_server_for_capability(node.server_type, node.mcp_method)
+        server = self.server_registry.get_server_for_capability(
+            node.server_type, node.mcp_method
+        )
 
         if not server:
-            raise ValueError(f"No server available for {node.server_type.value}:{node.mcp_method}")
+            raise ValueError(
+                f"No server available for {node.server_type.value}:{node.mcp_method}"
+            )
 
         self.metrics["server_call_counts"][server.server_url] += 1
 
@@ -556,7 +571,10 @@ class MCPOrchestrator:
             elif node.mcp_method == "search":
                 return {"results": [f"Search result {i}" for i in range(5)], "total": 5}
             elif node.mcp_method == "query":
-                return {"rows": [{"id": i, "value": f"row_{i}"} for i in range(3)], "count": 3}
+                return {
+                    "rows": [{"id": i, "value": f"row_{i}"} for i in range(3)],
+                    "count": 3,
+                }
             else:
                 return {"status": "success", "data": node.mcp_params}
 
@@ -591,7 +609,9 @@ class MCPOrchestrator:
             return len(dependency_results)
 
         elif aggregation_func == "sum":
-            values = [r for r in dependency_results.values() if isinstance(r, (int, float))]
+            values = [
+                r for r in dependency_results.values() if isinstance(r, (int, float))
+            ]
             return sum(values)
 
         else:
@@ -647,7 +667,9 @@ class MCPOrchestrator:
         else:
             return inputs
 
-    async def _evaluate_condition(self, condition: str, node: DAGNode, plan: ExecutionPlan) -> bool:
+    async def _evaluate_condition(
+        self, condition: str, node: DAGNode, plan: ExecutionPlan
+    ) -> bool:
         """Evaluate conditional expression"""
         # Simple condition evaluation - could be enhanced with expression parser
         if condition == "true":
@@ -752,7 +774,9 @@ class MCPOrchestrator:
                 cache_key=call.get("cache_key"),
             )
 
-        return builder.build(plan_id=str(uuid4()), name=name, persona_domain=persona_domain)
+        return builder.build(
+            plan_id=str(uuid4()), name=name, persona_domain=persona_domain
+        )
 
     async def get_execution_status(self, plan_id: str) -> Optional[dict[str, Any]]:
         """Get current status of execution"""
@@ -760,7 +784,12 @@ class MCPOrchestrator:
             return None
 
         plan = self.active_executions[plan_id]
-        status = {"plan_id": plan_id, "name": plan.name, "status": "running", "nodes": {}}
+        status = {
+            "plan_id": plan_id,
+            "name": plan.name,
+            "status": "running",
+            "nodes": {},
+        }
 
         for node_id, node in plan.nodes.items():
             status["nodes"][node_id] = {
@@ -777,7 +806,9 @@ class MCPOrchestrator:
         """Comprehensive orchestrator health check"""
         await self.server_registry.health_check_all()
 
-        healthy_servers = sum(1 for h in self.server_registry.server_health.values() if h)
+        healthy_servers = sum(
+            1 for h in self.server_registry.server_health.values() if h
+        )
         total_servers = len(self.server_registry.server_health)
 
         return {

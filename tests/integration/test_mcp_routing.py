@@ -125,7 +125,9 @@ class TestMCPRouterConfiguration:
 
         # Artemis should be able to route to filesystem
         result = await router.route_request(
-            MCPServerType.FILESYSTEM, MemoryDomain.ARTEMIS, {"operation": "read", "path": "/src"}
+            MCPServerType.FILESYSTEM,
+            MemoryDomain.ARTEMIS,
+            {"operation": "read", "path": "/src"},
         )
 
         assert result is not None
@@ -133,7 +135,9 @@ class TestMCPRouterConfiguration:
 
         # Sophia should NOT be able to route to filesystem
         result = await router.route_request(
-            MCPServerType.FILESYSTEM, MemoryDomain.SOPHIA, {"operation": "read", "path": "/src"}
+            MCPServerType.FILESYSTEM,
+            MemoryDomain.SOPHIA,
+            {"operation": "read", "path": "/src"},
         )
 
         assert result is None
@@ -420,10 +424,14 @@ class TestMCPRouterConfiguration:
         assert code_analysis_config.health_check.timeout_seconds == 15
 
         websearch_config = router.server_configs["sophia_web_search"]
-        assert websearch_config.health_check.failure_threshold == 5  # More tolerant for external
+        assert (
+            websearch_config.health_check.failure_threshold == 5
+        )  # More tolerant for external
 
         database_config = router.server_configs["shared_database"]
-        assert database_config.health_check.interval_seconds == 20  # More frequent for critical
+        assert (
+            database_config.health_check.interval_seconds == 20
+        )  # More frequent for critical
         assert database_config.health_check.failure_threshold == 2
 
     # ==============================================================================
@@ -589,7 +597,9 @@ class TestMCPRouterConfiguration:
     async def test_route_request_with_unknown_server_type(self, router):
         """Test routing with unknown server type"""
         result = await router.route_request(
-            "UNKNOWN_TYPE", MemoryDomain.ARTEMIS, {"test": "data"}  # Invalid server type
+            "UNKNOWN_TYPE",
+            MemoryDomain.ARTEMIS,
+            {"test": "data"},  # Invalid server type
         )
 
         assert result is None

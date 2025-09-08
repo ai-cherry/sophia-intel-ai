@@ -151,13 +151,21 @@ class TestMem0MemoryServerInitialization:
                 "cleanup_threshold": 0.8,
                 "persistence_enabled": True,
             },
-            "embedding": {"model": "text-embedding-ada-002", "dimension": 1536, "batch_size": 100},
+            "embedding": {
+                "model": "text-embedding-ada-002",
+                "dimension": 1536,
+                "batch_size": 100,
+            },
             "correlation": {
                 "similarity_threshold": 0.7,
                 "max_correlations": 50,
                 "correlation_decay": 0.05,
             },
-            "adaptation": {"strategy": "hybrid", "learning_rate": 0.01, "adaptation_window": 1000},
+            "adaptation": {
+                "strategy": "hybrid",
+                "learning_rate": 0.01,
+                "adaptation_window": 1000,
+            },
             "optimization": {
                 "enabled": True,
                 "strategies": ["compression", "pruning"],
@@ -232,7 +240,9 @@ class TestMemoryOptimizer:
                 if len(memories) > 1:
                     # Merge duplicates
                     primary_memory = memories[0]
-                    primary_memory.metadata["merged_from"] = [m.memory_id for m in memories[1:]]
+                    primary_memory.metadata["merged_from"] = [
+                        m.memory_id for m in memories[1:]
+                    ]
                     compressed.append(primary_memory)
                 else:
                     compressed.extend(memories)
@@ -286,13 +296,27 @@ class TestMemoryOptimizer:
         memories_with_embeddings = [
             {"memory_id": "mem_1", "embedding": np.random.rand(10), "topic": "python"},
             {"memory_id": "mem_2", "embedding": np.random.rand(10), "topic": "python"},
-            {"memory_id": "mem_3", "embedding": np.random.rand(10), "topic": "javascript"},
-            {"memory_id": "mem_4", "embedding": np.random.rand(10), "topic": "javascript"},
-            {"memory_id": "mem_5", "embedding": np.random.rand(10), "topic": "database"},
+            {
+                "memory_id": "mem_3",
+                "embedding": np.random.rand(10),
+                "topic": "javascript",
+            },
+            {
+                "memory_id": "mem_4",
+                "embedding": np.random.rand(10),
+                "topic": "javascript",
+            },
+            {
+                "memory_id": "mem_5",
+                "embedding": np.random.rand(10),
+                "topic": "database",
+            },
         ]
 
         if hasattr(optimizer, "cluster_memories"):
-            clusters = optimizer.cluster_memories(memories_with_embeddings, num_clusters=3)
+            clusters = optimizer.cluster_memories(
+                memories_with_embeddings, num_clusters=3
+            )
 
             assert len(clusters) <= 3
             assert all(len(cluster) > 0 for cluster in clusters)
@@ -323,7 +347,9 @@ class TestMemoryOptimizer:
         memories_to_organize = [
             MemoryEntry("mem_py", "Python best practices", MemoryType.SEMANTIC),
             MemoryEntry("mem_django", "Django deployment guide", MemoryType.PROCEDURAL),
-            MemoryEntry("mem_docker", "Docker containerization tips", MemoryType.PROCEDURAL),
+            MemoryEntry(
+                "mem_docker", "Docker containerization tips", MemoryType.PROCEDURAL
+            ),
         ]
 
         if hasattr(optimizer, "organize_hierarchically"):
@@ -386,7 +412,9 @@ class TestMemoryOptimizer:
         }
 
         if hasattr(optimizer, "determine_optimization_schedule"):
-            schedule = await optimizer.determine_optimization_schedule(memory_usage_stats)
+            schedule = await optimizer.determine_optimization_schedule(
+                memory_usage_stats
+            )
 
             # High fragmentation should trigger compression
             assert "compression" in schedule["strategies"]
@@ -442,14 +470,17 @@ class TestMemoryAnalytics:
             assert "query_patterns" in patterns
         else:
             # Mock usage pattern analysis
-            growth_rate = (usage_data[0]["memories_count"] - usage_data[-1]["memories_count"]) / 24
+            growth_rate = (
+                usage_data[0]["memories_count"] - usage_data[-1]["memories_count"]
+            ) / 24
             peak_hour = max(usage_data, key=lambda x: x["queries"])["timestamp"].hour
 
             patterns = {
                 "growth_rate": growth_rate,
                 "peak_hours": [peak_hour],
                 "query_patterns": {
-                    "avg_queries_per_hour": sum(d["queries"] for d in usage_data) / len(usage_data)
+                    "avg_queries_per_hour": sum(d["queries"] for d in usage_data)
+                    / len(usage_data)
                 },
             }
 
@@ -459,10 +490,26 @@ class TestMemoryAnalytics:
     def test_correlation_analysis(self, analytics):
         """Test analyzing correlation patterns across memories"""
         correlation_data = [
-            {"memory_pair": ("mem_1", "mem_2"), "correlation_score": 0.85, "type": "semantic"},
-            {"memory_pair": ("mem_2", "mem_3"), "correlation_score": 0.72, "type": "temporal"},
-            {"memory_pair": ("mem_1", "mem_4"), "correlation_score": 0.45, "type": "contextual"},
-            {"memory_pair": ("mem_3", "mem_4"), "correlation_score": 0.91, "type": "semantic"},
+            {
+                "memory_pair": ("mem_1", "mem_2"),
+                "correlation_score": 0.85,
+                "type": "semantic",
+            },
+            {
+                "memory_pair": ("mem_2", "mem_3"),
+                "correlation_score": 0.72,
+                "type": "temporal",
+            },
+            {
+                "memory_pair": ("mem_1", "mem_4"),
+                "correlation_score": 0.45,
+                "type": "contextual",
+            },
+            {
+                "memory_pair": ("mem_3", "mem_4"),
+                "correlation_score": 0.91,
+                "type": "semantic",
+            },
         ]
 
         if hasattr(analytics, "analyze_correlations"):
@@ -492,7 +539,10 @@ class TestMemoryAnalytics:
                 "correlation_types": correlation_types,
             }
 
-            assert correlation_insights["strongest_correlations"][0]["correlation_score"] == 0.91
+            assert (
+                correlation_insights["strongest_correlations"][0]["correlation_score"]
+                == 0.91
+            )
             assert "semantic" in correlation_insights["correlation_types"]
 
     async def test_insight_generation(self, insight_generator):
@@ -520,7 +570,9 @@ class TestMemoryAnalytics:
                 )
 
             if memory_metrics["avg_correlation_score"] > 0.7:
-                insights.append("High correlation scores indicate good memory organization.")
+                insights.append(
+                    "High correlation scores indicate good memory organization."
+                )
 
             if memory_metrics["most_accessed_type"] == MemoryType.PROCEDURAL:
                 insights.append(
@@ -554,10 +606,17 @@ class TestMemoryAnalytics:
             cache_ratios = [d["cache_hit_ratio"] for d in performance_data]
 
             # Simple trend detection (comparing first and last values)
-            query_trend = "increasing" if query_times[0] > query_times[-1] else "decreasing"
-            cache_trend = "decreasing" if cache_ratios[0] > cache_ratios[-1] else "increasing"
+            query_trend = (
+                "increasing" if query_times[0] > query_times[-1] else "decreasing"
+            )
+            cache_trend = (
+                "decreasing" if cache_ratios[0] > cache_ratios[-1] else "increasing"
+            )
 
-            trends = {"query_time_trend": query_trend, "cache_efficiency_trend": cache_trend}
+            trends = {
+                "query_time_trend": query_trend,
+                "cache_efficiency_trend": cache_trend,
+            }
 
             assert trends["query_time_trend"] == "increasing"
             assert trends["cache_efficiency_trend"] == "decreasing"
@@ -688,7 +747,9 @@ class TestVectorStoreIntegration:
         query_vector = np.random.rand(1536).tolist()
 
         if hasattr(vector_store, "similarity_search"):
-            similar_memories = await vector_store.similarity_search(query_vector, top_k=2)
+            similar_memories = await vector_store.similarity_search(
+                query_vector, top_k=2
+            )
 
             assert len(similar_memories) <= 2
             assert all("memory_id" in result for result in similar_memories)
@@ -700,7 +761,8 @@ class TestVectorStoreIntegration:
             selected = random.sample(memory_ids, min(2, len(memory_ids)))
 
             similar_memories = [
-                {"memory_id": mem_id, "similarity": random.uniform(0.5, 1.0)} for mem_id in selected
+                {"memory_id": mem_id, "similarity": random.uniform(0.5, 1.0)}
+                for mem_id in selected
             ]
 
             assert len(similar_memories) == 2
@@ -750,7 +812,9 @@ class TestVectorStoreIntegration:
                     int(content_hash[i : i + 2], 16) / 255.0
                     for i in range(0, min(len(content_hash), 32), 2)
                 ]
-                embedding = hash_nums + [0.0] * (embedding_model.dimension - len(hash_nums))
+                embedding = hash_nums + [0.0] * (
+                    embedding_model.dimension - len(hash_nums)
+                )
                 embeddings.append(embedding)
 
             assert len(embeddings) == 5
@@ -761,8 +825,13 @@ class TestVectorStoreIntegration:
         incorrect_dimension_vector = [0.1] * 512  # Wrong dimension
 
         if hasattr(vector_store, "validate_vector_dimension"):
-            assert vector_store.validate_vector_dimension(correct_dimension_vector) is True
-            assert vector_store.validate_vector_dimension(incorrect_dimension_vector) is False
+            assert (
+                vector_store.validate_vector_dimension(correct_dimension_vector) is True
+            )
+            assert (
+                vector_store.validate_vector_dimension(incorrect_dimension_vector)
+                is False
+            )
         else:
             # Mock dimension validation
             expected_dim = embedding_model.dimension
@@ -786,7 +855,9 @@ class TestEndToEndMemoryOperations:
     async def test_complete_memory_lifecycle(self, full_mem0_server):
         """Test complete memory lifecycle from storage to retrieval"""
         # 1. Store memory
-        memory_content = "User prefers Python for backend development due to Django framework"
+        memory_content = (
+            "User prefers Python for backend development due to Django framework"
+        )
         memory_type = MemoryType.SEMANTIC
 
         if hasattr(full_mem0_server, "store_memory"):
@@ -849,11 +920,17 @@ class TestEndToEndMemoryOperations:
 
         # Test correlation discovery
         if hasattr(full_mem0_server, "find_related_memories"):
-            related = await full_mem0_server.find_related_memories(stored_ids[0], cross_domain=True)
+            related = await full_mem0_server.find_related_memories(
+                stored_ids[0], cross_domain=True
+            )
 
             # Should find related Python memories across different types
-            related_contents = [r.content for r in related if r.memory_id != stored_ids[0]]
-            python_related = [c for c in related_contents if "Python" in c or "Django" in c]
+            related_contents = [
+                r.content for r in related if r.memory_id != stored_ids[0]
+            ]
+            python_related = [
+                c for c in related_contents if "Python" in c or "Django" in c
+            ]
             assert len(python_related) >= 1
         else:
             # Mock cross-domain correlation
@@ -917,10 +994,14 @@ class TestEndToEndMemoryOperations:
             ]
 
             # Sort by access count (simulating adaptive ranking)
-            sorted_memories = sorted(python_memories, key=lambda m: m.access_count, reverse=True)
+            sorted_memories = sorted(
+                python_memories, key=lambda m: m.access_count, reverse=True
+            )
 
             if len(sorted_memories) > 1:
-                assert sorted_memories[0].access_count >= sorted_memories[-1].access_count
+                assert (
+                    sorted_memories[0].access_count >= sorted_memories[-1].access_count
+                )
 
     async def test_memory_optimization_integration(self, full_mem0_server):
         """Test memory optimization runs automatically"""
@@ -931,7 +1012,9 @@ class TestEndToEndMemoryOperations:
         duplicate_ids = []
         for i in range(5):
             if hasattr(full_mem0_server, "store_memory"):
-                mem_id = await full_mem0_server.store_memory(duplicate_content, MemoryType.SEMANTIC)
+                mem_id = await full_mem0_server.store_memory(
+                    duplicate_content, MemoryType.SEMANTIC
+                )
                 duplicate_ids.append(mem_id)
             else:
                 # Mock duplicate storage

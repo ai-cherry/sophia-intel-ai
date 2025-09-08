@@ -42,7 +42,8 @@ class ProductionMCPBridge:
     def __init__(self, config: Optional[MCPConfig] = None):
         self.config = config or MCPConfig()
         self.client = httpx.AsyncClient(
-            timeout=self.config.timeout, limits=httpx.Limits(max_keepalive_connections=10)
+            timeout=self.config.timeout,
+            limits=httpx.Limits(max_keepalive_connections=10),
         )
 
     async def health_check(self) -> bool:
@@ -77,7 +78,9 @@ class ProductionMCPBridge:
             logger.error(f"Code review error: {e}")
             return {"error": str(e)}
 
-    async def quality_check(self, code: str, metrics: list[str] = None) -> dict[str, Any]:
+    async def quality_check(
+        self, code: str, metrics: list[str] = None
+    ) -> dict[str, Any]:
         """Perform quality check on code"""
         metrics = metrics or ["complexity", "maintainability", "testability"]
 

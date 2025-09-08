@@ -136,7 +136,13 @@ class EnterpriseSecurityService:
             ),
             "analyst": UserRole(
                 name="analyst",
-                permissions=["read", "query", "export", "view_analytics", "create_reports"],
+                permissions=[
+                    "read",
+                    "query",
+                    "export",
+                    "view_analytics",
+                    "create_reports",
+                ],
                 description="Data analyst with read and analytics access",
             ),
             "viewer": UserRole(
@@ -172,7 +178,9 @@ class EnterpriseSecurityService:
 
             # Check if account is locked
             if user.locked_until and user.locked_until > datetime.utcnow():
-                await self._log_security_event("login_attempt_locked", {"username": username})
+                await self._log_security_event(
+                    "login_attempt_locked", {"username": username}
+                )
                 raise HTTPException(
                     status_code=status.HTTP_423_LOCKED,
                     detail=f"Account locked until {user.locked_until}",
@@ -187,7 +195,8 @@ class EnterpriseSecurityService:
             if user.mfa_enabled:
                 if not mfa_token:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST, detail="MFA token required"
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="MFA token required",
                     )
 
                 if not self.verify_mfa_token(user.mfa_secret, mfa_token):
@@ -219,11 +228,14 @@ class EnterpriseSecurityService:
             user.locked_until = datetime.utcnow() + timedelta(
                 minutes=SecurityConfig.LOCKOUT_DURATION_MINUTES
             )
-            await self._log_security_event("account_locked", {"username": user.username})
+            await self._log_security_event(
+                "account_locked", {"username": user.username}
+            )
 
         await self.update_user(user)
         await self._log_security_event(
-            "failed_login", {"username": user.username, "attempts": user.failed_login_attempts}
+            "failed_login",
+            {"username": user.username, "attempts": user.failed_login_attempts},
         )
 
     async def _reset_failed_attempts(self, user: User):
@@ -249,10 +261,14 @@ class EnterpriseSecurityService:
                 f"Password must be at least {SecurityConfig.PASSWORD_MIN_LENGTH} characters"
             )
 
-        if SecurityConfig.PASSWORD_REQUIRE_UPPERCASE and not any(c.isupper() for c in password):
+        if SecurityConfig.PASSWORD_REQUIRE_UPPERCASE and not any(
+            c.isupper() for c in password
+        ):
             issues.append("Password must contain at least one uppercase letter")
 
-        if SecurityConfig.PASSWORD_REQUIRE_NUMBERS and not any(c.isdigit() for c in password):
+        if SecurityConfig.PASSWORD_REQUIRE_NUMBERS and not any(
+            c.isdigit() for c in password
+        ):
             issues.append("Password must contain at least one number")
 
         if SecurityConfig.PASSWORD_REQUIRE_SPECIAL and not any(
@@ -318,7 +334,9 @@ class EnterpriseSecurityService:
             user.mfa_secret = encrypted_secret
             await self.update_user(user)
 
-            await self._log_security_event("mfa_setup_initiated", {"username": user.username})
+            await self._log_security_event(
+                "mfa_setup_initiated", {"username": user.username}
+            )
 
             return {
                 "secret": secret,
@@ -341,7 +359,9 @@ class EnterpriseSecurityService:
             if self.verify_mfa_token(secret, token):
                 user.mfa_enabled = True
                 await self.update_user(user)
-                await self._log_security_event("mfa_enabled", {"username": user.username})
+                await self._log_security_event(
+                    "mfa_enabled", {"username": user.username}
+                )
                 return True
 
             return False
@@ -388,7 +408,9 @@ class EnterpriseSecurityService:
                 # Get current user from context
                 current_user = kwargs.get("current_user")
                 if not current_user:
-                    raise HTTPException(status_code=401, detail="Authentication required")
+                    raise HTTPException(
+                        status_code=401, detail="Authentication required"
+                    )
 
                 if not self.check_permission(current_user.role, permission):
                     await self._log_security_event(
@@ -399,7 +421,9 @@ class EnterpriseSecurityService:
                             "user_role": current_user.role,
                         },
                     )
-                    raise HTTPException(status_code=403, detail="Insufficient permissions")
+                    raise HTTPException(
+                        status_code=403, detail="Insufficient permissions"
+                    )
 
                 return await func(*args, **kwargs)
 
@@ -409,7 +433,9 @@ class EnterpriseSecurityService:
 
     # JWT Token Management
 
-    def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(
+        self, data: dict, expires_delta: Optional[timedelta] = None
+    ) -> str:
         """Create JWT access token"""
         to_encode = data.copy()
 
@@ -430,7 +456,9 @@ class EnterpriseSecurityService:
     def create_refresh_token(self, data: dict) -> str:
         """Create JWT refresh token"""
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=SecurityConfig.REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.utcnow() + timedelta(
+            days=SecurityConfig.REFRESH_TOKEN_EXPIRE_DAYS
+        )
         to_encode.update({"exp": expire, "type": "refresh"})
 
         encoded_jwt = jwt.encode(
@@ -513,7 +541,11 @@ class EnterpriseSecurityService:
 
     def _get_event_severity(self, event_type: str) -> str:
         """Get severity level for security event"""
-        high_severity = ["account_locked", "unauthorized_access", "authentication_error"]
+        high_severity = [
+            "account_locked",
+            "unauthorized_access",
+            "authentication_error",
+        ]
         medium_severity = ["failed_login", "mfa_setup_initiated"]
 
         if event_type in high_severity:
@@ -538,7 +570,8 @@ class EnterpriseSecurityService:
 
                 if count >= 10:  # 10 failed attempts in 1 hour
                     await self._trigger_security_alert(
-                        "brute_force_detected", {"username": username, "failed_attempts": count}
+                        "brute_force_detected",
+                        {"username": username, "failed_attempts": count},
                     )
 
         # Detect unusual access patterns
@@ -606,7 +639,9 @@ security_service = EnterpriseSecurityService()
 
 
 # FastAPI dependencies
-async def get_current_user(token: str = Depends(security_service.oauth2_scheme)) -> User:
+async def get_current_user(
+    token: str = Depends(security_service.oauth2_scheme),
+) -> User:
     """Get current authenticated user"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,

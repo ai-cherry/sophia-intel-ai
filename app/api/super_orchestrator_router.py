@@ -51,20 +51,28 @@ async def chat_with_personality(request: ChatMessage):
     """
     orchestrator = get_orchestrator()
 
-    response = await orchestrator.process_request({"type": "chat", "message": request.message})
+    response = await orchestrator.process_request(
+        {"type": "chat", "message": request.message}
+    )
 
     # Add personality flair to the response
     if request.include_suggestions:
         current_context = {
             "error_count": sum(
-                1 for s in orchestrator.registry.systems.values() if s.status.value == "error"
+                1
+                for s in orchestrator.registry.systems.values()
+                if s.status.value == "error"
             ),
             "cost_today": orchestrator._calculate_cost(),
             "idle_systems": sum(
-                1 for s in orchestrator.registry.systems.values() if s.status.value == "idle"
+                1
+                for s in orchestrator.registry.systems.values()
+                if s.status.value == "idle"
             ),
         }
-        suggestions = orchestrator.suggestions.get_contextual_suggestions(current_context)
+        suggestions = orchestrator.suggestions.get_contextual_suggestions(
+            current_context
+        )
         response["suggestions"] = suggestions
 
     return response
@@ -120,7 +128,9 @@ async def deploy_micro_swarm(request: SwarmDeployment):
     )
 
     if risk_analysis["should_pushback"] and request.agent_count > 20:
-        alternatives = orchestrator.personality.suggest_alternatives(f"spawn {request.agent_count}")
+        alternatives = orchestrator.personality.suggest_alternatives(
+            f"spawn {request.agent_count}"
+        )
         return {
             "status": "needs_confirmation",
             "message": orchestrator.personality.generate_response(
@@ -133,7 +143,11 @@ async def deploy_micro_swarm(request: SwarmDeployment):
     swarm_id = f"swarm_{request.task.replace(' ', '_')}_{datetime.now().timestamp()}"
 
     # Register swarm with registry
-    from app.core.orchestrator_enhancements import RegisteredSystem, SystemStatus, SystemType
+    from app.core.orchestrator_enhancements import (
+        RegisteredSystem,
+        SystemStatus,
+        SystemType,
+    )
 
     swarm = RegisteredSystem(
         id=swarm_id,
@@ -148,7 +162,8 @@ async def deploy_micro_swarm(request: SwarmDeployment):
 
     # Generate personality response
     success_msg = orchestrator.personality.generate_response(
-        "success", data={"metrics": f"Micro-swarm deployed: {request.agent_count} agents"}
+        "success",
+        data={"metrics": f"Micro-swarm deployed: {request.agent_count} agents"},
     )
 
     return {
@@ -194,9 +209,12 @@ async def get_system_status():
         "analysis": personality_analysis,
         "systems": {
             "total": len(systems),
-            "by_type": {t.value: len(orchestrator.registry.get_by_type(t)) for t in SystemType},
+            "by_type": {
+                t.value: len(orchestrator.registry.get_by_type(t)) for t in SystemType
+            },
             "by_status": {
-                s.value: len([sys for sys in systems if sys.status == s]) for s in SystemStatus
+                s.value: len([sys for sys in systems if sys.status == s])
+                for s in SystemStatus
             },
         },
     }
@@ -211,11 +229,15 @@ async def get_smart_suggestions():
 
     current_context = {
         "error_count": sum(
-            1 for s in orchestrator.registry.systems.values() if s.status.value == "error"
+            1
+            for s in orchestrator.registry.systems.values()
+            if s.status.value == "error"
         ),
         "cost_today": orchestrator._calculate_cost(),
         "idle_systems": sum(
-            1 for s in orchestrator.registry.systems.values() if s.status.value == "idle"
+            1
+            for s in orchestrator.registry.systems.values()
+            if s.status.value == "idle"
         ),
         "active_systems": len(orchestrator.registry.get_active_systems()),
     }
@@ -248,7 +270,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     {"type": "chat", "message": data.get("message")}
                 )
             elif data.get("type") == "command":
-                response = await orchestrator.process_natural_language(data.get("command"))
+                response = await orchestrator.process_natural_language(
+                    data.get("command")
+                )
             else:
                 response = {"error": "Unknown message type"}
 

@@ -12,7 +12,12 @@ from agno.agent import Agent
 from agno.tools import Function as Tool
 
 from app.models.simple_router import ROLE_MODELS, ROLE_PARAMS, agno_chat_model
-from app.swarms.contracts import CRITIC_SCHEMA, GENERATOR_SCHEMA, JUDGE_SCHEMA, PLANNER_SCHEMA
+from app.swarms.contracts import (
+    CRITIC_SCHEMA,
+    GENERATOR_SCHEMA,
+    JUDGE_SCHEMA,
+    PLANNER_SCHEMA,
+)
 from app.tools.basic_tools import (
     CodeSearch,
     FormatCode,
@@ -132,7 +137,13 @@ def make_generator(
     m_id = ROLE_MODELS.get(model_name, model_name)
     params = ROLE_PARAMS.get(model_name, {})
 
-    default_tools = [CodeSearch(), ReadFile(), ListDirectory(), RunTests(), RunTypeCheck()]
+    default_tools = [
+        CodeSearch(),
+        ReadFile(),
+        ListDirectory(),
+        RunTests(),
+        RunTypeCheck(),
+    ]
 
     return Agent(
         name=name,

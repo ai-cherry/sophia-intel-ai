@@ -34,8 +34,13 @@ class MCPIntegrationTester:
                     async with session.get(url, timeout=5) as response:
                         return response.status == 200
                 else:
-                    test_data = {"query": f"Test query for {name}", "context": {"test": True}}
-                    async with session.post(url, json=test_data, timeout=10) as response:
+                    test_data = {
+                        "query": f"Test query for {name}",
+                        "context": {"test": True},
+                    }
+                    async with session.post(
+                        url, json=test_data, timeout=10
+                    ) as response:
                         if response.status == 200:
                             data = await response.json()
                             return "response" in data or "result" in data

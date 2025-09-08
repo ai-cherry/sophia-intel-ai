@@ -32,7 +32,9 @@ def _save_cache(cache: Dict[str, int]) -> None:
 
 
 async def delta_index(
-    repo_root: str = ".", max_total_bytes: int = 500_000, max_bytes_per_file: int = 50_000
+    repo_root: str = ".",
+    max_total_bytes: int = 500_000,
+    max_bytes_per_file: int = 50_000,
 ) -> dict[str, Any]:
     """Index changed/new files since last run using a simple size-based cache.
 
@@ -42,11 +44,19 @@ async def delta_index(
     - Feature flag: SCOUT_DELTA_INDEX_ENABLED
     """
     if os.getenv("SCOUT_DELTA_INDEX_ENABLED", "true").lower() in {"0", "false", "no"}:
-        return {"ok": True, "skipped": True, "reason": "SCOUT_DELTA_INDEX_ENABLED=false"}
+        return {
+            "ok": True,
+            "skipped": True,
+            "reason": "SCOUT_DELTA_INDEX_ENABLED=false",
+        }
 
     client = StdioMCPClient(Path.cwd())
     # Lazy import to avoid heavy deps at module import time
-    from app.memory.unified_memory_router import DocChunk, MemoryDomain, get_memory_router
+    from app.memory.unified_memory_router import (
+        DocChunk,
+        MemoryDomain,
+        get_memory_router,
+    )
 
     router = get_memory_router()
 
@@ -79,7 +89,9 @@ async def delta_index(
     for c in candidates:
         p = c["path"]
         try:
-            fr = await asyncio.to_thread(client.fs_read, p, max_bytes=max_bytes_per_file)
+            fr = await asyncio.to_thread(
+                client.fs_read, p, max_bytes=max_bytes_per_file
+            )
             content = fr.get("content", "") if isinstance(fr, dict) else str(fr)
             if not content:
                 continue

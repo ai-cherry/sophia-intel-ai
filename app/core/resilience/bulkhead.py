@@ -190,12 +190,18 @@ class BulkheadBase(ABC):
             "completed_calls": self.completed_calls,
             "failed_calls": self.failed_calls,
             "accept_rate": (
-                (self.accepted_calls / max(self.total_calls, 1)) if self.total_calls > 0 else 0.0
+                (self.accepted_calls / max(self.total_calls, 1))
+                if self.total_calls > 0
+                else 0.0
             ),
             "avg_execution_time": avg_execution_time,
-            "min_execution_time": self.min_execution_time if self.completed_calls > 0 else 0,
+            "min_execution_time": (
+                self.min_execution_time if self.completed_calls > 0 else 0
+            ),
             "max_execution_time": self.max_execution_time,
-            "state_duration": (datetime.utcnow() - self.state_changed_at).total_seconds(),
+            "state_duration": (
+                datetime.utcnow() - self.state_changed_at
+            ).total_seconds(),
         }
 
 
@@ -280,7 +286,9 @@ class SemaphoreBulkhead(BulkheadBase):
         """Execute function within bulkhead protection"""
         # Acquire slot
         if not await self.acquire(timeout):
-            raise BulkheadRejectedException(f"Bulkhead '{self.name}' rejected execution")
+            raise BulkheadRejectedException(
+                f"Bulkhead '{self.name}' rejected execution"
+            )
 
         start_time = datetime.utcnow()
 
@@ -404,7 +412,9 @@ class AsyncSemaphoreBulkhead(BulkheadBase):
         """Execute function within bulkhead protection"""
         # Acquire slot
         if not await self.acquire(timeout):
-            raise BulkheadRejectedException(f"Bulkhead '{self.name}' rejected execution")
+            raise BulkheadRejectedException(
+                f"Bulkhead '{self.name}' rejected execution"
+            )
 
         start_time = datetime.utcnow()
 
@@ -412,7 +422,9 @@ class AsyncSemaphoreBulkhead(BulkheadBase):
             # Execute function
             if asyncio.iscoroutinefunction(func):
                 if timeout:
-                    result = await asyncio.wait_for(func(*args, **kwargs), timeout=timeout)
+                    result = await asyncio.wait_for(
+                        func(*args, **kwargs), timeout=timeout
+                    )
                 else:
                     result = await func(*args, **kwargs)
             else:
@@ -420,7 +432,8 @@ class AsyncSemaphoreBulkhead(BulkheadBase):
                 loop = asyncio.get_event_loop()
                 if timeout:
                     result = await asyncio.wait_for(
-                        loop.run_in_executor(None, func, *args, **kwargs), timeout=timeout
+                        loop.run_in_executor(None, func, *args, **kwargs),
+                        timeout=timeout,
                     )
                 else:
                     result = await loop.run_in_executor(None, func, *args, **kwargs)
@@ -514,7 +527,9 @@ class ThreadPoolBulkhead(BulkheadBase):
         """Execute function in thread pool"""
         # Check capacity
         if not await self.acquire():
-            raise BulkheadRejectedException(f"Thread pool bulkhead '{self.name}' at capacity")
+            raise BulkheadRejectedException(
+                f"Thread pool bulkhead '{self.name}' at capacity"
+            )
 
         start_time = datetime.utcnow()
 
@@ -589,7 +604,10 @@ class BulkheadRegistry:
         logger.info("Bulkhead registry initialized")
 
     def register(
-        self, name: str, bulkhead_type: BulkheadType, config: Optional[BulkheadConfig] = None
+        self,
+        name: str,
+        bulkhead_type: BulkheadType,
+        config: Optional[BulkheadConfig] = None,
     ) -> BulkheadBase:
         """
         Register a new bulkhead
@@ -651,20 +669,32 @@ class BulkheadRegistry:
     def get_all_stats(self) -> dict[str, Any]:
         """Get statistics for all bulkheads"""
         return {
-            "bulkheads": {name: bulkhead.get_stats() for name, bulkhead in self.bulkheads.items()},
+            "bulkheads": {
+                name: bulkhead.get_stats() for name, bulkhead in self.bulkheads.items()
+            },
             "summary": {
                 "total_bulkheads": len(self.bulkheads),
                 "healthy": sum(
-                    1 for b in self.bulkheads.values() if b.state == BulkheadState.HEALTHY
+                    1
+                    for b in self.bulkheads.values()
+                    if b.state == BulkheadState.HEALTHY
                 ),
                 "degraded": sum(
-                    1 for b in self.bulkheads.values() if b.state == BulkheadState.DEGRADED
+                    1
+                    for b in self.bulkheads.values()
+                    if b.state == BulkheadState.DEGRADED
                 ),
                 "saturated": sum(
-                    1 for b in self.bulkheads.values() if b.state == BulkheadState.SATURATED
+                    1
+                    for b in self.bulkheads.values()
+                    if b.state == BulkheadState.SATURATED
                 ),
-                "total_active_calls": sum(b.active_calls for b in self.bulkheads.values()),
-                "total_queued_calls": sum(b.queued_calls for b in self.bulkheads.values()),
+                "total_active_calls": sum(
+                    b.active_calls for b in self.bulkheads.values()
+                ),
+                "total_queued_calls": sum(
+                    b.queued_calls for b in self.bulkheads.values()
+                ),
             },
         }
 

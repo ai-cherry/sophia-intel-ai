@@ -20,7 +20,9 @@ import yaml
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s", datefmt="%H:%M:%S"
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
@@ -214,7 +216,15 @@ class UnifiedOrchestrator:
         ]
 
         # AI model keys that should NOT be in Sophia
-        ai_keys = ["ANTHROPIC", "OPENAI", "GROQ", "GROK", "DEEPSEEK", "MISTRAL", "COHERE"]
+        ai_keys = [
+            "ANTHROPIC",
+            "OPENAI",
+            "GROQ",
+            "GROK",
+            "DEEPSEEK",
+            "MISTRAL",
+            "COHERE",
+        ]
 
         sophia_env = Path(".env.sophia")
         if sophia_env.exists():
@@ -229,7 +239,9 @@ class UnifiedOrchestrator:
             if contamination:
                 logger.error(f"❌ AI model keys found in .env.sophia: {contamination}")
                 logger.error("These should be in Artemis CLI environment only!")
-                if not self._ask_confirmation("Continue with contaminated environment?"):
+                if not self._ask_confirmation(
+                    "Continue with contaminated environment?"
+                ):
                     sys.exit(1)
 
     def _create_env_template(self, env_file: str):
@@ -318,7 +330,10 @@ REDIS_URL=redis://localhost:6379
         # Check dependencies
         depends_on = config.get("depends_on", [])
         for dep in depends_on:
-            if dep not in self.services or self.services[dep]["status"] != ServiceStatus.HEALTHY:
+            if (
+                dep not in self.services
+                or self.services[dep]["status"] != ServiceStatus.HEALTHY
+            ):
                 logger.warning(f"  ⚠️  {name} waiting for {dep}")
                 await self._wait_for_service(dep)
 
@@ -350,7 +365,11 @@ REDIS_URL=redis://localhost:6379
 
             # Start the process
             process = subprocess.Popen(
-                command, shell=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                command,
+                shell=True,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
 
             self.processes[name] = process
@@ -381,19 +400,26 @@ REDIS_URL=redis://localhost:6379
         """Wait for a service to become healthy"""
         start = time.time()
         while time.time() - start < timeout:
-            if name in self.services and self.services[name]["status"] == ServiceStatus.HEALTHY:
+            if (
+                name in self.services
+                and self.services[name]["status"] == ServiceStatus.HEALTHY
+            ):
                 return True
             await asyncio.sleep(1)
         return False
 
-    async def _wait_for_health(self, name: str, config: Dict, timeout: int = 30) -> bool:
+    async def _wait_for_health(
+        self, name: str, config: Dict, timeout: int = 30
+    ) -> bool:
         """Wait for service to pass health check"""
         start = time.time()
 
         while time.time() - start < timeout:
             if "health_check" in config:
                 # Command-based health check
-                result = subprocess.run(config["health_check"], shell=True, capture_output=True)
+                result = subprocess.run(
+                    config["health_check"], shell=True, capture_output=True
+                )
                 if result.returncode == 0:
                     return True
 

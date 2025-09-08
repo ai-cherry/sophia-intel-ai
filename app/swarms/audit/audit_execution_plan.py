@@ -178,7 +178,11 @@ class BadassAuditOrchestrator:
                     description="Deep architectural analysis with design pattern evaluation",
                     category="architecture",
                     priority=1,
-                    assigned_agents=["chief_architect", "deepcode_analyzer", "pattern_detector"],
+                    assigned_agents=[
+                        "chief_architect",
+                        "deepcode_analyzer",
+                        "pattern_detector",
+                    ],
                     collaboration_mode=CollaborationMode.DEBATE,
                     expected_duration=15,
                     dependencies=["codebase_structure_analysis"],
@@ -215,7 +219,11 @@ class BadassAuditOrchestrator:
                     description="Comprehensive code quality review with best practices validation",
                     category="quality",
                     priority=2,
-                    assigned_agents=["quality_overlord", "pattern_detector", "rapid_scanner"],
+                    assigned_agents=[
+                        "quality_overlord",
+                        "pattern_detector",
+                        "rapid_scanner",
+                    ],
                     collaboration_mode=CollaborationMode.DEBATE,
                     expected_duration=12,
                     debate_worthy=True,
@@ -234,7 +242,10 @@ class BadassAuditOrchestrator:
                     assigned_agents=["integration_master", "test_commander"],
                     collaboration_mode=CollaborationMode.COLLABORATIVE,
                     expected_duration=8,
-                    dependencies=["test_infrastructure_assessment", "architecture_deep_dive"],
+                    dependencies=[
+                        "test_infrastructure_assessment",
+                        "architecture_deep_dive",
+                    ],
                 ),
                 AnalysisTask(
                     id="cross_cutting_concerns_analysis",
@@ -267,7 +278,11 @@ class BadassAuditOrchestrator:
                     description="Cross-validation of findings across all analysis domains",
                     category="validation",
                     priority=1,
-                    assigned_agents=["consensus_builder", "debate_moderator", "final_validator"],
+                    assigned_agents=[
+                        "consensus_builder",
+                        "debate_moderator",
+                        "final_validator",
+                    ],
                     collaboration_mode=CollaborationMode.VALIDATION,
                     expected_duration=8,
                     dependencies=[
@@ -282,7 +297,11 @@ class BadassAuditOrchestrator:
                     description="Prioritization and feasibility analysis of recommendations",
                     category="synthesis",
                     priority=1,
-                    assigned_agents=["chief_architect", "consensus_builder", "final_validator"],
+                    assigned_agents=[
+                        "chief_architect",
+                        "consensus_builder",
+                        "final_validator",
+                    ],
                     collaboration_mode=CollaborationMode.CONSENSUS,
                     expected_duration=10,
                     dependencies=["findings_cross_validation"],
@@ -370,7 +389,8 @@ class BadassAuditOrchestrator:
         """Initialize swarm components and memory"""
 
         self.memory_client = EnhancedSwarmMemoryClient(
-            swarm_type=f"badass_audit_{self.formation}", swarm_id=f"audit_{int(time.time())}"
+            swarm_type=f"badass_audit_{self.formation}",
+            swarm_id=f"audit_{int(time.time())}",
         )
 
         # Create specialized agent teams based on formation
@@ -446,7 +466,9 @@ class BadassAuditOrchestrator:
     async def _execute_parallel_discovery(self) -> dict[str, Any]:
         """Execute discovery tasks in parallel"""
 
-        discovery_tasks = [task for task in self.analysis_tasks if task.category == "discovery"]
+        discovery_tasks = [
+            task for task in self.analysis_tasks if task.category == "discovery"
+        ]
 
         # Execute all discovery tasks in parallel
         task_results = []
@@ -495,15 +517,29 @@ class BadassAuditOrchestrator:
                 logger.warning(f"Skipping {task.id} - dependencies not satisfied")
                 continue
 
-            if task.collaboration_mode == CollaborationMode.DEBATE and task.debate_worthy:
+            if (
+                task.collaboration_mode == CollaborationMode.DEBATE
+                and task.debate_worthy
+            ):
                 result = await self._execute_debate_task(task)
                 self.execution.debate_sessions.append(
-                    {"task_id": task.id, "participants": task.assigned_agents, "result": result}
+                    {
+                        "task_id": task.id,
+                        "participants": task.assigned_agents,
+                        "result": result,
+                    }
                 )
-            elif task.collaboration_mode == CollaborationMode.CONSENSUS and task.requires_consensus:
+            elif (
+                task.collaboration_mode == CollaborationMode.CONSENSUS
+                and task.requires_consensus
+            ):
                 result = await self._execute_consensus_task(task)
                 self.execution.consensus_sessions.append(
-                    {"task_id": task.id, "participants": task.assigned_agents, "result": result}
+                    {
+                        "task_id": task.id,
+                        "participants": task.assigned_agents,
+                        "result": result,
+                    }
                 )
             else:
                 result = await self._execute_collaborative_task(task)
@@ -648,7 +684,9 @@ class BadassAuditOrchestrator:
     async def _execute_consensus_building(self) -> dict[str, Any]:
         """Build consensus on final recommendations"""
 
-        consensus_tasks = [task for task in self.analysis_tasks if task.category == "validation"]
+        consensus_tasks = [
+            task for task in self.analysis_tasks if task.category == "validation"
+        ]
 
         consensus_results = {}
         for task in consensus_tasks:
@@ -690,7 +728,11 @@ class BadassAuditOrchestrator:
                 "overall_score": self._calculate_overall_score(),
                 "total_findings": len(self.execution.findings),
                 "critical_findings": len(
-                    [f for f in self.execution.findings if f.get("severity") == "critical"]
+                    [
+                        f
+                        for f in self.execution.findings
+                        if f.get("severity") == "critical"
+                    ]
                 ),
                 "recommendations": self._compile_prioritized_recommendations(),
                 "quality_gates_passed": self._evaluate_quality_gates(),
@@ -720,7 +762,9 @@ class BadassAuditOrchestrator:
 
             # Adjust task priorities based on strategic insights
             if "security" in insight_category and confidence > 0.8:
-                priority_adjustments["security_vulnerability_hunt"] = 1  # Highest priority
+                priority_adjustments["security_vulnerability_hunt"] = (
+                    1  # Highest priority
+                )
                 priority_adjustments["data_flow_privacy_analysis"] = 1
 
             if "architecture" in insight_category and confidence > 0.8:
@@ -750,7 +794,9 @@ class BadassAuditOrchestrator:
         # Sort tasks by updated priorities
         self.analysis_tasks.sort(key=lambda x: x.priority)
 
-        logger.info(f"✅ Strategic insights integrated: {len(insights)} insights applied")
+        logger.info(
+            f"✅ Strategic insights integrated: {len(insights)} insights applied"
+        )
 
     def _dependencies_satisfied(self, task: AnalysisTask) -> bool:
         """Check if task dependencies are satisfied"""

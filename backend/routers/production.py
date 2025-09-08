@@ -59,7 +59,9 @@ service_checks = {}
 deployment_start_time = datetime.now()
 
 
-async def check_service_health(name: str, url: str, timeout: float = 5.0) -> ServiceStatus:
+async def check_service_health(
+    name: str, url: str, timeout: float = 5.0
+) -> ServiceStatus:
     """Check health of a service endpoint"""
     start_time = time.time()
 
@@ -136,7 +138,12 @@ def get_system_metrics() -> SystemMetrics:
             cpu_usage=0.0,
             memory_usage=0.0,
             disk_usage=0.0,
-            network_io={"bytes_sent": 0, "bytes_recv": 0, "packets_sent": 0, "packets_recv": 0},
+            network_io={
+                "bytes_sent": 0,
+                "bytes_recv": 0,
+                "packets_sent": 0,
+                "packets_recv": 0,
+            },
             process_count=0,
         )
 
@@ -179,7 +186,9 @@ async def get_deployment_metrics():
     """Get current deployment metrics"""
     # Calculate uptime
     uptime_seconds = (datetime.now() - deployment_start_time).total_seconds()
-    uptime_percentage = min(99.99, (uptime_seconds / (24 * 3600)) * 100)  # Mock calculation
+    uptime_percentage = min(
+        99.99, (uptime_seconds / (24 * 3600)) * 100
+    )  # Mock calculation
 
     # Mock metrics (in production, get from monitoring system)
     metrics = DeploymentMetrics(
@@ -192,12 +201,16 @@ async def get_deployment_metrics():
     )
 
     # Store in history
-    metrics_history.append({"timestamp": datetime.now().isoformat(), "metrics": metrics.dict()})
+    metrics_history.append(
+        {"timestamp": datetime.now().isoformat(), "metrics": metrics.dict()}
+    )
 
     # Keep only last 24 hours of data
     cutoff_time = datetime.now() - timedelta(hours=24)
     metrics_history[:] = [
-        m for m in metrics_history if datetime.fromisoformat(m["timestamp"]) > cutoff_time
+        m
+        for m in metrics_history
+        if datetime.fromisoformat(m["timestamp"]) > cutoff_time
     ]
 
     return metrics
@@ -294,7 +307,9 @@ async def comprehensive_health_check():
     # Calculate overall health
     healthy_services = sum(1 for s in service_statuses if s.status == "healthy")
     total_services = len(service_statuses)
-    health_percentage = (healthy_services / total_services) * 100 if total_services > 0 else 0
+    health_percentage = (
+        (healthy_services / total_services) * 100 if total_services > 0 else 0
+    )
 
     # Determine overall status
     if health_percentage >= 90:
@@ -332,7 +347,9 @@ async def get_metrics_history(
     # Filter metrics by time range
     cutoff_time = datetime.now() - timedelta(hours=hours)
     filtered_metrics = [
-        m for m in metrics_history if datetime.fromisoformat(m["timestamp"]) > cutoff_time
+        m
+        for m in metrics_history
+        if datetime.fromisoformat(m["timestamp"]) > cutoff_time
     ]
 
     return {
@@ -373,7 +390,9 @@ async def sophia_alert_system(user_permissions: dict = Depends(verify_permission
 
 @router.get("/logs/recent")
 async def get_recent_logs(
-    lines: int = 100, level: str = "INFO", user_permissions: dict = Depends(verify_permissions)
+    lines: int = 100,
+    level: str = "INFO",
+    user_permissions: dict = Depends(verify_permissions),
 ):
     """Get recent application logs"""
     if not user_permissions.get("admin", False):

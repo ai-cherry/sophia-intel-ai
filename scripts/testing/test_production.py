@@ -59,8 +59,16 @@ class ProductionTestSuite:
         # Test data
         self.test_commands = [
             {"text": "show system status", "intent": "system_status"},
-            {"text": "run agent researcher", "intent": "run_agent", "entity": "researcher"},
-            {"text": "scale ollama to 3", "intent": "scale_service", "entity": "ollama"},
+            {
+                "text": "run agent researcher",
+                "intent": "run_agent",
+                "entity": "researcher",
+            },
+            {
+                "text": "scale ollama to 3",
+                "intent": "scale_service",
+                "entity": "ollama",
+            },
             {"text": "help", "intent": "help"},
             {"text": "list all agents", "intent": "list_agents"},
         ]
@@ -80,7 +88,9 @@ class ProductionTestSuite:
         else:
             logger.info(f"{Colors.BOLD}{timestamp} {message}{Colors.END}")
 
-    def test_result(self, name: str, passed: bool, message: str = "", details: Any = None):
+    def test_result(
+        self, name: str, passed: bool, message: str = "", details: Any = None
+    ):
         """Record test result"""
         self.results["tests_run"] += 1
 
@@ -113,7 +123,9 @@ class ProductionTestSuite:
                 )
                 return True
             else:
-                self.test_result("API Health Check", False, f"Status code: {response.status_code}")
+                self.test_result(
+                    "API Health Check", False, f"Status code: {response.status_code}"
+                )
                 return False
 
         except Exception as e:
@@ -135,7 +147,9 @@ class ProductionTestSuite:
             auth_processor = SecureNLProcessor(base_processor)
 
             # Test valid key
-            is_valid, message, user_info = auth_processor.validate_api_key("dev-key-12345")
+            is_valid, message, user_info = auth_processor.validate_api_key(
+                "dev-key-12345"
+            )
             self.test_result("API Key Validation", is_valid)
 
             if is_valid:
@@ -204,7 +218,9 @@ class ProductionTestSuite:
             cache_stats = cached_processor.get_cache_stats()
             cache_working = cache_stats["hit_rate"] > 0
             self.test_result(
-                "Cache Hit Rate", cache_working, f"Hit rate: {cache_stats['hit_rate']:.2f}"
+                "Cache Hit Rate",
+                cache_working,
+                f"Hit rate: {cache_stats['hit_rate']:.2f}",
             )
 
             return perf_improved
@@ -225,7 +241,9 @@ class ProductionTestSuite:
 
                 # Test metrics collection
                 initial_metrics = orchestrator.get_metrics()
-                self.test_result("Metrics Collection", "ollama_calls" in initial_metrics)
+                self.test_result(
+                    "Metrics Collection", "ollama_calls" in initial_metrics
+                )
 
                 # Test context saving
                 test_context = {
@@ -261,7 +279,10 @@ class ProductionTestSuite:
             payload = {"text": "help", "session_id": self.session_id}
 
             response = requests.post(
-                f"{self.base_url}/api/nl/process", json=payload, headers=headers, timeout=10
+                f"{self.base_url}/api/nl/process",
+                json=payload,
+                headers=headers,
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -297,7 +318,9 @@ class ProductionTestSuite:
 
                 return has_all_fields
             else:
-                self.test_result("Response Format Test", False, f"Status: {response.status_code}")
+                self.test_result(
+                    "Response Format Test", False, f"Status: {response.status_code}"
+                )
                 return False
 
         except Exception as e:
@@ -318,7 +341,10 @@ class ProductionTestSuite:
             }
 
             trigger_response = requests.post(
-                f"{self.base_url}/api/nl/process", json=trigger_payload, headers=headers, timeout=10
+                f"{self.base_url}/api/nl/process",
+                json=trigger_payload,
+                headers=headers,
+                timeout=10,
             )
 
             if trigger_response.status_code == 200:
@@ -340,7 +366,8 @@ class ProductionTestSuite:
                 if callback_response.status_code == 200:
                     callback_data = callback_response.json()
                     has_callback_data = (
-                        "data" in callback_data and "workflow_id" in callback_data["data"]
+                        "data" in callback_data
+                        and "workflow_id" in callback_data["data"]
                     )
 
                     self.test_result("Workflow Callback Processing", has_callback_data)
@@ -354,7 +381,9 @@ class ProductionTestSuite:
                     return False
             else:
                 self.test_result(
-                    "Workflow Trigger", False, f"Trigger status: {trigger_response.status_code}"
+                    "Workflow Trigger",
+                    False,
+                    f"Trigger status: {trigger_response.status_code}",
                 )
                 return False
 
@@ -384,7 +413,9 @@ class ProductionTestSuite:
             has_auth_features = hasattr(processor, "validate_api_key")
             has_security = hasattr(processor, "record_usage")
 
-            self.test_result("Memory Integration Interface", has_auth_features and has_security)
+            self.test_result(
+                "Memory Integration Interface", has_auth_features and has_security
+            )
             return has_auth_features and has_security
 
         except Exception as e:

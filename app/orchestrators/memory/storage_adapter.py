@@ -176,7 +176,12 @@ class S3StorageAdapter(StorageAdapter):
 
             # Upload to S3
             await asyncio.get_event_loop().run_in_executor(
-                None, self.s3_client.put_object, self.bucket_name, key, serialized, metadata
+                None,
+                self.s3_client.put_object,
+                self.bucket_name,
+                key,
+                serialized,
+                metadata,
             )
 
             logger.debug(f"Saved data to S3: {key}")

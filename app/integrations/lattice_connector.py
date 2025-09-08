@@ -129,7 +129,9 @@ class LatticeConnector:
         try:
             async with (
                 aiohttp.ClientSession() as session,
-                session.get(f"{self.base_url}/users/me", headers=self.headers) as response,
+                session.get(
+                    f"{self.base_url}/users/me", headers=self.headers
+                ) as response,
             ):
                 if response.status == 200:
                     data = await response.json()
@@ -389,7 +391,9 @@ class LatticeConnector:
         try:
             async with (
                 aiohttp.ClientSession() as session,
-                session.get(f"{self.base_url}/engagement/scores", headers=self.headers) as response,
+                session.get(
+                    f"{self.base_url}/engagement/scores", headers=self.headers
+                ) as response,
             ):
                 if response.status == 200:
                     data = await response.json()
@@ -424,12 +428,15 @@ class LatticeConnector:
 
         # Calculate team metrics
         avg_rating = (
-            sum(r.rating for r in reviews if r.rating) / len([r for r in reviews if r.rating])
+            sum(r.rating for r in reviews if r.rating)
+            / len([r for r in reviews if r.rating])
             if reviews
             else 0
         )
         goal_completion_rate = (
-            len([g for g in goals if g.status == "completed"]) / len(goals) * 100 if goals else 0
+            len([g for g in goals if g.status == "completed"]) / len(goals) * 100
+            if goals
+            else 0
         )
         feedback_sentiment = self._analyze_feedback_sentiment(feedback)
 
@@ -443,7 +450,9 @@ class LatticeConnector:
             },
             "feedback_insights": {
                 "total_feedback": len(feedback),
-                "praise_count": len([f for f in feedback if f.feedback_type == "praise"]),
+                "praise_count": len(
+                    [f for f in feedback if f.feedback_type == "praise"]
+                ),
                 "constructive_count": len(
                     [f for f in feedback if f.feedback_type == "constructive"]
                 ),
@@ -461,7 +470,9 @@ class LatticeConnector:
             return "neutral"
 
         praise_count = len([f for f in feedback if f.feedback_type == "praise"])
-        constructive_count = len([f for f in feedback if f.feedback_type == "constructive"])
+        constructive_count = len(
+            [f for f in feedback if f.feedback_type == "constructive"]
+        )
 
         if praise_count > constructive_count * 2:
             return "very_positive"
@@ -493,7 +504,9 @@ class LatticeConnector:
                         "metrics": {},
                     }
                 employee_scores[review.employee_id]["score"] += review.rating
-                employee_scores[review.employee_id]["metrics"]["review_rating"] = review.rating
+                employee_scores[review.employee_id]["metrics"][
+                    "review_rating"
+                ] = review.rating
 
         # Score based on goal completion
         for goal in goals:
@@ -506,7 +519,8 @@ class LatticeConnector:
                     }
                 employee_scores[goal.owner_id]["score"] += 1
                 employee_scores[goal.owner_id]["metrics"]["goals_completed"] = (
-                    employee_scores[goal.owner_id]["metrics"].get("goals_completed", 0) + 1
+                    employee_scores[goal.owner_id]["metrics"].get("goals_completed", 0)
+                    + 1
                 )
 
         # Score based on positive feedback
@@ -520,7 +534,8 @@ class LatticeConnector:
                     }
                 employee_scores[f.recipient_id]["score"] += 0.5
                 employee_scores[f.recipient_id]["metrics"]["praise_received"] = (
-                    employee_scores[f.recipient_id]["metrics"].get("praise_received", 0) + 1
+                    employee_scores[f.recipient_id]["metrics"].get("praise_received", 0)
+                    + 1
                 )
 
         # Sort and return top performers
@@ -632,4 +647,10 @@ class LatticeConnector:
 
 
 # Export main class
-__all__ = ["LatticeConnector", "LatticeReview", "LatticeGoal", "LatticeFeedback", "LatticeOneOnOne"]
+__all__ = [
+    "LatticeConnector",
+    "LatticeReview",
+    "LatticeGoal",
+    "LatticeFeedback",
+    "LatticeOneOnOne",
+]

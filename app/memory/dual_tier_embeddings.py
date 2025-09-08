@@ -208,7 +208,8 @@ class EmbeddingCache:
             return {
                 "total_cached": total,
                 "by_model": [
-                    {"model": row[0], "count": row[1], "avg_access": row[2]} for row in by_model
+                    {"model": row[0], "count": row[1], "avg_access": row[2]}
+                    for row in by_model
                 ],
             }
 
@@ -410,13 +411,17 @@ class DualTierEmbedder:
                     batch_size=self.config.tier_a_batch_size,
                 )
 
-                for i, (text, embedding) in enumerate(zip(tier_a_texts, embeddings, strict=False)):
+                for i, (text, embedding) in enumerate(
+                    zip(tier_a_texts, embeddings, strict=False)
+                ):
                     idx = tier_a_positions[i]
                     results[idx] = (embedding, EmbeddingTier.TIER_A)
 
                     # Cache result
                     if use_cache:
-                        self.cache.cache_embedding(text, self.config.tier_a_model, embedding)
+                        self.cache.cache_embedding(
+                            text, self.config.tier_a_model, embedding
+                        )
 
         # Process Tier-B texts
         if tier_indices[EmbeddingTier.TIER_B]:
@@ -442,13 +447,17 @@ class DualTierEmbedder:
                     batch_size=self.config.tier_b_batch_size,
                 )
 
-                for i, (text, embedding) in enumerate(zip(tier_b_texts, embeddings, strict=False)):
+                for i, (text, embedding) in enumerate(
+                    zip(tier_b_texts, embeddings, strict=False)
+                ):
                     idx = tier_b_positions[i]
                     results[idx] = (embedding, EmbeddingTier.TIER_B)
 
                     # Cache result
                     if use_cache:
-                        self.cache.cache_embedding(text, self.config.tier_b_model, embedding)
+                        self.cache.cache_embedding(
+                            text, self.config.tier_b_model, embedding
+                        )
 
         return results
 

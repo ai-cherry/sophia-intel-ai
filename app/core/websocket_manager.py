@@ -13,7 +13,12 @@ from typing import Any, Optional
 
 from fastapi import HTTPException, WebSocket, WebSocketDisconnect
 
-from .websocket_auth import AuthenticatedUser, TenantType, UserRole, WebSocketAuthenticator
+from .websocket_auth import (
+    AuthenticatedUser,
+    TenantType,
+    UserRole,
+    WebSocketAuthenticator,
+)
 from .websocket_rate_limiter import DomainType, WebSocketRateLimiter
 from .websocket_security import WebSocketSecurityMiddleware
 
@@ -57,13 +62,17 @@ class WebSocketManager:
         )
 
         self.rate_limiter = (
-            WebSocketRateLimiter(redis_url=redis_url, enable_ddos_protection=enable_ddos_protection)
+            WebSocketRateLimiter(
+                redis_url=redis_url, enable_ddos_protection=enable_ddos_protection
+            )
             if enable_rate_limiting
             else None
         )
 
         self.security_middleware = (
-            WebSocketSecurityMiddleware(redis_url=redis_url) if enable_security else None
+            WebSocketSecurityMiddleware(redis_url=redis_url)
+            if enable_security
+            else None
         )
 
         # Connection management
@@ -106,7 +115,11 @@ class WebSocketManager:
         logger.info("Secure WebSocket Manager initialized with all security features")
 
     async def connect(
-        self, websocket: WebSocket, client_id: str, session_id: str, token: Optional[str] = None
+        self,
+        websocket: WebSocket,
+        client_id: str,
+        session_id: str,
+        token: Optional[str] = None,
     ) -> WSConnection:
         """
         Accept new secure WebSocket connection with authentication and security checks
@@ -127,19 +140,22 @@ class WebSocketManager:
             # Security checks before accepting connection
             if self.security_middleware:
                 # Check if client is blocked
-                is_blocked, block_until = await self.security_middleware.is_client_blocked(
-                    client_id
+                is_blocked, block_until = (
+                    await self.security_middleware.is_client_blocked(client_id)
                 )
                 if is_blocked:
                     logger.warning(f"Blocked client attempted connection: {client_id}")
                     raise HTTPException(
-                        status_code=403, detail="Client blocked due to security violations"
+                        status_code=403,
+                        detail="Client blocked due to security violations",
                     )
 
             # Authenticate user if security is enabled
             user = None
             if self.authenticator and self.require_authentication:
-                user = await self.authenticator.authenticate_websocket(websocket, token, client_id)
+                user = await self.authenticator.authenticate_websocket(
+                    websocket, token, client_id
+                )
 
             # Accept WebSocket connection after security checks pass
             await websocket.accept()
@@ -187,7 +203,9 @@ class WebSocketManager:
                         "username": user.username,
                         "tenant_id": user.tenant_id,
                         "role": user.role.value,
-                        "permissions": list(user.permissions)[:10],  # Limit for security
+                        "permissions": list(user.permissions)[
+                            :10
+                        ],  # Limit for security
                     }
                 )
 
@@ -271,7 +289,11 @@ class WebSocketManager:
         # Confirm subscription
         await self.send_to_client(
             client_id,
-            {"type": "subscribed", "channel": channel, "timestamp": datetime.utcnow().isoformat()},
+            {
+                "type": "subscribed",
+                "channel": channel,
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )
 
         logger.debug(f"Client {client_id} subscribed to {channel}")
@@ -320,14 +342,19 @@ class WebSocketManager:
                     message_str = json.dumps(message)
 
                     # Check for Pay Ready data isolation
-                    if "pay_ready" in message_str.lower() or "stuck_account" in message_str.lower():
+                    if (
+                        "pay_ready" in message_str.lower()
+                        or "stuck_account" in message_str.lower()
+                    ):
                         has_access, security_event = (
                             await self.security_middleware.check_tenant_access(
                                 connection.user, connection.user.tenant_id, "pay_ready"
                             )
                         )
                         if not has_access:
-                            logger.warning(f"Blocked Pay Ready data access for {client_id}")
+                            logger.warning(
+                                f"Blocked Pay Ready data access for {client_id}"
+                            )
                             return
 
                     # Check for Sophia intelligence data
@@ -337,7 +364,9 @@ class WebSocketManager:
                     ):
                         has_access, security_event = (
                             await self.security_middleware.check_tenant_access(
-                                connection.user, connection.user.tenant_id, "sophia_intelligence"
+                                connection.user,
+                                connection.user.tenant_id,
+                                "sophia_intelligence",
                             )
                         )
                         if not has_access:
@@ -394,7 +423,9 @@ class WebSocketManager:
 
         logger.debug(f"Broadcasted to {len(tasks)} clients on {channel}")
 
-    async def broadcast_swarm_event(self, session_id: str, event_type: str, data: dict[str, Any]):
+    async def broadcast_swarm_event(
+        self, session_id: str, event_type: str, data: dict[str, Any]
+    ):
         """
         Broadcast swarm execution event
 
@@ -413,7 +444,9 @@ class WebSocketManager:
 
         await self.broadcast(f"swarm_{session_id}", message)
 
-    async def broadcast_memory_update(self, memory_id: str, operation: str, data: dict[str, Any]):
+    async def broadcast_memory_update(
+        self, memory_id: str, operation: str, data: dict[str, Any]
+    ):
         """
         Broadcast memory update event
 
@@ -439,7 +472,11 @@ class WebSocketManager:
         Args:
             metrics: Current system metrics
         """
-        message = {"type": "metrics", "data": metrics, "timestamp": datetime.utcnow().isoformat()}
+        message = {
+            "type": "metrics",
+            "data": metrics,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
 
         await self.broadcast("system_metrics", message)
 
@@ -486,7 +523,9 @@ class WebSocketManager:
 
         await self.broadcast("stuck_accounts", message)
 
-    async def broadcast_team_performance_update(self, team_id: str, metrics: dict[str, Any]):
+    async def broadcast_team_performance_update(
+        self, team_id: str, metrics: dict[str, Any]
+    ):
         """
         Broadcast team performance metrics update
 
@@ -503,7 +542,9 @@ class WebSocketManager:
 
         await self.broadcast("team_performance", message)
 
-    async def broadcast_operational_intelligence(self, insight_type: str, data: dict[str, Any]):
+    async def broadcast_operational_intelligence(
+        self, insight_type: str, data: dict[str, Any]
+    ):
         """
         Broadcast operational intelligence insights
 
@@ -587,14 +628,16 @@ class WebSocketManager:
             if self.enable_security:
                 # Check if client is blocked
                 if self.security_middleware:
-                    is_blocked, block_until = await self.security_middleware.is_client_blocked(
-                        client_id
+                    is_blocked, block_until = (
+                        await self.security_middleware.is_client_blocked(client_id)
                     )
                     if is_blocked:
                         return {
                             "type": "error",
                             "message": "Access denied - security violation",
-                            "blocked_until": block_until.isoformat() if block_until else None,
+                            "blocked_until": (
+                                block_until.isoformat() if block_until else None
+                            ),
                         }
 
                 # Rate limiting check
@@ -624,14 +667,18 @@ class WebSocketManager:
                         return {
                             "type": "error",
                             "message": "Security violation detected",
-                            "event_id": security_event.event_id if security_event else None,
+                            "event_id": (
+                                security_event.event_id if security_event else None
+                            ),
                         }
                     message = sanitized_message
 
                 # Anomaly detection for authenticated users
                 if self.security_middleware and connection.user:
-                    anomaly_event = await self.security_middleware.detect_anomalous_behavior(
-                        connection.user, msg_type, message
+                    anomaly_event = (
+                        await self.security_middleware.detect_anomalous_behavior(
+                            connection.user, msg_type, message
+                        )
                     )
                     if anomaly_event and anomaly_event.blocked:
                         connection.security_violations += 1
@@ -667,8 +714,13 @@ class WebSocketManager:
             elif msg_type == "heartbeat":
                 # Update session heartbeat if authenticated
                 if connection.user and self.authenticator:
-                    await self.authenticator.update_session_heartbeat(connection.session_id)
-                return {"type": "heartbeat_ack", "timestamp": datetime.utcnow().isoformat()}
+                    await self.authenticator.update_session_heartbeat(
+                        connection.session_id
+                    )
+                return {
+                    "type": "heartbeat_ack",
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
 
             else:
                 return {"type": "error", "message": f"Unknown message type: {msg_type}"}
@@ -682,7 +734,8 @@ class WebSocketManager:
         base_metrics = {
             **self.metrics,
             "channels": {
-                channel: len(subscribers) for channel, subscribers in self.channels.items()
+                channel: len(subscribers)
+                for channel, subscribers in self.channels.items()
             },
             "queued_messages": {
                 client: len(messages) for client, messages in self.message_queue.items()
@@ -691,13 +744,17 @@ class WebSocketManager:
 
         # Add security metrics if available
         if self.authenticator:
-            base_metrics["authentication_metrics"] = self.authenticator.get_session_metrics()
+            base_metrics["authentication_metrics"] = (
+                self.authenticator.get_session_metrics()
+            )
 
         if self.rate_limiter:
             base_metrics["rate_limiting_metrics"] = self.rate_limiter.get_metrics()
 
         if self.security_middleware:
-            base_metrics["security_metrics"] = self.security_middleware.get_security_metrics()
+            base_metrics["security_metrics"] = (
+                self.security_middleware.get_security_metrics()
+            )
 
         # Connection breakdown by tenant and role
         tenant_breakdown = {}
@@ -738,7 +795,9 @@ class WebSocketManager:
         else:
             return DomainType.GENERAL
 
-    async def _handle_subscribe(self, client_id: str, message: dict[str, Any]) -> dict[str, Any]:
+    async def _handle_subscribe(
+        self, client_id: str, message: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle channel subscription with authorization"""
         channel = message.get("channel")
         if not channel:
@@ -750,8 +809,10 @@ class WebSocketManager:
 
         # Check authorization for channel access
         if self.security_middleware and connection.user:
-            has_access, security_event = await self.security_middleware.check_tenant_isolation(
-                connection.user, channel
+            has_access, security_event = (
+                await self.security_middleware.check_tenant_isolation(
+                    connection.user, channel
+                )
             )
             if not has_access:
                 return {"type": "error", "message": "Access denied to channel"}
@@ -759,7 +820,9 @@ class WebSocketManager:
         await self.subscribe(client_id, channel)
         return {"type": "subscribed", "channel": channel}
 
-    async def _handle_unsubscribe(self, client_id: str, message: dict[str, Any]) -> dict[str, Any]:
+    async def _handle_unsubscribe(
+        self, client_id: str, message: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle channel unsubscription"""
         channel = message.get("channel")
         if channel:
@@ -767,7 +830,9 @@ class WebSocketManager:
             return {"type": "unsubscribed", "channel": channel}
         return {"type": "error", "message": "Channel name required"}
 
-    async def _handle_get_metrics(self, client_id: str, message: dict[str, Any]) -> dict[str, Any]:
+    async def _handle_get_metrics(
+        self, client_id: str, message: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle metrics request with authorization"""
         connection = self.connections.get(client_id)
         if not connection:
@@ -789,7 +854,10 @@ class WebSocketManager:
         """Handle Pay Ready specific queries with strict tenant isolation"""
         connection = self.connections.get(client_id)
         if not connection or not connection.user:
-            return {"type": "error", "message": "Authentication required for Pay Ready data"}
+            return {
+                "type": "error",
+                "message": "Authentication required for Pay Ready data",
+            }
 
         # Strict Pay Ready tenant isolation
         if (
@@ -813,7 +881,10 @@ class WebSocketManager:
         """Handle Sophia intelligence queries"""
         connection = self.connections.get(client_id)
         if not connection or not connection.user:
-            return {"type": "error", "message": "Authentication required for Sophia intelligence"}
+            return {
+                "type": "error",
+                "message": "Authentication required for Sophia intelligence",
+            }
 
         # Check Sophia access
         has_permission = await self.authenticator.check_permission(
@@ -822,7 +893,11 @@ class WebSocketManager:
         if not has_permission:
             return {"type": "error", "message": "Insufficient Sophia permissions"}
 
-        return {"type": "sophia_intelligence_response", "message": "Query processed", "data": {}}
+        return {
+            "type": "sophia_intelligence_response",
+            "message": "Query processed",
+            "data": {},
+        }
 
     async def _handle_artemis_operation(
         self, client_id: str, message: dict[str, Any]
@@ -830,7 +905,10 @@ class WebSocketManager:
         """Handle Artemis tactical operations"""
         connection = self.connections.get(client_id)
         if not connection or not connection.user:
-            return {"type": "error", "message": "Authentication required for Artemis operations"}
+            return {
+                "type": "error",
+                "message": "Authentication required for Artemis operations",
+            }
 
         # Check Artemis access
         has_permission = await self.authenticator.check_permission(
@@ -839,10 +917,18 @@ class WebSocketManager:
         if not has_permission:
             return {"type": "error", "message": "Insufficient Artemis permissions"}
 
-        return {"type": "artemis_response", "message": "Operation processed", "data": {}}
+        return {
+            "type": "artemis_response",
+            "message": "Operation processed",
+            "data": {},
+        }
 
     async def websocket_endpoint(
-        self, websocket: WebSocket, client_id: str, session_id: str, token: Optional[str] = None
+        self,
+        websocket: WebSocket,
+        client_id: str,
+        session_id: str,
+        token: Optional[str] = None,
     ):
         """
         Secure FastAPI WebSocket endpoint handler with comprehensive security
@@ -890,7 +976,9 @@ class WebSocketManager:
             "rate_limiting_enabled": self.enable_rate_limiting,
             "authentication_required": self.require_authentication,
             "total_connections": len(self.connections),
-            "authenticated_connections": self.metrics.get("authenticated_connections", 0),
+            "authenticated_connections": self.metrics.get(
+                "authenticated_connections", 0
+            ),
             "security_violations": sum(
                 conn.security_violations for conn in self.connections.values()
             ),
@@ -912,7 +1000,9 @@ class WebSocketManager:
         if self.security_middleware:
             status["security_middleware_status"] = "active"
             status["blocked_clients"] = len(self.security_middleware.blocked_clients)
-            recent_events = await self.security_middleware.get_recent_security_events(limit=10)
+            recent_events = await self.security_middleware.get_recent_security_events(
+                limit=10
+            )
             status["recent_security_events"] = len(recent_events)
 
         return status
@@ -952,7 +1042,9 @@ class WebSocketManager:
 
         # Filter events by time
         cutoff = datetime.utcnow() - timedelta(hours=hours)
-        filtered_events = [e for e in events if datetime.fromisoformat(e["timestamp"]) > cutoff]
+        filtered_events = [
+            e for e in events if datetime.fromisoformat(e["timestamp"]) > cutoff
+        ]
 
         return {
             "audit_period_hours": hours,

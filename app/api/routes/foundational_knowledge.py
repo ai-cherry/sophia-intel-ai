@@ -8,7 +8,11 @@ from typing import Any, Optional
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app.api.middleware.auth import get_current_user, verify_admin_access, verify_api_key
+from app.api.middleware.auth import (
+    get_current_user,
+    verify_admin_access,
+    verify_api_key,
+)
 from app.api.middleware.rate_limit import rate_limit
 from app.core.ai_logger import logger
 from app.knowledge.foundational_manager import FoundationalKnowledgeManager
@@ -156,7 +160,9 @@ async def create_knowledge(
 
 @router.get("/{knowledge_id}", response_model=KnowledgeResponse)
 @rate_limit(limit=60)  # Allow 60 reads per minute
-async def get_knowledge(knowledge_id: str, _user: Optional[dict] = Depends(get_current_user)):
+async def get_knowledge(
+    knowledge_id: str, _user: Optional[dict] = Depends(get_current_user)
+):
     """Get knowledge entity by ID"""
     entity = await get_manager().get(knowledge_id)
 
@@ -346,7 +352,9 @@ async def get_pay_ready_context(_user: dict = Depends(require_authentication)):
 
 @router.get("/{knowledge_id}/versions")
 @rate_limit(limit=30)  # Allow 30 version history requests per minute
-async def get_version_history(knowledge_id: str, _user: Optional[dict] = Depends(get_current_user)):
+async def get_version_history(
+    knowledge_id: str, _user: Optional[dict] = Depends(get_current_user)
+):
     """Get version history for knowledge entity"""
     versions = await get_manager().get_version_history(knowledge_id)
 
@@ -498,7 +506,8 @@ async def resume_sync_scheduler(
 @router.post("/batch/create")
 @rate_limit(limit=10)  # Lower limit for batch operations
 async def batch_create_knowledge(
-    requests: list[KnowledgeCreateRequest], _user: dict = Depends(require_authentication)
+    requests: list[KnowledgeCreateRequest],
+    _user: dict = Depends(require_authentication),
 ):
     """Create multiple knowledge entities in a batch"""
     if len(requests) > 100:
@@ -523,11 +532,15 @@ async def batch_create_knowledge(
                 entity.priority = KnowledgePriority(request.priority)
 
             created = await manager.create(entity)
-            results["success"].append({"index": idx, "id": created.id, "name": created.name})
+            results["success"].append(
+                {"index": idx, "id": created.id, "name": created.name}
+            )
 
         except Exception as e:
             logger.error(f"Failed to create entity {request.name}: {e}")
-            results["failed"].append({"index": idx, "name": request.name, "error": str(e)})
+            results["failed"].append(
+                {"index": idx, "name": request.name, "error": str(e)}
+            )
 
     return {
         "total": len(requests),
@@ -566,7 +579,9 @@ async def batch_update_knowledge(
             if "category" in update:
                 entity.category = update["category"]
             if "classification" in update:
-                entity.classification = KnowledgeClassification(update["classification"])
+                entity.classification = KnowledgeClassification(
+                    update["classification"]
+                )
             if "priority" in update:
                 entity.priority = KnowledgePriority(update["priority"])
             if "content" in update:
@@ -577,11 +592,15 @@ async def batch_update_knowledge(
                 entity.is_active = update["is_active"]
 
             updated = await manager.update(entity)
-            results["success"].append({"index": idx, "id": updated.id, "name": updated.name})
+            results["success"].append(
+                {"index": idx, "id": updated.id, "name": updated.name}
+            )
 
         except Exception as e:
             logger.error(f"Failed to update entity {update.get('id')}: {e}")
-            results["failed"].append({"index": idx, "id": update.get("id"), "error": str(e)})
+            results["failed"].append(
+                {"index": idx, "id": update.get("id"), "error": str(e)}
+            )
 
     return {
         "total": len(updates),
@@ -594,11 +613,14 @@ async def batch_update_knowledge(
 @router.post("/batch/delete")
 @rate_limit(limit=5)  # Very limited for batch deletes
 async def batch_delete_knowledge(
-    entity_ids: list[str], _user: dict = Depends(require_admin)  # Only admins can batch delete
+    entity_ids: list[str],
+    _user: dict = Depends(require_admin),  # Only admins can batch delete
 ):
     """Delete multiple knowledge entities in a batch"""
     if len(entity_ids) > 50:
-        raise HTTPException(status_code=400, detail="Maximum 50 entities per batch delete")
+        raise HTTPException(
+            status_code=400, detail="Maximum 50 entities per batch delete"
+        )
 
     results = {"success": [], "failed": []}
 

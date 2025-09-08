@@ -179,7 +179,10 @@ class TrafficManager:
         await self.update_traffic_split(
             service_name,
             namespace,
-            {stable_version: 100 - initial_percentage, canary_version: initial_percentage},
+            {
+                stable_version: 100 - initial_percentage,
+                canary_version: initial_percentage,
+            },
         )
 
         canary.current_percentage = initial_percentage
@@ -188,7 +191,9 @@ class TrafficManager:
         logger.info(f"Canary deployment created: {canary_key}")
         return canary
 
-    async def update_traffic_split(self, service_name: str, namespace: str, splits: dict[str, int]):
+    async def update_traffic_split(
+        self, service_name: str, namespace: str, splits: dict[str, int]
+    ):
         """
         Update traffic split for a service
 
@@ -222,7 +227,10 @@ class TrafficManager:
                         for version, percentage in splits.items():
                             http_route["route"].append(
                                 {
-                                    "destination": {"host": service_name, "subset": version},
+                                    "destination": {
+                                        "host": service_name,
+                                        "subset": version,
+                                    },
                                     "weight": percentage,
                                 }
                             )
@@ -249,7 +257,9 @@ class TrafficManager:
             logger.error(f"Failed to update traffic split: {e}")
             raise
 
-    async def rollout_canary(self, service_name: str, namespace: str, increment: int = 10):
+    async def rollout_canary(
+        self, service_name: str, namespace: str, increment: int = 10
+    ):
         """
         Increase canary traffic by increment
 
@@ -265,13 +275,18 @@ class TrafficManager:
         canary = self.active_canaries[canary_key]
 
         # Calculate new percentage
-        new_percentage = min(canary.current_percentage + increment, canary.target_percentage)
+        new_percentage = min(
+            canary.current_percentage + increment, canary.target_percentage
+        )
 
         # Update traffic split
         await self.update_traffic_split(
             service_name,
             namespace,
-            {canary.stable_version: 100 - new_percentage, canary.canary_version: new_percentage},
+            {
+                canary.stable_version: 100 - new_percentage,
+                canary.canary_version: new_percentage,
+            },
         )
 
         canary.current_percentage = new_percentage
@@ -302,7 +317,9 @@ class TrafficManager:
 
         # Reset traffic to stable version
         await self.update_traffic_split(
-            service_name, namespace, {canary.stable_version: 100, canary.canary_version: 0}
+            service_name,
+            namespace,
+            {canary.stable_version: 100, canary.canary_version: 0},
         )
 
         canary.status = "rolled_back"
@@ -329,7 +346,9 @@ class TrafficManager:
             green_version: Green version
             switch_to_green: Whether to switch to green
         """
-        logger.info(f"Implementing blue-green deployment for {namespace}/{service_name}")
+        logger.info(
+            f"Implementing blue-green deployment for {namespace}/{service_name}"
+        )
 
         if switch_to_green:
             splits = {blue_version: 0, green_version: 100}
@@ -370,7 +389,11 @@ class TrafficManager:
         logger.info(f"A/B testing setup completed for {namespace}/{service_name}")
 
     async def handle_failover(
-        self, service_name: str, namespace: str, failed_version: str, fallback_version: str
+        self,
+        service_name: str,
+        namespace: str,
+        failed_version: str,
+        fallback_version: str,
     ):
         """
         Handle failover scenario
@@ -410,8 +433,12 @@ class TrafficManager:
 
                     # Check if should rollback
                     if metrics.get("success_rate", 0) < 0.90:
-                        logger.warning(f"Canary metrics below threshold for {canary_key}")
-                        await self.rollback_canary(canary.service_name, canary.namespace)
+                        logger.warning(
+                            f"Canary metrics below threshold for {canary_key}"
+                        )
+                        await self.rollback_canary(
+                            canary.service_name, canary.namespace
+                        )
                         continue
 
                     # Check if should progress
@@ -441,7 +468,9 @@ class TrafficManager:
                         canary_key = f"{policy.namespace}/{policy.service_name}"
                         if canary_key in self.active_canaries:
                             await self.rollout_canary(
-                                policy.service_name, policy.namespace, policy.increment_percentage
+                                policy.service_name,
+                                policy.namespace,
+                                policy.increment_percentage,
                             )
                             policy.updated_at = datetime.now()
 
@@ -479,7 +508,9 @@ class TrafficManager:
                     if response.status == 200:
                         data = await response.json()
                         if data["status"] == "success" and data["data"]["result"]:
-                            metrics["success_rate"] = float(data["data"]["result"][0]["value"][1])
+                            metrics["success_rate"] = float(
+                                data["data"]["result"][0]["value"][1]
+                            )
 
                 # P95 latency query
                 query = f"""
@@ -496,7 +527,9 @@ class TrafficManager:
                     if response.status == 200:
                         data = await response.json()
                         if data["status"] == "success" and data["data"]["result"]:
-                            metrics["p95_latency"] = float(data["data"]["result"][0]["value"][1])
+                            metrics["p95_latency"] = float(
+                                data["data"]["result"][0]["value"][1]
+                            )
 
                 # Request rate query
                 query = f"""
@@ -513,7 +546,9 @@ class TrafficManager:
                     if response.status == 200:
                         data = await response.json()
                         if data["status"] == "success" and data["data"]["result"]:
-                            metrics["request_rate"] = float(data["data"]["result"][0]["value"][1])
+                            metrics["request_rate"] = float(
+                                data["data"]["result"][0]["value"][1]
+                            )
 
         except Exception as e:
             logger.error(f"Error getting canary metrics: {e}")
@@ -540,13 +575,20 @@ class TrafficManager:
                 ab_routes = []
 
                 for rule_name, rule_config in routing_rules.items():
-                    route = {"name": rule_name, "match": rule_config.get("match", []), "route": []}
+                    route = {
+                        "name": rule_name,
+                        "match": rule_config.get("match", []),
+                        "route": [],
+                    }
 
                     # Add destinations based on rule
                     for version, weight in rule_config.get("route_to", {}).items():
                         route["route"].append(
                             {
-                                "destination": {"host": service_name, "subset": version},
+                                "destination": {
+                                    "host": service_name,
+                                    "subset": version,
+                                },
                                 "weight": weight,
                             }
                         )
@@ -629,7 +671,9 @@ class TrafficManager:
             logger.error(f"Failed to update outlier detection: {e}")
             raise
 
-    async def get_traffic_split(self, service_name: str, namespace: str) -> Optional[TrafficSplit]:
+    async def get_traffic_split(
+        self, service_name: str, namespace: str
+    ) -> Optional[TrafficSplit]:
         """
         Get current traffic split for a service
 

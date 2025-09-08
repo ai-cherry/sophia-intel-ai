@@ -91,7 +91,9 @@ class TestCrossDomainWorkflows:
         assert domain_enforcer.check_cross_domain_approval(cross_domain_request.id)
 
         # Step 4: Sophia provides business context
-        sophia_agent_id = await sophia_factory.create_business_agent("sales_pipeline_analyst")
+        sophia_agent_id = await sophia_factory.create_business_agent(
+            "sales_pipeline_analyst"
+        )
 
         # Step 5: Execute business analysis with technical context
         business_result = await sophia_factory.execute_business_task(
@@ -183,7 +185,10 @@ class TestCrossDomainWorkflows:
         with patch.object(
             artemis_factory, "_execute_mission_phase", new_callable=AsyncMock
         ) as mock_phase:
-            mock_phase.return_value = {"success": True, "tactical_plan": "phased_implementation"}
+            mock_phase.return_value = {
+                "success": True,
+                "tactical_plan": "phased_implementation",
+            }
 
             tactical_result = await artemis_factory.execute_mission(
                 "operation_clean_sweep",
@@ -204,7 +209,9 @@ class TestCrossDomainWorkflows:
     ):
         """Test that domain boundaries are enforced during workflows"""
         # Artemis agent tries to access Sophia operation without approval
-        artemis_agent_id = await artemis_factory.create_technical_agent("security_auditor")
+        artemis_agent_id = await artemis_factory.create_technical_agent(
+            "security_auditor"
+        )
 
         # Attempt direct access to Sophia domain - should fail
         validation_result = validate_domain_request(
@@ -216,10 +223,15 @@ class TestCrossDomainWorkflows:
         )
 
         assert validation_result.allowed is False
-        assert "Operation sales_analytics not allowed in SOPHIA domain" in validation_result.reason
+        assert (
+            "Operation sales_analytics not allowed in SOPHIA domain"
+            in validation_result.reason
+        )
 
         # Sophia agent tries to access Artemis operation without approval
-        sophia_agent_id = await sophia_factory.create_business_agent("revenue_forecaster")
+        sophia_agent_id = await sophia_factory.create_business_agent(
+            "revenue_forecaster"
+        )
 
         validation_result = validate_domain_request(
             user_id=sophia_agent_id,
@@ -331,9 +343,15 @@ class TestCrossDomainWorkflows:
 
         # Both domains can access indexing
         for domain in [MemoryDomain.ARTEMIS, MemoryDomain.SOPHIA]:
-            request = {"operation": "index", "documents": ["doc1", "doc2"], "domain": domain.value}
+            request = {
+                "operation": "index",
+                "documents": ["doc1", "doc2"],
+                "domain": domain.value,
+            }
 
-            result = await mcp_router.route_request(MCPServerType.INDEXING, domain, request)
+            result = await mcp_router.route_request(
+                MCPServerType.INDEXING, domain, request
+            )
 
             assert result == "shared_indexing"
             assert "domain_filters" in request
@@ -385,7 +403,9 @@ class TestCrossDomainWorkflows:
             data={"feature": "real_time_analytics", "priority": "high"},
         )
 
-        domain_enforcer.approve_cross_domain_request(cross_domain.id, "admin_user", UserRole.ADMIN)
+        domain_enforcer.approve_cross_domain_request(
+            cross_domain.id, "admin_user", UserRole.ADMIN
+        )
 
         workflow_steps.append(("cross_domain_approved", cross_domain.id))
 
@@ -424,7 +444,9 @@ class TestCrossDomainWorkflows:
     ):
         """Test incident response workflow spanning both domains"""
         # Stage 1: Technical detection by Artemis
-        security_agent = await artemis_factory.create_technical_agent("security_auditor")
+        security_agent = await artemis_factory.create_technical_agent(
+            "security_auditor"
+        )
 
         # Stage 2: Rapid response mission
         with patch.object(
@@ -437,13 +459,17 @@ class TestCrossDomainWorkflows:
             }
 
             incident_response = await artemis_factory.execute_mission(
-                "rapid_response", target="/security/incident", parameters={"severity": "CRITICAL"}
+                "rapid_response",
+                target="/security/incident",
+                parameters={"severity": "CRITICAL"},
             )
 
         assert incident_response["success"] is True
 
         # Stage 3: Business impact assessment by Sophia
-        cs_manager = await sophia_factory.create_business_agent("client_success_manager")
+        cs_manager = await sophia_factory.create_business_agent(
+            "client_success_manager"
+        )
 
         business_impact = await sophia_factory.execute_business_task(
             cs_manager,
@@ -474,7 +500,9 @@ class TestCrossDomainWorkflows:
     # ==============================================================================
 
     @pytest.mark.asyncio
-    async def test_workflow_rollback_on_domain_violation(self, artemis_factory, domain_enforcer):
+    async def test_workflow_rollback_on_domain_violation(
+        self, artemis_factory, domain_enforcer
+    ):
         """Test workflow rollback when domain violation occurs"""
         # Start workflow
         agent_id = await artemis_factory.create_technical_agent("code_reviewer")

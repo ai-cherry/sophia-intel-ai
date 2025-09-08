@@ -87,7 +87,10 @@ class ConnectionManager:
                 self._http_session = aiohttp.ClientSession(
                     connector=connector,
                     timeout=timeout,
-                    headers={"User-Agent": "Sophia-Intel-AI/2.1.0", "Accept": "application/json"},
+                    headers={
+                        "User-Agent": "Sophia-Intel-AI/2.1.0",
+                        "Accept": "application/json",
+                    },
                 )
 
                 # Initialize Redis connection pool

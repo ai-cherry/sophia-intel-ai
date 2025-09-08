@@ -40,7 +40,9 @@ class Mem0Manager:
             return
 
         self.config = Mem0Config(
-            api_key=os.getenv("MEM0_API_KEY", "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"),
+            api_key=os.getenv(
+                "MEM0_API_KEY", "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"
+            ),
             base_url=os.getenv("MEM0_BASE_URL", "https://api.mem0.ai"),
             auth_header_format="Token",  # Critical: Use "Token" format, not "Bearer"
             timeout=int(os.getenv("MEM0_TIMEOUT", "30")),
@@ -89,7 +91,9 @@ class Mem0Manager:
     def get_status(self) -> dict[str, Any]:
         """Get status information"""
         return {
-            "api_key": self.config.api_key[:10] + "..." if self.config.api_key else None,
+            "api_key": (
+                self.config.api_key[:10] + "..." if self.config.api_key else None
+            ),
             "base_url": self.config.base_url,
             "auth_format": self.config.auth_header_format,
             "timeout": self.config.timeout,

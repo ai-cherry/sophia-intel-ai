@@ -60,7 +60,9 @@ class Role:
     name: str
     permissions: set[Permission]
     description: str = ""
-    resource_patterns: list[str] = field(default_factory=list)  # Regex patterns for resource access
+    resource_patterns: list[str] = field(
+        default_factory=list
+    )  # Regex patterns for resource access
     environments: list[str] = field(default_factory=list)  # Allowed environments
 
 
@@ -195,7 +197,11 @@ class RoleManager:
         # Service account role
         self.roles["service_account"] = Role(
             name="service_account",
-            permissions={Permission.SECRET_READ, Permission.CONFIG_READ, Permission.CONFIG_REFRESH},
+            permissions={
+                Permission.SECRET_READ,
+                Permission.CONFIG_READ,
+                Permission.CONFIG_REFRESH,
+            },
             description="Service account for application runtime",
             environments=["dev", "staging", "production"],
         )
@@ -283,7 +289,9 @@ class AccessControlManager:
 
     def __init__(self, secret_key: Optional[str] = None):
         self.role_manager = RoleManager()
-        self.token_manager = AccessTokenManager(secret_key or Fernet.generate_key().decode())
+        self.token_manager = AccessTokenManager(
+            secret_key or Fernet.generate_key().decode()
+        )
 
         # User registry
         self.users: dict[str, User] = {}
@@ -327,7 +335,9 @@ class AccessControlManager:
             token = self.token_manager.generate_token(user)
 
             # Create session
-            session_id = hashlib.sha256(f"{user.user_id}_{time.time()}".encode()).hexdigest()
+            session_id = hashlib.sha256(
+                f"{user.user_id}_{time.time()}".encode()
+            ).hexdigest()
             self.active_sessions[session_id] = {
                 "user_id": user.user_id,
                 "token": token,
@@ -360,7 +370,9 @@ class AccessControlManager:
         # Clean old entries
         if user_id in self.rate_limits:
             self.rate_limits[user_id] = [
-                timestamp for timestamp in self.rate_limits[user_id] if timestamp > minute_ago
+                timestamp
+                for timestamp in self.rate_limits[user_id]
+                if timestamp > minute_ago
             ]
         else:
             self.rate_limits[user_id] = []
@@ -440,8 +452,11 @@ class AccessControlManager:
                     # Check environment access
                     if request.environment in role.environments:
                         # Check resource pattern match
-                        if not role.resource_patterns or self._matches_resource_pattern(
-                            request.resource_id, role.resource_patterns
+                        if (
+                            not role.resource_patterns
+                            or self._matches_resource_pattern(
+                                request.resource_id, role.resource_patterns
+                            )
                         ):
                             has_permission = True
                             break
@@ -563,7 +578,9 @@ class AccessControlManager:
             "total_access_requests": total_requests,
             "granted_requests": granted_requests,
             "denial_rate": (
-                (total_requests - granted_requests) / total_requests if total_requests > 0 else 0
+                (total_requests - granted_requests) / total_requests
+                if total_requests > 0
+                else 0
             ),
             "permission_usage": permission_stats,
             "rate_limit_users": len(self.rate_limits),
@@ -588,13 +605,19 @@ def initialize_default_users():
 
     # System admin user
     admin_user = User(
-        user_id="admin", username="admin", roles={"system_admin"}, email="admin@sophia-intel-ai.com"
+        user_id="admin",
+        username="admin",
+        roles={"system_admin"},
+        email="admin@sophia-intel-ai.com",
     )
     access_control.add_user(admin_user)
 
     # Developer user
     dev_user = User(
-        user_id="dev", username="developer", roles={"developer"}, email="dev@sophia-intel-ai.com"
+        user_id="dev",
+        username="developer",
+        roles={"developer"},
+        email="dev@sophia-intel-ai.com",
     )
     access_control.add_user(dev_user)
 
@@ -611,7 +634,9 @@ def initialize_default_users():
 
 
 # Decorator for access control
-def require_permission(permission: Permission, resource_type: ResourceType = ResourceType.SECRET):
+def require_permission(
+    permission: Permission, resource_type: ResourceType = ResourceType.SECRET
+):
     """Decorator to require specific permission for API endpoints"""
 
     def decorator(func):

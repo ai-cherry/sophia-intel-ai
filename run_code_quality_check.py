@@ -29,7 +29,9 @@ class CodeQualityChecker:
             except SyntaxError as e:
                 issues["errors"].append(f"Syntax Error: {e.msg} at line {e.lineno}")
             except IndentationError as e:
-                issues["errors"].append(f"Indentation Error: {e.msg} at line {e.lineno}")
+                issues["errors"].append(
+                    f"Indentation Error: {e.msg} at line {e.lineno}"
+                )
 
             # Basic style checks
             lines = content.split("\n")
@@ -103,7 +105,9 @@ class CodeQualityChecker:
             if issues["errors"]:
                 self.errors.extend([(filepath, error) for error in issues["errors"]])
             if issues["warnings"]:
-                self.warnings.extend([(filepath, warning) for warning in issues["warnings"]])
+                self.warnings.extend(
+                    [(filepath, warning) for warning in issues["warnings"]]
+                )
 
     def generate_report(self) -> str:
         """Generate a summary report"""
@@ -144,7 +148,9 @@ class CodeQualityChecker:
             report.append("🎯 PRIORITY FIXES NEEDED:")
             report.append("-" * 30)
             syntax_errors = [
-                e for e in self.errors if "Syntax Error" in e[1] or "Indentation Error" in e[1]
+                e
+                for e in self.errors
+                if "Syntax Error" in e[1] or "Indentation Error" in e[1]
             ]
             if syntax_errors:
                 report.append("1. Fix syntax and indentation errors first")

@@ -53,7 +53,8 @@ vector_search_latency = meter.create_histogram(
     "sophia_vector_search_latency_seconds", description="Vector search latency"
 )
 quantization_savings = meter.create_histogram(
-    "sophia_quantization_memory_savings_ratio", description="Memory savings from quantization"
+    "sophia_quantization_memory_savings_ratio",
+    description="Memory savings from quantization",
 )
 
 
@@ -122,7 +123,9 @@ class AdaptiveEfCalculator:
         self.max_ef = 512
         self.min_ef = 16
 
-    def calculate_ef(self, k: int, collection_size: int, accuracy_requirement: float = 0.9) -> int:
+    def calculate_ef(
+        self, k: int, collection_size: int, accuracy_requirement: float = 0.9
+    ) -> int:
         """Calculate optimal ef based on query parameters"""
 
         # Apr '25 optimization: ef=256 for k>50
@@ -177,7 +180,9 @@ class SemanticCache:
         self.misses = 0
         self.total_searches = 0
 
-    def _calculate_query_hash(self, query_vector: List[float], k: int, filters: Dict = None) -> str:
+    def _calculate_query_hash(
+        self, query_vector: List[float], k: int, filters: Dict = None
+    ) -> str:
         """Calculate hash for query caching"""
         # Quantize vector for fuzzy matching
         quantized = [round(x, 3) for x in query_vector]
@@ -202,7 +207,11 @@ class SemanticCache:
             return 0.0
 
     async def get(
-        self, query_vector: List[float], k: int, tenant_id: str = "default", filters: Dict = None
+        self,
+        query_vector: List[float],
+        k: int,
+        tenant_id: str = "default",
+        filters: Dict = None,
     ) -> Optional[List[Dict[str, Any]]]:
         """Get cached search results if similar query exists"""
         self.total_searches += 1
@@ -406,7 +415,9 @@ class QuantizedQdrantWrapper:
         try:
             # Check semantic cache first
             if use_cache:
-                cached_results = await self.semantic_cache.get(query_vector, k, tenant_id, filters)
+                cached_results = await self.semantic_cache.get(
+                    query_vector, k, tenant_id, filters
+                )
                 if cached_results:
                     self.metrics["cache_hits"] += 1
                     self._record_search_latency(start_time, cached=True)
@@ -426,7 +437,10 @@ class QuantizedQdrantWrapper:
             search_request = SearchRequest(
                 vector=query_vector,
                 limit=k,
-                params={"hnsw_ef": ef, "exact": False},  # Use approximate search for speed
+                params={
+                    "hnsw_ef": ef,
+                    "exact": False,
+                },  # Use approximate search for speed
                 with_payload=True,
                 with_vector=False,  # Don't return vectors to save bandwidth
                 score_threshold=0.1,  # Filter low-relevance results
@@ -550,13 +564,17 @@ class QuantizedQdrantWrapper:
 
             vector_operations.add(total_vectors, {"operation": "upsert"})
 
-            logger.info(f"✅ Upserted {total_vectors} vectors to {full_collection_name}")
+            logger.info(
+                f"✅ Upserted {total_vectors} vectors to {full_collection_name}"
+            )
 
             return {
                 "collection": full_collection_name,
                 "vectors_upserted": total_vectors,
                 "batches_processed": (total_vectors + batch_size - 1) // batch_size,
-                "quantization": self.collections[full_collection_name].quantization.quant_name,
+                "quantization": self.collections[
+                    full_collection_name
+                ].quantization.quant_name,
             }
 
         except Exception as e:
@@ -571,7 +589,9 @@ class QuantizedQdrantWrapper:
 
         try:
             await self.client.delete(
-                collection_name=full_collection_name, points_selector=vector_ids, wait=True
+                collection_name=full_collection_name,
+                points_selector=vector_ids,
+                wait=True,
             )
 
             # Update collection metrics
@@ -580,7 +600,10 @@ class QuantizedQdrantWrapper:
 
             vector_operations.add(len(vector_ids), {"operation": "delete"})
 
-            return {"collection": full_collection_name, "vectors_deleted": len(vector_ids)}
+            return {
+                "collection": full_collection_name,
+                "vectors_deleted": len(vector_ids),
+            }
 
         except Exception as e:
             logger.error(f"Vector deletion failed: {e}")
@@ -605,12 +628,16 @@ class QuantizedQdrantWrapper:
                 "vectors_count": collection_info.vectors_count,
                 "indexed_vectors_count": collection_info.indexed_vectors_count,
                 "points_count": collection_info.points_count,
-                "segments_count": len(collection_info.segments) if collection_info.segments else 0,
+                "segments_count": (
+                    len(collection_info.segments) if collection_info.segments else 0
+                ),
                 "config": {
                     "distance": collection_info.config.params.vectors.distance.value,
                     "dimension": collection_info.config.params.vectors.size,
                     "quantization": (
-                        local_collection.quantization.quant_name if local_collection else "unknown"
+                        local_collection.quantization.quant_name
+                        if local_collection
+                        else "unknown"
                     ),
                 },
             }
@@ -691,18 +718,24 @@ class QuantizedQdrantWrapper:
                     )
             else:
                 # Simple equality match
-                conditions.append(FieldCondition(key=field, match=Match(value=condition)))
+                conditions.append(
+                    FieldCondition(key=field, match=Match(value=condition))
+                )
 
         return Filter(must=conditions) if conditions else None
 
-    def _record_search_latency(self, start_time: float, cached: bool = False, error: bool = False):
+    def _record_search_latency(
+        self, start_time: float, cached: bool = False, error: bool = False
+    ):
         """Record search latency metrics"""
         latency_ms = (time.perf_counter() - start_time) * 1000
 
         # Update exponential moving average
         alpha = 0.1
         current_avg = self.metrics["avg_search_latency_ms"]
-        self.metrics["avg_search_latency_ms"] = alpha * latency_ms + (1 - alpha) * current_avg
+        self.metrics["avg_search_latency_ms"] = (
+            alpha * latency_ms + (1 - alpha) * current_avg
+        )
 
         # Log slow searches
         if latency_ms > 1000 and not cached:  # >1s for non-cached

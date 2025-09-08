@@ -39,7 +39,9 @@ class ESCIntegrationConfig:
     auto_refresh: bool = True
     refresh_interval: int = 300
     watch_files: bool = True
-    fallback_env_files: list[str] = field(default_factory=lambda: [".env", ".env.local"])
+    fallback_env_files: list[str] = field(
+        default_factory=lambda: [".env", ".env.local"]
+    )
     enable_audit_logging: bool = True
     backward_compatibility: bool = True
     hot_reload_enabled: bool = True
@@ -140,7 +142,9 @@ class SophiaESCConfig:
             )
         ]
 
-        self.audit_logger = ESCAuditLogger(storage_backends=audit_backends, compliance_mode=True)
+        self.audit_logger = ESCAuditLogger(
+            storage_backends=audit_backends, compliance_mode=True
+        )
 
         await self.audit_logger.start()
 
@@ -235,7 +239,9 @@ class SophiaESCConfig:
                 except Exception as e:
                     logger.warning(f"Failed to set {env_var} from {esc_key}: {e}")
 
-        logger.info(f"Backward compatibility setup complete: {len(self._env_fallbacks)} mappings")
+        logger.info(
+            f"Backward compatibility setup complete: {len(self._env_fallbacks)} mappings"
+        )
 
     async def _start_hot_reload_monitoring(self):
         """Start hot reload monitoring for configuration changes"""
@@ -271,7 +277,8 @@ class SophiaESCConfig:
                     resource=key,
                     message=f"Configuration changed: {key}",
                     context=AuditContext(
-                        service_name="sophia_esc_config", environment=self.config.environment
+                        service_name="sophia_esc_config",
+                        environment=self.config.environment,
                     ),
                     data={
                         "old_value_type": type(old_value).__name__,
@@ -282,7 +289,9 @@ class SophiaESCConfig:
         except Exception as e:
             logger.error(f"Error handling config change for {key}: {e}")
 
-    async def _handle_critical_config_change(self, key: str, new_value: Any, old_value: Any):
+    async def _handle_critical_config_change(
+        self, key: str, new_value: Any, old_value: Any
+    ):
         """Handle changes to critical configuration"""
         if key in self._critical_config_keys:
             logger.warning(f"Critical configuration changed: {key}")
@@ -294,7 +303,8 @@ class SophiaESCConfig:
                     resource=key,
                     message=f"Critical configuration changed: {key}",
                     context=AuditContext(
-                        service_name="sophia_esc_config", environment=self.config.environment
+                        service_name="sophia_esc_config",
+                        environment=self.config.environment,
                     ),
                     data={"critical": True},
                 )
@@ -305,7 +315,9 @@ class SophiaESCConfig:
         for env_var, esc_key in self._env_fallbacks.items():
             if esc_key == key:
                 os.environ[env_var] = str(value)
-                logger.debug(f"Updated environment variable {env_var} with new value from {key}")
+                logger.debug(
+                    f"Updated environment variable {env_var} with new value from {key}"
+                )
                 break
 
     async def _validate_critical_config(self):
@@ -330,7 +342,8 @@ class SophiaESCConfig:
                     resource="critical_config",
                     message=f"Missing critical configuration keys: {missing_critical}",
                     context=AuditContext(
-                        service_name="sophia_esc_config", environment=self.config.environment
+                        service_name="sophia_esc_config",
+                        environment=self.config.environment,
                     ),
                     data={"missing_keys": missing_critical},
                 )
@@ -382,7 +395,8 @@ class SophiaESCConfig:
                     resource="esc_integration",
                     message=f"Fallback mode enabled: {error_message}",
                     context=AuditContext(
-                        service_name="sophia_esc_config", environment=self.config.environment
+                        service_name="sophia_esc_config",
+                        environment=self.config.environment,
                     ),
                     success=False,
                     error_details=error_message,
@@ -418,7 +432,8 @@ class SophiaESCConfig:
                 resource="esc_integration",
                 message="ESC integration initialized successfully",
                 context=AuditContext(
-                    service_name="sophia_esc_config", environment=self.config.environment
+                    service_name="sophia_esc_config",
+                    environment=self.config.environment,
                 ),
                 data={
                     "config_entries": self.runtime_state.config_entries,
@@ -534,7 +549,8 @@ class SophiaESCConfig:
                     resource="esc_integration",
                     message="ESC integration shutdown",
                     context=AuditContext(
-                        service_name="sophia_esc_config", environment=self.config.environment
+                        service_name="sophia_esc_config",
+                        environment=self.config.environment,
                     ),
                 )
                 await self.audit_logger.stop()

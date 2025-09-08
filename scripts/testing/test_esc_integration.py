@@ -196,7 +196,11 @@ class ESCIntegrationTestSuite:
                 )
             except Exception as e:
                 test_result["checks"].append(
-                    {"check": "Configuration Access", "passed": False, "details": f"Error: {e}"}
+                    {
+                        "check": "Configuration Access",
+                        "passed": False,
+                        "details": f"Error: {e}",
+                    }
                 )
 
             test_result["status"] = "passed"
@@ -244,7 +248,9 @@ class ESCIntegrationTestSuite:
                         {
                             "check": f"Load {description}",
                             "passed": (
-                                value is not None if "nonexistent" not in key else value is None
+                                value is not None
+                                if "nonexistent" not in key
+                                else value is None
                             ),
                             "details": f"Key: {key}, Value type: {type(value).__name__}",
                         }
@@ -270,7 +276,11 @@ class ESCIntegrationTestSuite:
                 )
             except Exception as e:
                 test_result["checks"].append(
-                    {"check": "Load All Configurations", "passed": False, "details": f"Error: {e}"}
+                    {
+                        "check": "Load All Configurations",
+                        "passed": False,
+                        "details": f"Error: {e}",
+                    }
                 )
 
             # Test configuration refresh
@@ -285,7 +295,11 @@ class ESCIntegrationTestSuite:
                 )
             except Exception as e:
                 test_result["checks"].append(
-                    {"check": "Configuration Refresh", "passed": False, "details": f"Error: {e}"}
+                    {
+                        "check": "Configuration Refresh",
+                        "passed": False,
+                        "details": f"Error: {e}",
+                    }
                 )
 
             test_result["status"] = "passed"
@@ -342,19 +356,26 @@ class ESCIntegrationTestSuite:
                     SecretType.HUGGINGFACE_API_KEY,
                     "Valid HuggingFace format",
                 ),
-                ("redis://localhost:6379", SecretType.REDIS_CONNECTION, "Valid Redis URL"),
+                (
+                    "redis://localhost:6379",
+                    SecretType.REDIS_CONNECTION,
+                    "Valid Redis URL",
+                ),
                 ("invalid-key", SecretType.OPENAI_API_KEY, "Invalid OpenAI format"),
             ]
 
             for secret_value, secret_type, description in format_tests:
                 try:
-                    result = await validator.validate_secret("test_key", secret_value, secret_type)
+                    result = await validator.validate_secret(
+                        "test_key", secret_value, secret_type
+                    )
                     expected_valid = "Invalid" not in description
 
                     test_result["checks"].append(
                         {
                             "check": f"Format Validation: {description}",
-                            "passed": (result.result.value == "valid") == expected_valid,
+                            "passed": (result.result.value == "valid")
+                            == expected_valid,
                             "details": f"Result: {result.result.value}, Expected valid: {expected_valid}",
                         }
                     )
@@ -388,7 +409,11 @@ class ESCIntegrationTestSuite:
                 )
             except Exception as e:
                 test_result["checks"].append(
-                    {"check": "Batch Secret Validation", "passed": False, "details": f"Error: {e}"}
+                    {
+                        "check": "Batch Secret Validation",
+                        "passed": False,
+                        "details": f"Error: {e}",
+                    }
                 )
 
             # Test validation report
@@ -397,7 +422,8 @@ class ESCIntegrationTestSuite:
                 test_result["checks"].append(
                     {
                         "check": "Validation Report Generation",
-                        "passed": isinstance(report, dict) and "total_validations" in report,
+                        "passed": isinstance(report, dict)
+                        and "total_validations" in report,
                         "details": f"Report generated with {report.get('total_validations', 0)} validations",
                     }
                 )
@@ -436,7 +462,9 @@ class ESCIntegrationTestSuite:
         try:
             # Get Redis configuration from ESC
             redis_url = get_config("infrastructure.redis.url", "redis://localhost:6379")
-            redis_password = await get_secret_config("infrastructure.redis.password", "")
+            redis_password = await get_secret_config(
+                "infrastructure.redis.password", ""
+            )
 
             test_result["checks"].append(
                 {
@@ -448,7 +476,9 @@ class ESCIntegrationTestSuite:
 
             # Test Redis connection using ESC config
             try:
-                redis_client = redis.from_url(redis_url, password=redis_password, socket_timeout=5)
+                redis_client = redis.from_url(
+                    redis_url, password=redis_password, socket_timeout=5
+                )
                 await redis_client.ping()
 
                 # Test basic Redis operations
@@ -487,7 +517,11 @@ class ESCIntegrationTestSuite:
                 )
             except Exception as e:
                 test_result["checks"].append(
-                    {"check": "Redis Config Object", "passed": False, "details": f"Error: {e}"}
+                    {
+                        "check": "Redis Config Object",
+                        "passed": False,
+                        "details": f"Error: {e}",
+                    }
                 )
 
             test_result["status"] = "passed"
@@ -529,7 +563,8 @@ class ESCIntegrationTestSuite:
             try:
                 async with aiohttp.ClientSession() as session:
                     async with session.get(
-                        self.test_endpoints["mcp_status"], timeout=aiohttp.ClientTimeout(total=5)
+                        self.test_endpoints["mcp_status"],
+                        timeout=aiohttp.ClientTimeout(total=5),
                     ) as response:
                         if response.status == 200:
                             mcp_status = await response.json()
@@ -559,7 +594,11 @@ class ESCIntegrationTestSuite:
                 )
             except Exception as e:
                 test_result["checks"].append(
-                    {"check": "MCP Status Endpoint", "passed": False, "details": f"Error: {e}"}
+                    {
+                        "check": "MCP Status Endpoint",
+                        "passed": False,
+                        "details": f"Error: {e}",
+                    }
                 )
 
             test_result["status"] = "passed"
@@ -601,12 +640,16 @@ class ESCIntegrationTestSuite:
                 [
                     {
                         "check": "Qdrant Configuration",
-                        "passed": bool(qdrant_config["api_key"] and qdrant_config["url"]),
+                        "passed": bool(
+                            qdrant_config["api_key"] and qdrant_config["url"]
+                        ),
                         "details": f"API key configured: {bool(qdrant_config['api_key'])}, URL configured: {bool(qdrant_config['url'])}",
                     },
                     {
                         "check": "Weaviate Configuration",
-                        "passed": bool(weaviate_config["api_key"] and weaviate_config["url"]),
+                        "passed": bool(
+                            weaviate_config["api_key"] and weaviate_config["url"]
+                        ),
                         "details": f"API key configured: {bool(weaviate_config['api_key'])}, URL configured: {bool(weaviate_config['url'])}",
                     },
                 ]
@@ -615,7 +658,9 @@ class ESCIntegrationTestSuite:
             # Test Mem0 configuration
             mem0_config = {
                 "api_key": get_config("infrastructure_providers.mem0.api_key"),
-                "url": get_config("infrastructure_providers.mem0.url", "https://api.mem0.ai"),
+                "url": get_config(
+                    "infrastructure_providers.mem0.url", "https://api.mem0.ai"
+                ),
             }
 
             test_result["checks"].append(
@@ -651,7 +696,11 @@ class ESCIntegrationTestSuite:
 
         try:
             # Test WebSocket configuration
-            ws_config = self.esc_config.get_all("application.websocket") if self.esc_config else {}
+            ws_config = (
+                self.esc_config.get_all("application.websocket")
+                if self.esc_config
+                else {}
+            )
 
             test_result["checks"].append(
                 {
@@ -663,18 +712,22 @@ class ESCIntegrationTestSuite:
 
             # Test WebSocket connection parameters
             max_connections = get_config("application.websocket.max_connections", 100)
-            heartbeat_interval = get_config("application.websocket.heartbeat_interval", 30)
+            heartbeat_interval = get_config(
+                "application.websocket.heartbeat_interval", 30
+            )
 
             test_result["checks"].extend(
                 [
                     {
                         "check": "WebSocket Max Connections",
-                        "passed": isinstance(max_connections, int) and max_connections > 0,
+                        "passed": isinstance(max_connections, int)
+                        and max_connections > 0,
                         "details": f"Max connections: {max_connections}",
                     },
                     {
                         "check": "WebSocket Heartbeat Interval",
-                        "passed": isinstance(heartbeat_interval, int) and heartbeat_interval > 0,
+                        "passed": isinstance(heartbeat_interval, int)
+                        and heartbeat_interval > 0,
                         "details": f"Heartbeat interval: {heartbeat_interval}s",
                     },
                 ]
@@ -973,12 +1026,20 @@ class ESCIntegrationTestSuite:
 
         # Calculate overall statistics
         total_tests = len(self.test_results)
-        passed_tests = len([r for r in self.test_results.values() if r.get("status") == "passed"])
-        failed_tests = len([r for r in self.test_results.values() if r.get("status") == "failed"])
-        skipped_tests = len([r for r in self.test_results.values() if r.get("status") == "skipped"])
+        passed_tests = len(
+            [r for r in self.test_results.values() if r.get("status") == "passed"]
+        )
+        failed_tests = len(
+            [r for r in self.test_results.values() if r.get("status") == "failed"]
+        )
+        skipped_tests = len(
+            [r for r in self.test_results.values() if r.get("status") == "skipped"]
+        )
 
         # Count individual checks
-        total_checks = sum(len(result.get("checks", [])) for result in self.test_results.values())
+        total_checks = sum(
+            len(result.get("checks", [])) for result in self.test_results.values()
+        )
         passed_checks = sum(
             len([c for c in result.get("checks", []) if c.get("passed")])
             for result in self.test_results.values()
@@ -998,7 +1059,9 @@ class ESCIntegrationTestSuite:
                 "success_rate": passed_tests / total_tests if total_tests > 0 else 0,
                 "total_checks": total_checks,
                 "passed_checks": passed_checks,
-                "check_success_rate": passed_checks / total_checks if total_checks > 0 else 0,
+                "check_success_rate": (
+                    passed_checks / total_checks if total_checks > 0 else 0
+                ),
             },
             "test_results": self.test_results,
             "system_info": {
@@ -1008,19 +1071,21 @@ class ESCIntegrationTestSuite:
                     [
                         k
                         for k in os.environ.keys()
-                        if any(pattern in k for pattern in ["API", "KEY", "URL", "SECRET"])
+                        if any(
+                            pattern in k for pattern in ["API", "KEY", "URL", "SECRET"]
+                        )
                     ]
                 ),
                 "esc_integration_status": (
-                    self.esc_config.get_status() if self.esc_config else "not_initialized"
+                    self.esc_config.get_status()
+                    if self.esc_config
+                    else "not_initialized"
                 ),
             },
         }
 
         # Save report to file
-        report_filename = (
-            f"esc_integration_test_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
-        )
+        report_filename = f"esc_integration_test_report_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
         with open(report_filename, "w") as f:
             json.dump(report, f, indent=2, default=str)
 
@@ -1038,7 +1103,9 @@ class ESCIntegrationTestSuite:
                 "skipped": "[yellow]SKIPPED[/yellow]",
             }.get(result.get("status"), "[gray]UNKNOWN[/gray]")
 
-            checks_passed = len([c for c in result.get("checks", []) if c.get("passed")])
+            checks_passed = len(
+                [c for c in result.get("checks", []) if c.get("passed")]
+            )
             total_checks = len(result.get("checks", []))
 
             if result.get("started_at") and result.get("completed_at"):
@@ -1070,7 +1137,9 @@ class ESCIntegrationTestSuite:
         console.print(
             f"\n[blue]📊 Overall check success rate: {passed_checks}/{total_checks} ({passed_checks/total_checks*100:.1f}%)[/blue]"
         )
-        console.print(f"[blue]⏱️  Total execution time: {total_duration:.2f} seconds[/blue]")
+        console.print(
+            f"[blue]⏱️  Total execution time: {total_duration:.2f} seconds[/blue]"
+        )
         console.print(f"[blue]📄 Test report saved: {report_filename}[/blue]")
 
         return report

@@ -20,7 +20,9 @@ class PMIntelligenceMCPServer:
     Provides tools for RPE optimization, collaboration gap detection, and strategic alignment
     """
 
-    def __init__(self, rpe_engine, coordinator, sophia_context: Dict, db_pool: asyncpg.Pool):
+    def __init__(
+        self, rpe_engine, coordinator, sophia_context: Dict, db_pool: asyncpg.Pool
+    ):
         self.name = "pm-intelligence"
         self.rpe_engine = rpe_engine
         self.coordinator = coordinator
@@ -31,7 +33,9 @@ class PMIntelligenceMCPServer:
         self.tools = {}
         self.register_tools()
 
-        logger.info(f"PM Intelligence MCP Server initialized with {len(self.tools)} tools")
+        logger.info(
+            f"PM Intelligence MCP Server initialized with {len(self.tools)} tools"
+        )
 
     def register_tools(self):
         """Register all PM intelligence tools"""
@@ -43,7 +47,10 @@ class PMIntelligenceMCPServer:
                     "type": "string",
                     "description": "Type of activity (project, task, okr, etc.)",
                 },
-                "activity_data": {"type": "object", "description": "Activity data dictionary"},
+                "activity_data": {
+                    "type": "object",
+                    "description": "Activity data dictionary",
+                },
                 "source_system": {
                     "type": "string",
                     "description": "Source system (linear, asana, notion, etc.)",
@@ -92,7 +99,11 @@ class PMIntelligenceMCPServer:
             "description": "Natural language query for project intelligence",
             "parameters": {
                 "query": {"type": "string", "description": "Natural language query"},
-                "context": {"type": "object", "description": "Additional context", "default": {}},
+                "context": {
+                    "type": "object",
+                    "description": "Additional context",
+                    "default": {},
+                },
             },
             "handler": self._query_project_intelligence,
         }
@@ -184,10 +195,12 @@ class PMIntelligenceMCPServer:
         enriched_gaps = []
         for gap in gaps:
             enriched_gap = gap.copy()
-            enriched_gap["estimated_resolution_time"] = await self._estimate_gap_resolution_time(
-                gap
+            enriched_gap["estimated_resolution_time"] = (
+                await self._estimate_gap_resolution_time(gap)
             )
-            enriched_gap["success_probability"] = await self._estimate_gap_success_probability(gap)
+            enriched_gap["success_probability"] = (
+                await self._estimate_gap_success_probability(gap)
+            )
             enriched_gaps.append(enriched_gap)
 
         return enriched_gaps
@@ -200,7 +213,8 @@ class PMIntelligenceMCPServer:
         result["performance_metrics"] = {
             "cascade_time": "< 30 seconds",
             "alignment_improvement": f"{result.get('alignment_score', 0) * 100:.1f}%",
-            "projects_created": len(result.get("linear", [])) + len(result.get("asana", [])),
+            "projects_created": len(result.get("linear", []))
+            + len(result.get("asana", [])),
         }
 
         return result
@@ -211,14 +225,18 @@ class PMIntelligenceMCPServer:
 
         # Add execution tracking
         for escalation in escalations:
-            escalation["tracking_id"] = f"esc_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-            escalation["estimated_impact_timeline"] = await self._estimate_escalation_timeline(
-                escalation
+            escalation["tracking_id"] = (
+                f"esc_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            )
+            escalation["estimated_impact_timeline"] = (
+                await self._estimate_escalation_timeline(escalation)
             )
 
         return escalations
 
-    async def _optimize_project_portfolio(self, optimization_target: str = "rpe_maximize") -> Dict:
+    async def _optimize_project_portfolio(
+        self, optimization_target: str = "rpe_maximize"
+    ) -> Dict:
         """Optimize entire project portfolio for RPE"""
 
         # Get all active projects
@@ -277,7 +295,9 @@ class PMIntelligenceMCPServer:
         )
 
         total_projected_rpe = sum(p["rpe_impact"] for p in optimized_portfolio)
-        recommendations = await self._generate_portfolio_recommendations(optimized_portfolio)
+        recommendations = await self._generate_portfolio_recommendations(
+            optimized_portfolio
+        )
 
         return {
             "optimized_order": optimized_portfolio,
@@ -289,7 +309,8 @@ class PMIntelligenceMCPServer:
                     [p for p in optimized_portfolio if p["rpe_impact"] > 2000]
                 ),
                 "average_confidence": (
-                    sum(p["confidence"] for p in optimized_portfolio) / len(optimized_portfolio)
+                    sum(p["confidence"] for p in optimized_portfolio)
+                    / len(optimized_portfolio)
                     if optimized_portfolio
                     else 0
                 ),
@@ -308,7 +329,9 @@ class PMIntelligenceMCPServer:
             },
         }
 
-    async def _query_project_intelligence(self, query: str, context: Dict = None) -> Dict:
+    async def _query_project_intelligence(
+        self, query: str, context: Dict = None
+    ) -> Dict:
         """Natural language query for project intelligence"""
 
         if context is None:
@@ -317,7 +340,13 @@ class PMIntelligenceMCPServer:
         # Enhanced PM context
         pm_context = {
             "service_area": "project_management",
-            "available_data": ["projects", "okrs", "rpe_metrics", "blockages", "market_signals"],
+            "available_data": [
+                "projects",
+                "okrs",
+                "rpe_metrics",
+                "blockages",
+                "market_signals",
+            ],
             "user_context": context,
             "query_timestamp": datetime.utcnow().isoformat(),
         }
@@ -349,7 +378,8 @@ class PMIntelligenceMCPServer:
             }
 
         elif any(
-            keyword in query_lower for keyword in ["gap", "collaboration", "blockage", "missing"]
+            keyword in query_lower
+            for keyword in ["gap", "collaboration", "blockage", "missing"]
         ):
             # Collaboration gap query
             gaps = await self.rpe_engine.detect_collaboration_gaps()
@@ -364,7 +394,8 @@ class PMIntelligenceMCPServer:
             }
 
         elif any(
-            keyword in query_lower for keyword in ["project", "priority", "optimize", "portfolio"]
+            keyword in query_lower
+            for keyword in ["project", "priority", "optimize", "portfolio"]
         ):
             # Project optimization query
             optimization = await self._optimize_project_portfolio()
@@ -451,7 +482,9 @@ class PMIntelligenceMCPServer:
                     if dept not in dept_breakdown:
                         dept_breakdown[dept] = {"projects": 0, "revenue_impact": 0}
                     dept_breakdown[dept]["projects"] += 1
-                    dept_breakdown[dept]["revenue_impact"] += project["revenue_impact"] or 0
+                    dept_breakdown[dept]["revenue_impact"] += (
+                        project["revenue_impact"] or 0
+                    )
 
                 return {
                     "current_metrics": {
@@ -506,7 +539,9 @@ class PMIntelligenceMCPServer:
                     "optimization_opportunity": optimization["total_projected_rpe"]
                     - dashboard_data["current_metrics"]["rpe"],
                 },
-                "critical_gaps": [g for g in gaps if g.get("urgency") == "critical"][:3],
+                "critical_gaps": [g for g in gaps if g.get("urgency") == "critical"][
+                    :3
+                ],
                 "top_opportunities": optimization["optimized_order"][:5],
                 "recommendations": optimization["recommendations"][:5],
                 "executive_summary": await self._generate_executive_summary(
@@ -533,7 +568,9 @@ class PMIntelligenceMCPServer:
                 "generated_at": datetime.utcnow().isoformat(),
                 "trend_analysis": dashboard_data["trends"],
                 "trend_direction": dashboard_data["summary"]["trend_direction"],
-                "trend_insights": await self._generate_trend_insights(dashboard_data["trends"]),
+                "trend_insights": await self._generate_trend_insights(
+                    dashboard_data["trends"]
+                ),
             }
 
     # Helper methods
@@ -564,7 +601,12 @@ class PMIntelligenceMCPServer:
         """Estimate probability of successfully resolving a gap"""
         urgency = gap.get("urgency", "low")
 
-        urgency_probabilities = {"critical": 0.9, "high": 0.8, "medium": 0.7, "low": 0.6}
+        urgency_probabilities = {
+            "critical": 0.9,
+            "high": 0.8,
+            "medium": 0.7,
+            "low": 0.6,
+        }
 
         return urgency_probabilities.get(urgency, 0.6)
 
@@ -579,7 +621,9 @@ class PMIntelligenceMCPServer:
         else:
             return "4-8 weeks"
 
-    async def _generate_portfolio_recommendations(self, portfolio: List[Dict]) -> List[str]:
+    async def _generate_portfolio_recommendations(
+        self, portfolio: List[Dict]
+    ) -> List[str]:
         """Generate recommendations for portfolio optimization"""
         if not portfolio:
             return ["No projects available for optimization"]

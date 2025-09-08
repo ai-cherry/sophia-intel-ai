@@ -92,7 +92,11 @@ class CircuitBreaker:
         logger.info(f"Circuit breaker '{name}' initialized in CLOSED state")
 
     async def call(
-        self, func: Callable[..., T], *args, fallback: Optional[Callable[..., T]] = None, **kwargs
+        self,
+        func: Callable[..., T],
+        *args,
+        fallback: Optional[Callable[..., T]] = None,
+        **kwargs,
     ) -> T:
         """
         Execute function through circuit breaker
@@ -120,12 +124,16 @@ class CircuitBreaker:
                     logger.warning(f"Circuit breaker '{self.name}' is OPEN")
                     if fallback:
                         return await self._execute_fallback(fallback, *args, **kwargs)
-                    raise CircuitBreakerOpenException(f"Circuit breaker '{self.name}' is OPEN")
+                    raise CircuitBreakerOpenException(
+                        f"Circuit breaker '{self.name}' is OPEN"
+                    )
 
             # In HALF_OPEN state, limit concurrent attempts
             if self.state == CircuitState.HALF_OPEN:
                 if self.half_open_attempts >= self.config.half_open_requests:
-                    logger.warning(f"Circuit breaker '{self.name}' HALF_OPEN request limit reached")
+                    logger.warning(
+                        f"Circuit breaker '{self.name}' HALF_OPEN request limit reached"
+                    )
                     if fallback:
                         return await self._execute_fallback(fallback, *args, **kwargs)
                     raise CircuitBreakerOpenException(
@@ -204,7 +212,8 @@ class CircuitBreaker:
         recent_requests = [
             success
             for timestamp, success in self.request_history
-            if (datetime.utcnow() - timestamp).total_seconds() <= self.config.monitoring_window
+            if (datetime.utcnow() - timestamp).total_seconds()
+            <= self.config.monitoring_window
         ]
 
         if len(recent_requests) >= 10:  # Minimum sample size
@@ -223,7 +232,9 @@ class CircuitBreaker:
         if not self.last_failure_time:
             return True
 
-        time_since_failure = (datetime.utcnow() - self.last_failure_time).total_seconds()
+        time_since_failure = (
+            datetime.utcnow() - self.last_failure_time
+        ).total_seconds()
         return time_since_failure >= self.config.timeout
 
     def _transition_to_open(self):
@@ -292,7 +303,9 @@ class CircuitBreaker:
             "total_requests": self.total_requests,
             "total_failures": self.total_failures,
             "total_successes": self.total_successes,
-            "last_failure": self.last_failure_time.isoformat() if self.last_failure_time else None,
+            "last_failure": (
+                self.last_failure_time.isoformat() if self.last_failure_time else None
+            ),
             "last_state_change": self.last_state_change.isoformat(),
             "uptime": (datetime.utcnow() - self.last_state_change).total_seconds(),
             "success_rate": (
@@ -371,13 +384,21 @@ class CircuitBreakerGroup:
         """Get status of all circuit breakers in the group"""
         return {
             "group": self.name,
-            "breakers": {name: breaker.get_status() for name, breaker in self.breakers.items()},
+            "breakers": {
+                name: breaker.get_status() for name, breaker in self.breakers.items()
+            },
             "summary": {
                 "total": len(self.breakers),
-                "open": sum(1 for b in self.breakers.values() if b.state == CircuitState.OPEN),
-                "closed": sum(1 for b in self.breakers.values() if b.state == CircuitState.CLOSED),
+                "open": sum(
+                    1 for b in self.breakers.values() if b.state == CircuitState.OPEN
+                ),
+                "closed": sum(
+                    1 for b in self.breakers.values() if b.state == CircuitState.CLOSED
+                ),
                 "half_open": sum(
-                    1 for b in self.breakers.values() if b.state == CircuitState.HALF_OPEN
+                    1
+                    for b in self.breakers.values()
+                    if b.state == CircuitState.HALF_OPEN
                 ),
             },
         }

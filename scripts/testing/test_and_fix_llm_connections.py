@@ -137,7 +137,9 @@ class LLMConnectionFixer:
                 "model": config["test_model"],
                 "latency_ms": latency,
                 "response": (
-                    response.choices[0].message.content if response.choices else "No response"
+                    response.choices[0].message.content
+                    if response.choices
+                    else "No response"
                 ),
             }
 
@@ -204,7 +206,9 @@ class LLMConnectionFixer:
         print("=" * 60)
 
         # Test each provider
-        tasks = [self.test_provider(name, config) for name, config in self.PROVIDERS.items()]
+        tasks = [
+            self.test_provider(name, config) for name, config in self.PROVIDERS.items()
+        ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -248,23 +252,31 @@ class LLMConnectionFixer:
         for provider in self.failed_providers:
             result = self.results.get(provider, {})
             if result.get("diagnosis") == "Rate limit or quota exceeded":
-                recommendations.append(f"Upgrade {provider} plan or implement rate limiting")
+                recommendations.append(
+                    f"Upgrade {provider} plan or implement rate limiting"
+                )
             elif result.get("diagnosis") == "Authentication failed - invalid API key":
                 recommendations.append(f"Update {provider} API key in Portkey")
 
         # General recommendations
         if len(self.working_providers) < 3:
-            recommendations.append("Critical: Less than 3 providers working - add backup providers")
+            recommendations.append(
+                "Critical: Less than 3 providers working - add backup providers"
+            )
 
         if "groq" in self.failed_providers and "groq" in [
             p
             for p in self.failed_providers
             if "timeout" in str(self.results.get(p, {}).get("diagnosis", ""))
         ]:
-            recommendations.append("Consider using smaller Groq models for better reliability")
+            recommendations.append(
+                "Consider using smaller Groq models for better reliability"
+            )
 
         if len(self.working_providers) >= 6:
-            recommendations.append("Good coverage - consider load balancing across providers")
+            recommendations.append(
+                "Good coverage - consider load balancing across providers"
+            )
 
         return recommendations
 
@@ -346,7 +358,9 @@ async def main():
         await fixer.fix_connections()
 
     # Save report
-    report_file = f"llm_diagnostic_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_file = (
+        f"llm_diagnostic_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
@@ -358,7 +372,9 @@ async def main():
         print(f"\n✅ System operational with {summary['working']} providers")
         return 0
     else:
-        print(f"\n⚠️  Only {summary['working']} providers working (minimum {min_required} required)")
+        print(
+            f"\n⚠️  Only {summary['working']} providers working (minimum {min_required} required)"
+        )
         return 1
 
 

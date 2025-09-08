@@ -20,7 +20,10 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.ai_logger import logger
-from app.embeddings.agno_embedding_service import AgnoEmbeddingRequest, AgnoEmbeddingService
+from app.embeddings.agno_embedding_service import (
+    AgnoEmbeddingRequest,
+    AgnoEmbeddingService,
+)
 
 # ============================================
 # Benchmark Configuration
@@ -296,7 +299,9 @@ class EmbeddingBenchmark:
                 "latency_ms": response.latency_ms,
             }
 
-            logger.info(f"{use_case.upper()}: {response.model_used} ({response.provider})")
+            logger.info(
+                f"{use_case.upper()}: {response.model_used} ({response.provider})"
+            )
 
         logger.info()
 
@@ -312,7 +317,9 @@ class EmbeddingBenchmark:
             requests = [AgnoEmbeddingRequest(texts=[text]) for text in texts]
 
             start = time.perf_counter()
-            responses = await asyncio.gather(*[self.service.embed(req) for req in requests])
+            responses = await asyncio.gather(
+                *[self.service.embed(req) for req in requests]
+            )
             total_time = time.perf_counter() - start
 
             throughput = level / total_time
@@ -445,12 +452,18 @@ class EmbeddingBenchmark:
 
         # Check cache hit rate
         total_tests += 1
-        if self.metrics["cache"]["cache_hit_rate"] >= PERFORMANCE_TARGETS["cache_hit_rate"]:
+        if (
+            self.metrics["cache"]["cache_hit_rate"]
+            >= PERFORMANCE_TARGETS["cache_hit_rate"]
+        ):
             passed_tests += 1
 
         # Check cost reduction
         total_tests += 1
-        if self.metrics["cost"]["cost_reduction"] >= PERFORMANCE_TARGETS["cost_reduction"]:
+        if (
+            self.metrics["cost"]["cost_reduction"]
+            >= PERFORMANCE_TARGETS["cost_reduction"]
+        ):
             passed_tests += 1
 
         # Check throughput
@@ -471,7 +484,9 @@ class EmbeddingBenchmark:
         logger.info(
             f"• Single Embedding Latency: {self.metrics['single_embedding']['avg_latency_ms']:.2f}ms"
         )
-        logger.info(f"• Batch-100 Latency: {self.metrics['batch_100']['latency_ms']:.2f}ms")
+        logger.info(
+            f"• Batch-100 Latency: {self.metrics['batch_100']['latency_ms']:.2f}ms"
+        )
         logger.info(f"• Cache Hit Rate: {self.metrics['cache']['cache_hit_rate']:.2%}")
         logger.info(f"• Cost Reduction: {self.metrics['cost']['cost_reduction']:.1%}")
         logger.info(
@@ -491,13 +506,19 @@ class EmbeddingBenchmark:
             logger.info("   - Using smaller models for simple queries")
             logger.info("   - Implementing request batching")
 
-        if self.metrics["cache"]["cache_hit_rate"] < PERFORMANCE_TARGETS["cache_hit_rate"]:
+        if (
+            self.metrics["cache"]["cache_hit_rate"]
+            < PERFORMANCE_TARGETS["cache_hit_rate"]
+        ):
             logger.info("⚠️ Cache hit rate below target. Consider:")
             logger.info("   - Increasing cache size")
             logger.info("   - Implementing better cache key generation")
             logger.info("   - Using LRU cache with longer TTL")
 
-        if self.metrics["cost"]["cost_reduction"] < PERFORMANCE_TARGETS["cost_reduction"]:
+        if (
+            self.metrics["cost"]["cost_reduction"]
+            < PERFORMANCE_TARGETS["cost_reduction"]
+        ):
             logger.info("⚠️ Cost reduction below target. Consider:")
             logger.info("   - More aggressive caching")
             logger.info("   - Using cheaper models when appropriate")
@@ -522,11 +543,15 @@ class EmbeddingBenchmark:
             "performance_targets": PERFORMANCE_TARGETS,
             "metrics": self.metrics,
             "summary": {
-                "single_embedding_latency_ms": self.metrics["single_embedding"]["avg_latency_ms"],
+                "single_embedding_latency_ms": self.metrics["single_embedding"][
+                    "avg_latency_ms"
+                ],
                 "batch_100_latency_ms": self.metrics["batch_100"]["latency_ms"],
                 "cache_hit_rate": self.metrics["cache"]["cache_hit_rate"],
                 "cost_reduction": self.metrics["cost"]["cost_reduction"],
-                "peak_throughput": self.metrics["concurrent_20"]["throughput_per_second"],
+                "peak_throughput": self.metrics["concurrent_20"][
+                    "throughput_per_second"
+                ],
             },
         }
 

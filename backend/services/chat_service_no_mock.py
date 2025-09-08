@@ -9,7 +9,11 @@ import os
 from datetime import datetime
 from typing import Dict, List
 
-from backend.services.feature_flags import FeatureFlags, get_available_models, require_feature
+from backend.services.feature_flags import (
+    FeatureFlags,
+    get_available_models,
+    require_feature,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +179,8 @@ class ChatService:
                 "usage": {
                     "input_tokens": response.usage.input_tokens,
                     "output_tokens": response.usage.output_tokens,
-                    "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
+                    "total_tokens": response.usage.input_tokens
+                    + response.usage.output_tokens,
                 },
             }
 
@@ -239,7 +244,9 @@ Run `./scripts/setup_free_api_keys.sh` for setup guide."""
 Run: `./scripts/setup_free_api_keys.sh` for detailed guide."""
 
         # Business/sales queries
-        elif any(word in query_lower for word in ["sales", "revenue", "business", "crm"]):
+        elif any(
+            word in query_lower for word in ["sales", "revenue", "business", "crm"]
+        ):
             response = """Business analysis requires AI integration. Current status:
 
 • Basic business logic: ✅ Available
@@ -250,7 +257,9 @@ Run: `./scripts/setup_free_api_keys.sh` for detailed guide."""
 Add API keys to unlock advanced business features."""
 
         # Technical queries
-        elif any(word in query_lower for word in ["code", "debug", "error", "technical"]):
+        elif any(
+            word in query_lower for word in ["code", "debug", "error", "technical"]
+        ):
             response = """Technical assistance available with limited functionality:
 
 • Basic code review: ✅ Available
@@ -290,5 +299,7 @@ I can still help with basic queries and guidance!"""
         """Save chat message to database"""
         # This would integrate with database
         # For now, just log
-        logger.info(f"Chat message for user {user_id}: {message.get('response', '')[:50]}...")
+        logger.info(
+            f"Chat message for user {user_id}: {message.get('response', '')[:50]}..."
+        )
         return True

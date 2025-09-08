@@ -51,11 +51,15 @@ class LambdaLabsConfig:
         """Load configuration from environment variables"""
         return cls(
             api_key=os.getenv("LAMBDA_LABS_API_KEY", ""),
-            api_endpoint=os.getenv("LAMBDA_LABS_ENDPOINT", "https://cloud.lambdalabs.com/api/v1"),
-            preferred_gpu_types=os.getenv("LAMBDA_LABS_GPU_TYPES", "A100,H100,RTX_6000_Ada").split(
-                ","
+            api_endpoint=os.getenv(
+                "LAMBDA_LABS_ENDPOINT", "https://cloud.lambdalabs.com/api/v1"
             ),
-            preferred_regions=os.getenv("LAMBDA_LABS_REGIONS", "us-east-1,us-west-1").split(","),
+            preferred_gpu_types=os.getenv(
+                "LAMBDA_LABS_GPU_TYPES", "A100,H100,RTX_6000_Ada"
+            ).split(","),
+            preferred_regions=os.getenv(
+                "LAMBDA_LABS_REGIONS", "us-east-1,us-west-1"
+            ).split(","),
             min_instances=int(os.getenv("LAMBDA_LABS_MIN_INSTANCES", "1")),
             max_instances=int(os.getenv("LAMBDA_LABS_MAX_INSTANCES", "10")),
             max_hourly_cost=float(os.getenv("LAMBDA_LABS_MAX_COST", "50.0")),
@@ -103,7 +107,9 @@ class LambdaLabsClient:
     async def get_instance_types(self) -> list[dict[str, Any]]:
         """Get available GPU instance types and pricing"""
         try:
-            async with self.session.get(f"{self.config.api_endpoint}/instance-types") as response:
+            async with self.session.get(
+                f"{self.config.api_endpoint}/instance-types"
+            ) as response:
                 response.raise_for_status()
                 data = await response.json()
                 return data.get("data", [])
@@ -156,13 +162,19 @@ class LambdaLabsClient:
                 instance_data = data.get("data", {})
                 return GPUInstance(
                     instance_id=instance_data.get("id", ""),
-                    instance_type=instance_data.get("instance_type", {}).get("name", ""),
-                    gpu_type=instance_data.get("instance_type", {}).get("description", ""),
+                    instance_type=instance_data.get("instance_type", {}).get(
+                        "name", ""
+                    ),
+                    gpu_type=instance_data.get("instance_type", {}).get(
+                        "description", ""
+                    ),
                     region=instance_data.get("region", {}).get("name", ""),
                     status=instance_data.get("status", ""),
                     ip_address=instance_data.get("ip", ""),
                     cost_per_hour=float(
-                        instance_data.get("instance_type", {}).get("price_cents_per_hour", 0)
+                        instance_data.get("instance_type", {}).get(
+                            "price_cents_per_hour", 0
+                        )
                     )
                     / 100,
                     created_at=(
@@ -181,7 +193,9 @@ class LambdaLabsClient:
     async def list_instances(self) -> list[GPUInstance]:
         """List all instances"""
         try:
-            async with self.session.get(f"{self.config.api_endpoint}/instances") as response:
+            async with self.session.get(
+                f"{self.config.api_endpoint}/instances"
+            ) as response:
                 response.raise_for_status()
                 data = await response.json()
 
@@ -189,18 +203,26 @@ class LambdaLabsClient:
                 for instance_data in data.get("data", []):
                     instance = GPUInstance(
                         instance_id=instance_data.get("id", ""),
-                        instance_type=instance_data.get("instance_type", {}).get("name", ""),
-                        gpu_type=instance_data.get("instance_type", {}).get("description", ""),
+                        instance_type=instance_data.get("instance_type", {}).get(
+                            "name", ""
+                        ),
+                        gpu_type=instance_data.get("instance_type", {}).get(
+                            "description", ""
+                        ),
                         region=instance_data.get("region", {}).get("name", ""),
                         status=instance_data.get("status", ""),
                         ip_address=instance_data.get("ip", ""),
                         cost_per_hour=float(
-                            instance_data.get("instance_type", {}).get("price_cents_per_hour", 0)
+                            instance_data.get("instance_type", {}).get(
+                                "price_cents_per_hour", 0
+                            )
                         )
                         / 100,
                         created_at=(
                             datetime.fromisoformat(
-                                instance_data.get("created_at", "").replace("Z", "+00:00")
+                                instance_data.get("created_at", "").replace(
+                                    "Z", "+00:00"
+                                )
                             )
                             if instance_data.get("created_at")
                             else None
@@ -257,7 +279,9 @@ class SophiaAIWorkloadManager:
         self.active_instances: dict[str, GPUInstance] = {}
         self.workload_queue: list[dict[str, Any]] = []
 
-    async def get_optimal_instance_type(self, workload_type: str = "ai_agent") -> str | None:
+    async def get_optimal_instance_type(
+        self, workload_type: str = "ai_agent"
+    ) -> str | None:
         """Get optimal instance type for workload"""
 
         instance_types = await self.client.get_instance_types()
@@ -281,7 +305,9 @@ class SophiaAIWorkloadManager:
             },
         }
 
-        preferences = workload_preferences.get(workload_type, workload_preferences["ai_agent"])
+        preferences = workload_preferences.get(
+            workload_type, workload_preferences["ai_agent"]
+        )
 
         # Filter and rank instance types
         suitable_instances = []
@@ -329,7 +355,9 @@ class SophiaAIWorkloadManager:
             target_instances = min(current_count + 1, self.config.max_instances)
 
         if target_instances <= current_count:
-            logger.info(f"No scale-up needed. Current: {current_count}, Target: {target_instances}")
+            logger.info(
+                f"No scale-up needed. Current: {current_count}, Target: {target_instances}"
+            )
             return []
 
         instances_to_launch = target_instances - current_count
@@ -347,7 +375,9 @@ class SophiaAIWorkloadManager:
             # Try different regions for availability
             for region in self.config.preferred_regions:
                 instance_name = f"sophia-ai-agent-{int(time.time())}-{i}"
-                instance = await self.client.launch_instance(instance_type, region, instance_name)
+                instance = await self.client.launch_instance(
+                    instance_type, region, instance_name
+                )
 
                 if instance:
                     self.active_instances[instance.instance_id] = instance
@@ -405,7 +435,9 @@ class SophiaAIWorkloadManager:
         }
 
         current_count = len(self.active_instances)
-        total_cost_per_hour = sum(inst.cost_per_hour for inst in self.active_instances.values())
+        total_cost_per_hour = sum(
+            inst.cost_per_hour for inst in self.active_instances.values()
+        )
 
         # Calculate average utilization (simulated for now)
         # In production, you'd get real metrics from monitoring agents
@@ -490,19 +522,25 @@ class CostOptimizer:
                         "gpu_type": instance.gpu_type,
                     }
                 cost_breakdown[instance.instance_type]["count"] += 1
-                cost_breakdown[instance.instance_type]["hourly_cost"] += instance.cost_per_hour
+                cost_breakdown[instance.instance_type][
+                    "hourly_cost"
+                ] += instance.cost_per_hour
 
         # Optimization recommendations
         recommendations = []
 
         if current_hourly_cost > 10:
-            recommendations.append("Consider using spot instances for non-critical workloads")
+            recommendations.append(
+                "Consider using spot instances for non-critical workloads"
+            )
 
         if len(instances) > 5:
             recommendations.append("Evaluate if all instances are actively used")
 
         if monthly_cost > 1000:
-            recommendations.append("Consider reserved instances for long-term workloads")
+            recommendations.append(
+                "Consider reserved instances for long-term workloads"
+            )
 
         return {
             "current_hourly_cost": current_hourly_cost,
@@ -573,7 +611,9 @@ async def main():
         # Monitor and analyze costs
         cost_optimizer = CostOptimizer(workload_manager)
         cost_analysis = await cost_optimizer.analyze_costs()
-        logger.info(f"Cost analysis: ${cost_analysis['estimated_monthly_cost']:.2f}/month")
+        logger.info(
+            f"Cost analysis: ${cost_analysis['estimated_monthly_cost']:.2f}/month"
+        )
 
         # Get optimization suggestions
         suggestions = await cost_optimizer.suggest_optimizations()

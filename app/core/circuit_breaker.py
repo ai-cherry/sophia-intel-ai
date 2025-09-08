@@ -71,7 +71,9 @@ class CircuitBreaker(Generic[T]):
         self.last_state_change: datetime = datetime.now()
 
         # Sliding window for metrics
-        self.call_metrics: deque[CallMetrics] = deque(maxlen=self.config.sliding_window_size)
+        self.call_metrics: deque[CallMetrics] = deque(
+            maxlen=self.config.sliding_window_size
+        )
 
         # Statistics
         self.total_calls = 0
@@ -93,7 +95,9 @@ class CircuitBreaker(Generic[T]):
             if self.state == CircuitState.OPEN:
                 if await self._should_attempt_reset():
                     self.state = CircuitState.HALF_OPEN
-                    logger.info(f"Circuit breaker '{self.name}' entering HALF_OPEN state")
+                    logger.info(
+                        f"Circuit breaker '{self.name}' entering HALF_OPEN state"
+                    )
                 else:
                     raise CircuitOpenException(
                         f"Circuit breaker '{self.name}' is OPEN. "
@@ -168,7 +172,10 @@ class CircuitBreaker(Generic[T]):
             # Add to metrics
             self.call_metrics.append(
                 CallMetrics(
-                    timestamp=datetime.now(), duration=duration, success=False, exception=exception
+                    timestamp=datetime.now(),
+                    duration=duration,
+                    success=False,
+                    exception=exception,
                 )
             )
 
@@ -219,7 +226,9 @@ class CircuitBreaker(Generic[T]):
             return False
 
         recent_metrics = list(self.call_metrics)
-        slow_calls = sum(1 for m in recent_metrics if m.duration >= self.config.slow_call_duration)
+        slow_calls = sum(
+            1 for m in recent_metrics if m.duration >= self.config.slow_call_duration
+        )
         slow_rate = slow_calls / len(recent_metrics)
 
         return slow_rate >= self.config.slow_call_rate_threshold
@@ -280,7 +289,9 @@ class CircuitBreaker(Generic[T]):
 
     def get_state(self) -> dict[str, Any]:
         """Get current state and metrics"""
-        success_rate = self.total_successes / self.total_calls if self.total_calls > 0 else 0
+        success_rate = (
+            self.total_successes / self.total_calls if self.total_calls > 0 else 0
+        )
 
         return {
             "name": self.name,
@@ -335,7 +346,9 @@ class CircuitBreakerManager:
     def get_open_circuits(self) -> list[str]:
         """Get list of open circuits"""
         return [
-            name for name, breaker in self._breakers.items() if breaker.state == CircuitState.OPEN
+            name
+            for name, breaker in self._breakers.items()
+            if breaker.state == CircuitState.OPEN
         ]
 
 
@@ -343,7 +356,9 @@ class CircuitBreakerManager:
 _circuit_manager = CircuitBreakerManager()
 
 
-def get_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
+def get_circuit_breaker(
+    name: str, config: Optional[CircuitBreakerConfig] = None
+) -> CircuitBreaker:
     """Get or create a circuit breaker"""
     return _circuit_manager.get_or_create(name, config)
 
@@ -368,7 +383,9 @@ def with_circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = Non
                 import concurrent.futures
 
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, breaker.call(func, *args, **kwargs))
+                    future = executor.submit(
+                        asyncio.run, breaker.call(func, *args, **kwargs)
+                    )
                     return future.result()
             except RuntimeError:
                 # No running loop, safe to use asyncio.run
@@ -390,7 +407,10 @@ def get_llm_circuit_breaker() -> CircuitBreaker:
     return get_circuit_breaker(
         "llm",
         CircuitBreakerConfig(
-            failure_threshold=3, timeout=30, slow_call_duration=10, expected_exception=(Exception,)
+            failure_threshold=3,
+            timeout=30,
+            slow_call_duration=10,
+            expected_exception=(Exception,),
         ),
     )
 
@@ -400,7 +420,10 @@ def get_weaviate_circuit_breaker() -> CircuitBreaker:
     return get_circuit_breaker(
         "weaviate",
         CircuitBreakerConfig(
-            failure_threshold=5, timeout=20, slow_call_duration=3, expected_exception=(Exception,)
+            failure_threshold=5,
+            timeout=20,
+            slow_call_duration=3,
+            expected_exception=(Exception,),
         ),
     )
 
@@ -410,7 +433,10 @@ def get_redis_circuit_breaker() -> CircuitBreaker:
     return get_circuit_breaker(
         "redis",
         CircuitBreakerConfig(
-            failure_threshold=10, timeout=10, slow_call_duration=1, expected_exception=(Exception,)
+            failure_threshold=10,
+            timeout=10,
+            slow_call_duration=1,
+            expected_exception=(Exception,),
         ),
     )
 
@@ -420,6 +446,9 @@ def get_webhook_circuit_breaker() -> CircuitBreaker:
     return get_circuit_breaker(
         "webhook",
         CircuitBreakerConfig(
-            failure_threshold=3, timeout=60, slow_call_duration=5, expected_exception=(Exception,)
+            failure_threshold=3,
+            timeout=60,
+            slow_call_duration=5,
+            expected_exception=(Exception,),
         ),
     )

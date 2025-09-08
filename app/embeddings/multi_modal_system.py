@@ -182,7 +182,9 @@ class EmbeddingCache:
     def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         now = datetime.now()
-        active_count = sum(1 for cached in self._memory_cache.values() if cached.expires_at > now)
+        active_count = sum(
+            1 for cached in self._memory_cache.values() if cached.expires_at > now
+        )
         expired_count = len(self._memory_cache) - active_count
 
         return {
@@ -218,8 +220,14 @@ class MultiModalEmbeddings:
         },
         "huggingface": {
             "models": {
-                "sentence-transformers/all-MiniLM-L6-v2": {"dimensions": 384, "max_tokens": 512},
-                "sentence-transformers/all-mpnet-base-v2": {"dimensions": 768, "max_tokens": 514},
+                "sentence-transformers/all-MiniLM-L6-v2": {
+                    "dimensions": 384,
+                    "max_tokens": 512,
+                },
+                "sentence-transformers/all-mpnet-base-v2": {
+                    "dimensions": 768,
+                    "max_tokens": 514,
+                },
             },
             "default_model": "sentence-transformers/all-mpnet-base-v2",
         },
@@ -325,7 +333,9 @@ class MultiModalEmbeddings:
             self._stats["embeddings_generated"] += 1
             self._stats["total_tokens"] += metadata.tokens
 
-            logger.debug(f"Generated {embedding_type.value} embedding for {content[:50]}...")
+            logger.debug(
+                f"Generated {embedding_type.value} embedding for {content[:50]}..."
+            )
             return vector, metadata
 
         except Exception as e:
@@ -377,19 +387,25 @@ class MultiModalEmbeddings:
                     self._stats["cache_hits"] += 1
                 else:
                     results.append(None)  # Placeholder
-                    uncached_items.append((content, emb_type, metadatas[i] if metadatas else None))
+                    uncached_items.append(
+                        (content, emb_type, metadatas[i] if metadatas else None)
+                    )
                     uncached_indices.append(i)
                     self._stats["cache_misses"] += 1
         else:
             # No cache, process all items
             for i, (content, emb_type) in enumerate(zip(contents, embedding_types)):
-                uncached_items.append((content, emb_type, metadatas[i] if metadatas else None))
+                uncached_items.append(
+                    (content, emb_type, metadatas[i] if metadatas else None)
+                )
                 uncached_indices.append(i)
                 results.append(None)  # Placeholder
 
         # Process uncached items in batches
         if uncached_items:
-            logger.info(f"Processing {len(uncached_items)} uncached embeddings in batches")
+            logger.info(
+                f"Processing {len(uncached_items)} uncached embeddings in batches"
+            )
 
             for batch_start in range(0, len(uncached_items), self.batch_size):
                 batch_end = min(batch_start + self.batch_size, len(uncached_items))
@@ -436,7 +452,9 @@ class MultiModalEmbeddings:
 
         return results
 
-    async def _call_embedding_api(self, content: str, provider: str, model: str) -> np.ndarray:
+    async def _call_embedding_api(
+        self, content: str, provider: str, model: str
+    ) -> np.ndarray:
         """Call embedding API for single content"""
         try:
             client = self.portkey_manager.get_client(provider)
@@ -462,10 +480,14 @@ class MultiModalEmbeddings:
                 model=model, input=contents, encoding_format="float"
             )
 
-            return [np.array(item.embedding, dtype=np.float32) for item in response.data]
+            return [
+                np.array(item.embedding, dtype=np.float32) for item in response.data
+            ]
 
         except Exception as e:
-            logger.error(f"Batch embedding API call failed for provider {provider}: {e}")
+            logger.error(
+                f"Batch embedding API call failed for provider {provider}: {e}"
+            )
             raise
 
     async def generate_hierarchical_embeddings(
@@ -485,7 +507,9 @@ class MultiModalEmbeddings:
         from .chunking_strategies import CodeChunker
 
         chunker = CodeChunker(language=language)
-        hierarchical_chunks = chunker.create_hierarchical_chunks(file_content, file_path)
+        hierarchical_chunks = chunker.create_hierarchical_chunks(
+            file_content, file_path
+        )
 
         results = {}
 
@@ -519,7 +543,9 @@ class MultiModalEmbeddings:
                 level_embeddings.extend(level_results)
 
             results[level] = level_embeddings
-            logger.info(f"Generated {len(level_embeddings)} embeddings for level {level}")
+            logger.info(
+                f"Generated {len(level_embeddings)} embeddings for level {level}"
+            )
 
         return results
 
@@ -556,7 +582,9 @@ class MultiModalEmbeddings:
                 # Test with a simple embedding
                 test_content = "This is a test."
                 await self._call_embedding_api(
-                    test_content, provider, self.provider_configs[provider]["default_model"]
+                    test_content,
+                    provider,
+                    self.provider_configs[provider]["default_model"],
                 )
                 results[provider] = {"status": "healthy", "error": None}
             except Exception as e:
@@ -564,7 +592,9 @@ class MultiModalEmbeddings:
 
         return {
             "overall_status": (
-                "healthy" if all(r["status"] == "healthy" for r in results.values()) else "degraded"
+                "healthy"
+                if all(r["status"] == "healthy" for r in results.values())
+                else "degraded"
             ),
             "providers": results,
             "timestamp": datetime.now().isoformat(),

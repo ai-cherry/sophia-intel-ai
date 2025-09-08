@@ -286,7 +286,10 @@ class DeploymentManager:
                 task="Conduct comprehensive weekly strategic analysis including market trends, competitive landscape, and strategic recommendations for the upcoming week.",
                 priority=1,
                 requester="automated_system",
-                context_data={"report_type": "weekly_strategy", "include_market_analysis": True},
+                context_data={
+                    "report_type": "weekly_strategy",
+                    "include_market_analysis": True,
+                },
             ),
             schedule_config=weekly_strategy_schedule,
             daily_cost_limit=20.0,
@@ -294,7 +297,9 @@ class DeploymentManager:
             tags=["weekly", "automated", "strategy"],
         )
 
-        self.deployment_templates["weekly_strategic_planning"] = weekly_strategy_template
+        self.deployment_templates["weekly_strategic_planning"] = (
+            weekly_strategy_template
+        )
         self.schedule_configs["weekly_strategy_schedule"] = weekly_strategy_schedule
 
         # Code Quality Monitoring (Hourly during work hours)
@@ -351,7 +356,10 @@ class DeploymentManager:
             description="Event-driven emergency response and analysis",
             schedule_type=ScheduleType.EVENT_DRIVEN,
             trigger_events=["system_alert", "critical_error", "security_breach"],
-            event_conditions={"severity": "critical", "requires_immediate_response": True},
+            event_conditions={
+                "severity": "critical",
+                "requires_immediate_response": True,
+            },
             max_concurrent_runs=3,
             max_daily_runs=10,
             timeout_minutes=5,
@@ -382,7 +390,10 @@ class DeploymentManager:
                 task="Immediate analysis and response to critical system event. Provide rapid assessment and recommended actions.",
                 priority=1,
                 requester="emergency_system",
-                context_data={"response_type": "emergency", "immediate_action_required": True},
+                context_data={
+                    "response_type": "emergency",
+                    "immediate_action_required": True,
+                },
             ),
             schedule_config=emergency_schedule,
             daily_cost_limit=20.0,
@@ -394,7 +405,9 @@ class DeploymentManager:
         self.deployment_templates["emergency_response_system"] = emergency_template
         self.schedule_configs["emergency_response"] = emergency_schedule
 
-        logger.info(f"Initialized {len(self.deployment_templates)} default deployment templates")
+        logger.info(
+            f"Initialized {len(self.deployment_templates)} default deployment templates"
+        )
 
     async def start_scheduler(self):
         """Start the background scheduler"""
@@ -469,7 +482,11 @@ class DeploymentManager:
 
         # Check concurrent runs
         active_runs = len(
-            [r for r in self.active_runs.values() if r.template_id == template.template_id]
+            [
+                r
+                for r in self.active_runs.values()
+                if r.template_id == template.template_id
+            ]
         )
 
         if active_runs >= schedule.max_concurrent_runs:
@@ -496,7 +513,11 @@ class DeploymentManager:
         if schedule.cron_expression:
             # For demo purposes, check basic patterns
             if schedule.cron_expression == "0 8 * * 1-5":  # 8 AM weekdays
-                return now.hour == 8 and now.minute == 0 and now.weekday() in [0, 1, 2, 3, 4]
+                return (
+                    now.hour == 8
+                    and now.minute == 0
+                    and now.weekday() in [0, 1, 2, 3, 4]
+                )
             elif schedule.cron_expression == "0 9 * * 1":  # 9 AM Monday
                 return now.hour == 9 and now.minute == 0 and now.weekday() == 0
 
@@ -533,7 +554,9 @@ class DeploymentManager:
 
         return True  # First run
 
-    async def _check_conditional_schedule(self, schedule: ScheduleConfig, now: datetime) -> bool:
+    async def _check_conditional_schedule(
+        self, schedule: ScheduleConfig, now: datetime
+    ) -> bool:
         """Check conditional schedule (placeholder for complex conditions)"""
 
         # This would implement complex conditional logic
@@ -546,27 +569,37 @@ class DeploymentManager:
         # Check daily cost limit
         today = datetime.now().date()
         daily_cost = sum(
-            r.total_cost for r in self.run_history if r.started_at and r.started_at.date() == today
+            r.total_cost
+            for r in self.run_history
+            if r.started_at and r.started_at.date() == today
         )
 
         if (
             daily_cost + template.swarm_factory_config.max_cost_per_execution
             > template.daily_cost_limit
         ):
-            logger.warning(f"Daily cost limit would be exceeded for {template.template_id}")
+            logger.warning(
+                f"Daily cost limit would be exceeded for {template.template_id}"
+            )
             return False
 
         # Check monthly cost limit (simplified)
-        month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_start = datetime.now().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0
+        )
         monthly_cost = sum(
-            r.total_cost for r in self.run_history if r.started_at and r.started_at >= month_start
+            r.total_cost
+            for r in self.run_history
+            if r.started_at and r.started_at >= month_start
         )
 
         if (
             monthly_cost + template.swarm_factory_config.max_cost_per_execution
             > template.monthly_cost_limit
         ):
-            logger.warning(f"Monthly cost limit would be exceeded for {template.template_id}")
+            logger.warning(
+                f"Monthly cost limit would be exceeded for {template.template_id}"
+            )
             return False
 
         return True
@@ -592,7 +625,9 @@ class DeploymentManager:
 
         try:
             # Create and execute swarm
-            from app.factory.comprehensive_swarm_factory import get_comprehensive_factory
+            from app.factory.comprehensive_swarm_factory import (
+                get_comprehensive_factory,
+            )
 
             factory = get_comprehensive_factory()
             swarm_id = await factory.create_swarm(template.swarm_factory_config)
@@ -601,10 +636,14 @@ class DeploymentManager:
             deployment_run.status = DeploymentStatus.RUNNING
             deployment_run.started_at = datetime.now()
 
-            logger.info(f"Started deployment run {run_id} for template {template.template_id}")
+            logger.info(
+                f"Started deployment run {run_id} for template {template.template_id}"
+            )
 
             # Execute the swarm
-            result = await factory.execute_swarm(swarm_id, template.execution_context_template)
+            result = await factory.execute_swarm(
+                swarm_id, template.execution_context_template
+            )
 
             # Update deployment run with results
             deployment_run.completed_at = datetime.now()
@@ -625,7 +664,9 @@ class DeploymentManager:
                 deployment_run.error_message = (
                     "; ".join(result.errors) if result.errors else "Unknown error"
                 )
-                logger.error(f"Deployment run {run_id} failed: {deployment_run.error_message}")
+                logger.error(
+                    f"Deployment run {run_id} failed: {deployment_run.error_message}"
+                )
 
             # Send notifications if configured
             await self._send_deployment_notifications(template, deployment_run, result)
@@ -669,7 +710,9 @@ class DeploymentManager:
                     notification_config = DeliveryConfig(
                         channel=channel,
                         priority=(
-                            DeliveryPriority.HIGH if not run.success else DeliveryPriority.NORMAL
+                            DeliveryPriority.HIGH
+                            if not run.success
+                            else DeliveryPriority.NORMAL
                         ),
                         auto_summarize_long_content=True,
                     )
@@ -717,14 +760,18 @@ class DeploymentManager:
 
         # Calculate daily cost
         daily_cost = sum(
-            r.total_cost for r in self.run_history if r.started_at and r.started_at.date() == today
+            r.total_cost
+            for r in self.run_history
+            if r.started_at and r.started_at.date() == today
         )
         self.deployment_metrics["daily_cost"] = daily_cost
 
         # Calculate monthly cost
         month_start = datetime.now().replace(day=1)
         monthly_cost = sum(
-            r.total_cost for r in self.run_history if r.started_at and r.started_at >= month_start
+            r.total_cost
+            for r in self.run_history
+            if r.started_at and r.started_at >= month_start
         )
         self.deployment_metrics["monthly_cost"] = monthly_cost
 
@@ -749,7 +796,10 @@ class DeploymentManager:
             ) / total_runs
 
     async def trigger_event_deployment(
-        self, event: str, event_data: dict[str, Any], priority_override: Optional[int] = None
+        self,
+        event: str,
+        event_data: dict[str, Any],
+        priority_override: Optional[int] = None,
     ):
         """Trigger event-driven deployments"""
 
@@ -788,7 +838,9 @@ class DeploymentManager:
         """Add a deployment template"""
         self.deployment_templates[template.template_id] = template
         if template.schedule_config:
-            self.schedule_configs[template.schedule_config.schedule_id] = template.schedule_config
+            self.schedule_configs[template.schedule_config.schedule_id] = (
+                template.schedule_config
+            )
         logger.info(f"Added deployment template: {template.name}")
 
     def remove_deployment_template(self, template_id: str) -> bool:
@@ -812,13 +864,16 @@ class DeploymentManager:
         success_rate = 0.0
         if self.deployment_metrics["total_runs"] > 0:
             success_rate = (
-                self.deployment_metrics["successful_runs"] / self.deployment_metrics["total_runs"]
+                self.deployment_metrics["successful_runs"]
+                / self.deployment_metrics["total_runs"]
             )
 
         return {
             "overview": {
                 "total_templates": len(self.deployment_templates),
-                "active_schedules": len([s for s in self.schedule_configs.values() if s.enabled]),
+                "active_schedules": len(
+                    [s for s in self.schedule_configs.values() if s.enabled]
+                ),
                 "active_runs": len(self.active_runs),
                 "total_runs": self.deployment_metrics["total_runs"],
                 "success_rate": success_rate,
@@ -834,7 +889,9 @@ class DeploymentManager:
                     "run_id": run.run_id,
                     "template_id": run.template_id,
                     "status": run.status.value,
-                    "started_at": run.started_at.isoformat() if run.started_at else None,
+                    "started_at": (
+                        run.started_at.isoformat() if run.started_at else None
+                    ),
                     "duration_ms": run.duration_ms,
                 }
                 for run in self.active_runs.values()
@@ -847,10 +904,14 @@ class DeploymentManager:
                     "success": run.success,
                     "cost": run.total_cost,
                     "duration_ms": run.duration_ms,
-                    "started_at": run.started_at.isoformat() if run.started_at else None,
+                    "started_at": (
+                        run.started_at.isoformat() if run.started_at else None
+                    ),
                 }
                 for run in sorted(
-                    self.run_history, key=lambda r: r.started_at or datetime.min, reverse=True
+                    self.run_history,
+                    key=lambda r: r.started_at or datetime.min,
+                    reverse=True,
                 )[:10]
             ],
             "scheduler_status": {
@@ -889,4 +950,6 @@ async def stop_automated_deployments():
 async def trigger_emergency_response(event_data: dict[str, Any]):
     """Trigger emergency response deployment"""
     manager = get_deployment_manager()
-    return await manager.trigger_event_deployment("system_alert", event_data, priority_override=1)
+    return await manager.trigger_event_deployment(
+        "system_alert", event_data, priority_override=1
+    )

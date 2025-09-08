@@ -33,7 +33,9 @@ def get_changed_files() -> list[str]:
 
         # Warn if too many files changed
         if len(changed_files) > 1000:
-            logger.warning(f"Large number of changed files detected: {len(changed_files)}")
+            logger.warning(
+                f"Large number of changed files detected: {len(changed_files)}"
+            )
 
         return changed_files
 
@@ -84,13 +86,16 @@ async def incremental_index(batch_size: int = 100):
                 logger.error(f"Failed to reindex {file_path}: {str(e)}")
                 failed_count += 1
 
-    logger.info(f"Incremental indexing complete. Indexed: {indexed_count}, Failed: {failed_count}")
+    logger.info(
+        f"Incremental indexing complete. Indexed: {indexed_count}, Failed: {failed_count}"
+    )
 
 
 if __name__ == "__main__":
     # Setup basic logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run the async function

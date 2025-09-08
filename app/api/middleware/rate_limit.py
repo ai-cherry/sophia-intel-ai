@@ -24,7 +24,9 @@ class InMemoryRateLimiter:
 
     def __init__(self):
         # Structure: {client_id: {endpoint: deque of timestamps}}
-        self.requests: dict[str, dict[str, deque]] = defaultdict(lambda: defaultdict(deque))
+        self.requests: dict[str, dict[str, deque]] = defaultdict(
+            lambda: defaultdict(deque)
+        )
         self.global_requests: deque = deque()
         self.lock = asyncio.Lock()
 
@@ -41,7 +43,9 @@ class InMemoryRateLimiter:
 
             # Clean old requests for this client/endpoint
             client_endpoint_requests = self.requests[client_id][endpoint]
-            while client_endpoint_requests and client_endpoint_requests[0] < window_start:
+            while (
+                client_endpoint_requests and client_endpoint_requests[0] < window_start
+            ):
                 client_endpoint_requests.popleft()
 
             current_requests = len(client_endpoint_requests)
@@ -60,7 +64,9 @@ class InMemoryRateLimiter:
             reset_time = int(now + window_seconds)
             return True, current_requests + 1, reset_time
 
-    async def check_global_limit(self, limit: int, window_seconds: int = 60) -> tuple[bool, int]:
+    async def check_global_limit(
+        self, limit: int, window_seconds: int = 60
+    ) -> tuple[bool, int]:
         """
         Check global rate limit across all clients
         Returns (is_allowed, current_global_requests)
@@ -143,11 +149,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         # Check global concurrent requests
         global_allowed, global_count = await self.rate_limiter.check_global_limit(
-            self.max_concurrent, window_seconds=1  # 1 second window for concurrent requests
+            self.max_concurrent,
+            window_seconds=1,  # 1 second window for concurrent requests
         )
 
         if not global_allowed:
-            logger.warning(f"Global rate limit exceeded: {global_count}/{self.max_concurrent}")
+            logger.warning(
+                f"Global rate limit exceeded: {global_count}/{self.max_concurrent}"
+            )
             return self._create_rate_limit_response(
                 "Too many concurrent requests globally",
                 rate_limit,
@@ -175,7 +184,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
             # Add rate limiting headers
             response.headers["X-RateLimit-Limit"] = str(rate_limit)
-            response.headers["X-RateLimit-Remaining"] = str(max(0, rate_limit - requests_made))
+            response.headers["X-RateLimit-Remaining"] = str(
+                max(0, rate_limit - requests_made)
+            )
             response.headers["X-RateLimit-Reset"] = str(reset_time)
             response.headers["X-RateLimit-Window"] = "60"
 

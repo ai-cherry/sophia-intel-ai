@@ -68,7 +68,10 @@ class MCPArchitectureValidator:
                 await test_function()
             except Exception as e:
                 self.log(f"❌ Category {category_name} failed: {e}", "ERROR")
-                self.test_results["tests"][category_name] = {"status": "failed", "error": str(e)}
+                self.test_results["tests"][category_name] = {
+                    "status": "failed",
+                    "error": str(e),
+                }
                 self.test_results["summary"]["failed"] += 1
 
             self.test_results["summary"]["total"] += 1
@@ -201,7 +204,9 @@ class MCPArchitectureValidator:
                             read_data = read_response.json()
                             if read_data.get("success"):
                                 content_size = read_data.get("size", 0)
-                                self.log(f"✅ Filesystem read_file: {content_size} bytes")
+                                self.log(
+                                    f"✅ Filesystem read_file: {content_size} bytes"
+                                )
 
                                 self.test_results["tests"]["Filesystem Operations"] = {
                                     "status": "passed",
@@ -213,7 +218,9 @@ class MCPArchitectureValidator:
 
                         raise Exception("Read file operation failed")
                     else:
-                        raise Exception(f"List directory failed: {list_data.get('error')}")
+                        raise Exception(
+                            f"List directory failed: {list_data.get('error')}"
+                        )
                 else:
                     raise Exception(f"HTTP {list_response.status_code}")
 
@@ -244,7 +251,9 @@ class MCPArchitectureValidator:
                     if data.get("success"):
                         files = data.get("files", [])
                         is_clean = data.get("clean", False)
-                        self.log(f"✅ Git status: {len(files)} changed files, clean={is_clean}")
+                        self.log(
+                            f"✅ Git status: {len(files)} changed files, clean={is_clean}"
+                        )
 
                         self.test_results["tests"]["Git Operations"] = {
                             "status": "passed",
@@ -312,7 +321,9 @@ class MCPArchitectureValidator:
 
                         raise Exception("Memory retrieve failed")
                     else:
-                        raise Exception(f"Memory store failed: {store_data.get('error')}")
+                        raise Exception(
+                            f"Memory store failed: {store_data.get('error')}"
+                        )
                 else:
                     raise Exception(f"HTTP {store_response.status_code}")
 
@@ -344,7 +355,9 @@ class MCPArchitectureValidator:
                         dimensions = data.get("dimensions", 0)
                         model = data.get("model", "unknown")
 
-                        self.log(f"✅ Embeddings generated: {dimensions}D vector, model={model}")
+                        self.log(
+                            f"✅ Embeddings generated: {dimensions}D vector, model={model}"
+                        )
 
                         self.test_results["tests"]["Embeddings Operations"] = {
                             "status": "passed",
@@ -354,7 +367,9 @@ class MCPArchitectureValidator:
                         }
                         self.test_results["summary"]["passed"] += 1
                     else:
-                        raise Exception(f"Embeddings generation failed: {data.get('error')}")
+                        raise Exception(
+                            f"Embeddings generation failed: {data.get('error')}"
+                        )
                 else:
                     raise Exception(f"HTTP {response.status_code}")
 
@@ -386,11 +401,17 @@ class MCPArchitectureValidator:
 
                         if status == "healthy":
                             healthy_servers += 1
-                            self.log(f"  ✅ {server_name} ({domain}/{capability}): {status}")
+                            self.log(
+                                f"  ✅ {server_name} ({domain}/{capability}): {status}"
+                            )
                         else:
-                            self.log(f"  ⚠️ {server_name} ({domain}/{capability}): {status}")
+                            self.log(
+                                f"  ⚠️ {server_name} ({domain}/{capability}): {status}"
+                            )
 
-                    self.log(f"✅ Server management: {healthy_servers}/{total_servers} healthy")
+                    self.log(
+                        f"✅ Server management: {healthy_servers}/{total_servers} healthy"
+                    )
 
                     self.test_results["tests"]["Server Management"] = {
                         "status": "passed",
@@ -422,7 +443,9 @@ class MCPArchitectureValidator:
                     active_connections = data.get("active_connections", 0)
                     servers = data.get("servers", {})
 
-                    self.log(f"✅ Connections: {active_connections}/{total_connections} active")
+                    self.log(
+                        f"✅ Connections: {active_connections}/{total_connections} active"
+                    )
 
                     # Log server utilization
                     for server_name, server_stats in servers.items():
@@ -502,7 +525,9 @@ class MCPArchitectureValidator:
 
         if total > 0:
             pass_rate = (passed / total) * 100
-            self.log(f"Overall Test Results: {passed}/{total} passed ({pass_rate:.1f}%)")
+            self.log(
+                f"Overall Test Results: {passed}/{total} passed ({pass_rate:.1f}%)"
+            )
 
             if pass_rate >= 80:
                 self.log("🎉 MCP Architecture: HEALTHY", "SUCCESS")

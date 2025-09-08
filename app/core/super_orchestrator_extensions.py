@@ -8,7 +8,11 @@ import json
 from datetime import datetime
 from typing import Any
 
-from app.core.orchestrator_enhancements import RegisteredSystem, SystemStatus, SystemType
+from app.core.orchestrator_enhancements import (
+    RegisteredSystem,
+    SystemStatus,
+    SystemType,
+)
 
 
 class SuperOrchestratorExtensions:
@@ -83,7 +87,10 @@ class SuperOrchestratorExtensions:
             status=SystemStatus.IDLE,
             capabilities=self.swarm_configs.get(swarm_type, {}).get("capabilities", []),
             config=self.swarm_configs.get(swarm_type, {}),
-            metadata={"swarm_type": swarm_type, "created_at": datetime.now().isoformat()},
+            metadata={
+                "swarm_type": swarm_type,
+                "created_at": datetime.now().isoformat(),
+            },
         )
 
         await self.registry.register(swarm_system)
@@ -113,7 +120,9 @@ class SuperOrchestratorExtensions:
 
         return swarm_id
 
-    async def process_natural_language(self, command: str, context: dict = None) -> dict:
+    async def process_natural_language(
+        self, command: str, context: dict = None
+    ) -> dict:
         """
         Process natural language commands for complete system control.
         This is the main interface for natural language control.
@@ -213,7 +222,9 @@ class SuperOrchestratorExtensions:
             system = self.registry.systems.get(swarm_id)
             if system:
                 system.metrics["last_execution"] = datetime.now().isoformat()
-                system.metrics["total_executions"] = system.metrics.get("total_executions", 0) + 1
+                system.metrics["total_executions"] = (
+                    system.metrics.get("total_executions", 0) + 1
+                )
 
             # Update status back to active
             await self.registry.update_status(swarm_id, SystemStatus.ACTIVE)
@@ -293,7 +304,9 @@ class SuperOrchestratorExtensions:
 
         elif cmd_type == "spawn_swarm":
             # Spawn a micro-swarm
-            return await self.spawn_micro_swarm(command.get("swarm_type"), command.get("task"))
+            return await self.spawn_micro_swarm(
+                command.get("swarm_type"), command.get("task")
+            )
 
         elif cmd_type == "get_overview":
             # Get system overview

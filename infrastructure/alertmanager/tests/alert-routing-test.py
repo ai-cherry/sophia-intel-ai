@@ -18,7 +18,9 @@ class AlertRoutingTest:
         self.api_url = f"{alertmanager_url}/api/v2"
         self.test_results = []
 
-    def create_alert(self, labels: Dict[str, str], annotations: Dict[str, str] = None) -> Dict:
+    def create_alert(
+        self, labels: Dict[str, str], annotations: Dict[str, str] = None
+    ) -> Dict:
         """Create a test alert with specified labels"""
         alert = {
             "labels": labels,
@@ -113,10 +115,14 @@ class AlertRoutingTest:
 
                 if self.verify_alert_routing(alert, test_case["expected_receiver"]):
                     print(f"  ✓ Alert routed to {test_case['expected_receiver']}")
-                    self.test_results.append({"test": test_case["name"], "result": "PASS"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "PASS"}
+                    )
                 else:
                     print("  ✗ Alert routing verification failed")
-                    self.test_results.append({"test": test_case["name"], "result": "FAIL"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "FAIL"}
+                    )
             else:
                 print("  ✗ Failed to send alert")
                 self.test_results.append({"test": test_case["name"], "result": "FAIL"})
@@ -171,10 +177,14 @@ class AlertRoutingTest:
 
                 if self.verify_alert_routing(alert, test_case["expected_receiver"]):
                     print(f"  ✓ Alert routed to {test_case['expected_receiver']}")
-                    self.test_results.append({"test": test_case["name"], "result": "PASS"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "PASS"}
+                    )
                 else:
                     print("  ✗ Alert routing verification failed")
-                    self.test_results.append({"test": test_case["name"], "result": "FAIL"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "FAIL"}
+                    )
             else:
                 print("  ✗ Failed to send alert")
                 self.test_results.append({"test": test_case["name"], "result": "FAIL"})
@@ -216,10 +226,14 @@ class AlertRoutingTest:
 
                 if self.verify_alert_routing(alert, test_case["expected_receiver"]):
                     print(f"  ✓ Alert routed to {test_case['expected_receiver']}")
-                    self.test_results.append({"test": test_case["name"], "result": "PASS"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "PASS"}
+                    )
                 else:
                     print("  ✗ Alert routing verification failed")
-                    self.test_results.append({"test": test_case["name"], "result": "FAIL"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "FAIL"}
+                    )
             else:
                 print("  ✗ Failed to send alert")
                 self.test_results.append({"test": test_case["name"], "result": "FAIL"})
@@ -261,10 +275,14 @@ class AlertRoutingTest:
 
                 if self.verify_alert_routing(alert, test_case["expected_receiver"]):
                     print(f"  ✓ Alert routed to {test_case['expected_receiver']}")
-                    self.test_results.append({"test": test_case["name"], "result": "PASS"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "PASS"}
+                    )
                 else:
                     print("  ✗ Alert routing verification failed")
-                    self.test_results.append({"test": test_case["name"], "result": "FAIL"})
+                    self.test_results.append(
+                        {"test": test_case["name"], "result": "FAIL"}
+                    )
             else:
                 print("  ✗ Failed to send alert")
                 self.test_results.append({"test": test_case["name"], "result": "FAIL"})
@@ -377,7 +395,15 @@ def main():
     )
     parser.add_argument(
         "--test",
-        choices=["all", "artemis", "sophia", "infrastructure", "keda", "grouping", "inhibition"],
+        choices=[
+            "all",
+            "artemis",
+            "sophia",
+            "infrastructure",
+            "keda",
+            "grouping",
+            "inhibition",
+        ],
         default="all",
         help="Test to run",
     )

@@ -330,7 +330,11 @@ IMPLEMENTATION_FORMATIONS = {
         "description": "Complete implementation team with all specialists",
         "duration_estimate": "45-90 minutes",
         "use_case": "Complex implementation challenges requiring all expertise areas",
-        "problem_analysts": ["implementation_god", "problem_destroyer", "architecture_commander"],
+        "problem_analysts": [
+            "implementation_god",
+            "problem_destroyer",
+            "architecture_commander",
+        ],
         "solution_designers": [
             "solution_architect",
             "architecture_commander",
@@ -369,7 +373,11 @@ IMPLEMENTATION_FORMATIONS = {
         "description": "Architecture-focused team for design challenges",
         "duration_estimate": "30-60 minutes",
         "use_case": "Complex architectural decisions and design challenges",
-        "problem_analysts": ["architecture_commander", "problem_destroyer", "integration_master"],
+        "problem_analysts": [
+            "architecture_commander",
+            "problem_destroyer",
+            "integration_master",
+        ],
         "solution_designers": [
             "architecture_commander",
             "solution_architect",
@@ -386,7 +394,11 @@ IMPLEMENTATION_FORMATIONS = {
         "duration_estimate": "20-45 minutes",
         "use_case": "API integration, system connectivity, and cross-service challenges",
         "problem_analysts": ["integration_master", "problem_destroyer"],
-        "solution_designers": ["integration_master", "api_specialist", "solution_architect"],
+        "solution_designers": [
+            "integration_master",
+            "api_specialist",
+            "solution_architect",
+        ],
         "implementers": ["api_specialist", "code_surgeon", "integration_master"],
         "validators": ["testing_overlord", "validation_specialist", "quality_enforcer"],
         "collaboration_patterns": ["consensus", "expert"],
@@ -396,8 +408,16 @@ IMPLEMENTATION_FORMATIONS = {
         "description": "Quality-focused team for high-standards implementation",
         "duration_estimate": "35-70 minutes",
         "use_case": "Production-critical implementations requiring highest quality standards",
-        "problem_analysts": ["quality_enforcer", "problem_destroyer", "security_analyst"],
-        "solution_designers": ["solution_architect", "architecture_commander", "performance_guru"],
+        "problem_analysts": [
+            "quality_enforcer",
+            "problem_destroyer",
+            "security_analyst",
+        ],
+        "solution_designers": [
+            "solution_architect",
+            "architecture_commander",
+            "performance_guru",
+        ],
         "implementers": ["code_surgeon", "refactoring_ninja", "implementation_god"],
         "validators": [
             "quality_enforcer",
@@ -418,7 +438,11 @@ COLLABORATION_PATTERNS = {
         "max_agents": 6,
         "rounds": 3,
         "consensus_threshold": 0.75,
-        "use_for": ["architecture_decisions", "complex_problems", "controversial_solutions"],
+        "use_for": [
+            "architecture_decisions",
+            "complex_problems",
+            "controversial_solutions",
+        ],
         "time_multiplier": 1.5,
     },
     "consensus": {
@@ -446,7 +470,11 @@ COLLABORATION_PATTERNS = {
         "min_agents": 1,
         "max_agents": 1,
         "expertise_threshold": 0.90,
-        "use_for": ["specialized_tasks", "domain_specific_problems", "focused_analysis"],
+        "use_for": [
+            "specialized_tasks",
+            "domain_specific_problems",
+            "focused_analysis",
+        ],
         "time_multiplier": 1.0,
     },
     "swarm": {
@@ -455,7 +483,11 @@ COLLABORATION_PATTERNS = {
         "min_agents": 6,
         "max_agents": 16,
         "coordination_complexity": "high",
-        "use_for": ["complex_integrations", "system_redesigns", "major_implementations"],
+        "use_for": [
+            "complex_integrations",
+            "system_redesigns",
+            "major_implementations",
+        ],
         "time_multiplier": 2.0,
     },
 }
@@ -565,7 +597,14 @@ SUCCESS_METRICS = {
 EXECUTION_STRATEGIES = {
     "quality_first": {
         "description": "Quality and correctness prioritized over speed",
-        "phases": ["analysis", "design", "debate", "consensus", "implement", "validate"],
+        "phases": [
+            "analysis",
+            "design",
+            "debate",
+            "consensus",
+            "implement",
+            "validate",
+        ],
         "quality_gates_enforced": True,
         "consensus_required": True,
         "validation_intensive": True,

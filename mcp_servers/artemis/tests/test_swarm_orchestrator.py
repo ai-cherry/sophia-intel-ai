@@ -417,7 +417,11 @@ class TestPerformance:
         """Test concurrent intent processing"""
         swarm = create_artemis_swarm(mock_config)
 
-        intents = ["Create API endpoint 1", "Create API endpoint 2", "Create API endpoint 3"]
+        intents = [
+            "Create API endpoint 1",
+            "Create API endpoint 2",
+            "Create API endpoint 3",
+        ]
 
         # Process intents concurrently
         tasks = [swarm.process_intent(intent) for intent in intents]

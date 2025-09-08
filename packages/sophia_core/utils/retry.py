@@ -31,7 +31,11 @@ class RetryConfig:
 
 
 def calculate_backoff(
-    attempt: int, initial_delay: float, exponential_base: float, max_delay: float, jitter: bool
+    attempt: int,
+    initial_delay: float,
+    exponential_base: float,
+    max_delay: float,
+    jitter: bool,
 ) -> float:
     """Calculate the backoff delay for a given attempt."""
     delay = min(initial_delay * (exponential_base**attempt), max_delay)

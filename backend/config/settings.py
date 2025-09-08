@@ -38,20 +38,30 @@ class Settings(BaseSettings):
 
     # AI Services
     openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
-    anthropic_api_key: Optional[str] = Field(default=None, description="Anthropic API key")
+    anthropic_api_key: Optional[str] = Field(
+        default=None, description="Anthropic API key"
+    )
 
     # Slack Integration
     slack_bot_token: Optional[str] = Field(default=None, description="Slack bot token")
-    slack_signing_secret: Optional[str] = Field(default=None, description="Slack signing secret")
+    slack_signing_secret: Optional[str] = Field(
+        default=None, description="Slack signing secret"
+    )
     slack_app_token: Optional[str] = Field(default=None, description="Slack app token")
 
     # Notion Integration
     notion_api_key: Optional[str] = Field(default=None, description="Notion API key")
-    notion_database_id: Optional[str] = Field(default=None, description="Notion database ID")
+    notion_database_id: Optional[str] = Field(
+        default=None, description="Notion database ID"
+    )
 
     # Asana Integration
-    asana_access_token: Optional[str] = Field(default=None, description="Asana access token")
-    asana_workspace_id: Optional[str] = Field(default=None, description="Asana workspace ID")
+    asana_access_token: Optional[str] = Field(
+        default=None, description="Asana access token"
+    )
+    asana_workspace_id: Optional[str] = Field(
+        default=None, description="Asana workspace ID"
+    )
 
     # Linear Integration
     linear_api_key: Optional[str] = Field(default=None, description="Linear API key")
@@ -68,7 +78,9 @@ class Settings(BaseSettings):
 
     # Rate Limiting
     rate_limit_tier: str = Field(default="tier_3", description="Rate limit tier")
-    rate_limit_requests_per_minute: int = Field(default=200, description="Requests per minute")
+    rate_limit_requests_per_minute: int = Field(
+        default=200, description="Requests per minute"
+    )
     rate_limit_burst: int = Field(default=500, description="Burst limit")
 
     # Security
@@ -88,7 +100,9 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", description="Logging level")
 
     # File Storage
-    upload_max_size: int = Field(default=10485760, description="Max upload size in bytes (10MB)")
+    upload_max_size: int = Field(
+        default=10485760, description="Max upload size in bytes (10MB)"
+    )
     upload_allowed_types: List[str] = Field(
         default=["pdf", "docx", "txt", "md", "json", "csv"],
         description="Allowed file types for upload",
@@ -102,20 +116,36 @@ class Settings(BaseSettings):
     smtp_use_tls: bool = Field(default=True, description="Use TLS for SMTP")
 
     # Feature Flags
-    enable_slack_integration: bool = Field(default=True, description="Enable Slack integration")
-    enable_notion_integration: bool = Field(default=True, description="Enable Notion integration")
-    enable_asana_integration: bool = Field(default=True, description="Enable Asana integration")
-    enable_linear_integration: bool = Field(default=True, description="Enable Linear integration")
-    enable_gong_integration: bool = Field(default=True, description="Enable Gong integration")
-    enable_anthropic_reasoning: bool = Field(default=True, description="Enable Anthropic reasoning")
+    enable_slack_integration: bool = Field(
+        default=True, description="Enable Slack integration"
+    )
+    enable_notion_integration: bool = Field(
+        default=True, description="Enable Notion integration"
+    )
+    enable_asana_integration: bool = Field(
+        default=True, description="Enable Asana integration"
+    )
+    enable_linear_integration: bool = Field(
+        default=True, description="Enable Linear integration"
+    )
+    enable_gong_integration: bool = Field(
+        default=True, description="Enable Gong integration"
+    )
+    enable_anthropic_reasoning: bool = Field(
+        default=True, description="Enable Anthropic reasoning"
+    )
     enable_vector_search: bool = Field(default=True, description="Enable vector search")
-    enable_knowledge_graph: bool = Field(default=True, description="Enable knowledge graph")
+    enable_knowledge_graph: bool = Field(
+        default=True, description="Enable knowledge graph"
+    )
 
     # Model Configuration
     embedding_model: str = Field(
         default="all-mpnet-base-v2", description="Sentence transformer model"
     )
-    anthropic_model: str = Field(default="claude-3-opus-20240805", description="Anthropic model")
+    anthropic_model: str = Field(
+        default="claude-3-opus-20240805", description="Anthropic model"
+    )
     openai_model: str = Field(default="gpt-4", description="OpenAI model")
 
     # Cache Configuration
@@ -127,7 +157,9 @@ class Settings(BaseSettings):
         default="project_knowledge", description="Vector collection name"
     )
     vector_embedding_size: int = Field(default=768, description="Embedding vector size")
-    vector_search_limit: int = Field(default=10, description="Default search result limit")
+    vector_search_limit: int = Field(
+        default=10, description="Default search result limit"
+    )
     vector_confidence_threshold: float = Field(
         default=0.7, description="Minimum confidence threshold"
     )
@@ -137,17 +169,27 @@ class Settings(BaseSettings):
         default=0.7, description="Intent classification threshold"
     )
     intent_cache_ttl: int = Field(default=3600, description="Intent analysis cache TTL")
-    intent_max_reasoning_tokens: int = Field(default=1000, description="Max tokens for reasoning")
+    intent_max_reasoning_tokens: int = Field(
+        default=1000, description="Max tokens for reasoning"
+    )
 
     # Slack Configuration
-    slack_rate_limit_tier: str = Field(default="tier_3", description="Slack rate limit tier")
+    slack_rate_limit_tier: str = Field(
+        default="tier_3", description="Slack rate limit tier"
+    )
     slack_webhook_timeout: int = Field(default=10, description="Slack webhook timeout")
     slack_retry_attempts: int = Field(default=3, description="Slack API retry attempts")
 
     # Knowledge Management
-    knowledge_auto_capture: bool = Field(default=True, description="Auto-capture knowledge")
-    knowledge_insight_generation: bool = Field(default=True, description="Generate insights")
-    knowledge_graph_updates: bool = Field(default=True, description="Update knowledge graph")
+    knowledge_auto_capture: bool = Field(
+        default=True, description="Auto-capture knowledge"
+    )
+    knowledge_insight_generation: bool = Field(
+        default=True, description="Generate insights"
+    )
+    knowledge_graph_updates: bool = Field(
+        default=True, description="Update knowledge graph"
+    )
 
     @validator("cors_origins", pre=True)
     def parse_cors_origins(cls, v):

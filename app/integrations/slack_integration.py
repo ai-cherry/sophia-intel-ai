@@ -98,7 +98,10 @@ class SlackIntegrationError(Exception):
     """Custom exception for Slack integration errors"""
 
     def __init__(
-        self, message: str, error_code: Optional[str] = None, response_data: Optional[dict] = None
+        self,
+        message: str,
+        error_code: Optional[str] = None,
+        response_data: Optional[dict] = None,
     ):
         super().__init__(message)
         self.error_code = error_code
@@ -159,7 +162,9 @@ class SlackClient:
         try:
             async with httpx.AsyncClient() as client:
                 if method.upper() == "GET":
-                    response = await client.get(url, headers=self.headers, params=params)
+                    response = await client.get(
+                        url, headers=self.headers, params=params
+                    )
                 elif method.upper() == "POST":
                     response = await client.post(url, headers=self.headers, json=data)
                 else:
@@ -202,9 +207,13 @@ class SlackClient:
                 return result
 
         except httpx.HTTPError as e:
-            raise SlackIntegrationError(f"HTTP error during Slack API request: {str(e)}")
+            raise SlackIntegrationError(
+                f"HTTP error during Slack API request: {str(e)}"
+            )
         except json.JSONDecodeError as e:
-            raise SlackIntegrationError(f"Failed to decode Slack API response: {str(e)}")
+            raise SlackIntegrationError(
+                f"Failed to decode Slack API response: {str(e)}"
+            )
 
     async def test_connection(self) -> dict[str, Any]:
         """Test the Slack API connection and return auth information"""
@@ -293,7 +302,11 @@ class SlackClient:
 
         try:
             result = await self._make_request("POST", "chat.delete", data=data)
-            return {"success": True, "channel": result.get("channel"), "ts": result.get("ts")}
+            return {
+                "success": True,
+                "channel": result.get("channel"),
+                "ts": result.get("ts"),
+            }
         except SlackIntegrationError as e:
             return {"success": False, "error": str(e), "error_code": e.error_code}
 
@@ -310,7 +323,9 @@ class SlackClient:
             params["types"] = "public_channel,private_channel"
 
         try:
-            result = await self._make_request("GET", "conversations.list", params=params)
+            result = await self._make_request(
+                "GET", "conversations.list", params=params
+            )
             channels = []
             for channel_data in result.get("channels", []):
                 channel = SlackChannel(
@@ -334,7 +349,9 @@ class SlackClient:
         params = {"channel": channel}
 
         try:
-            result = await self._make_request("GET", "conversations.info", params=params)
+            result = await self._make_request(
+                "GET", "conversations.info", params=params
+            )
             channel_data = result.get("channel", {})
 
             channel_info = SlackChannel(
@@ -419,7 +436,9 @@ class SlackClient:
             params["latest"] = latest
 
         try:
-            result = await self._make_request("GET", "conversations.history", params=params)
+            result = await self._make_request(
+                "GET", "conversations.history", params=params
+            )
             messages = result.get("messages", [])
 
             return {
@@ -459,7 +478,11 @@ async def send_slack_message(channel: str, text: str, **kwargs) -> dict[str, Any
         client = SlackClient()
         return await client.send_message(channel, text, **kwargs)
     except SlackIntegrationError as e:
-        return {"success": False, "error": str(e), "error_code": getattr(e, "error_code", None)}
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": getattr(e, "error_code", None),
+        }
 
 
 async def test_slack_connection() -> dict[str, Any]:
@@ -468,7 +491,11 @@ async def test_slack_connection() -> dict[str, Any]:
         client = SlackClient()
         return await client.test_connection()
     except SlackIntegrationError as e:
-        return {"success": False, "error": str(e), "error_code": getattr(e, "error_code", None)}
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": getattr(e, "error_code", None),
+        }
 
 
 async def get_slack_channels() -> dict[str, Any]:
@@ -477,4 +504,8 @@ async def get_slack_channels() -> dict[str, Any]:
         client = SlackClient()
         return await client.list_channels()
     except SlackIntegrationError as e:
-        return {"success": False, "error": str(e), "error_code": getattr(e, "error_code", None)}
+        return {
+            "success": False,
+            "error": str(e),
+            "error_code": getattr(e, "error_code", None),
+        }

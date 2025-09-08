@@ -21,9 +21,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 try:
     from base_mcp_server.connection_manager import Connection, ConnectionManager
-    from base_mcp_server.error_handling import AuthenticationError, MCPError, ValidationError
+    from base_mcp_server.error_handling import (
+        AuthenticationError,
+        MCPError,
+        ValidationError,
+    )
     from base_mcp_server.handlers import RequestHandler, ResponseHandler
-    from base_mcp_server.middleware import AuthMiddleware, LoggingMiddleware, RateLimitMiddleware
+    from base_mcp_server.middleware import (
+        AuthMiddleware,
+        LoggingMiddleware,
+        RateLimitMiddleware,
+    )
     from base_mcp_server.monitoring import HealthChecker, MetricsCollector
     from base_mcp_server.server import BaseMCPServer, ServerStatus
     from base_mcp_server.utils import ConfigManager, MessageValidator
@@ -206,7 +214,11 @@ class TestBaseMCPServerInitialization:
             assert isinstance(base_server.middleware[0], AuthMiddleware)
         else:
             # Mock middleware registration
-            base_server.middleware = [auth_middleware, rate_limit_middleware, logging_middleware]
+            base_server.middleware = [
+                auth_middleware,
+                rate_limit_middleware,
+                logging_middleware,
+            ]
 
             assert len(base_server.middleware) == 3
             assert isinstance(base_server.middleware[0], AuthMiddleware)
@@ -250,7 +262,9 @@ class TestConnectionManager:
         connection_manager.connections[connection_id] = connection
 
         if hasattr(connection_manager, "authenticate_connection"):
-            await connection_manager.authenticate_connection(connection_id, {"api_key": "test_key"})
+            await connection_manager.authenticate_connection(
+                connection_id, {"api_key": "test_key"}
+            )
 
             assert connection_manager.connections[connection_id].authenticated is True
         else:
@@ -399,7 +413,11 @@ class TestRequestHandler:
 
         request_handler.handlers["echo"] = echo_handler
 
-        test_request = {"id": "req_1", "method": "echo", "params": {"data": "hello world"}}
+        test_request = {
+            "id": "req_1",
+            "method": "echo",
+            "params": {"data": "hello world"},
+        }
 
         if hasattr(request_handler, "process_request"):
             response = await request_handler.process_request(test_request)
@@ -442,7 +460,11 @@ class TestRequestHandler:
 
     def test_unknown_method_handling(self, request_handler):
         """Test handling requests with unknown methods"""
-        unknown_request = {"id": "req_unknown", "method": "unknown_method", "params": {}}
+        unknown_request = {
+            "id": "req_unknown",
+            "method": "unknown_method",
+            "params": {},
+        }
 
         if hasattr(request_handler, "is_method_supported"):
             is_supported = request_handler.is_method_supported("unknown_method")
@@ -525,7 +547,9 @@ class TestResponseHandler:
         request_id = "req_success_1"
 
         if hasattr(response_handler, "format_success_response"):
-            formatted = response_handler.format_success_response(request_id, success_data)
+            formatted = response_handler.format_success_response(
+                request_id, success_data
+            )
 
             assert formatted["id"] == request_id
             assert formatted["result"] == success_data
@@ -564,10 +588,15 @@ class TestResponseHandler:
 
     def test_notification_formatting(self, response_handler):
         """Test formatting notification responses (no id)"""
-        notification_data = {"event": "connection_established", "timestamp": "2024-01-01T00:00:00Z"}
+        notification_data = {
+            "event": "connection_established",
+            "timestamp": "2024-01-01T00:00:00Z",
+        }
 
         if hasattr(response_handler, "format_notification"):
-            formatted = response_handler.format_notification("connection_event", notification_data)
+            formatted = response_handler.format_notification(
+                "connection_event", notification_data
+            )
 
             assert "id" not in formatted  # Notifications don't have IDs
             assert formatted["method"] == "connection_event"
@@ -613,7 +642,11 @@ class TestMiddleware:
 
     def test_auth_middleware_initialization(self):
         """Test authentication middleware initialization"""
-        auth_config = {"enabled": True, "method": "api_key", "api_keys": ["key1", "key2"]}
+        auth_config = {
+            "enabled": True,
+            "method": "api_key",
+            "api_keys": ["key1", "key2"],
+        }
 
         auth_middleware = AuthMiddleware(auth_config)
 
@@ -627,7 +660,10 @@ class TestMiddleware:
         auth_middleware = AuthMiddleware(auth_config)
 
         # Valid authentication
-        valid_request = {"headers": {"Authorization": "Bearer valid_key"}, "method": "test_method"}
+        valid_request = {
+            "headers": {"Authorization": "Bearer valid_key"},
+            "method": "test_method",
+        }
 
         # Invalid authentication
         invalid_request = {
@@ -651,7 +687,9 @@ class TestMiddleware:
             def authenticate(request):
                 auth_header = request.get("headers", {}).get("Authorization", "")
                 token = (
-                    auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+                    auth_header.replace("Bearer ", "")
+                    if auth_header.startswith("Bearer ")
+                    else ""
                 )
                 return token in auth_config["api_keys"]
 
@@ -710,7 +748,11 @@ class TestMiddleware:
 
     def test_logging_middleware_initialization(self):
         """Test logging middleware initialization"""
-        logging_config = {"level": "INFO", "format": "json", "include_request_body": True}
+        logging_config = {
+            "level": "INFO",
+            "format": "json",
+            "include_request_body": True,
+        }
 
         logging_middleware = LoggingMiddleware(logging_config)
 
@@ -719,11 +761,19 @@ class TestMiddleware:
 
     async def test_logging_middleware_processing(self):
         """Test logging middleware request processing"""
-        logging_config = {"level": "INFO", "format": "json", "include_request_body": True}
+        logging_config = {
+            "level": "INFO",
+            "format": "json",
+            "include_request_body": True,
+        }
 
         logging_middleware = LoggingMiddleware(logging_config)
 
-        test_request = {"id": "req_log_1", "method": "test_method", "params": {"data": "test"}}
+        test_request = {
+            "id": "req_log_1",
+            "method": "test_method",
+            "params": {"data": "test"},
+        }
 
         if hasattr(logging_middleware, "process_request"):
             result = await logging_middleware.process_request(test_request)
@@ -986,7 +1036,9 @@ class TestHealthChecker:
                 results[name] = await check_func()
 
             failed_checks = [
-                name for name, result in results.items() if result["status"] != "healthy"
+                name
+                for name, result in results.items()
+                if result["status"] != "healthy"
             ]
             overall_status = "unhealthy" if failed_checks else "healthy"
 
@@ -1036,7 +1088,10 @@ class TestUtilities:
             config_manager.load_config(test_config)
 
             assert config_manager.config["server"]["host"] == "localhost"
-            assert config_manager.config["database"]["url"] == "postgresql://localhost/testdb"
+            assert (
+                config_manager.config["database"]["url"]
+                == "postgresql://localhost/testdb"
+            )
         else:
             # Mock config loading
             config_manager.config = test_config
@@ -1045,7 +1100,10 @@ class TestUtilities:
 
     def test_config_validation(self):
         """Test configuration validation"""
-        valid_config = {"server": {"host": "localhost", "port": 8080}, "auth": {"enabled": True}}
+        valid_config = {
+            "server": {"host": "localhost", "port": 8080},
+            "auth": {"enabled": True},
+        }
 
         invalid_config = {"server": {"host": "localhost"}}  # Missing required port
 
@@ -1158,7 +1216,9 @@ class TestIntegrationScenarios:
         server.connection_manager.connections["error_test_conn"] = connection
 
         if hasattr(server, "process_full_request"):
-            response = await server.process_full_request("error_test_conn", error_request)
+            response = await server.process_full_request(
+                "error_test_conn", error_request
+            )
 
             assert "error" in response
             assert response["error"]["message"] == "Invalid input"

@@ -90,7 +90,9 @@ class PerformanceMonitor:
 
         # In-memory metrics storage
         self.endpoint_metrics: Dict[str, EndpointMetrics] = {}
-        self.system_metrics_history: deque = deque(maxlen=1000)  # Keep last 1000 data points
+        self.system_metrics_history: deque = deque(
+            maxlen=1000
+        )  # Keep last 1000 data points
         self.active_alerts: List[PerformanceAlert] = []
 
         # Configuration
@@ -192,7 +194,9 @@ class PerformanceMonitor:
 
         # Get or create endpoint metrics
         if endpoint_key not in self.endpoint_metrics:
-            self.endpoint_metrics[endpoint_key] = EndpointMetrics(endpoint=endpoint, method=method)
+            self.endpoint_metrics[endpoint_key] = EndpointMetrics(
+                endpoint=endpoint, method=method
+            )
 
         metrics = self.endpoint_metrics[endpoint_key]
 
@@ -229,7 +233,9 @@ class PerformanceMonitor:
         # Calculate requests per minute (approximate)
         if metrics.total_requests > 1:
             time_window = 60  # 1 minute
-            recent_requests = sum(1 for _ in metrics.response_times[-60:])  # Approximate
+            recent_requests = sum(
+                1 for _ in metrics.response_times[-60:]
+            )  # Approximate
             metrics.requests_per_minute = recent_requests
 
         # Check for alerts
@@ -306,7 +312,9 @@ class PerformanceMonitor:
             alerts.append(
                 PerformanceAlert(
                     alert_id=f"p95_latency_{endpoint_key}",
-                    severity="warning" if metrics.p95_response_time_ms < 200 else "critical",
+                    severity=(
+                        "warning" if metrics.p95_response_time_ms < 200 else "critical"
+                    ),
                     message=f"High P95 latency on {metrics.endpoint}: {metrics.p95_response_time_ms:.1f}ms",
                     threshold=self.alert_thresholds["p95_latency_ms"],
                     current_value=metrics.p95_response_time_ms,
@@ -344,7 +352,9 @@ class PerformanceMonitor:
             alerts.append(
                 PerformanceAlert(
                     alert_id="high_cpu_usage",
-                    severity="warning" if metrics.cpu_usage_percent < 90 else "critical",
+                    severity=(
+                        "warning" if metrics.cpu_usage_percent < 90 else "critical"
+                    ),
                     message=f"High CPU usage: {metrics.cpu_usage_percent:.1f}%",
                     threshold=self.alert_thresholds["cpu_usage_percent"],
                     current_value=metrics.cpu_usage_percent,
@@ -357,7 +367,9 @@ class PerformanceMonitor:
             alerts.append(
                 PerformanceAlert(
                     alert_id="high_memory_usage",
-                    severity="warning" if metrics.memory_usage_percent < 95 else "critical",
+                    severity=(
+                        "warning" if metrics.memory_usage_percent < 95 else "critical"
+                    ),
                     message=f"High memory usage: {metrics.memory_usage_percent:.1f}%",
                     threshold=self.alert_thresholds["memory_usage_percent"],
                     current_value=metrics.memory_usage_percent,
@@ -371,7 +383,9 @@ class PerformanceMonitor:
                 self.active_alerts.append(alert)
                 logger.warning(f"🚨 SYSTEM ALERT: {alert.message}")
 
-    async def get_endpoint_metrics(self, endpoint: Optional[str] = None) -> Dict[str, Any]:
+    async def get_endpoint_metrics(
+        self, endpoint: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Get metrics for specific endpoint or all endpoints"""
         if endpoint:
             # Find matching endpoints
@@ -401,7 +415,9 @@ class PerformanceMonitor:
         total_errors = sum(m.failed_requests for m in self.endpoint_metrics.values())
 
         # Get latest system metrics
-        latest_system = self.system_metrics_history[-1] if self.system_metrics_history else None
+        latest_system = (
+            self.system_metrics_history[-1] if self.system_metrics_history else None
+        )
 
         summary = {
             "overall_status": "healthy",
@@ -410,12 +426,20 @@ class PerformanceMonitor:
             "overall_error_rate": (
                 (total_errors / total_requests * 100) if total_requests > 0 else 0
             ),
-            "avg_p95_latency_ms": statistics.mean(all_p95_times) if all_p95_times else 0,
+            "avg_p95_latency_ms": (
+                statistics.mean(all_p95_times) if all_p95_times else 0
+            ),
             "max_p95_latency_ms": max(all_p95_times) if all_p95_times else 0,
             "active_alerts": len(self.active_alerts),
-            "critical_alerts": len([a for a in self.active_alerts if a.severity == "critical"]),
-            "system_cpu_percent": latest_system.cpu_usage_percent if latest_system else 0,
-            "system_memory_percent": latest_system.memory_usage_percent if latest_system else 0,
+            "critical_alerts": len(
+                [a for a in self.active_alerts if a.severity == "critical"]
+            ),
+            "system_cpu_percent": (
+                latest_system.cpu_usage_percent if latest_system else 0
+            ),
+            "system_memory_percent": (
+                latest_system.memory_usage_percent if latest_system else 0
+            ),
             "last_updated": datetime.now().isoformat(),
         }
 
@@ -465,7 +489,9 @@ class PerformanceMonitor:
                 data = json.loads(endpoint_data)
                 for key, metrics_dict in data.items():
                     self.endpoint_metrics[key] = EndpointMetrics(**metrics_dict)
-                logger.info(f"📊 Loaded metrics for {len(self.endpoint_metrics)} endpoints")
+                logger.info(
+                    f"📊 Loaded metrics for {len(self.endpoint_metrics)} endpoints"
+                )
         except Exception as e:
             logger.warning(f"⚠️ Could not load performance metrics: {e}")
 

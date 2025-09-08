@@ -154,7 +154,13 @@ class EstuaryFlowPipelines:
                 "ssl": False,
                 "replication_method": "Standard",
             },
-            "redis": {"host": "localhost", "port": 6380, "password": "", "db": 0, "ssl": False},
+            "redis": {
+                "host": "localhost",
+                "port": 6380,
+                "password": "",
+                "db": 0,
+                "ssl": False,
+            },
             "api": {
                 "base_url": "https://api.example.com",
                 "api_key": "",
@@ -225,7 +231,10 @@ class EstuaryFlowPipelines:
             timeout = aiohttp.ClientTimeout(total=60, connect=10)
             self.session = aiohttp.ClientSession(
                 timeout=timeout,
-                headers={"Content-Type": "application/json", "Accept": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
             )
             logger.info("✅ EstuaryFlow session initialized")
 
@@ -248,12 +257,15 @@ class EstuaryFlowPipelines:
             request_data = {
                 "workspaceId": self.workspace_id,
                 "name": config.name,
-                "sourceDefinitionId": await self._get_source_definition_id(config.source_type),
+                "sourceDefinitionId": await self._get_source_definition_id(
+                    config.source_type
+                ),
                 "connectionConfiguration": config.connection_config,
             }
 
             async with self.session.post(
-                f"{self.estuary_flow_url}/api/{self.api_version}/sources/create", json=request_data
+                f"{self.estuary_flow_url}/api/{self.api_version}/sources/create",
+                json=request_data,
             ) as response:
 
                 if response.status == 200:
@@ -261,11 +273,15 @@ class EstuaryFlowPipelines:
                     config.source_id = result.get("sourceId", config.source_id)
                     self.sources[config.source_id] = config
 
-                    logger.info(f"✅ Created source: {config.name} ({config.source_id})")
+                    logger.info(
+                        f"✅ Created source: {config.name} ({config.source_id})"
+                    )
                     return result
                 else:
                     error_text = await response.text()
-                    logger.error(f"❌ Failed to create source: {response.status} - {error_text}")
+                    logger.error(
+                        f"❌ Failed to create source: {response.status} - {error_text}"
+                    )
                     return {"error": error_text}
 
         except Exception as e:
@@ -292,10 +308,14 @@ class EstuaryFlowPipelines:
 
                 if response.status == 200:
                     result = await response.json()
-                    config.destination_id = result.get("destinationId", config.destination_id)
+                    config.destination_id = result.get(
+                        "destinationId", config.destination_id
+                    )
                     self.destinations[config.destination_id] = config
 
-                    logger.info(f"✅ Created destination: {config.name} ({config.destination_id})")
+                    logger.info(
+                        f"✅ Created destination: {config.name} ({config.destination_id})"
+                    )
                     return result
                 else:
                     error_text = await response.text()
@@ -346,11 +366,15 @@ class EstuaryFlowPipelines:
                         pipeline_id=config.pipeline_id
                     )
 
-                    logger.info(f"✅ Created pipeline: {config.name} ({config.pipeline_id})")
+                    logger.info(
+                        f"✅ Created pipeline: {config.name} ({config.pipeline_id})"
+                    )
                     return result
                 else:
                     error_text = await response.text()
-                    logger.error(f"❌ Failed to create pipeline: {response.status} - {error_text}")
+                    logger.error(
+                        f"❌ Failed to create pipeline: {response.status} - {error_text}"
+                    )
                     return {"error": error_text}
 
         except Exception as e:
@@ -382,11 +406,15 @@ class EstuaryFlowPipelines:
                         )
                         self.active_jobs[job_id] = job_result
 
-                    logger.info(f"✅ Triggered sync for pipeline: {pipeline_id} (Job: {job_id})")
+                    logger.info(
+                        f"✅ Triggered sync for pipeline: {pipeline_id} (Job: {job_id})"
+                    )
                     return result
                 else:
                     error_text = await response.text()
-                    logger.error(f"❌ Failed to trigger sync: {response.status} - {error_text}")
+                    logger.error(
+                        f"❌ Failed to trigger sync: {response.status} - {error_text}"
+                    )
                     return {"error": error_text}
 
         except Exception as e:
@@ -397,7 +425,8 @@ class EstuaryFlowPipelines:
         """Get the status of a sync job"""
         try:
             async with self.session.get(
-                f"{self.estuary_flow_url}/api/{self.api_version}/jobs/get", params={"id": job_id}
+                f"{self.estuary_flow_url}/api/{self.api_version}/jobs/get",
+                params={"id": job_id},
             ) as response:
 
                 if response.status == 200:
@@ -408,11 +437,15 @@ class EstuaryFlowPipelines:
                         job_result = self.active_jobs[job_id]
                         job_info = result.get("job", {})
 
-                        job_result.status = SyncStatus(job_info.get("status", "pending"))
+                        job_result.status = SyncStatus(
+                            job_info.get("status", "pending")
+                        )
                         if job_info.get("endedAt"):
                             job_result.end_time = job_info["endedAt"]
                             job_result.duration_seconds = (
-                                datetime.fromisoformat(job_result.end_time.replace("Z", "+00:00"))
+                                datetime.fromisoformat(
+                                    job_result.end_time.replace("Z", "+00:00")
+                                )
                                 - datetime.fromisoformat(
                                     job_result.start_time.replace("Z", "+00:00")
                                 )
@@ -424,7 +457,9 @@ class EstuaryFlowPipelines:
                     return result
                 else:
                     error_text = await response.text()
-                    logger.error(f"❌ Failed to get job status: {response.status} - {error_text}")
+                    logger.error(
+                        f"❌ Failed to get job status: {response.status} - {error_text}"
+                    )
                     return {"error": error_text}
 
         except Exception as e:
@@ -436,7 +471,9 @@ class EstuaryFlowPipelines:
         pipeline_list = []
 
         for pipeline_id, config in self.pipelines.items():
-            stats = self.pipeline_stats.get(pipeline_id, PipelineStats(pipeline_id=pipeline_id))
+            stats = self.pipeline_stats.get(
+                pipeline_id, PipelineStats(pipeline_id=pipeline_id)
+            )
 
             pipeline_info = {
                 "pipeline_id": pipeline_id,
@@ -452,7 +489,9 @@ class EstuaryFlowPipelines:
             if config.source_id in self.sources:
                 pipeline_info["source_name"] = self.sources[config.source_id].name
             if config.destination_id in self.destinations:
-                pipeline_info["destination_name"] = self.destinations[config.destination_id].name
+                pipeline_info["destination_name"] = self.destinations[
+                    config.destination_id
+                ].name
 
             pipeline_list.append(pipeline_info)
 
@@ -542,7 +581,8 @@ class EstuaryFlowPipelines:
             else:
                 alpha = 0.1  # Smoothing factor
                 stats.avg_duration_seconds = (
-                    alpha * job_result.duration_seconds + (1 - alpha) * stats.avg_duration_seconds
+                    alpha * job_result.duration_seconds
+                    + (1 - alpha) * stats.avg_duration_seconds
                 )
 
         # Update success rate
@@ -622,7 +662,9 @@ class EstuaryFlowPipelines:
                     if response.status == 200:
                         health_status["estuary_flow_connectivity"] = "success"
                     else:
-                        health_status["estuary_flow_connectivity"] = f"error_{response.status}"
+                        health_status["estuary_flow_connectivity"] = (
+                            f"error_{response.status}"
+                        )
                         health_status["status"] = "degraded"
             else:
                 health_status["estuary_flow_connectivity"] = "no_session"
@@ -638,7 +680,9 @@ class EstuaryFlowPipelines:
 _estuary_flow_instance: Optional[EstuaryFlowPipelines] = None
 
 
-async def get_estuary_flow(estuary_flow_url: str = "http://localhost:8000") -> EstuaryFlowPipelines:
+async def get_estuary_flow(
+    estuary_flow_url: str = "http://localhost:8000",
+) -> EstuaryFlowPipelines:
     """Get or create global EstuaryFlow instance"""
     global _estuary_flow_instance
 

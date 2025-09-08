@@ -496,17 +496,17 @@ class MonitoringValidationSystem:
 
                     # Update Prometheus metrics
                     if result.status == ValidationStatus.INVALID:
-                        self.data_quality_gauge.labels(source=data_source, data_type=data_type).set(
-                            0.0
-                        )
+                        self.data_quality_gauge.labels(
+                            source=data_source, data_type=data_type
+                        ).set(0.0)
                     elif result.status == ValidationStatus.WARNING:
-                        self.data_quality_gauge.labels(source=data_source, data_type=data_type).set(
-                            0.7
-                        )
+                        self.data_quality_gauge.labels(
+                            source=data_source, data_type=data_type
+                        ).set(0.7)
                     else:
-                        self.data_quality_gauge.labels(source=data_source, data_type=data_type).set(
-                            1.0
-                        )
+                        self.data_quality_gauge.labels(
+                            source=data_source, data_type=data_type
+                        ).set(1.0)
 
                 except Exception as e:
                     logger.error(f"Error applying validation rule {rule.rule_id}: {e}")
@@ -597,7 +597,9 @@ class MonitoringValidationSystem:
                     rule, data, data_source, data_type, validation_id
                 )
             elif rule.rule_type == "range":
-                return await self._validate_range(rule, data, data_source, data_type, validation_id)
+                return await self._validate_range(
+                    rule, data, data_source, data_type, validation_id
+                )
             elif rule.rule_type == "custom":
                 return await self._validate_custom(
                     rule, data, data_source, data_type, validation_id
@@ -631,7 +633,11 @@ class MonitoringValidationSystem:
         processing_time = time.time()
         field_name = rule.parameters.get("field")
 
-        if field_name in data and data[field_name] is not None and data[field_name] != "":
+        if (
+            field_name in data
+            and data[field_name] is not None
+            and data[field_name] != ""
+        ):
             status = ValidationStatus.VALID
             message = f"Required field '{field_name}' is present"
         else:
@@ -717,16 +723,15 @@ class MonitoringValidationSystem:
                     min_val = rule.parameters["min"]
                     max_val = rule.parameters["max"]
 
-                    if isinstance(field_value, int | float) and min_val <= field_value <= max_val:
+                    if (
+                        isinstance(field_value, int | float)
+                        and min_val <= field_value <= max_val
+                    ):
                         status = ValidationStatus.VALID
-                        message = (
-                            f"Field '{field_name}' is within valid range [{min_val}, {max_val}]"
-                        )
+                        message = f"Field '{field_name}' is within valid range [{min_val}, {max_val}]"
                     else:
                         status = ValidationStatus.INVALID
-                        message = (
-                            f"Field '{field_name}' is outside valid range [{min_val}, {max_val}]"
-                        )
+                        message = f"Field '{field_name}' is outside valid range [{min_val}, {max_val}]"
 
                 elif "max_hours_old" in rule.parameters:
                     # Date freshness validation
@@ -734,17 +739,19 @@ class MonitoringValidationSystem:
 
                     if isinstance(field_value, str):
                         try:
-                            field_date = datetime.fromisoformat(field_value.replace("Z", "+00:00"))
-                            hours_old = (datetime.now(UTC) - field_date).total_seconds() / 3600
+                            field_date = datetime.fromisoformat(
+                                field_value.replace("Z", "+00:00")
+                            )
+                            hours_old = (
+                                datetime.now(UTC) - field_date
+                            ).total_seconds() / 3600
 
                             if hours_old <= max_hours:
                                 status = ValidationStatus.VALID
                                 message = f"Data is fresh ({hours_old:.1f} hours old)"
                             else:
                                 status = ValidationStatus.WARNING
-                                message = (
-                                    f"Data is stale ({hours_old:.1f} hours old, max {max_hours})"
-                                )
+                                message = f"Data is stale ({hours_old:.1f} hours old, max {max_hours})"
                         except ValueError:
                             status = ValidationStatus.INVALID
                             message = f"Invalid date format for field '{field_name}'"
@@ -754,7 +761,9 @@ class MonitoringValidationSystem:
 
                 else:
                     status = ValidationStatus.WARNING
-                    message = f"Unknown range validation parameters for field '{field_name}'"
+                    message = (
+                        f"Unknown range validation parameters for field '{field_name}'"
+                    )
 
             except Exception as e:
                 status = ValidationStatus.INVALID
@@ -798,14 +807,18 @@ class MonitoringValidationSystem:
             if field_value:
                 # In a real implementation, this would check against all integrated systems
                 # For now, we'll simulate the check
-                is_unique = await self._check_field_uniqueness(field_name, field_value, data_source)
+                is_unique = await self._check_field_uniqueness(
+                    field_name, field_value, data_source
+                )
 
                 if is_unique:
                     status = ValidationStatus.VALID
                     message = f"Field '{field_name}' value is unique"
                 else:
                     status = ValidationStatus.WARNING
-                    message = f"Field '{field_name}' value may not be unique across systems"
+                    message = (
+                        f"Field '{field_name}' value may not be unique across systems"
+                    )
             else:
                 status = ValidationStatus.WARNING
                 message = f"Field '{field_name}' is not present for uniqueness check"
@@ -831,7 +844,9 @@ class MonitoringValidationSystem:
             processing_time=processing_time,
         )
 
-    async def _check_field_uniqueness(self, field_name: str, field_value: Any, source: str) -> bool:
+    async def _check_field_uniqueness(
+        self, field_name: str, field_value: Any, source: str
+    ) -> bool:
         """Check if field value is unique across systems"""
         try:
             # Check in Redis cache first
@@ -905,7 +920,9 @@ class MonitoringValidationSystem:
             # Response times (from recent validation history)
             response_times = {}
             if self.validation_history:
-                recent_validations = list(self.validation_history)[-100:]  # Last 100 validations
+                recent_validations = list(self.validation_history)[
+                    -100:
+                ]  # Last 100 validations
                 by_source = defaultdict(list)
 
                 for validation in recent_validations:
@@ -917,7 +934,9 @@ class MonitoringValidationSystem:
             # Error rates (from recent validation history)
             error_rates = {}
             if self.validation_history:
-                recent_validations = list(self.validation_history)[-1000:]  # Last 1000 validations
+                recent_validations = list(self.validation_history)[
+                    -1000:
+                ]  # Last 1000 validations
                 by_source = defaultdict(lambda: {"total": 0, "errors": 0})
 
                 for validation in recent_validations:
@@ -927,7 +946,9 @@ class MonitoringValidationSystem:
 
                 for source, counts in by_source.items():
                     error_rates[source] = (
-                        counts["errors"] / counts["total"] if counts["total"] > 0 else 0.0
+                        counts["errors"] / counts["total"]
+                        if counts["total"] > 0
+                        else 0.0
                     )
 
             # Throughput (simplified - requests per minute)
@@ -1021,7 +1042,11 @@ class MonitoringValidationSystem:
         if metrics.cpu_usage > 80:
             await self._create_alert(
                 alert_type="high_cpu_usage",
-                severity=(AlertSeverity.HIGH if metrics.cpu_usage > 90 else AlertSeverity.MEDIUM),
+                severity=(
+                    AlertSeverity.HIGH
+                    if metrics.cpu_usage > 90
+                    else AlertSeverity.MEDIUM
+                ),
                 title="High CPU Usage",
                 message=f"CPU usage is {metrics.cpu_usage:.1f}%",
                 source="system_monitor",
@@ -1033,7 +1058,9 @@ class MonitoringValidationSystem:
             await self._create_alert(
                 alert_type="high_memory_usage",
                 severity=(
-                    AlertSeverity.HIGH if metrics.memory_usage > 95 else AlertSeverity.MEDIUM
+                    AlertSeverity.HIGH
+                    if metrics.memory_usage > 95
+                    else AlertSeverity.MEDIUM
                 ),
                 title="High Memory Usage",
                 message=f"Memory usage is {metrics.memory_usage:.1f}%",
@@ -1057,7 +1084,9 @@ class MonitoringValidationSystem:
             if error_rate > 0.1:  # 10% error rate
                 await self._create_alert(
                     alert_type="high_error_rate",
-                    severity=(AlertSeverity.HIGH if error_rate > 0.2 else AlertSeverity.MEDIUM),
+                    severity=(
+                        AlertSeverity.HIGH if error_rate > 0.2 else AlertSeverity.MEDIUM
+                    ),
                     title=f"High Error Rate - {source}",
                     message=f"Error rate for {source} is {error_rate:.1%}",
                     source=source,
@@ -1079,7 +1108,11 @@ class MonitoringValidationSystem:
         # Check if similar alert already exists
         existing_alert = None
         for alert in self.active_alerts.values():
-            if alert.alert_type == alert_type and alert.source == source and not alert.is_resolved:
+            if (
+                alert.alert_type == alert_type
+                and alert.source == source
+                and not alert.is_resolved
+            ):
                 existing_alert = alert
                 break
 
@@ -1218,10 +1251,18 @@ class MonitoringValidationSystem:
         try:
             # Count alerts by severity
             critical_alerts = len(
-                [a for a in self.active_alerts.values() if a.severity == AlertSeverity.CRITICAL]
+                [
+                    a
+                    for a in self.active_alerts.values()
+                    if a.severity == AlertSeverity.CRITICAL
+                ]
             )
             high_alerts = len(
-                [a for a in self.active_alerts.values() if a.severity == AlertSeverity.HIGH]
+                [
+                    a
+                    for a in self.active_alerts.values()
+                    if a.severity == AlertSeverity.HIGH
+                ]
             )
 
             # Get latest system metrics
@@ -1288,7 +1329,10 @@ class MonitoringValidationSystem:
                     if self.system_metrics_history:
                         latest_metrics = self.system_metrics_history[-1]
 
-                        if alert.alert_type == "high_cpu_usage" and latest_metrics.cpu_usage < 70:
+                        if (
+                            alert.alert_type == "high_cpu_usage"
+                            and latest_metrics.cpu_usage < 70
+                        ):
                             await self.resolve_alert(
                                 alert_id, "Auto-resolved: CPU usage returned to normal"
                             )
@@ -1337,7 +1381,9 @@ class MonitoringValidationSystem:
             return
 
         # Analyze recent validation results
-        recent_validations = list(self.validation_history)[-1000:]  # Last 1000 validations
+        recent_validations = list(self.validation_history)[
+            -1000:
+        ]  # Last 1000 validations
 
         # Group by rule
         by_rule = defaultdict(list)
@@ -1365,7 +1411,11 @@ class MonitoringValidationSystem:
                         "failure_rate": failure_rate,
                         "total_validations": len(validations),
                         "failed_validations": len(
-                            [v for v in validations if v.status == ValidationStatus.INVALID]
+                            [
+                                v
+                                for v in validations
+                                if v.status == ValidationStatus.INVALID
+                            ]
                         ),
                     },
                 )
@@ -1377,7 +1427,9 @@ class MonitoringValidationSystem:
                 return
 
             # Calculate average processing times by rule
-            recent_validations = list(self.validation_history)[-5000:]  # Last 5000 validations
+            recent_validations = list(self.validation_history)[
+                -5000:
+            ]  # Last 5000 validations
 
             by_rule = defaultdict(list)
             for validation in recent_validations:
@@ -1387,7 +1439,9 @@ class MonitoringValidationSystem:
             for rule_id, processing_times in by_rule.items():
                 if len(processing_times) >= 100:  # Need sufficient data
                     avg_time = statistics.mean(processing_times)
-                    self.performance_baselines[f"validation_{rule_id}_avg_time"] = avg_time
+                    self.performance_baselines[f"validation_{rule_id}_avg_time"] = (
+                        avg_time
+                    )
 
         except Exception as e:
             logger.error(f"Failed to update validation baselines: {e}")
@@ -1399,9 +1453,9 @@ class MonitoringValidationSystem:
 
     async def _trigger_alert_handlers(self, alert: Alert):
         """Trigger registered alert handlers"""
-        handlers = self.alert_handlers.get(alert.alert_type, []) + self.alert_handlers.get(
-            "all", []
-        )
+        handlers = self.alert_handlers.get(
+            alert.alert_type, []
+        ) + self.alert_handlers.get("all", [])
 
         for handler in handlers:
             try:
@@ -1428,7 +1482,9 @@ class MonitoringValidationSystem:
             },
             "validation_rules": {
                 "total": len(self.validation_rules),
-                "active": len([r for r in self.validation_rules.values() if r.is_active]),
+                "active": len(
+                    [r for r in self.validation_rules.values() if r.is_active]
+                ),
             },
             "recent_validations": len(self.validation_history),
             "system_metrics": {

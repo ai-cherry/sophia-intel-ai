@@ -34,8 +34,12 @@ except ImportError:
     class DummyMetrics:
         def __init__(self):
             self.embedding_cache_hits = type("obj", (object,), {"inc": lambda: None})()
-            self.embedding_cache_misses = type("obj", (object,), {"inc": lambda: None})()
-            self.embeddings_generated = type("obj", (object,), {"inc": lambda x: None})()
+            self.embedding_cache_misses = type(
+                "obj", (object,), {"inc": lambda: None}
+            )()
+            self.embeddings_generated = type(
+                "obj", (object,), {"inc": lambda x: None}
+            )()
             self.embedding_errors = type("obj", (object,), {"inc": lambda: None})()
 
         def get_embedding_cache_hit_rate(self):
@@ -155,7 +159,9 @@ class StandardizedEmbeddingPipeline:
 
     @trace_async
     @with_circuit_breaker("llm")
-    async def generate_embeddings(self, request: EmbeddingRequest) -> list[EmbeddingResult]:
+    async def generate_embeddings(
+        self, request: EmbeddingRequest
+    ) -> list[EmbeddingResult]:
         """Generate embeddings for texts.
 
         Args:
@@ -331,7 +337,9 @@ class StandardizedEmbeddingPipeline:
             embedding=embedding, metadata=metadata, text=text, text_hash=text_hash
         )
 
-    def _get_cache_key(self, text: str, model: EmbeddingModel, purpose: EmbeddingPurpose) -> str:
+    def _get_cache_key(
+        self, text: str, model: EmbeddingModel, purpose: EmbeddingPurpose
+    ) -> str:
         """Generate cache key for embedding.
 
         Args:
@@ -342,7 +350,11 @@ class StandardizedEmbeddingPipeline:
         Returns:
             Cache key
         """
-        components = [hashlib.sha256(text.encode()).hexdigest(), model.value, purpose.value]
+        components = [
+            hashlib.sha256(text.encode()).hexdigest(),
+            model.value,
+            purpose.value,
+        ]
         return ":".join(components)
 
     def clear_cache(self):
@@ -358,7 +370,8 @@ class StandardizedEmbeddingPipeline:
         """
         return {
             "size": len(self._cache),
-            "memory_mb": sum(len(str(v.embedding)) for v in self._cache.values()) / (1024 * 1024),
+            "memory_mb": sum(len(str(v.embedding)) for v in self._cache.values())
+            / (1024 * 1024),
             "hit_rate": metrics.get_embedding_cache_hit_rate(),
         }
 
@@ -409,11 +422,14 @@ class BatchEmbeddingProcessor:
         """
         # Create batches
         batches = [
-            documents[i : i + self.batch_size] for i in range(0, len(documents), self.batch_size)
+            documents[i : i + self.batch_size]
+            for i in range(0, len(documents), self.batch_size)
         ]
 
         # Process batches concurrently
-        tasks = [self._process_batch(batch, text_field, model, purpose) for batch in batches]
+        tasks = [
+            self._process_batch(batch, text_field, model, purpose) for batch in batches
+        ]
 
         results = await asyncio.gather(*tasks)
 

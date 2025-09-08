@@ -281,7 +281,9 @@ class TalentAcquisitionAgent(BaseAgent):
         requisition = self.active_requisitions.get(req_id)
 
         # Determine interview panel
-        interview_panel = await self._determine_interview_panel(requisition, interview_type)
+        interview_panel = await self._determine_interview_panel(
+            requisition, interview_type
+        )
 
         # Find optimal time slots
         available_slots = await self._find_available_time_slots(
@@ -309,7 +311,9 @@ class TalentAcquisitionAgent(BaseAgent):
         }
 
         # Store interview schedule
-        self.interview_schedules[interview_schedule["interview_id"]] = interview_schedule
+        self.interview_schedules[interview_schedule["interview_id"]] = (
+            interview_schedule
+        )
 
         # Send notifications
         notifications = await self._send_interview_notifications(interview_schedule)
@@ -318,7 +322,9 @@ class TalentAcquisitionAgent(BaseAgent):
             "interview_schedule": interview_schedule,
             "available_slots": available_slots,
             "notifications_sent": notifications,
-            "preparation_checklist": await self._create_interview_checklist(interview_schedule),
+            "preparation_checklist": await self._create_interview_checklist(
+                interview_schedule
+            ),
         }
 
     async def conduct_ai_interview(self, context: dict[str, Any]) -> dict[str, Any]:
@@ -439,10 +445,14 @@ class TalentAcquisitionAgent(BaseAgent):
         requisition = self.active_requisitions.get(req_id)
 
         # Generate personalized offer letter
-        offer_letter = await self._generate_offer_letter(candidate, requisition, offer_terms)
+        offer_letter = await self._generate_offer_letter(
+            candidate, requisition, offer_terms
+        )
 
         # Create offer package
-        offer_package = await self._create_offer_package(candidate, requisition, offer_terms)
+        offer_package = await self._create_offer_package(
+            candidate, requisition, offer_terms
+        )
 
         # Set up offer tracking
         offer_tracking = {
@@ -471,7 +481,9 @@ class TalentAcquisitionAgent(BaseAgent):
             "offer_package": offer_package,
             "offer_tracking": offer_tracking,
             "delivery_confirmation": offer_delivery,
-            "follow_up_schedule": await self._create_offer_follow_up_schedule(offer_tracking),
+            "follow_up_schedule": await self._create_offer_follow_up_schedule(
+                offer_tracking
+            ),
         }
 
     async def analyze_talent_pipeline(self, context: dict[str, Any]) -> dict[str, Any]:
@@ -497,7 +509,9 @@ class TalentAcquisitionAgent(BaseAgent):
         )
 
         # Create action plan
-        action_plan = await self._create_pipeline_action_plan(optimization_recommendations)
+        action_plan = await self._create_pipeline_action_plan(
+            optimization_recommendations
+        )
 
         return {
             "analysis_scope": analysis_scope,
@@ -512,7 +526,9 @@ class TalentAcquisitionAgent(BaseAgent):
         }
 
     # Helper methods for AI-powered operations
-    async def _generate_sourcing_strategy(self, requisition: JobRequisition) -> dict[str, Any]:
+    async def _generate_sourcing_strategy(
+        self, requisition: JobRequisition
+    ) -> dict[str, Any]:
         """Generate AI-powered sourcing strategy"""
         strategy_prompt = f"""
         Generate a comprehensive candidate sourcing strategy for this role:
@@ -670,7 +686,9 @@ class TalentAcquisitionAgent(BaseAgent):
         # This would load from database
 
     # Additional helper methods would be implemented here...
-    async def _execute_sourcing_strategy(self, strategy: dict[str, Any]) -> dict[str, Any]:
+    async def _execute_sourcing_strategy(
+        self, strategy: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute the sourcing strategy"""
         return {
             "channels_used": ["LinkedIn", "Indeed", "Referrals"],
@@ -701,7 +719,9 @@ async def main():
     await talent_acquisition_agent.initialize()
 
     # Test candidate sourcing
-    sourcing_result = await talent_acquisition_agent.source_candidates({"req_id": "REQ_001"})
+    sourcing_result = await talent_acquisition_agent.source_candidates(
+        {"req_id": "REQ_001"}
+    )
     print(f"Sourcing Result: {sourcing_result}")
 
 

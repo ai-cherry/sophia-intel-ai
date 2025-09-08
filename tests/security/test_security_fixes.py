@@ -25,7 +25,9 @@ class TestSecurityFixes:
             major, minor, patch = map(int, version.split("."))
 
             # PyJWT >= 3.0.0 required for security fixes
-            assert major >= 3, f"PyJWT version {version} does not meet security requirement >=3.0.0"
+            assert (
+                major >= 3
+            ), f"PyJWT version {version} does not meet security requirement >=3.0.0"
 
         except ImportError:
             pytest.fail("PyJWT not installed - security requirement not met")
@@ -44,7 +46,9 @@ class TestSecurityFixes:
                 or (major == 78 and minor < 1)
                 or (major == 78 and minor == 1 and patch < 1)
             ):
-                pytest.fail(f"setuptools version {version} vulnerable to CVE-2025-47273")
+                pytest.fail(
+                    f"setuptools version {version} vulnerable to CVE-2025-47273"
+                )
 
         except ImportError:
             pytest.fail("setuptools not available - security requirement not met")
@@ -90,7 +94,9 @@ class TestSecurityFixes:
             redis_mock = Mock()
             config = {"agent_id": "test", "secret_key": "test_secret"}
 
-            with patch("orchestration.communication.acp_protocol.logger") as mock_logger:
+            with patch(
+                "orchestration.communication.acp_protocol.logger"
+            ) as mock_logger:
                 acp = AgentCommunicationProtocol(redis_mock, config)
                 key = acp._derive_encryption_key("test_password")
 
@@ -163,7 +169,9 @@ class TestSecurityFixes:
                     matches = re.findall(pattern, content, re.IGNORECASE)
                     # Filter out test/example values
                     real_secrets = [
-                        m for m in matches if "test" not in m.lower() and "example" not in m.lower()
+                        m
+                        for m in matches
+                        if "test" not in m.lower() and "example" not in m.lower()
                     ]
 
                     assert (
@@ -198,7 +206,10 @@ class TestSecurityConfiguration:
             logger = logging.getLogger(logger_name)
             assert logger is not None
             # Should have at least WARNING level or higher for security
-            assert logger.level <= logging.WARNING or logger.parent.level <= logging.WARNING
+            assert (
+                logger.level <= logging.WARNING
+                or logger.parent.level <= logging.WARNING
+            )
 
 
 @pytest.mark.security
@@ -217,7 +228,9 @@ class TestSecurityIntegration:
         # Test ACP with proper environment
         test_salt = "dGVzdF9zYWx0X2tleV8yMDI1XzA4XzA0X3NlY3VyZQ=="
         with patch.dict(os.environ, {"ACP_SALT_KEY": test_salt}):
-            from orchestration.communication.acp_protocol import AgentCommunicationProtocol
+            from orchestration.communication.acp_protocol import (
+                AgentCommunicationProtocol,
+            )
 
             config = {
                 "agent_id": "security_test_agent",

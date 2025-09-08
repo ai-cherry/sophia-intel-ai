@@ -251,7 +251,9 @@ class RedisHealthMonitor:
                 "metrics": {
                     "memory_usage_percent": usage_percent,
                     "used_memory_mb": used_memory / (1024 * 1024),
-                    "max_memory_mb": max_memory / (1024 * 1024) if max_memory > 0 else None,
+                    "max_memory_mb": (
+                        max_memory / (1024 * 1024) if max_memory > 0 else None
+                    ),
                     "memory_fragmentation_ratio": memory_stats.get(
                         "memory_fragmentation_ratio", 1.0
                     ),
@@ -274,7 +276,9 @@ class RedisHealthMonitor:
                 in_use_connections = pool.in_use_connections
                 max_connections = self.redis_manager.config.pool.max_connections
 
-                pool_usage = in_use_connections / max_connections if max_connections > 0 else 0
+                pool_usage = (
+                    in_use_connections / max_connections if max_connections > 0 else 0
+                )
 
                 status = HealthStatus.HEALTHY
                 alerts = []
@@ -328,7 +332,9 @@ class RedisHealthMonitor:
             total_operations = metrics.get("total_operations", 1)
             failed_operations = metrics.get("failed_operations", 0)
 
-            error_rate = failed_operations / total_operations if total_operations > 0 else 0
+            error_rate = (
+                failed_operations / total_operations if total_operations > 0 else 0
+            )
 
             status = HealthStatus.HEALTHY
             alerts = []
@@ -350,7 +356,11 @@ class RedisHealthMonitor:
                     "performance",
                     f"High Redis error rate: {error_rate:.2%}",
                     {"error_rate": error_rate, "failed_operations": failed_operations},
-                    ["Check Redis logs", "Review network connectivity", "Monitor resource usage"],
+                    [
+                        "Check Redis logs",
+                        "Review network connectivity",
+                        "Monitor resource usage",
+                    ],
                 )
 
             return {
@@ -439,7 +449,9 @@ class RedisHealthMonitor:
                     async for stream_key in redis.scan_iter(match=pattern, count=50):
                         try:
                             stream_key_str = (
-                                stream_key.decode() if isinstance(stream_key, bytes) else stream_key
+                                stream_key.decode()
+                                if isinstance(stream_key, bytes)
+                                else stream_key
                             )
                             info = await redis.xinfo_stream(stream_key)
 
@@ -453,18 +465,24 @@ class RedisHealthMonitor:
                                 "length": length,
                                 "max_length": max_len,
                                 "usage_percent": usage_percent,
-                                "last_generated_id": info.get("last-generated-id", "0-0"),
+                                "last_generated_id": info.get(
+                                    "last-generated-id", "0-0"
+                                ),
                                 "groups": info.get("groups", 0),
                             }
 
                             if usage_percent >= 0.9:
-                                overall_status = max(overall_status, HealthStatus.WARNING)
+                                overall_status = max(
+                                    overall_status, HealthStatus.WARNING
+                                )
                                 alerts.append(
                                     f"Stream {stream_key_str} near capacity: {usage_percent:.1%}"
                                 )
 
                         except Exception as e:
-                            logger.warning(f"Could not get info for stream {stream_key}: {e}")
+                            logger.warning(
+                                f"Could not get info for stream {stream_key}: {e}"
+                            )
 
             return {
                 "status": overall_status,
@@ -584,7 +602,9 @@ class RedisHealthMonitor:
                 "avg_response_time": health_data["metrics"].get("avg_response_time", 0),
                 "error_rate": health_data["metrics"].get("error_rate", 0),
             },
-            "recommendations": health_data["pay_ready_status"].get("recommendations", []),
+            "recommendations": health_data["pay_ready_status"].get(
+                "recommendations", []
+            ),
         }
 
 

@@ -88,7 +88,9 @@ class MessageBus:
                 )
 
         self._initialized = True
-        logger.info("📊 Message bus initialized with bounded streams and connection pooling")
+        logger.info(
+            "📊 Message bus initialized with bounded streams and connection pooling"
+        )
 
     async def _get_redis_manager(self) -> RedisManager:
         """Get Redis manager, ensuring initialization"""
@@ -134,7 +136,9 @@ class MessageBus:
                 "receiver": message.receiver_agent_id,
             }
             self._record_metrics("bus_messages_total", metrics, 1)
-            self._record_metrics("bus_publish_latency_ms", metrics, time.time() - start_time)
+            self._record_metrics(
+                "bus_publish_latency_ms", metrics, time.time() - start_time
+            )
 
             logger.debug(
                 f"📨 Published bounded message {message.id} to {message.receiver_agent_id or 'broadcast'}"
@@ -195,7 +199,9 @@ class MessageBus:
                         message_ids_to_ack.append(message_id)  # Ack invalid messages
                     except Exception as e:
                         logger.error(f"Message processing error: {e}")
-                        message_ids_to_ack.append(message_id)  # Ack to prevent redelivery
+                        message_ids_to_ack.append(
+                            message_id
+                        )  # Ack to prevent redelivery
 
                 # Acknowledge processed messages
                 if message_ids_to_ack:
@@ -205,7 +211,9 @@ class MessageBus:
                 logger.error(f"Subscription error for agent {agent_id}: {e}")
                 await asyncio.sleep(1)  # Back off on error
 
-    async def get_thread_history(self, thread_id: str, limit: int = 100) -> list[SwarmMessage]:
+    async def get_thread_history(
+        self, thread_id: str, limit: int = 100
+    ) -> list[SwarmMessage]:
         """Get message history for a specific thread with circuit breaker protection"""
         redis_manager = await self._get_redis_manager()
         stream = f"{self.streams['threads']}:{thread_id}"
@@ -229,7 +237,9 @@ class MessageBus:
         parsed_messages = []
         for _, msg_data in sorted_messages:
             try:
-                parsed_messages.append(SwarmMessage(**msgpack.loads(msg_data[b"message"])))
+                parsed_messages.append(
+                    SwarmMessage(**msgpack.loads(msg_data[b"message"]))
+                )
             except Exception as e:
                 logger.warning(f"Failed to parse message in thread {thread_id}: {e}")
                 continue
@@ -299,7 +309,9 @@ class MessageBus:
                             "last_generated_id": info.get("last-generated-id", "0-0"),
                         }
                     except Exception:
-                        health["streams_info"][stream_name] = {"error": "Stream not found"}
+                        health["streams_info"][stream_name] = {
+                            "error": "Stream not found"
+                        }
         except Exception as e:
             logger.warning(f"Could not get stream info: {e}")
 

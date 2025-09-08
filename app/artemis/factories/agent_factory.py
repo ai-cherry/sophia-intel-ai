@@ -533,7 +533,9 @@ RESPONSE STYLE:
             "config": agent_config,
             "created_at": datetime.now().isoformat(),
             "status": "ready",
-            "tactical_level": template.tactical_traits.get("precision_level", "standard"),
+            "tactical_level": template.tactical_traits.get(
+                "precision_level", "standard"
+            ),
         }
 
         logger.info(f"⛔️ Created tactical agent: {agent_id} ({template.name})")
@@ -584,13 +586,19 @@ RESPONSE STYLE:
 
         self.created_swarms[team_id] = team_info
 
-        logger.info(f"⛔️ Created tactical team: {team_id} with {len(team_agents)} agents")
+        logger.info(
+            f"⛔️ Created tactical team: {team_id} with {len(team_agents)} agents"
+        )
         return team_id
 
     def _get_team_templates(self, team_type: str) -> list[str]:
         """Get agent templates for specific team types"""
         team_compositions = {
-            "code_analysis": ["code_reviewer", "security_auditor", "performance_optimizer"],
+            "code_analysis": [
+                "code_reviewer",
+                "security_auditor",
+                "performance_optimizer",
+            ],
             "security_audit": ["security_auditor", "vulnerability_scanner"],
             "architecture_review": [
                 "architecture_critic",
@@ -667,7 +675,10 @@ RESPONSE STYLE:
         dry_run = refactoring_config.get("dry_run", False)
 
         # Map string to enum
-        from app.swarms.refactoring.code_refactoring_swarm import RefactoringRisk, RefactoringType
+        from app.swarms.refactoring.code_refactoring_swarm import (
+            RefactoringRisk,
+            RefactoringType,
+        )
 
         risk_map = {
             "low": RefactoringRisk.LOW,
@@ -729,11 +740,17 @@ RESPONSE STYLE:
                     "opportunities_found": len(result.executed_opportunities)
                     + len(result.failed_opportunities),
                     "success_rate": len(result.executed_opportunities)
-                    / max(len(result.executed_opportunities) + len(result.failed_opportunities), 1),
+                    / max(
+                        len(result.executed_opportunities)
+                        + len(result.failed_opportunities),
+                        1,
+                    ),
                     "risk_level": risk_tolerance,
                     "dry_run": dry_run,
                     "tactical_status": (
-                        "mission_accomplished" if result.success else "mission_partially_completed"
+                        "mission_accomplished"
+                        if result.success
+                        else "mission_partially_completed"
                     ),
                 },
                 "execution_time": execution_time,
@@ -814,7 +831,9 @@ RESPONSE STYLE:
                 "execution_time": execution_time,
                 "tactical_status": "mission_accomplished",
                 "team_composition": team_info["agents"],
-                "tactical_insights": self._generate_tactical_insights(result, team_type),
+                "tactical_insights": self._generate_tactical_insights(
+                    result, team_type
+                ),
             }
 
         except Exception as e:
@@ -827,7 +846,9 @@ RESPONSE STYLE:
                 "recovery_plan": "Tactical recalibration required",
             }
 
-    def _generate_tactical_insights(self, result: dict[str, Any], team_type: str) -> list[str]:
+    def _generate_tactical_insights(
+        self, result: dict[str, Any], team_type: str
+    ) -> list[str]:
         """Generate tactical insights from team execution"""
         insights = [
             f"Tactical {team_type} assessment completed with precision",
@@ -860,7 +881,9 @@ RESPONSE STYLE:
             elif team_type == DomainTeamType.SALES_INTELLIGENCE:
                 team = await IntegrationTeamFactory.create_sales_intelligence_team()
             elif team_type == DomainTeamType.DEVELOPMENT_INTELLIGENCE:
-                team = await IntegrationTeamFactory.create_development_intelligence_team()
+                team = (
+                    await IntegrationTeamFactory.create_development_intelligence_team()
+                )
             elif team_type == DomainTeamType.KNOWLEDGE_MANAGEMENT:
                 team = await IntegrationTeamFactory.create_knowledge_management_team()
             else:
@@ -915,7 +938,10 @@ RESPONSE STYLE:
             raise
 
     async def execute_domain_intelligence_analysis(
-        self, team_id: str, platform_data: dict[str, Any], analysis_type: str = "comprehensive"
+        self,
+        team_id: str,
+        platform_data: dict[str, Any],
+        analysis_type: str = "comprehensive",
     ) -> dict[str, Any]:
         """Execute domain-specific intelligence analysis"""
 
@@ -934,7 +960,9 @@ RESPONSE STYLE:
             # Execute analysis based on team type
             if team_type == "business_intelligence":
                 if analysis_type == "okr_analysis":
-                    result = await team_instance.analyze_revenue_per_employee_okr(platform_data)
+                    result = await team_instance.analyze_revenue_per_employee_okr(
+                        platform_data
+                    )
                 else:
                     result = await team_instance.generate_financial_intelligence_report(
                         platform_data
@@ -947,27 +975,37 @@ RESPONSE STYLE:
                         platform_data
                     )
                 else:
-                    result = await team_instance.optimize_sales_pipeline_performance(platform_data)
+                    result = await team_instance.optimize_sales_pipeline_performance(
+                        platform_data
+                    )
                 self.domain_metrics["sales_intelligence_analyses"] += 1
 
             elif team_type == "development_intelligence":
                 if analysis_type == "productivity":
-                    result = await team_instance.optimize_engineering_productivity(platform_data)
-                else:
-                    result = await team_instance.analyze_development_contribution_to_revenue(
+                    result = await team_instance.optimize_engineering_productivity(
                         platform_data
+                    )
+                else:
+                    result = (
+                        await team_instance.analyze_development_contribution_to_revenue(
+                            platform_data
+                        )
                     )
                 self.domain_metrics["development_intelligence_analyses"] += 1
 
             elif team_type == "knowledge_management":
-                result = await team_instance.analyze_knowledge_contribution_to_efficiency(
-                    platform_data
+                result = (
+                    await team_instance.analyze_knowledge_contribution_to_efficiency(
+                        platform_data
+                    )
                 )
                 self.domain_metrics["knowledge_management_analyses"] += 1
 
             elif team_type == "integration_orchestrator":
-                result = await team_instance.execute_comprehensive_intelligence_analysis(
-                    platform_data, analysis_type
+                result = (
+                    await team_instance.execute_comprehensive_intelligence_analysis(
+                        platform_data, analysis_type
+                    )
                 )
                 # Update multiple metrics for orchestrator
                 for metric in self.domain_metrics:
@@ -1038,7 +1076,9 @@ RESPONSE STYLE:
         try:
             # Use orchestrator's correlator
             correlator = self.integration_orchestrator.correlator
-            result = await correlator.correlate_entities(correlation_type, platform_data)
+            result = await correlator.correlate_entities(
+                correlation_type, platform_data
+            )
 
             execution_time = (datetime.now() - start_time).total_seconds()
 
@@ -1082,8 +1122,12 @@ RESPONSE STYLE:
         try:
             if financial_data:
                 # Update OKR tracker with new financial data
-                self.okr_tracker.total_revenue = financial_data.get("total_revenue", 0.0)
-                self.okr_tracker.employee_count = financial_data.get("employee_count", 1)
+                self.okr_tracker.total_revenue = financial_data.get(
+                    "total_revenue", 0.0
+                )
+                self.okr_tracker.employee_count = financial_data.get(
+                    "employee_count", 1
+                )
                 self.okr_tracker.revenue_per_employee = (
                     self.okr_tracker.total_revenue / self.okr_tracker.employee_count
                     if self.okr_tracker.employee_count > 0
@@ -1127,7 +1171,9 @@ RESPONSE STYLE:
                     "total_analyses": sum(
                         v for k, v in self.domain_metrics.items() if "analyses" in k
                     ),
-                    "correlations_performed": self.domain_metrics["cross_platform_correlations"],
+                    "correlations_performed": self.domain_metrics[
+                        "cross_platform_correlations"
+                    ],
                     "okr_calculations": self.domain_metrics["okr_calculations"],
                 },
                 "timestamp": datetime.now().isoformat(),
@@ -1147,9 +1193,15 @@ RESPONSE STYLE:
 
         except Exception as e:
             logger.error(f"OKR calculation failed: {e}")
-            return {"success": False, "error": str(e), "timestamp": datetime.now().isoformat()}
+            return {
+                "success": False,
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
+            }
 
-    def _generate_domain_insights(self, result: dict[str, Any], team_type: str) -> list[str]:
+    def _generate_domain_insights(
+        self, result: dict[str, Any], team_type: str
+    ) -> list[str]:
         """Generate domain-specific insights from analysis results"""
         insights = []
 
@@ -1188,7 +1240,9 @@ RESPONSE STYLE:
 
         return insights
 
-    def _calculate_okr_impact(self, result: dict[str, Any], team_type: str) -> dict[str, Any]:
+    def _calculate_okr_impact(
+        self, result: dict[str, Any], team_type: str
+    ) -> dict[str, Any]:
         """Calculate potential OKR impact from analysis results"""
 
         # Base impact calculations by team type
@@ -1271,7 +1325,9 @@ RESPONSE STYLE:
             "tactical_readiness": (
                 "maximum" if sum(self.technical_metrics.values()) > 0 else "ready"
             ),
-            "integration_readiness": "operational" if len(self.domain_teams) > 0 else "ready",
+            "integration_readiness": (
+                "operational" if len(self.domain_teams) > 0 else "ready"
+            ),
             "okr_metrics": {
                 "revenue_per_employee": self.okr_tracker.revenue_per_employee,
                 "target_revenue_per_employee": self.okr_tracker.target_revenue_per_employee,
@@ -1347,7 +1403,9 @@ RESPONSE STYLE:
         team_instance = team_info["instance"]
 
         # Get recent analyses from memory
-        recent_analyses = await search_memory(query=team_id, filters={"team_id": team_id})
+        recent_analyses = await search_memory(
+            query=team_id, filters={"team_id": team_id}
+        )
 
         return {
             "team_id": team_id,
@@ -1357,9 +1415,9 @@ RESPONSE STYLE:
             "integration_context": {
                 "platforms": team_info["platforms"],
                 "okr_focus": team_info["okr_focus"],
-                "processing_mode": getattr(team_instance, "integration_context", {}).get(
-                    "processing_mode", "unknown"
-                ),
+                "processing_mode": getattr(
+                    team_instance, "integration_context", {}
+                ).get("processing_mode", "unknown"),
             },
         }
 
@@ -1384,7 +1442,9 @@ async def create_technical_agent(request: dict[str, Any]):
         if not template_name:
             raise HTTPException(status_code=400, detail="Template name is required")
 
-        agent_id = await artemis_factory.create_technical_agent(template_name, custom_config)
+        agent_id = await artemis_factory.create_technical_agent(
+            template_name, custom_config
+        )
 
         return {
             "success": True,
@@ -1442,7 +1502,9 @@ async def get_technical_templates():
 
     except Exception as e:
         logger.error(f"Failed to get templates: {e}")
-        raise HTTPException(status_code=500, detail=f"Template retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Template retrieval failed: {str(e)}"
+        )
 
 
 @router.get("/agents")
@@ -1504,7 +1566,9 @@ async def get_technical_team_info(team_id: str):
     """Get technical team information"""
     try:
         if team_id not in artemis_factory.created_swarms:
-            raise HTTPException(status_code=404, detail=f"Technical team '{team_id}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Technical team '{team_id}' not found"
+            )
 
         team_info = artemis_factory.created_swarms[team_id]
         agents_info = []
@@ -1532,7 +1596,9 @@ async def get_technical_team_info(team_id: str):
         raise
     except Exception as e:
         logger.error(f"Failed to get team info: {e}")
-        raise HTTPException(status_code=500, detail=f"Team info retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Team info retrieval failed: {str(e)}"
+        )
 
 
 @router.get("/metrics")
@@ -1540,11 +1606,17 @@ async def get_technical_metrics():
     """Get technical operations metrics"""
     try:
         metrics = artemis_factory.get_technical_metrics()
-        return {"success": True, "metrics": metrics, "tactical_status": "metrics_available"}
+        return {
+            "success": True,
+            "metrics": metrics,
+            "tactical_status": "metrics_available",
+        }
 
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}")
-        raise HTTPException(status_code=500, detail=f"Metrics retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Metrics retrieval failed: {str(e)}"
+        )
 
 
 @router.post("/swarms/refactoring/create")
@@ -1568,7 +1640,9 @@ async def create_refactoring_swarm(request: dict[str, Any]):
 
     except Exception as e:
         logger.error(f"Failed to create refactoring swarm: {e}")
-        raise HTTPException(status_code=500, detail=f"Refactoring swarm creation failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Refactoring swarm creation failed: {str(e)}"
+        )
 
 
 @router.post("/swarms/refactoring/{swarm_id}/execute")
@@ -1591,7 +1665,9 @@ async def execute_refactoring_swarm(swarm_id: str, request: dict[str, Any]):
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to execute refactoring swarm: {e}")
-        raise HTTPException(status_code=500, detail=f"Refactoring swarm execution failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Refactoring swarm execution failed: {str(e)}"
+        )
 
 
 @router.get("/swarms/refactoring/{swarm_id}")
@@ -1599,7 +1675,9 @@ async def get_refactoring_swarm_info(swarm_id: str):
     """Get refactoring swarm information"""
     try:
         if swarm_id not in artemis_factory.specialized_swarms:
-            raise HTTPException(status_code=404, detail=f"Refactoring swarm '{swarm_id}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Refactoring swarm '{swarm_id}' not found"
+            )
 
         swarm_info = artemis_factory.specialized_swarms[swarm_id]
 
@@ -1627,7 +1705,9 @@ async def get_refactoring_swarm_info(swarm_id: str):
         raise
     except Exception as e:
         logger.error(f"Failed to get refactoring swarm info: {e}")
-        raise HTTPException(status_code=500, detail=f"Swarm info retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Swarm info retrieval failed: {str(e)}"
+        )
 
 
 @router.get("/swarms")
@@ -1667,7 +1747,11 @@ async def factory_health_check():
 
     except Exception as e:
         logger.error(f"Factory health check failed: {e}")
-        return {"status": "degraded", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "degraded",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 # ==============================================================================

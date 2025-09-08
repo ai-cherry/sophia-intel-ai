@@ -150,13 +150,17 @@ class GongRAGService:
 
                 # Perform vector search
                 vector_results = await self.weaviate.vector_search(
-                    collection=collection_name, vector=query_embedding, limit=self.max_results
+                    collection=collection_name,
+                    vector=query_embedding,
+                    limit=self.max_results,
                 )
 
                 # Convert to SearchResult objects
                 for result in vector_results:
                     if result.score >= self.min_relevance_score:
-                        search_result = self._convert_to_search_result(result, collection_key)
+                        search_result = self._convert_to_search_result(
+                            result, collection_key
+                        )
                         if search_result:
                             all_results.append(search_result)
 
@@ -183,10 +187,14 @@ class GongRAGService:
         """Perform hybrid search combining semantic and keyword search"""
 
         # Get semantic results
-        semantic_results = await self.semantic_search(query, collections, filters, date_range)
+        semantic_results = await self.semantic_search(
+            query, collections, filters, date_range
+        )
 
         # Get keyword results
-        keyword_results = await self.keyword_search(query, collections, filters, date_range)
+        keyword_results = await self.keyword_search(
+            query, collections, filters, date_range
+        )
 
         # Combine and re-rank results
         combined_results = self._combine_search_results(
@@ -229,8 +237,13 @@ class GongRAGService:
 
                 # Convert to SearchResult objects
                 for result in text_results:
-                    search_result = self._convert_to_search_result(result, collection_key)
-                    if search_result and search_result.relevance_score >= self.min_relevance_score:
+                    search_result = self._convert_to_search_result(
+                        result, collection_key
+                    )
+                    if (
+                        search_result
+                        and search_result.relevance_score >= self.min_relevance_score
+                    ):
                         all_results.append(search_result)
 
             except Exception as e:
@@ -254,7 +267,10 @@ class GongRAGService:
 
         if query:
             return await self.hybrid_search(
-                query=query, collections=["transcripts"], filters=filters, date_range=date_range
+                query=query,
+                collections=["transcripts"],
+                filters=filters,
+                date_range=date_range,
             )
         else:
             # Return all content from this speaker
@@ -273,13 +289,21 @@ class GongRAGService:
         filters = {"thread_id": thread_id}
 
         if query:
-            return await self.hybrid_search(query=query, collections=["emails"], filters=filters)
+            return await self.hybrid_search(
+                query=query, collections=["emails"], filters=filters
+            )
         else:
             # Return all emails in thread
-            return await self.keyword_search(query="*", collections=["emails"], filters=filters)
+            return await self.keyword_search(
+                query="*", collections=["emails"], filters=filters
+            )
 
     async def temporal_search(
-        self, query: str, start_date: datetime, end_date: datetime, collections: list[str] = None
+        self,
+        query: str,
+        start_date: datetime,
+        end_date: datetime,
+        collections: list[str] = None,
     ) -> list[SearchResult]:
         """Search within a specific time range"""
 
@@ -298,10 +322,14 @@ class GongRAGService:
             return []
 
         # Use the content itself as the search query
-        query = original_content.get("content", "") or original_content.get("summary", "")
+        query = original_content.get("content", "") or original_content.get(
+            "summary", ""
+        )
 
         # Perform semantic search
-        results = await self.semantic_search(query, min_relevance_score=similarity_threshold)
+        results = await self.semantic_search(
+            query, min_relevance_score=similarity_threshold
+        )
 
         # Filter out the original content
         filtered_results = [r for r in results if r.citation.source_id != content_id]
@@ -309,7 +337,9 @@ class GongRAGService:
         return filtered_results
 
     def _build_where_filter(
-        self, filters: dict[str, Any] = None, date_range: tuple[datetime, datetime] = None
+        self,
+        filters: dict[str, Any] = None,
+        date_range: tuple[datetime, datetime] = None,
     ) -> dict[str, Any]:
         """Build Weaviate where filter from parameters"""
         where_conditions = []
@@ -319,7 +349,11 @@ class GongRAGService:
                 if isinstance(value, list):
                     # Array contains any of these values
                     where_conditions.append(
-                        {"path": [field], "operator": "ContainsAny", "valueTextArray": value}
+                        {
+                            "path": [field],
+                            "operator": "ContainsAny",
+                            "valueTextArray": value,
+                        }
                     )
                 else:
                     # Exact match
@@ -398,7 +432,9 @@ class GongRAGService:
                     source_type=ContentSource.EMAIL,
                     title=metadata.get("subject", "Email"),
                     url=None,
-                    date=datetime.fromisoformat(metadata.get("sentAt", datetime.now().isoformat())),
+                    date=datetime.fromisoformat(
+                        metadata.get("sentAt", datetime.now().isoformat())
+                    ),
                     email_from=metadata.get("fromEmail"),
                     email_to=metadata.get("toEmails", []),
                 )
@@ -478,7 +514,9 @@ class GongRAGService:
                 logger.error(f"Error adding context to result: {e}")
                 continue
 
-    async def _get_surrounding_transcript_context(self, result: SearchResult) -> Optional[str]:
+    async def _get_surrounding_transcript_context(
+        self, result: SearchResult
+    ) -> Optional[str]:
         """Get surrounding context for transcript chunks"""
 
         try:
@@ -493,7 +531,9 @@ class GongRAGService:
 
             # Get previous chunk
             if current_chunk_index > 0:
-                prev_chunk = await self._get_transcript_chunk(call_id, current_chunk_index - 1)
+                prev_chunk = await self._get_transcript_chunk(
+                    call_id, current_chunk_index - 1
+                )
                 if prev_chunk:
                     context_chunks.append(f"[Previous] {prev_chunk}")
 
@@ -501,7 +541,9 @@ class GongRAGService:
             context_chunks.append(f"[Current] {result.content}")
 
             # Get next chunk
-            next_chunk = await self._get_transcript_chunk(call_id, current_chunk_index + 1)
+            next_chunk = await self._get_transcript_chunk(
+                call_id, current_chunk_index + 1
+            )
             if next_chunk:
                 context_chunks.append(f"[Next] {next_chunk}")
 
@@ -511,7 +553,9 @@ class GongRAGService:
             logger.error(f"Error getting transcript context: {e}")
             return None
 
-    async def _get_transcript_chunk(self, call_id: str, chunk_index: int) -> Optional[str]:
+    async def _get_transcript_chunk(
+        self, call_id: str, chunk_index: int
+    ) -> Optional[str]:
         """Get a specific transcript chunk"""
 
         try:
@@ -636,12 +680,15 @@ async def main():
         # Example searches
         logger.info("Testing semantic search...")
         results = await rag_service.semantic_search(
-            query="pricing and contract discussions", collections=["transcripts", "emails"]
+            query="pricing and contract discussions",
+            collections=["transcripts", "emails"],
         )
 
         logger.info(f"Found {len(results)} results for pricing query")
         for result in results[:3]:
-            logger.info(f"- {result.citation.title} (score: {result.relevance_score:.2f})")
+            logger.info(
+                f"- {result.citation.title} (score: {result.relevance_score:.2f})"
+            )
 
         # Test speaker search
         logger.info("Testing speaker search...")

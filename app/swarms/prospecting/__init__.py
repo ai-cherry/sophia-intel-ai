@@ -15,14 +15,22 @@ from .behavioral_analysis import (
     EngagementBehaviorAnalyzer,
     LinkedInActivityAnalyzer,
 )
-from .models import BehaviorPattern, PersonalityProfile, ProspectIntelligence, ResearchInsight
+from .models import (
+    BehaviorPattern,
+    PersonalityProfile,
+    ProspectIntelligence,
+    ResearchInsight,
+)
 from .personality_analysis import (
     AdvancedPsychProfileAgent,
     BasicPersonalityAgent,
     DISCProfileAnalyzer,
     PredictivePersonalityEngine,
 )
-from .prospecting_orchestrator import ProspectEnrichmentPipeline, ProspectingSwarmOrchestrator
+from .prospecting_orchestrator import (
+    ProspectEnrichmentPipeline,
+    ProspectingSwarmOrchestrator,
+)
 from .research_agents import (
     CompanyIntelligenceAgent,
     CompetitiveResearchAgent,

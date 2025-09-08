@@ -61,18 +61,26 @@ class AppSettings(BaseSettings):
 
     # OpenRouter/OpenAI
     openai_api_key: Optional[SecretStr] = Field(default=None, env="OPENAI_API_KEY")
-    openai_base_url: str = Field(default="https://openrouter.ai/api/v1", env="OPENAI_BASE_URL")
-    openrouter_api_key: Optional[SecretStr] = Field(default=None, env="OPENROUTER_API_KEY")
+    openai_base_url: str = Field(
+        default="https://openrouter.ai/api/v1", env="OPENAI_BASE_URL"
+    )
+    openrouter_api_key: Optional[SecretStr] = Field(
+        default=None, env="OPENROUTER_API_KEY"
+    )
 
     # Portkey
     portkey_api_key: Optional[SecretStr] = Field(default=None, env="PORTKEY_API_KEY")
-    portkey_base_url: str = Field(default="https://api.portkey.ai/v1", env="PORTKEY_BASE_URL")
+    portkey_base_url: str = Field(
+        default="https://api.portkey.ai/v1", env="PORTKEY_BASE_URL"
+    )
 
     # Together AI
     together_api_key: Optional[SecretStr] = Field(default=None, env="TOGETHER_API_KEY")
 
     # Anthropic
-    anthropic_api_key: Optional[SecretStr] = Field(default=None, env="ANTHROPIC_API_KEY")
+    anthropic_api_key: Optional[SecretStr] = Field(
+        default=None, env="ANTHROPIC_API_KEY"
+    )
 
     # Agno
     agno_api_key: Optional[SecretStr] = Field(default=None, env="AGNO_API_KEY")
@@ -95,7 +103,8 @@ class AppSettings(BaseSettings):
         default=["gpt-4o", "claude-3-opus", "gemini-1.5-pro"], env="PREMIUM_MODELS"
     )
     balanced_models: list[str] = Field(
-        default=["gpt-4o-mini", "claude-3-sonnet", "gemini-1.5-flash"], env="BALANCED_MODELS"
+        default=["gpt-4o-mini", "claude-3-sonnet", "gemini-1.5-flash"],
+        env="BALANCED_MODELS",
     )
     fast_models: list[str] = Field(
         default=["gpt-3.5-turbo", "claude-3-haiku", "llama-3-70b"], env="FAST_MODELS"
@@ -196,12 +205,20 @@ class AppSettings(BaseSettings):
     redis_connection_timeout: int = Field(default=30, env="REDIS_CONNECTION_TIMEOUT")
 
     # WebSocket Configuration
-    websocket_max_connections: int = Field(default=1000, env="WEBSOCKET_MAX_CONNECTIONS")
-    websocket_heartbeat_interval: int = Field(default=30, env="WEBSOCKET_HEARTBEAT_INTERVAL")
-    websocket_max_message_size: int = Field(default=1024 * 1024, env="WEBSOCKET_MAX_MESSAGE_SIZE")
+    websocket_max_connections: int = Field(
+        default=1000, env="WEBSOCKET_MAX_CONNECTIONS"
+    )
+    websocket_heartbeat_interval: int = Field(
+        default=30, env="WEBSOCKET_HEARTBEAT_INTERVAL"
+    )
+    websocket_max_message_size: int = Field(
+        default=1024 * 1024, env="WEBSOCKET_MAX_MESSAGE_SIZE"
+    )
 
     # Circuit Breaker Settings
-    circuit_breaker_failure_threshold: int = Field(default=5, env="CB_FAILURE_THRESHOLD")
+    circuit_breaker_failure_threshold: int = Field(
+        default=5, env="CB_FAILURE_THRESHOLD"
+    )
     circuit_breaker_timeout_seconds: int = Field(default=60, env="CB_TIMEOUT_SECONDS")
     circuit_breaker_reset_timeout: int = Field(default=300, env="CB_RESET_TIMEOUT")
 

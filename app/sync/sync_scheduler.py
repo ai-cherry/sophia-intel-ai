@@ -61,8 +61,12 @@ class SyncScheduler:
         self.max_consecutive_failures = 3
 
         # Configuration
-        self.incremental_interval_minutes = getattr(settings, "sync_incremental_interval", 60)
-        self.full_sync_cron = getattr(settings, "sync_full_cron", "0 2 * * *")  # 2 AM daily
+        self.incremental_interval_minutes = getattr(
+            settings, "sync_incremental_interval", 60
+        )
+        self.full_sync_cron = getattr(
+            settings, "sync_full_cron", "0 2 * * *"
+        )  # 2 AM daily
         self.enable_auto_sync = getattr(settings, "enable_auto_sync", True)
 
     async def initialize(self):
@@ -154,7 +158,11 @@ class SyncScheduler:
                 "records_synced": result.get("records_synced", 0),
                 "conflicts_detected": result.get("conflicts_detected", 0),
                 "errors": result.get("errors", []),
-                "status": SyncStatus.SUCCESS if not result.get("errors") else SyncStatus.PARTIAL,
+                "status": (
+                    SyncStatus.SUCCESS
+                    if not result.get("errors")
+                    else SyncStatus.PARTIAL
+                ),
             }
 
             # Update status
@@ -227,7 +235,11 @@ class SyncScheduler:
                 "records_synced": result.get("records_synced", 0),
                 "conflicts_detected": result.get("conflicts_detected", 0),
                 "errors": result.get("errors", []),
-                "status": SyncStatus.SUCCESS if not result.get("errors") else SyncStatus.PARTIAL,
+                "status": (
+                    SyncStatus.SUCCESS
+                    if not result.get("errors")
+                    else SyncStatus.PARTIAL
+                ),
             }
 
             # Update status
@@ -317,7 +329,9 @@ class SyncScheduler:
         """
         Handle critical sync failure (multiple consecutive failures).
         """
-        logger.critical(f"Critical sync failure: {self.consecutive_failures} consecutive failures")
+        logger.critical(
+            f"Critical sync failure: {self.consecutive_failures} consecutive failures"
+        )
 
         # Pause scheduled jobs
         self.scheduler.pause_job("incremental_sync")
@@ -357,9 +371,13 @@ class SyncScheduler:
             if entry.get("start_time", datetime.min) > cutoff_time
         ]
 
-        logger.debug(f"Cleaned up sync history, {len(self.sync_history)} entries remaining")
+        logger.debug(
+            f"Cleaned up sync history, {len(self.sync_history)} entries remaining"
+        )
 
-    async def trigger_manual_sync(self, sync_type: str = "incremental") -> dict[str, Any]:
+    async def trigger_manual_sync(
+        self, sync_type: str = "incremental"
+    ) -> dict[str, Any]:
         """
         Manually trigger a synchronization.
 
@@ -406,7 +424,9 @@ class SyncScheduler:
             "current_status": self.current_status.value,
             "sync_health": sync_health,
             "consecutive_failures": self.consecutive_failures,
-            "last_sync_time": self.last_sync_time.isoformat() if self.last_sync_time else None,
+            "last_sync_time": (
+                self.last_sync_time.isoformat() if self.last_sync_time else None
+            ),
             "last_sync_result": self.last_sync_result,
             "next_scheduled_runs": next_runs,
             "scheduler_running": self.scheduler.running,

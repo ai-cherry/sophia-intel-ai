@@ -12,10 +12,23 @@ from agno.team import Team
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.models.simple_router import agno_chat_model
-from app.swarms.coding.agents import make_critic, make_generator, make_judge, make_lead, make_runner
+from app.swarms.coding.agents import (
+    make_critic,
+    make_generator,
+    make_judge,
+    make_lead,
+    make_runner,
+)
 from app.swarms.coding.models import PoolType, SwarmConfiguration
 from app.swarms.coding.pools import POOLS
-from app.tools.basic_tools import CodeSearch, GitDiff, GitStatus, ReadFile, RunTests, WriteFile
+from app.tools.basic_tools import (
+    CodeSearch,
+    GitDiff,
+    GitStatus,
+    ReadFile,
+    RunTests,
+    WriteFile,
+)
 from app.tools.list_directory import ListDirectory
 
 logger = logging.getLogger(__name__)
@@ -59,7 +72,9 @@ class TeamFactory:
         # Add generators based on configuration
         generators = TeamFactory._build_generators(config)
         if len(generators) > config.max_generators:
-            logger.warning(f"Limiting generators from {len(generators)} to {config.max_generators}")
+            logger.warning(
+                f"Limiting generators from {len(generators)} to {config.max_generators}"
+            )
             generators = generators[: config.max_generators]
         members.extend(generators)
 
@@ -144,7 +159,9 @@ class TeamFactory:
 
         # Add custom concurrent models
         if config.concurrent_models:
-            generators.extend(TeamFactory._build_custom_generators(config.concurrent_models))
+            generators.extend(
+                TeamFactory._build_custom_generators(config.concurrent_models)
+            )
 
         return generators
 
@@ -298,7 +315,9 @@ class TeamFactory:
             raise ValueError("accuracy_threshold must be between 0 and 10")
 
         if config.include_runner and not config.enable_file_write:
-            logger.warning("Runner included but file write disabled - runner will be limited")
+            logger.warning(
+                "Runner included but file write disabled - runner will be limited"
+            )
 
         if config.timeout_seconds < 30:
             raise ValueError("timeout_seconds must be at least 30")

@@ -80,7 +80,9 @@ class MemoryIntegrationPattern(SwarmPattern):
             await self.memory_client.close()
             self.memory_client = None
 
-    async def execute(self, context: dict[str, Any], agents: list[Any]) -> PatternResult:
+    async def execute(
+        self, context: dict[str, Any], agents: list[Any]
+    ) -> PatternResult:
         """
         Execute memory integration for swarm workflow.
 
@@ -126,14 +128,20 @@ class MemoryIntegrationPattern(SwarmPattern):
                 execution_time=execution_time,
                 metrics={
                     "memory_ops_count": len(self.memory_operations_log),
-                    "context_patterns_loaded": len(self.swarm_context.get("patterns", [])),
-                    "context_learnings_loaded": len(self.swarm_context.get("learnings", [])),
+                    "context_patterns_loaded": len(
+                        self.swarm_context.get("patterns", [])
+                    ),
+                    "context_learnings_loaded": len(
+                        self.swarm_context.get("learnings", [])
+                    ),
                 },
             )
 
         except Exception as e:
             logger.error(f"Memory integration execution failed: {e}")
-            return PatternResult(success=False, error=str(e), pattern_name="memory_integration")
+            return PatternResult(
+                success=False, error=str(e), pattern_name="memory_integration"
+            )
 
     async def _ensure_memory_client(self, context: dict[str, Any]):
         """Ensure memory client is initialized with swarm information."""
@@ -143,7 +151,9 @@ class MemoryIntegrationPattern(SwarmPattern):
         # Extract swarm information from context
         swarm_info = context.get("swarm_info", {})
         swarm_type = swarm_info.get("type", "unknown_swarm")
-        swarm_id = swarm_info.get("id", f"{swarm_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+        swarm_id = swarm_info.get(
+            "id", f"{swarm_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
 
         # Initialize memory client
         self.memory_client = SwarmMemoryClient(swarm_type, swarm_id)
@@ -191,7 +201,9 @@ class MemoryIntegrationPattern(SwarmPattern):
                     "task_type": task.get("type", "unknown"),
                     "task_description": str(task.get("description", ""))[:200],
                     "agent_count": len(agents),
-                    "agents": [str(agent) for agent in agents[:10]],  # Limit for storage
+                    "agents": [
+                        str(agent) for agent in agents[:10]
+                    ],  # Limit for storage
                 },
             )
 
@@ -214,7 +226,8 @@ class MemoryIntegrationPattern(SwarmPattern):
             enhanced_context["suggested_patterns"] = [
                 p
                 for p in context["memory_patterns"]
-                if p.get("success_score", 0) > self.config.min_quality_for_pattern_storage
+                if p.get("success_score", 0)
+                > self.config.min_quality_for_pattern_storage
             ]
 
         # Add relevant learnings to context
@@ -228,14 +241,20 @@ class MemoryIntegrationPattern(SwarmPattern):
         # Execute with enhanced context
         result = {
             "enhanced_context_applied": True,
-            "memory_patterns_available": len(enhanced_context.get("suggested_patterns", [])),
-            "memory_learnings_available": len(enhanced_context.get("relevant_learnings", [])),
+            "memory_patterns_available": len(
+                enhanced_context.get("suggested_patterns", [])
+            ),
+            "memory_learnings_available": len(
+                enhanced_context.get("relevant_learnings", [])
+            ),
             "execution_timestamp": datetime.now().isoformat(),
         }
 
         return result
 
-    async def _store_execution_results(self, context: dict[str, Any], result: dict[str, Any]):
+    async def _store_execution_results(
+        self, context: dict[str, Any], result: dict[str, Any]
+    ):
         """Store execution results and outcomes."""
         if not self.memory_client:
             return
@@ -280,7 +299,9 @@ class MemoryIntegrationPattern(SwarmPattern):
             logger.error(f"Failed to store execution results: {e}")
             self._log_memory_operation("execution_results", "failed", str(e))
 
-    async def _store_successful_pattern(self, context: dict[str, Any], result: dict[str, Any]):
+    async def _store_successful_pattern(
+        self, context: dict[str, Any], result: dict[str, Any]
+    ):
         """Store successful execution pattern."""
         if not self.memory_client:
             return
@@ -337,7 +358,9 @@ class MemoryIntegrationPattern(SwarmPattern):
                     context=learning.get("context", {}),
                 )
 
-    def _log_memory_operation(self, operation: str, status: str, error: Optional[str] = None):
+    def _log_memory_operation(
+        self, operation: str, status: str, error: Optional[str] = None
+    ):
         """Log memory operation for tracking."""
         self.memory_operations_log.append(
             {
@@ -353,7 +376,10 @@ class MemoryIntegrationPattern(SwarmPattern):
     # ============================================
 
     async def send_knowledge_to_swarm(
-        self, target_swarm_type: str, knowledge: dict[str, Any], priority: str = "normal"
+        self,
+        target_swarm_type: str,
+        knowledge: dict[str, Any],
+        priority: str = "normal",
     ):
         """Send knowledge or insights to another swarm."""
         if not self.memory_client or not self.config.enable_inter_swarm_comm:
@@ -393,7 +419,9 @@ class MemoryIntegrationPattern(SwarmPattern):
             ]
 
             if knowledge_messages:
-                logger.info(f"Received {len(knowledge_messages)} knowledge transfer messages")
+                logger.info(
+                    f"Received {len(knowledge_messages)} knowledge transfer messages"
+                )
 
             return knowledge_messages
 
@@ -454,13 +482,19 @@ class MemoryIntegrationPattern(SwarmPattern):
 
         return enhanced_decision
 
-    def _analyze_decision_patterns(self, similar_decisions: list[dict]) -> dict[str, Any]:
+    def _analyze_decision_patterns(
+        self, similar_decisions: list[dict]
+    ) -> dict[str, Any]:
         """Analyze patterns in past decisions."""
         if not similar_decisions:
             return {}
 
         # Extract decision patterns
-        patterns = {"common_factors": [], "success_indicators": [], "failure_indicators": []}
+        patterns = {
+            "common_factors": [],
+            "success_indicators": [],
+            "failure_indicators": [],
+        }
 
         for decision in similar_decisions:
             try:
@@ -482,7 +516,10 @@ class MemoryIntegrationPattern(SwarmPattern):
         return patterns
 
     def _generate_recommendations(
-        self, decision_patterns: dict[str, Any], learnings: list[dict], options: list[Any]
+        self,
+        decision_patterns: dict[str, Any],
+        learnings: list[dict],
+        options: list[Any],
     ) -> list[str]:
         """Generate recommendations based on memory analysis."""
         recommendations = []
@@ -490,10 +527,14 @@ class MemoryIntegrationPattern(SwarmPattern):
         # Recommendations based on success indicators
         success_indicators = decision_patterns.get("success_indicators", [])
         if success_indicators:
-            recommendations.append(f"Past successes indicate: {', '.join(success_indicators[:3])}")
+            recommendations.append(
+                f"Past successes indicate: {', '.join(success_indicators[:3])}"
+            )
 
         # Recommendations based on learnings
-        high_confidence_learnings = [l for l in learnings if l.get("confidence", 0) > 0.8]
+        high_confidence_learnings = [
+            l for l in learnings if l.get("confidence", 0) > 0.8
+        ]
         if high_confidence_learnings:
             recommendations.append(
                 f"High-confidence learning: {high_confidence_learnings[0].get('content', '')[:100]}"
@@ -588,10 +629,18 @@ class MemoryIntegrationPattern(SwarmPattern):
             "operations_logged": len(self.memory_operations_log),
             "context_loaded": bool(self.swarm_context),
             "successful_operations": len(
-                [op for op in self.memory_operations_log if op.get("status") == "success"]
+                [
+                    op
+                    for op in self.memory_operations_log
+                    if op.get("status") == "success"
+                ]
             ),
             "failed_operations": len(
-                [op for op in self.memory_operations_log if op.get("status") == "failed"]
+                [
+                    op
+                    for op in self.memory_operations_log
+                    if op.get("status") == "failed"
+                ]
             ),
             "last_operation": (
                 self.memory_operations_log[-1] if self.memory_operations_log else None
@@ -624,7 +673,9 @@ class MemoryIntegrationPattern(SwarmPattern):
 
                 # Test context loading
                 test_context = await self.memory_client.load_swarm_context()
-                validation["context_loading_functional"] = isinstance(test_context, dict)
+                validation["context_loading_functional"] = isinstance(
+                    test_context, dict
+                )
 
             except Exception as e:
                 logger.error(f"Memory integration validation failed: {e}")
@@ -677,9 +728,13 @@ class MemoryEnhancedStrategyArchive:
             context=additional_context,
         )
 
-        logger.info(f"Archived successful strategy for {problem_type} (score: {quality_score:.2f})")
+        logger.info(
+            f"Archived successful strategy for {problem_type} (score: {quality_score:.2f})"
+        )
 
-    async def retrieve_best_pattern(self, problem_type: str) -> Optional[dict[str, Any]]:
+    async def retrieve_best_pattern(
+        self, problem_type: str
+    ) -> Optional[dict[str, Any]]:
         """Retrieve best pattern for problem type from memory."""
         patterns = await self.memory_client.retrieve_patterns(
             pattern_name=f"strategy_{problem_type}", limit=1

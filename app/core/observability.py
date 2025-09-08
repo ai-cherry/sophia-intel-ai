@@ -8,7 +8,13 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 
 try:
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
@@ -41,7 +47,9 @@ http_requests_total = Counter(
 )
 
 http_request_duration = Histogram(
-    "http_request_duration_seconds", "HTTP request duration in seconds", ["method", "endpoint"]
+    "http_request_duration_seconds",
+    "HTTP request duration in seconds",
+    ["method", "endpoint"],
 )
 
 # Memory system metrics
@@ -90,7 +98,9 @@ swarm_execution_duration = Histogram(
     "swarm_execution_duration_seconds", "Swarm execution duration", ["team_id"]
 )
 
-swarm_active_executions = Gauge("swarm_active_executions", "Currently active swarm executions")
+swarm_active_executions = Gauge(
+    "swarm_active_executions", "Currently active swarm executions"
+)
 
 # Gate evaluation metrics
 gate_evaluations_total = Counter(
@@ -121,7 +131,9 @@ def setup_tracing(jaeger_endpoint: Optional[str] = None):
         # Create Jaeger exporter
         jaeger_exporter = JaegerExporter(
             agent_host_name=jaeger_endpoint.split(":")[0],
-            agent_port=int(jaeger_endpoint.split(":")[1]) if ":" in jaeger_endpoint else 6831,
+            agent_port=(
+                int(jaeger_endpoint.split(":")[1]) if ":" in jaeger_endpoint else 6831
+            ),
         )
 
         # Create tracer provider
@@ -163,12 +175,14 @@ class MetricsMiddleware:
         duration = time.time() - start_time
 
         http_requests_total.labels(
-            method=request.method, endpoint=request.url.path, status=response.status_code
+            method=request.method,
+            endpoint=request.url.path,
+            status=response.status_code,
         ).inc()
 
-        http_request_duration.labels(method=request.method, endpoint=request.url.path).observe(
-            duration
-        )
+        http_request_duration.labels(
+            method=request.method, endpoint=request.url.path
+        ).observe(duration)
 
         # Add custom headers
         response.headers["X-Request-Duration"] = str(duration)
@@ -427,7 +441,9 @@ class HealthChecker:
         }
 
         all_healthy = all(
-            check.get("healthy", False) for check in checks.values() if isinstance(check, dict)
+            check.get("healthy", False)
+            for check in checks.values()
+            if isinstance(check, dict)
         )
 
         return {"healthy": all_healthy, "checks": checks}

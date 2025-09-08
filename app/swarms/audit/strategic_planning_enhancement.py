@@ -14,7 +14,10 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from app.swarms.enhanced_memory_integration import EnhancedSwarmMemoryClient, auto_tag_and_store
+from app.swarms.enhanced_memory_integration import (
+    EnhancedSwarmMemoryClient,
+    auto_tag_and_store,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -190,10 +193,15 @@ class StrategicPlanningEngine:
                 self.memory_client,
                 content=json.dumps(planning_results),
                 topic="Strategic Planning Cycle",
-                execution_context={"cycle": self.ooda_cycles, "scope": self.planning_scope},
+                execution_context={
+                    "cycle": self.ooda_cycles,
+                    "scope": self.planning_scope,
+                },
             )
 
-            logger.info(f"✅ Strategic planning cycle completed in {time.time() - start_time:.1f}s")
+            logger.info(
+                f"✅ Strategic planning cycle completed in {time.time() - start_time:.1f}s"
+            )
             return planning_results
 
         except Exception as e:
@@ -243,22 +251,34 @@ class StrategicPlanningEngine:
         self.environmental_data.update(
             {
                 "technology_landscape": (
-                    scan_results[0] if not isinstance(scan_results[0], Exception) else {}
+                    scan_results[0]
+                    if not isinstance(scan_results[0], Exception)
+                    else {}
                 ),
                 "competitive_environment": (
-                    scan_results[1] if not isinstance(scan_results[1], Exception) else {}
+                    scan_results[1]
+                    if not isinstance(scan_results[1], Exception)
+                    else {}
                 ),
                 "market_conditions": (
-                    scan_results[2] if not isinstance(scan_results[2], Exception) else {}
+                    scan_results[2]
+                    if not isinstance(scan_results[2], Exception)
+                    else {}
                 ),
                 "regulatory_changes": (
-                    scan_results[3] if not isinstance(scan_results[3], Exception) else {}
+                    scan_results[3]
+                    if not isinstance(scan_results[3], Exception)
+                    else {}
                 ),
                 "stakeholder_sentiment": (
-                    scan_results[4] if not isinstance(scan_results[4], Exception) else {}
+                    scan_results[4]
+                    if not isinstance(scan_results[4], Exception)
+                    else {}
                 ),
                 "performance_indicators": (
-                    scan_results[5] if not isinstance(scan_results[5], Exception) else {}
+                    scan_results[5]
+                    if not isinstance(scan_results[5], Exception)
+                    else {}
                 ),
             }
         )
@@ -295,27 +315,41 @@ class StrategicPlanningEngine:
         ]
 
         # Execute orientation analysis
-        orientation_results = await asyncio.gather(*orientation_tasks, return_exceptions=True)
+        orientation_results = await asyncio.gather(
+            *orientation_tasks, return_exceptions=True
+        )
 
         # Strategic positioning synthesis
-        strategic_position = await self._synthesize_strategic_position(orientation_results)
+        strategic_position = await self._synthesize_strategic_position(
+            orientation_results
+        )
 
         orient_results = {
             "strategic_position": strategic_position,
             "capability_assessment": (
-                orientation_results[1] if not isinstance(orientation_results[1], Exception) else {}
+                orientation_results[1]
+                if not isinstance(orientation_results[1], Exception)
+                else {}
             ),
             "competitive_analysis": (
-                orientation_results[2] if not isinstance(orientation_results[2], Exception) else {}
+                orientation_results[2]
+                if not isinstance(orientation_results[2], Exception)
+                else {}
             ),
             "resource_evaluation": (
-                orientation_results[3] if not isinstance(orientation_results[3], Exception) else {}
+                orientation_results[3]
+                if not isinstance(orientation_results[3], Exception)
+                else {}
             ),
             "stakeholder_mapping": (
-                orientation_results[4] if not isinstance(orientation_results[4], Exception) else {}
+                orientation_results[4]
+                if not isinstance(orientation_results[4], Exception)
+                else {}
             ),
             "intelligence_synthesis": (
-                orientation_results[5] if not isinstance(orientation_results[5], Exception) else {}
+                orientation_results[5]
+                if not isinstance(orientation_results[5], Exception)
+                else {}
             ),
             "orientation_clarity_score": self._calculate_orientation_clarity(),
         }
@@ -346,24 +380,36 @@ class StrategicPlanningEngine:
         decision_results = await asyncio.gather(*decision_tasks, return_exceptions=True)
 
         # Strategic decision synthesis
-        strategic_decisions = await self._synthesize_strategic_decisions(decision_results)
+        strategic_decisions = await self._synthesize_strategic_decisions(
+            decision_results
+        )
 
         decide_results = {
             "scenario_forecasts": len(scenario_forecasts),
             "strategic_options_evaluated": (
-                decision_results[0] if not isinstance(decision_results[0], Exception) else {}
+                decision_results[0]
+                if not isinstance(decision_results[0], Exception)
+                else {}
             ),
             "risk_assessments": (
-                decision_results[1] if not isinstance(decision_results[1], Exception) else {}
+                decision_results[1]
+                if not isinstance(decision_results[1], Exception)
+                else {}
             ),
             "resource_analysis": (
-                decision_results[2] if not isinstance(decision_results[2], Exception) else {}
+                decision_results[2]
+                if not isinstance(decision_results[2], Exception)
+                else {}
             ),
             "implementation_scenarios": (
-                decision_results[3] if not isinstance(decision_results[3], Exception) else {}
+                decision_results[3]
+                if not isinstance(decision_results[3], Exception)
+                else {}
             ),
             "stakeholder_impact": (
-                decision_results[4] if not isinstance(decision_results[4], Exception) else {}
+                decision_results[4]
+                if not isinstance(decision_results[4], Exception)
+                else {}
             ),
             "strategic_decisions": strategic_decisions,
             "decision_confidence_score": self._calculate_decision_confidence(),
@@ -388,10 +434,14 @@ class StrategicPlanningEngine:
         ]
 
         # Execute implementation planning
-        implementation_results = await asyncio.gather(*implementation_tasks, return_exceptions=True)
+        implementation_results = await asyncio.gather(
+            *implementation_tasks, return_exceptions=True
+        )
 
         # Implementation plan synthesis
-        implementation_plan = await self._synthesize_implementation_plan(implementation_results)
+        implementation_plan = await self._synthesize_implementation_plan(
+            implementation_results
+        )
 
         act_results = {
             "implementation_roadmap": (
@@ -558,11 +608,18 @@ class StrategicPlanningEngine:
 
     async def _map_stakeholder_ecosystem(self) -> dict[str, Any]:
         """Map stakeholder ecosystem and relationships"""
-        return {"stakeholders": ["users", "developers", "partners"], "relationships": "strong"}
+        return {
+            "stakeholders": ["users", "developers", "partners"],
+            "relationships": "strong",
+        }
 
     async def _synthesize_environmental_intelligence(self) -> dict[str, Any]:
         """Synthesize environmental intelligence"""
-        return {"intelligence": "comprehensive", "confidence": "high", "actionability": "strong"}
+        return {
+            "intelligence": "comprehensive",
+            "confidence": "high",
+            "actionability": "strong",
+        }
 
     # Decision-making methods
     async def _generate_scenario_forecasts(self) -> list[ScenarioForecast]:
@@ -604,7 +661,10 @@ class StrategicPlanningEngine:
 
     async def _assess_risk_return_profiles(self) -> dict[str, Any]:
         """Assess risk-return profiles of strategic options"""
-        return {"profiles": {"high_return": 0.8, "medium_risk": 0.4}, "balance": "favorable"}
+        return {
+            "profiles": {"high_return": 0.8, "medium_risk": 0.4},
+            "balance": "favorable",
+        }
 
     async def _analyze_resource_requirements(self) -> dict[str, Any]:
         """Analyze resource requirements for strategic options"""
@@ -615,11 +675,18 @@ class StrategicPlanningEngine:
 
     async def _model_implementation_scenarios(self) -> dict[str, Any]:
         """Model implementation scenarios and timelines"""
-        return {"scenarios": ["aggressive", "moderate", "conservative"], "preferred": "moderate"}
+        return {
+            "scenarios": ["aggressive", "moderate", "conservative"],
+            "preferred": "moderate",
+        }
 
     async def _evaluate_stakeholder_impact(self) -> dict[str, Any]:
         """Evaluate stakeholder impact of strategic decisions"""
-        return {"impact": "positive", "stakeholder_alignment": "high", "support": "strong"}
+        return {
+            "impact": "positive",
+            "stakeholder_alignment": "high",
+            "support": "strong",
+        }
 
     async def _synthesize_decision_recommendations(self) -> dict[str, Any]:
         """Synthesize decision recommendations"""
@@ -654,7 +721,10 @@ class StrategicPlanningEngine:
 
     async def _establish_success_metrics(self) -> dict[str, Any]:
         """Establish success metrics and KPIs"""
-        return {"metrics": ["accuracy", "speed", "satisfaction"], "targets": [0.95, 0.90, 0.85]}
+        return {
+            "metrics": ["accuracy", "speed", "satisfaction"],
+            "targets": [0.95, 0.90, 0.85],
+        }
 
     async def _create_contingency_plans(self) -> dict[str, Any]:
         """Create contingency plans for risks"""
@@ -674,7 +744,12 @@ class StrategicPlanningEngine:
     # Adaptation methods
     async def _identify_adaptation_triggers(self) -> list[str]:
         """Identify triggers for strategic adaptation"""
-        return ["performance changes", "market shifts", "technology advances", "competitive moves"]
+        return [
+            "performance changes",
+            "market shifts",
+            "technology advances",
+            "competitive moves",
+        ]
 
     async def _extract_planning_lessons(self) -> list[str]:
         """Extract lessons learned from planning cycle"""
@@ -742,20 +817,34 @@ class StrategicPlanningEngine:
         }
 
     # Synthesis methods
-    async def _synthesize_strategic_position(self, orientation_results: list) -> dict[str, Any]:
+    async def _synthesize_strategic_position(
+        self, orientation_results: list
+    ) -> dict[str, Any]:
         """Synthesize strategic position analysis"""
-        return {"position": "favorable", "confidence": "high", "next_actions": "execute"}
+        return {
+            "position": "favorable",
+            "confidence": "high",
+            "next_actions": "execute",
+        }
 
-    async def _synthesize_strategic_decisions(self, decision_results: list) -> dict[str, Any]:
+    async def _synthesize_strategic_decisions(
+        self, decision_results: list
+    ) -> dict[str, Any]:
         """Synthesize strategic decisions"""
         return {
             "decisions": ["enhance capabilities", "optimize performance"],
             "rationale": "data-driven",
         }
 
-    async def _synthesize_implementation_plan(self, implementation_results: list) -> dict[str, Any]:
+    async def _synthesize_implementation_plan(
+        self, implementation_results: list
+    ) -> dict[str, Any]:
         """Synthesize implementation plan"""
-        return {"plan": "comprehensive", "timeline": "12 months", "resources": "allocated"}
+        return {
+            "plan": "comprehensive",
+            "timeline": "12 months",
+            "resources": "allocated",
+        }
 
     # Scoring methods
     def _assess_data_quality(self) -> float:

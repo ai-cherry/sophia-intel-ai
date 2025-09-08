@@ -103,7 +103,9 @@ class BasePersonaAgent(ABC):
                 else profile.backstory
             ),
             "traits": [trait.value for trait in profile.personality_traits],
-            "conversation_styles": {k: v.value for k, v in profile.conversation_styles.items()},
+            "conversation_styles": {
+                k: v.value for k, v in profile.conversation_styles.items()
+            },
             "expertise": profile.expertise_areas,
             "catchphrases": profile.catchphrases,
             "values": profile.values,
@@ -164,7 +166,8 @@ class BasePersonaAgent(ABC):
         relevant_memories = [
             m
             for m in self.episodic_memory
-            if context.lower() in m.context.lower() or context.lower() in m.content.lower()
+            if context.lower() in m.context.lower()
+            or context.lower() in m.content.lower()
         ]
 
         # Sort by importance and recency
@@ -204,7 +207,9 @@ class BasePersonaAgent(ABC):
         return response
 
     @abstractmethod
-    async def process_interaction(self, user_input: str, context: dict[str, Any]) -> dict[str, Any]:
+    async def process_interaction(
+        self, user_input: str, context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Process user interaction - must be implemented by subclasses"""
         pass
 
@@ -278,4 +283,10 @@ class BasePersonaAgent(ABC):
 
 
 # Export key components
-__all__ = ["BasePersonaAgent", "ConversationStyle", "PersonalityTrait", "PersonaProfile", "Memory"]
+__all__ = [
+    "BasePersonaAgent",
+    "ConversationStyle",
+    "PersonalityTrait",
+    "PersonaProfile",
+    "Memory",
+]

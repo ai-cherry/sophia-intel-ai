@@ -61,9 +61,13 @@ class ToolCall(BaseModel):
     """Base schema for tool invocation"""
 
     tool_name: str = Field(..., description="Name of the tool to invoke")
-    parameters: dict[str, Any] = Field(default_factory=dict, description="Tool parameters")
+    parameters: dict[str, Any] = Field(
+        default_factory=dict, description="Tool parameters"
+    )
     category: ToolCategory = Field(ToolCategory.ANALYSIS, description="Tool category")
-    priority: ToolPriority = Field(ToolPriority.MEDIUM, description="Execution priority")
+    priority: ToolPriority = Field(
+        ToolPriority.MEDIUM, description="Execution priority"
+    )
     timeout_seconds: int = Field(30, ge=1, le=300, description="Maximum execution time")
     retry_on_failure: bool = Field(True, description="Whether to retry on failure")
     max_retries: int = Field(3, ge=0, le=10, description="Maximum retry attempts")
@@ -277,11 +281,18 @@ def get_default_tool_definitions() -> list[ToolDefinition]:
             description="Create a project timeline with milestones",
             category=ToolCategory.PLANNING,
             parameters=[
-                ToolParameter(name="project_name", type="str", description="Name of the project"),
-                ToolParameter(name="tasks", type="list", description="List of tasks"),
-                ToolParameter(name="start_date", type="str", description="Start date (ISO format)"),
                 ToolParameter(
-                    name="end_date", type="str", description="End date (ISO format)", required=False
+                    name="project_name", type="str", description="Name of the project"
+                ),
+                ToolParameter(name="tasks", type="list", description="List of tasks"),
+                ToolParameter(
+                    name="start_date", type="str", description="Start date (ISO format)"
+                ),
+                ToolParameter(
+                    name="end_date",
+                    type="str",
+                    description="End date (ISO format)",
+                    required=False,
                 ),
             ],
             returns="Timeline object with milestones and dependencies",
@@ -291,9 +302,14 @@ def get_default_tool_definitions() -> list[ToolDefinition]:
             description="Search for code patterns in the repository",
             category=ToolCategory.CODING,
             parameters=[
-                ToolParameter(name="query", type="str", description="Search query or pattern"),
                 ToolParameter(
-                    name="language", type="str", description="Programming language", required=False
+                    name="query", type="str", description="Search query or pattern"
+                ),
+                ToolParameter(
+                    name="language",
+                    type="str",
+                    description="Programming language",
+                    required=False,
                 ),
                 ToolParameter(
                     name="max_results",
@@ -343,7 +359,10 @@ def get_default_tool_definitions() -> list[ToolDefinition]:
                     max_value=50,
                 ),
                 ToolParameter(
-                    name="domains", type="list", description="Domains to include", required=False
+                    name="domains",
+                    type="list",
+                    description="Domains to include",
+                    required=False,
                 ),
             ],
             returns="List of search results with titles, URLs, and snippets",

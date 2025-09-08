@@ -37,7 +37,9 @@ class StateManagerProtocol(Protocol):
         """Retrieve workflow state"""
         ...
 
-    async def list_tasks(self, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+    async def list_tasks(
+        self, status: str | None = None, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """List all tasks"""
         ...
 
@@ -72,7 +74,9 @@ class ToolRegistryProtocol(Protocol):
         """Initialize the tool registry"""
         ...
 
-    async def execute_tool(self, tool_name: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def execute_tool(
+        self, tool_name: str, params: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute a specific tool"""
         ...
 
@@ -121,7 +125,9 @@ class WorkflowState(Protocol):
 class WorkflowEngineProtocol(Protocol):
     """Protocol for workflow engines"""
 
-    async def execute(self, task_id: str, initial_state: dict[str, Any]) -> dict[str, Any]:
+    async def execute(
+        self, task_id: str, initial_state: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute a workflow"""
         ...
 

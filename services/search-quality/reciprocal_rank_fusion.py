@@ -136,10 +136,14 @@ class OptimizedReciprocalRankFusion:
 
         # Deduplicate results
         deduplicated_results = self._deduplicate_results(all_results)
-        self._metrics.deduplicated_results = len(all_results) - len(deduplicated_results)
+        self._metrics.deduplicated_results = len(all_results) - len(
+            deduplicated_results
+        )
 
         # Calculate RRF scores
-        scored_results = self._calculate_rrf_scores(deduplicated_results, provider_results)
+        scored_results = self._calculate_rrf_scores(
+            deduplicated_results, provider_results
+        )
 
         # Apply quality and recency boosts
         if boost_quality:
@@ -163,7 +167,9 @@ class OptimizedReciprocalRankFusion:
         self._metrics.fusion_time_ms = (time.time() - start_time) * 1000
 
         # Generate fusion metadata
-        fusion_metadata = self._generate_fusion_metadata(provider_results, fused_results)
+        fusion_metadata = self._generate_fusion_metadata(
+            provider_results, fused_results
+        )
 
         logger.debug(
             f"RRF fusion completed: {len(fused_results)} results in {self._metrics.fusion_time_ms:.1f}ms"
@@ -227,7 +233,9 @@ class OptimizedReciprocalRankFusion:
 
         for result in results:
             # Create content hash for exact duplicates
-            content_hash = hashlib.md5((result.title + result.content).lower().encode()).hexdigest()
+            content_hash = hashlib.md5(
+                (result.title + result.content).lower().encode()
+            ).hexdigest()
 
             if content_hash in seen_content_hashes:
                 continue
@@ -342,12 +350,16 @@ class OptimizedReciprocalRankFusion:
                         # Assume ISO format string
                         import datetime
 
-                        dt = datetime.datetime.fromisoformat(publish_date.replace("Z", "+00:00"))
+                        dt = datetime.datetime.fromisoformat(
+                            publish_date.replace("Z", "+00:00")
+                        )
                         age_days = (current_time - dt.timestamp()) / 86400
 
                     # Apply recency boost (stronger for newer content)
                     if age_days < 7:  # Boost content less than a week old
-                        recency_boost = self.config.recency_boost_factor * (1.0 - age_days / 7)
+                        recency_boost = self.config.recency_boost_factor * (
+                            1.0 - age_days / 7
+                        )
                         boosted_score = score * (1.0 + recency_boost)
                         self._metrics.recency_adjustments += 1
                     else:
@@ -366,7 +378,9 @@ class OptimizedReciprocalRankFusion:
 
         return boosted_results
 
-    def _calculate_content_similarity(self, result1: SearchResult, result2: SearchResult) -> float:
+    def _calculate_content_similarity(
+        self, result1: SearchResult, result2: SearchResult
+    ) -> float:
         """Calculate content similarity between two results"""
 
         # Create cache key
@@ -470,7 +484,9 @@ class OptimizedReciprocalRankFusion:
                 "latency_ms": pr.latency_ms,
                 "cost_cents": pr.cost_cents,
                 "quality_score": pr.quality_score,
-                "contribution_count": self._metrics.provider_contributions.get(pr.provider, 0),
+                "contribution_count": self._metrics.provider_contributions.get(
+                    pr.provider, 0
+                ),
             }
 
         # Result distribution analysis
@@ -524,7 +540,8 @@ class OptimizedReciprocalRankFusion:
             "total_input_results": self._metrics.total_input_results,
             "deduplicated_results": self._metrics.deduplicated_results,
             "deduplication_rate": (
-                self._metrics.deduplicated_results / max(1, self._metrics.total_input_results)
+                self._metrics.deduplicated_results
+                / max(1, self._metrics.total_input_results)
             ),
             "final_result_count": self._metrics.final_result_count,
             "fusion_time_ms": self._metrics.fusion_time_ms,

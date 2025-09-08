@@ -69,7 +69,9 @@ class PersonaTrait:
         self.last_updated = datetime.now()
 
         if abs(old_value - self.value) > 0.01:
-            logger.debug(f"Trait '{self.name}' evolved from {old_value:.3f} to {self.value:.3f}")
+            logger.debug(
+                f"Trait '{self.name}' evolved from {old_value:.3f} to {self.value:.3f}"
+            )
 
 
 @dataclass
@@ -174,7 +176,9 @@ class Persona:
             domain=domain, expertise_level=expertise_level, learning_rate=learning_rate
         )
         self.last_updated = datetime.now()
-        logger.debug(f"Added knowledge area '{domain}' with expertise {expertise_level}")
+        logger.debug(
+            f"Added knowledge area '{domain}' with expertise {expertise_level}"
+        )
 
     def update_performance(self, metrics: PerformanceMetrics) -> None:
         """Update persona performance and trigger evolution if needed."""
@@ -218,7 +222,9 @@ class Persona:
             delta = base_delta * (0.5 + random.random())
             trait.evolve(delta)
 
-        logger.info(f"Persona '{self.name}' evolved traits with base delta {base_delta}")
+        logger.info(
+            f"Persona '{self.name}' evolved traits with base delta {base_delta}"
+        )
 
     def get_expertise_score(self, domain: TaskDomain) -> float:
         """Get expertise score for a specific domain."""
@@ -227,7 +233,9 @@ class Persona:
             return self.knowledge_areas[domain_str].expertise_level
         return 0.0
 
-    def generate_system_prompt(self, task_context: Optional[dict[str, Any]] = None) -> str:
+    def generate_system_prompt(
+        self, task_context: Optional[dict[str, Any]] = None
+    ) -> str:
         """Generate a system prompt based on current persona state."""
         # This is a basic implementation - will be enhanced by prompt_templates.py
         prompt_parts = [
@@ -237,12 +245,16 @@ class Persona:
         ]
 
         for trait_name, trait in self.traits.items():
-            prompt_parts.append(f"- {trait_name}: {trait.value:.2f} ({trait.description})")
+            prompt_parts.append(
+                f"- {trait_name}: {trait.value:.2f} ({trait.description})"
+            )
 
         prompt_parts.extend(["", "## Knowledge Areas:"])
 
         for domain, knowledge in self.knowledge_areas.items():
-            prompt_parts.append(f"- {domain}: {knowledge.expertise_level:.2f} expertise")
+            prompt_parts.append(
+                f"- {domain}: {knowledge.expertise_level:.2f} expertise"
+            )
 
         if task_context:
             prompt_parts.extend(
@@ -260,7 +272,9 @@ class Persona:
             "created_at": self.created_at.isoformat(),
             "last_updated": self.last_updated.isoformat(),
             "traits": {name: asdict(trait) for name, trait in self.traits.items()},
-            "knowledge_areas": {name: asdict(ka) for name, ka in self.knowledge_areas.items()},
+            "knowledge_areas": {
+                name: asdict(ka) for name, ka in self.knowledge_areas.items()
+            },
             "communication_style": self.communication_style,
             "preferred_domains": [d.value for d in self.preferred_domains],
             "system_prompt_template": self.system_prompt_template,
@@ -286,7 +300,9 @@ class PersonaManager:
         self.personas: dict[str, Persona] = {}
         self.active_instances: dict[str, Persona] = {}  # Task-specific instances
 
-        logger.info(f"PersonaManager initialized with storage path: {self.storage_path}")
+        logger.info(
+            f"PersonaManager initialized with storage path: {self.storage_path}"
+        )
 
     async def load_persona(self, persona_name: str) -> Optional[Persona]:
         """Load a persona from storage."""
@@ -334,7 +350,9 @@ class PersonaManager:
             if not base_persona:
                 base_persona = await self.load_persona(persona_name)
                 if not base_persona:
-                    logger.error(f"Cannot create instance: persona '{persona_name}' not found")
+                    logger.error(
+                        f"Cannot create instance: persona '{persona_name}' not found"
+                    )
                     return None
 
             # Create a copy for the specific task
@@ -348,16 +366,25 @@ class PersonaManager:
                     domain_enum = TaskDomain(task_domain)
                     # Boost expertise in relevant domain
                     if domain_enum.value in instance.knowledge_areas:
-                        instance.knowledge_areas[domain_enum.value].expertise_level *= 1.1
-                        instance.knowledge_areas[domain_enum.value].expertise_level = min(
-                            1.0, instance.knowledge_areas[domain_enum.value].expertise_level
+                        instance.knowledge_areas[
+                            domain_enum.value
+                        ].expertise_level *= 1.1
+                        instance.knowledge_areas[domain_enum.value].expertise_level = (
+                            min(
+                                1.0,
+                                instance.knowledge_areas[
+                                    domain_enum.value
+                                ].expertise_level,
+                            )
                         )
                 except ValueError:
                     logger.warning(f"Unknown task domain: {task_domain}")
 
             self.active_instances[instance_id] = instance
 
-            logger.info(f"Created persona instance '{instance_id}' for '{persona_name}'")
+            logger.info(
+                f"Created persona instance '{instance_id}' for '{persona_name}'"
+            )
             return instance
 
         except Exception as e:
@@ -397,7 +424,9 @@ class PersonaManager:
             logger.debug(f"Cleaned up instance '{instance_id}'")
 
     async def get_best_persona_for_task(
-        self, task_domain: TaskDomain, additional_criteria: Optional[dict[str, Any]] = None
+        self,
+        task_domain: TaskDomain,
+        additional_criteria: Optional[dict[str, Any]] = None,
     ) -> Optional[str]:
         """Determine the best persona for a given task."""
         best_persona = None
@@ -441,7 +470,9 @@ class PersonaManager:
 
         # Reconstruct traits
         for name, trait_data in data["traits"].items():
-            trait_data["last_updated"] = datetime.fromisoformat(trait_data["last_updated"])
+            trait_data["last_updated"] = datetime.fromisoformat(
+                trait_data["last_updated"]
+            )
             persona.traits[name] = PersonaTrait(**trait_data)
 
         # Reconstruct knowledge areas
@@ -451,7 +482,9 @@ class PersonaManager:
 
         # Reconstruct enums
         persona.preferred_domains = [TaskDomain(d) for d in data["preferred_domains"]]
-        persona.evolution_triggers = [EvolutionTrigger(t) for t in data["evolution_triggers"]]
+        persona.evolution_triggers = [
+            EvolutionTrigger(t) for t in data["evolution_triggers"]
+        ]
 
         return persona
 
@@ -475,7 +508,9 @@ class PersonaManager:
         domain_performance = {}
 
         if recent_performance:
-            avg_quality = sum(p.quality_score for p in recent_performance) / len(recent_performance)
+            avg_quality = sum(p.quality_score for p in recent_performance) / len(
+                recent_performance
+            )
             avg_response_time = sum(p.response_time for p in recent_performance) / len(
                 recent_performance
             )
@@ -489,7 +524,8 @@ class PersonaManager:
 
         # Calculate domain averages
         domain_averages = {
-            domain: sum(scores) / len(scores) for domain, scores in domain_performance.items()
+            domain: sum(scores) / len(scores)
+            for domain, scores in domain_performance.items()
         }
 
         return {
@@ -500,9 +536,12 @@ class PersonaManager:
             "recent_avg_response_time": avg_response_time,
             "domain_performance": domain_averages,
             "knowledge_areas": {
-                domain: ka.expertise_level for domain, ka in persona.knowledge_areas.items()
+                domain: ka.expertise_level
+                for domain, ka in persona.knowledge_areas.items()
             },
-            "trait_values": {name: trait.value for name, trait in persona.traits.items()},
+            "trait_values": {
+                name: trait.value for name, trait in persona.traits.items()
+            },
             "last_updated": persona.last_updated.isoformat(),
         }
 

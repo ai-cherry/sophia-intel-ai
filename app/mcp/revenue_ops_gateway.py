@@ -74,7 +74,11 @@ class SalesforceClient:
 
     async def authenticate(self):
         """Authenticate with Salesforce OAuth"""
-        if self.access_token and self.token_expires and datetime.utcnow() < self.token_expires:
+        if (
+            self.access_token
+            and self.token_expires
+            and datetime.utcnow() < self.token_expires
+        ):
             return
 
         auth_url = f"{self.instance_url}/services/oauth2/token"
@@ -91,7 +95,9 @@ class SalesforceClient:
 
         token_data = response.json()
         self.access_token = token_data["access_token"]
-        self.token_expires = datetime.utcnow() + timedelta(hours=1)  # Conservative expiry
+        self.token_expires = datetime.utcnow() + timedelta(
+            hours=1
+        )  # Conservative expiry
 
         logger.info("Salesforce authentication successful")
 
@@ -123,7 +129,9 @@ class SalesforceClient:
             return result["records"][0]
         raise ValueError(f"Account {account_id} not found")
 
-    async def search_contacts(self, search_term: str, limit: int = 50) -> List[Dict[str, Any]]:
+    async def search_contacts(
+        self, search_term: str, limit: int = 50
+    ) -> List[Dict[str, Any]]:
         """Search contacts by name, email, or company"""
         soql = f"""
         SELECT Id, Name, Email, Phone, Title, Account.Name, Account.Id,
@@ -164,9 +172,14 @@ class HubSpotClient:
 
     def _get_headers(self) -> Dict[str, str]:
         """Get API headers"""
-        return {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
 
-    async def search_contacts(self, search_term: str, limit: int = 50) -> List[Dict[str, Any]]:
+    async def search_contacts(
+        self, search_term: str, limit: int = 50
+    ) -> List[Dict[str, Any]]:
         """Search contacts in HubSpot"""
         url = f"{self.base_url}/crm/v3/objects/contacts/search"
 
@@ -211,7 +224,9 @@ class HubSpotClient:
             "limit": limit,
         }
 
-        response = await self.session.post(url, headers=self._get_headers(), json=payload)
+        response = await self.session.post(
+            url, headers=self._get_headers(), json=payload
+        )
         response.raise_for_status()
 
         return response.json().get("results", [])
@@ -237,14 +252,18 @@ class HubSpotClient:
             ]
         }
 
-        response = await self.session.get(url, headers=self._get_headers(), params=params)
+        response = await self.session.get(
+            url, headers=self._get_headers(), params=params
+        )
         response.raise_for_status()
 
         return response.json()
 
     async def get_deals(self, company_id: str) -> List[Dict[str, Any]]:
         """Get deals associated with company"""
-        url = f"{self.base_url}/crm/v4/objects/companies/{company_id}/associations/deals"
+        url = (
+            f"{self.base_url}/crm/v4/objects/companies/{company_id}/associations/deals"
+        )
 
         response = await self.session.get(url, headers=self._get_headers())
         response.raise_for_status()
@@ -287,7 +306,9 @@ class SlackClient:
     def __init__(self):
         # Credentials from environment (managed by Pulumi ESC)
         self.bot_token = os.getenv("SLACK_BOT_TOKEN")
-        self.user_token = os.getenv("SLACK_USER_TOKEN")  # For accessing DMs and private channels
+        self.user_token = os.getenv(
+            "SLACK_USER_TOKEN"
+        )  # For accessing DMs and private channels
         self.base_url = "https://slack.com/api"
         self.session = httpx.AsyncClient()
 
@@ -325,7 +346,9 @@ class SlackClient:
         if latest:
             params["latest"] = latest
 
-        response = await self.session.get(url, headers=self._get_headers(), params=params)
+        response = await self.session.get(
+            url, headers=self._get_headers(), params=params
+        )
         response.raise_for_status()
 
         return response.json()
@@ -336,23 +359,31 @@ class SlackClient:
 
         params = {"user": user_id}
 
-        response = await self.session.get(url, headers=self._get_headers(), params=params)
+        response = await self.session.get(
+            url, headers=self._get_headers(), params=params
+        )
         response.raise_for_status()
 
         return response.json()
 
-    async def list_channels(self, types: str = "public_channel,private_channel") -> Dict[str, Any]:
+    async def list_channels(
+        self, types: str = "public_channel,private_channel"
+    ) -> Dict[str, Any]:
         """List all channels the bot has access to"""
         url = f"{self.base_url}/conversations.list"
 
         params = {"types": types, "exclude_archived": True, "limit": 1000}
 
-        response = await self.session.get(url, headers=self._get_headers(), params=params)
+        response = await self.session.get(
+            url, headers=self._get_headers(), params=params
+        )
         response.raise_for_status()
 
         return response.json()
 
-    async def search_client_mentions(self, client_name: str, days_back: int = 30) -> Dict[str, Any]:
+    async def search_client_mentions(
+        self, client_name: str, days_back: int = 30
+    ) -> Dict[str, Any]:
         """Search for mentions of a specific client across all channels"""
         # Calculate timestamp for days_back
         from_timestamp = (datetime.utcnow() - timedelta(days=days_back)).timestamp()
@@ -449,7 +480,9 @@ class SlackClient:
             "sentiment_scores": sentiment_scores,
             "sentiment_percentages": sentiment_percentages,
             "messages": analyzed_messages[:10],  # Return sample of messages
-            "overall_sentiment": max(sentiment_percentages, key=sentiment_percentages.get),
+            "overall_sentiment": max(
+                sentiment_percentages, key=sentiment_percentages.get
+            ),
         }
 
     async def get_client_channel_activity(
@@ -483,7 +516,9 @@ class SlackClient:
             channel_name = channel["name"]
 
             # Get recent messages
-            oldest_timestamp = (datetime.utcnow() - timedelta(days=days_back)).timestamp()
+            oldest_timestamp = (
+                datetime.utcnow() - timedelta(days=days_back)
+            ).timestamp()
             messages = await self.get_channel_messages(
                 channel_id, limit=100, oldest=str(oldest_timestamp)
             )
@@ -535,7 +570,9 @@ class GongClient:
 
     def __init__(self):
         # Credentials from environment (managed by Pulumi ESC)
-        self.access_key = os.getenv("GONG_ACCESS_KEY", "TV33BPZ5UN45QKZCZ2UCAKRXHQ6Q3L5N")
+        self.access_key = os.getenv(
+            "GONG_ACCESS_KEY", "TV33BPZ5UN45QKZCZ2UCAKRXHQ6Q3L5N"
+        )
         self.secret = os.getenv(
             "GONG_CLIENT_SECRET",
             "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwNTQxNTA4ODUsImFjY2Vzc0tZXkiOiJUVjMzQlBaNVVONDRRS1pDWjJVQ0FLUlhIUTZRM0w1TiJ9.zgPvDQQIvU1kvF_9ctjcKuqC5xKhlpZo7MH5v7AYufU",
@@ -543,7 +580,9 @@ class GongClient:
         self.base_url = "https://api.gong.io/v2"
 
         # Create Basic Auth header
-        credentials = base64.b64encode(f"{self.access_key}:{self.secret}".encode()).decode()
+        credentials = base64.b64encode(
+            f"{self.access_key}:{self.secret}".encode()
+        ).decode()
         self.auth_header = f"Basic {credentials}"
 
         self.session = httpx.AsyncClient()
@@ -567,13 +606,17 @@ class GongClient:
         if from_date:
             filter_params["fromDateTime"] = from_date.isoformat()
         if account_name:
-            filter_params["workspaces"] = [account_name]  # Adjust based on Gong workspace structure
+            filter_params["workspaces"] = [
+                account_name
+            ]  # Adjust based on Gong workspace structure
         if contact_email:
             filter_params["emailAddress"] = contact_email
 
         payload = {"filter": filter_params, "cursor": {"limit": limit}}
 
-        response = await self.session.post(url, headers=self._get_headers(), json=payload)
+        response = await self.session.post(
+            url, headers=self._get_headers(), json=payload
+        )
         response.raise_for_status()
 
         return response.json().get("calls", [])
@@ -590,7 +633,9 @@ class GongClient:
 
         # Build filter for emails specifically
         filter_params = {
-            "contentSelector": {"exposureType": "EMAIL"}  # Filter for email conversations only
+            "contentSelector": {
+                "exposureType": "EMAIL"
+            }  # Filter for email conversations only
         }
 
         if from_date:
@@ -602,7 +647,9 @@ class GongClient:
 
         payload = {"filter": filter_params, "cursor": {"limit": limit}}
 
-        response = await self.session.post(url, headers=self._get_headers(), json=payload)
+        response = await self.session.post(
+            url, headers=self._get_headers(), json=payload
+        )
         response.raise_for_status()
 
         return response.json().get("calls", [])  # Gong returns emails in 'calls' array
@@ -628,14 +675,18 @@ class GongClient:
         # Search calls and emails in parallel
         async def fetch_calls():
             try:
-                return await self.search_calls(account_name, contact_email, from_date, limit)
+                return await self.search_calls(
+                    account_name, contact_email, from_date, limit
+                )
             except Exception as e:
                 logger.error(f"Failed to fetch calls: {e}")
                 return []
 
         async def fetch_emails():
             try:
-                return await self.search_emails(account_name, contact_email, from_date, limit)
+                return await self.search_emails(
+                    account_name, contact_email, from_date, limit
+                )
             except Exception as e:
                 logger.error(f"Failed to fetch emails: {e}")
                 return []
@@ -773,7 +824,9 @@ class RevenueOpsGateway(MCPServerBase):
 
                 except Exception as e:
                     logger.error(f"Salesforce search failed: {e}")
-                    results["errors"] = results.get("errors", []) + [f"Salesforce: {str(e)}"]
+                    results["errors"] = results.get("errors", []) + [
+                        f"Salesforce: {str(e)}"
+                    ]
 
             # Search HubSpot
             if "hubspot" in sources:
@@ -800,13 +853,17 @@ class RevenueOpsGateway(MCPServerBase):
 
                 except Exception as e:
                     logger.error(f"HubSpot search failed: {e}")
-                    results["errors"] = results.get("errors", []) + [f"HubSpot: {str(e)}"]
+                    results["errors"] = results.get("errors", []) + [
+                        f"HubSpot: {str(e)}"
+                    ]
 
             return results
 
         @self.mcp_tool("analytics.account_360")
         @trace_async("revenue_account_360")
-        async def account_360(account_id: str, include_gong: bool = True) -> Dict[str, Any]:
+        async def account_360(
+            account_id: str, include_gong: bool = True
+        ) -> Dict[str, Any]:
             """
             Comprehensive account view across all revenue systems
             This is what sales coach agents need for contextual coaching
@@ -864,7 +921,9 @@ class RevenueOpsGateway(MCPServerBase):
             account_data["health_score"] = health_score.__dict__
 
             # Generate next actions
-            account_data["next_actions"] = await self._suggest_next_actions(account_data)
+            account_data["next_actions"] = await self._suggest_next_actions(
+                account_data
+            )
 
             return account_data
 
@@ -931,7 +990,9 @@ class RevenueOpsGateway(MCPServerBase):
                                 }
                             )
                         except Exception as e:
-                            logger.warning(f"Failed to get call details for {call_id}: {e}")
+                            logger.warning(
+                                f"Failed to get call details for {call_id}: {e}"
+                            )
 
                 # Process emails for insights
                 for email in emails[:5]:  # Limit for performance
@@ -954,7 +1015,9 @@ class RevenueOpsGateway(MCPServerBase):
                                 }
                             )
                         except Exception as e:
-                            logger.warning(f"Failed to get email details for {email_id}: {e}")
+                            logger.warning(
+                                f"Failed to get email details for {email_id}: {e}"
+                            )
 
                 # Calculate conversation frequency
                 total_conversations = len(calls) + len(emails)
@@ -973,7 +1036,9 @@ class RevenueOpsGateway(MCPServerBase):
 
         @self.mcp_tool("intelligence.slack_client_context")
         @trace_async("revenue_slack_client_context")
-        async def slack_client_context(client_name: str, days_back: int = 30) -> Dict[str, Any]:
+        async def slack_client_context(
+            client_name: str, days_back: int = 30
+        ) -> Dict[str, Any]:
             """
             Get comprehensive Slack context for a client including mentions and channel activity
             """
@@ -982,10 +1047,14 @@ class RevenueOpsGateway(MCPServerBase):
             try:
                 # Get client mentions and channel activity in parallel
                 async def fetch_mentions():
-                    return await self.slack.search_client_mentions(client_name, days_back)
+                    return await self.slack.search_client_mentions(
+                        client_name, days_back
+                    )
 
                 async def fetch_channel_activity():
-                    return await self.slack.get_client_channel_activity(client_name, days_back)
+                    return await self.slack.get_client_channel_activity(
+                        client_name, days_back
+                    )
 
                 async with asyncio.TaskGroup() as tg:
                     mentions_task = tg.create_task(fetch_mentions())
@@ -997,10 +1066,29 @@ class RevenueOpsGateway(MCPServerBase):
                 # Analyze sentiment and urgency from mentions
                 mention_messages = mentions.get("messages", {}).get("matches", [])
 
-                sentiment_analysis = {"positive": 0, "negative": 0, "neutral": 0, "urgent": 0}
+                sentiment_analysis = {
+                    "positive": 0,
+                    "negative": 0,
+                    "neutral": 0,
+                    "urgent": 0,
+                }
 
-                urgent_keywords = ["urgent", "asap", "emergency", "critical", "issue", "problem"]
-                positive_keywords = ["great", "excellent", "love", "perfect", "amazing", "success"]
+                urgent_keywords = [
+                    "urgent",
+                    "asap",
+                    "emergency",
+                    "critical",
+                    "issue",
+                    "problem",
+                ]
+                positive_keywords = [
+                    "great",
+                    "excellent",
+                    "love",
+                    "perfect",
+                    "amazing",
+                    "success",
+                ]
                 negative_keywords = [
                     "frustrated",
                     "issue",
@@ -1028,7 +1116,9 @@ class RevenueOpsGateway(MCPServerBase):
                     "analysis_period_days": days_back,
                     "mentions": {
                         "total_mentions": len(mention_messages),
-                        "recent_mentions": mention_messages[:5],  # Sample of recent mentions
+                        "recent_mentions": mention_messages[
+                            :5
+                        ],  # Sample of recent mentions
                         "sentiment_breakdown": sentiment_analysis,
                     },
                     "channel_activity": channel_activity,
@@ -1041,10 +1131,12 @@ class RevenueOpsGateway(MCPServerBase):
                         ),
                         "sentiment_trend": (
                             "positive"
-                            if sentiment_analysis["positive"] > sentiment_analysis["negative"]
+                            if sentiment_analysis["positive"]
+                            > sentiment_analysis["negative"]
                             else (
                                 "negative"
-                                if sentiment_analysis["negative"] > sentiment_analysis["positive"]
+                                if sentiment_analysis["negative"]
+                                > sentiment_analysis["positive"]
                                 else "neutral"
                             )
                         ),
@@ -1058,13 +1150,17 @@ class RevenueOpsGateway(MCPServerBase):
         @self.mcp_tool("intelligence.employee_sentiment")
         @trace_async("revenue_employee_sentiment")
         async def employee_sentiment_analysis(
-            employee_slack_id: str = None, employee_email: str = None, days_back: int = 7
+            employee_slack_id: str = None,
+            employee_email: str = None,
+            days_back: int = 7,
         ) -> Dict[str, Any]:
             """
             Analyze employee sentiment and stress levels from Slack activity
             """
             if not employee_slack_id and not employee_email:
-                raise ValueError("Either employee_slack_id or employee_email must be provided")
+                raise ValueError(
+                    "Either employee_slack_id or employee_email must be provided"
+                )
 
             try:
                 # If we have email but not Slack ID, we'd need to map it
@@ -1083,13 +1179,17 @@ class RevenueOpsGateway(MCPServerBase):
                 # Add coaching recommendations based on sentiment
                 recommendations = []
                 overall_sentiment = sentiment_data.get("overall_sentiment", "neutral")
-                stress_percentage = sentiment_data.get("sentiment_percentages", {}).get("stress", 0)
+                stress_percentage = sentiment_data.get("sentiment_percentages", {}).get(
+                    "stress", 0
+                )
 
                 if overall_sentiment == "negative" or stress_percentage > 30:
                     recommendations.append(
                         "🚨 Schedule 1:1 check-in - employee showing signs of stress"
                     )
-                    recommendations.append("💬 Consider workload adjustment or additional support")
+                    recommendations.append(
+                        "💬 Consider workload adjustment or additional support"
+                    )
 
                 if stress_percentage > 50:
                     recommendations.append(
@@ -1112,7 +1212,10 @@ class RevenueOpsGateway(MCPServerBase):
 
             except Exception as e:
                 logger.error(f"Employee sentiment analysis failed: {e}")
-                return {"error": str(e), "employee_id": employee_slack_id or employee_email}
+                return {
+                    "error": str(e),
+                    "employee_id": employee_slack_id or employee_email,
+                }
 
         @self.mcp_tool("coaching.team_health_analysis")
         @trace_async("revenue_team_health")
@@ -1128,7 +1231,9 @@ class RevenueOpsGateway(MCPServerBase):
             try:
                 # Get team channel messages
                 if team_channel_id:
-                    oldest_timestamp = (datetime.utcnow() - timedelta(days=days_back)).timestamp()
+                    oldest_timestamp = (
+                        datetime.utcnow() - timedelta(days=days_back)
+                    ).timestamp()
                     messages_data = await self.slack.get_channel_messages(
                         team_channel_id, limit=200, oldest=str(oldest_timestamp)
                     )
@@ -1177,7 +1282,10 @@ class RevenueOpsGateway(MCPServerBase):
 
                     if user_id:
                         if user_id not in user_activity:
-                            user_activity[user_id] = {"message_count": 0, "sentiment": "neutral"}
+                            user_activity[user_id] = {
+                                "message_count": 0,
+                                "sentiment": "neutral",
+                            }
                         user_activity[user_id]["message_count"] += 1
 
                     # Analyze message content
@@ -1194,9 +1302,13 @@ class RevenueOpsGateway(MCPServerBase):
                 active_members = len(user_activity)
 
                 # Calculate health metrics
-                collaboration_score = (collaboration_indicators / max(total_messages, 1)) * 100
+                collaboration_score = (
+                    collaboration_indicators / max(total_messages, 1)
+                ) * 100
                 conflict_score = (conflict_indicators / max(total_messages, 1)) * 100
-                innovation_score = (innovation_indicators / max(total_messages, 1)) * 100
+                innovation_score = (
+                    innovation_indicators / max(total_messages, 1)
+                ) * 100
 
                 # Overall team health score
                 team_health_score = max(
@@ -1216,7 +1328,9 @@ class RevenueOpsGateway(MCPServerBase):
                     )
 
                 if collaboration_score < 20:
-                    recommendations.append("🤝 Low collaboration - encourage more team interaction")
+                    recommendations.append(
+                        "🤝 Low collaboration - encourage more team interaction"
+                    )
 
                 if innovation_score < 10:
                     recommendations.append(
@@ -1253,7 +1367,10 @@ class RevenueOpsGateway(MCPServerBase):
 
             except Exception as e:
                 logger.error(f"Team health analysis failed: {e}")
-                return {"error": str(e), "team_identifier": team_channel_id or team_name}
+                return {
+                    "error": str(e),
+                    "team_identifier": team_channel_id or team_name,
+                }
 
         @self.mcp_tool("coaching.ceo_dashboard")
         @trace_async("revenue_ceo_dashboard")
@@ -1264,7 +1381,12 @@ class RevenueOpsGateway(MCPServerBase):
             Comprehensive CEO dashboard with Pay Ready specific intelligence
             """
             if not focus_areas:
-                focus_areas = ["revenue", "client_health", "team_sentiment", "operational_issues"]
+                focus_areas = [
+                    "revenue",
+                    "client_health",
+                    "team_sentiment",
+                    "operational_issues",
+                ]
 
             dashboard_data = {
                 "generated_at": datetime.utcnow().isoformat(),
@@ -1301,22 +1423,26 @@ class RevenueOpsGateway(MCPServerBase):
 
                     for client in key_clients:
                         try:
-                            client_context = await slack_client_context(client, days_back)
+                            client_context = await slack_client_context(
+                                client, days_back
+                            )
                             client_health_summary[client] = {
-                                "mention_frequency": client_context.get("overall_health", {}).get(
-                                    "mention_frequency", 0
-                                ),
-                                "urgency_level": client_context.get("overall_health", {}).get(
-                                    "urgency_level", "low"
-                                ),
-                                "sentiment_trend": client_context.get("overall_health", {}).get(
-                                    "sentiment_trend", "neutral"
-                                ),
+                                "mention_frequency": client_context.get(
+                                    "overall_health", {}
+                                ).get("mention_frequency", 0),
+                                "urgency_level": client_context.get(
+                                    "overall_health", {}
+                                ).get("urgency_level", "low"),
+                                "sentiment_trend": client_context.get(
+                                    "overall_health", {}
+                                ).get("sentiment_trend", "neutral"),
                             }
 
                             # Add to risk alerts if needed
                             if (
-                                client_context.get("overall_health", {}).get("urgency_level")
+                                client_context.get("overall_health", {}).get(
+                                    "urgency_level"
+                                )
                                 == "high"
                             ):
                                 dashboard_data["risk_alerts"].append(
@@ -1326,7 +1452,9 @@ class RevenueOpsGateway(MCPServerBase):
                         except Exception as e:
                             logger.warning(f"Failed to analyze client {client}: {e}")
 
-                    dashboard_data["detailed_insights"]["client_health"] = client_health_summary
+                    dashboard_data["detailed_insights"][
+                        "client_health"
+                    ] = client_health_summary
 
                 # Team Sentiment Intelligence
                 if "team_sentiment" in focus_areas:
@@ -1364,7 +1492,9 @@ class RevenueOpsGateway(MCPServerBase):
                         except Exception as e:
                             logger.warning(f"Failed to analyze team {team}: {e}")
 
-                    dashboard_data["detailed_insights"]["team_sentiment"] = team_health_summary
+                    dashboard_data["detailed_insights"][
+                        "team_sentiment"
+                    ] = team_health_summary
 
                 # Operational Issues Intelligence
                 if "operational_issues" in focus_areas:
@@ -1384,7 +1514,9 @@ class RevenueOpsGateway(MCPServerBase):
                             search_result = await self.slack.search_messages(
                                 f'"{keyword}"', count=10
                             )
-                            matches = search_result.get("messages", {}).get("matches", [])
+                            matches = search_result.get("messages", {}).get(
+                                "matches", []
+                            )
 
                             for match in matches:
                                 # Filter recent messages (within analysis period)
@@ -1407,7 +1539,9 @@ class RevenueOpsGateway(MCPServerBase):
                                     )
 
                         except Exception as e:
-                            logger.warning(f"Failed to search for keyword {keyword}: {e}")
+                            logger.warning(
+                                f"Failed to search for keyword {keyword}: {e}"
+                            )
 
                     dashboard_data["detailed_insights"]["operational_issues"] = {
                         "total_issues": len(operational_issues),
@@ -1476,7 +1610,9 @@ class RevenueOpsGateway(MCPServerBase):
                 ],
             }
 
-    async def _calculate_account_health(self, account_data: Dict[str, Any]) -> AccountHealth:
+    async def _calculate_account_health(
+        self, account_data: Dict[str, Any]
+    ) -> AccountHealth:
         """Calculate comprehensive account health score"""
 
         # Extract key metrics
@@ -1498,7 +1634,8 @@ class RevenueOpsGateway(MCPServerBase):
                     account["LastActivityDate"].replace("Z", "+00:00")
                 )
                 days_since = (
-                    datetime.utcnow().replace(tzinfo=last_activity.tzinfo) - last_activity
+                    datetime.utcnow().replace(tzinfo=last_activity.tzinfo)
+                    - last_activity
                 ).days
 
                 if days_since < 7:
@@ -1533,7 +1670,9 @@ class RevenueOpsGateway(MCPServerBase):
                     ).days
 
                     if days_stalled > 30:
-                        risk_factors.append(f"Stalled opportunity: {opp.get('Name', 'Unknown')}")
+                        risk_factors.append(
+                            f"Stalled opportunity: {opp.get('Name', 'Unknown')}"
+                        )
                         health_score -= 10
         else:
             risk_factors.append("No active opportunities")
@@ -1597,8 +1736,12 @@ class RevenueOpsGateway(MCPServerBase):
 
         for opp in opportunities:
             if opp.get("LastModifiedDate"):
-                last_mod = datetime.fromisoformat(opp["LastModifiedDate"].replace("Z", "+00:00"))
-                days_stalled = (datetime.utcnow().replace(tzinfo=last_mod.tzinfo) - last_mod).days
+                last_mod = datetime.fromisoformat(
+                    opp["LastModifiedDate"].replace("Z", "+00:00")
+                )
+                days_stalled = (
+                    datetime.utcnow().replace(tzinfo=last_mod.tzinfo) - last_mod
+                ).days
 
                 if days_stalled > 30:
                     stalled_opps.append(opp)
@@ -1614,7 +1757,8 @@ class RevenueOpsGateway(MCPServerBase):
                     account["LastActivityDate"].replace("Z", "+00:00")
                 )
                 days_since = (
-                    datetime.utcnow().replace(tzinfo=last_activity.tzinfo) - last_activity
+                    datetime.utcnow().replace(tzinfo=last_activity.tzinfo)
+                    - last_activity
                 ).days
 
                 if days_since > 60:
@@ -1638,7 +1782,9 @@ if __name__ == "__main__":
 
         # Test search contacts
         result = await gateway.handle_tool_call(
-            "crm.search_contacts", {"search_term": "john", "limit": 10}, "test-search-123"
+            "crm.search_contacts",
+            {"search_term": "john", "limit": 10},
+            "test-search-123",
         )
         print(f"Search result: {result}")
 

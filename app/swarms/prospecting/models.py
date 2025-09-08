@@ -113,7 +113,9 @@ class BehaviorPattern:
         """Update confidence level based on new data"""
         # Weighted average with existing confidence
         weight = 0.7  # Weight for new evidence
-        self.confidence_level = self.confidence_level * (1 - weight) + new_confidence * weight
+        self.confidence_level = (
+            self.confidence_level * (1 - weight) + new_confidence * weight
+        )
         self.last_updated = datetime.now()
 
 
@@ -251,7 +253,9 @@ class PersonalityProfile:
 
         # Data quantity
         total_data_points = (
-            self.linkedin_data_points + self.email_data_points + self.web_behavior_data_points
+            self.linkedin_data_points
+            + self.email_data_points
+            + self.web_behavior_data_points
         )
 
         if total_data_points >= 50:
@@ -269,9 +273,9 @@ class PersonalityProfile:
 
         # Pattern consistency
         if self.behavior_patterns:
-            avg_pattern_confidence = sum(p.confidence_level for p in self.behavior_patterns) / len(
-                self.behavior_patterns
-            )
+            avg_pattern_confidence = sum(
+                p.confidence_level for p in self.behavior_patterns
+            ) / len(self.behavior_patterns)
             confidence_factors.append(avg_pattern_confidence)
 
         # DISC score confidence
@@ -350,8 +354,10 @@ class ResearchInsight:
         """Calculate outreach value score for this insight"""
         factors = [
             self.relevance_score * 0.3,
-            ({"high": 1.0, "medium": 0.6, "low": 0.2}.get(self.business_impact, 0.5)) * 0.3,
-            ({"high": 1.0, "medium": 0.6, "low": 0.2}.get(self.actionability, 0.5)) * 0.2,
+            ({"high": 1.0, "medium": 0.6, "low": 0.2}.get(self.business_impact, 0.5))
+            * 0.3,
+            ({"high": 1.0, "medium": 0.6, "low": 0.2}.get(self.actionability, 0.5))
+            * 0.2,
             self.confidence * 0.2,
         ]
 
@@ -363,18 +369,26 @@ class ResearchInsight:
             "primary_angle": self.outreach_angle,
             "message_hooks": self.message_themes,
             "conversation_starters": self.talking_points,
-            "timing_recommendation": "immediate" if self.urgency == "urgent" else "normal",
+            "timing_recommendation": (
+                "immediate" if self.urgency == "urgent" else "normal"
+            ),
             "channel_recommendation": ["email", "linkedin"],
             "follow_up_strategy": [],
         }
 
         # Add follow-up strategy based on insight type
         if self.insight_type == "financial":
-            recommendations["follow_up_strategy"].append("Share relevant ROI case studies")
+            recommendations["follow_up_strategy"].append(
+                "Share relevant ROI case studies"
+            )
         elif self.insight_type == "strategic":
-            recommendations["follow_up_strategy"].append("Provide strategic partnership insights")
+            recommendations["follow_up_strategy"].append(
+                "Provide strategic partnership insights"
+            )
         elif self.insight_type == "operational":
-            recommendations["follow_up_strategy"].append("Offer operational efficiency solutions")
+            recommendations["follow_up_strategy"].append(
+                "Offer operational efficiency solutions"
+            )
 
         return recommendations
 
@@ -467,12 +481,16 @@ class ProspectIntelligence:
 
         # Enhance with personality profile if available
         if self.personality_profile:
-            personality_approach = self.personality_profile.get_optimal_outreach_approach()
+            personality_approach = (
+                self.personality_profile.get_optimal_outreach_approach()
+            )
             strategy.update(personality_approach)
 
         # Add insights-based recommendations
         high_value_insights = [
-            insight for insight in self.research_insights if insight.get_outreach_value() > 0.7
+            insight
+            for insight in self.research_insights
+            if insight.get_outreach_value() > 0.7
         ]
 
         if high_value_insights:
@@ -482,7 +500,9 @@ class ProspectIntelligence:
             for insight in high_value_insights[:3]:  # Top 3 insights
                 insight_recs = insight.generate_outreach_recommendations()
                 strategy["message_themes"].extend(insight_recs["message_hooks"])
-                strategy["conversation_starters"].extend(insight_recs["conversation_starters"])
+                strategy["conversation_starters"].extend(
+                    insight_recs["conversation_starters"]
+                )
 
         # Adjust based on engagement history
         if self.engagement_history:
@@ -520,8 +540,12 @@ class ProspectIntelligence:
             confidence_factors.append(engagement_data_quality)
 
         if confidence_factors:
-            self.intelligence_confidence = sum(confidence_factors) / len(confidence_factors)
-            self.data_freshness_score = confidence_factors[-1] if confidence_factors else 0.0
+            self.intelligence_confidence = sum(confidence_factors) / len(
+                confidence_factors
+            )
+            self.data_freshness_score = (
+                confidence_factors[-1] if confidence_factors else 0.0
+            )
 
         self.last_updated = datetime.now()
 

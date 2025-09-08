@@ -134,7 +134,9 @@ class TestPortkeyManager:
         """Mock secrets manager"""
         with patch("app.core.portkey_manager.get_secrets_manager") as mock:
             secrets = MagicMock()
-            secrets.get_secret = MagicMock(side_effect=lambda key, default=None: f"mock-{key}")
+            secrets.get_secret = MagicMock(
+                side_effect=lambda key, default=None: f"mock-{key}"
+            )
             mock.return_value = secrets
             yield secrets
 
@@ -167,11 +169,14 @@ class TestPortkeyManager:
         manager = PortkeyManager()
 
         # Mock the actual API call
-        with patch.object(manager, "_execute_with_portkey", new_callable=AsyncMock) as mock_execute:
+        with patch.object(
+            manager, "_execute_with_portkey", new_callable=AsyncMock
+        ) as mock_execute:
             mock_execute.return_value = {"choices": [{"message": {"content": "test"}}]}
 
             result = await manager.execute_with_fallback(
-                task_type=TaskType.ANALYSIS, messages=[{"role": "user", "content": "test"}]
+                task_type=TaskType.ANALYSIS,
+                messages=[{"role": "user", "content": "test"}],
             )
 
             assert result["choices"][0]["message"]["content"] == "test"
@@ -207,7 +212,9 @@ class TestPortkeyManager:
         manager = PortkeyManager()
 
         # Simulate repeated failures
-        with patch.object(manager, "_execute_with_portkey", new_callable=AsyncMock) as mock_execute:
+        with patch.object(
+            manager, "_execute_with_portkey", new_callable=AsyncMock
+        ) as mock_execute:
             mock_execute.side_effect = Exception("API Error")
 
             # Multiple failures should trip circuit
@@ -298,7 +305,9 @@ class TestUnifiedMemoryRouter:
         )
 
         artemis_chunk = DocChunk(
-            content="Artemis code data", metadata={"domain": "code"}, embedding=[0.3, 0.4]
+            content="Artemis code data",
+            metadata={"domain": "code"},
+            embedding=[0.3, 0.4],
         )
 
         # Store in different domains

@@ -64,7 +64,9 @@ def fix_file(filepath):
     ]
 
     for pattern in broken_patterns:
-        content = re.sub(pattern, lambda m: f"# REMOVED: {m.group(0)}", content, flags=re.MULTILINE)
+        content = re.sub(
+            pattern, lambda m: f"# REMOVED: {m.group(0)}", content, flags=re.MULTILINE
+        )
 
     if content != original:
         with open(filepath, "w") as f:
@@ -142,7 +144,9 @@ def main():
         print(f"✅ Cleaned {init_file}")
 
     print(f"\n📊 Summary: Fixed {fixed_count} files")
-    print("\n⚠️  Note: Some files may need manual adjustment to use SuperOrchestrator properly")
+    print(
+        "\n⚠️  Note: Some files may need manual adjustment to use SuperOrchestrator properly"
+    )
     print("Consider adding the OrchestratorAdapter class where needed.")
 
 

@@ -181,7 +181,9 @@ class FoundationalKnowledgeManager:
             limit=limit,
         )
 
-    async def search(self, query: str, include_operational: bool = False) -> list[KnowledgeEntity]:
+    async def search(
+        self, query: str, include_operational: bool = False
+    ) -> list[KnowledgeEntity]:
         """Search knowledge with optional operational data inclusion"""
         results = await self.storage.search_knowledge(query)
 
@@ -238,7 +240,9 @@ class FoundationalKnowledgeManager:
         """Get version history for knowledge entity"""
         return await self.versioning.get_history(knowledge_id)
 
-    async def rollback_to_version(self, knowledge_id: str, version_number: int) -> KnowledgeEntity:
+    async def rollback_to_version(
+        self, knowledge_id: str, version_number: int
+    ) -> KnowledgeEntity:
         """Rollback knowledge to specific version"""
         entity = await self.versioning.rollback(knowledge_id, version_number)
 
@@ -249,7 +253,9 @@ class FoundationalKnowledgeManager:
         logger.info(f"Rolled back {knowledge_id} to version {version_number}")
         return entity
 
-    async def compare_versions(self, knowledge_id: str, v1: int, v2: int) -> dict[str, Any]:
+    async def compare_versions(
+        self, knowledge_id: str, v1: int, v2: int
+    ) -> dict[str, Any]:
         """Compare two versions of knowledge"""
         return await self.versioning.compare(knowledge_id, v1, v2)
 

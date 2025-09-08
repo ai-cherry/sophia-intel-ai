@@ -59,7 +59,9 @@ async def websocket_endpoint(
     websocket,
     client_id: str,
     session_id: str,
-    token: Optional[str] = Query(None, description="JWT authentication token for secure access"),
+    token: Optional[str] = Query(
+        None, description="JWT authentication token for secure access"
+    ),
 ):
     """
     Secure WebSocket endpoint with:
@@ -223,7 +225,8 @@ if __name__ == "__main__":
 
     # Configure logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Run server with security enabled

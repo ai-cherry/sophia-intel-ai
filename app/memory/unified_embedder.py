@@ -139,9 +139,13 @@ class UnifiedEmbedderConfig:
 
         # Override with environment variables if set
         if os.getenv("EMBEDDING_CACHE_ENABLED"):
-            config.cache_enabled = os.getenv("EMBEDDING_CACHE_ENABLED").lower() == "true"
+            config.cache_enabled = (
+                os.getenv("EMBEDDING_CACHE_ENABLED").lower() == "true"
+            )
         if os.getenv("EMBEDDING_STRATEGY_DEFAULT"):
-            config.default_strategy = EmbedderStrategy(os.getenv("EMBEDDING_STRATEGY_DEFAULT"))
+            config.default_strategy = EmbedderStrategy(
+                os.getenv("EMBEDDING_STRATEGY_DEFAULT")
+            )
         if os.getenv("EMBEDDING_MAX_CONCURRENT"):
             config.max_concurrent_requests = int(os.getenv("EMBEDDING_MAX_CONCURRENT"))
 
@@ -210,9 +214,17 @@ class UnifiedEmbedderRouter:
 
         # 1. Strategy-level routing
         if strategy_override == EmbedderStrategy.PERFORMANCE:
-            return (EmbedderTier.SPEED, self.config.speed_model, self.config.speed_provider)
+            return (
+                EmbedderTier.SPEED,
+                self.config.speed_model,
+                self.config.speed_provider,
+            )
         elif strategy_override == EmbedderStrategy.ACCURACY:
-            return (EmbedderTier.QUALITY, self.config.quality_model, self.config.quality_provider)
+            return (
+                EmbedderTier.QUALITY,
+                self.config.quality_model,
+                self.config.quality_provider,
+            )
 
         # 2. Purpose-driven routing
         if purpose == EmbeddingPurpose.MEMORY:
@@ -222,7 +234,11 @@ class UnifiedEmbedderRouter:
                 self.config.specialized_memory_provider,
             )
         elif purpose == EmbeddingPurpose.RAG:
-            return (EmbedderTier.QUALITY, self.config.quality_model, self.config.quality_provider)
+            return (
+                EmbedderTier.QUALITY,
+                self.config.quality_model,
+                self.config.quality_provider,
+            )
         elif purpose in [EmbeddingPurpose.SEARCH, EmbeddingPurpose.INDEXING]:
             return (
                 EmbedderTier.BALANCED,
@@ -246,7 +262,11 @@ class UnifiedEmbedderRouter:
 
         # 4. Priority-based routing
         if priority == "high" or self._contains_priority_keywords(text):
-            return (EmbedderTier.QUALITY, self.config.quality_model, self.config.quality_provider)
+            return (
+                EmbedderTier.QUALITY,
+                self.config.quality_model,
+                self.config.quality_provider,
+            )
 
         # 5. Token-based routing (from dual-tier)
         import tiktoken
@@ -256,7 +276,11 @@ class UnifiedEmbedderRouter:
             token_count = len(tokenizer.encode(text))
 
             if token_count < self.config.token_threshold_speed:
-                return (EmbedderTier.SPEED, self.config.speed_model, self.config.speed_provider)
+                return (
+                    EmbedderTier.SPEED,
+                    self.config.speed_model,
+                    self.config.speed_provider,
+                )
             elif token_count > self.config.token_threshold_quality:
                 return (
                     EmbedderTier.QUALITY,
@@ -361,7 +385,9 @@ class EliteUnifiedEmbedder:
             "response_times": [],
         }
 
-        logger.info("🏆 Elite Unified Embedder initialized - The future of embedding is here!")
+        logger.info(
+            "🏆 Elite Unified Embedder initialized - The future of embedding is here!"
+        )
 
     @with_circuit_breaker("embeddings")
     async def embed_batch(
@@ -438,7 +464,9 @@ class EliteUnifiedEmbedder:
                         response = await self.gateway.generate_embeddings(tier_texts)
 
                         # Extract embeddings and place in results
-                        for local_idx, result_data in enumerate(response.get("embeddings", [])):
+                        for local_idx, result_data in enumerate(
+                            response.get("embeddings", [])
+                        ):
                             original_idx = (
                                 tier_indices[local_idx]
                                 if local_idx < len(tier_indices)
@@ -449,7 +477,9 @@ class EliteUnifiedEmbedder:
                         self.metrics["tier_usage"][tier] += len(tier_texts)
 
                     except Exception as e:
-                        logger.error(f"Failed to generate embeddings for tier {tier}: {e}")
+                        logger.error(
+                            f"Failed to generate embeddings for tier {tier}: {e}"
+                        )
                         # Mark as failed but continue processing other tiers
                         pass
 
@@ -526,7 +556,9 @@ class EliteUnifiedEmbedder:
             strategy=strategy,
             purpose=purpose,
             metadata=(
-                [{"language": language, "priority": priority}] if language or priority else None
+                [{"language": language, "priority": priority}]
+                if language or priority
+                else None
             ),
             return_metadata=return_metadata,
         )
@@ -618,11 +650,15 @@ class EliteUnifiedEmbedder:
             try:
                 # Test both single and batch embedding
                 single_result = await embedder.embed_single(
-                    test_texts[0], strategy=EmbedderStrategy.AUTO, purpose=EmbeddingPurpose.SEARCH
+                    test_texts[0],
+                    strategy=EmbedderStrategy.AUTO,
+                    purpose=EmbeddingPurpose.SEARCH,
                 )
 
                 batch_result = await embedder.embed_batch(
-                    test_texts, strategy=EmbedderStrategy.AUTO, purpose=EmbeddingPurpose.SEARCH
+                    test_texts,
+                    strategy=EmbedderStrategy.AUTO,
+                    purpose=EmbeddingPurpose.SEARCH,
                 )
 
                 health_results[tier.value] = {
@@ -638,7 +674,9 @@ class EliteUnifiedEmbedder:
                 health_results[tier.value] = {"status": "unhealthy", "error": str(e)}
 
         # Overall assessment
-        healthy_tiers = sum(1 for tier in health_results.values() if tier["status"] == "healthy")
+        healthy_tiers = sum(
+            1 for tier in health_results.values() if tier["status"] == "healthy"
+        )
         total_tiers = len(health_results)
 
         return {
@@ -726,7 +764,9 @@ async def test_elite_unified_embedder():
         # Test single embedding
         logger.info("\n🔹 Testing single embedding...")
         single_result = await embedder.embed_single(test_texts[0], return_metadata=True)
-        logger.info(f"✅ Single embedding: {len(single_result['embedding'])} dimensions")
+        logger.info(
+            f"✅ Single embedding: {len(single_result['embedding'])} dimensions"
+        )
 
         # Test batch embedding - auto strategy
         logger.info("\n🔹 Testing batch embedding (AUTO strategy)...")
@@ -749,7 +789,9 @@ async def test_elite_unified_embedder():
                     test_texts, strategy=strategy, metadata=metadata
                 )
                 dimensions = [len(emb) for emb in results if emb]
-                logger.info(f"✅ {strategy.value}: Dimensions {min(dimensions)}-{max(dimensions)}")
+                logger.info(
+                    f"✅ {strategy.value}: Dimensions {min(dimensions)}-{max(dimensions)}"
+                )
             except Exception as e:
                 logger.info(f"⚠️  {strategy.value}: Failed - {e}")
 

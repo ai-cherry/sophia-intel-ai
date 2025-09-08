@@ -82,10 +82,14 @@ class SophiaSlackIntelligence:
         try:
             # Note: We'll need a bot token to be added to the config
             # For now, using app_token as placeholder
-            bot_token = self.slack_config.get("bot_token") or self.slack_config.get("app_token")
+            bot_token = self.slack_config.get("bot_token") or self.slack_config.get(
+                "app_token"
+            )
 
             if not bot_token or not bot_token.startswith(("xoxb-", "xoxe.")):
-                logger.warning("No valid bot token found. Slack functionality will be limited.")
+                logger.warning(
+                    "No valid bot token found. Slack functionality will be limited."
+                )
                 return
 
             self.slack_client = AsyncWebClient(token=bot_token)
@@ -169,7 +173,9 @@ class SophiaSlackIntelligence:
 
                 # Get report data from Looker
                 try:
-                    report_data = self.looker_client.get_look_data(config["looker_id"], limit=100)
+                    report_data = self.looker_client.get_look_data(
+                        config["looker_id"], limit=100
+                    )
 
                     # Analyze for anomalies and insights
                     report_alerts = await self._analyze_report_for_alerts(
@@ -230,7 +236,9 @@ class SophiaSlackIntelligence:
 
         return alerts
 
-    async def _analyze_master_payments(self, data: list[dict], config: dict) -> list[SlackAlert]:
+    async def _analyze_master_payments(
+        self, data: list[dict], config: dict
+    ) -> list[SlackAlert]:
         """Analyze the master payments report (270 views - most critical)"""
         alerts = []
 
@@ -277,7 +285,9 @@ class SophiaSlackIntelligence:
 
         return alerts
 
-    async def _analyze_abs_history(self, data: list[dict], config: dict) -> list[SlackAlert]:
+    async def _analyze_abs_history(
+        self, data: list[dict], config: dict
+    ) -> list[SlackAlert]:
         """Analyze ABS history report (252 views - financial critical)"""
         alerts = []
 
@@ -300,7 +310,9 @@ class SophiaSlackIntelligence:
 
         return alerts
 
-    async def _analyze_batch_processing(self, data: list[dict], config: dict) -> list[SlackAlert]:
+    async def _analyze_batch_processing(
+        self, data: list[dict], config: dict
+    ) -> list[SlackAlert]:
         """Analyze batch processing report (235 views - operations critical)"""
         alerts = []
 
@@ -321,7 +333,9 @@ class SophiaSlackIntelligence:
 
         return alerts
 
-    async def _check_data_quality(self, data: list[dict], config: dict) -> list[SlackAlert]:
+    async def _check_data_quality(
+        self, data: list[dict], config: dict
+    ) -> list[SlackAlert]:
         """Check data quality across any report"""
         alerts = []
 
@@ -373,7 +387,9 @@ class SophiaSlackIntelligence:
 
                 if response["ok"]:
                     results["sent"] += 1
-                    logger.info(f"Alert sent to {alert.channel}: {alert.message[:50]}...")
+                    logger.info(
+                        f"Alert sent to {alert.channel}: {alert.message[:50]}..."
+                    )
                 else:
                     results["failed"] += 1
                     results["errors"].append(
@@ -429,7 +445,9 @@ class SophiaSlackIntelligence:
                 message += f"  • {config['name']} ({config['views']} views)\\n"
 
             message += "\\n✅ **System Status**: All monitoring systems operational\\n"
-            message += "🤖 **AI Insights**: Ready to provide intelligent business analysis"
+            message += (
+                "🤖 **AI Insights**: Ready to provide intelligent business analysis"
+            )
 
             return SlackAlert(
                 channel="#general",
@@ -447,7 +465,9 @@ class SophiaSlackIntelligence:
                 priority="medium",
             )
 
-    async def handle_slack_command(self, command: str, user_id: str, channel_id: str) -> str:
+    async def handle_slack_command(
+        self, command: str, user_id: str, channel_id: str
+    ) -> str:
         """Handle Slack slash commands for business intelligence"""
         try:
             command = command.lower().strip()
@@ -468,15 +488,15 @@ class SophiaSlackIntelligence:
                     return await self._handle_status_command()
 
                 else:
-                    return (
-                        f"Unknown command: {parts[0]}. Type `/sophia help` for available commands."
-                    )
+                    return f"Unknown command: {parts[0]}. Type `/sophia help` for available commands."
 
             return "Command not recognized. Use `/sophia help` for assistance."
 
         except Exception as e:
             logger.error(f"Slack command handling failed: {str(e)}")
-            return f"Sorry, I encountered an error processing your request: {str(e)[:100]}"
+            return (
+                f"Sorry, I encountered an error processing your request: {str(e)[:100]}"
+            )
 
     def _get_help_message(self) -> str:
         """Get help message for Slack commands"""
@@ -502,7 +522,9 @@ _Powered by Sophia AI for intelligent business insights_"""
 
             for i, (_key, config) in enumerate(self.monitored_reports.items(), 1):
                 message += f"{i}. **{config['name']}**\\n"
-                message += f"   👥 {config['views']} views | Priority: {config['priority']}\\n"
+                message += (
+                    f"   👥 {config['views']} views | Priority: {config['priority']}\\n"
+                )
                 message += f"   📊 Report ID: {config['looker_id']}\\n\\n"
 
             message += "_Use these reports for real-time business intelligence_"
@@ -522,13 +544,23 @@ _Powered by Sophia AI for intelligent business insights_"""
 
             # Filter by priority if specified
             priority_filter = args[0].lower() if args else None
-            if priority_filter and priority_filter in ["critical", "high", "medium", "low"]:
+            if priority_filter and priority_filter in [
+                "critical",
+                "high",
+                "medium",
+                "low",
+            ]:
                 alerts = [a for a in alerts if a.priority == priority_filter]
 
             message = f"🚨 **Current Business Alerts ({len(alerts)})**\\n\\n"
 
             for alert in alerts[:5]:  # Show top 5
-                priority_emoji = {"critical": "🚨", "high": "⚠️", "medium": "📊", "low": "✅"}
+                priority_emoji = {
+                    "critical": "🚨",
+                    "high": "⚠️",
+                    "medium": "📊",
+                    "low": "✅",
+                }
                 emoji = priority_emoji.get(alert.priority, "📄")
 
                 message += f"{emoji} **{alert.priority.title()}**: {alert.message}\\n"
@@ -555,7 +587,9 @@ _Powered by Sophia AI for intelligent business insights_"""
 
             message += "**Monitored Reports:**\\n"
             for config in self.monitored_reports.values():
-                status_emoji = "✅" if config["priority"] in ["critical", "high"] else "📊"
+                status_emoji = (
+                    "✅" if config["priority"] in ["critical", "high"] else "📊"
+                )
                 message += f"{status_emoji} {config['name']} ({config['priority']})\\n"
 
             message += f"\\n_Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}_"

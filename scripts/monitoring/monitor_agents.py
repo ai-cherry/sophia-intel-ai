@@ -39,7 +39,9 @@ async def check_mcp_health():
     async with aiohttp.ClientSession() as session:
         for name, port in servers:
             try:
-                async with session.get(f"http://localhost:{port}/health", timeout=5) as resp:
+                async with session.get(
+                    f"http://localhost:{port}/health", timeout=5
+                ) as resp:
                     if resp.status == 200:
                         data = await resp.json()
                         if not data.get("mock", False):
@@ -75,7 +77,9 @@ async def monitor_qdrant():
     """Monitor Qdrant vector database"""
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get("http://localhost:6333/collections", timeout=5) as resp:
+            async with session.get(
+                "http://localhost:6333/collections", timeout=5
+            ) as resp:
                 if resp.status == 200:
                     data = await resp.json()
                     collections = data.get("result", {}).get("collections", [])
@@ -141,7 +145,9 @@ async def main():
     print(f"  Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     if agentops_available and os.getenv("AGENTOPS_API_KEY"):
-        agentops.log(f"Monitoring complete - {healthy_mcp}/{total_mcp} MCP servers healthy")
+        agentops.log(
+            f"Monitoring complete - {healthy_mcp}/{total_mcp} MCP servers healthy"
+        )
         agentops.stop()
 
 

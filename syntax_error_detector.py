@@ -32,7 +32,10 @@ class SyntaxErrorDetector:
         """Get list of files that Black cannot format"""
         try:
             result = subprocess.run(
-                ["black", "--check", "."], capture_output=True, text=True, cwd=self.root_dir
+                ["black", "--check", "."],
+                capture_output=True,
+                text=True,
+                cwd=self.root_dir,
             )
 
             failed_files = []
@@ -41,7 +44,9 @@ class SyntaxErrorDetector:
                     # Extract file path from error line
                     parts = line.split(":")
                     if len(parts) >= 2:
-                        file_path = parts[0].replace("error: cannot format ", "").strip()
+                        file_path = (
+                            parts[0].replace("error: cannot format ", "").strip()
+                        )
                         failed_files.append(file_path)
 
             return list(set(failed_files))  # Remove duplicates
@@ -94,7 +99,9 @@ class SyntaxErrorDetector:
                 "category": "other",
             }
 
-    def categorize_error(self, content: str, error: SyntaxError, file_path: Path) -> str:
+    def categorize_error(
+        self, content: str, error: SyntaxError, file_path: Path
+    ) -> str:
         """Categorize the type of syntax error"""
         error_text = error.text.strip() if error.text else ""
         error_msg = error.msg.lower() if error.msg else ""
@@ -126,7 +133,9 @@ class SyntaxErrorDetector:
 
         return "other"
 
-    def get_content_preview(self, content: str, error_line: int, context_lines: int = 3) -> Dict:
+    def get_content_preview(
+        self, content: str, error_line: int, context_lines: int = 3
+    ) -> Dict:
         """Get preview of content around the error line"""
         lines = content.split("\n")
         start = max(0, error_line - context_lines - 1)
@@ -153,7 +162,9 @@ class SyntaxErrorDetector:
             print("✅ No files found that Black cannot format!")
             return {"errors": [], "summary": {}}
 
-        print(f"📝 Found {len(failed_files)} files with issues. Analyzing syntax errors...")
+        print(
+            f"📝 Found {len(failed_files)} files with issues. Analyzing syntax errors..."
+        )
 
         errors = []
         category_counts = {}
@@ -188,7 +199,9 @@ class SyntaxErrorDetector:
         report.append("")
         report.append("📊 SUMMARY:")
         report.append(f"  • Total files Black cannot format: {summary['total_files']}")
-        report.append(f"  • Files with syntax errors: {summary['files_with_syntax_errors']}")
+        report.append(
+            f"  • Files with syntax errors: {summary['files_with_syntax_errors']}"
+        )
         report.append("")
 
         report.append("📈 ERROR CATEGORIES:")
@@ -240,7 +253,9 @@ class SyntaxErrorDetector:
                 report.append("")
 
             if len(by_category[category]) > 5:
-                report.append(f"    ... and {len(by_category[category]) - 5} more files")
+                report.append(
+                    f"    ... and {len(by_category[category]) - 5} more files"
+                )
 
             report.append("")
 

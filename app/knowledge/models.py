@@ -131,7 +131,9 @@ class KnowledgeEntity(BaseModel):
             "classification": self.classification.value,
             "priority": self.priority.value,
             "content": self.content,
-            "pay_ready_context": self.pay_ready_context.dict() if self.pay_ready_context else None,
+            "pay_ready_context": (
+                self.pay_ready_context.dict() if self.pay_ready_context else None
+            ),
             "metadata": self.metadata,
             "source": self.source,
             "source_id": self.source_id,
@@ -174,7 +176,9 @@ class KnowledgeVersion(BaseModel):
         new_keys = set(self.content.keys())
 
         for key in new_keys - old_keys:
-            diff["changes"].append({"type": "added", "key": key, "value": self.content[key]})
+            diff["changes"].append(
+                {"type": "added", "key": key, "value": self.content[key]}
+            )
 
         for key in old_keys - new_keys:
             diff["changes"].append({"type": "removed", "key": key})

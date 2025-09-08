@@ -16,12 +16,16 @@ class RedisPoolConfig(BaseModel):
 
     max_connections: int = Field(default=50, description="Maximum connections in pool")
     min_connections: int = Field(default=5, description="Minimum connections in pool")
-    retry_on_timeout: bool = Field(default=True, description="Retry on connection timeout")
+    retry_on_timeout: bool = Field(
+        default=True, description="Retry on connection timeout"
+    )
     socket_keepalive: bool = Field(default=True, description="Enable socket keepalive")
     socket_keepalive_options: dict[str, int] = Field(
         default_factory=lambda: {}  # Let Redis handle platform-specific keepalive options
     )
-    connection_timeout: float = Field(default=5.0, description="Connection timeout in seconds")
+    connection_timeout: float = Field(
+        default=5.0, description="Connection timeout in seconds"
+    )
     socket_timeout: float = Field(default=30.0, description="Socket timeout in seconds")
 
 
@@ -29,9 +33,15 @@ class RedisStreamConfig(BaseModel):
     """Redis streams configuration with bounded memory"""
 
     max_len: int = Field(default=10000, description="Maximum stream length (MAXLEN)")
-    trim_strategy: str = Field(default="~", description="Trim strategy (~=approximate, =exact)")
-    consumer_group_timeout: int = Field(default=3600000, description="Consumer group timeout in ms")
-    block_timeout: int = Field(default=5000, description="Block timeout for XREAD in ms")
+    trim_strategy: str = Field(
+        default="~", description="Trim strategy (~=approximate, =exact)"
+    )
+    consumer_group_timeout: int = Field(
+        default=3600000, description="Consumer group timeout in ms"
+    )
+    block_timeout: int = Field(
+        default=5000, description="Block timeout for XREAD in ms"
+    )
     batch_size: int = Field(default=10, description="Batch size for stream processing")
 
 
@@ -39,41 +49,69 @@ class RedisTTLConfig(BaseModel):
     """TTL configuration for different data types"""
 
     # Cache TTLs
-    cache_short: int = Field(default=300, description="Short-term cache TTL (5 minutes)")
+    cache_short: int = Field(
+        default=300, description="Short-term cache TTL (5 minutes)"
+    )
     cache_medium: int = Field(default=1800, description="Medium cache TTL (30 minutes)")
     cache_long: int = Field(default=3600, description="Long cache TTL (1 hour)")
     cache_daily: int = Field(default=86400, description="Daily cache TTL (24 hours)")
 
     # Session and temporary data
     session_data: int = Field(default=1800, description="Session data TTL (30 minutes)")
-    temp_results: int = Field(default=600, description="Temporary results TTL (10 minutes)")
-    websocket_state: int = Field(default=300, description="WebSocket state TTL (5 minutes)")
+    temp_results: int = Field(
+        default=600, description="Temporary results TTL (10 minutes)"
+    )
+    websocket_state: int = Field(
+        default=300, description="WebSocket state TTL (5 minutes)"
+    )
 
     # Business cycle specific
-    pay_ready_snapshot: int = Field(default=7200, description="Pay Ready snapshot TTL (2 hours)")
-    monthly_analytics: int = Field(default=604800, description="Monthly analytics TTL (7 days)")
-    team_performance: int = Field(default=3600, description="Team performance TTL (1 hour)")
+    pay_ready_snapshot: int = Field(
+        default=7200, description="Pay Ready snapshot TTL (2 hours)"
+    )
+    monthly_analytics: int = Field(
+        default=604800, description="Monthly analytics TTL (7 days)"
+    )
+    team_performance: int = Field(
+        default=3600, description="Team performance TTL (1 hour)"
+    )
 
     # Message bus
-    message_retention: int = Field(default=86400, description="Message retention TTL (24 hours)")
+    message_retention: int = Field(
+        default=86400, description="Message retention TTL (24 hours)"
+    )
     agent_inbox: int = Field(default=1800, description="Agent inbox TTL (30 minutes)")
 
     # Memory management
-    memory_embeddings: int = Field(default=7200, description="Memory embeddings TTL (2 hours)")
-    search_results: int = Field(default=1800, description="Search results TTL (30 minutes)")
+    memory_embeddings: int = Field(
+        default=7200, description="Memory embeddings TTL (2 hours)"
+    )
+    search_results: int = Field(
+        default=1800, description="Search results TTL (30 minutes)"
+    )
 
 
 class RedisMemoryConfig(BaseModel):
     """Redis memory management configuration"""
 
     # Memory thresholds (percentage of max memory)
-    warning_threshold: float = Field(default=0.8, description="Memory warning threshold (80%)")
-    critical_threshold: float = Field(default=0.9, description="Memory critical threshold (90%)")
-    emergency_threshold: float = Field(default=0.95, description="Memory emergency threshold (95%)")
+    warning_threshold: float = Field(
+        default=0.8, description="Memory warning threshold (80%)"
+    )
+    critical_threshold: float = Field(
+        default=0.9, description="Memory critical threshold (90%)"
+    )
+    emergency_threshold: float = Field(
+        default=0.95, description="Memory emergency threshold (95%)"
+    )
 
     # Eviction policies
-    default_policy: str = Field(default="allkeys-lru", description="Default eviction policy")
-    cache_policy: str = Field(default="volatile-lru", description="Cache-specific eviction policy")
+    default_policy: str = Field(
+        default="allkeys-lru", description="Default eviction policy"
+    )
+    cache_policy: str = Field(
+        default="volatile-lru", description="Cache-specific eviction policy"
+    )
 
     # Memory limits
     max_memory_mb: Optional[int] = Field(default=1024, description="Max memory in MB")
@@ -97,15 +135,23 @@ class RedisMonitoringConfig(BaseModel):
     health_check_interval: float = Field(
         default=30.0, description="Health check interval in seconds"
     )
-    connection_check_timeout: float = Field(default=5.0, description="Connection check timeout")
+    connection_check_timeout: float = Field(
+        default=5.0, description="Connection check timeout"
+    )
 
     # Metrics collection
     collect_metrics: bool = Field(default=True, description="Enable metrics collection")
-    metrics_interval: float = Field(default=60.0, description="Metrics collection interval")
+    metrics_interval: float = Field(
+        default=60.0, description="Metrics collection interval"
+    )
 
     # Alerting thresholds
-    slow_query_threshold: float = Field(default=1.0, description="Slow query threshold in seconds")
-    high_memory_threshold: float = Field(default=0.85, description="High memory usage threshold")
+    slow_query_threshold: float = Field(
+        default=1.0, description="Slow query threshold in seconds"
+    )
+    high_memory_threshold: float = Field(
+        default=0.85, description="High memory usage threshold"
+    )
     connection_pool_threshold: float = Field(
         default=0.8, description="Connection pool usage threshold"
     )
@@ -115,7 +161,9 @@ class RedisConfig(BaseModel):
     """Complete Redis configuration"""
 
     # Connection details
-    url: str = Field(default="redis://localhost:6379", description="Redis connection URL")
+    url: str = Field(
+        default="redis://localhost:6379", description="Redis connection URL"
+    )
     db: int = Field(default=0, description="Redis database number")
 
     # Configuration sections
@@ -126,7 +174,9 @@ class RedisConfig(BaseModel):
     monitoring: RedisMonitoringConfig = Field(default_factory=RedisMonitoringConfig)
 
     # Circuit breaker
-    circuit_breaker: RedisCircuitBreakerConfig = Field(default_factory=RedisCircuitBreakerConfig)
+    circuit_breaker: RedisCircuitBreakerConfig = Field(
+        default_factory=RedisCircuitBreakerConfig
+    )
 
     # Environment overrides
     @classmethod
@@ -146,7 +196,9 @@ class RedisConfig(BaseModel):
             config.memory.max_memory_mb = int(os.getenv("REDIS_MAX_MEMORY_MB", 2048))
 
             # Extended TTLs for production caching
-            config.ttl.pay_ready_snapshot = int(os.getenv("PAY_READY_TTL", 14400))  # 4 hours
+            config.ttl.pay_ready_snapshot = int(
+                os.getenv("PAY_READY_TTL", 14400)
+            )  # 4 hours
             config.ttl.monthly_analytics = int(
                 os.getenv("MONTHLY_ANALYTICS_TTL", 1209600)
             )  # 14 days

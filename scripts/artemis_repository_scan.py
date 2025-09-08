@@ -69,7 +69,9 @@ Provide specific file paths and code snippets where possible.""",
         try:
             # Use factory's execute_with_agent method
             response = self.factory.execute_with_agent(
-                agent_name="code_architect", messages=messages, model_override="grok-code-fast-1"
+                agent_name="code_architect",
+                messages=messages,
+                model_override="grok-code-fast-1",
             )
 
             return {
@@ -219,7 +221,9 @@ Evaluate efficiency and suggest architectural improvements.""",
         try:
             # Use factory with a different agent
             response = self.factory.execute_with_agent(
-                agent_name="system_analyst", messages=messages, model_override="llama-4-scout"
+                agent_name="system_analyst",
+                messages=messages,
+                model_override="llama-4-scout",
             )
 
             return {

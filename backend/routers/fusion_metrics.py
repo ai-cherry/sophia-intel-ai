@@ -137,7 +137,9 @@ async def get_system_health():
 
             overall_uptime = sum(uptimes) / len(uptimes) if uptimes else 99.94
             avg_response_time = (
-                int(sum(response_times) / len(response_times)) if response_times else 245
+                int(sum(response_times) / len(response_times))
+                if response_times
+                else 245
             )
 
         else:
@@ -214,7 +216,10 @@ async def trigger_fusion_system(system: str, background_tasks: BackgroundTasks):
         else:
             raise HTTPException(status_code=400, detail=f"Unknown system: {system}")
 
-        return {"message": f"Triggered {system} operation", "timestamp": datetime.now().isoformat()}
+        return {
+            "message": f"Triggered {system} operation",
+            "timestamp": datetime.now().isoformat(),
+        }
 
     except Exception as e:
         logger.error(f"Error triggering {system}: {e}")
@@ -317,12 +322,22 @@ async def get_cross_db_analytics_metrics(client: redis.Redis) -> Dict[str, Any]:
 
 def get_mock_redis_metrics() -> Dict[str, Any]:
     """Mock Redis optimization metrics"""
-    return {"memory_saved": 2.4, "cost_savings": 127.50, "keys_pruned": 1847, "status": "active"}
+    return {
+        "memory_saved": 2.4,
+        "cost_savings": 127.50,
+        "keys_pruned": 1847,
+        "status": "active",
+    }
 
 
 def get_mock_edge_rag_metrics() -> Dict[str, Any]:
     """Mock Edge RAG metrics"""
-    return {"query_count": 342, "avg_latency": 245, "success_rate": 98.7, "status": "active"}
+    return {
+        "query_count": 342,
+        "avg_latency": 245,
+        "success_rate": 98.7,
+        "status": "active",
+    }
 
 
 def get_mock_hybrid_routing_metrics() -> Dict[str, Any]:
@@ -337,7 +352,12 @@ def get_mock_hybrid_routing_metrics() -> Dict[str, Any]:
 
 def get_mock_cross_db_metrics() -> Dict[str, Any]:
     """Mock Cross-DB Analytics metrics"""
-    return {"predictions_made": 89, "accuracy": 94.3, "data_points": 12847, "status": "active"}
+    return {
+        "predictions_made": 89,
+        "accuracy": 94.3,
+        "data_points": 12847,
+        "status": "active",
+    }
 
 
 # Background task functions
@@ -360,10 +380,14 @@ async def trigger_redis_optimization():
         if client:
             metrics_key = "fusion:redis_optimization:metrics"
             metrics_data = {
-                "memory_saved_gb": result.get("pruning_result", {}).get("memory_saved", 0)
+                "memory_saved_gb": result.get("pruning_result", {}).get(
+                    "memory_saved", 0
+                )
                 / (1024**3),
                 "cost_savings": result.get("pruning_result", {}).get("cost_savings", 0),
-                "keys_pruned": len(result.get("pruning_result", {}).get("pruned_keys", [])),
+                "keys_pruned": len(
+                    result.get("pruning_result", {}).get("pruned_keys", [])
+                ),
                 "status": "active" if result.get("status") == "completed" else "idle",
                 "last_run": datetime.now().isoformat(),
             }

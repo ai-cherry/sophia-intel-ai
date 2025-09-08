@@ -21,7 +21,9 @@ def check_python_version() -> dict[str, Any]:
         "status": "pass" if is_secure else "warn",
         "version": f"{version.major}.{version.minor}.{version.micro}",
         "message": (
-            "Python version is secure" if is_secure else "Consider upgrading to Python 3.11+"
+            "Python version is secure"
+            if is_secure
+            else "Consider upgrading to Python 3.11+"
         ),
     }
 
@@ -101,7 +103,9 @@ def check_file_permissions() -> dict[str, Any]:
         "status": "pass" if not issues else "warn",
         "issues": issues,
         "message": (
-            "File permissions secure" if not issues else f"{len(issues)} permission issues found"
+            "File permissions secure"
+            if not issues
+            else f"{len(issues)} permission issues found"
         ),
     }
 
@@ -178,7 +182,9 @@ def main():
     # Print summary
     print("\n📊 Security Validation Summary:")
     print(f"Overall Status: {report['overall_status'].upper()}")
-    print(f"Checks: {report['summary']['passed']}/{report['summary']['total_checks']} passed")
+    print(
+        f"Checks: {report['summary']['passed']}/{report['summary']['total_checks']} passed"
+    )
 
     if report["summary"]["warnings"] > 0:
         print(f"⚠️  {report['summary']['warnings']} warnings")
@@ -190,7 +196,9 @@ def main():
     print("\n📋 Detailed Results:")
     for check in report["checks"]:
         status_icon = {"pass": "✅", "warn": "⚠️", "fail": "❌", "error": "🔥"}
-        print(f"{status_icon.get(check['status'], '?')} {check['check']}: {check['message']}")
+        print(
+            f"{status_icon.get(check['status'], '?')} {check['check']}: {check['message']}"
+        )
 
         if "issues" in check and check["issues"]:
             for issue in check["issues"]:

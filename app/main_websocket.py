@@ -303,7 +303,8 @@ async def get_metrics():
     except Exception as e:
         logger.error(f"Metrics error: {e}")
         return JSONResponse(
-            status_code=500, content={"error": str(e), "timestamp": datetime.now().isoformat()}
+            status_code=500,
+            content={"error": str(e), "timestamp": datetime.now().isoformat()},
         )
 
 
@@ -322,13 +323,21 @@ async def get_chat_agents():
             "id": "sales_coach",
             "name": "Sales Coach",
             "description": "Pipeline optimization, deal coaching, revenue insights",
-            "capabilities": ["pipeline_analysis", "deal_coaching", "revenue_forecasting"],
+            "capabilities": [
+                "pipeline_analysis",
+                "deal_coaching",
+                "revenue_forecasting",
+            ],
         },
         {
             "id": "customer_support_coach",
             "name": "Support Coach",
             "description": "Support efficiency, customer satisfaction, team coaching",
-            "capabilities": ["support_optimization", "satisfaction_analysis", "team_coaching"],
+            "capabilities": [
+                "support_optimization",
+                "satisfaction_analysis",
+                "team_coaching",
+            ],
         },
         {
             "id": "client_health",
@@ -340,7 +349,11 @@ async def get_chat_agents():
             "id": "product_strategist",
             "name": "Product Strategist",
             "description": "Feature analysis, roadmap insights, user feedback synthesis",
-            "capabilities": ["feature_analysis", "roadmap_planning", "feedback_synthesis"],
+            "capabilities": [
+                "feature_analysis",
+                "roadmap_planning",
+                "feedback_synthesis",
+            ],
         },
         {
             "id": "database_master",
@@ -352,16 +365,26 @@ async def get_chat_agents():
             "id": "ceo_coach",
             "name": "CEO Coach",
             "description": "Executive insights, strategic analysis, Pay Ready intelligence",
-            "capabilities": ["executive_insights", "strategic_analysis", "business_intelligence"],
+            "capabilities": [
+                "executive_insights",
+                "strategic_analysis",
+                "business_intelligence",
+            ],
         },
     ]
 
-    return {"agents": agents, "total_count": len(agents), "timestamp": datetime.now().isoformat()}
+    return {
+        "agents": agents,
+        "total_count": len(agents),
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 # HTTP chat endpoint (fallback)
 @app.post("/chat/message")
-async def send_chat_message(message: Dict, handler: SophiaChatHandler = Depends(get_chat_handler)):
+async def send_chat_message(
+    message: Dict, handler: SophiaChatHandler = Depends(get_chat_handler)
+):
     """HTTP endpoint for chat messages (fallback when WebSocket unavailable)"""
     try:
         user_message = message.get("message", "").strip()
@@ -404,7 +427,9 @@ async def list_mcp_tools(server: SophiaMCPServer = Depends(get_mcp_server)):
 
 # MCP tool call endpoint
 @app.post("/mcp/tools/call")
-async def call_mcp_tool(request: Dict, server: SophiaMCPServer = Depends(get_mcp_server)):
+async def call_mcp_tool(
+    request: Dict, server: SophiaMCPServer = Depends(get_mcp_server)
+):
     """Call MCP tool"""
     try:
         result = await server.call_tool(request)

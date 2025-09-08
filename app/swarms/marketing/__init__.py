@@ -16,7 +16,13 @@ from .agents import (
     MarketIntelligenceAgent,
     PerformanceAnalyticsAgent,
 )
-from .models import BrandGuidelines, CampaignData, CreativeCampaign, MarketingContext, MarketInsight
+from .models import (
+    BrandGuidelines,
+    CampaignData,
+    CreativeCampaign,
+    MarketingContext,
+    MarketInsight,
+)
 from .orchestrator import MarketingSwarmOrchestrator
 
 __all__ = [

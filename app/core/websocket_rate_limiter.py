@@ -100,7 +100,10 @@ class PayReadyBusinessCycle:
             return 0.5, "weekend"
 
         # Outside business hours - reduced activity
-        if hour < self.business_hours["start_hour"] or hour >= self.business_hours["end_hour"]:
+        if (
+            hour < self.business_hours["start_hour"]
+            or hour >= self.business_hours["end_hour"]
+        ):
             return 0.3, "after_hours"
 
         # Check critical periods
@@ -154,32 +157,52 @@ class WebSocketRateLimiter:
         return {
             # Per-role limits
             UserRole.ADMIN: {
-                DomainType.SOPHIA_INTEL: RateLimit(100, 60, RateLimitType.PER_MINUTE, 20),
-                DomainType.ARTEMIS_TACTICAL: RateLimit(100, 60, RateLimitType.PER_MINUTE, 20),
+                DomainType.SOPHIA_INTEL: RateLimit(
+                    100, 60, RateLimitType.PER_MINUTE, 20
+                ),
+                DomainType.ARTEMIS_TACTICAL: RateLimit(
+                    100, 60, RateLimitType.PER_MINUTE, 20
+                ),
                 DomainType.PAY_READY: RateLimit(200, 60, RateLimitType.PER_MINUTE, 50),
-                DomainType.SYSTEM_METRICS: RateLimit(60, 60, RateLimitType.PER_MINUTE, 10),
+                DomainType.SYSTEM_METRICS: RateLimit(
+                    60, 60, RateLimitType.PER_MINUTE, 10
+                ),
                 DomainType.GENERAL: RateLimit(200, 60, RateLimitType.PER_MINUTE, 30),
             },
             UserRole.SOPHIA_OPERATOR: {
-                DomainType.SOPHIA_INTEL: RateLimit(60, 60, RateLimitType.PER_MINUTE, 15),
-                DomainType.SYSTEM_METRICS: RateLimit(30, 60, RateLimitType.PER_MINUTE, 5),
+                DomainType.SOPHIA_INTEL: RateLimit(
+                    60, 60, RateLimitType.PER_MINUTE, 15
+                ),
+                DomainType.SYSTEM_METRICS: RateLimit(
+                    30, 60, RateLimitType.PER_MINUTE, 5
+                ),
                 DomainType.GENERAL: RateLimit(100, 60, RateLimitType.PER_MINUTE, 20),
             },
             UserRole.PAY_READY_ANALYST: {
                 DomainType.PAY_READY: RateLimit(120, 60, RateLimitType.PER_MINUTE, 30),
-                DomainType.SYSTEM_METRICS: RateLimit(30, 60, RateLimitType.PER_MINUTE, 5),
+                DomainType.SYSTEM_METRICS: RateLimit(
+                    30, 60, RateLimitType.PER_MINUTE, 5
+                ),
                 DomainType.GENERAL: RateLimit(80, 60, RateLimitType.PER_MINUTE, 15),
             },
             UserRole.ARTEMIS_OPERATOR: {
-                DomainType.ARTEMIS_TACTICAL: RateLimit(80, 60, RateLimitType.PER_MINUTE, 20),
-                DomainType.SYSTEM_METRICS: RateLimit(30, 60, RateLimitType.PER_MINUTE, 5),
+                DomainType.ARTEMIS_TACTICAL: RateLimit(
+                    80, 60, RateLimitType.PER_MINUTE, 20
+                ),
+                DomainType.SYSTEM_METRICS: RateLimit(
+                    30, 60, RateLimitType.PER_MINUTE, 5
+                ),
                 DomainType.GENERAL: RateLimit(60, 60, RateLimitType.PER_MINUTE, 10),
             },
             UserRole.VIEWER: {
-                DomainType.SYSTEM_METRICS: RateLimit(20, 60, RateLimitType.PER_MINUTE, 3),
+                DomainType.SYSTEM_METRICS: RateLimit(
+                    20, 60, RateLimitType.PER_MINUTE, 3
+                ),
                 DomainType.GENERAL: RateLimit(30, 60, RateLimitType.PER_MINUTE, 5),
             },
-            UserRole.GUEST: {DomainType.GENERAL: RateLimit(10, 60, RateLimitType.PER_MINUTE, 2)},
+            UserRole.GUEST: {
+                DomainType.GENERAL: RateLimit(10, 60, RateLimitType.PER_MINUTE, 2)
+            },
         }
 
     async def initialize(self):
@@ -189,7 +212,9 @@ class WebSocketRateLimiter:
             await self.redis.ping()
             logger.info("WebSocket rate limiter initialized with Redis")
         except Exception as e:
-            logger.warning(f"Redis connection failed, using in-memory rate limiting: {e}")
+            logger.warning(
+                f"Redis connection failed, using in-memory rate limiting: {e}"
+            )
             self.redis = None
 
         # Start background tasks
@@ -220,7 +245,9 @@ class WebSocketRateLimiter:
 
         # Get or create client state
         if client_id not in self.client_states:
-            self.client_states[client_id] = ClientRateState(client_id=client_id, user=user)
+            self.client_states[client_id] = ClientRateState(
+                client_id=client_id, user=user
+            )
 
         client_state = self.client_states[client_id]
         client_state.user = user  # Update user info
@@ -250,7 +277,11 @@ class WebSocketRateLimiter:
         # Apply business cycle multiplier for Pay Ready
         multiplier = 1.0
         cycle_info = "normal"
-        if domain == DomainType.PAY_READY and user and user.tenant_type == TenantType.PAY_READY:
+        if (
+            domain == DomainType.PAY_READY
+            and user
+            and user.tenant_type == TenantType.PAY_READY
+        ):
             multiplier, cycle_info = self.business_cycle.get_business_multiplier()
 
         adjusted_limit = int(rate_limit.limit * multiplier)
@@ -259,7 +290,9 @@ class WebSocketRateLimiter:
         window_start = now - rate_limit.window_seconds
 
         # Clean old requests from window
-        while client_state.request_times and client_state.request_times[0] < window_start:
+        while (
+            client_state.request_times and client_state.request_times[0] < window_start
+        ):
             client_state.request_times.popleft()
 
         # Add current request
@@ -300,7 +333,9 @@ class WebSocketRateLimiter:
         # Replenish burst tokens gradually
         if client_state.burst_tokens < rate_limit.burst_allowance:
             time_since_last = now - (
-                client_state.request_times[-2] if len(client_state.request_times) > 1 else now - 1
+                client_state.request_times[-2]
+                if len(client_state.request_times) > 1
+                else now - 1
             )
             if time_since_last > 10:  # Replenish every 10 seconds
                 client_state.burst_tokens = min(
@@ -351,7 +386,9 @@ class WebSocketRateLimiter:
 
         for client_state in self.client_states.values():
             if client_state.last_request >= window_start:
-                recent_requests += len([t for t in client_state.request_times if t >= window_start])
+                recent_requests += len(
+                    [t for t in client_state.request_times if t >= window_start]
+                )
                 unique_clients.add(client_state.client_id)
 
         self.global_metrics.requests_per_second = recent_requests / 5.0
@@ -395,7 +432,9 @@ class WebSocketRateLimiter:
         if self.redis:
             try:
                 await self.redis.lpush("websocket_violations", str(violation_data))
-                await self.redis.ltrim("websocket_violations", 0, 1000)  # Keep last 1000
+                await self.redis.ltrim(
+                    "websocket_violations", 0, 1000
+                )  # Keep last 1000
             except Exception as e:
                 logger.error(f"Failed to log violation to Redis: {e}")
 
@@ -494,7 +533,9 @@ class WebSocketRateLimiter:
                     del self.client_states[client_id]
 
                 if expired_clients:
-                    logger.info(f"Cleaned up {len(expired_clients)} expired client states")
+                    logger.info(
+                        f"Cleaned up {len(expired_clients)} expired client states"
+                    )
 
                 await asyncio.sleep(self.cleanup_interval)
             except Exception as e:
@@ -514,7 +555,11 @@ class WebSocketRateLimiter:
         )
 
         blocked_clients = len(
-            [s for s in self.client_states.values() if s.blocked_until and now < s.blocked_until]
+            [
+                s
+                for s in self.client_states.values()
+                if s.blocked_until and now < s.blocked_until
+            ]
         )
 
         return {

@@ -46,7 +46,9 @@ class ProductionIngestionPipeline:
             logger.warning(f"No specific ingestion method for source: {source_name}")
             return []
 
-    async def _ingest_gong_data(self, filters: dict | None = None) -> list[dict[str, Any]]:
+    async def _ingest_gong_data(
+        self, filters: dict | None = None
+    ) -> list[dict[str, Any]]:
         """Ingest data from Gong.io"""
         try:
             # Mock implementation - replace with actual Gong API integration
@@ -72,7 +74,9 @@ class ProductionIngestionPipeline:
             logger.error(f"Gong ingestion failed: {e}")
             raise
 
-    async def _ingest_hubspot_data(self, filters: dict | None = None) -> list[dict[str, Any]]:
+    async def _ingest_hubspot_data(
+        self, filters: dict | None = None
+    ) -> list[dict[str, Any]]:
         """Ingest data from HubSpot CRM"""
         try:
             # Mock implementation - replace with actual HubSpot API integration
@@ -98,7 +102,9 @@ class ProductionIngestionPipeline:
             logger.error(f"HubSpot ingestion failed: {e}")
             raise
 
-    async def _ingest_slack_data(self, filters: dict | None = None) -> list[dict[str, Any]]:
+    async def _ingest_slack_data(
+        self, filters: dict | None = None
+    ) -> list[dict[str, Any]]:
         """Ingest data from Slack conversations"""
         try:
             # Mock implementation - replace with actual Slack API integration
@@ -124,7 +130,9 @@ class ProductionIngestionPipeline:
             logger.error(f"Slack ingestion failed: {e}")
             raise
 
-    async def _ingest_salesforce_data(self, filters: dict | None = None) -> list[dict[str, Any]]:
+    async def _ingest_salesforce_data(
+        self, filters: dict | None = None
+    ) -> list[dict[str, Any]]:
         """Ingest data from Salesforce"""
         try:
             # Mock implementation - replace with actual Salesforce API integration
@@ -168,7 +176,9 @@ class ProductionIngestionPipeline:
                     batched_docs.extend(batch)
 
                 results[source_name] = batched_docs
-                logger.info(f"Batch ingested {len(batched_docs)} documents from {source_name}")
+                logger.info(
+                    f"Batch ingested {len(batched_docs)} documents from {source_name}"
+                )
 
             except Exception as e:
                 logger.error(f"Batch ingestion failed for {source_name}: {e}")

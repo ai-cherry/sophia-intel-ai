@@ -23,7 +23,9 @@ from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/integration-intelligence", tags=["integration-intelligence"])
+router = APIRouter(
+    prefix="/api/integration-intelligence", tags=["integration-intelligence"]
+)
 
 # ==============================================================================
 # REQUEST/RESPONSE MODELS
@@ -44,7 +46,9 @@ class AnalysisRequest(BaseModel):
 
     team_id: str = Field(..., min_length=1, description="Domain team identifier")
     platform_data: dict[str, Any] = Field(..., description="Platform data for analysis")
-    analysis_type: str = Field(default="comprehensive", description="Type of analysis to perform")
+    analysis_type: str = Field(
+        default="comprehensive", description="Type of analysis to perform"
+    )
 
     @validator("analysis_type")
     def validate_analysis_type(cls, v: str) -> str:
@@ -56,7 +60,9 @@ class AnalysisRequest(BaseModel):
             "knowledge_analysis",
         ]
         if v not in allowed_types:
-            raise ValueError(f"Analysis type must be one of: {', '.join(allowed_types)}")
+            raise ValueError(
+                f"Analysis type must be one of: {', '.join(allowed_types)}"
+            )
         return v
 
 
@@ -76,15 +82,21 @@ class CorrelationRequest(BaseModel):
             "knowledge_linkage",
         ]
         if v not in valid_types:
-            raise ValueError(f"Correlation type must be one of: {', '.join(valid_types)}")
+            raise ValueError(
+                f"Correlation type must be one of: {', '.join(valid_types)}"
+            )
         return v
 
 
 class OKRUpdateRequest(BaseModel):
     """Request model for OKR metric updates"""
 
-    total_revenue: Optional[float] = Field(default=None, ge=0, description="Total revenue")
-    employee_count: Optional[int] = Field(default=None, ge=1, description="Number of employees")
+    total_revenue: Optional[float] = Field(
+        default=None, ge=0, description="Total revenue"
+    )
+    employee_count: Optional[int] = Field(
+        default=None, ge=1, description="Number of employees"
+    )
     target_revenue_per_employee: Optional[float] = Field(
         default=None, ge=0, description="Target revenue per employee"
     )
@@ -105,21 +117,31 @@ class DashboardDataResponse(BaseModel):
     """Executive dashboard data response"""
 
     okr_metrics: dict[str, Any] = Field(..., description="OKR metrics and progress")
-    team_analytics: list[dict[str, Any]] = Field(..., description="Domain team analytics")
+    team_analytics: list[dict[str, Any]] = Field(
+        ..., description="Domain team analytics"
+    )
     correlation_insights: list[dict[str, Any]] = Field(
         ..., description="Cross-platform correlations"
     )
     real_time_status: dict[str, Any] = Field(..., description="Real-time system status")
-    performance_metrics: dict[str, Any] = Field(..., description="System performance metrics")
+    performance_metrics: dict[str, Any] = Field(
+        ..., description="System performance metrics"
+    )
 
 
 class IntegrationStatusResponse(BaseModel):
     """Integration status response"""
 
     active_teams: list[dict[str, Any]] = Field(..., description="Active domain teams")
-    platform_connections: dict[str, Any] = Field(..., description="Platform connection status")
-    recent_analyses: list[dict[str, Any]] = Field(..., description="Recent analysis results")
-    websocket_connections: int = Field(..., description="Number of active WebSocket connections")
+    platform_connections: dict[str, Any] = Field(
+        ..., description="Platform connection status"
+    )
+    recent_analyses: list[dict[str, Any]] = Field(
+        ..., description="Recent analysis results"
+    )
+    websocket_connections: int = Field(
+        ..., description="Number of active WebSocket connections"
+    )
     system_health: dict[str, Any] = Field(..., description="Overall system health")
 
 
@@ -135,18 +157,24 @@ class IntegrationWebSocketManager:
         self.active_connections: set[WebSocket] = set()
         self.connection_metadata: dict[WebSocket, dict[str, Any]] = {}
 
-    async def connect(self, websocket: WebSocket, client_info: Optional[dict[str, Any]] = None):
+    async def connect(
+        self, websocket: WebSocket, client_info: Optional[dict[str, Any]] = None
+    ):
         """Accept and register a new WebSocket connection"""
         await websocket.accept()
         self.active_connections.add(websocket)
         self.connection_metadata[websocket] = client_info or {}
-        logger.info(f"WebSocket connected. Active connections: {len(self.active_connections)}")
+        logger.info(
+            f"WebSocket connected. Active connections: {len(self.active_connections)}"
+        )
 
     def disconnect(self, websocket: WebSocket):
         """Remove WebSocket connection"""
         self.active_connections.discard(websocket)
         self.connection_metadata.pop(websocket, None)
-        logger.info(f"WebSocket disconnected. Active connections: {len(self.active_connections)}")
+        logger.info(
+            f"WebSocket disconnected. Active connections: {len(self.active_connections)}"
+        )
 
     async def broadcast_message(self, message: dict[str, Any]):
         """Broadcast message to all connected clients"""
@@ -286,7 +314,9 @@ async def get_team_status(team_id: str):
 
     except Exception as e:
         logger.error(f"Failed to get team status: {e}")
-        raise HTTPException(status_code=500, detail=f"Status retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Status retrieval failed: {str(e)}"
+        )
 
 
 # ==============================================================================
@@ -358,7 +388,9 @@ async def execute_domain_analysis(team_id: str, request: AnalysisRequest):
 async def execute_cross_platform_correlation(request: CorrelationRequest):
     """Execute cross-platform entity correlation"""
     try:
-        correlation_count = len(request.platform_data) * 10  # Simulated correlation count
+        correlation_count = (
+            len(request.platform_data) * 10
+        )  # Simulated correlation count
 
         result = {
             "success": True,
@@ -400,7 +432,9 @@ async def execute_cross_platform_correlation(request: CorrelationRequest):
 
 
 @router.get("/analytics/recent")
-async def get_recent_analytics(team_type: Optional[str] = None, limit: int = 50, hours: int = 24):
+async def get_recent_analytics(
+    team_type: Optional[str] = None, limit: int = 50, hours: int = 24
+):
     """Get recent analytics results"""
     # Parameter validation
     if not 1 <= limit <= 500:
@@ -420,7 +454,9 @@ async def get_recent_analytics(team_type: Optional[str] = None, limit: int = 50,
                     "id": f"analysis_{i+1}",
                     "team_type": team_type or "business_intelligence",
                     "analysis_type": "okr_analysis",
-                    "timestamp": (datetime.now(timezone.utc) - timedelta(hours=i)).isoformat(),
+                    "timestamp": (
+                        datetime.now(timezone.utc) - timedelta(hours=i)
+                    ).isoformat(),
                     "success": True,
                     "execution_time": 2.3 + (i * 0.1),
                     "insights_count": 3 + i,
@@ -439,7 +475,9 @@ async def get_recent_analytics(team_type: Optional[str] = None, limit: int = 50,
 
     except Exception as e:
         logger.error(f"Failed to get recent analytics: {e}")
-        raise HTTPException(status_code=500, detail=f"Analytics retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Analytics retrieval failed: {str(e)}"
+        )
 
 
 # ==============================================================================
@@ -458,7 +496,9 @@ async def update_okr_metrics(request: OKRUpdateRequest):
 
         # Calculate efficiency score
         target_rpe = request.target_revenue_per_employee or 150000  # Default target
-        efficiency_score = min(revenue_per_employee / target_rpe, 1.0) if target_rpe > 0 else 0.0
+        efficiency_score = (
+            min(revenue_per_employee / target_rpe, 1.0) if target_rpe > 0 else 0.0
+        )
 
         result = {
             "current_metrics": {
@@ -552,7 +592,9 @@ async def get_okr_trends(days: int = 30):
             date = datetime.now(timezone.utc) - timedelta(days=days - i - 1)
             # Simulate gradual improvement with some variance
             daily_rpe = base_rpe + (i * 50) + (i % 7) * 200
-            trends.append({"timestamp": date.isoformat(), "revenue_per_employee": daily_rpe})
+            trends.append(
+                {"timestamp": date.isoformat(), "revenue_per_employee": daily_rpe}
+            )
 
         return {
             "success": True,
@@ -570,7 +612,9 @@ async def get_okr_trends(days: int = 30):
 
     except Exception as e:
         logger.error(f"Failed to get OKR trends: {e}")
-        raise HTTPException(status_code=500, detail=f"Trends retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Trends retrieval failed: {str(e)}"
+        )
 
 
 # ==============================================================================
@@ -650,7 +694,9 @@ async def get_executive_dashboard():
 
     except Exception as e:
         logger.error(f"Failed to get executive dashboard: {e}")
-        raise HTTPException(status_code=500, detail=f"Dashboard retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Dashboard retrieval failed: {str(e)}"
+        )
 
 
 # ==============================================================================
@@ -675,12 +721,30 @@ async def get_integration_status():
                 }
             ],
             platform_connections={
-                "netsuite": {"status": "connected", "last_sync": datetime.now().isoformat()},
-                "looker": {"status": "connected", "last_sync": datetime.now().isoformat()},
-                "salesforce": {"status": "connected", "last_sync": datetime.now().isoformat()},
-                "hubspot": {"status": "connected", "last_sync": datetime.now().isoformat()},
-                "slack": {"status": "simulation", "last_sync": datetime.now().isoformat()},
-                "gong": {"status": "simulation", "last_sync": datetime.now().isoformat()},
+                "netsuite": {
+                    "status": "connected",
+                    "last_sync": datetime.now().isoformat(),
+                },
+                "looker": {
+                    "status": "connected",
+                    "last_sync": datetime.now().isoformat(),
+                },
+                "salesforce": {
+                    "status": "connected",
+                    "last_sync": datetime.now().isoformat(),
+                },
+                "hubspot": {
+                    "status": "connected",
+                    "last_sync": datetime.now().isoformat(),
+                },
+                "slack": {
+                    "status": "simulation",
+                    "last_sync": datetime.now().isoformat(),
+                },
+                "gong": {
+                    "status": "simulation",
+                    "last_sync": datetime.now().isoformat(),
+                },
             },
             recent_analyses=[
                 {
@@ -705,7 +769,9 @@ async def get_integration_status():
 
     except Exception as e:
         logger.error(f"Failed to get integration status: {e}")
-        raise HTTPException(status_code=500, detail=f"Status retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Status retrieval failed: {str(e)}"
+        )
 
 
 @router.get("/health")
@@ -740,7 +806,11 @@ async def integration_health_check():
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {"status": "degraded", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "degraded",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 # ==============================================================================

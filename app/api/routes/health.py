@@ -155,9 +155,14 @@ async def detailed_health_check(user: str = Depends(get_current_user)):
     }
 
     # Determine overall health
-    if any(comp.get("status") == "error" for comp in health_status["components"].values()):
+    if any(
+        comp.get("status") == "error" for comp in health_status["components"].values()
+    ):
         health_status["status"] = "unhealthy"
-    elif any(comp.get("status") == "degraded" for comp in health_status["components"].values()):
+    elif any(
+        comp.get("status") == "degraded"
+        for comp in health_status["components"].values()
+    ):
         health_status["status"] = "degraded"
 
     return health_status

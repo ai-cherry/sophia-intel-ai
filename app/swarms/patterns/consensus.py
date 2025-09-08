@@ -15,7 +15,9 @@ logger = logging.getLogger(__name__)
 class ConsensusConfig(PatternConfig):
     """Configuration for consensus pattern."""
 
-    consensus_method: str = "weighted_voting"  # simple_majority, weighted_voting, ranked_choice
+    consensus_method: str = (
+        "weighted_voting"  # simple_majority, weighted_voting, ranked_choice
+    )
     min_agreement: float = 0.6
     tie_breaker: str = "seniority"  # random, seniority, performance
     weight_factors: dict[str, float] = None
@@ -41,7 +43,9 @@ class ConsensusPattern(SwarmPattern):
     async def _teardown(self) -> None:
         """Cleanup consensus system."""
 
-    async def execute(self, context: dict[str, Any], agents: list[Any]) -> PatternResult:
+    async def execute(
+        self, context: dict[str, Any], agents: list[Any]
+    ) -> PatternResult:
         """Execute consensus building."""
         proposals = context.get("proposals", [])
 

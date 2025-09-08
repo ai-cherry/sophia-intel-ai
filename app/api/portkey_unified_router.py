@@ -17,7 +17,11 @@ import aiohttp
 from fastapi import HTTPException
 
 from app.core.circuit_breaker import with_circuit_breaker
-from app.elite_portkey_config import EliteAgentConfig, EliteOptimizations, ElitePortkeyGateway
+from app.elite_portkey_config import (
+    EliteAgentConfig,
+    EliteOptimizations,
+    ElitePortkeyGateway,
+)
 
 
 # Import ExecutionStrategy locally to avoid circular import
@@ -203,7 +207,11 @@ class PortkeyUnifiedRouter:
         return tier_mapping.get(model, ModelTier.STANDARD)
 
     def _calculate_routing_score(
-        self, model: str, strategy: RoutingStrategy, task_complexity: float, max_cost: float
+        self,
+        model: str,
+        strategy: RoutingStrategy,
+        task_complexity: float,
+        max_cost: float,
     ) -> float:
         """Calculate routing score for model selection"""
 
@@ -214,8 +222,12 @@ class PortkeyUnifiedRouter:
         tier = self._get_model_tier(model)
 
         # Base score factors
-        performance_score = metrics.success_rate * (1.0 - metrics.avg_latency_ms / 10000.0)
-        cost_score = max(0.0, 1.0 - metrics.cost_per_token / max_cost) if max_cost > 0 else 0.5
+        performance_score = metrics.success_rate * (
+            1.0 - metrics.avg_latency_ms / 10000.0
+        )
+        cost_score = (
+            max(0.0, 1.0 - metrics.cost_per_token / max_cost) if max_cost > 0 else 0.5
+        )
         availability_score = 1.0 - min(1.0, metrics.error_count / 10.0)
 
         # Strategy-specific weighting
@@ -231,9 +243,14 @@ class PortkeyUnifiedRouter:
 
         elif strategy == RoutingStrategy.HIGHEST_QUALITY:
             # Prefer premium models for high complexity
-            tier_bonus = 0.3 if tier == ModelTier.PREMIUM and task_complexity > 0.7 else 0.0
+            tier_bonus = (
+                0.3 if tier == ModelTier.PREMIUM and task_complexity > 0.7 else 0.0
+            )
             return (
-                0.5 * performance_score + 0.3 * availability_score + 0.2 * cost_score + tier_bonus
+                0.5 * performance_score
+                + 0.3 * availability_score
+                + 0.2 * cost_score
+                + tier_bonus
             )
 
         else:  # BALANCED
@@ -270,14 +287,18 @@ class PortkeyUnifiedRouter:
         # Check cache first
         if config.cache_enabled and cache_key in self.routing_cache:
             cached = self.routing_cache[cache_key]
-            if datetime.fromisoformat(cached["timestamp"]) > datetime.now() - timedelta(minutes=10):
+            if datetime.fromisoformat(cached["timestamp"]) > datetime.now() - timedelta(
+                minutes=10
+            ):
                 logger.info(f"Using cached routing decision for {agent_role}")
                 return cached["result"]
 
         # Get candidate models for role
         primary_model = self.agent_config.MODELS.get(agent_role)
         if not primary_model:
-            raise HTTPException(status_code=400, detail=f"Unknown agent role: {agent_role}")
+            raise HTTPException(
+                status_code=400, detail=f"Unknown agent role: {agent_role}"
+            )
 
         # Get fallback models based on execution strategy
         candidate_models = self._get_candidate_models(agent_role, execution_strategy)
@@ -339,20 +360,30 @@ class PortkeyUnifiedRouter:
         if execution_strategy == ExecutionStrategy.LITE:
             # Prefer fast, cheap models
             candidates.extend(
-                ["google/gemini-2.5-flash", "openai/gpt-5-mini", "x-ai/grok-code-fast-1"]
+                [
+                    "google/gemini-2.5-flash",
+                    "openai/gpt-5-mini",
+                    "x-ai/grok-code-fast-1",
+                ]
             )
 
         elif execution_strategy == ExecutionStrategy.QUALITY:
             # Prefer premium models
-            candidates.extend(["openai/gpt-5", "anthropic/claude-sonnet-4", "x-ai/grok-4"])
+            candidates.extend(
+                ["openai/gpt-5", "anthropic/claude-sonnet-4", "x-ai/grok-4"]
+            )
 
         elif execution_strategy == ExecutionStrategy.DEBATE:
             # Need diverse perspectives
-            candidates.extend(["x-ai/grok-4", "anthropic/claude-sonnet-4", "openai/gpt-5"])
+            candidates.extend(
+                ["x-ai/grok-4", "anthropic/claude-sonnet-4", "openai/gpt-5"]
+            )
 
         else:  # BALANCED, CONSENSUS
             # Use balanced selection
-            candidates.extend(["x-ai/grok-4", "google/gemini-2.5-pro", "qwen/qwen3-30b-a3b"])
+            candidates.extend(
+                ["x-ai/grok-4", "google/gemini-2.5-pro", "qwen/qwen3-30b-a3b"]
+            )
 
         # Remove duplicates while preserving order
         seen = set()
@@ -453,7 +484,9 @@ class PortkeyUnifiedRouter:
 
             except Exception as e:
                 last_error = e
-                logger.warning(f"Completion attempt {attempt+1} failed with {current_model}: {e}")
+                logger.warning(
+                    f"Completion attempt {attempt+1} failed with {current_model}: {e}"
+                )
 
                 # Update error metrics
                 await self._update_model_metrics(current_model, 0, False)
@@ -465,7 +498,8 @@ class PortkeyUnifiedRouter:
         # All attempts failed
         logger.error(f"All completion attempts failed for {agent_role}: {last_error}")
         raise HTTPException(
-            status_code=503, detail=f"Model completion failed after retries: {str(last_error)}"
+            status_code=503,
+            detail=f"Model completion failed after retries: {str(last_error)}",
         )
 
     async def _update_model_metrics(self, model: str, latency_ms: float, success: bool):
@@ -480,7 +514,9 @@ class PortkeyUnifiedRouter:
             metrics.avg_latency_ms = 0.8 * metrics.avg_latency_ms + 0.2 * latency_ms
 
         # Update success rate
-        metrics.success_rate = 0.9 * metrics.success_rate + 0.1 * (1.0 if success else 0.0)
+        metrics.success_rate = 0.9 * metrics.success_rate + 0.1 * (
+            1.0 if success else 0.0
+        )
 
         # Update error count
         if not success:
@@ -529,7 +565,8 @@ class PortkeyUnifiedRouter:
         return {
             "daily_cost": daily_cost,
             "total_requests": sum(self.request_counts.values()),
-            "cache_hit_rate": len(self.routing_cache) / max(1, sum(self.request_counts.values())),
+            "cache_hit_rate": len(self.routing_cache)
+            / max(1, sum(self.request_counts.values())),
             "model_statistics": model_stats,
             "routing_cache_size": len(self.routing_cache),
             "timestamp": datetime.now().isoformat(),

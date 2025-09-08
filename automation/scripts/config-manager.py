@@ -180,12 +180,18 @@ class ConfigurationManager:
 
         return config
 
-    def _merge_configs(self, base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_configs(
+        self, base: Dict[str, Any], override: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Recursively merge configuration dictionaries"""
         result = base.copy()
 
         for key, value in override.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._merge_configs(result[key], value)
             else:
                 result[key] = value
@@ -235,18 +241,24 @@ class ConfigurationManager:
         service_templates = config.get("service_templates", {})
         for category, services in service_templates.items():
             if not isinstance(services, dict):
-                issues.append(f"Service template category '{category}' must be a dictionary")
+                issues.append(
+                    f"Service template category '{category}' must be a dictionary"
+                )
                 continue
 
             for service_name, service_config in services.items():
                 if not isinstance(service_config, dict):
-                    issues.append(f"Service '{service_name}' configuration must be a dictionary")
+                    issues.append(
+                        f"Service '{service_name}' configuration must be a dictionary"
+                    )
 
                 # Check required service fields
                 required_fields = ["port"]
                 for field in required_fields:
                     if field not in service_config:
-                        issues.append(f"Service '{service_name}' missing required field: {field}")
+                        issues.append(
+                            f"Service '{service_name}' missing required field: {field}"
+                        )
 
         # Validate resource limits
         profile_config = config.get("profile", {})
@@ -254,7 +266,9 @@ class ConfigurationManager:
         if resource_limits:
             for resource in ["cpu", "memory"]:
                 if resource not in resource_limits:
-                    issues.append(f"Resource limit '{resource}' not specified for profile")
+                    issues.append(
+                        f"Resource limit '{resource}' not specified for profile"
+                    )
 
         return issues
 
@@ -274,7 +288,9 @@ class ConfigurationManager:
         if issues:
             for issue in issues:
                 logger.error(f"Configuration validation error: {issue}")
-            raise ValueError(f"Configuration validation failed with {len(issues)} issues")
+            raise ValueError(
+                f"Configuration validation failed with {len(issues)} issues"
+            )
 
         # Load environment variables
         env = Environment(config["computed"]["environment"])
@@ -395,7 +411,9 @@ class ConfigurationManager:
         # Basic settings
         env_content.append(f"SOPHIA_ENVIRONMENT={config['computed']['environment']}")
         env_content.append(f"SOPHIA_PLATFORM={config['computed']['platform']}")
-        env_content.append(f"LOG_LEVEL={config.get('profile', {}).get('log_level', 'INFO')}")
+        env_content.append(
+            f"LOG_LEVEL={config.get('profile', {}).get('log_level', 'INFO')}"
+        )
 
         # Service URLs
         namespace = config["computed"]["namespace"]
@@ -443,10 +461,16 @@ class ConfigurationManager:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Sophia Intel AI Configuration Manager")
+    parser = argparse.ArgumentParser(
+        description="Sophia Intel AI Configuration Manager"
+    )
     parser.add_argument("--project-root", default=".", help="Project root directory")
-    parser.add_argument("--environment", choices=[e.value for e in Environment], help="Environment")
-    parser.add_argument("--platform", choices=[p.value for p in Platform], help="Platform")
+    parser.add_argument(
+        "--environment", choices=[e.value for e in Environment], help="Environment"
+    )
+    parser.add_argument(
+        "--platform", choices=[p.value for p in Platform], help="Platform"
+    )
     parser.add_argument("--profile", help="Configuration profile")
     parser.add_argument(
         "--action",
@@ -454,7 +478,9 @@ def main():
         default="validate",
         help="Action to perform",
     )
-    parser.add_argument("--format", choices=["yaml", "json"], default="yaml", help="Output format")
+    parser.add_argument(
+        "--format", choices=["yaml", "json"], default="yaml", help="Output format"
+    )
     parser.add_argument("--output", help="Output file (default: stdout)")
     parser.add_argument("--verbose", action="store_true", help="Verbose logging")
 
@@ -472,7 +498,9 @@ def main():
         platform = Platform(args.platform) if args.platform else None
 
         if args.action == "validate":
-            config = config_manager.get_configuration(environment, platform, args.profile)
+            config = config_manager.get_configuration(
+                environment, platform, args.profile
+            )
             issues = config_manager.validate_configuration(config)
 
             if issues:
@@ -484,7 +512,9 @@ def main():
                 print("Configuration validation successful")
 
         elif args.action == "generate":
-            files = config_manager.generate_configurations(environment, platform, args.profile)
+            files = config_manager.generate_configurations(
+                environment, platform, args.profile
+            )
             print("Generated configuration files:")
             for name, path in files.items():
                 print(f"  - {name}: {path}")

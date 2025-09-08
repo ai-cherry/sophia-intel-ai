@@ -169,7 +169,11 @@ class OptimizationAgent(BaseAgent):
             optimizations.append("Implement additional validation")
 
         optimizations.extend(
-            ["Cache frequently accessed data", "Implement lazy loading", "Use connection pooling"]
+            [
+                "Cache frequently accessed data",
+                "Implement lazy loading",
+                "Use connection pooling",
+            ]
         )
 
         return {
@@ -192,7 +196,11 @@ class ValidationAgent(BaseAgent):
 
         return {
             "validation_status": "passed",
-            "checks_performed": ["Data integrity", "Business rules", "Performance metrics"],
+            "checks_performed": [
+                "Data integrity",
+                "Business rules",
+                "Performance metrics",
+            ],
             "warnings": [],
             "approved": True,
         }
@@ -387,7 +395,9 @@ class ChainOrchestrator:
                 "chain_name": chain_name,
                 "timestamp": start_time.isoformat(),
                 "duration": (datetime.now() - start_time).total_seconds(),
-                "success": all(r.status == AgentStatus.SUCCESS for r in context.results),
+                "success": all(
+                    r.status == AgentStatus.SUCCESS for r in context.results
+                ),
                 "agents_executed": len(context.results),
             }
         )
@@ -406,7 +416,8 @@ class ChainOrchestrator:
             "total_executions": total,
             "successful_executions": successful,
             "success_rate": (successful / total) * 100,
-            "average_duration": sum(e["duration"] for e in self.execution_history) / total,
+            "average_duration": sum(e["duration"] for e in self.execution_history)
+            / total,
             "chains_registered": len(self.chains),
         }
 
@@ -424,7 +435,9 @@ async def main():
 
     print(f"Chain completed with {len(context.results)} agents")
     for result in context.results:
-        print(f"  - {result.agent_name}: {result.status.value} ({result.execution_time:.2f}s)")
+        print(
+            f"  - {result.agent_name}: {result.status.value} ({result.execution_time:.2f}s)"
+        )
 
     # Test 2: Parallel execution
     print("\n2. Testing Parallel Chain")

@@ -34,8 +34,12 @@ ANOMALIES_DETECTED = Counter(
 HEALING_ACTIONS = Counter(
     "sophia_healing_actions_total", "Total healing actions taken", ["action_type"]
 )
-HEALING_SUCCESS_RATE = Gauge("sophia_healing_success_rate", "Success rate of healing actions")
-PREDICTION_ACCURACY = Gauge("sophia_prediction_accuracy", "Accuracy of failure predictions")
+HEALING_SUCCESS_RATE = Gauge(
+    "sophia_healing_success_rate", "Success rate of healing actions"
+)
+PREDICTION_ACCURACY = Gauge(
+    "sophia_prediction_accuracy", "Accuracy of failure predictions"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +88,9 @@ class FusedHealingSystem:
         self.metrics_collector = MetricsCollector()
 
         # ML Models
-        self.anomaly_model = IsolationForest(contamination=0.05, random_state=42, n_estimators=200)
+        self.anomaly_model = IsolationForest(
+            contamination=0.05, random_state=42, n_estimators=200
+        )
         self.scaler = StandardScaler()
 
         # Bayesian Optimizer for parameter tuning
@@ -118,11 +124,15 @@ class FusedHealingSystem:
         try:
             # Redis connection
             self.redis_client = redis.Redis(
-                host=settings.REDIS_HOST, port=settings.REDIS_PORT, decode_responses=True
+                host=settings.REDIS_HOST,
+                port=settings.REDIS_PORT,
+                decode_responses=True,
             )
 
             # Database connection
-            self.db_pool = await asyncpg.create_pool(settings.DATABASE_URL, min_size=2, max_size=10)
+            self.db_pool = await asyncpg.create_pool(
+                settings.DATABASE_URL, min_size=2, max_size=10
+            )
 
             # Load historical data and train models
             await self._load_historical_data()
@@ -149,7 +159,9 @@ class FusedHealingSystem:
             failure_predictions = await self._predict_failures(metrics, anomalies)
 
             # Step 3: Generate healing actions
-            healing_actions = await self._generate_healing_actions(anomalies, failure_predictions)
+            healing_actions = await self._generate_healing_actions(
+                anomalies, failure_predictions
+            )
 
             # Step 4: Execute healing actions
             executed_actions = []
@@ -191,8 +203,12 @@ class FusedHealingSystem:
                     expected_range = await self._get_expected_range(metric_name)
 
                     if not (expected_range[0] <= value <= expected_range[1]):
-                        severity = self._calculate_severity(metric_name, value, expected_range)
-                        confidence = abs(anomaly_score)  # Higher absolute score = higher confidence
+                        severity = self._calculate_severity(
+                            metric_name, value, expected_range
+                        )
+                        confidence = abs(
+                            anomaly_score
+                        )  # Higher absolute score = higher confidence
 
                         anomaly = Anomaly(
                             timestamp=datetime.utcnow(),
@@ -236,7 +252,9 @@ class FusedHealingSystem:
 
             # Response time degradation
             if response_time > 1000:
-                predictions["response_degradation"] = min(1.0, (response_time - 1000) / 2000)
+                predictions["response_degradation"] = min(
+                    1.0, (response_time - 1000) / 2000
+                )
 
             # Error rate spike
             if error_rate > 5:
@@ -288,7 +306,9 @@ class FusedHealingSystem:
         self, anomaly: Anomaly, optimal_params: Dict
     ) -> Optional[HealingAction]:
         """Create specific healing action for an anomaly"""
-        action_id = hashlib.md5(f"{anomaly.metric_name}_{anomaly.timestamp}".encode()).hexdigest()
+        action_id = hashlib.md5(
+            f"{anomaly.metric_name}_{anomaly.timestamp}".encode()
+        ).hexdigest()
 
         # CPU-related healing
         if "cpu" in anomaly.metric_name.lower():
@@ -491,7 +511,9 @@ class FusedHealingSystem:
                 if row and row["p5"] is not None:
                     range_tuple = (float(row["p5"]), float(row["p95"]))
                     # Cache for 1 hour
-                    await self.cache_service.set(cache_key, json.dumps(range_tuple), ttl=3600)
+                    await self.cache_service.set(
+                        cache_key, json.dumps(range_tuple), ttl=3600
+                    )
                     return range_tuple
                 else:
                     # Default ranges for common metrics
@@ -635,7 +657,9 @@ class FusedHealingSystem:
         except Exception as e:
             logger.error(f"Error rolling back action {action.action_id}: {e}")
 
-    async def _learn_from_healing(self, actions: List[HealingAction], metrics: Dict[str, float]):
+    async def _learn_from_healing(
+        self, actions: List[HealingAction], metrics: Dict[str, float]
+    ):
         """Learn from healing action results to improve future decisions"""
         try:
             # Update healing history
@@ -659,7 +683,9 @@ class FusedHealingSystem:
         except Exception as e:
             logger.error(f"Error learning from healing: {e}")
 
-    async def _store_learning_data(self, actions: List[HealingAction], performance_score: float):
+    async def _store_learning_data(
+        self, actions: List[HealingAction], performance_score: float
+    ):
         """Store learning data for future optimization"""
         try:
             async with self.db_pool.acquire() as conn:

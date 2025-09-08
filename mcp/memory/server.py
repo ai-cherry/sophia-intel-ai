@@ -81,16 +81,20 @@ async def memory_store(req: StoreRequest) -> Dict[str, Any]:
                     vectorizer_config=weaviate.classes.config.Configure.Vectorizer.none(),
                     properties=[
                         weaviate.classes.config.Property(
-                            name="content", data_type=weaviate.classes.config.DataType.TEXT
+                            name="content",
+                            data_type=weaviate.classes.config.DataType.TEXT,
                         ),
                         weaviate.classes.config.Property(
-                            name="namespace", data_type=weaviate.classes.config.DataType.TEXT
+                            name="namespace",
+                            data_type=weaviate.classes.config.DataType.TEXT,
                         ),
                         weaviate.classes.config.Property(
-                            name="metadata", data_type=weaviate.classes.config.DataType.TEXT
+                            name="metadata",
+                            data_type=weaviate.classes.config.DataType.TEXT,
                         ),
                         weaviate.classes.config.Property(
-                            name="timestamp", data_type=weaviate.classes.config.DataType.TEXT
+                            name="timestamp",
+                            data_type=weaviate.classes.config.DataType.TEXT,
                         ),
                     ],
                 )

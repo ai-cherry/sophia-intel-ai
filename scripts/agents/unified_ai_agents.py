@@ -246,7 +246,11 @@ class UnifiedAgentCLI:
     """Unified CLI for all AI agents"""
 
     def __init__(self):
-        self.agents = {"grok": GrokAgent(), "claude": ClaudeCoderAgent(), "codex": CodexAgent()}
+        self.agents = {
+            "grok": GrokAgent(),
+            "claude": ClaudeCoderAgent(),
+            "codex": CodexAgent(),
+        }
         self.current_agent = None
 
     async def select_agent(self, agent_name: str) -> bool:
@@ -382,7 +386,9 @@ Examples:
         elif sys.argv[1] == "--list":
             agents = await cli.list_agents()
             for agent in agents:
-                print(f"{agent['key']}: {agent['name']} - {', '.join(agent['specialties'])}")
+                print(
+                    f"{agent['key']}: {agent['name']} - {', '.join(agent['specialties'])}"
+                )
         else:
             # Execute specific task
             agent_name = sys.argv[1]

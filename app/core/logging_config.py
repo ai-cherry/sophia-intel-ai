@@ -70,8 +70,12 @@ class ColoredFormatter(logging.Formatter):
         """Format with colors for console output."""
         if settings.environment == "development":
             levelname = record.levelname
-            record.levelname = f"{self.COLORS.get(levelname, '')}{levelname}{self.COLORS['RESET']}"
-            record.msg = f"{self.COLORS.get(levelname, '')}{record.msg}{self.COLORS['RESET']}"
+            record.levelname = (
+                f"{self.COLORS.get(levelname, '')}{levelname}{self.COLORS['RESET']}"
+            )
+            record.msg = (
+                f"{self.COLORS.get(levelname, '')}{record.msg}{self.COLORS['RESET']}"
+            )
 
         return super().format(record)
 
@@ -120,7 +124,9 @@ class SensitiveDataFilter(logging.Filter):
                 import re
 
                 pattern = rf'{key}["\']?\s*[:=]\s*["\']?[\w\-\.]+'
-                message = re.sub(pattern, f"{key}=***REDACTED***", message, flags=re.IGNORECASE)
+                message = re.sub(
+                    pattern, f"{key}=***REDACTED***", message, flags=re.IGNORECASE
+                )
 
         record.msg = message
         record.args = ()  # Clear args to prevent re-formatting
@@ -163,7 +169,9 @@ def get_logging_config() -> dict[str, Any]:
             "console": {
                 "class": "logging.StreamHandler",
                 "level": settings.log_level,
-                "formatter": "colored" if settings.environment == "development" else "simple",
+                "formatter": (
+                    "colored" if settings.environment == "development" else "simple"
+                ),
                 "filters": ["request_id", "sensitive_data"],
                 "stream": "ext://sys.stdout",
             },
@@ -220,7 +228,11 @@ def get_logging_config() -> dict[str, Any]:
                 "handlers": ["console", "error_file"],
                 "propagate": False,
             },
-            "uvicorn.access": {"level": "INFO", "handlers": ["console"], "propagate": False},
+            "uvicorn.access": {
+                "level": "INFO",
+                "handlers": ["console"],
+                "propagate": False,
+            },
             "httpx": {"level": "WARNING", "handlers": ["console"], "propagate": False},
             "openai": {"level": "WARNING", "handlers": ["console"], "propagate": False},
         },
@@ -335,7 +347,9 @@ def log_function_call(logger: logging.Logger):
 
             try:
                 result = func(*args, **kwargs)
-                logger.debug(f"Completed {func.__name__}", extra={"function": func.__name__})
+                logger.debug(
+                    f"Completed {func.__name__}", extra={"function": func.__name__}
+                )
                 return result
             except Exception as e:
                 logger.error(
@@ -358,7 +372,10 @@ def log_function_call(logger: logging.Logger):
 
             try:
                 result = await func(*args, **kwargs)
-                logger.debug(f"Completed async {func.__name__}", extra={"function": func.__name__})
+                logger.debug(
+                    f"Completed async {func.__name__}",
+                    extra={"function": func.__name__},
+                )
                 return result
             except Exception as e:
                 logger.error(

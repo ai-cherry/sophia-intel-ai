@@ -196,7 +196,9 @@ class CodeAnalyzer:
         self.function_pattern = re.compile(r"def\s+(\w+)\s*\([^)]*\):", re.MULTILINE)
         self.class_pattern = re.compile(r"class\s+(\w+)(?:\([^)]*\))?:", re.MULTILINE)
         self.docstring_pattern = re.compile(r'"""([^"]+)"""', re.DOTALL)
-        self.import_pattern = re.compile(r"from\s+(\S+)\s+import|import\s+(\S+)", re.MULTILINE)
+        self.import_pattern = re.compile(
+            r"from\s+(\S+)\s+import|import\s+(\S+)", re.MULTILINE
+        )
 
     def analyze_python_file(self, file_path: Path) -> dict[str, Any]:
         """Analyze Python file for documentation insights"""
@@ -235,7 +237,9 @@ class CodeAnalyzer:
                     "docstring": ast.get_docstring(node),
                     "line_number": node.lineno,
                     "is_async": isinstance(node, ast.AsyncFunctionDef),
-                    "decorators": [self._get_decorator_name(d) for d in node.decorator_list],
+                    "decorators": [
+                        self._get_decorator_name(d) for d in node.decorator_list
+                    ],
                 }
                 functions.append(func_info)
 
@@ -253,7 +257,9 @@ class CodeAnalyzer:
                     "docstring": ast.get_docstring(node),
                     "line_number": node.lineno,
                     "methods": [],
-                    "decorators": [self._get_decorator_name(d) for d in node.decorator_list],
+                    "decorators": [
+                        self._get_decorator_name(d) for d in node.decorator_list
+                    ],
                 }
 
                 # Extract methods
@@ -284,7 +290,9 @@ class CodeAnalyzer:
 
     def _extract_docstrings(self, content: str) -> list[str]:
         """Extract all docstrings"""
-        return [match.group(1).strip() for match in self.docstring_pattern.finditer(content)]
+        return [
+            match.group(1).strip() for match in self.docstring_pattern.finditer(content)
+        ]
 
     def _estimate_complexity(self, tree: ast.AST) -> dict[str, int]:
         """Estimate code complexity metrics"""
@@ -572,7 +580,9 @@ class LivingDocumentationSystem:
     """Main living documentation system"""
 
     def __init__(
-        self, docs_directory: Path, memory_system: Optional[HierarchicalMemorySystem] = None
+        self,
+        docs_directory: Path,
+        memory_system: Optional[HierarchicalMemorySystem] = None,
     ):
         self.docs_directory = Path(docs_directory)
         self.docs_directory.mkdir(exist_ok=True)
@@ -607,7 +617,9 @@ class LivingDocumentationSystem:
         if self.memory_system:
             await self._load_concepts_from_memory()
 
-        logger.info(f"Initialized living documentation system with {len(self.documents)} documents")
+        logger.info(
+            f"Initialized living documentation system with {len(self.documents)} documents"
+        )
 
     async def scan_and_update(self, source_directory: Path) -> dict[str, Any]:
         """Scan source code and update documentation"""
@@ -635,11 +647,15 @@ class LivingDocumentationSystem:
                     # Analyze file
                     analysis = self.code_analyzer.analyze_python_file(file_path)
                     if "error" in analysis:
-                        scan_results["errors"].append(f"{file_path}: {analysis['error']}")
+                        scan_results["errors"].append(
+                            f"{file_path}: {analysis['error']}"
+                        )
                         continue
 
                     # Update or create documentation
-                    updated = await self._update_documentation_for_file(file_path, analysis)
+                    updated = await self._update_documentation_for_file(
+                        file_path, analysis
+                    )
 
                     if updated:
                         scan_results["documents_updated"] += 1
@@ -726,7 +742,9 @@ class LivingDocumentationSystem:
         if preserve_manual_changes and not document.auto_generated:
             # Only update metadata, not content
             safe_updates = {
-                k: v for k, v in updates.items() if k not in ["content", "examples", "ai_contexts"]
+                k: v
+                for k, v in updates.items()
+                if k not in ["content", "examples", "ai_contexts"]
             }
             updates = safe_updates
 
@@ -749,7 +767,9 @@ class LivingDocumentationSystem:
 
         return document
 
-    async def add_example(self, doc_id: str, level: ComplexityLevel, example: ExampleTier) -> bool:
+    async def add_example(
+        self, doc_id: str, level: ComplexityLevel, example: ExampleTier
+    ) -> bool:
         """Add example to document"""
 
         if doc_id not in self.documents:
@@ -832,7 +852,9 @@ class LivingDocumentationSystem:
         results.sort(key=lambda x: x[1], reverse=True)
         return [doc for doc, score in results[:limit]]
 
-    async def get_related_documents(self, doc_id: str, limit: int = 5) -> list[DocumentEntry]:
+    async def get_related_documents(
+        self, doc_id: str, limit: int = 5
+    ) -> list[DocumentEntry]:
         """Get documents related to the given document"""
 
         if doc_id not in self.documents:
@@ -904,7 +926,9 @@ class LivingDocumentationSystem:
             report["quality_scores"]["coverage"].append(metrics.coverage_score)
             report["quality_scores"]["ai_context"].append(metrics.ai_context_score)
             report["quality_scores"]["examples"].append(metrics.example_quality_score)
-            report["quality_scores"]["cross_references"].append(metrics.cross_reference_score)
+            report["quality_scores"]["cross_references"].append(
+                metrics.cross_reference_score
+            )
 
             # Identify issues
             if document.status in [DocumentStatus.STALE, DocumentStatus.OUTDATED]:
@@ -928,7 +952,11 @@ class LivingDocumentationSystem:
 
             if metrics.ai_context_score < 0.3:
                 report["weak_ai_context"].append(
-                    {"id": document.id, "title": document.title, "score": metrics.ai_context_score}
+                    {
+                        "id": document.id,
+                        "title": document.title,
+                        "score": metrics.ai_context_score,
+                    }
                 )
 
         # Calculate averages
@@ -972,8 +1000,12 @@ class LivingDocumentationSystem:
         """Update documentation for a specific file"""
 
         # Create document ID from file path
-        relative_path = file_path.relative_to(file_path.parent.parent)  # Adjust as needed
-        doc_id = str(relative_path).replace("/", "_").replace("\\", "_").replace(".py", "")
+        relative_path = file_path.relative_to(
+            file_path.parent.parent
+        )  # Adjust as needed
+        doc_id = (
+            str(relative_path).replace("/", "_").replace("\\", "_").replace(".py", "")
+        )
 
         # Check if document exists
         if doc_id in self.documents:
@@ -983,7 +1015,10 @@ class LivingDocumentationSystem:
             document.source_files.add(str(file_path))
 
             # Mark as stale if code changed recently
-            if document.last_code_change and document.last_code_change > document.last_updated:
+            if (
+                document.last_code_change
+                and document.last_code_change > document.last_updated
+            ):
                 document.status = DocumentStatus.STALE
 
         else:
@@ -1028,7 +1063,9 @@ class LivingDocumentationSystem:
         # Simple keyword extraction (would be enhanced with proper NLP)
         words = re.findall(r"\b[A-Za-z]{4,}\b", text_content.lower())
         important_words = [
-            w for w in words if w not in ["this", "that", "with", "from", "they", "have", "been"]
+            w
+            for w in words
+            if w not in ["this", "that", "with", "from", "they", "have", "been"]
         ]
 
         # Create concepts for important terms
@@ -1060,11 +1097,15 @@ class LivingDocumentationSystem:
         completeness_factors.append(1.0 if document.ai_contexts else 0.0)
         completeness_factors.append(1.0 if document.related_documents else 0.0)
 
-        metrics.completeness_score = sum(completeness_factors) / len(completeness_factors)
+        metrics.completeness_score = sum(completeness_factors) / len(
+            completeness_factors
+        )
 
         # Freshness score (how recent is the documentation)
         age_days = (datetime.utcnow() - document.last_updated).days
-        metrics.freshness_score = max(0.0, 1.0 - (age_days / 30.0))  # Decay over 30 days
+        metrics.freshness_score = max(
+            0.0, 1.0 - (age_days / 30.0)
+        )  # Decay over 30 days
 
         # Clarity score (length and structure heuristics)
         content_length = len(document.content)
@@ -1170,7 +1211,9 @@ class LivingDocumentationSystem:
         if not self.memory_system:
             return
 
-        context = QueryContext(query_type=QueryType.EXACT_MATCH, persona_domain=PersonaType.SOPHIA)
+        context = QueryContext(
+            query_type=QueryType.EXACT_MATCH, persona_domain=PersonaType.SOPHIA
+        )
 
         entry = MemoryEntry(
             id=document.id,
@@ -1249,7 +1292,11 @@ async def main():
         auto_generate=True,
         description="Example API for demonstration",
         functions=[
-            {"name": "hello_world", "args": ["name"], "docstring": "Greet the user by name"}
+            {
+                "name": "hello_world",
+                "args": ["name"],
+                "docstring": "Greet the user by name",
+            }
         ],
     )
 
@@ -1276,7 +1323,9 @@ async def main():
 
     # Generate health report
     health_report = await docs_system.generate_documentation_health_report()
-    print(f"Documentation health: {health_report['overview']['total_documents']} total documents")
+    print(
+        f"Documentation health: {health_report['overview']['total_documents']} total documents"
+    )
 
     # Search documents
     results = await docs_system.search_documents("greeting")

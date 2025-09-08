@@ -29,7 +29,9 @@ class TestOpenAIIntegration:
         try:
             models = await client.models.list()
             assert len(models.data) > 0
-            print(f"✅ OpenAI connection successful - {len(models.data)} models available")
+            print(
+                f"✅ OpenAI connection successful - {len(models.data)} models available"
+            )
         except Exception as e:
             pytest.fail(f"OpenAI connection failed: {e}")
 
@@ -51,7 +53,9 @@ class TestOpenAIIntegration:
 
             assert response.choices[0].message.content
             assert "OpenAI integration working" in response.choices[0].message.content
-            print(f"✅ OpenAI chat completion successful: {response.choices[0].message.content}")
+            print(
+                f"✅ OpenAI chat completion successful: {response.choices[0].message.content}"
+            )
 
         except Exception as e:
             pytest.fail(f"OpenAI chat completion failed: {e}")
@@ -66,7 +70,9 @@ class TestOpenAIIntegration:
 
             assert len(response.data) > 0
             assert len(response.data[0].embedding) > 0
-            print(f"✅ OpenAI embeddings successful - {len(response.data[0].embedding)} dimensions")
+            print(
+                f"✅ OpenAI embeddings successful - {len(response.data[0].embedding)} dimensions"
+            )
 
         except Exception as e:
             pytest.fail(f"OpenAI embeddings failed: {e}")
@@ -88,7 +94,9 @@ class TestOpenAIIntegration:
             responses = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Check that at least some requests succeeded
-            successful_responses = [r for r in responses if not isinstance(r, Exception)]
+            successful_responses = [
+                r for r in responses if not isinstance(r, Exception)
+            ]
             assert len(successful_responses) > 0
             print(
                 f"✅ Rate limiting test passed - {len(successful_responses)}/5 requests successful"

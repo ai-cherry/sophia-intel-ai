@@ -18,7 +18,9 @@ def debug_model_response(model_name):
     print(f"Testing: {model_name}")
     print(f"{'='*60}")
 
-    messages = [{"role": "user", "content": "Say 'Hello, I am working!' and nothing else."}]
+    messages = [
+        {"role": "user", "content": "Say 'Hello, I am working!' and nothing else."}
+    ]
 
     try:
         response = aimlapi_manager.chat_completion(
@@ -26,7 +28,9 @@ def debug_model_response(model_name):
         )
 
         print(f"Raw response type: {type(response)}")
-        print(f"Response keys: {response.keys() if isinstance(response, dict) else 'Not a dict'}")
+        print(
+            f"Response keys: {response.keys() if isinstance(response, dict) else 'Not a dict'}"
+        )
 
         if isinstance(response, dict):
             print("\nFull response structure:")
@@ -39,7 +43,9 @@ def debug_model_response(model_name):
                     print(f"First choice keys: {choice.keys()}")
                     if "message" in choice:
                         print(f"Message keys: {choice['message'].keys()}")
-                        print(f"Content: {choice['message'].get('content', 'NO CONTENT')}")
+                        print(
+                            f"Content: {choice['message'].get('content', 'NO CONTENT')}"
+                        )
 
         return response
 

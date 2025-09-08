@@ -119,7 +119,12 @@ class MCPIntegrationManager:
             "filesystem": {
                 "port": 8001,
                 "endpoint": "http://localhost:8001",
-                "capabilities": ["read_file", "write_file", "list_directory", "search_files"],
+                "capabilities": [
+                    "read_file",
+                    "write_file",
+                    "list_directory",
+                    "search_files",
+                ],
             },
             "git": {
                 "port": 8002,
@@ -129,7 +134,11 @@ class MCPIntegrationManager:
             "code_intelligence": {
                 "port": 8003,
                 "endpoint": "http://localhost:8003",
-                "capabilities": ["semantic_search", "dependency_analysis", "symbol_lookup"],
+                "capabilities": [
+                    "semantic_search",
+                    "dependency_analysis",
+                    "symbol_lookup",
+                ],
             },
             "memory": {
                 "port": 8004,
@@ -206,7 +215,9 @@ class MCPIntegrationManager:
                     connection.last_used = datetime.now()
                     return response.json()
                 else:
-                    raise HTTPException(status_code=response.status_code, detail=response.text)
+                    raise HTTPException(
+                        status_code=response.status_code, detail=response.text
+                    )
 
         return await circuit_breaker.async_call(_execute)
 
@@ -385,18 +396,24 @@ class ModelRouter:
 
         # Execute request
         async with httpx.AsyncClient(timeout=config.timeout) as client:
-            response = await client.post(config.endpoint, headers=headers, json=request_data)
+            response = await client.post(
+                config.endpoint, headers=headers, json=request_data
+            )
 
             if response.status_code == 200:
                 data = response.json()
                 return {
-                    "content": data.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                    "content": data.get("choices", [{}])[0]
+                    .get("message", {})
+                    .get("content", ""),
                     "tokens": data.get("usage", {}).get("total_tokens", 0),
                     "model_used": config.model,
                     "provider": config.provider,
                 }
             else:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+                raise HTTPException(
+                    status_code=response.status_code, detail=response.text
+                )
 
     def _track_usage(self, model: str, tokens: int, cost_per_1k: float):
         """Track model usage and costs"""
@@ -525,7 +542,12 @@ class BaseAgentFactory:
 
         # Broadcast to WebSockets
         await self._broadcast_update(
-            {"event": "agent_created", "agent_id": agent_id, "name": name, "domain": self.domain}
+            {
+                "event": "agent_created",
+                "agent_id": agent_id,
+                "name": name,
+                "domain": self.domain,
+            }
         )
 
         logger.info(f"🤖 Created agent: {name} ({agent_id})")
@@ -547,7 +569,9 @@ class BaseAgentFactory:
 
         try:
             # Route to model
-            result = await self.model_router.route_request(agent.model_config.model, task, context)
+            result = await self.model_router.route_request(
+                agent.model_config.model, task, context
+            )
 
             # Calculate execution time
             execution_time = (datetime.now() - start_time).total_seconds()
@@ -574,7 +598,10 @@ class BaseAgentFactory:
             self.performance_metrics["errors"] += 1
             self.performance_metrics["success_rate"] = self.performance_metrics[
                 "tasks_executed"
-            ] / (self.performance_metrics["tasks_executed"] + self.performance_metrics["errors"])
+            ] / (
+                self.performance_metrics["tasks_executed"]
+                + self.performance_metrics["errors"]
+            )
 
             # Update agent status
             self.agent_status[agent_id] = AgentStatus.ERROR
@@ -589,7 +616,11 @@ class BaseAgentFactory:
             }
 
     async def create_swarm(
-        self, name: str, description: str, agent_ids: list[str], strategy: str = "parallel"
+        self,
+        name: str,
+        description: str,
+        agent_ids: list[str],
+        strategy: str = "parallel",
     ) -> str:
         """Create an agent swarm"""
 
@@ -619,7 +650,9 @@ class BaseAgentFactory:
         # Update metrics
         self.performance_metrics["swarms_created"] += 1
 
-        logger.info(f"🐝 Created swarm: {name} with {len(agent_ids)} agents ({swarm_id})")
+        logger.info(
+            f"🐝 Created swarm: {name} with {len(agent_ids)} agents ({swarm_id})"
+        )
         return swarm_id
 
     async def _broadcast_update(self, message: dict[str, Any]):
@@ -650,13 +683,17 @@ class BaseAgentFactory:
             "agents": {
                 "total": len(self.agents),
                 "by_status": {
-                    status.value: sum(1 for s in self.agent_status.values() if s == status)
+                    status.value: sum(
+                        1 for s in self.agent_status.values() if s == status
+                    )
                     for status in AgentStatus
                 },
             },
             "swarms": {
                 "total": len(self.swarms),
-                "total_agents_in_swarms": sum(len(s.agents) for s in self.swarms.values()),
+                "total_agents_in_swarms": sum(
+                    len(s.agents) for s in self.swarms.values()
+                ),
             },
             "performance": self.performance_metrics,
             "mcp_status": self.mcp_manager.get_connection_status(),

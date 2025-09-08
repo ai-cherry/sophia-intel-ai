@@ -66,7 +66,12 @@ SERVICES = {
                 "description": "User authentication service",
             },
         ],
-        "test_queries": ["calculate revenue", "customer data", "authentication", "async function"],
+        "test_queries": [
+            "calculate revenue",
+            "customer data",
+            "authentication",
+            "async function",
+        ],
     },
 }
 
@@ -99,7 +104,9 @@ class RAGServiceTester:
             # 4. Test stats endpoint
             await self.test_stats(client, service_name, config)
 
-    async def test_health(self, client: httpx.AsyncClient, service_name: str, config: Dict) -> bool:
+    async def test_health(
+        self, client: httpx.AsyncClient, service_name: str, config: Dict
+    ) -> bool:
         """Test health endpoint"""
         print("\n📍 Testing health endpoint...")
         try:
@@ -118,7 +125,9 @@ class RAGServiceTester:
             self.failed += 1
             return False
 
-    async def test_indexing(self, client: httpx.AsyncClient, service_name: str, config: Dict):
+    async def test_indexing(
+        self, client: httpx.AsyncClient, service_name: str, config: Dict
+    ):
         """Test document indexing"""
         print("\n📍 Testing document indexing...")
 
@@ -131,7 +140,9 @@ class RAGServiceTester:
 
                 if response.status_code == 200:
                     result = response.json()
-                    print(f"✅ Document {i} indexed: {result.get('document_id', 'auto-generated')}")
+                    print(
+                        f"✅ Document {i} indexed: {result.get('document_id', 'auto-generated')}"
+                    )
                     self.passed += 1
                 else:
                     print(f"❌ Failed to index document {i}: {response.status_code}")
@@ -144,7 +155,9 @@ class RAGServiceTester:
         # Wait for indexing to complete
         await asyncio.sleep(1)
 
-    async def test_querying(self, client: httpx.AsyncClient, service_name: str, config: Dict):
+    async def test_querying(
+        self, client: httpx.AsyncClient, service_name: str, config: Dict
+    ):
         """Test document querying"""
         print("\n📍 Testing document queries...")
 
@@ -175,7 +188,9 @@ class RAGServiceTester:
                 print(f"❌ Error querying '{query}': {e}")
                 self.failed += 1
 
-    async def test_stats(self, client: httpx.AsyncClient, service_name: str, config: Dict):
+    async def test_stats(
+        self, client: httpx.AsyncClient, service_name: str, config: Dict
+    ):
         """Test stats endpoint"""
         print("\n📍 Testing stats endpoint...")
         try:
@@ -252,7 +267,9 @@ async def test_integration():
         }
 
         try:
-            response = await client.post("http://localhost:8767/index", json=business_doc)
+            response = await client.post(
+                "http://localhost:8767/index", json=business_doc
+            )
             if response.status_code == 200:
                 print("✅ Business context indexed in Sophia")
         except Exception as e:
@@ -281,11 +298,14 @@ async def test_integration():
         for service_name, port in [("Sophia", 8767), ("Artemis", 8768)]:
             try:
                 response = await client.post(
-                    f"http://localhost:{port}/query", json={"query": "authentication", "limit": 3}
+                    f"http://localhost:{port}/query",
+                    json={"query": "authentication", "limit": 3},
                 )
                 if response.status_code == 200:
                     result = response.json()
-                    print(f"✅ {service_name}: Found {result.get('total_results', 0)} results")
+                    print(
+                        f"✅ {service_name}: Found {result.get('total_results', 0)} results"
+                    )
             except Exception as e:
                 print(f"⚠️  {service_name} query failed: {e}")
 
@@ -295,7 +315,9 @@ async def main():
     # Check if services are specified
     if len(sys.argv) > 1:
         if sys.argv[1] == "--help":
-            print("Usage: python3 test_rag_services.py [sophia|artemis|integration|all]")
+            print(
+                "Usage: python3 test_rag_services.py [sophia|artemis|integration|all]"
+            )
             print("  sophia:      Test only Sophia BI Memory")
             print("  artemis:     Test only Artemis Code Memory")
             print("  integration: Test cross-service integration")

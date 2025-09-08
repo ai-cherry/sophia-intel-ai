@@ -17,7 +17,13 @@ from typing import Any, Dict, List, Optional
 import typer
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+)
 from rich.table import Table
 
 # Add the parent directory to Python path for imports
@@ -85,7 +91,8 @@ class EmbeddingInitializer:
 
         # Initialize components
         self.embedding_system = MultiModalEmbeddings(
-            cache_dir=str(self.output_dir / "cache"), default_provider=embedding_provider
+            cache_dir=str(self.output_dir / "cache"),
+            default_provider=embedding_provider,
         )
 
         self.hierarchical_index = HierarchicalIndex(
@@ -193,7 +200,9 @@ class EmbeddingInitializer:
         total_found = 0
 
         with Progress(
-            SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
         ) as progress:
 
             task = progress.add_task("Scanning repository...", total=None)
@@ -208,7 +217,8 @@ class EmbeddingInitializer:
                         # Update progress periodically
                         if len(files) % 100 == 0:
                             progress.update(
-                                task, description=f"Found {len(files)} processable files"
+                                task,
+                                description=f"Found {len(files)} processable files",
                             )
 
                     # Limit for testing
@@ -266,7 +276,11 @@ class EmbeddingInitializer:
                     logger.error(f"Error reading {file_path}: {e}")
                     self.stats["error_files"] += 1
                     self.stats["errors"].append(
-                        {"file": str(file_path), "error": str(e), "stage": "file_reading"}
+                        {
+                            "file": str(file_path),
+                            "error": str(e),
+                            "stage": "file_reading",
+                        }
                     )
 
                 progress.advance(task)
@@ -316,7 +330,9 @@ class EmbeddingInitializer:
 
                     all_chunks[file_path] = file_chunks
                     total_chunks += len(file_chunks)
-                    total_tokens += sum(chunk.metadata.token_count for chunk in file_chunks)
+                    total_tokens += sum(
+                        chunk.metadata.token_count for chunk in file_chunks
+                    )
 
                 except Exception as e:
                     logger.error(f"Error chunking {file_path}: {e}")
@@ -329,7 +345,9 @@ class EmbeddingInitializer:
         self.stats["total_chunks"] = total_chunks
         self.stats["total_tokens"] = total_tokens
 
-        console.print(f"[green]Generated {total_chunks:,} chunks ({total_tokens:,} tokens)[/green]")
+        console.print(
+            f"[green]Generated {total_chunks:,} chunks ({total_tokens:,} tokens)[/green]"
+        )
         return all_chunks
 
     async def generate_embeddings(self, all_chunks: Dict[str, List]) -> Dict[str, Any]:
@@ -373,12 +391,16 @@ class EmbeddingInitializer:
                     ]
 
                     # Generate batch embeddings
-                    batch_results = await self.embedding_system.generate_batch_embeddings(
-                        contents, embedding_types
+                    batch_results = (
+                        await self.embedding_system.generate_batch_embeddings(
+                            contents, embedding_types
+                        )
                     )
 
                     # Store results
-                    for (file_path, chunk), (vector, metadata) in zip(batch_chunks, batch_results):
+                    for (file_path, chunk), (vector, metadata) in zip(
+                        batch_chunks, batch_results
+                    ):
                         if file_path not in all_embeddings:
                             all_embeddings[file_path] = []
 
@@ -424,7 +446,9 @@ class EmbeddingInitializer:
         ) as progress:
 
             # Count total embeddings
-            total_embeddings = sum(len(embeddings) for embeddings in all_embeddings.values())
+            total_embeddings = sum(
+                len(embeddings) for embeddings in all_embeddings.values()
+            )
             task = progress.add_task("Building index...", total=total_embeddings)
 
             for file_path, embeddings in all_embeddings.items():
@@ -442,7 +466,9 @@ class EmbeddingInitializer:
 
                 if batch_data:
                     # Add batch to hierarchical index
-                    added_count = self.hierarchical_index.add_batch_embeddings(batch_data)
+                    added_count = self.hierarchical_index.add_batch_embeddings(
+                        batch_data
+                    )
                     total_indexed += added_count
 
                     for _ in range(len(batch_data)):
@@ -453,9 +479,13 @@ class EmbeddingInitializer:
 
         console.print(f"[green]Indexed {total_indexed:,} embeddings[/green]")
 
-    async def build_contextual_graph(self, file_contents: Dict[str, str]) -> Dict[str, Any]:
+    async def build_contextual_graph(
+        self, file_contents: Dict[str, str]
+    ) -> Dict[str, Any]:
         """Build contextual relationship graph"""
-        console.print("\n[bold blue]Building contextual relationship graph...[/bold blue]")
+        console.print(
+            "\n[bold blue]Building contextual relationship graph...[/bold blue]"
+        )
 
         # Filter to code files only for graph analysis
         code_contents = {}
@@ -466,7 +496,9 @@ class EmbeddingInitializer:
         console.print(f"Analyzing {len(code_contents)} code files for relationships...")
 
         # Build contextual index
-        contextual_data = await self.contextual_embeddings.build_contextual_index(code_contents)
+        contextual_data = await self.contextual_embeddings.build_contextual_index(
+            code_contents
+        )
 
         # Export graph for visualization
         graph_export_path = self.output_dir / "dependency_graph.json"
@@ -624,10 +656,18 @@ class EmbeddingInitializer:
 @app.command()
 def init(
     repo_path: str = typer.Argument(".", help="Path to repository root"),
-    output_dir: str = typer.Option("data/embeddings", help="Output directory for embeddings"),
-    provider: str = typer.Option("openai", help="Embedding provider (openai, cohere, huggingface)"),
-    max_files: Optional[int] = typer.Option(None, help="Maximum files to process (for testing)"),
-    exclude_patterns: Optional[str] = typer.Option(None, help="Comma-separated exclude patterns"),
+    output_dir: str = typer.Option(
+        "data/embeddings", help="Output directory for embeddings"
+    ),
+    provider: str = typer.Option(
+        "openai", help="Embedding provider (openai, cohere, huggingface)"
+    ),
+    max_files: Optional[int] = typer.Option(
+        None, help="Maximum files to process (for testing)"
+    ),
+    exclude_patterns: Optional[str] = typer.Option(
+        None, help="Comma-separated exclude patterns"
+    ),
 ):
     """Initialize embeddings for the sophia-intel-ai codebase"""
 
@@ -653,7 +693,9 @@ def init(
 
 
 @app.command()
-def health_check(provider: str = typer.Option("openai", help="Embedding provider to check")):
+def health_check(
+    provider: str = typer.Option("openai", help="Embedding provider to check")
+):
     """Check health of embedding providers"""
 
     async def check_health():
@@ -682,7 +724,11 @@ def health_check(provider: str = typer.Option("openai", help="Embedding provider
 
 
 @app.command()
-def stats(output_dir: str = typer.Option("data/embeddings", help="Embeddings output directory")):
+def stats(
+    output_dir: str = typer.Option(
+        "data/embeddings", help="Embeddings output directory"
+    )
+):
     """Show statistics for existing embeddings"""
 
     output_path = Path(output_dir)
@@ -702,7 +748,9 @@ def stats(output_dir: str = typer.Option("data/embeddings", help="Embeddings out
 
     # Basic stats
     console.print(f"Generated: {report['generation_info']['start_time']}")
-    console.print(f"Duration: {report['generation_info']['duration_seconds']:.1f} seconds")
+    console.print(
+        f"Duration: {report['generation_info']['duration_seconds']:.1f} seconds"
+    )
     console.print(f"Provider: {report['generation_info']['embedding_provider']}")
 
     # Processing stats

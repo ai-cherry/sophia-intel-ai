@@ -22,7 +22,9 @@ from weaviate.classes.tenants import Tenant
 load_dotenv(".env.local")
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -898,9 +900,13 @@ class WeaviateMigration:
                 # Check multi-tenancy
                 tenants = collection.tenants.get()
                 if tenants:
-                    logger.info(f"✅ {collection_name}: {len(tenants)} tenants configured")
+                    logger.info(
+                        f"✅ {collection_name}: {len(tenants)} tenants configured"
+                    )
                 else:
-                    logger.info(f"ℹ️ {collection_name}: No tenants (might not need them)")
+                    logger.info(
+                        f"ℹ️ {collection_name}: No tenants (might not need them)"
+                    )
 
             return True
 
@@ -936,7 +942,9 @@ async def main():
 
     # Connect to Weaviate
     if not migration.connect():
-        logger.error("Failed to connect to Weaviate. Ensure Docker container is running.")
+        logger.error(
+            "Failed to connect to Weaviate. Ensure Docker container is running."
+        )
         sys.exit(1)
 
     try:

@@ -106,7 +106,11 @@ class TestProductionSecurity:
         headers = response.headers
 
         # These should be present in production
-        security_headers = ["x-content-type-options", "x-frame-options", "x-xss-protection"]
+        security_headers = [
+            "x-content-type-options",
+            "x-frame-options",
+            "x-xss-protection",
+        ]
 
         # Note: These may not be implemented yet, so we'll check if present
         for header in security_headers:
@@ -143,7 +147,9 @@ class TestProductionAI:
         ]
 
         for payload in test_cases:
-            response = requests.post(f"{BASE_URL}/ai/chat", json=payload, timeout=TIMEOUT)
+            response = requests.post(
+                f"{BASE_URL}/ai/chat", json=payload, timeout=TIMEOUT
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -166,7 +172,9 @@ class TestProductionPerformance:
 
             response_time = end_time - start_time
             assert response.status_code == 200
-            assert response_time < max_response_time, f"{endpoint} took {response_time:.2f}s"
+            assert (
+                response_time < max_response_time
+            ), f"{endpoint} took {response_time:.2f}s"
 
     def test_concurrent_requests_handled(self):
         """Test system handles concurrent requests"""
@@ -179,7 +187,9 @@ class TestProductionPerformance:
         # Test with 10 concurrent requests
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(make_request) for _ in range(10)]
-            results = [future.result() for future in concurrent.futures.as_completed(futures)]
+            results = [
+                future.result() for future in concurrent.futures.as_completed(futures)
+            ]
 
         # All requests should succeed
         assert all(results), "Some concurrent requests failed"

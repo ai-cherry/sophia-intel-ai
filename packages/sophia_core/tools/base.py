@@ -265,7 +265,11 @@ class ToolSchema(BaseModel):
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": {"type": "object", "properties": properties, "required": required},
+                "parameters": {
+                    "type": "object",
+                    "properties": properties,
+                    "required": required,
+                },
             },
         }
 
@@ -357,14 +361,25 @@ class ToolResult(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @classmethod
-    def success_result(cls, result: Any, execution_time: float = 0.0, **metadata) -> "ToolResult":
+    def success_result(
+        cls, result: Any, execution_time: float = 0.0, **metadata
+    ) -> "ToolResult":
         """Create successful result."""
-        return cls(success=True, result=result, execution_time=execution_time, metadata=metadata)
+        return cls(
+            success=True,
+            result=result,
+            execution_time=execution_time,
+            metadata=metadata,
+        )
 
     @classmethod
-    def error_result(cls, error: str, execution_time: float = 0.0, **metadata) -> "ToolResult":
+    def error_result(
+        cls, error: str, execution_time: float = 0.0, **metadata
+    ) -> "ToolResult":
         """Create error result."""
-        return cls(success=False, error=error, execution_time=execution_time, metadata=metadata)
+        return cls(
+            success=False, error=error, execution_time=execution_time, metadata=metadata
+        )
 
     def to_json(self) -> str:
         """Convert result to JSON string."""
@@ -484,17 +499,23 @@ class BaseTool(ABC):
         except ToolExecutionError as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds()
             logger.error(f"Tool {self.schema.name} execution error: {e}")
-            return ToolResult.error_result(f"Execution failed: {e}", execution_time=execution_time)
+            return ToolResult.error_result(
+                f"Execution failed: {e}", execution_time=execution_time
+            )
 
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds()
             logger.error(f"Tool {self.schema.name} unexpected error: {e}")
-            return ToolResult.error_result(f"Unexpected error: {e}", execution_time=execution_time)
+            return ToolResult.error_result(
+                f"Unexpected error: {e}", execution_time=execution_time
+            )
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get tool execution statistics."""
         avg_time = (
-            self._total_execution_time / self._execution_count if self._execution_count > 0 else 0.0
+            self._total_execution_time / self._execution_count
+            if self._execution_count > 0
+            else 0.0
         )
 
         return {
@@ -560,7 +581,9 @@ class SyncTool(BaseTool):
     """
 
     @abstractmethod
-    def _execute_sync(self, parameters: Dict[str, Any], context: ToolExecutionContext) -> Any:
+    def _execute_sync(
+        self, parameters: Dict[str, Any], context: ToolExecutionContext
+    ) -> Any:
         """
         Synchronous implementation of tool execution.
 
@@ -600,7 +623,10 @@ class ToolRegistry:
         logger.info("Initialized tool registry")
 
     def register(
-        self, tool: BaseTool, category: Optional[str] = None, replace_existing: bool = False
+        self,
+        tool: BaseTool,
+        category: Optional[str] = None,
+        replace_existing: bool = False,
     ) -> None:
         """
         Register a tool in the registry.
@@ -704,8 +730,12 @@ class ToolRegistry:
         return {
             "total_tools": len(self._tools),
             "categories": list(self._categories.keys()),
-            "tools_by_category": {cat: len(tools) for cat, tools in self._categories.items()},
-            "tool_stats": {name: tool.get_statistics() for name, tool in self._tools.items()},
+            "tools_by_category": {
+                cat: len(tools) for cat, tools in self._categories.items()
+            },
+            "tool_stats": {
+                name: tool.get_statistics() for name, tool in self._tools.items()
+            },
         }
 
     async def execute_tool(

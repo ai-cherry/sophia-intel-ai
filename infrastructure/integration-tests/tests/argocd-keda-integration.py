@@ -77,7 +77,10 @@ class ArgoCDKEDAIntegration:
                 },
                 "syncPolicy": {
                     "automated": {"prune": True, "selfHeal": True, "allowEmpty": False},
-                    "syncOptions": ["CreateNamespace=true", "PrunePropagationPolicy=foreground"],
+                    "syncOptions": [
+                        "CreateNamespace=true",
+                        "PrunePropagationPolicy=foreground",
+                    ],
                     "retry": {
                         "limit": 5,
                         "backoff": {"duration": "5s", "factor": 2, "maxDuration": "3m"},
@@ -118,7 +121,9 @@ class ArgoCDKEDAIntegration:
             plural="scaledobjects",
         )
 
-        assert len(scaled_objects.get("items", [])) > 0, "No ScaledObjects deployed by ArgoCD"
+        assert (
+            len(scaled_objects.get("items", [])) > 0
+        ), "No ScaledObjects deployed by ArgoCD"
 
         # Verify ScaledObjects have correct ArgoCD labels
         for obj in scaled_objects["items"]:
@@ -172,7 +177,9 @@ spec:
         assert obj["spec"]["minReplicaCount"] == 2
 
         # Update the ScaledObject
-        updated_yaml = scaled_object_yaml.replace("minReplicaCount: 2", "minReplicaCount: 3")
+        updated_yaml = scaled_object_yaml.replace(
+            "minReplicaCount: 2", "minReplicaCount: 3"
+        )
         await self._simulate_git_update(updated_yaml)
 
         # Trigger sync again
@@ -247,8 +254,16 @@ spec:
         # Deploy configs with sync waves
         configs = [
             {"name": "wave-0-scaledobject", "wave": "0", "dependencies": []},
-            {"name": "wave-1-scaledobject", "wave": "1", "dependencies": ["wave-0-scaledobject"]},
-            {"name": "wave-2-scaledobject", "wave": "2", "dependencies": ["wave-1-scaledobject"]},
+            {
+                "name": "wave-1-scaledobject",
+                "wave": "1",
+                "dependencies": ["wave-0-scaledobject"],
+            },
+            {
+                "name": "wave-2-scaledobject",
+                "wave": "2",
+                "dependencies": ["wave-1-scaledobject"],
+            },
         ]
 
         for config in configs:
@@ -297,8 +312,14 @@ spec:
             await asyncio.sleep(1)
 
         # Verify wave ordering
-        assert creation_times["wave-0-scaledobject"] < creation_times["wave-1-scaledobject"]
-        assert creation_times["wave-1-scaledobject"] < creation_times["wave-2-scaledobject"]
+        assert (
+            creation_times["wave-0-scaledobject"]
+            < creation_times["wave-1-scaledobject"]
+        )
+        assert (
+            creation_times["wave-1-scaledobject"]
+            < creation_times["wave-2-scaledobject"]
+        )
 
         logger.info("✓ KEDA configs deployed in correct sync wave order")
 
@@ -310,10 +331,15 @@ spec:
         orphan = {
             "apiVersion": "keda.sh/v1alpha1",
             "kind": "ScaledObject",
-            "metadata": {"name": "orphan-scaledobject", "namespace": self.test_namespace},
+            "metadata": {
+                "name": "orphan-scaledobject",
+                "namespace": self.test_namespace,
+            },
             "spec": {
                 "scaleTargetRef": {"name": "orphan-deployment"},
-                "triggers": [{"type": "cpu", "metadata": {"type": "Utilization", "value": "50"}}],
+                "triggers": [
+                    {"type": "cpu", "metadata": {"type": "Utilization", "value": "50"}}
+                ],
             },
         }
 
@@ -379,13 +405,17 @@ spec:
         assert app["status"]["sync"]["status"] != "Synced"
         assert "validation" in str(app["status"]["conditions"]).lower()
 
-        logger.info("✓ KEDA validation webhooks properly reject invalid configs from ArgoCD")
+        logger.info(
+            "✓ KEDA validation webhooks properly reject invalid configs from ArgoCD"
+        )
 
     async def _trigger_argocd_sync(self, app_name: str):
         """Trigger ArgoCD application sync"""
         async with aiohttp.ClientSession() as session:
             url = f"http://{self.argocd_server}/api/v1/applications/{app_name}/sync"
-            headers = {"Authorization": "Bearer dummy-token"}  # In real test, use actual token
+            headers = {
+                "Authorization": "Bearer dummy-token"
+            }  # In real test, use actual token
 
             try:
                 async with session.post(url, headers=headers) as resp:

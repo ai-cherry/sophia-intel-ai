@@ -137,7 +137,9 @@ async def main():
         logger.info("\n⚠️  No virtual keys configured yet")
         logger.info("\nNext steps:")
         logger.info("  1. Go to https://app.portkey.ai")
-        logger.info("  2. Create the 7 virtual keys as described in PORTKEY_EXACT_SETUP.md")
+        logger.info(
+            "  2. Create the 7 virtual keys as described in PORTKEY_EXACT_SETUP.md"
+        )
         logger.info("  3. Add the virtual key IDs to .env.local")
         logger.info("  4. Run this test again")
     else:

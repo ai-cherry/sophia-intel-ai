@@ -49,7 +49,9 @@ class EvolutionAlert:
             "timestamp": self.timestamp.isoformat(),
             "resolved": self.resolved,
             "resolution_timestamp": (
-                self.resolution_timestamp.isoformat() if self.resolution_timestamp else None
+                self.resolution_timestamp.isoformat()
+                if self.resolution_timestamp
+                else None
             ),
             "experimental_context": self.experimental_context or {},
         }
@@ -143,7 +145,9 @@ class ExperimentalEvolutionMonitor:
         self.metrics_history[swarm_type] = []
         logger.info(f"🧪📊 Registered evolution engine for monitoring: {swarm_type}")
 
-    def register_adapter(self, swarm_type: str, adapter: ExperimentalSwarmEvolutionAdapter):
+    def register_adapter(
+        self, swarm_type: str, adapter: ExperimentalSwarmEvolutionAdapter
+    ):
         """Register an evolution adapter for monitoring."""
         self.tracked_adapters[swarm_type] = adapter
         if swarm_type not in self.metrics_history:
@@ -172,7 +176,9 @@ class ExperimentalEvolutionMonitor:
             try:
                 await self._perform_monitoring_cycle()
                 self.monitoring_stats["monitoring_cycles"] += 1
-                self.monitoring_stats["last_monitoring_cycle"] = datetime.now().isoformat()
+                self.monitoring_stats["last_monitoring_cycle"] = (
+                    datetime.now().isoformat()
+                )
 
                 await asyncio.sleep(self.monitoring_interval.total_seconds())
 
@@ -199,7 +205,9 @@ class ExperimentalEvolutionMonitor:
         if self.memory_client:
             await self._store_monitoring_data()
 
-    async def _monitor_engine(self, swarm_type: str, engine: ExperimentalEvolutionEngine):
+    async def _monitor_engine(
+        self, swarm_type: str, engine: ExperimentalEvolutionEngine
+    ):
         """Monitor an evolution engine."""
         try:
             # Get engine status
@@ -213,7 +221,9 @@ class ExperimentalEvolutionMonitor:
                 return
 
             # Calculate metrics
-            metrics = await self._calculate_engine_metrics(swarm_type, engine, population)
+            metrics = await self._calculate_engine_metrics(
+                swarm_type, engine, population
+            )
 
             # Store metrics
             self.metrics_history[swarm_type].append(metrics)
@@ -221,7 +231,9 @@ class ExperimentalEvolutionMonitor:
             # Keep only recent metrics
             max_history = 288  # 24 hours at 5-minute intervals
             if len(self.metrics_history[swarm_type]) > max_history:
-                self.metrics_history[swarm_type] = self.metrics_history[swarm_type][-max_history:]
+                self.metrics_history[swarm_type] = self.metrics_history[swarm_type][
+                    -max_history:
+                ]
 
             # Check for issues
             await self._check_engine_issues(swarm_type, engine, metrics)
@@ -229,7 +241,9 @@ class ExperimentalEvolutionMonitor:
         except Exception as e:
             logger.error(f"🧪📊 Error monitoring engine {swarm_type}: {e}")
 
-    async def _monitor_adapter(self, swarm_type: str, adapter: ExperimentalSwarmEvolutionAdapter):
+    async def _monitor_adapter(
+        self, swarm_type: str, adapter: ExperimentalSwarmEvolutionAdapter
+    ):
         """Monitor an evolution adapter."""
         try:
             # Get adapter status
@@ -274,7 +288,9 @@ class ExperimentalEvolutionMonitor:
         fitness_scores = [c.fitness_score for c in population]
         average_fitness = statistics.mean(fitness_scores) if fitness_scores else 0.0
         best_fitness = max(fitness_scores) if fitness_scores else 0.0
-        fitness_std_dev = statistics.stdev(fitness_scores) if len(fitness_scores) > 1 else 0.0
+        fitness_std_dev = (
+            statistics.stdev(fitness_scores) if len(fitness_scores) > 1 else 0.0
+        )
 
         # Performance trend
         history = self.metrics_history.get(swarm_type, [])
@@ -298,7 +314,11 @@ class ExperimentalEvolutionMonitor:
         # Safety metrics
         safety_violations = len(engine.safety_violations)
         rollback_count = engine.evolution_stats.get("rollbacks", 0)
-        avg_risk = statistics.mean([c.risk_tolerance for c in population]) if population else 0.0
+        avg_risk = (
+            statistics.mean([c.risk_tolerance for c in population])
+            if population
+            else 0.0
+        )
 
         # Experimental metrics
         breakthrough_events = len(engine.breakthrough_events)
@@ -342,32 +362,47 @@ class ExperimentalEvolutionMonitor:
             swarm_type=swarm_type,
             population_size=1,  # Adapter tracks single best
             generation=chromosome.generation if chromosome else 1,
-            experimental_variants=1 if chromosome and chromosome.experimental_variant else 0,
+            experimental_variants=(
+                1 if chromosome and chromosome.experimental_variant else 0
+            ),
             average_fitness=chromosome.fitness_score if chromosome else 0.0,
             best_fitness=chromosome.fitness_score if chromosome else 0.0,
             fitness_std_dev=0.0,  # Single chromosome
             performance_trend=performance.get("improvement_from_baseline", 0.0),
-            mutation_rate_actual=adapter.config.experimental_mode.value == "experimental"
+            mutation_rate_actual=adapter.config.experimental_mode.value
+            == "experimental"
             and 0.15
             or 0.1,
             crossover_rate_actual=0.7,  # Default
             selection_pressure_actual=0.3,  # Default
             safety_violations_count=len(adapter.safety_violations),
             rollback_count=len(
-                [v for v in adapter.safety_violations if v.get("type") == "evolution_rollback"]
+                [
+                    v
+                    for v in adapter.safety_violations
+                    if v.get("type") == "evolution_rollback"
+                ]
             ),
             risk_score=chromosome.risk_tolerance if chromosome else 0.0,
             breakthrough_events=0,  # Adapter doesn't track breakthroughs directly
             pattern_discoveries=0,  # Adapter doesn't track patterns directly
-            experimental_mutations=chromosome.experimental_mutations_count if chromosome else 0,
+            experimental_mutations=(
+                chromosome.experimental_mutations_count if chromosome else 0
+            ),
         )
 
     async def _check_engine_issues(
-        self, swarm_type: str, engine: ExperimentalEvolutionEngine, metrics: EvolutionMetrics
+        self,
+        swarm_type: str,
+        engine: ExperimentalEvolutionEngine,
+        metrics: EvolutionMetrics,
     ):
         """Check for issues in evolution engine."""
         # Performance degradation alert
-        if metrics.performance_trend < -self.alert_thresholds["performance_degradation"]:
+        if (
+            metrics.performance_trend
+            < -self.alert_thresholds["performance_degradation"]
+        ):
             await self._create_alert(
                 alert_type="performance",
                 severity="high",
@@ -380,7 +415,8 @@ class ExperimentalEvolutionMonitor:
         recent_violations = [
             v
             for v in engine.safety_violations
-            if (datetime.now() - datetime.fromisoformat(v["timestamp"])).total_seconds() < 3600
+            if (datetime.now() - datetime.fromisoformat(v["timestamp"])).total_seconds()
+            < 3600
         ]
         if len(recent_violations) > self.alert_thresholds["safety_violation_rate"] * 10:
             await self._create_alert(
@@ -398,7 +434,9 @@ class ExperimentalEvolutionMonitor:
                 severity="medium",
                 swarm_type=swarm_type,
                 message=f"High experimental risk score: {metrics.risk_score:.3f}",
-                experimental_context={"risk_details": {"population_risk": metrics.risk_score}},
+                experimental_context={
+                    "risk_details": {"population_risk": metrics.risk_score}
+                },
             )
 
         # Fitness stagnation alert
@@ -406,9 +444,13 @@ class ExperimentalEvolutionMonitor:
         if len(history) >= self.alert_thresholds["fitness_stagnation_generations"]:
             recent_fitness = [
                 m.best_fitness
-                for m in history[-self.alert_thresholds["fitness_stagnation_generations"] :]
+                for m in history[
+                    -self.alert_thresholds["fitness_stagnation_generations"] :
+                ]
             ]
-            if max(recent_fitness) - min(recent_fitness) < 0.01:  # Very little improvement
+            if (
+                max(recent_fitness) - min(recent_fitness) < 0.01
+            ):  # Very little improvement
                 await self._create_alert(
                     alert_type="performance",
                     severity="medium",
@@ -418,11 +460,17 @@ class ExperimentalEvolutionMonitor:
                 )
 
     async def _check_adapter_issues(
-        self, swarm_type: str, adapter: ExperimentalSwarmEvolutionAdapter, metrics: EvolutionMetrics
+        self,
+        swarm_type: str,
+        adapter: ExperimentalSwarmEvolutionAdapter,
+        metrics: EvolutionMetrics,
     ):
         """Check for issues in evolution adapter."""
         # Similar checks as engine but adapted for adapter context
-        if metrics.performance_trend < -self.alert_thresholds["performance_degradation"]:
+        if (
+            metrics.performance_trend
+            < -self.alert_thresholds["performance_degradation"]
+        ):
             await self._create_alert(
                 alert_type="performance",
                 severity="high",
@@ -440,13 +488,17 @@ class ExperimentalEvolutionMonitor:
         experimental_context: dict[str, Any] = None,
     ):
         """Create a new alert."""
-        alert_id = f"{alert_type}_{swarm_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        alert_id = (
+            f"{alert_type}_{swarm_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        )
 
         # Check if similar alert already exists
         existing_similar = [
             a
             for a in self.active_alerts.values()
-            if a.alert_type == alert_type and a.swarm_type == swarm_type and not a.resolved
+            if a.alert_type == alert_type
+            and a.swarm_type == swarm_type
+            and not a.resolved
         ]
 
         if existing_similar:
@@ -470,7 +522,9 @@ class ExperimentalEvolutionMonitor:
 
         if severity == "critical":
             self.monitoring_stats["critical_alerts"] += 1
-            logger.error(f"🧪📊🚨 CRITICAL EXPERIMENTAL EVOLUTION ALERT [{swarm_type}]: {message}")
+            logger.error(
+                f"🧪📊🚨 CRITICAL EXPERIMENTAL EVOLUTION ALERT [{swarm_type}]: {message}"
+            )
         else:
             logger.warning(
                 f"🧪📊⚠️ Experimental evolution alert [{swarm_type}] ({severity}): {message}"
@@ -483,7 +537,10 @@ class ExperimentalEvolutionMonitor:
                     learning_type="experimental_evolution_alert",
                     content=f"Alert: {alert_type} - {message}",
                     confidence=0.9 if severity in ["high", "critical"] else 0.7,
-                    context={"alert_data": alert.to_dict(), "experimental_monitoring": True},
+                    context={
+                        "alert_data": alert.to_dict(),
+                        "experimental_monitoring": True,
+                    },
                 )
             except Exception as e:
                 logger.warning(f"Failed to store alert in memory: {e}")
@@ -557,7 +614,8 @@ class ExperimentalEvolutionMonitor:
         return {
             "monitoring_active": self.monitoring_active,
             "monitoring_stats": self.monitoring_stats,
-            "total_tracked_systems": len(self.tracked_engines) + len(self.tracked_adapters),
+            "total_tracked_systems": len(self.tracked_engines)
+            + len(self.tracked_adapters),
             "tracked_engines": len(self.tracked_engines),
             "tracked_adapters": len(self.tracked_adapters),
             "active_alerts": len(self.active_alerts),
@@ -594,8 +652,12 @@ class ExperimentalEvolutionMonitor:
 
     def _calculate_system_health(self) -> str:
         """Calculate overall system health status."""
-        active_critical = len([a for a in self.active_alerts.values() if a.severity == "critical"])
-        active_high = len([a for a in self.active_alerts.values() if a.severity == "high"])
+        active_critical = len(
+            [a for a in self.active_alerts.values() if a.severity == "critical"]
+        )
+        active_high = len(
+            [a for a in self.active_alerts.values() if a.severity == "high"]
+        )
 
         if active_critical > 0:
             return "critical"
@@ -613,12 +675,16 @@ class ExperimentalEvolutionMonitor:
         # Recent metrics for charts
         dashboard_metrics = {}
         for swarm_type, metrics in self.metrics_history.items():
-            recent_metrics = metrics[-24:] if metrics else []  # Last 24 data points (2 hours)
+            recent_metrics = (
+                metrics[-24:] if metrics else []
+            )  # Last 24 data points (2 hours)
             dashboard_metrics[swarm_type] = {
                 "fitness_trend": [m.average_fitness for m in recent_metrics],
                 "risk_trend": [m.risk_score for m in recent_metrics],
                 "generation_progress": [m.generation for m in recent_metrics],
-                "experimental_activity": [m.experimental_variants for m in recent_metrics],
+                "experimental_activity": [
+                    m.experimental_variants for m in recent_metrics
+                ],
                 "timestamps": [m.timestamp.isoformat() for m in recent_metrics],
             }
 
@@ -658,9 +724,13 @@ class ExperimentalEvolutionMonitor:
                 "avg_fitness": statistics.mean([m.average_fitness for m in metrics]),
                 "max_fitness": max([m.best_fitness for m in metrics]),
                 "avg_risk": statistics.mean([m.risk_score for m in metrics]),
-                "total_safety_violations": sum([m.safety_violations_count for m in metrics]),
+                "total_safety_violations": sum(
+                    [m.safety_violations_count for m in metrics]
+                ),
                 "total_rollbacks": sum([m.rollback_count for m in metrics]),
-                "experimental_activity": sum([m.experimental_variants for m in metrics]),
+                "experimental_activity": sum(
+                    [m.experimental_variants for m in metrics]
+                ),
                 "breakthrough_events": sum([m.breakthrough_events for m in metrics]),
                 "generation_progress": max([m.generation for m in metrics])
                 - min([m.generation for m in metrics]),
@@ -681,10 +751,14 @@ class ExperimentalEvolutionMonitor:
             "alerts_in_period": report_alerts,
             "alert_summary": {
                 "total_alerts": len(report_alerts),
-                "critical_alerts": len([a for a in report_alerts if a["severity"] == "critical"]),
+                "critical_alerts": len(
+                    [a for a in report_alerts if a["severity"] == "critical"]
+                ),
                 "resolved_alerts": len([a for a in report_alerts if a["resolved"]]),
             },
-            "recommendations": self._generate_recommendations(report_stats, report_alerts),
+            "recommendations": self._generate_recommendations(
+                report_stats, report_alerts
+            ),
         }
 
     def _generate_recommendations(
@@ -694,7 +768,9 @@ class ExperimentalEvolutionMonitor:
         recommendations = []
 
         # Check for consistent high risk
-        high_risk_swarms = [swarm for swarm, data in stats.items() if data.get("avg_risk", 0) > 0.7]
+        high_risk_swarms = [
+            swarm for swarm, data in stats.items() if data.get("avg_risk", 0) > 0.7
+        ]
         if high_risk_swarms:
             recommendations.append(
                 f"🧪⚠️ Consider reducing risk tolerance for high-risk swarms: {', '.join(high_risk_swarms)}"
@@ -702,7 +778,9 @@ class ExperimentalEvolutionMonitor:
 
         # Check for frequent safety violations
         high_violation_swarms = [
-            swarm for swarm, data in stats.items() if data.get("total_safety_violations", 0) > 5
+            swarm
+            for swarm, data in stats.items()
+            if data.get("total_safety_violations", 0) > 5
         ]
         if high_violation_swarms:
             recommendations.append(
@@ -713,7 +791,8 @@ class ExperimentalEvolutionMonitor:
         stagnant_swarms = [
             swarm
             for swarm, data in stats.items()
-            if data.get("generation_progress", 0) < 2 and data.get("total_data_points", 0) > 10
+            if data.get("generation_progress", 0) < 2
+            and data.get("total_data_points", 0) > 10
         ]
         if stagnant_swarms:
             recommendations.append(
@@ -728,7 +807,9 @@ class ExperimentalEvolutionMonitor:
             )
 
         # Experimental activity recommendations
-        total_experimental = sum(data.get("experimental_activity", 0) for data in stats.values())
+        total_experimental = sum(
+            data.get("experimental_activity", 0) for data in stats.values()
+        )
         if total_experimental == 0:
             recommendations.append(
                 "🧪 No experimental variants detected - consider enabling experimental features for exploration"
@@ -758,6 +839,8 @@ def get_global_monitor() -> ExperimentalEvolutionMonitor:
     return _global_monitor
 
 
-def create_monitor_with_memory(memory_client: SwarmMemoryClient) -> ExperimentalEvolutionMonitor:
+def create_monitor_with_memory(
+    memory_client: SwarmMemoryClient,
+) -> ExperimentalEvolutionMonitor:
     """Create a new monitor with memory integration."""
     return ExperimentalEvolutionMonitor(memory_client)

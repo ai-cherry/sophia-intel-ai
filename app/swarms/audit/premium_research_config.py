@@ -76,11 +76,15 @@ class ResearchAgentSpec:
     research_capabilities: list[ResearchCapability] = field(default_factory=list)
     confidence_threshold: float = 0.85
     collaboration_style: str = "researcher"
-    research_depth: str = "comprehensive"  # "surface", "standard", "comprehensive", "deep"
+    research_depth: str = (
+        "comprehensive"  # "surface", "standard", "comprehensive", "deep"
+    )
     citation_required: bool = True
     validation_rounds: int = 2
     api_provider: str = "openrouter"
-    fallback_providers: list[str] = field(default_factory=lambda: ["openai", "anthropic", "groq"])
+    fallback_providers: list[str] = field(
+        default_factory=lambda: ["openai", "anthropic", "groq"]
+    )
 
 
 # Premium Research Agent Roster for 2025
@@ -224,7 +228,10 @@ PREMIUM_RESEARCH_AGENTS = {
         name="Research Validation Agent",
         role="research_validation",
         model=PREMIUM_RESEARCH_MODELS["validation_agent"],
-        backup_models=["anthropic/claude-3-haiku-20240307", "groq/llama-3.3-70b-versatile"],
+        backup_models=[
+            "anthropic/claude-3-haiku-20240307",
+            "groq/llama-3.3-70b-versatile",
+        ],
         research_capabilities=[
             ResearchCapability.BENCHMARK_ANALYSIS,
             ResearchCapability.LITERATURE_REVIEW,
@@ -445,7 +452,9 @@ API_CONFIGURATIONS = {
         "priority": 7,
     },
     "mistral": {
-        "api_key": get_config().get("MISTRAL_API_KEY", "jCGVZEeBzppPH0pPVL0vxRCPnZuWL90i"),
+        "api_key": get_config().get(
+            "MISTRAL_API_KEY", "jCGVZEeBzppPH0pPVL0vxRCPnZuWL90i"
+        ),
         "base_url": "https://api.mistral.ai/v1",
         "priority": 8,
     },

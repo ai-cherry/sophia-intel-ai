@@ -71,7 +71,12 @@ class VectorEmbedding(BaseModel):
 @app.get("/health")
 async def health_check():
     """Check the health of the MCP Memory Server and its dependencies"""
-    status = {"status": "operational", "version": "1.0.0", "redis": False, "qdrant": False}
+    status = {
+        "status": "operational",
+        "version": "1.0.0",
+        "redis": False,
+        "qdrant": False,
+    }
 
     # Check Redis connection
     try:

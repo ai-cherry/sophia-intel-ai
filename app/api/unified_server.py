@@ -52,7 +52,9 @@ from app.api.repository.repo_service import router as repo_router
 from app.api.resilient_websocket_endpoints import router as resilient_ws_router
 
 # from app.api.routers.brain_training import router as brain_training_router  # Missing docx dependency
-from app.api.routers.integration_intelligence import router as integration_intelligence_router
+from app.api.routers.integration_intelligence import (
+    router as integration_intelligence_router,
+)
 from app.api.routers.looker import router as looker_router
 from app.api.routers.slack_business_intelligence import router as slack_bi_router
 
@@ -60,7 +62,9 @@ from app.api.routers.slack_business_intelligence import router as slack_bi_route
 from app.api.routers.teams import router as teams_router
 
 # from app.api.routers.voice import router as voice_router  # Requires ELEVENLABS_API_KEY
-from app.api.routes.foundational_knowledge import router as foundational_knowledge_router
+from app.api.routes.foundational_knowledge import (
+    router as foundational_knowledge_router,
+)
 from app.api.routes.prompt_library import router as prompt_library_router
 from app.api.routes.redis_health import router as redis_health_router
 from app.api.super_orchestrator_router import router as super_orchestrator_router
@@ -70,7 +74,9 @@ from app.api.unified_gateway import router as unified_gateway_router
 
 
 app = FastAPI(
-    title="Sophia Intel AI API", description="Sophia Intel AI Platform API", version="1.0.0"
+    title="Sophia Intel AI API",
+    description="Sophia Intel AI Platform API",
+    version="1.0.0",
 )
 
 # Include all routers
@@ -102,11 +108,15 @@ app.include_router(slack_bi_router)
 # )  # Brain Training endpoints - includes /api/brain-training prefix - Missing docx dependency
 # app.include_router(voice_router, prefix="/api")  # Voice endpoints - Requires ELEVENLABS_API_KEY
 # app.include_router(factory_router)  # Agent Factory endpoints - Has SlackIntegration import issues
-app.include_router(personas_router)  # Persona agents endpoints - includes /api/personas prefix
+app.include_router(
+    personas_router
+)  # Persona agents endpoints - includes /api/personas prefix
 app.include_router(
     foundational_knowledge_router, prefix="/api/foundational"
 )  # Foundational Knowledge endpoints
-app.include_router(redis_health_router, prefix="/api")  # Redis health monitoring endpoints
+app.include_router(
+    redis_health_router, prefix="/api"
+)  # Redis health monitoring endpoints
 app.include_router(
     prompt_library_router
 )  # Prompt Library endpoints - includes /api/v1/prompts prefix
@@ -139,7 +149,9 @@ async def startup_event():
         # Start Redis health monitoring
         from app.core.redis_health_monitor import redis_health_monitor
 
-        await redis_health_monitor.start_monitoring(interval=60.0)  # Monitor every minute
+        await redis_health_monitor.start_monitoring(
+            interval=60.0
+        )  # Monitor every minute
         logger.info("Redis health monitoring started")
 
     except Exception as e:
@@ -234,7 +246,9 @@ async def startup_event():
             logger.info("✅ Airtable Sync Scheduler started")
 
         except Exception as e:
-            logger.warning(f"⚠️ Foundational knowledge system initialization warning: {e}")
+            logger.warning(
+                f"⚠️ Foundational knowledge system initialization warning: {e}"
+            )
             # Don't fail startup if knowledge system can't initialize
 
         logger.info(
@@ -299,7 +313,10 @@ async def run_team(request: SwarmRequest):
 
         # Prepare messages
         messages = [
-            {"role": "system", "content": f"You are part of the {request.team_id} swarm."},
+            {
+                "role": "system",
+                "content": f"You are part of the {request.team_id} swarm.",
+            },
             {"role": "user", "content": request.message},
         ]
 
@@ -362,12 +379,18 @@ async def run_team(request: SwarmRequest):
             try:
                 import uuid
 
-                from app.swarms.communication.message_bus import MessageType, SwarmMessage
+                from app.swarms.communication.message_bus import (
+                    MessageType,
+                    SwarmMessage,
+                )
 
                 message = SwarmMessage(
                     id=str(uuid.uuid4()),
                     sender_agent_id=request.team_id,
-                    content={"text": response["content"], "model": response.get("model")},
+                    content={
+                        "text": response["content"],
+                        "model": response.get("model"),
+                    },
                     thread_id=f"team-{request.team_id}",
                     message_type=MessageType.RESULT,
                 )
@@ -441,7 +464,9 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
             # Run all swarms in parallel
             tasks = []
             for team_id in request.teams:
-                task = asyncio.create_task(execute_single_swarm(request.message, team_id))
+                task = asyncio.create_task(
+                    execute_single_swarm(request.message, team_id)
+                )
                 tasks.append((team_id, task))
 
             # Gather results
@@ -470,7 +495,9 @@ async def run_multiple_swarms(request: MultiSwarmRequest):
 
             for team_id in request.teams:
                 result = await execute_single_swarm(request.message, team_id)
-                all_responses.append({"team": team_id, "response": result.get("content", "")})
+                all_responses.append(
+                    {"team": team_id, "response": result.get("content", "")}
+                )
 
             # Synthesize consensus
             consensus_prompt = f"""
@@ -512,10 +539,18 @@ async def execute_single_swarm(message: str, team_id: str) -> dict[str, Any]:
     ]
 
     response = await portkey_balancer.execute_with_routing(
-        messages=messages, task_type=task_type, temperature=0.7, max_tokens=4096, stream=False
+        messages=messages,
+        task_type=task_type,
+        temperature=0.7,
+        max_tokens=4096,
+        stream=False,
     )
 
-    return {"content": response["content"], "model": response.get("model"), "team": team_id}
+    return {
+        "content": response["content"],
+        "model": response.get("model"),
+        "team": team_id,
+    }
 
 
 @app.get("/mcp/system-health")
@@ -536,7 +571,11 @@ async def system_health():
             "last_check": current_time,
             "purpose": "Connects IDEs to MCP server",
         },
-        "api_integration": {"status": "connected", "last_request": current_time, "endpoints": 100},
+        "api_integration": {
+            "status": "connected",
+            "last_request": current_time,
+            "endpoints": 100,
+        },
         "sdk_integration": {
             "status": "active",
             "version": "sophia-mcp-sdk@2.0",
@@ -552,7 +591,11 @@ async def system_health():
             "last_sync": current_time,
             "metrics_coverage": "95%",
         },
-        "cost_tracking": {"status": "active", "last_sync": current_time, "budget_usage": "42%"},
+        "cost_tracking": {
+            "status": "active",
+            "last_sync": current_time,
+            "budget_usage": "42%",
+        },
     }
 
 
@@ -579,7 +622,9 @@ async def generate_embeddings_endpoint(request: dict[str, Any]):
             import openai
 
             openai.api_key = os.getenv("OPENAI_API_KEY")
-            response = await openai.Embedding.acreate(model="text-embedding-ada-002", input=text)
+            response = await openai.Embedding.acreate(
+                model="text-embedding-ada-002", input=text
+            )
             return {
                 "embeddings": response["data"][0]["embedding"],
                 "model": "text-embedding-ada-002",
@@ -587,7 +632,9 @@ async def generate_embeddings_endpoint(request: dict[str, Any]):
             }
         except Exception as e:
             logger.error(f"Real embedding generation failed: {e}")
-            raise HTTPException(status_code=503, detail=f"Embedding service unavailable: {str(e)}")
+            raise HTTPException(
+                status_code=503, detail=f"Embedding service unavailable: {str(e)}"
+            )
 
 
 @app.get("/agents/factory-dashboard.html")
@@ -613,14 +660,22 @@ async def list_models():
             "google/gemini-2.0-flash-exp:free",
             "openai/gpt-4o-mini",
         ],
-        "routing": {"strategy": "load_balanced", "gateway": "portkey", "provider": "openrouter"},
+        "routing": {
+            "strategy": "load_balanced",
+            "gateway": "portkey",
+            "provider": "openrouter",
+        },
     }
 
 
 @app.post("/mcp/swarm-config")
 async def swarm_config(data: dict):
     # Validate required fields
-    if "num_agents" not in data or "agent_type" not in data or "max_concurrency" not in data:
+    if (
+        "num_agents" not in data
+        or "agent_type" not in data
+        or "max_concurrency" not in data
+    ):
         return {"error": "Missing required swarm config parameters"}
 
     # Update MCP state with new config
@@ -646,7 +701,10 @@ async def llm_assignment(data: dict):
     # Update MCP server's assignment
     # (Implementation details would use existing MCP state management)
 
-    return {"status": "success", "message": f"Assigned {data['model']} to {data['agent']}"}
+    return {
+        "status": "success",
+        "message": f"Assigned {data['model']} to {data['agent']}",
+    }
 
 
 @app.get("/health")
@@ -733,7 +791,9 @@ async def chat_completions(request: ChatCompletionRequest):
             )
             return response
         except Exception as fallback_error:
-            raise HTTPException(status_code=500, detail=f"All models failed: {str(fallback_error)}")
+            raise HTTPException(
+                status_code=500, detail=f"All models failed: {str(fallback_error)}"
+            )
 
 
 @app.get("/metrics")

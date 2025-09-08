@@ -99,7 +99,9 @@ class SophiaAIUnified:
                         path=request.url.path,
                         duration=duration,
                         status_code=(
-                            getattr(response, "status_code", 500) if "response" in locals() else 500
+                            getattr(response, "status_code", 500)
+                            if "response" in locals()
+                            else 500
                         ),
                     )
 
@@ -110,7 +112,9 @@ class SophiaAIUnified:
 
         try:
             # Setup telemetry first
-            setup_telemetry(service_name="sophia-ai-unified", environment=self.environment)
+            setup_telemetry(
+                service_name="sophia-ai-unified", environment=self.environment
+            )
 
             # Initialize metrics collector
             self.metrics = MetricsCollector()
@@ -182,7 +186,9 @@ class SophiaAIUnified:
         async def root():
             """Root endpoint with system status"""
             uptime = (
-                (datetime.now() - self.startup_time).total_seconds() if self.startup_time else 0
+                (datetime.now() - self.startup_time).total_seconds()
+                if self.startup_time
+                else 0
             )
 
             return {
@@ -192,10 +198,18 @@ class SophiaAIUnified:
                 "status": "operational",
                 "uptime_seconds": uptime,
                 "components": {
-                    "memory_bus": "operational" if self.memory_bus else "not_initialized",
-                    "mcp_server": "operational" if self.mcp_server else "not_initialized",
-                    "revenue_ops": "operational" if self.revenue_ops else "not_initialized",
-                    "factory_swarm": "operational" if self.factory_swarm else "not_initialized",
+                    "memory_bus": (
+                        "operational" if self.memory_bus else "not_initialized"
+                    ),
+                    "mcp_server": (
+                        "operational" if self.mcp_server else "not_initialized"
+                    ),
+                    "revenue_ops": (
+                        "operational" if self.revenue_ops else "not_initialized"
+                    ),
+                    "factory_swarm": (
+                        "operational" if self.factory_swarm else "not_initialized"
+                    ),
                 },
                 "metrics": {
                     "total_requests": self.request_count,
@@ -238,7 +252,8 @@ class SophiaAIUnified:
 
                 # Overall health determination
                 component_statuses = [
-                    comp.get("status", "unknown") for comp in health_status["components"].values()
+                    comp.get("status", "unknown")
+                    for comp in health_status["components"].values()
                 ]
 
                 if all(status == "healthy" for status in component_statuses):
@@ -269,7 +284,9 @@ class SophiaAIUnified:
         async def mcp_tool_call(request: Dict[str, Any]):
             """Universal MCP tool call endpoint"""
             if not self.mcp_server:
-                raise HTTPException(status_code=503, detail="MCP server not initialized")
+                raise HTTPException(
+                    status_code=503, detail="MCP server not initialized"
+                )
 
             return await self.mcp_server.call_tool(request)
 
@@ -277,7 +294,9 @@ class SophiaAIUnified:
         async def list_mcp_tools():
             """List all available MCP tools"""
             if not self.mcp_server:
-                raise HTTPException(status_code=503, detail="MCP server not initialized")
+                raise HTTPException(
+                    status_code=503, detail="MCP server not initialized"
+                )
 
             return await self.mcp_server.list_tools()
 
@@ -286,7 +305,9 @@ class SophiaAIUnified:
         async def revenue_search(request: Dict[str, Any]):
             """Search across revenue operations data"""
             if not self.revenue_ops:
-                raise HTTPException(status_code=503, detail="Revenue Ops not initialized")
+                raise HTTPException(
+                    status_code=503, detail="Revenue Ops not initialized"
+                )
 
             return await self.revenue_ops.federated_search(request)
 
@@ -294,7 +315,9 @@ class SophiaAIUnified:
         async def client_health(client_name: str):
             """Get client health score"""
             if not self.revenue_ops:
-                raise HTTPException(status_code=503, detail="Revenue Ops not initialized")
+                raise HTTPException(
+                    status_code=503, detail="Revenue Ops not initialized"
+                )
 
             return await self.revenue_ops.get_client_health(client_name)
 
@@ -302,7 +325,9 @@ class SophiaAIUnified:
         async def revenue_insights():
             """Get revenue intelligence insights"""
             if not self.revenue_ops:
-                raise HTTPException(status_code=503, detail="Revenue Ops not initialized")
+                raise HTTPException(
+                    status_code=503, detail="Revenue Ops not initialized"
+                )
 
             return await self.revenue_ops.get_insights()
 
@@ -311,7 +336,9 @@ class SophiaAIUnified:
         async def factory_call(request: Dict[str, Any], background: BackgroundTasks):
             """Factory AI MCP call with evolution"""
             if not self.factory_swarm:
-                raise HTTPException(status_code=503, detail="Factory Swarm not initialized")
+                raise HTTPException(
+                    status_code=503, detail="Factory Swarm not initialized"
+                )
 
             # Convert to ToolCall format
             from app.factory_ai.swarm_wrapper import ToolCall
@@ -323,13 +350,17 @@ class SophiaAIUnified:
             )
 
             # Use the factory swarm's mcp_call method
-            return await self.factory_swarm.app.routes[2].endpoint(tool_call, background)
+            return await self.factory_swarm.app.routes[2].endpoint(
+                tool_call, background
+            )
 
         @self.app.get("/factory/evolution")
         async def factory_evolution():
             """Get Factory AI evolution metrics"""
             if not self.factory_swarm:
-                raise HTTPException(status_code=503, detail="Factory Swarm not initialized")
+                raise HTTPException(
+                    status_code=503, detail="Factory Swarm not initialized"
+                )
 
             return await self.factory_swarm.app.routes[3].endpoint()
 
@@ -367,7 +398,11 @@ class SophiaAIUnified:
                         "id": "sales_coach",
                         "name": "Sales Coach",
                         "description": "Pipeline optimization and deal coaching",
-                        "capabilities": ["deal_analysis", "pipeline_health", "sales_coaching"],
+                        "capabilities": [
+                            "deal_analysis",
+                            "pipeline_health",
+                            "sales_coaching",
+                        ],
                     },
                     {
                         "id": "customer_support",
@@ -383,19 +418,31 @@ class SophiaAIUnified:
                         "id": "client_health",
                         "name": "Client Health Agent",
                         "description": "Account health and retention analysis",
-                        "capabilities": ["health_scoring", "retention_analysis", "risk_assessment"],
+                        "capabilities": [
+                            "health_scoring",
+                            "retention_analysis",
+                            "risk_assessment",
+                        ],
                     },
                     {
                         "id": "product_strategist",
                         "name": "Product Strategist",
                         "description": "Feature analysis and roadmap insights",
-                        "capabilities": ["feature_analysis", "roadmap_planning", "user_feedback"],
+                        "capabilities": [
+                            "feature_analysis",
+                            "roadmap_planning",
+                            "user_feedback",
+                        ],
                     },
                     {
                         "id": "database_master",
                         "name": "Database Master",
                         "description": "Data analysis and query optimization",
-                        "capabilities": ["data_analysis", "query_optimization", "reporting"],
+                        "capabilities": [
+                            "data_analysis",
+                            "query_optimization",
+                            "reporting",
+                        ],
                     },
                     {
                         "id": "ceo_coach",
@@ -442,7 +489,10 @@ class SophiaAIUnified:
                 {"query": message, "type": "product_strategy"}, context
             )
         else:
-            return {"error": "Factory Swarm not available", "agent": "product_strategist"}
+            return {
+                "error": "Factory Swarm not available",
+                "agent": "product_strategist",
+            }
 
     async def _handle_database_master(self, message: str, context: Dict) -> Dict:
         """Handle database master queries"""
@@ -466,21 +516,32 @@ class SophiaAIUnified:
         message_lower = message.lower()
 
         # Simple keyword-based routing (can be enhanced with ML)
-        if any(word in message_lower for word in ["deal", "pipeline", "sales", "revenue"]):
+        if any(
+            word in message_lower for word in ["deal", "pipeline", "sales", "revenue"]
+        ):
             return await self._handle_sales_coach(message, context)
         elif any(
-            word in message_lower for word in ["support", "ticket", "customer", "satisfaction"]
+            word in message_lower
+            for word in ["support", "ticket", "customer", "satisfaction"]
         ):
             return await self._handle_customer_support(message, context)
-        elif any(word in message_lower for word in ["health", "retention", "churn", "risk"]):
+        elif any(
+            word in message_lower for word in ["health", "retention", "churn", "risk"]
+        ):
             return await self._handle_client_health(message, context)
         elif any(
-            word in message_lower for word in ["product", "feature", "roadmap", "development"]
+            word in message_lower
+            for word in ["product", "feature", "roadmap", "development"]
         ):
             return await self._handle_product_strategist(message, context)
-        elif any(word in message_lower for word in ["data", "query", "database", "analytics"]):
+        elif any(
+            word in message_lower for word in ["data", "query", "database", "analytics"]
+        ):
             return await self._handle_database_master(message, context)
-        elif any(word in message_lower for word in ["strategic", "executive", "ceo", "leadership"]):
+        elif any(
+            word in message_lower
+            for word in ["strategic", "executive", "ceo", "leadership"]
+        ):
             return await self._handle_ceo_coach(message, context)
         else:
             # Default to CEO coach for general queries

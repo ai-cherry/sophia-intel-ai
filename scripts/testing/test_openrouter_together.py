@@ -49,7 +49,9 @@ def test_provider(provider_name, config):
         print(f"\n🧪 Testing model: {model}")
 
         try:
-            client = Portkey(api_key=os.environ["PORTKEY_API_KEY"], virtual_key=config["vk"])
+            client = Portkey(
+                api_key=os.environ["PORTKEY_API_KEY"], virtual_key=config["vk"]
+            )
 
             start_time = time.time()
 
@@ -67,7 +69,9 @@ def test_provider(provider_name, config):
                 "model": model,
                 "status": "success",
                 "response": (
-                    response.choices[0].message.content if response.choices else "No response"
+                    response.choices[0].message.content
+                    if response.choices
+                    else "No response"
                 ),
                 "latency_ms": latency_ms,
             }
@@ -127,7 +131,9 @@ def main():
                 print(f"    - {r['model']}")
 
     # Save results
-    output_file = f"openrouter_together_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = (
+        f"openrouter_together_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(output_file, "w") as f:
         json.dump(all_results, f, indent=2)
 

@@ -162,7 +162,8 @@ class NeonMigrationManager:
                 validation_results["passed_checks"] += 1
 
                 validation_results["success"] = (
-                    validation_results["passed_checks"] == validation_results["total_checks"]
+                    validation_results["passed_checks"]
+                    == validation_results["total_checks"]
                 )
 
                 logger.info(
@@ -199,7 +200,9 @@ class NeonMigrationManager:
         self.migration_steps.append(step)
         logger.info(f"Added migration step: {name}")
 
-    async def execute_migration_step(self, step: MigrationStep, connection_string: str) -> bool:
+    async def execute_migration_step(
+        self, step: MigrationStep, connection_string: str
+    ) -> bool:
         """Execute a single migration step"""
 
         with create_memory_operation_span("execute_migration_step", "default") as span:
@@ -262,9 +265,14 @@ class NeonMigrationManager:
             "steps": [],
         }
 
-        with create_memory_operation_span("execute_complete_migration", "default") as span:
+        with create_memory_operation_span(
+            "execute_complete_migration", "default"
+        ) as span:
             span.set_attributes(
-                {"migration_id": self.migration_id, "total_steps": len(self.migration_steps)}
+                {
+                    "migration_id": self.migration_id,
+                    "total_steps": len(self.migration_steps),
+                }
             )
 
             try:
@@ -287,10 +295,14 @@ class NeonMigrationManager:
                         migration_results["failed_steps"] += 1
 
                         # Stop on first failure
-                        logger.error(f"Migration stopped due to failed step: {step.name}")
+                        logger.error(
+                            f"Migration stopped due to failed step: {step.name}"
+                        )
                         break
 
-                migration_results["total_time_ms"] = (time.perf_counter() - self.start_time) * 1000
+                migration_results["total_time_ms"] = (
+                    time.perf_counter() - self.start_time
+                ) * 1000
                 migration_results["success"] = migration_results["failed_steps"] == 0
 
                 if migration_results["success"]:
@@ -324,7 +336,9 @@ class NeonMigrationManager:
         }
 
         # Get completed steps in reverse order
-        completed_steps = [s for s in self.migration_steps if s.status == MigrationStatus.COMPLETED]
+        completed_steps = [
+            s for s in self.migration_steps if s.status == MigrationStatus.COMPLETED
+        ]
         completed_steps.reverse()
 
         rollback_results["total_steps"] = len(completed_steps)
@@ -348,7 +362,11 @@ class NeonMigrationManager:
 
                             rollback_results["completed_steps"] += 1
                             rollback_results["steps"].append(
-                                {"id": step.id, "name": step.name, "status": "rolled_back"}
+                                {
+                                    "id": step.id,
+                                    "name": step.name,
+                                    "status": "rolled_back",
+                                }
                             )
 
                             logger.info(f"✅ Rolled back step: {step.name}")
@@ -364,7 +382,9 @@ class NeonMigrationManager:
                                 }
                             )
 
-                            logger.error(f"❌ Rollback failed for step: {step.name} - {e}")
+                            logger.error(
+                                f"❌ Rollback failed for step: {step.name} - {e}"
+                            )
 
                 finally:
                     await conn.close()
@@ -387,7 +407,10 @@ class NeonMigrationManager:
                 return rollback_results
 
     async def canary_deployment(
-        self, production_connection: str, shadow_connection: str, traffic_percentage: float = 5.0
+        self,
+        production_connection: str,
+        shadow_connection: str,
+        traffic_percentage: float = 5.0,
     ) -> Dict[str, Any]:
         """
         Execute canary deployment with traffic monitoring
@@ -408,7 +431,10 @@ class NeonMigrationManager:
 
         with create_memory_operation_span("canary_deployment", "default") as span:
             span.set_attributes(
-                {"canary_id": canary_results["canary_id"], "traffic_percentage": traffic_percentage}
+                {
+                    "canary_id": canary_results["canary_id"],
+                    "traffic_percentage": traffic_percentage,
+                }
             )
 
             try:
@@ -439,10 +465,14 @@ class NeonMigrationManager:
                     <= canary_results["metrics"]["error_rate_production"] * 1.1
                 )
 
-                canary_results["success"] = performance_acceptable and error_rate_acceptable
+                canary_results["success"] = (
+                    performance_acceptable and error_rate_acceptable
+                )
 
                 if canary_results["success"]:
-                    logger.info("✅ Canary deployment successful - proceeding with full cutover")
+                    logger.info(
+                        "✅ Canary deployment successful - proceeding with full cutover"
+                    )
                 else:
                     logger.warning("⚠️ Canary deployment failed - aborting migration")
 
@@ -561,7 +591,9 @@ class NeonMigrationManager:
 
         try:
             # In real implementation, this would call Neon API to delete branch
-            logger.info(f"🧹 Cleaning up shadow branch: {self.shadow_branch.branch_name}")
+            logger.info(
+                f"🧹 Cleaning up shadow branch: {self.shadow_branch.branch_name}"
+            )
 
             # Simulate cleanup
             await asyncio.sleep(1)
@@ -581,22 +613,34 @@ class NeonMigrationManager:
             "migration_id": self.migration_id,
             "status": (
                 "completed"
-                if all(s.status == MigrationStatus.COMPLETED for s in self.migration_steps)
+                if all(
+                    s.status == MigrationStatus.COMPLETED for s in self.migration_steps
+                )
                 else "in_progress"
             ),
             "total_steps": len(self.migration_steps),
             "completed_steps": len(
-                [s for s in self.migration_steps if s.status == MigrationStatus.COMPLETED]
+                [
+                    s
+                    for s in self.migration_steps
+                    if s.status == MigrationStatus.COMPLETED
+                ]
             ),
             "failed_steps": len(
                 [s for s in self.migration_steps if s.status == MigrationStatus.FAILED]
             ),
             "shadow_branch": {
                 "active": self.shadow_branch is not None,
-                "branch_name": self.shadow_branch.branch_name if self.shadow_branch else None,
-                "branch_id": self.shadow_branch.branch_id if self.shadow_branch else None,
+                "branch_name": (
+                    self.shadow_branch.branch_name if self.shadow_branch else None
+                ),
+                "branch_id": (
+                    self.shadow_branch.branch_id if self.shadow_branch else None
+                ),
             },
-            "total_execution_time_ms": sum(s.execution_time_ms for s in self.migration_steps),
+            "total_execution_time_ms": sum(
+                s.execution_time_ms for s in self.migration_steps
+            ),
             "steps": [
                 {
                     "id": s.id,

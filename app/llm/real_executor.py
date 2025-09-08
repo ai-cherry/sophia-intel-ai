@@ -9,7 +9,10 @@ from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any, Optional
 
-from app.api.advanced_gateway_2025 import AdvancedAIGateway2025, TaskType  # Corrected import
+from app.api.advanced_gateway_2025 import (
+    AdvancedAIGateway2025,
+    TaskType,
+)  # Corrected import
 from app.elite_portkey_config import EliteAgentConfig  # For model configs
 from app.llm.response_models import LLMResponse, ResponseStatus, TokenStats
 
@@ -54,7 +57,9 @@ class RealLLMExecutor:
     """Execute real LLM calls through Portkey gateway."""
 
     def __init__(self):
-        self.gateway: AdvancedAIGateway2025 = AdvancedAIGateway2025()  # Use the new gateway
+        self.gateway: AdvancedAIGateway2025 = (
+            AdvancedAIGateway2025()
+        )  # Use the new gateway
         self.session_id = None
 
     async def execute(
@@ -103,11 +108,15 @@ class RealLLMExecutor:
         # Try each model in the fallback chain
         for model in fallback_models:
             try:
-                logger.info(f"Attempting LLM call: model={model}, pool={model_pool}, role={role}")
+                logger.info(
+                    f"Attempting LLM call: model={model}, pool={model_pool}, role={role}"
+                )
 
                 if stream:
                     # For now, streaming returns dict - update streaming to return LLMResponse
-                    result = await self._execute_streaming(messages, model, temperature, role)
+                    result = await self._execute_streaming(
+                        messages, model, temperature, role
+                    )
                     return LLMResponse(
                         content=result.get("content", ""),
                         success=result.get("success", False),
@@ -144,7 +153,11 @@ class RealLLMExecutor:
             except Exception as e:
                 logger.warning(f"Model {model} failed: {e}")
                 attempts.append(
-                    {"model": model, "error": str(e), "timestamp": datetime.now().isoformat()}
+                    {
+                        "model": model,
+                        "error": str(e),
+                        "timestamp": datetime.now().isoformat(),
+                    }
                 )
                 last_error = str(e)
                 continue
@@ -190,7 +203,11 @@ class RealLLMExecutor:
             full_content = ""
             async for chunk in stream_response:
                 # Assuming Portkey's streamed chunks have a 'choices' attribute
-                if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                if (
+                    chunk.choices
+                    and chunk.choices[0].delta
+                    and chunk.choices[0].delta.content
+                ):
                     content_chunk = chunk.choices[0].delta.content
                     full_content += content_chunk
                     yield {
@@ -244,7 +261,9 @@ class RealLLMExecutor:
                 temperature=temperature,
             )
 
-            content = response.get("choices", [{}])[0].get("message", {}).get("content", "")
+            content = (
+                response.get("choices", [{}])[0].get("message", {}).get("content", "")
+            )
 
             # Extract token stats if available
             metrics = response.get("metrics", {})
@@ -266,12 +285,17 @@ class RealLLMExecutor:
                 latency_ms=latency_ms,
                 token_stats=token_stats,
                 estimated_cost=token_stats.cost_estimate,
-                metadata={"role": role.value if role else None, "temperature": temperature},
+                metadata={
+                    "role": role.value if role else None,
+                    "temperature": temperature,
+                },
             )
 
         except Exception as e:
             logger.error(f"Non-streaming execution failed: {e}")
-            return LLMResponse.from_error(error=str(e), error_code="LLM_EXECUTION_ERROR")
+            return LLMResponse.from_error(
+                error=str(e), error_code="LLM_EXECUTION_ERROR"
+            )
 
     def _select_model(self, pool: str, role: Optional[Role]) -> str:
         """Select appropriate model based on pool and role from EliteAgentConfig."""
@@ -410,7 +434,9 @@ class RealLLMExecutor:
                 "error": str(e),
             }
 
-    def _build_coding_prompt(self, task: str, role: Role, context: Optional[dict[str, Any]]) -> str:
+    def _build_coding_prompt(
+        self, task: str, role: Role, context: Optional[dict[str, Any]]
+    ) -> str:
         """Build role-specific coding prompt."""
         base_prompts = {
             Role.PLANNER: f"""You are a technical planner. Analyze this coding task and create a structured plan:
@@ -479,7 +505,9 @@ Provide execution details and any issues found.""",
         # Add context if provided
         if context:
             if context.get("memory_results"):
-                prompt += f"\n\nRelevant context from memory:\n{context['memory_results']}"
+                prompt += (
+                    f"\n\nRelevant context from memory:\n{context['memory_results']}"
+                )
             if context.get("code_search_results"):
                 prompt += f"\n\nRelevant code from repository:\n{context['code_search_results']}"
             if context.get("conversation_history"):
@@ -488,7 +516,9 @@ Provide execution details and any issues found.""",
         return prompt
 
     @with_circuit_breaker("external_api")
-    async def embed_text(self, texts: list[str], strategy: str = "auto") -> list[list[float]]:
+    async def embed_text(
+        self, texts: list[str], strategy: str = "auto"
+    ) -> list[list[float]]:
         """Generate embeddings for text using unified coordinator with graceful fallback."""
         # Prefer the local unified coordinator (embed_router + cache) when available
         try:
@@ -497,7 +527,9 @@ Provide execution details and any issues found.""",
                 import asyncio
 
                 coordinator = get_embedding_coordinator()
-                result = await asyncio.to_thread(coordinator.generate_embeddings, texts, strategy)
+                result = await asyncio.to_thread(
+                    coordinator.generate_embeddings, texts, strategy
+                )
                 embeddings = result.get("embeddings", [])
                 if embeddings:
                     logger.info(
@@ -505,7 +537,9 @@ Provide execution details and any issues found.""",
                     )
                     return embeddings
         except Exception as e:
-            logger.warning(f"Coordinator embedding failed, falling back to gateway: {e}")
+            logger.warning(
+                f"Coordinator embedding failed, falling back to gateway: {e}"
+            )
         # Fallback to gateway (Portkey) if coordinator not available or failed
         try:
             embeddings_response = await self.gateway.generate_embeddings(texts)
@@ -531,7 +565,9 @@ real_executor = RealLLMExecutor()
 
 
 # Backward compatibility functions
-async def execute_with_real_llm(problem: dict, agents: list[str], pool: str = "balanced") -> dict:
+async def execute_with_real_llm(
+    problem: dict, agents: list[str], pool: str = "balanced"
+) -> dict:
     """Execute problem with real LLM calls (backward compatible)."""
     try:
         # Convert old format to new
@@ -550,7 +586,10 @@ async def execute_with_real_llm(problem: dict, agents: list[str], pool: str = "b
 
         # Execute with real LLM
         result = await real_executor.execute(
-            prompt=task, model_pool=pool, role=agent_role, context=problem.get("context")
+            prompt=task,
+            model_pool=pool,
+            role=agent_role,
+            context=problem.get("context"),
         )
 
         return {

@@ -386,7 +386,9 @@ class ArtemisSwarmExecutor:
         }
 
         # Save report to file
-        report_path = Path(f"artemis_audit_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+        report_path = Path(
+            f"artemis_audit_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(report_path, "w") as f:
             json.dump(report, f, indent=2, default=str)
 

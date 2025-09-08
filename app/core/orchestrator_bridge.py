@@ -210,7 +210,9 @@ class EnhancedOrchestratorBridge:
         self.routing_decisions: deque = deque(maxlen=500)
 
         # Performance monitoring
-        self.performance_samples: dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self.performance_samples: dict[str, deque] = defaultdict(
+            lambda: deque(maxlen=100)
+        )
         self.bottlenecks: list[PerformanceBottleneck] = []
 
         # Threading locks
@@ -248,7 +250,9 @@ class EnhancedOrchestratorBridge:
             last_heartbeat=datetime.utcnow(),
         )
 
-        logger.info(f"Registered {orchestrator_type.value} orchestrator: {orchestrator_id}")
+        logger.info(
+            f"Registered {orchestrator_type.value} orchestrator: {orchestrator_id}"
+        )
 
     def unregister_orchestrator(self, orchestrator_id: str) -> None:
         """Unregister an orchestrator from the bridge"""
@@ -261,7 +265,10 @@ class EnhancedOrchestratorBridge:
     # ==================== TASK ROUTING ====================
 
     def route_task(
-        self, task: Task, source_orchestrator_id: str, preferred_target: Optional[str] = None
+        self,
+        task: Task,
+        source_orchestrator_id: str,
+        preferred_target: Optional[str] = None,
     ) -> TaskRoutingDecision:
         """
         Route a task to the optimal orchestrator based on the routing strategy
@@ -281,9 +288,15 @@ class EnhancedOrchestratorBridge:
                     source_orchestrator=source_orchestrator_id,
                     target_orchestrator=target_orchestrator_id,
                     routing_strategy=self.routing_strategy,
-                    decision_reason=self._get_routing_reason(task, target_orchestrator_id),
-                    confidence=self._calculate_routing_confidence(task, target_orchestrator_id),
-                    expected_performance=self._estimate_performance(task, target_orchestrator_id),
+                    decision_reason=self._get_routing_reason(
+                        task, target_orchestrator_id
+                    ),
+                    confidence=self._calculate_routing_confidence(
+                        task, target_orchestrator_id
+                    ),
+                    expected_performance=self._estimate_performance(
+                        task, target_orchestrator_id
+                    ),
                 )
 
                 # Record routing decision
@@ -300,7 +313,11 @@ class EnhancedOrchestratorBridge:
                     task_id=task.id,
                     source_orchestrator=source_orchestrator_id,
                     target_orchestrator=target_orchestrator_id,
-                    task_type=task.type.value if hasattr(task.type, "value") else str(task.type),
+                    task_type=(
+                        task.type.value
+                        if hasattr(task.type, "value")
+                        else str(task.type)
+                    ),
                     priority=task.priority,
                     pay_ready_context=self._is_pay_ready_task(task),
                     metadata={
@@ -326,7 +343,10 @@ class EnhancedOrchestratorBridge:
                 raise
 
     def _select_target_orchestrator(
-        self, task: Task, source_orchestrator_id: str, preferred_target: Optional[str] = None
+        self,
+        task: Task,
+        source_orchestrator_id: str,
+        preferred_target: Optional[str] = None,
     ) -> str:
         """Select the best target orchestrator for a task"""
 
@@ -342,7 +362,9 @@ class EnhancedOrchestratorBridge:
         if not available_orchestrators:
             # Fallback: use least overloaded orchestrator
             available_orchestrators = [
-                orch_id for orch_id in self.orchestrators if orch_id != source_orchestrator_id
+                orch_id
+                for orch_id in self.orchestrators
+                if orch_id != source_orchestrator_id
             ]
 
         if not available_orchestrators:
@@ -478,20 +500,29 @@ class EnhancedOrchestratorBridge:
     def get_coordination_metrics(self) -> dict[str, Any]:
         """Get comprehensive coordination metrics"""
         with self.metrics_lock:
-            total_tasks = sum(m.active_tasks for m in self.orchestrator_metrics.values())
-            total_capacity = sum(m.max_tasks for m in self.orchestrator_metrics.values())
+            total_tasks = sum(
+                m.active_tasks for m in self.orchestrator_metrics.values()
+            )
+            total_capacity = sum(
+                m.max_tasks for m in self.orchestrator_metrics.values()
+            )
             total_queue = sum(m.queue_size for m in self.orchestrator_metrics.values())
 
             avg_response_time = (
                 statistics.mean(
-                    [m.average_response_time_ms for m in self.orchestrator_metrics.values()]
+                    [
+                        m.average_response_time_ms
+                        for m in self.orchestrator_metrics.values()
+                    ]
                 )
                 if self.orchestrator_metrics
                 else 0.0
             )
 
             avg_success_rate = (
-                statistics.mean([m.success_rate for m in self.orchestrator_metrics.values()])
+                statistics.mean(
+                    [m.success_rate for m in self.orchestrator_metrics.values()]
+                )
                 if self.orchestrator_metrics
                 else 100.0
             )
@@ -505,7 +536,9 @@ class EnhancedOrchestratorBridge:
                 ),
                 "bridge_health_score": self.bridge_metrics.health_score,
                 "synchronization_lag_ms": self._calculate_sync_lag(),
-                "active_bottlenecks": len([b for b in self.bottlenecks if not b.resolved_at]),
+                "active_bottlenecks": len(
+                    [b for b in self.bottlenecks if not b.resolved_at]
+                ),
                 "success_rate_percent": avg_success_rate,
                 "peak_throughput": self._calculate_peak_throughput(),
                 "last_updated": datetime.utcnow().isoformat(),
@@ -533,7 +566,9 @@ class EnhancedOrchestratorBridge:
                         severity="high" if metrics.queue_size >= 8 else "medium",
                         orchestrator_affected=orch_id,
                         description=f"{orch_id} queue approaching capacity with {metrics.queue_size} tasks",
-                        impact_score=min(10.0, metrics.queue_size / metrics.max_tasks * 10),
+                        impact_score=min(
+                            10.0, metrics.queue_size / metrics.max_tasks * 10
+                        ),
                         suggested_actions=[
                             "Consider scaling orchestrator instances",
                             "Implement task redistribution",
@@ -590,7 +625,14 @@ class EnhancedOrchestratorBridge:
 
     def _is_pay_ready_task(self, task: Task) -> bool:
         """Check if task is related to Pay Ready business context"""
-        pay_ready_keywords = ["pay_ready", "payment", "billing", "revenue", "sales", "business"]
+        pay_ready_keywords = [
+            "pay_ready",
+            "payment",
+            "billing",
+            "revenue",
+            "sales",
+            "business",
+        ]
         task_content = str(task.content).lower()
         return any(keyword in task_content for keyword in pay_ready_keywords)
 
@@ -610,12 +652,17 @@ class EnhancedOrchestratorBridge:
 
     def _get_routing_reason(self, task: Task, target_orchestrator: str) -> str:
         """Get human-readable reason for routing decision"""
-        target_type = self.orchestrator_types.get(target_orchestrator, OrchestratorType.HYBRID)
+        target_type = self.orchestrator_types.get(
+            target_orchestrator, OrchestratorType.HYBRID
+        )
 
         if self.routing_strategy == TaskRoutingStrategy.DOMAIN_AFFINITY:
             if self._is_pay_ready_task(task) and target_type == OrchestratorType.SOPHIA:
                 return "Pay Ready context requires Sophia business intelligence"
-            elif self._is_technical_task(task) and target_type == OrchestratorType.ARTEMIS:
+            elif (
+                self._is_technical_task(task)
+                and target_type == OrchestratorType.ARTEMIS
+            ):
                 return "Technical task routed to Artemis code excellence"
 
         if self.routing_strategy == TaskRoutingStrategy.LEAST_LOADED:
@@ -623,7 +670,9 @@ class EnhancedOrchestratorBridge:
 
         return f"Routed via {self.routing_strategy.value} strategy"
 
-    def _calculate_routing_confidence(self, task: Task, target_orchestrator: str) -> float:
+    def _calculate_routing_confidence(
+        self, task: Task, target_orchestrator: str
+    ) -> float:
         """Calculate confidence score for routing decision"""
         metrics = self.orchestrator_metrics.get(target_orchestrator)
         if not metrics:
@@ -639,10 +688,12 @@ class EnhancedOrchestratorBridge:
         # Domain affinity bonus
         if (
             self._is_pay_ready_task(task)
-            and self.orchestrator_types.get(target_orchestrator) == OrchestratorType.SOPHIA
+            and self.orchestrator_types.get(target_orchestrator)
+            == OrchestratorType.SOPHIA
         ) or (
             self._is_technical_task(task)
-            and self.orchestrator_types.get(target_orchestrator) == OrchestratorType.ARTEMIS
+            and self.orchestrator_types.get(target_orchestrator)
+            == OrchestratorType.ARTEMIS
         ):
             confidence *= 1.1
 
@@ -690,7 +741,8 @@ class EnhancedOrchestratorBridge:
         """Calculate synchronization lag in milliseconds"""
         # Mock calculation - in production would measure actual sync times
         return int(
-            self.bridge_metrics.serialization_time_ms + self.bridge_metrics.deserialization_time_ms
+            self.bridge_metrics.serialization_time_ms
+            + self.bridge_metrics.deserialization_time_ms
         )
 
     def _calculate_peak_throughput(self) -> float:
@@ -699,7 +751,9 @@ class EnhancedOrchestratorBridge:
         now = time.time()
         peak_throughput = 0.0
 
-        for window_start in range(int(now - 300), int(now), 60):  # 5-minute window, 1-minute steps
+        for window_start in range(
+            int(now - 300), int(now), 60
+        ):  # 5-minute window, 1-minute steps
             window_tasks = [
                 event
                 for event in self.task_history
@@ -745,7 +799,9 @@ class EnhancedOrchestratorBridge:
         except Exception as e:
             logger.error(f"Failed to broadcast task event: {e}")
 
-    async def _broadcast_bottleneck_alert(self, bottlenecks: list[PerformanceBottleneck]) -> None:
+    async def _broadcast_bottleneck_alert(
+        self, bottlenecks: list[PerformanceBottleneck]
+    ) -> None:
         """Broadcast bottleneck alert via WebSocket"""
         if not self.websocket_manager:
             return
@@ -786,7 +842,9 @@ class EnhancedOrchestratorBridge:
             self.monitoring_task = asyncio.create_task(self._monitoring_loop())
 
         if self.enable_metrics:
-            self.metrics_collection_task = asyncio.create_task(self._metrics_collection_loop())
+            self.metrics_collection_task = asyncio.create_task(
+                self._metrics_collection_loop()
+            )
 
         logger.info("Enhanced Orchestrator Bridge started")
 
@@ -857,7 +915,9 @@ class EnhancedOrchestratorBridge:
 
             # Overall health score
             self.bridge_metrics.health_score = (
-                success_rate_factor * 0.3 + performance_factor * 0.2 + avg_orchestrator_health * 0.5
+                success_rate_factor * 0.3
+                + performance_factor * 0.2
+                + avg_orchestrator_health * 0.5
             ) * 100
 
             # Update health status
@@ -898,7 +958,9 @@ class EnhancedOrchestratorBridge:
 
             # Store in Redis with expiration (keep 7 days of metrics)
             await self.redis_manager.setex(
-                f"coordination_metrics:{timestamp}", 604800, json.dumps(metrics_data)  # 7 days
+                f"coordination_metrics:{timestamp}",
+                604800,
+                json.dumps(metrics_data),  # 7 days
             )
 
         except Exception as e:
@@ -909,7 +971,9 @@ class EnhancedOrchestratorBridge:
 
 
 def create_orchestrator_bridge(
-    redis_manager: RedisManager, websocket_manager: Optional[WebSocketManager] = None, **kwargs
+    redis_manager: RedisManager,
+    websocket_manager: Optional[WebSocketManager] = None,
+    **kwargs,
 ) -> EnhancedOrchestratorBridge:
     """Factory function to create an enhanced orchestrator bridge"""
     return EnhancedOrchestratorBridge(

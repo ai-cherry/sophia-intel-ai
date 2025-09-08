@@ -21,7 +21,9 @@ class MemoryConfig(BaseSettings):
     redis_ttl: int = Field(default=86400, env="MEMORY_REDIS_TTL")  # 24 hours
 
     # Weaviate Configuration
-    weaviate_url: str = Field(default="http://localhost:8080", env="MEMORY_WEAVIATE_URL")
+    weaviate_url: str = Field(
+        default="http://localhost:8080", env="MEMORY_WEAVIATE_URL"
+    )
     weaviate_api_key: Optional[str] = Field(default=None, env="MEMORY_WEAVIATE_API_KEY")
     weaviate_timeout: int = Field(default=10, env="MEMORY_WEAVIATE_TIMEOUT")
 
@@ -45,7 +47,9 @@ class MemoryConfig(BaseSettings):
     api_key: Optional[str] = Field(default=None, env="MEMORY_API_KEY")
     rate_limit_enabled: bool = Field(default=True, env="MEMORY_RATE_LIMIT_ENABLED")
     rate_limit_requests: int = Field(default=100, env="MEMORY_RATE_LIMIT_REQUESTS")
-    rate_limit_period: int = Field(default=60, env="MEMORY_RATE_LIMIT_PERIOD")  # seconds
+    rate_limit_period: int = Field(
+        default=60, env="MEMORY_RATE_LIMIT_PERIOD"
+    )  # seconds
 
     # Logging Configuration
     log_level: str = Field(default="INFO", env="MEMORY_LOG_LEVEL")

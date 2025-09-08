@@ -17,7 +17,9 @@ import logging
 
 from app.core.portkey_config import AgentRole, ModelProvider, portkey_manager
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +34,9 @@ def test_provider_configuration():
     for provider, config in status.items():
         print(f"\n{provider.upper()}:")
         print(f"  Virtual Key: {config['virtual_key']}")
-        print(f"  Models: {', '.join(config['models']) if config['models'] else 'None'}")
+        print(
+            f"  Models: {', '.join(config['models']) if config['models'] else 'None'}"
+        )
         print(
             f"  Fallbacks: {', '.join(config['fallback_providers']) if config['fallback_providers'] else 'None'}"
         )
@@ -65,7 +69,8 @@ def test_individual_providers():
         try:
             client = portkey_manager.get_client_for_provider(provider)
             response = client.chat.completions.create(
-                messages=[{"role": "user", "content": "Say 'hello' in one word"}], max_tokens=10
+                messages=[{"role": "user", "content": "Say 'hello' in one word"}],
+                max_tokens=10,
             )
             if response and response.choices:
                 print(f"✓ Success - Response: {response.choices[0].message.content}")

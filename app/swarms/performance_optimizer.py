@@ -51,7 +51,11 @@ class CircuitBreaker:
 
     def _time_since_failure(self) -> float:
         """Time since last failure."""
-        return time.time() - self.last_failure_time if self.last_failure_time else float("inf")
+        return (
+            time.time() - self.last_failure_time
+            if self.last_failure_time
+            else float("inf")
+        )
 
     def _time_until_reset(self) -> float:
         """Time until automatic reset."""
@@ -75,7 +79,9 @@ class CircuitBreaker:
         if self.failure_count >= self.failure_threshold:
             self.state = "open"
             self.success_count = 0
-            logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
+            logger.warning(
+                f"Circuit breaker opened after {self.failure_count} failures"
+            )
 
     def _reset(self):
         """Reset circuit breaker to closed state."""
@@ -100,7 +106,9 @@ class PatternPerformanceMetrics:
     memory_usage_mb: float = 0.0
     last_execution_time: float = 0.0
 
-    def record_execution(self, execution_time: float, success: bool, memory_used_mb: float = 0.0):
+    def record_execution(
+        self, execution_time: float, success: bool, memory_used_mb: float = 0.0
+    ):
         """Record a pattern execution."""
         self.execution_count += 1
         self.total_execution_time += execution_time
@@ -126,7 +134,9 @@ class PatternPerformanceMetrics:
     def is_performing_poorly(self) -> bool:
         """Check if pattern is performing poorly."""
         return (
-            self.success_rate < 0.8 or self.avg_execution_time > 5.0 or self.memory_usage_mb > 200
+            self.success_rate < 0.8
+            or self.avg_execution_time > 5.0
+            or self.memory_usage_mb > 200
         )
 
 
@@ -177,7 +187,10 @@ class GracefulDegradationManager:
                 "alternative": "simple_judge_decision",
                 "quality_impact": -0.1,
             },
-            "debate_failure": {"action": "use_single_round", "alternative": "sequential_critique"},
+            "debate_failure": {
+                "action": "use_single_round",
+                "alternative": "sequential_critique",
+            },
         }
 
     def mark_component_degraded(self, component_name: str, error_message: str = ""):
@@ -187,7 +200,9 @@ class GracefulDegradationManager:
             "error_message": error_message,
             "recovery_attempts": self.recovery_attempts.get(component_name, 0),
         }
-        logger.warning(f"Component {component_name} marked as degraded: {error_message}")
+        logger.warning(
+            f"Component {component_name} marked as degraded: {error_message}"
+        )
 
     def is_component_available(self, component_name: str) -> bool:
         """Check if a component is available."""
@@ -251,7 +266,10 @@ class SwarmOptimizer:
     def _get_default_config(self) -> dict[str, Any]:
         """Default optimization configuration."""
         return {
-            "circuit_breaker_defaults": {"failure_threshold": 3, "recovery_timeout": 30.0},
+            "circuit_breaker_defaults": {
+                "failure_threshold": 3,
+                "recovery_timeout": 30.0,
+            },
             "performance_targets": {"max_execution_time": 60.0, "max_memory_mb": 500},
         }
 
@@ -285,7 +303,14 @@ class SwarmOptimizer:
         # Keyword analysis
         simple_keywords = ["fix", "update", "change", "modify", "add", "remove"]
         medium_keywords = ["implement", "create", "integrate", "optimize", "improve"]
-        complex_keywords = ["architect", "design", "refactor", "scale", "migrate", "enterprise"]
+        complex_keywords = [
+            "architect",
+            "design",
+            "refactor",
+            "scale",
+            "migrate",
+            "enterprise",
+        ]
 
         # Count matches and adjust score
         simple_matches = sum(1 for kw in simple_keywords if kw in task_text)
@@ -313,7 +338,9 @@ class SwarmOptimizer:
         complexity = self.calculate_task_complexity(task)
         return self._get_config_for_complexity(complexity, task)
 
-    def _get_config_for_complexity(self, complexity: float, task: dict[str, Any]) -> dict[str, Any]:
+    def _get_config_for_complexity(
+        self, complexity: float, task: dict[str, Any]
+    ) -> dict[str, Any]:
         """Get configuration based on task complexity."""
         modes = self.config.get("optimization_modes", {})
 
@@ -400,7 +427,10 @@ class SwarmOptimizer:
                 }
             )
 
-        if any(metrics.is_performing_poorly for metrics in self.performance_metrics.values()):
+        if any(
+            metrics.is_performing_poorly
+            for metrics in self.performance_metrics.values()
+        ):
             recommendations["optimization_suggestions"].append(
                 {
                     "type": "patterns",
@@ -435,5 +465,7 @@ async def performance_monitoring(optimizer: SwarmOptimizer, pattern_name: str):
     except Exception:
         # Record failed execution
         execution_time = time.time() - start_time
-        optimizer.get_performance_metrics(pattern_name).record_execution(execution_time, False, 0)
+        optimizer.get_performance_metrics(pattern_name).record_execution(
+            execution_time, False, 0
+        )
         raise

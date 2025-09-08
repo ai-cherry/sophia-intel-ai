@@ -23,7 +23,9 @@ async def main():
         await monitor.start_monitoring()
 
         print("✅ Reliability monitoring system active")
-        print("📊 Monitor available at: http://104.171.202.103:8080/api/reliability/dashboard")
+        print(
+            "📊 Monitor available at: http://104.171.202.103:8080/api/reliability/dashboard"
+        )
         print("🔍 Logs available in: logs/reliability/")
         print("⏹️  Press Ctrl+C to stop monitoring")
 

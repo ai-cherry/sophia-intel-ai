@@ -36,7 +36,9 @@ class StackUtilizationAnalyzer:
             "compose_files_count": len(compose_files),
             "dockerfiles": [str(f) for f in dockerfiles],
             "compose_files": [str(f) for f in compose_files],
-            "usage_assessment": "GOOD" if len(dockerfiles) >= 3 else "NEEDS_IMPROVEMENT",
+            "usage_assessment": (
+                "GOOD" if len(dockerfiles) >= 3 else "NEEDS_IMPROVEMENT"
+            ),
             "optimization_opportunities": [],
         }
 
@@ -151,7 +153,9 @@ class StackUtilizationAnalyzer:
             "pulumi_files": len(pulumi_files),
             "kubernetes_files": len(k8s_files),
             "terraform_files": len(terraform_files),
-            "usage_assessment": "GOOD" if len(pulumi_files) > 0 else "NEEDS_IMPROVEMENT",
+            "usage_assessment": (
+                "GOOD" if len(pulumi_files) > 0 else "NEEDS_IMPROVEMENT"
+            ),
             "optimization_opportunities": [],
         }
 
@@ -317,7 +321,9 @@ class StackUtilizationAnalyzer:
         self.analysis_results["python_stack"] = self.analyze_python_stack()
         self.analysis_results["web_stack"] = self.analyze_web_stack()
         self.analysis_results["database_stack"] = self.analyze_database_stack()
-        self.analysis_results["infrastructure_stack"] = self.analyze_infrastructure_stack()
+        self.analysis_results["infrastructure_stack"] = (
+            self.analyze_infrastructure_stack()
+        )
         self.analysis_results["ai_ml_stack"] = self.analyze_ai_ml_stack()
         self.analysis_results["monitoring_stack"] = self.analyze_monitoring_stack()
 
@@ -328,7 +334,9 @@ class StackUtilizationAnalyzer:
         with open("stack_utilization_analysis.json", "w") as f:
             json.dump(self.analysis_results, f, indent=2)
 
-        print("\n✅ Analysis complete! Results saved to stack_utilization_analysis.json")
+        print(
+            "\n✅ Analysis complete! Results saved to stack_utilization_analysis.json"
+        )
         return self.analysis_results
 
 

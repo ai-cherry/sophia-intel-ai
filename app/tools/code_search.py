@@ -16,7 +16,10 @@ class CodeSearch(Tool):
     parameters = {
         "type": "object",
         "properties": {
-            "query": {"type": "string", "description": "The search query to find relevant code"},
+            "query": {
+                "type": "string",
+                "description": "The search query to find relevant code",
+            },
             "limit": {
                 "type": "integer",
                 "description": "Maximum number of results to return",
@@ -41,7 +44,11 @@ class CodeSearch(Tool):
     @with_circuit_breaker("database")
     @with_circuit_breaker("database")
     async def run(
-        self, query: str, limit: int = 8, semantic_weight: float = 0.65, show_citations: bool = True
+        self,
+        query: str,
+        limit: int = 8,
+        semantic_weight: float = 0.65,
+        show_citations: bool = True,
     ) -> str:
         """
         Search for code using hybrid retrieval from dual collections.
@@ -119,10 +126,16 @@ class SmartCodeSearch(CodeSearch):
     """
 
     name = "smart_code_search"
-    description = "Intelligent code search with query understanding and result reranking"
+    description = (
+        "Intelligent code search with query understanding and result reranking"
+    )
 
     async def run(
-        self, query: str, limit: int = 8, semantic_weight: float = 0.65, show_citations: bool = True
+        self,
+        query: str,
+        limit: int = 8,
+        semantic_weight: float = 0.65,
+        show_citations: bool = True,
     ) -> str:
         """
         Smart search with query expansion and multiple search strategies.
@@ -143,7 +156,8 @@ class SmartCodeSearch(CodeSearch):
                 for word in ["implement", "function", "method", "class", "def", "async"]
             )
             is_usage = any(
-                word in query.lower() for word in ["use", "call", "invoke", "example", "usage"]
+                word in query.lower()
+                for word in ["use", "call", "invoke", "example", "usage"]
             )
             is_error = any(
                 word in query.lower()

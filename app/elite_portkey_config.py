@@ -88,7 +88,9 @@ class ElitePortkeyGateway:
 
         return {"success": True, "routing": routing_decision, "config": agent_config}
 
-    def apply_optimizations(self, agent_id: str, optimizations: list[EliteOptimizations]) -> bool:
+    def apply_optimizations(
+        self, agent_id: str, optimizations: list[EliteOptimizations]
+    ) -> bool:
         """Apply optimizations to an agent"""
         agent_config = self.get_agent_config(agent_id)
 

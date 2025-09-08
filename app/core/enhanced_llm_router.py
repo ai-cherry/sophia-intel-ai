@@ -84,7 +84,9 @@ class EnhancedLLMRouter:
                 ],
             }
 
-            logger.info("Enhanced LLM Router initialized with AIMLAPI, Portkey, and Direct access")
+            logger.info(
+                "Enhanced LLM Router initialized with AIMLAPI, Portkey, and Direct access"
+            )
 
     def get_best_model_for_task(
         self,
@@ -402,7 +404,9 @@ class EnhancedLLMRouter:
                 return self.create_completion(**kwargs)
             except Exception as e:
                 last_error = e
-                logger.warning(f"Fallback attempt with {provider_type} failed: {str(e)}")
+                logger.warning(
+                    f"Fallback attempt with {provider_type} failed: {str(e)}"
+                )
                 continue
 
         raise last_error or Exception("All fallback attempts failed")
@@ -433,7 +437,10 @@ class EnhancedLLMRouter:
                 "providers_count": len(self.portkey.providers),
                 "api_key_set": bool(os.getenv("PORTKEY_API_KEY")),
             },
-            "direct": {"available": True, "providers_count": len(self.keys.direct_api_keys)},
+            "direct": {
+                "available": True,
+                "providers_count": len(self.keys.direct_api_keys),
+            },
         }
         return status
 

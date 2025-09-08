@@ -123,7 +123,9 @@ class KEDAPerformanceBenchmark:
 
         for pod in pods.items:
             if pod.status.phase != "Running":
-                raise RuntimeError(f"KEDA operator pod {pod.metadata.name} is not running")
+                raise RuntimeError(
+                    f"KEDA operator pod {pod.metadata.name} is not running"
+                )
 
         logger.info("KEDA operator verified as healthy")
 
@@ -319,7 +321,9 @@ class KEDAPerformanceBenchmark:
         """Generate realistic mixed load pattern"""
         # Combination of different patterns to simulate real-world scenario
         await asyncio.gather(
-            self._generate_burst_load(), self._generate_gradual_load(), return_exceptions=True
+            self._generate_burst_load(),
+            self._generate_gradual_load(),
+            return_exceptions=True,
         )
 
     async def _create_load_task(self, session: aiohttp.ClientSession, task_id: str):
@@ -328,7 +332,9 @@ class KEDAPerformanceBenchmark:
         await asyncio.sleep(0.01)  # Simulate task creation
         return task_id
 
-    async def _monitor_scaling(self, initial_state: Dict, timeout: int = 120) -> Dict[str, Any]:
+    async def _monitor_scaling(
+        self, initial_state: Dict, timeout: int = 120
+    ) -> Dict[str, Any]:
         """Monitor scaling activity"""
         start_time = time.time()
         scale_events = 0
@@ -383,22 +389,29 @@ class KEDAPerformanceBenchmark:
             "total_tests": len(self.results),
             "valid_tests": len(valid_results),
             "failed_tests": len(self.results) - len(valid_results),
-            "success_rate": sum(1 for r in valid_results if r.success) / len(valid_results) * 100,
+            "success_rate": sum(1 for r in valid_results if r.success)
+            / len(valid_results)
+            * 100,
             "scaling_time": {
                 "mean": statistics.mean(scaling_times),
                 "median": statistics.median(scaling_times),
-                "stdev": statistics.stdev(scaling_times) if len(scaling_times) > 1 else 0,
+                "stdev": (
+                    statistics.stdev(scaling_times) if len(scaling_times) > 1 else 0
+                ),
                 "min": min(scaling_times),
                 "max": max(scaling_times),
                 "p95": np.percentile(scaling_times, 95),
                 "p99": np.percentile(scaling_times, 99),
             },
             "improvement": {
-                "actual": (self.config.baseline_scaling_time - statistics.mean(scaling_times))
+                "actual": (
+                    self.config.baseline_scaling_time - statistics.mean(scaling_times)
+                )
                 / self.config.baseline_scaling_time
                 * 100,
                 "target": self.config.improvement_target,
-                "meets_target": statistics.mean(scaling_times) <= self.config.target_scaling_time,
+                "meets_target": statistics.mean(scaling_times)
+                <= self.config.target_scaling_time,
             },
             "by_profile": {},
         }
@@ -445,12 +458,17 @@ class KEDAPerformanceBenchmark:
                     "keda_version": "2.13.0",
                 },
             },
-            "results": {"summary": analysis, "detailed": [r.to_dict() for r in self.results]},
+            "results": {
+                "summary": analysis,
+                "detailed": [r.to_dict() for r in self.results],
+            },
             "verdict": self._generate_verdict(analysis),
         }
 
         # Save report to file
-        report_filename = f"benchmark_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_filename = (
+            f"benchmark_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(report_filename, "w") as f:
             json.dump(report, f, indent=2, default=str)
 
@@ -485,7 +503,8 @@ class KEDAPerformanceBenchmark:
                 "target": self.config.target_scaling_time,
             },
             "improvement_target": {
-                "pass": analysis["improvement"]["actual"] >= self.config.improvement_target,
+                "pass": analysis["improvement"]["actual"]
+                >= self.config.improvement_target,
                 "actual": analysis["improvement"]["actual"],
                 "target": self.config.improvement_target,
             },
@@ -548,7 +567,12 @@ class MetricsCollector:
 
     async def collect_metrics(self) -> Dict[str, float]:
         """Collect current metrics from Prometheus"""
-        metrics = {"cpu_usage": 0.0, "memory_usage": 0.0, "queue_length": 0, "processing_rate": 0.0}
+        metrics = {
+            "cpu_usage": 0.0,
+            "memory_usage": 0.0,
+            "queue_length": 0,
+            "processing_rate": 0.0,
+        }
 
         async with aiohttp.ClientSession() as session:
             # CPU usage
@@ -556,20 +580,30 @@ class MetricsCollector:
             metrics["cpu_usage"] = await self._query_prometheus(session, cpu_query)
 
             # Memory usage
-            memory_query = "avg(container_memory_working_set_bytes / 1024 / 1024 / 1024)"
-            metrics["memory_usage"] = await self._query_prometheus(session, memory_query)
+            memory_query = (
+                "avg(container_memory_working_set_bytes / 1024 / 1024 / 1024)"
+            )
+            metrics["memory_usage"] = await self._query_prometheus(
+                session, memory_query
+            )
 
             # Queue length (Artemis)
             queue_query = 'redis_list_length{list="artemis:task:queue"}'
-            metrics["queue_length"] = int(await self._query_prometheus(session, queue_query))
+            metrics["queue_length"] = int(
+                await self._query_prometheus(session, queue_query)
+            )
 
             # Processing rate (Sophia)
             rate_query = "sum(rate(sophia_analytics_events_processed_total[1m]))"
-            metrics["processing_rate"] = await self._query_prometheus(session, rate_query)
+            metrics["processing_rate"] = await self._query_prometheus(
+                session, rate_query
+            )
 
         return metrics
 
-    async def _query_prometheus(self, session: aiohttp.ClientSession, query: str) -> float:
+    async def _query_prometheus(
+        self, session: aiohttp.ClientSession, query: str
+    ) -> float:
         """Execute Prometheus query"""
         try:
             async with session.get(
@@ -588,8 +622,12 @@ class MetricsCollector:
 async def main():
     """Main entry point"""
     parser = argparse.ArgumentParser(description="KEDA Performance Benchmark")
-    parser.add_argument("--iterations", type=int, default=10, help="Number of benchmark iterations")
-    parser.add_argument("--warmup", type=int, default=2, help="Number of warmup iterations")
+    parser.add_argument(
+        "--iterations", type=int, default=10, help="Number of benchmark iterations"
+    )
+    parser.add_argument(
+        "--warmup", type=int, default=2, help="Number of warmup iterations"
+    )
     parser.add_argument(
         "--profiles",
         nargs="+",

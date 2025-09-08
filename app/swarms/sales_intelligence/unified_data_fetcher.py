@@ -61,8 +61,13 @@ class GongDataFetcher:
 
     async def get_auth_headers(self) -> dict[str, str]:
         """Get authentication headers for Gong API"""
-        auth_string = base64.b64encode(f"{self.access_key}:{self.client_secret}".encode()).decode()
-        return {"Authorization": f"Basic {auth_string}", "Content-Type": "application/json"}
+        auth_string = base64.b64encode(
+            f"{self.access_key}:{self.client_secret}".encode()
+        ).decode()
+        return {
+            "Authorization": f"Basic {auth_string}",
+            "Content-Type": "application/json",
+        }
 
     async def fetch_calls_data(self, days_back: int = 7) -> PlatformData:
         """Fetch recent calls data from Gong"""
@@ -75,7 +80,9 @@ class GongDataFetcher:
                 calls_url = f"{self.base_url}/v2/calls"
                 params = {"fromDateTime": from_date, "limit": 100}
 
-                async with session.get(calls_url, headers=headers, params=params) as response:
+                async with session.get(
+                    calls_url, headers=headers, params=params
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
                         calls = data.get("calls", [])
@@ -89,7 +96,9 @@ class GongDataFetcher:
                             metadata={
                                 "api_url": self.base_url,
                                 "days_back": days_back,
-                                "company": self.config.get("stats", {}).get("company", "Unknown"),
+                                "company": self.config.get("stats", {}).get(
+                                    "company", "Unknown"
+                                ),
                             },
                         )
                     else:
@@ -121,7 +130,10 @@ class AsanaDataFetcher:
 
     async def get_auth_headers(self) -> dict[str, str]:
         """Get authentication headers for Asana API"""
-        return {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"}
+        return {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+        }
 
     async def fetch_workspace_data(self) -> PlatformData:
         """Fetch workspace and project data from Asana"""
@@ -159,7 +171,9 @@ class AsanaDataFetcher:
                             last_updated=datetime.now(),
                             metadata={
                                 "workspaces": len(workspaces),
-                                "workspace_names": [w.get("name", "") for w in workspaces],
+                                "workspace_names": [
+                                    w.get("name", "") for w in workspaces
+                                ],
                             },
                         )
                     else:
@@ -226,7 +240,9 @@ class LinearDataFetcher:
 
             async with (
                 aiohttp.ClientSession() as session,
-                session.post(self.base_url, headers=headers, json={"query": query}) as response,
+                session.post(
+                    self.base_url, headers=headers, json={"query": query}
+                ) as response,
             ):
                 if response.status == 200:
                     data = await response.json()
@@ -292,7 +308,9 @@ class NotionDataFetcher:
                 search_url = f"{self.base_url}/search"
                 search_body = {"filter": {"property": "object", "value": "database"}}
 
-                async with session.post(search_url, headers=headers, json=search_body) as response:
+                async with session.post(
+                    search_url, headers=headers, json=search_body
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
                         databases = data.get("results", [])
@@ -305,7 +323,9 @@ class NotionDataFetcher:
                             last_updated=datetime.now(),
                             metadata={
                                 "database_names": [
-                                    db.get("title", [{}])[0].get("plain_text", "Untitled")
+                                    db.get("title", [{}])[0].get(
+                                        "plain_text", "Untitled"
+                                    )
                                     for db in databases
                                 ]
                             },
@@ -339,7 +359,10 @@ class HubSpotDataFetcher:
 
     async def get_auth_headers(self) -> dict[str, str]:
         """Get authentication headers for HubSpot API"""
-        return {"Authorization": f"Bearer {self.token}", "Content-Type": "application/json"}
+        return {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+        }
 
     async def fetch_contacts_data(self) -> PlatformData:
         """Fetch contacts and deals data from HubSpot"""
@@ -351,7 +374,9 @@ class HubSpotDataFetcher:
                 contacts_url = f"{self.base_url}/crm/v3/objects/contacts"
                 params = {"limit": 100}
 
-                async with session.get(contacts_url, headers=headers, params=params) as response:
+                async with session.get(
+                    contacts_url, headers=headers, params=params
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
                         contacts = data.get("results", [])
@@ -433,7 +458,9 @@ class UnifiedDataFetcher:
         fetch_tasks = []
 
         if "gong" in self.fetchers:
-            fetch_tasks.append(self._safe_fetch("gong", self.fetchers["gong"].fetch_calls_data()))
+            fetch_tasks.append(
+                self._safe_fetch("gong", self.fetchers["gong"].fetch_calls_data())
+            )
 
         if "asana" in self.fetchers:
             fetch_tasks.append(
@@ -447,12 +474,16 @@ class UnifiedDataFetcher:
 
         if "notion" in self.fetchers:
             fetch_tasks.append(
-                self._safe_fetch("notion", self.fetchers["notion"].fetch_databases_data())
+                self._safe_fetch(
+                    "notion", self.fetchers["notion"].fetch_databases_data()
+                )
             )
 
         if "hubspot" in self.fetchers:
             fetch_tasks.append(
-                self._safe_fetch("hubspot", self.fetchers["hubspot"].fetch_contacts_data())
+                self._safe_fetch(
+                    "hubspot", self.fetchers["hubspot"].fetch_contacts_data()
+                )
             )
 
         # Execute all fetches concurrently
@@ -467,7 +498,9 @@ class UnifiedDataFetcher:
                 setattr(summary, platform_name, platform_data)
                 total_records += platform_data.count
                 connected_platforms += 1
-                logger.info(f"Fetched {platform_data.count} records from {platform_name}")
+                logger.info(
+                    f"Fetched {platform_data.count} records from {platform_name}"
+                )
 
         summary.total_records = total_records
         summary.connected_platforms = connected_platforms

@@ -153,13 +153,20 @@ class SmartCommandDispatcher:
         return {
             "complexity_thresholds": {"lite": 0.3, "balanced": 0.7},
             "swarm_eligible_intents": ["EXECUTE_WORKFLOW", "QUERY_DATA", "RUN_AGENT"],
-            "memory_enrichment": {"enabled": True, "max_history": 10, "include_similar": True},
+            "memory_enrichment": {
+                "enabled": True,
+                "max_history": 10,
+                "include_similar": True,
+            },
             "optimization": {
                 "auto_adjust_mode": True,
                 "performance_target_ms": 5000,
                 "quality_target": 0.8,
             },
-            "fallback": {"enable_graceful_degradation": True, "fallback_to_simple": True},
+            "fallback": {
+                "enable_graceful_degradation": True,
+                "fallback_to_simple": True,
+            },
         }
 
     async def process_command(
@@ -196,12 +203,19 @@ class SmartCommandDispatcher:
             logger.info(f"Selected execution mode: {execution_mode.value}")
 
             # Route to appropriate handler
-            if self._is_swarm_eligible(enriched_command) and execution_mode != ExecutionMode.LITE:
+            if (
+                self._is_swarm_eligible(enriched_command)
+                and execution_mode != ExecutionMode.LITE
+            ):
                 result = await self._dispatch_to_swarm(enriched_command, execution_mode)
             elif enriched_command.parsed_command.intent == CommandIntent.RUN_AGENT:
-                result = await self._handle_agent_execution(enriched_command, execution_mode)
+                result = await self._handle_agent_execution(
+                    enriched_command, execution_mode
+                )
             elif enriched_command.parsed_command.intent == CommandIntent.QUERY_DATA:
-                result = await self._handle_complex_query(enriched_command, execution_mode)
+                result = await self._handle_complex_query(
+                    enriched_command, execution_mode
+                )
             else:
                 result = await self._handle_simple_command(enriched_command)
 
@@ -223,7 +237,11 @@ class SmartCommandDispatcher:
                 execution_mode=execution_mode,
                 execution_time=execution_time,
                 patterns_used=self._get_patterns_used(execution_mode),
-                quality_score=result.get("quality_score", 0.8) if isinstance(result, dict) else 0.8,
+                quality_score=(
+                    result.get("quality_score", 0.8)
+                    if isinstance(result, dict)
+                    else 0.8
+                ),
             )
 
         except Exception as e:
@@ -245,7 +263,10 @@ class SmartCommandDispatcher:
             )
 
     async def _enrich_with_memory(
-        self, parsed_command: ParsedCommand, session_id: str, user_context: dict[str, Any]
+        self,
+        parsed_command: ParsedCommand,
+        session_id: str,
+        user_context: dict[str, Any],
     ) -> EnrichedCommand:
         """
         Enrich command with memory and conversation history
@@ -292,9 +313,9 @@ class SmartCommandDispatcher:
 
                 return history, context_summary, similar
 
-            history, context_summary, similar = await self.circuit_breakers["memory"].call(
-                fetch_memory
-            )
+            history, context_summary, similar = await self.circuit_breakers[
+                "memory"
+            ].call(fetch_memory)
 
             enriched.conversation_history = history
             enriched.metadata["context_summary"] = context_summary
@@ -312,7 +333,9 @@ class SmartCommandDispatcher:
 
         return enriched
 
-    async def _analyze_and_select_mode(self, enriched_command: EnrichedCommand) -> ExecutionMode:
+    async def _analyze_and_select_mode(
+        self, enriched_command: EnrichedCommand
+    ) -> ExecutionMode:
         """
         Analyze task complexity and select optimal execution mode
 
@@ -360,7 +383,8 @@ class SmartCommandDispatcher:
 
         avg_time = self.execution_stats["avg_execution_time"]
         success_rate = (
-            self.execution_stats["success_count"] / self.execution_stats["total_commands"]
+            self.execution_stats["success_count"]
+            / self.execution_stats["total_commands"]
         )
 
         target_time = self.config["optimization"]["performance_target_ms"] / 1000
@@ -434,7 +458,9 @@ class SmartCommandDispatcher:
             self.degradation_manager.mark_component_degraded("swarm", str(e))
 
             # Fallback to orchestrator
-            return await self._handle_agent_execution(enriched_command, ExecutionMode.LITE)
+            return await self._handle_agent_execution(
+                enriched_command, ExecutionMode.LITE
+            )
 
     async def _handle_agent_execution(
         self, enriched_command: EnrichedCommand, execution_mode: ExecutionMode
@@ -456,10 +482,16 @@ class SmartCommandDispatcher:
             elif execution_mode == ExecutionMode.BALANCED:
                 agents_chain = [AgentRole.RESEARCHER, AgentRole.EXECUTOR]
             else:
-                agents_chain = [AgentRole.RESEARCHER, AgentRole.CODER, AgentRole.REVIEWER]
+                agents_chain = [
+                    AgentRole.RESEARCHER,
+                    AgentRole.CODER,
+                    AgentRole.REVIEWER,
+                ]
 
             # Extract agent name if specified
-            agent_name = enriched_command.parsed_command.entities.get("agent_name", "default")
+            agent_name = enriched_command.parsed_command.entities.get(
+                "agent_name", "default"
+            )
 
             # Execute with circuit breaker
             async def orchestrator_execute():
@@ -471,14 +503,18 @@ class SmartCommandDispatcher:
                         agents_chain=agents_chain,
                     )
 
-            context = await self.circuit_breakers["orchestrator"].call(orchestrator_execute)
+            context = await self.circuit_breakers["orchestrator"].call(
+                orchestrator_execute
+            )
 
             return {
                 "agent": agent_name,
                 "execution_context": context.state,
                 "tasks_completed": len(context.tasks),
                 "quality_score": 0.85,
-                "execution_time": context.end_time - context.start_time if context.end_time else 0,
+                "execution_time": (
+                    context.end_time - context.start_time if context.end_time else 0
+                ),
             }
 
         except Exception as e:
@@ -502,7 +538,9 @@ class SmartCommandDispatcher:
         query_text = enriched_command.parsed_command.entities.get("query", "")
 
         # For complex queries, use swarm if available
-        if execution_mode != ExecutionMode.LITE and self._is_swarm_eligible(enriched_command):
+        if execution_mode != ExecutionMode.LITE and self._is_swarm_eligible(
+            enriched_command
+        ):
             return await self._dispatch_to_swarm(enriched_command, execution_mode)
 
         # Otherwise, use simple query processing
@@ -513,7 +551,9 @@ class SmartCommandDispatcher:
             "quality_score": 0.7,
         }
 
-    async def _handle_simple_command(self, enriched_command: EnrichedCommand) -> dict[str, Any]:
+    async def _handle_simple_command(
+        self, enriched_command: EnrichedCommand
+    ) -> dict[str, Any]:
         """
         Handle simple commands that don't need complex processing
 
@@ -590,20 +630,26 @@ class SmartCommandDispatcher:
                 intent=enriched_command.parsed_command.intent.value,
                 entities=enriched_command.parsed_command.entities,
                 confidence=enriched_command.parsed_command.confidence,
-                response=json.dumps(result) if isinstance(result, dict) else str(result),
+                response=(
+                    json.dumps(result) if isinstance(result, dict) else str(result)
+                ),
                 workflow_id=enriched_command.parsed_command.workflow_trigger,
                 execution_result={
                     "execution_mode": enriched_command.recommended_mode.value,
                     "execution_time": execution_time,
                     "quality_score": (
-                        result.get("quality_score", 0) if isinstance(result, dict) else 0
+                        result.get("quality_score", 0)
+                        if isinstance(result, dict)
+                        else 0
                     ),
                 },
                 metadata=enriched_command.metadata,
             )
 
             await self.memory_connector.store_interaction(interaction)
-            logger.debug(f"Stored interaction for session {enriched_command.session_id[:8]}")
+            logger.debug(
+                f"Stored interaction for session {enriched_command.session_id[:8]}"
+            )
 
         except Exception as e:
             logger.warning(f"Failed to store interaction in memory: {e}")
@@ -666,13 +712,20 @@ class SmartCommandDispatcher:
         elif mode == ExecutionMode.BALANCED:
             return ["memory_enrichment", "orchestrator", "quality_gates"]
         else:
-            return ["memory_enrichment", "swarm", "debate", "quality_gates", "consensus"]
+            return [
+                "memory_enrichment",
+                "swarm",
+                "debate",
+                "quality_gates",
+                "consensus",
+            ]
 
     def _update_avg_execution_time(self, execution_time: float):
         """Update average execution time"""
         self.execution_stats["total_execution_time"] += execution_time
         self.execution_stats["avg_execution_time"] = (
-            self.execution_stats["total_execution_time"] / self.execution_stats["total_commands"]
+            self.execution_stats["total_execution_time"]
+            / self.execution_stats["total_commands"]
         )
 
     def _get_performance_metrics(self) -> dict[str, Any]:
@@ -698,7 +751,8 @@ class SmartCommandDispatcher:
         # Calculate overall quality score
         if self.execution_stats["total_commands"] > 0:
             metrics["overall_quality_score"] = (
-                self.execution_stats["success_count"] / self.execution_stats["total_commands"]
+                self.execution_stats["success_count"]
+                / self.execution_stats["total_commands"]
             )
         else:
             metrics["overall_quality_score"] = 0
@@ -731,7 +785,9 @@ class SmartCommandDispatcher:
                 intent_distribution[intent] = intent_distribution.get(intent, 0) + 1
 
             if interaction.get("execution_result"):
-                complexity = interaction["execution_result"].get("complexity_score", 0.5)
+                complexity = interaction["execution_result"].get(
+                    "complexity_score", 0.5
+                )
                 avg_complexity += complexity
 
         if history:
@@ -784,7 +840,9 @@ class SmartCommandDispatcher:
         session_info = self.active_sessions.get(session_id, {})
 
         # Get recent history
-        history = await self.memory_connector.retrieve_session_history(session_id, limit=5)
+        history = await self.memory_connector.retrieve_session_history(
+            session_id, limit=5
+        )
 
         # Get context summary
         context = await self.memory_connector.get_context_summary(session_id)
@@ -824,7 +882,10 @@ async def example_usage():
         ("show system status", "simple"),  # Simple command
         ("run agent researcher to analyze market trends", "complex"),  # Agent execution
         ("query data about user engagement metrics", "medium"),  # Data query
-        ("execute workflow data-pipeline with quality checks", "complex"),  # Workflow execution
+        (
+            "execute workflow data-pipeline with quality checks",
+            "complex",
+        ),  # Workflow execution
     ]
 
     session_id = "test-session-001"
@@ -861,7 +922,9 @@ async def example_usage():
     logger.info("Performance Metrics:")
     logger.info(f"Total Commands: {metrics['dispatcher_stats']['total_commands']}")
     logger.info(f"Success Rate: {metrics['overall_quality_score']:.2%}")
-    logger.info(f"Avg Execution Time: {metrics['dispatcher_stats']['avg_execution_time']:.2f}s")
+    logger.info(
+        f"Avg Execution Time: {metrics['dispatcher_stats']['avg_execution_time']:.2f}s"
+    )
     logger.info(f"System Health: {metrics['system_health']:.2%}")
 
     # Shutdown

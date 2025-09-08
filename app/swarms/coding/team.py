@@ -16,7 +16,12 @@ from app.memory.supermemory_mcp import SupermemoryMCP
 
 # SwarmOrchestrator removed - use SuperOrchestrator if needed
 # from app.core.super_orchestrator import get_orchestrator
-from app.swarms.coding.models import DebateResult, PoolType, SwarmConfiguration, SwarmRequest
+from app.swarms.coding.models import (
+    DebateResult,
+    PoolType,
+    SwarmConfiguration,
+    SwarmRequest,
+)
 from app.swarms.coding.team_factory import TeamFactory
 
 logger = logging.getLogger(__name__)
@@ -207,7 +212,10 @@ def create_coding_team() -> Team:
 
     # Use new system with legacy-compatible settings
     config = SwarmConfiguration(
-        pool=PoolType.BALANCED, include_default_pair=True, include_runner=False, max_generators=2
+        pool=PoolType.BALANCED,
+        include_default_pair=True,
+        include_runner=False,
+        max_generators=2,
     )
 
     team = TeamFactory.create_team(config)

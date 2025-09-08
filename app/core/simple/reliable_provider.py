@@ -103,7 +103,9 @@ class ReliableProviderManager:
             )
         return self.clients[provider_name]
 
-    def select_provider(self, requirements: RequirementType = RequirementType.DEFAULT) -> str:
+    def select_provider(
+        self, requirements: RequirementType = RequirementType.DEFAULT
+    ) -> str:
         """
         Select best provider based on requirements
 
@@ -173,7 +175,11 @@ class ReliableProviderManager:
         raise Exception(f"All providers failed. Last error: {last_error}")
 
     async def _execute_completion(
-        self, provider_name: str, prompt: str, system_prompt: Optional[str], temperature: float
+        self,
+        provider_name: str,
+        prompt: str,
+        system_prompt: Optional[str],
+        temperature: float,
     ) -> dict[str, Any]:
         """Execute completion with a specific provider"""
         config = self.PROVIDERS[provider_name]
@@ -229,7 +235,9 @@ class ReliableProviderManager:
             history["successes"] += 1
             history["total_latency_ms"] += latency_ms
             history["successes"] + history["failures"]
-            history["avg_latency_ms"] = history["total_latency_ms"] / history["successes"]
+            history["avg_latency_ms"] = (
+                history["total_latency_ms"] / history["successes"]
+            )
         else:
             history["failures"] += 1
 
@@ -243,7 +251,9 @@ class ReliableProviderManager:
         stats = {
             "total_requests": self.request_count,
             "total_cost": round(self.total_cost, 4),
-            "avg_cost_per_request": round(self.total_cost / max(self.request_count, 1), 4),
+            "avg_cost_per_request": round(
+                self.total_cost / max(self.request_count, 1), 4
+            ),
             "provider_performance": {},
         }
 
@@ -279,7 +289,11 @@ class AsyncReliableProvider(ReliableProviderManager):
     """Async wrapper for the provider manager"""
 
     async def _execute_completion(
-        self, provider_name: str, prompt: str, system_prompt: Optional[str], temperature: float
+        self,
+        provider_name: str,
+        prompt: str,
+        system_prompt: Optional[str],
+        temperature: float,
     ) -> dict[str, Any]:
         """Execute completion in thread pool"""
         loop = asyncio.get_event_loop()

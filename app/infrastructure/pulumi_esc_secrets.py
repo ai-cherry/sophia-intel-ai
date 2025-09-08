@@ -153,7 +153,9 @@ class AdvancedSecretsManager:
                 if success:
                     self.secrets[service] = rotated_secret
                     rotated_secret.last_rotation = datetime.now()
-                    rotated_secret.next_rotation = self._calculate_next_rotation(rotated_secret)
+                    rotated_secret.next_rotation = self._calculate_next_rotation(
+                        rotated_secret
+                    )
 
                 results[service] = success
                 logger.info(f"Configured rotation for {service}")
@@ -180,7 +182,9 @@ class AdvancedSecretsManager:
             }
         }
 
-    async def trigger_emergency_rotation(self, service: str, reason: str) -> dict[str, Any]:
+    async def trigger_emergency_rotation(
+        self, service: str, reason: str
+    ) -> dict[str, Any]:
         """
         Immediate secret rotation for security incidents
 
@@ -215,7 +219,9 @@ class AdvancedSecretsManager:
             secret.last_rotation = datetime.now()
             secret.next_rotation = self._calculate_next_rotation(secret)
             secret.rotation_count += 1
-            secret.active_version = "secondary" if secret.active_version == "primary" else "primary"
+            secret.active_version = (
+                "secondary" if secret.active_version == "primary" else "primary"
+            )
 
             # Propagate updates to downstream services
             await self._propagate_secret_updates(service)
@@ -279,10 +285,16 @@ class AdvancedSecretsManager:
             health = SecretHealth(
                 service=service,
                 status=status,
-                last_rotation=secret.last_rotation.isoformat() if secret.last_rotation else "never",
+                last_rotation=(
+                    secret.last_rotation.isoformat()
+                    if secret.last_rotation
+                    else "never"
+                ),
                 age_hours=age_hours,
                 next_rotation=(
-                    secret.next_rotation.isoformat() if secret.next_rotation else "not scheduled"
+                    secret.next_rotation.isoformat()
+                    if secret.next_rotation
+                    else "not scheduled"
                 ),
                 rotation_count=secret.rotation_count,
                 active_version=secret.active_version,
@@ -322,20 +334,26 @@ class AdvancedSecretsManager:
 
             # Update ESC
             await self.esc_client.rotate_environment(
-                name=f"rotated-secrets/{service}", reason="Scheduled rotation", notify_webhooks=True
+                name=f"rotated-secrets/{service}",
+                reason="Scheduled rotation",
+                notify_webhooks=True,
             )
 
             # Update secret state
             secret.last_rotation = datetime.now()
             secret.next_rotation = self._calculate_next_rotation(secret)
             secret.rotation_count += 1
-            secret.active_version = "secondary" if secret.active_version == "primary" else "primary"
+            secret.active_version = (
+                "secondary" if secret.active_version == "primary" else "primary"
+            )
 
             # Propagate updates
             await self._propagate_secret_updates(service)
 
             # Send notifications
-            await self._send_webhook_notification(service, "scheduled", "Scheduled rotation")
+            await self._send_webhook_notification(
+                service, "scheduled", "Scheduled rotation"
+            )
 
             # Record history
             self.rotation_history.append(
@@ -386,7 +404,9 @@ class AdvancedSecretsManager:
         await asyncio.sleep(0.1)
         logger.info(f"Propagated secret updates for {service}")
 
-    async def _send_webhook_notification(self, service: str, rotation_type: str, reason: str):
+    async def _send_webhook_notification(
+        self, service: str, rotation_type: str, reason: str
+    ):
         """Send webhook notification for rotation event"""
         secret = self.secrets.get(service)
         if not secret or not secret.webhook_url:
@@ -398,7 +418,9 @@ class AdvancedSecretsManager:
             "reason": reason,
             "timestamp": datetime.now().isoformat(),
             "new_version": secret.active_version,
-            "next_rotation": secret.next_rotation.isoformat() if secret.next_rotation else None,
+            "next_rotation": (
+                secret.next_rotation.isoformat() if secret.next_rotation else None
+            ),
         }
 
         # Mock webhook call
@@ -440,9 +462,14 @@ class AdvancedSecretsManager:
         return {
             **self.metrics,
             "success_rate": 1
-            - (self.metrics["failed_rotations"] / max(1, self.metrics["total_rotations"])),
+            - (
+                self.metrics["failed_rotations"]
+                / max(1, self.metrics["total_rotations"])
+            ),
             "emergency_percentage": (
-                self.metrics["emergency_rotations"] / max(1, self.metrics["total_rotations"]) * 100
+                self.metrics["emergency_rotations"]
+                / max(1, self.metrics["total_rotations"])
+                * 100
             ),
         }
 

@@ -27,7 +27,8 @@ class UnifiedCredentialManager:
 
     def __init__(self, config_path: Optional[Path] = None):
         self.config_path = (
-            config_path or Path(__file__).parent.parent.parent / "config" / "credentials.enc"
+            config_path
+            or Path(__file__).parent.parent.parent / "config" / "credentials.enc"
         )
         self.config_path.parent.mkdir(exist_ok=True)
 
@@ -96,7 +97,9 @@ class UnifiedCredentialManager:
                 "url": None,  # Will be constructed
             },
             "database": {
-                "sqlite_path": str(Path(__file__).parent.parent.parent / "data" / "sophia.db"),
+                "sqlite_path": str(
+                    Path(__file__).parent.parent.parent / "data" / "sophia.db"
+                ),
                 "postgres_url": None,  # Optional PostgreSQL
                 "encryption_key": self._generate_secure_password(),
             },
@@ -118,11 +121,17 @@ class UnifiedCredentialManager:
                 "operation_timeout": 30,
                 "health_check_interval": 30,
             },
-            "metadata": {"created": "2025-09-06T00:00:00Z", "version": "1.0.0", "checksum": None},
+            "metadata": {
+                "created": "2025-09-06T00:00:00Z",
+                "version": "1.0.0",
+                "checksum": None,
+            },
         }
 
         # Calculate checksum for integrity
-        default_credentials["metadata"]["checksum"] = self._calculate_checksum(default_credentials)
+        default_credentials["metadata"]["checksum"] = self._calculate_checksum(
+            default_credentials
+        )
 
         # Save encrypted credentials
         self._save_credentials(default_credentials)

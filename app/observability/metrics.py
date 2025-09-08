@@ -325,7 +325,11 @@ class MemoryLeakDetector:
                 else (
                     "high"
                     if any(l.get("severity") == "high" for l in leaks)
-                    else "medium" if any(l.get("severity") == "medium" for l in leaks) else "low"
+                    else (
+                        "medium"
+                        if any(l.get("severity") == "medium" for l in leaks)
+                        else "low"
+                    )
                 )
             ),
             "recommendations": [leak.get("recommendation", "") for leak in leaks],
@@ -383,7 +387,9 @@ class PerformanceProfiler:
                 cpu_delta = (end_cpu_times.user - self.start_cpu_times.user) + (
                     end_cpu_times.system - self.start_cpu_times.system
                 )
-                cpu_percent = (cpu_delta / (duration_ms / 1000)) * 100 if duration_ms > 0 else 0
+                cpu_percent = (
+                    (cpu_delta / (duration_ms / 1000)) * 100 if duration_ms > 0 else 0
+                )
 
                 # Create profile
                 profile = PerformanceProfile(
@@ -409,7 +415,9 @@ class PerformanceProfiler:
 
         # Keep operation stats bounded
         if len(self.operation_stats[profile.operation]) > 100:
-            self.operation_stats[profile.operation] = self.operation_stats[profile.operation][-50:]
+            self.operation_stats[profile.operation] = self.operation_stats[
+                profile.operation
+            ][-50:]
 
     def get_optimization_suggestions(self) -> List[Dict[str, Any]]:
         """Get optimization suggestions based on profiles"""
@@ -528,7 +536,20 @@ class SophiaMetricsCollector:
             "sophia_operation_duration_seconds",
             "Operation duration by component and operation",
             ["component", "operation"],
-            buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
+            buckets=[
+                0.001,
+                0.005,
+                0.01,
+                0.025,
+                0.05,
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+            ],
         )
 
         self.leak_detection_gauge = Gauge(
@@ -572,13 +593,13 @@ class SophiaMetricsCollector:
                 snapshot = self.leak_detector.take_snapshot("background_monitor")
 
                 # Update Prometheus metrics
-                self.memory_usage_gauge.labels(component="system", memory_type="rss").set(
-                    snapshot.rss_mb
-                )
+                self.memory_usage_gauge.labels(
+                    component="system", memory_type="rss"
+                ).set(snapshot.rss_mb)
 
-                self.memory_usage_gauge.labels(component="system", memory_type="heap").set(
-                    snapshot.heap_mb
-                )
+                self.memory_usage_gauge.labels(
+                    component="system", memory_type="heap"
+                ).set(snapshot.heap_mb)
 
                 # Update system resource metrics
                 self._update_system_metrics()
@@ -590,12 +611,16 @@ class SophiaMetricsCollector:
                     leak_counts[leak.get("severity", "unknown")] += 1
 
                 for severity in ["low", "medium", "high", "critical"]:
-                    self.leak_detection_gauge.labels(severity=severity).set(leak_counts[severity])
+                    self.leak_detection_gauge.labels(severity=severity).set(
+                        leak_counts[severity]
+                    )
 
                 # Log critical leaks
                 critical_leaks = [l for l in leaks if l.get("severity") == "critical"]
                 if critical_leaks:
-                    logger.error(f"🚨 CRITICAL MEMORY LEAKS DETECTED: {len(critical_leaks)}")
+                    logger.error(
+                        f"🚨 CRITICAL MEMORY LEAKS DETECTED: {len(critical_leaks)}"
+                    )
                     for leak in critical_leaks:
                         logger.error(f"  - {leak['description']}")
 
@@ -609,18 +634,24 @@ class SophiaMetricsCollector:
         try:
             # CPU usage
             cpu_percent = psutil.cpu_percent(interval=1)
-            self.system_resources_gauge.labels(resource_type="cpu_percent").set(cpu_percent)
+            self.system_resources_gauge.labels(resource_type="cpu_percent").set(
+                cpu_percent
+            )
 
             # Memory usage
             memory = psutil.virtual_memory()
-            self.system_resources_gauge.labels(resource_type="memory_percent").set(memory.percent)
+            self.system_resources_gauge.labels(resource_type="memory_percent").set(
+                memory.percent
+            )
             self.system_resources_gauge.labels(resource_type="memory_available_gb").set(
                 memory.available / 1024**3
             )
 
             # Disk usage
             disk = psutil.disk_usage("/")
-            self.system_resources_gauge.labels(resource_type="disk_percent").set(disk.percent)
+            self.system_resources_gauge.labels(resource_type="disk_percent").set(
+                disk.percent
+            )
 
             # Network I/O
             network = psutil.net_io_counters()
@@ -681,11 +712,15 @@ class SophiaMetricsCollector:
                 "memory_percent": psutil.virtual_memory().percent,
                 "disk_percent": psutil.disk_usage("/").percent,
             },
-            "recommendations": self._generate_recommendations(memory_report, performance_report),
+            "recommendations": self._generate_recommendations(
+                memory_report, performance_report
+            ),
             "status": "🔥 METRICS INFERNO ACTIVE",
         }
 
-    def _generate_recommendations(self, memory_report: Dict, performance_report: Dict) -> List[str]:
+    def _generate_recommendations(
+        self, memory_report: Dict, performance_report: Dict
+    ) -> List[str]:
         """Generate optimization recommendations"""
         recommendations = []
 
@@ -695,7 +730,9 @@ class SophiaMetricsCollector:
 
         current_usage = memory_report.get("current_usage", {})
         if current_usage.get("rss_mb", 0) > 1000:  # > 1GB
-            recommendations.append("💾 High memory usage detected - consider optimization")
+            recommendations.append(
+                "💾 High memory usage detected - consider optimization"
+            )
 
         # Performance recommendations
         if "optimization_suggestions" in performance_report:
@@ -705,7 +742,9 @@ class SophiaMetricsCollector:
         # System recommendations
         try:
             if psutil.cpu_percent() > 80:
-                recommendations.append("🔥 High CPU usage - check for CPU-intensive operations")
+                recommendations.append(
+                    "🔥 High CPU usage - check for CPU-intensive operations"
+                )
 
             if psutil.virtual_memory().percent > 85:
                 recommendations.append("💾 High system memory usage - consider scaling")

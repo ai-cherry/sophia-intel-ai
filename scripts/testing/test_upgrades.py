@@ -47,7 +47,9 @@ class UpgradeTestSuite:
                         logger.info(f"{RED}❌ Some systems offline{RESET}")
                         return False
                 else:
-                    logger.info(f"{RED}❌ Health check failed: {response.status}{RESET}")
+                    logger.info(
+                        f"{RED}❌ Health check failed: {response.status}{RESET}"
+                    )
                     return False
 
     async def test_modernbert_embeddings(self) -> bool:
@@ -70,7 +72,9 @@ class UpgradeTestSuite:
                     "source": "upgrade_test",
                 }
 
-                async with session.post(f"{self.base_url}/memory/add", json=payload) as response:
+                async with session.post(
+                    f"{self.base_url}/memory/add", json=payload
+                ) as response:
                     if response.status == 200:
                         data = await response.json()
                         logger.info(
@@ -87,7 +91,9 @@ class UpgradeTestSuite:
             ) as response:
                 if response.status == 200:
                     data = await response.json()
-                    logger.info(f"  ✅ Embedding search returned {data.get('count', 0)} results")
+                    logger.info(
+                        f"  ✅ Embedding search returned {data.get('count', 0)} results"
+                    )
                     return True
                 else:
                     logger.info("  ❌ Embedding search failed")
@@ -124,7 +130,9 @@ class UpgradeTestSuite:
             for test in test_cases:
                 logger.info(f"  Testing {test['team_id']}...")
 
-                async with session.post(f"{self.base_url}/teams/run", json=test) as response:
+                async with session.post(
+                    f"{self.base_url}/teams/run", json=test
+                ) as response:
                     if response.status == 200:
                         # Read streaming response
                         full_response = ""
@@ -140,7 +148,9 @@ class UpgradeTestSuite:
 
                             # Verify expected swarm was used
                             if test["expected"] in full_response:
-                                logger.info(f"    ✅ Correct swarm used: {test['expected']}")
+                                logger.info(
+                                    f"    ✅ Correct swarm used: {test['expected']}"
+                                )
                             else:
                                 logger.info("    ⚠️  Different swarm used than expected")
                         else:
@@ -182,7 +192,9 @@ class UpgradeTestSuite:
 
             # Test search
             search_payload = {"query": "memory safety programming", "limit": 5}
-            async with session.post(f"{self.base_url}/search", json=search_payload) as response:
+            async with session.post(
+                f"{self.base_url}/search", json=search_payload
+            ) as response:
                 if response.status == 200:
                     data = await response.json()
                     results = data.get("results", [])
@@ -193,7 +205,9 @@ class UpgradeTestSuite:
                             logger.info(f"    - Score: {r.get('score', 0):.3f}")
                         return True
                     else:
-                        logger.info("  ⚠️  No results found (may be normal for empty index)")
+                        logger.info(
+                            "  ⚠️  No results found (may be normal for empty index)"
+                        )
                         return True
                 else:
                     logger.info(f"  ❌ Search failed: {response.status}")
@@ -215,7 +229,9 @@ class UpgradeTestSuite:
             chunks_received = 0
             first_chunk_time = None
 
-            async with session.post(f"{self.base_url}/teams/run", json=payload) as response:
+            async with session.post(
+                f"{self.base_url}/teams/run", json=payload
+            ) as response:
                 async for _chunk in response.content.iter_chunked(1024):
                     if chunks_received == 0:
                         first_chunk_time = time.time() - start
@@ -243,7 +259,9 @@ class UpgradeTestSuite:
                 "source": "test_suite",
             }
 
-            async with session.post(f"{self.base_url}/memory/add", json=test_payload) as response:
+            async with session.post(
+                f"{self.base_url}/memory/add", json=test_payload
+            ) as response:
                 if response.status == 200:
                     logger.info("  ✅ MCP Supermemory: Working")
                 else:
@@ -312,7 +330,9 @@ class UpgradeTestSuite:
         logger.info(f"{YELLOW}Duration: {duration:.1f}s{RESET}\n")
 
         if failed == 0:
-            logger.info(f"{GREEN}🎉 ALL TESTS PASSED! System ready for production.{RESET}")
+            logger.info(
+                f"{GREEN}🎉 ALL TESTS PASSED! System ready for production.{RESET}"
+            )
             return True
         else:
             logger.info(f"{RED}⚠️  {failed} tests failed. Please review and fix.{RESET}")

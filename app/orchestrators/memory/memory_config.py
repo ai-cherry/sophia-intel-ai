@@ -66,7 +66,9 @@ class MemoryConfig:
                 # Handle TLS if needed
                 if "rediss://" in redis_url:
                     return redis_url
-                elif redis_url.startswith("redis://") and os.getenv("REDIS_TLS_ENABLED"):
+                elif redis_url.startswith("redis://") and os.getenv(
+                    "REDIS_TLS_ENABLED"
+                ):
                     return redis_url.replace("redis://", "rediss://")
                 return redis_url
 
@@ -141,7 +143,12 @@ class MemoryConfig:
                 "project": 604800,  # 7 days
                 "global": 2592000,  # 30 days
             },
-            "max_size": {"working": 100, "session": 500, "project": 1000, "global": 5000},  # MB
+            "max_size": {
+                "working": 100,
+                "session": 500,
+                "project": 1000,
+                "global": 5000,
+            },  # MB
             "compression": self.deployment_mode == DeploymentMode.CLOUD,
         }
 
@@ -149,7 +156,9 @@ class MemoryConfig:
         """Get Redis configuration with retry and pool settings"""
         return {
             "url": self.redis_url,
-            "max_connections": 50 if self.deployment_mode == DeploymentMode.CLOUD else 10,
+            "max_connections": (
+                50 if self.deployment_mode == DeploymentMode.CLOUD else 10
+            ),
             "socket_keepalive": True,
             "socket_keepalive_options": {
                 1: 1,  # TCP_KEEPIDLE

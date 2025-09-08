@@ -6,7 +6,8 @@ if validator_path.exists():
     content = validator_path.read_text()
     # Crush path dupes: mcp_servers/mcp_servers/name -> mcp_servers/name
     content = content.replace(
-        "server['path'] / 'mcp_servers' / server['name']", "server['path'] / server['name']"
+        "server['path'] / 'mcp_servers' / server['name']",
+        "server['path'] / server['name']",
     )
     content = content.replace(
         "Path('mcp_servers') / server['name']", "server['path'] / server['name']"

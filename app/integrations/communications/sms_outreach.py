@@ -38,10 +38,19 @@ class ConsentManager:
     def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
         self.consent_records: dict[str, dict[str, Any]] = {}
-        self.opt_out_keywords = ["STOP", "QUIT", "UNSUBSCRIBE", "CANCEL", "END", "OPT-OUT"]
+        self.opt_out_keywords = [
+            "STOP",
+            "QUIT",
+            "UNSUBSCRIBE",
+            "CANCEL",
+            "END",
+            "OPT-OUT",
+        ]
         self.opt_in_keywords = ["START", "YES", "SUBSCRIBE", "JOIN", "OPT-IN"]
 
-    async def verify_consent(self, phone_number: str, prospect_id: str = "") -> tuple[bool, str]:
+    async def verify_consent(
+        self, phone_number: str, prospect_id: str = ""
+    ) -> tuple[bool, str]:
         """Verify SMS consent for phone number"""
         try:
             # Clean phone number
@@ -149,7 +158,9 @@ class ConsentManager:
             logger.error(f"Error revoking consent for {phone_number}: {e}")
             return False
 
-    async def process_inbound_message(self, phone_number: str, message_body: str) -> dict[str, Any]:
+    async def process_inbound_message(
+        self, phone_number: str, message_body: str
+    ) -> dict[str, Any]:
         """Process inbound SMS message for opt-in/opt-out"""
         try:
             clean_phone = self._clean_phone_number(phone_number)
@@ -165,16 +176,22 @@ class ConsentManager:
             # Check for opt-out keywords
             if any(keyword in message_upper for keyword in self.opt_out_keywords):
                 await self.revoke_consent(
-                    clean_phone, revocation_method="sms_opt_out", revocation_message=message_body
+                    clean_phone,
+                    revocation_method="sms_opt_out",
+                    revocation_message=message_body,
                 )
                 result["action"] = "opt_out"
-                result["auto_response"] = "You have been unsubscribed from SMS messages."
+                result["auto_response"] = (
+                    "You have been unsubscribed from SMS messages."
+                )
 
             # Check for opt-in keywords
             elif any(keyword in message_upper for keyword in self.opt_in_keywords):
                 # Note: Real implementation would require double opt-in
                 result["action"] = "opt_in_request"
-                result["auto_response"] = "Reply YES to confirm you want to receive SMS messages."
+                result["auto_response"] = (
+                    "Reply YES to confirm you want to receive SMS messages."
+                )
 
             return result
 
@@ -288,7 +305,9 @@ class TCPAComplianceEngine:
             validation_result["compliance_score"] -= 0.3
 
             # Suggest optimal send time
-            optimal_time = await self._suggest_optimal_send_time(prospect, scheduled_time)
+            optimal_time = await self._suggest_optimal_send_time(
+                prospect, scheduled_time
+            )
             validation_result["approved_send_time"] = optimal_time
 
         # Check frequency limits
@@ -305,7 +324,9 @@ class TCPAComplianceEngine:
             validation_result["compliance_score"] -= 0.1
 
         # Final compliance score
-        validation_result["compliance_score"] = max(0.0, validation_result["compliance_score"])
+        validation_result["compliance_score"] = max(
+            0.0, validation_result["compliance_score"]
+        )
 
         # Log compliance check
         await self._log_compliance_check(prospect, validation_result)
@@ -345,7 +366,11 @@ class TCPAComplianceEngine:
                     }
                 )
 
-        return {"valid": len(violations) == 0, "violations": violations, "local_time": local_time}
+        return {
+            "valid": len(violations) == 0,
+            "violations": violations,
+            "local_time": local_time,
+        }
 
     async def _validate_frequency(
         self, prospect: Prospect, scheduled_time: datetime
@@ -355,7 +380,9 @@ class TCPAComplianceEngine:
 
         # Check minimum interval since last message
         if prospect.last_contacted:
-            hours_since_last = (scheduled_time - prospect.last_contacted).total_seconds() / 3600
+            hours_since_last = (
+                scheduled_time - prospect.last_contacted
+            ).total_seconds() / 3600
             if hours_since_last < self.min_message_interval_hours:
                 violations.append(
                     {
@@ -385,7 +412,9 @@ class TCPAComplianceEngine:
 
         # Check for required opt-out instructions
         opt_out_indicators = ["stop", "unsubscribe", "opt-out", "opt out", "text stop"]
-        has_opt_out = any(indicator in message_content.lower() for indicator in opt_out_indicators)
+        has_opt_out = any(
+            indicator in message_content.lower() for indicator in opt_out_indicators
+        )
 
         if not has_opt_out:
             warnings.append(
@@ -407,7 +436,12 @@ class TCPAComplianceEngine:
             )
 
         # Check for prohibited content patterns
-        prohibited_patterns = [r"100% guaranteed", r"act now", r"urgent.*offer", r"limited.*time"]
+        prohibited_patterns = [
+            r"100% guaranteed",
+            r"act now",
+            r"urgent.*offer",
+            r"limited.*time",
+        ]
 
         for pattern in prohibited_patterns:
             if re.search(pattern, message_content, re.IGNORECASE):
@@ -419,7 +453,10 @@ class TCPAComplianceEngine:
                     }
                 )
 
-        return {"valid": True, "warnings": warnings}  # Content warnings don't prevent sending
+        return {
+            "valid": True,
+            "warnings": warnings,
+        }  # Content warnings don't prevent sending
 
     async def _suggest_optimal_send_time(
         self, prospect: Prospect, original_time: datetime
@@ -434,7 +471,9 @@ class TCPAComplianceEngine:
             or candidate_time.hour < self.quiet_hours_end
         ):
             # Move to 8 AM
-            candidate_time = candidate_time.replace(hour=8, minute=0, second=0, microsecond=0)
+            candidate_time = candidate_time.replace(
+                hour=8, minute=0, second=0, microsecond=0
+            )
 
             # If that's still today and we were in early morning quiet hours, it's fine
             # If we were in evening quiet hours, move to next day
@@ -470,9 +509,13 @@ class TCPAComplianceEngine:
 
         # Add violation details
         if validation_result["violations"]:
-            violation_descriptions = [v["description"] for v in validation_result["violations"]]
+            violation_descriptions = [
+                v["description"] for v in validation_result["violations"]
+            ]
             compliance_record.violation_description = "; ".join(violation_descriptions)
-            compliance_record.violation_type = validation_result["violations"][0]["type"]
+            compliance_record.violation_type = validation_result["violations"][0][
+                "type"
+            ]
 
         self.compliance_violations.append(compliance_record)
         return compliance_record
@@ -494,10 +537,18 @@ class TCPAComplianceEngine:
         # Calculate statistics
         total_checks = len(period_records)
         compliant_checks = len(
-            [r for r in period_records if r.compliance_status == ComplianceStatus.COMPLIANT]
+            [
+                r
+                for r in period_records
+                if r.compliance_status == ComplianceStatus.COMPLIANT
+            ]
         )
         violation_checks = len(
-            [r for r in period_records if r.compliance_status == ComplianceStatus.NON_COMPLIANT]
+            [
+                r
+                for r in period_records
+                if r.compliance_status == ComplianceStatus.NON_COMPLIANT
+            ]
         )
 
         # Violation breakdown
@@ -514,11 +565,17 @@ class TCPAComplianceEngine:
                 "total_compliance_checks": total_checks,
                 "compliant_checks": compliant_checks,
                 "violation_checks": violation_checks,
-                "compliance_rate": compliant_checks / total_checks if total_checks > 0 else 0.0,
+                "compliance_rate": (
+                    compliant_checks / total_checks if total_checks > 0 else 0.0
+                ),
             },
             "violation_breakdown": violation_types,
-            "top_violations": sorted(violation_types.items(), key=lambda x: x[1], reverse=True)[:5],
-            "recommendations": await self._generate_compliance_recommendations(period_records),
+            "top_violations": sorted(
+                violation_types.items(), key=lambda x: x[1], reverse=True
+            )[:5],
+            "recommendations": await self._generate_compliance_recommendations(
+                period_records
+            ),
         }
 
         return report
@@ -565,7 +622,11 @@ class TwilioSMSManager:
         self.message_cache: dict[str, dict[str, Any]] = {}
 
     async def send_sms(
-        self, to_phone: str, message: str, scheduled_time: datetime = None, callback_url: str = None
+        self,
+        to_phone: str,
+        message: str,
+        scheduled_time: datetime = None,
+        callback_url: str = None,
     ) -> Optional[OutreachMessage]:
         """Send SMS message via Twilio"""
         try:
@@ -573,12 +634,19 @@ class TwilioSMSManager:
             if scheduled_time and scheduled_time > datetime.now(timezone.utc):
                 # Twilio doesn't support scheduled messages directly
                 # Would need to implement queue/scheduler
-                logger.info(f"Message scheduled for {scheduled_time}, queuing for later delivery")
-                return await self._queue_scheduled_message(to_phone, message, scheduled_time)
+                logger.info(
+                    f"Message scheduled for {scheduled_time}, queuing for later delivery"
+                )
+                return await self._queue_scheduled_message(
+                    to_phone, message, scheduled_time
+                )
 
             # Send immediately
             twilio_message = self.client.messages.create(
-                to=to_phone, from_=self.from_phone, body=message, status_callback=callback_url
+                to=to_phone,
+                from_=self.from_phone,
+                body=message,
+                status_callback=callback_url,
             )
 
             # Create outreach message record
@@ -599,7 +667,9 @@ class TwilioSMSManager:
                 "twilio_message": twilio_message,
             }
 
-            logger.info(f"SMS sent successfully to {to_phone}, SID: {twilio_message.sid}")
+            logger.info(
+                f"SMS sent successfully to {to_phone}, SID: {twilio_message.sid}"
+            )
             return outreach_message
 
         except TwilioException as e:
@@ -638,7 +708,9 @@ class TwilioSMSManager:
 
             # Update cached message if exists
             if platform_message_id in self.message_cache:
-                cached_message = self.message_cache[platform_message_id]["outreach_message"]
+                cached_message = self.message_cache[platform_message_id][
+                    "outreach_message"
+                ]
                 cached_message.update_status(our_status)
 
             return {
@@ -656,7 +728,9 @@ class TwilioSMSManager:
             logger.error(f"Error fetching message status {platform_message_id}: {e}")
             return {"error": str(e)}
 
-    async def handle_delivery_webhook(self, webhook_data: dict[str, Any]) -> dict[str, Any]:
+    async def handle_delivery_webhook(
+        self, webhook_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Handle delivery status webhook from Twilio"""
         try:
             message_sid = webhook_data.get("MessageSid")
@@ -673,7 +747,11 @@ class TwilioSMSManager:
                 callback = self.delivery_callbacks[message_sid]
                 await callback(status_result)
 
-            return {"processed": True, "message_sid": message_sid, "status": message_status}
+            return {
+                "processed": True,
+                "message_sid": message_sid,
+                "status": message_status,
+            }
 
         except Exception as e:
             logger.error(f"Error handling delivery webhook: {e}")
@@ -705,7 +783,9 @@ class SMSCampaignOrchestrator:
     SMS Campaign Orchestrator with TCPA compliance
     """
 
-    def __init__(self, twilio_manager: TwilioSMSManager, compliance_engine: TCPAComplianceEngine):
+    def __init__(
+        self, twilio_manager: TwilioSMSManager, compliance_engine: TCPAComplianceEngine
+    ):
         self.twilio_manager = twilio_manager
         self.compliance_engine = compliance_engine
         self.active_campaigns: dict[str, dict[str, Any]] = {}
@@ -735,7 +815,9 @@ class SMSCampaignOrchestrator:
         for prospect in prospects:
             try:
                 # Personalize message
-                personalized_message = await self._personalize_message(message_template, prospect)
+                personalized_message = await self._personalize_message(
+                    message_template, prospect
+                )
 
                 # Validate compliance
                 compliance_result = await self.compliance_engine.validate_sms_outreach(
@@ -756,7 +838,9 @@ class SMSCampaignOrchestrator:
                             {
                                 "prospect_id": prospect.prospect_id,
                                 "message_id": outreach_message.message_id,
-                                "scheduled_time": compliance_result["approved_send_time"],
+                                "scheduled_time": compliance_result[
+                                    "approved_send_time"
+                                ],
                             }
                         )
                 else:
@@ -828,9 +912,15 @@ class SMSCampaignOrchestrator:
             "compliance_rate": (
                 (
                     launch_result["messages_queued"]
-                    / (launch_result["messages_queued"] + launch_result["messages_blocked"])
+                    / (
+                        launch_result["messages_queued"]
+                        + launch_result["messages_blocked"]
+                    )
                 )
-                if (launch_result["messages_queued"] + launch_result["messages_blocked"]) > 0
+                if (
+                    launch_result["messages_queued"] + launch_result["messages_blocked"]
+                )
+                > 0
                 else 0.0
             ),
             "estimated_delivery_rate": 0.95,  # Mock metric

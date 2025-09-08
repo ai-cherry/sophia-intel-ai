@@ -89,7 +89,11 @@ class SharedResourceManager:
                     "provider": "portkey",
                     "temperature": 0.7,
                 },
-                "medium_complexity": {"model": "gpt-4", "provider": "portkey", "temperature": 0.6},
+                "medium_complexity": {
+                    "model": "gpt-4",
+                    "provider": "portkey",
+                    "temperature": 0.6,
+                },
                 "low_complexity": {
                     "model": "claude-3-haiku",
                     "provider": "portkey",
@@ -102,7 +106,11 @@ class SharedResourceManager:
                     "provider": "portkey",
                     "temperature": 0.3,
                 },
-                "analysis": {"model": "gpt-4-turbo", "provider": "portkey", "temperature": 0.4},
+                "analysis": {
+                    "model": "gpt-4-turbo",
+                    "provider": "portkey",
+                    "temperature": 0.4,
+                },
                 "rapid_response": {
                     "model": "claude-3-haiku",
                     "provider": "portkey",
@@ -110,9 +118,21 @@ class SharedResourceManager:
                 },
             },
             "shared_models": {
-                "balanced": {"model": "claude-3-sonnet", "provider": "portkey", "temperature": 0.5},
-                "creative": {"model": "gpt-4", "provider": "portkey", "temperature": 0.8},
-                "analytical": {"model": "claude-3-opus", "provider": "portkey", "temperature": 0.3},
+                "balanced": {
+                    "model": "claude-3-sonnet",
+                    "provider": "portkey",
+                    "temperature": 0.5,
+                },
+                "creative": {
+                    "model": "gpt-4",
+                    "provider": "portkey",
+                    "temperature": 0.8,
+                },
+                "analytical": {
+                    "model": "claude-3-opus",
+                    "provider": "portkey",
+                    "temperature": 0.3,
+                },
             },
         }
 
@@ -199,7 +219,9 @@ class SharedResourceManager:
 
         return Agent(**agent_config)
 
-    def _enhance_with_sophia_personality(self, base_instructions: str, role: str) -> str:
+    def _enhance_with_sophia_personality(
+        self, base_instructions: str, role: str
+    ) -> str:
         """Add Sophia's strategic business intelligence personality"""
         personality_context = """
         You are part of Sophia's strategic business intelligence network with these characteristics:
@@ -215,7 +237,9 @@ class SharedResourceManager:
 
         return f"{base_instructions}\n\n{personality_context}"
 
-    def _enhance_with_artemis_personality(self, base_instructions: str, role: str) -> str:
+    def _enhance_with_artemis_personality(
+        self, base_instructions: str, role: str
+    ) -> str:
         """Add Artemis's tactical technical intelligence personality"""
         personality_context = """
         You are part of Artemis's tactical technical intelligence team with these characteristics:
@@ -257,7 +281,9 @@ class SharedResourceManager:
         logger.info(f"🧹 Cleaning up shared resources for {orchestrator_id}")
 
         # Clean up memory clients
-        keys_to_remove = [key for key in self.memory_clients if key.startswith(orchestrator_id)]
+        keys_to_remove = [
+            key for key in self.memory_clients if key.startswith(orchestrator_id)
+        ]
         for key in keys_to_remove:
             del self.memory_clients[key]
 
@@ -282,7 +308,9 @@ class PersonalityAGNOTeam:
         self.personality = personality
         self.shared_resources = shared_resources
 
-    async def create_personality_agent(self, role: str, config: dict[str, Any]) -> Agent:
+    async def create_personality_agent(
+        self, role: str, config: dict[str, Any]
+    ) -> Agent:
         """Create agent with appropriate personality enhancements"""
 
         # Get optimal model for this personality and role
@@ -300,7 +328,9 @@ class PersonalityAGNOTeam:
 
     async def get_memory_client(self, orchestrator_id: str, session_id: str):
         """Get appropriately isolated memory client"""
-        return await self.shared_resources.get_isolated_memory_client(orchestrator_id, session_id)
+        return await self.shared_resources.get_isolated_memory_client(
+            orchestrator_id, session_id
+        )
 
 
 # Utility functions for orchestrator integration

@@ -129,7 +129,9 @@ class TestSophiaUnifiedFactory:
             "capabilities": ["custom_capability"],
         }
 
-        agent_id = await factory.create_business_agent("client_success_manager", custom_config)
+        agent_id = await factory.create_business_agent(
+            "client_success_manager", custom_config
+        )
         agent = factory.active_agents[agent_id]
 
         assert agent.temperature == 0.7
@@ -141,7 +143,9 @@ class TestSophiaUnifiedFactory:
     @pytest.mark.asyncio
     async def test_create_business_agent_invalid_template(self, factory):
         """Test error handling for invalid agent template"""
-        with pytest.raises(ValueError, match="Agent template 'invalid_template' not found"):
+        with pytest.raises(
+            ValueError, match="Agent template 'invalid_template' not found"
+        ):
             await factory.create_business_agent("invalid_template")
 
     # ==============================================================================
@@ -192,16 +196,25 @@ class TestSophiaUnifiedFactory:
         assert agent.wisdom_traits["knowledge"] == "infinite"
 
     @pytest.mark.asyncio
-    async def test_create_mythology_agent_with_custom_config(self, factory, mock_memory):
+    async def test_create_mythology_agent_with_custom_config(
+        self, factory, mock_memory
+    ):
         """Test creating mythology agent with custom configuration"""
-        custom_config = {"temperature": 0.5, "wisdom_traits": {"custom_trait": "enhanced"}}
+        custom_config = {
+            "temperature": 0.5,
+            "wisdom_traits": {"custom_trait": "enhanced"},
+        }
 
-        agent_id = await factory.create_mythology_agent(MythologyArchetype.MINERVA, custom_config)
+        agent_id = await factory.create_mythology_agent(
+            MythologyArchetype.MINERVA, custom_config
+        )
         agent = factory.active_agents[agent_id]
 
         assert agent.temperature == 0.5
         assert agent.wisdom_traits["custom_trait"] == "enhanced"
-        assert agent.wisdom_traits["analysis"] == "systematic"  # Original trait preserved
+        assert (
+            agent.wisdom_traits["analysis"] == "systematic"
+        )  # Original trait preserved
 
     # ==============================================================================
     # BUSINESS TEAM TESTS
@@ -264,7 +277,9 @@ class TestSophiaUnifiedFactory:
             "enable_debate": False,
         }
 
-        team_id = await factory.create_business_team("business_intelligence", custom_config)
+        team_id = await factory.create_business_team(
+            "business_intelligence", custom_config
+        )
         team = factory.active_teams[team_id]
 
         assert team["strategy"] == "sequential"
@@ -286,7 +301,9 @@ class TestSophiaUnifiedFactory:
         """Test creation of strategic planning swarm with mythology agents"""
         swarm_config = {"focus": "Q1 2025 Strategy", "timeframe": "quarterly"}
 
-        with patch.object(factory, "create_mythology_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_mythology_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda archetype: f"mock_{archetype.value}_id"
 
             swarm_id = await factory.create_analytical_swarm(
@@ -315,7 +332,9 @@ class TestSophiaUnifiedFactory:
             "competitors": ["competitor_a", "competitor_b"],
         }
 
-        with patch.object(factory, "create_business_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_business_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda template: f"mock_{template}_id"
 
             swarm_id = await factory.create_analytical_swarm(
@@ -419,7 +438,9 @@ class TestSophiaUnifiedFactory:
         assert factory.business_metrics["analyses_completed"] == 1
 
     @pytest.mark.asyncio
-    async def test_execute_business_task_with_mythology_agent(self, factory, mock_memory):
+    async def test_execute_business_task_with_mythology_agent(
+        self, factory, mock_memory
+    ):
         """Test executing task with mythology agent shows wisdom traits"""
         agent_id = await factory.create_mythology_agent(MythologyArchetype.ATHENA)
 
@@ -499,7 +520,11 @@ class TestSophiaUnifiedFactory:
     @pytest.mark.asyncio
     async def test_task_queueing(self, factory):
         """Test task queueing mechanism"""
-        task = {"type": "business_analysis", "executor": "test_agent", "task": "Analyze metrics"}
+        task = {
+            "type": "business_analysis",
+            "executor": "test_agent",
+            "task": "Analyze metrics",
+        }
 
         task_id = await factory.queue_task(task)
 
@@ -620,7 +645,10 @@ class TestSophiaUnifiedFactory:
         # Check mythology agents
         assert "hermes" in templates["mythology_agents"]
         assert templates["mythology_agents"]["hermes"]["archetype"] == "hermes"
-        assert templates["mythology_agents"]["hermes"]["wisdom_traits"]["speed"] == "divine"
+        assert (
+            templates["mythology_agents"]["hermes"]["wisdom_traits"]["speed"]
+            == "divine"
+        )
 
     def test_get_team_templates(self, factory):
         """Test retrieving team templates"""
@@ -713,7 +741,9 @@ class TestSophiaUnifiedFactory:
         """Test concurrent creation of multiple agents"""
         tasks = []
         for i in range(5):
-            task = asyncio.create_task(factory.create_business_agent("sales_pipeline_analyst"))
+            task = asyncio.create_task(
+                factory.create_business_agent("sales_pipeline_analyst")
+            )
             tasks.append(task)
 
         agent_ids = await asyncio.gather(*tasks)

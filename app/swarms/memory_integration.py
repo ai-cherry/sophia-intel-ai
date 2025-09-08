@@ -176,11 +176,15 @@ class SwarmMemoryClient:
             ) as response:
                 if response.status == 200:
                     result = await response.json()
-                    logger.debug(f"Stored memory: {topic[:50]}... -> {result.get('id')}")
+                    logger.debug(
+                        f"Stored memory: {topic[:50]}... -> {result.get('id')}"
+                    )
                     return result
                 else:
                     error_text = await response.text()
-                    raise Exception(f"Memory storage failed: {response.status} - {error_text}")
+                    raise Exception(
+                        f"Memory storage failed: {response.status} - {error_text}"
+                    )
 
         except Exception as e:
             logger.error(f"Failed to store memory: {e}")
@@ -238,7 +242,9 @@ class SwarmMemoryClient:
                     return memories
                 else:
                     error_text = await response.text()
-                    raise Exception(f"Memory search failed: {response.status} - {error_text}")
+                    raise Exception(
+                        f"Memory search failed: {response.status} - {error_text}"
+                    )
 
         except Exception as e:
             logger.error(f"Failed to search memory: {e}")
@@ -365,7 +371,10 @@ class SwarmMemoryClient:
 
     @with_circuit_breaker("database")
     async def retrieve_patterns(
-        self, pattern_name: Optional[str] = None, min_success_score: float = 0.7, limit: int = 10
+        self,
+        pattern_name: Optional[str] = None,
+        min_success_score: float = 0.7,
+        limit: int = 10,
     ) -> list[dict[str, Any]]:
         """
         Retrieve successful patterns from memory.
@@ -385,7 +394,10 @@ class SwarmMemoryClient:
             query = f"Pattern swarm_type:{self.swarm_type}"
 
         memories = await self.search_memory(
-            query=query, limit=limit, memory_type=MemoryType.PROCEDURAL, tags=["pattern"]
+            query=query,
+            limit=limit,
+            memory_type=MemoryType.PROCEDURAL,
+            tags=["pattern"],
         )
 
         # Filter by success score and parse
@@ -429,7 +441,13 @@ class SwarmMemoryClient:
             topic=f"InterSwarm:{self.swarm_type}->{target_swarm_type}",
             content=json.dumps(comm_data, default=str),
             memory_type=MemoryType.EPISODIC,
-            tags=["inter_swarm", "communication", self.swarm_type, target_swarm_type, priority],
+            tags=[
+                "inter_swarm",
+                "communication",
+                self.swarm_type,
+                target_swarm_type,
+                priority,
+            ],
         )
 
         # Log communication event
@@ -618,7 +636,9 @@ class SwarmMemoryClient:
     # ============================================
 
     async def store_performance_metrics(
-        self, metrics: dict[str, Any], execution_context: Optional[dict[str, Any]] = None
+        self,
+        metrics: dict[str, Any],
+        execution_context: Optional[dict[str, Any]] = None,
     ):
         """
         Store swarm performance metrics.
@@ -674,7 +694,9 @@ class SwarmMemoryClient:
         for memory in memories:
             try:
                 content = json.loads(memory.get("content", "{}"))
-                timestamp = datetime.fromisoformat(content.get("timestamp", "")).timestamp()
+                timestamp = datetime.fromisoformat(
+                    content.get("timestamp", "")
+                ).timestamp()
 
                 if timestamp >= cutoff:
                     if metric_name and metric_name in content.get("metrics", {}):
@@ -701,9 +723,7 @@ class SwarmMemoryClient:
     def _cache_for_retry(self, operation: str, data: dict[str, Any]):
         """Cache failed operation for retry."""
         if len(self.memory_cache) < 100:  # Limit cache size
-            cache_key = (
-                f"{operation}_{hashlib.md5(json.dumps(data, default=str).encode()).hexdigest()[:8]}"
-            )
+            cache_key = f"{operation}_{hashlib.md5(json.dumps(data, default=str).encode()).hexdigest()[:8]}"
             self.memory_cache[cache_key] = {
                 "operation": operation,
                 "data": data,
@@ -814,7 +834,9 @@ class SwarmMemoryMixin:
                 pattern_name=f"successful_{task.get('type', 'general')}",
                 pattern_data={
                     "task": task,
-                    "result_summary": {k: v for k, v in result.items() if k != "result"},
+                    "result_summary": {
+                        k: v for k, v in result.items() if k != "result"
+                    },
                     "agent_roles": result.get("agent_roles", []),
                 },
                 success_score=result.get("quality_score", 0),

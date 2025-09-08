@@ -70,14 +70,19 @@ Provide SPECIFIC file:line references and consolidation recommendations.""",
         try:
             # Use AIMLAPI manager directly (synchronous)
             response = aimlapi_manager.chat_completion(
-                model="grok-code-fast-1", messages=messages, temperature=0.3, max_tokens=32768
+                model="grok-code-fast-1",
+                messages=messages,
+                temperature=0.3,
+                max_tokens=32768,
             )
 
             elapsed = time.time() - start_time
             print(f"✅ [T+{elapsed:.1f}s] Agent 1 COMPLETED")
 
             content = (
-                response.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+                response.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "No response")
             )
 
             return {
@@ -227,14 +232,19 @@ Provide SPECIFIC architectural improvements with implementation details.""",
         try:
             # Use AIMLAPI for Llama-4 Scout
             response = aimlapi_manager.chat_completion(
-                model="llama-4-scout", messages=messages, temperature=0.4, max_tokens=16384
+                model="llama-4-scout",
+                messages=messages,
+                temperature=0.4,
+                max_tokens=16384,
             )
 
             elapsed = time.time() - start_time
             print(f"✅ [T+{elapsed:.1f}s] Agent 3 COMPLETED")
 
             content = (
-                response.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+                response.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "No response")
             )
 
             return {
@@ -295,7 +305,9 @@ Provide SPECIFIC architectural improvements with implementation details.""",
         }
 
         # Save results
-        output_file = f"artemis_swarm_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        output_file = (
+            f"artemis_swarm_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
 

@@ -189,7 +189,9 @@ class PredictiveCache:
 
         # Evict oldest entries if cache is full
         if len(self.cache) >= self.max_size:
-            oldest_key = min(self.cache.keys(), key=lambda k: self.cache[k]["timestamp"])
+            oldest_key = min(
+                self.cache.keys(), key=lambda k: self.cache[k]["timestamp"]
+            )
             del self.cache[oldest_key]
             if oldest_key in self.access_patterns:
                 del self.access_patterns[oldest_key]
@@ -222,7 +224,8 @@ class UnifiedChatService:
             "web_search", CircuitBreakerConfig(failure_threshold=3, recovery_timeout=30)
         )
         self.mcp_circuit = CircuitBreaker(
-            "mcp_services", CircuitBreakerConfig(failure_threshold=5, recovery_timeout=60)
+            "mcp_services",
+            CircuitBreakerConfig(failure_threshold=5, recovery_timeout=60),
         )
 
         logger.info("🤖 Unified Chat Service initialized")
@@ -264,7 +267,9 @@ class UnifiedChatService:
         if intent.requires_web:
             fetch_tasks.append(
                 self._fetch_with_timeout(
-                    self._fetch_web_results(query, user_context), timeout_map["web"], "web"
+                    self._fetch_web_results(query, user_context),
+                    timeout_map["web"],
+                    "web",
                 )
             )
 
@@ -280,7 +285,9 @@ class UnifiedChatService:
         if intent.requires_mcp:
             fetch_tasks.append(
                 self._fetch_with_timeout(
-                    self._fetch_mcp_results(query, user_context), timeout_map["mcp"], "mcp"
+                    self._fetch_mcp_results(query, user_context),
+                    timeout_map["mcp"],
+                    "mcp",
                 )
             )
 
@@ -297,7 +304,9 @@ class UnifiedChatService:
                 processed_results.append(result)
 
         # Intelligent blending with source confidence scoring
-        response = await self._blend_with_confidence(query, processed_results, user_context, intent)
+        response = await self._blend_with_confidence(
+            query, processed_results, user_context, intent
+        )
 
         # Add metadata
         response.update(
@@ -338,7 +347,9 @@ class UnifiedChatService:
         self.intent_cache[cache_key] = intent
         return intent
 
-    async def _fetch_with_timeout(self, coro, timeout: float, source: str) -> Optional[QueryResult]:
+    async def _fetch_with_timeout(
+        self, coro, timeout: float, source: str
+    ) -> Optional[QueryResult]:
         """Fetch with timeout and error handling"""
         start_time = time.time()
 
@@ -356,7 +367,11 @@ class UnifiedChatService:
         except asyncio.TimeoutError:
             logger.warning(f"⏰ {source} fetch timed out after {timeout}s")
             return QueryResult(
-                source=source, data={}, confidence=0.0, response_time=timeout, error="timeout"
+                source=source,
+                data={},
+                confidence=0.0,
+                response_time=timeout,
+                error="timeout",
             )
         except Exception as e:
             logger.error(f"❌ {source} fetch failed: {e}")
@@ -472,11 +487,15 @@ class UnifiedChatService:
                 )
 
         if not response_parts:
-            response_text = "I found some information but couldn't extract meaningful results."
+            response_text = (
+                "I found some information but couldn't extract meaningful results."
+            )
             overall_confidence = 0.2
         else:
             response_text = " ".join(response_parts)
-            overall_confidence = sum(s["confidence"] for s in sources_used) / len(sources_used)
+            overall_confidence = sum(s["confidence"] for s in sources_used) / len(
+                sources_used
+            )
 
         return {
             "response": response_text,

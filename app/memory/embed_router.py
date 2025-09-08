@@ -23,7 +23,9 @@ EMBED_API_KEY = os.getenv(
 )  # Portkey Virtual Key for Together
 
 # Tier A: Long context, high accuracy (32k tokens)
-MODEL_A = get_config().get("EMBED_MODEL_A", "togethercomputer/m2-bert-80M-32k-retrieval")
+MODEL_A = get_config().get(
+    "EMBED_MODEL_A", "togethercomputer/m2-bert-80M-32k-retrieval"
+)
 DIM_A = int(get_config().get("EMBED_DIM_A", "768"))
 
 # Tier B: Fast, frequent use

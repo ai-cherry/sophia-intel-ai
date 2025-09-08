@@ -41,7 +41,9 @@ class ComprehensiveTestSuite:
                     "status": "PASS" if response.status_code == 200 else "FAIL",
                     "response_time_ms": round((end_time - start_time) * 1000, 2),
                     "status_code": response.status_code,
-                    "response": response.json() if response.status_code == 200 else None,
+                    "response": (
+                        response.json() if response.status_code == 200 else None
+                    ),
                 }
         except Exception as e:
             return {
@@ -70,7 +72,9 @@ class ComprehensiveTestSuite:
                     }
                 )
         except Exception as e:
-            tests.append({"endpoint": "neural_inference", "status": "FAIL", "error": str(e)})
+            tests.append(
+                {"endpoint": "neural_inference", "status": "FAIL", "error": str(e)}
+            )
 
         # Test enhanced search
         try:
@@ -87,7 +91,9 @@ class ComprehensiveTestSuite:
                     }
                 )
         except Exception as e:
-            tests.append({"endpoint": "enhanced_search", "status": "FAIL", "error": str(e)})
+            tests.append(
+                {"endpoint": "enhanced_search", "status": "FAIL", "error": str(e)}
+            )
 
         return tests
 
@@ -116,7 +122,9 @@ class ComprehensiveTestSuite:
                 "service": service_name,
                 "requests": requests,
                 "errors": errors,
-                "avg_response_time_ms": round(sum(response_times) / len(response_times), 2),
+                "avg_response_time_ms": round(
+                    sum(response_times) / len(response_times), 2
+                ),
                 "min_response_time_ms": round(min(response_times), 2),
                 "max_response_time_ms": round(max(response_times), 2),
                 "p95_response_time_ms": round(

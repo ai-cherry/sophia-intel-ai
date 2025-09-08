@@ -69,7 +69,9 @@ class E2ETestFixture:
 
     async def setup(self):
         """Set up test environment"""
-        self.session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=self.env.timeout))
+        self.session = aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=self.env.timeout)
+        )
 
         # Wait for all servers to be ready
         await self.wait_for_servers()
@@ -137,8 +139,15 @@ class E2ETestFixture:
                 },
             ],
             "users": [
-                TestUser("admin_001", "admin_api_key_123", "admin", ["read", "write", "admin"]),
-                TestUser("analyst_001", "analyst_api_key_456", "analyst", ["read", "write"]),
+                TestUser(
+                    "admin_001",
+                    "admin_api_key_123",
+                    "admin",
+                    ["read", "write", "admin"],
+                ),
+                TestUser(
+                    "analyst_001", "analyst_api_key_456", "analyst", ["read", "write"]
+                ),
                 TestUser("viewer_001", "viewer_api_key_789", "viewer", ["read"]),
             ],
             "workflows": [],
@@ -186,7 +195,9 @@ class TestCompleteUserWorkflows:
         headers = {"Authorization": f"Bearer {admin_user.api_key}"}
 
         async with fixture.session.post(
-            f"{fixture.env.bi_server_url}/customers", json=customer_profile_payload, headers=headers
+            f"{fixture.env.bi_server_url}/customers",
+            json=customer_profile_payload,
+            headers=headers,
         ) as response:
             assert response.status == 201
             profile_result = await response.json()
@@ -252,14 +263,17 @@ class TestCompleteUserWorkflows:
         }
 
         async with fixture.session.post(
-            f"{fixture.env.artemis_url}/workflows", json=workflow_payload, headers=headers
+            f"{fixture.env.artemis_url}/workflows",
+            json=workflow_payload,
+            headers=headers,
         ) as response:
             assert response.status == 202  # Accepted for processing
             workflow_result = await response.json()
             workflow_id = workflow_result["workflow_id"]
             fixture.cleanup_tasks.append(
                 lambda: fixture.session.delete(
-                    f"{fixture.env.artemis_url}/workflows/{workflow_id}", headers=headers
+                    f"{fixture.env.artemis_url}/workflows/{workflow_id}",
+                    headers=headers,
                 )
             )
 
@@ -273,7 +287,8 @@ class TestCompleteUserWorkflows:
 
         while not workflow_completed and waited_time < max_wait_time:
             async with fixture.session.get(
-                f"{fixture.env.unified_mcp_url}/workflows/{workflow_id}/status", headers=headers
+                f"{fixture.env.unified_mcp_url}/workflows/{workflow_id}/status",
+                headers=headers,
             ) as response:
                 assert response.status == 200
                 status_result = await response.json()
@@ -292,7 +307,8 @@ class TestCompleteUserWorkflows:
         print("✅ Step 5: Verifying workflow results...")
 
         async with fixture.session.get(
-            f"{fixture.env.artemis_url}/workflows/{workflow_id}/results", headers=headers
+            f"{fixture.env.artemis_url}/workflows/{workflow_id}/results",
+            headers=headers,
         ) as response:
             assert response.status == 200
             results = await response.json()
@@ -311,7 +327,10 @@ class TestCompleteUserWorkflows:
 
         async with fixture.session.get(
             f"{fixture.env.mem0_url}/memories/search",
-            params={"query": f"customer onboarding {customer_data['name']}", "limit": 10},
+            params={
+                "query": f"customer onboarding {customer_data['name']}",
+                "limit": 10,
+            },
             headers=headers,
         ) as response:
             assert response.status == 200
@@ -327,7 +346,9 @@ class TestCompleteUserWorkflows:
             assert len(onboarding_memories) >= 1
 
         total_workflow_time = time.time() - workflow_start
-        print(f"🎉 Customer onboarding workflow completed in {total_workflow_time:.2f} seconds")
+        print(
+            f"🎉 Customer onboarding workflow completed in {total_workflow_time:.2f} seconds"
+        )
 
         # Return workflow result for further analysis
         return WorkflowResult(
@@ -379,7 +400,8 @@ class TestCompleteUserWorkflows:
             analysis_id = request_result["analysis_id"]
             fixture.cleanup_tasks.append(
                 lambda: fixture.session.delete(
-                    f"{fixture.env.unified_mcp_url}/analysis/{analysis_id}", headers=headers
+                    f"{fixture.env.unified_mcp_url}/analysis/{analysis_id}",
+                    headers=headers,
                 )
             )
 
@@ -393,7 +415,8 @@ class TestCompleteUserWorkflows:
 
         while not routing_complete and waited < max_wait:
             async with fixture.session.get(
-                f"{fixture.env.unified_mcp_url}/analysis/{analysis_id}/routing", headers=headers
+                f"{fixture.env.unified_mcp_url}/analysis/{analysis_id}/routing",
+                headers=headers,
             ) as response:
                 if response.status == 200:
                     routing_status = await response.json()
@@ -416,7 +439,11 @@ class TestCompleteUserWorkflows:
                 "avg_employee_count": 342,
                 "industries": ["SaaS", "Enterprise Software", "AI/ML"],
             },
-            "hubspot": {"deals_in_segment": 23, "avg_deal_value": 125000, "conversion_rate": 0.34},
+            "hubspot": {
+                "deals_in_segment": 23,
+                "avg_deal_value": 125000,
+                "conversion_rate": 0.34,
+            },
             "gong": {
                 "calls_analyzed": 156,
                 "sentiment_score": 0.72,
@@ -431,7 +458,8 @@ class TestCompleteUserWorkflows:
 
         while not bi_processing_complete and waited_bi < max_wait_bi:
             async with fixture.session.get(
-                f"{fixture.env.bi_server_url}/analysis/{analysis_id}/status", headers=headers
+                f"{fixture.env.bi_server_url}/analysis/{analysis_id}/status",
+                headers=headers,
             ) as response:
                 if response.status == 200:
                     bi_status = await response.json()
@@ -492,7 +520,9 @@ class TestCompleteUserWorkflows:
         }
 
         async with fixture.session.post(
-            f"{fixture.env.artemis_url}/workflows", json=insight_workflow, headers=headers
+            f"{fixture.env.artemis_url}/workflows",
+            json=insight_workflow,
+            headers=headers,
         ) as response:
             assert response.status == 202
             workflow_result = await response.json()
@@ -508,7 +538,8 @@ class TestCompleteUserWorkflows:
 
         while not analysis_complete and waited_final < max_wait_final:
             async with fixture.session.get(
-                f"{fixture.env.unified_mcp_url}/analysis/{analysis_id}/results", headers=headers
+                f"{fixture.env.unified_mcp_url}/analysis/{analysis_id}/results",
+                headers=headers,
             ) as response:
                 if response.status == 200:
                     analysis_results = await response.json()
@@ -618,8 +649,14 @@ class TestCompleteUserWorkflows:
                 "type": "user_feedback",
                 "session_id": session_id,
                 "feedback": {
-                    "focus_areas": ["landing_page_optimization", "email_nurture_sequence"],
-                    "constraints": ["budget_under_50k", "implementation_within_30_days"],
+                    "focus_areas": [
+                        "landing_page_optimization",
+                        "email_nurture_sequence",
+                    ],
+                    "constraints": [
+                        "budget_under_50k",
+                        "implementation_within_30_days",
+                    ],
                     "additional_context": "We recently changed our pricing model which might be affecting conversions",
                 },
             }
@@ -658,7 +695,9 @@ class TestCompleteUserWorkflows:
                 approval = {
                     "type": "implementation_approval",
                     "session_id": session_id,
-                    "approved_plans": [plan["plan_id"] for plan in implementation_plans],
+                    "approved_plans": [
+                        plan["plan_id"] for plan in implementation_plans
+                    ],
                     "execution_priority": "high",
                 }
 
@@ -697,7 +736,10 @@ class TestCompleteUserWorkflows:
             # Step 8: Session summary and knowledge storage
             print("📚 Step 8: Storing session knowledge...")
 
-            session_summary = {"type": "session_summary_request", "session_id": session_id}
+            session_summary = {
+                "type": "session_summary_request",
+                "session_id": session_id,
+            }
 
             await websocket.send(json.dumps(session_summary))
 
@@ -710,7 +752,9 @@ class TestCompleteUserWorkflows:
             assert "memory_stored" in summary_result
 
         total_collaboration_time = time.time() - workflow_start
-        print(f"🌟 Real-time collaboration completed in {total_collaboration_time:.2f} seconds")
+        print(
+            f"🌟 Real-time collaboration completed in {total_collaboration_time:.2f} seconds"
+        )
 
         return WorkflowResult(
             workflow_id=session_id,
@@ -806,7 +850,9 @@ class TestCompleteUserWorkflows:
         # Step 4: Verify recovery mechanisms
         print("🔧 Step 4: Verifying recovery mechanisms...")
 
-        assert len(recovery_actions) >= len(failure_events), "Not all failures had recovery actions"
+        assert len(recovery_actions) >= len(
+            failure_events
+        ), "Not all failures had recovery actions"
 
         # Verify recovery action types
         recovery_types = {action["recovery_type"] for action in recovery_actions}
@@ -825,7 +871,9 @@ class TestCompleteUserWorkflows:
 
         for service_name, health_url in stability_tests:
             async with fixture.session.get(health_url, headers=headers) as response:
-                assert response.status == 200, f"{service_name} not stable after recovery"
+                assert (
+                    response.status == 200
+                ), f"{service_name} not stable after recovery"
                 health_data = await response.json()
                 assert health_data.get("status") == "healthy"
 
@@ -838,7 +886,8 @@ class TestCompleteUserWorkflows:
 
         while waited_recovery < max_wait_recovery:
             async with fixture.session.get(
-                f"{fixture.env.artemis_url}/workflows/{test_workflow_id}/status", headers=headers
+                f"{fixture.env.artemis_url}/workflows/{test_workflow_id}/status",
+                headers=headers,
             ) as response:
                 if response.status == 200:
                     status_data = await response.json()
@@ -865,7 +914,9 @@ class TestCompleteUserWorkflows:
                 assert error_details["recovery_attempted"] is True
 
         total_recovery_test_time = time.time() - workflow_start
-        print(f"🛡️ Failure recovery test completed in {total_recovery_test_time:.2f} seconds")
+        print(
+            f"🛡️ Failure recovery test completed in {total_recovery_test_time:.2f} seconds"
+        )
 
         return WorkflowResult(
             workflow_id=test_workflow_id,
@@ -909,14 +960,22 @@ class TestPerformanceValidation:
                 request_start = time.time()
 
                 # Mix different types of requests
-                request_types = ["memory_query", "workflow_creation", "bi_analysis", "health_check"]
+                request_types = [
+                    "memory_query",
+                    "workflow_creation",
+                    "bi_analysis",
+                    "health_check",
+                ]
                 request_type = request_types[req_num % len(request_types)]
 
                 try:
                     if request_type == "memory_query":
                         async with fixture.session.get(
                             f"{fixture.env.mem0_url}/memories/search",
-                            params={"query": f"test query {user_id}_{req_num}", "limit": 5},
+                            params={
+                                "query": f"test query {user_id}_{req_num}",
+                                "limit": 5,
+                            },
                             headers=headers,
                         ) as response:
                             status = response.status
@@ -936,7 +995,8 @@ class TestPerformanceValidation:
 
                     elif request_type == "bi_analysis":
                         async with fixture.session.get(
-                            f"{fixture.env.bi_server_url}/analytics/quick-stats", headers=headers
+                            f"{fixture.env.bi_server_url}/analytics/quick-stats",
+                            headers=headers,
                         ) as response:
                             status = response.status
 
@@ -989,7 +1049,8 @@ class TestPerformanceValidation:
         # Analyze performance results
         total_requests = sum(len(result["requests"]) for result in user_results)
         successful_requests = sum(
-            sum(1 for req in result["requests"] if req["success"]) for result in user_results
+            sum(1 for req in result["requests"] if req["success"])
+            for result in user_results
         )
 
         all_response_times = [
@@ -1006,7 +1067,9 @@ class TestPerformanceValidation:
         else:
             avg_response_time = max_response_time = min_response_time = 0
 
-        overall_success_rate = successful_requests / total_requests if total_requests > 0 else 0
+        overall_success_rate = (
+            successful_requests / total_requests if total_requests > 0 else 0
+        )
         requests_per_second = total_requests / total_load_test_time
 
         print("📊 Load Test Results:")
@@ -1068,7 +1131,8 @@ class TestPerformanceValidation:
             for i in range(volume):
                 memory_batch.append(
                     {
-                        "content": f"Performance test memory {i} - " + "data " * 10,  # ~60 chars
+                        "content": f"Performance test memory {i} - "
+                        + "data " * 10,  # ~60 chars
                         "memory_type": "semantic",
                         "tags": [f"batch_{volume}", f"item_{i}", "performance_test"],
                         "importance_score": 0.5 + (i % 100) / 200,  # Vary importance
@@ -1109,7 +1173,9 @@ class TestPerformanceValidation:
                 query_request_start = time.time()
 
                 async with fixture.session.get(
-                    f"{fixture.env.mem0_url}/memories/search", params=query, headers=headers
+                    f"{fixture.env.mem0_url}/memories/search",
+                    params=query,
+                    headers=headers,
                 ) as response:
                     assert response.status == 200
                     results = await response.json()
@@ -1126,7 +1192,10 @@ class TestPerformanceValidation:
             correlation_test_size = min(50, volume // 4)
             async with fixture.session.post(
                 f"{fixture.env.mem0_url}/memories/correlate",
-                json={"memory_count": correlation_test_size, "correlation_threshold": 0.7},
+                json={
+                    "memory_count": correlation_test_size,
+                    "correlation_threshold": 0.7,
+                },
                 headers=headers,
             ) as response:
                 if response.status == 200:
@@ -1184,8 +1253,12 @@ class TestPerformanceValidation:
         ), f"Storage throughput degraded by {throughput_degradation:.1%}"
 
         # Query time shouldn't increase more than 200%
-        query_time_increase = largest_result["avg_query_time"] / baseline_result["avg_query_time"]
-        assert query_time_increase <= 3.0, f"Query time increased by {query_time_increase:.1f}x"
+        query_time_increase = (
+            largest_result["avg_query_time"] / baseline_result["avg_query_time"]
+        )
+        assert (
+            query_time_increase <= 3.0
+        ), f"Query time increased by {query_time_increase:.1f}x"
 
         return {
             "test_type": "memory_scaling",

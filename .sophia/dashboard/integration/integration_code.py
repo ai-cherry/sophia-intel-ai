@@ -33,8 +33,12 @@ class SecretManagementIntegration:
 
         try:
             current_env = self.env_manager.current_env or "development"
-            validation_results = await self.secret_manager.validate_all_secrets(current_env)
-            health_report = self.secret_manager.generate_secret_health_report(validation_results)
+            validation_results = await self.secret_manager.validate_all_secrets(
+                current_env
+            )
+            health_report = self.secret_manager.generate_secret_health_report(
+                validation_results
+            )
 
             return {
                 "health_score": health_report["health_score"],
@@ -45,7 +49,9 @@ class SecretManagementIntegration:
                 "status": (
                     "healthy"
                     if health_report["health_score"] >= 80
-                    else "warning" if health_report["health_score"] >= 60 else "critical"
+                    else (
+                        "warning" if health_report["health_score"] >= 60 else "critical"
+                    )
                 ),
                 "last_updated": datetime.now().isoformat(),
             }

@@ -146,7 +146,9 @@ class MeshController:
 
         logger.info(f"Discovered {len(self.services)} services")
 
-    async def register_service(self, service: Any, namespace: str) -> Optional[MeshService]:
+    async def register_service(
+        self, service: Any, namespace: str
+    ) -> Optional[MeshService]:
         """
         Register a service in the mesh
 
@@ -293,7 +295,9 @@ class MeshController:
 
         return services
 
-    async def get_healthy_endpoints(self, name: str, namespace: str) -> list[ServiceEndpoint]:
+    async def get_healthy_endpoints(
+        self, name: str, namespace: str
+    ) -> list[ServiceEndpoint]:
         """
         Get healthy endpoints for a service
 
@@ -331,7 +335,9 @@ class MeshController:
         self.watchers[f"services-{namespace}"] = w
 
         try:
-            async for event in w.stream(self.v1.list_namespaced_service, namespace=namespace):
+            async for event in w.stream(
+                self.v1.list_namespaced_service, namespace=namespace
+            ):
                 if not self.running:
                     break
 
@@ -351,7 +357,9 @@ class MeshController:
         self.watchers[f"endpoints-{namespace}"] = w
 
         try:
-            async for event in w.stream(self.v1.list_namespaced_endpoints, namespace=namespace):
+            async for event in w.stream(
+                self.v1.list_namespaced_endpoints, namespace=namespace
+            ):
                 if not self.running:
                     break
 

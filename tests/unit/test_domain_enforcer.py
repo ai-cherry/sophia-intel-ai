@@ -102,13 +102,21 @@ class TestDomainEnforcer:
         assert matrix[(UserRole.ARCHITECT, MemoryDomain.ARTEMIS)] == AccessLevel.FULL
 
         # Business roles for Sophia
-        assert matrix[(UserRole.BUSINESS_ANALYST, MemoryDomain.SOPHIA)] == AccessLevel.FULL
+        assert (
+            matrix[(UserRole.BUSINESS_ANALYST, MemoryDomain.SOPHIA)] == AccessLevel.FULL
+        )
         assert matrix[(UserRole.EXECUTIVE, MemoryDomain.SOPHIA)] == AccessLevel.FULL
         assert matrix[(UserRole.SALES, MemoryDomain.SOPHIA)] == AccessLevel.WRITE
-        assert matrix[(UserRole.CUSTOMER_SUCCESS, MemoryDomain.SOPHIA)] == AccessLevel.WRITE
+        assert (
+            matrix[(UserRole.CUSTOMER_SUCCESS, MemoryDomain.SOPHIA)]
+            == AccessLevel.WRITE
+        )
 
         # Limited cross-domain access
-        assert matrix[(UserRole.BUSINESS_ANALYST, MemoryDomain.ARTEMIS)] == AccessLevel.READ
+        assert (
+            matrix[(UserRole.BUSINESS_ANALYST, MemoryDomain.ARTEMIS)]
+            == AccessLevel.READ
+        )
         assert matrix[(UserRole.DEVELOPER, MemoryDomain.SOPHIA)] == AccessLevel.READ
 
         # Readonly has read access to both
@@ -271,7 +279,9 @@ class TestDomainEnforcer:
         result = enforcer.validate_request(request)
 
         assert result.allowed is False
-        assert "Operation sales_analytics not allowed in ARTEMIS domain" in result.reason
+        assert (
+            "Operation sales_analytics not allowed in ARTEMIS domain" in result.reason
+        )
         assert result.suggested_domain == MemoryDomain.SOPHIA
         assert enforcer.validation_stats["violations_detected"] == 1
 
@@ -331,7 +341,9 @@ class TestDomainEnforcer:
 
         assert result.allowed is False
         assert len(result.restrictions) > 0
-        assert "Production resources require DevOps or Admin role" in result.restrictions
+        assert (
+            "Production resources require DevOps or Admin role" in result.restrictions
+        )
 
         # Test with DevOps role - should succeed
         request.user_role = UserRole.DEVOPS
@@ -415,7 +427,9 @@ class TestDomainEnforcer:
         result = enforcer.validate_request(request)
 
         assert result.allowed is False
-        assert "After-hours operations require Admin or DevOps role" in result.restrictions
+        assert (
+            "After-hours operations require Admin or DevOps role" in result.restrictions
+        )
 
         # Test with DevOps role - should succeed
         request.user_role = UserRole.DEVOPS
@@ -472,7 +486,9 @@ class TestDomainEnforcer:
 
         # Approve by admin - should succeed
         success = enforcer.approve_cross_domain_request(
-            request_id=request_id, approver_id="admin_user", approver_role=UserRole.ADMIN
+            request_id=request_id,
+            approver_id="admin_user",
+            approver_role=UserRole.ADMIN,
         )
 
         assert success is True
@@ -501,7 +517,9 @@ class TestDomainEnforcer:
 
         # Approve
         enforcer.approve_cross_domain_request(
-            request_id=request.id, approver_id="admin_user", approver_role=UserRole.ADMIN
+            request_id=request.id,
+            approver_id="admin_user",
+            approver_role=UserRole.ADMIN,
         )
 
         # Check after approval
@@ -510,7 +528,9 @@ class TestDomainEnforcer:
     def test_approve_nonexistent_request(self, enforcer):
         """Test attempting to approve non-existent request"""
         success = enforcer.approve_cross_domain_request(
-            request_id="nonexistent_id", approver_id="admin_user", approver_role=UserRole.ADMIN
+            request_id="nonexistent_id",
+            approver_id="admin_user",
+            approver_role=UserRole.ADMIN,
         )
 
         assert success is False
@@ -581,10 +601,16 @@ class TestDomainEnforcer:
             DomainRequest(
                 id=f"req_{i}",
                 user_id=f"user_{i % 2}",  # Alternating users
-                user_role=UserRole.DEVELOPER if i % 2 == 0 else UserRole.BUSINESS_ANALYST,
-                target_domain=MemoryDomain.ARTEMIS if i % 2 == 0 else MemoryDomain.SOPHIA,
+                user_role=(
+                    UserRole.DEVELOPER if i % 2 == 0 else UserRole.BUSINESS_ANALYST
+                ),
+                target_domain=(
+                    MemoryDomain.ARTEMIS if i % 2 == 0 else MemoryDomain.SOPHIA
+                ),
                 operation_type=(
-                    OperationType.CODE_REVIEW if i % 2 == 0 else OperationType.BUSINESS_ANALYSIS
+                    OperationType.CODE_REVIEW
+                    if i % 2 == 0
+                    else OperationType.BUSINESS_ANALYSIS
                 ),
             )
             for i in range(5)
@@ -731,7 +757,9 @@ class TestDomainEnforcer:
         summary = enforcer.get_domain_summary()
 
         # Check Artemis domain
-        assert summary["artemis_domain"]["description"] == "Repository and code operations"
+        assert (
+            summary["artemis_domain"]["description"] == "Repository and code operations"
+        )
         assert OperationType.CODE_GENERATION in summary["artemis_domain"]["operations"]
         assert UserRole.DEVELOPER.value in summary["artemis_domain"]["allowed_roles"]
         assert UserRole.ADMIN.value in summary["artemis_domain"]["allowed_roles"]
@@ -739,7 +767,9 @@ class TestDomainEnforcer:
         # Check Sophia domain
         assert summary["sophia_domain"]["description"] == "Business operations"
         assert OperationType.BUSINESS_ANALYSIS in summary["sophia_domain"]["operations"]
-        assert UserRole.BUSINESS_ANALYST.value in summary["sophia_domain"]["allowed_roles"]
+        assert (
+            UserRole.BUSINESS_ANALYST.value in summary["sophia_domain"]["allowed_roles"]
+        )
 
         # Check shared operations
         assert OperationType.MONITORING in summary["shared_operations"]
@@ -790,16 +820,27 @@ class TestDomainEnforcer:
         assert dev_summary["artemis_access"] == AccessLevel.FULL.value
         assert dev_summary["sophia_access"] == AccessLevel.READ.value
         assert OperationType.CODE_GENERATION.value in dev_summary["allowed_operations"]
-        assert OperationType.BUSINESS_ANALYSIS.value in dev_summary["allowed_operations"]
-        assert OperationType.REVENUE_FORECASTING.value not in dev_summary["allowed_operations"]
+        assert (
+            OperationType.BUSINESS_ANALYSIS.value in dev_summary["allowed_operations"]
+        )
+        assert (
+            OperationType.REVENUE_FORECASTING.value
+            not in dev_summary["allowed_operations"]
+        )
 
         # Test business analyst role
         analyst_summary = get_domain_access_summary(UserRole.BUSINESS_ANALYST)
 
         assert analyst_summary["artemis_access"] == AccessLevel.READ.value
         assert analyst_summary["sophia_access"] == AccessLevel.FULL.value
-        assert OperationType.REVENUE_FORECASTING.value in analyst_summary["allowed_operations"]
-        assert OperationType.CODE_GENERATION.value not in analyst_summary["allowed_operations"]
+        assert (
+            OperationType.REVENUE_FORECASTING.value
+            in analyst_summary["allowed_operations"]
+        )
+        assert (
+            OperationType.CODE_GENERATION.value
+            not in analyst_summary["allowed_operations"]
+        )
 
     # ==============================================================================
     # EDGE CASES AND ERROR HANDLING
@@ -809,13 +850,17 @@ class TestDomainEnforcer:
         """Test correct access level requirements for different operations"""
         # Write operations
         assert (
-            enforcer._get_required_access_level(OperationType.CODE_GENERATION) == AccessLevel.WRITE
+            enforcer._get_required_access_level(OperationType.CODE_GENERATION)
+            == AccessLevel.WRITE
         )
         assert (
             enforcer._get_required_access_level(OperationType.REVENUE_FORECASTING)
             == AccessLevel.WRITE
         )
-        assert enforcer._get_required_access_level(OperationType.OKR_TRACKING) == AccessLevel.WRITE
+        assert (
+            enforcer._get_required_access_level(OperationType.OKR_TRACKING)
+            == AccessLevel.WRITE
+        )
 
         # Execute operations
         assert (
@@ -828,41 +873,85 @@ class TestDomainEnforcer:
         )
 
         # Read operations
-        assert enforcer._get_required_access_level(OperationType.CODE_REVIEW) == AccessLevel.READ
         assert (
-            enforcer._get_required_access_level(OperationType.BUSINESS_ANALYSIS) == AccessLevel.READ
+            enforcer._get_required_access_level(OperationType.CODE_REVIEW)
+            == AccessLevel.READ
+        )
+        assert (
+            enforcer._get_required_access_level(OperationType.BUSINESS_ANALYSIS)
+            == AccessLevel.READ
         )
 
     def test_has_sufficient_access_hierarchy(self, enforcer):
         """Test access level hierarchy checking"""
         # FULL has access to everything
-        assert enforcer._has_sufficient_access(AccessLevel.FULL, AccessLevel.WRITE) is True
-        assert enforcer._has_sufficient_access(AccessLevel.FULL, AccessLevel.EXECUTE) is True
-        assert enforcer._has_sufficient_access(AccessLevel.FULL, AccessLevel.READ) is True
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.FULL, AccessLevel.WRITE) is True
+        )
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.FULL, AccessLevel.EXECUTE)
+            is True
+        )
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.FULL, AccessLevel.READ) is True
+        )
 
         # WRITE has access to WRITE and below
-        assert enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.WRITE) is True
-        assert enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.EXECUTE) is True
-        assert enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.READ) is True
-        assert enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.FULL) is False
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.WRITE)
+            is True
+        )
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.EXECUTE)
+            is True
+        )
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.READ) is True
+        )
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.WRITE, AccessLevel.FULL)
+            is False
+        )
 
         # READ has access only to READ
-        assert enforcer._has_sufficient_access(AccessLevel.READ, AccessLevel.READ) is True
-        assert enforcer._has_sufficient_access(AccessLevel.READ, AccessLevel.WRITE) is False
-        assert enforcer._has_sufficient_access(AccessLevel.READ, AccessLevel.EXECUTE) is False
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.READ, AccessLevel.READ) is True
+        )
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.READ, AccessLevel.WRITE)
+            is False
+        )
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.READ, AccessLevel.EXECUTE)
+            is False
+        )
 
         # NONE has no access
-        assert enforcer._has_sufficient_access(AccessLevel.NONE, AccessLevel.READ) is False
+        assert (
+            enforcer._has_sufficient_access(AccessLevel.NONE, AccessLevel.READ) is False
+        )
 
     def test_get_correct_domain_for_operations(self, enforcer):
         """Test getting the correct domain for operations"""
         # Artemis operations
-        assert enforcer._get_correct_domain(OperationType.CODE_GENERATION) == MemoryDomain.ARTEMIS
-        assert enforcer._get_correct_domain(OperationType.SECURITY_SCANNING) == MemoryDomain.ARTEMIS
+        assert (
+            enforcer._get_correct_domain(OperationType.CODE_GENERATION)
+            == MemoryDomain.ARTEMIS
+        )
+        assert (
+            enforcer._get_correct_domain(OperationType.SECURITY_SCANNING)
+            == MemoryDomain.ARTEMIS
+        )
 
         # Sophia operations
-        assert enforcer._get_correct_domain(OperationType.BUSINESS_ANALYSIS) == MemoryDomain.SOPHIA
-        assert enforcer._get_correct_domain(OperationType.OKR_TRACKING) == MemoryDomain.SOPHIA
+        assert (
+            enforcer._get_correct_domain(OperationType.BUSINESS_ANALYSIS)
+            == MemoryDomain.SOPHIA
+        )
+        assert (
+            enforcer._get_correct_domain(OperationType.OKR_TRACKING)
+            == MemoryDomain.SOPHIA
+        )
 
         # Shared operations return None (allowed in both)
         assert enforcer._get_correct_domain(OperationType.MONITORING) is None

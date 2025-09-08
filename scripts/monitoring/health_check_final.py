@@ -36,10 +36,14 @@ async def check_all_systems():
                     logger.info(f"{GREEN}  ✅ API Server: ONLINE{RESET}")
                     for system, status in data.get("systems", {}).items():
                         icon = "✅" if status else "❌"
-                        logger.info(f"    {icon} {system}: {'ACTIVE' if status else 'OFFLINE'}")
+                        logger.info(
+                            f"    {icon} {system}: {'ACTIVE' if status else 'OFFLINE'}"
+                        )
                     results["api_server"] = True
                 else:
-                    logger.info(f"{RED}  ❌ API Server: ERROR (Status {resp.status}){RESET}")
+                    logger.info(
+                        f"{RED}  ❌ API Server: ERROR (Status {resp.status}){RESET}"
+                    )
                     results["api_server"] = False
         except Exception as e:
             logger.info(f"{RED}  ❌ API Server: OFFLINE ({e}){RESET}")
@@ -67,14 +71,18 @@ async def check_all_systems():
                 "message": "Health check test",
                 "use_memory": False,
             }
-            async with session.post("http://localhost:8003/teams/run", json=payload) as resp:
+            async with session.post(
+                "http://localhost:8003/teams/run", json=payload
+            ) as resp:
                 if resp.status == 200:
                     content = await resp.text()
                     if "real_execution" in content and "mock" not in content.lower():
                         logger.info(f"{GREEN}  ✅ Orchestrator: REAL (no mocks){RESET}")
                         results["orchestrator"] = True
                     else:
-                        logger.info(f"{YELLOW}  ⚠️  Orchestrator: Mock responses detected{RESET}")
+                        logger.info(
+                            f"{YELLOW}  ⚠️  Orchestrator: Mock responses detected{RESET}"
+                        )
                         results["orchestrator"] = False
                 else:
                     logger.info(f"{RED}  ❌ Orchestrator: ERROR{RESET}")
@@ -120,9 +128,13 @@ async def check_all_systems():
                 "content": "Testing ModernBERT embeddings",
                 "source": "final_check",
             }
-            async with session.post("http://localhost:8003/memory/add", json=test_payload) as resp:
+            async with session.post(
+                "http://localhost:8003/memory/add", json=test_payload
+            ) as resp:
                 if resp.status == 200:
-                    logger.info(f"{GREEN}  ✅ ModernBERT: ACTIVE (Voyage-3/Cohere){RESET}")
+                    logger.info(
+                        f"{GREEN}  ✅ ModernBERT: ACTIVE (Voyage-3/Cohere){RESET}"
+                    )
                     results["embeddings"] = True
                 else:
                     logger.info(f"{RED}  ❌ ModernBERT: ERROR{RESET}")

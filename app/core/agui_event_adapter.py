@@ -199,7 +199,11 @@ class AGUIEventAdapter:
             )
 
             # Determine event type
-            event_type = AGUIEventType.TEXT_COMPLETE if finish_reason else AGUIEventType.TEXT_DELTA
+            event_type = (
+                AGUIEventType.TEXT_COMPLETE
+                if finish_reason
+                else AGUIEventType.TEXT_DELTA
+            )
 
             event = AGUIEvent(type=event_type, metadata=metadata, data=text_delta)
 
@@ -253,10 +257,16 @@ class AGUIEventAdapter:
             start_time=datetime.utcnow().isoformat(),
         )
 
-        return AGUIEvent(type=AGUIEventType.TOOL_CALL_START, metadata=metadata, data=tool_call)
+        return AGUIEvent(
+            type=AGUIEventType.TOOL_CALL_START, metadata=metadata, data=tool_call
+        )
 
     async def update_tool_call(
-        self, tool_id: str, status: str, result: Optional[Any] = None, error: Optional[str] = None
+        self,
+        tool_id: str,
+        status: str,
+        result: Optional[Any] = None,
+        error: Optional[str] = None,
     ) -> Optional[AGUIEvent]:
         """
         Update existing tool call with result or error
@@ -272,7 +282,9 @@ class AGUIEventAdapter:
         """
         # This would typically update an existing tool call
         # For now, create a completion event
-        metadata = AGUIEventMetadata(correlation_id=tool_id, sequence=self._get_next_sequence())
+        metadata = AGUIEventMetadata(
+            correlation_id=tool_id, sequence=self._get_next_sequence()
+        )
 
         tool_call = AGUIToolCall(
             tool_name="unknown",  # Would be retrieved from active calls
@@ -285,7 +297,9 @@ class AGUIEventAdapter:
         )
 
         event_type = (
-            AGUIEventType.TOOL_CALL_COMPLETE if status == "complete" else AGUIEventType.TOOL_RESULT
+            AGUIEventType.TOOL_CALL_COMPLETE
+            if status == "complete"
+            else AGUIEventType.TOOL_RESULT
         )
 
         return AGUIEvent(type=event_type, metadata=metadata, data=tool_call)
@@ -313,7 +327,9 @@ class AGUIEventAdapter:
         ws_event.get("session_id")
 
         # Map swarm event types to AG-UI types
-        event_mapping = WEBSOCKET_TO_AGUI_MAPPING.get(WebSocketEventType.SWARM_EVENT, {})
+        event_mapping = WEBSOCKET_TO_AGUI_MAPPING.get(
+            WebSocketEventType.SWARM_EVENT, {}
+        )
         agui_type = event_mapping.get(event_type_str, AGUIEventType.SWARM_PROGRESS)
 
         # Update domain context for swarm events
@@ -394,7 +410,9 @@ class AGUIEventAdapter:
                 "alert_type": ws_event.get("alert_type"),
                 "severity": ws_event.get("severity", "medium"),
                 "details": ws_event.get("details", {}),
-                "recommended_actions": ws_event.get("details", {}).get("recommended_actions", []),
+                "recommended_actions": ws_event.get("details", {}).get(
+                    "recommended_actions", []
+                ),
             },
         )
 
@@ -520,7 +538,9 @@ class AGUIEventAdapter:
             "streams": {
                 stream_id: {
                     "type": info["type"],
-                    "duration_seconds": (datetime.utcnow() - info["start_time"]).total_seconds(),
+                    "duration_seconds": (
+                        datetime.utcnow() - info["start_time"]
+                    ).total_seconds(),
                     "session_id": info.get("session_id"),
                 }
                 for stream_id, info in self.active_streams.items()
@@ -580,4 +600,6 @@ class AGUIEventAdapter:
             message=message,
         )
 
-        return AGUIEvent(type=AGUIEventType.STATE_UPDATE, metadata=metadata, data=state_update)
+        return AGUIEvent(
+            type=AGUIEventType.STATE_UPDATE, metadata=metadata, data=state_update
+        )

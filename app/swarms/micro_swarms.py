@@ -198,7 +198,9 @@ class ConfidenceBasedRouter:
 
         logger.info("ConfidenceBasedRouter initialized")
 
-    async def route_request(self, request: str, initial_tier: str = "tier1") -> dict[str, Any]:
+    async def route_request(
+        self, request: str, initial_tier: str = "tier1"
+    ) -> dict[str, Any]:
         """Route request through escalation tiers based on confidence."""
         tiers = MicroSwarmLibrary.ESCALATION_TIERS
         current_tier = initial_tier
@@ -217,8 +219,13 @@ class ConfidenceBasedRouter:
         total_cost += result.get("cost", 0)
 
         # Escalate if confidence is low
-        if result.get("confidence", 0) < self.tier1_threshold and current_tier == "tier1":
-            logger.info(f"Escalating to tier2 (confidence: {result.get('confidence', 0)})")
+        if (
+            result.get("confidence", 0) < self.tier1_threshold
+            and current_tier == "tier1"
+        ):
+            logger.info(
+                f"Escalating to tier2 (confidence: {result.get('confidence', 0)})"
+            )
             current_tier = "tier2"
             result = await self._execute_tier(request, tiers[current_tier])
             attempts.append(
@@ -230,8 +237,13 @@ class ConfidenceBasedRouter:
             )
             total_cost += result.get("cost", 0)
 
-        if result.get("confidence", 0) < self.tier2_threshold and current_tier == "tier2":
-            logger.info(f"Escalating to tier3 (confidence: {result.get('confidence', 0)})")
+        if (
+            result.get("confidence", 0) < self.tier2_threshold
+            and current_tier == "tier2"
+        ):
+            logger.info(
+                f"Escalating to tier3 (confidence: {result.get('confidence', 0)})"
+            )
             current_tier = "tier3"
             result = await self._execute_tier(request, tiers[current_tier])
             attempts.append(
@@ -314,7 +326,9 @@ class MicroSwarmExecutor:
 
         return result
 
-    async def _execute_fixed(self, config: MicroSwarmConfig, request: str) -> dict[str, Any]:
+    async def _execute_fixed(
+        self, config: MicroSwarmConfig, request: str
+    ) -> dict[str, Any]:
         """Execute with fixed swarm configuration."""
         # In production, this would execute with actual agents
         # For now, return mock result
@@ -338,7 +352,9 @@ class MicroSwarmExecutor:
             "gates_passed": config.gates,
         }
 
-    async def compare_configs(self, config_names: list[str], request: str) -> dict[str, Any]:
+    async def compare_configs(
+        self, config_names: list[str], request: str
+    ) -> dict[str, Any]:
         """Compare multiple micro-swarm configurations (A/B testing)."""
         results = {}
 

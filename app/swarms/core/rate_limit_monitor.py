@@ -43,9 +43,15 @@ class RateLimitInfo:
     success_rate: float = 1.0
 
     # Sliding windows for tracking
-    token_window: deque = field(default_factory=lambda: deque(maxlen=60))  # Last 60 seconds
-    request_window: deque = field(default_factory=lambda: deque(maxlen=60))  # Last 60 seconds
-    latency_window: deque = field(default_factory=lambda: deque(maxlen=100))  # Last 100 requests
+    token_window: deque = field(
+        default_factory=lambda: deque(maxlen=60)
+    )  # Last 60 seconds
+    request_window: deque = field(
+        default_factory=lambda: deque(maxlen=60)
+    )  # Last 60 seconds
+    latency_window: deque = field(
+        default_factory=lambda: deque(maxlen=100)
+    )  # Last 100 requests
 
     def update_usage(self, tokens: int, latency: float):
         """Update usage statistics"""
@@ -89,12 +95,16 @@ class RateLimitInfo:
         # Token availability
         token_availability = 1.0
         if self.configured_tpm > 0:
-            token_availability = max(0, 1 - (self.tokens_used_minute / self.configured_tpm))
+            token_availability = max(
+                0, 1 - (self.tokens_used_minute / self.configured_tpm)
+            )
 
         # Request availability
         request_availability = 1.0
         if self.configured_rpm > 0:
-            request_availability = max(0, 1 - (self.requests_this_minute / self.configured_rpm))
+            request_availability = max(
+                0, 1 - (self.requests_this_minute / self.configured_rpm)
+            )
 
         # Combined availability (minimum of both)
         return min(token_availability, request_availability) * self.success_rate
@@ -110,7 +120,9 @@ class RateLimitInfo:
 
         # Check request capacity
         if self.configured_rpm > 0:
-            if self.requests_this_minute + 1 > self.configured_rpm * 0.9:  # 90% threshold
+            if (
+                self.requests_this_minute + 1 > self.configured_rpm * 0.9
+            ):  # 90% threshold
                 return False
 
         # Check if recently rate limited
@@ -149,7 +161,9 @@ class RateLimitMonitor:
                 configured_rpm=config.get("rpm_limit", 0),
             )
 
-        logger.info(f"Loaded rate limit configs for {len(self.rate_limits)} virtual keys")
+        logger.info(
+            f"Loaded rate limit configs for {len(self.rate_limits)} virtual keys"
+        )
 
     def _start_monitoring(self):
         """Start background monitoring tasks"""
@@ -202,7 +216,9 @@ class RateLimitMonitor:
             if error and "rate limit" in error.lower():
                 rate_info.record_rate_limit()
         else:
-            rate_info.success_rate = min(1.0, rate_info.success_rate * 1.02)  # Slowly recover
+            rate_info.success_rate = min(
+                1.0, rate_info.success_rate * 1.02
+            )  # Slowly recover
 
         # Record in history
         self.request_history.append(
@@ -247,7 +263,8 @@ class RateLimitMonitor:
             # Calculate score
             score = (
                 availability * 0.4
-                + (1 / max(rate_info.avg_latency, 0.1)) * 0.3  # Availability is important
+                + (1 / max(rate_info.avg_latency, 0.1))
+                * 0.3  # Availability is important
                 + rate_info.success_rate  # Lower latency is better
                 * 0.3  # Higher success rate is better
             )
@@ -285,7 +302,9 @@ class RateLimitMonitor:
                     "success_rate": round(rate_info.success_rate, 3),
                     "rate_limit_count": rate_info.rate_limit_count,
                     "last_rate_limit": (
-                        rate_info.last_rate_limit.isoformat() if rate_info.last_rate_limit else None
+                        rate_info.last_rate_limit.isoformat()
+                        if rate_info.last_rate_limit
+                        else None
                     ),
                 }
 
@@ -374,7 +393,9 @@ class RateLimitMonitor:
                 "rate_limits": {
                     "hit_count": rate_info.rate_limit_count,
                     "last_hit": (
-                        rate_info.last_rate_limit.isoformat() if rate_info.last_rate_limit else None
+                        rate_info.last_rate_limit.isoformat()
+                        if rate_info.last_rate_limit
+                        else None
                     ),
                 },
             }
@@ -405,7 +426,9 @@ if __name__ == "__main__":
     monitor = get_rate_monitor()
 
     # Simulate some requests
-    monitor.record_request("openai-vk-190a60", tokens_used=500, latency=1.2, success=True)
+    monitor.record_request(
+        "openai-vk-190a60", tokens_used=500, latency=1.2, success=True
+    )
     monitor.record_request("groq-vk-6b9b52", tokens_used=200, latency=0.3, success=True)
     monitor.record_request(
         "anthropic-vk-b42804",

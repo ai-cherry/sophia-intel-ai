@@ -116,7 +116,9 @@ class RateLimitMiddleware:
     def get_retry_after(self, client_id: str, endpoint: str) -> int:
         """Get seconds until rate limit resets."""
         # Next minute
-        next_minute = (datetime.now() + timedelta(minutes=1)).replace(second=0, microsecond=0)
+        next_minute = (datetime.now() + timedelta(minutes=1)).replace(
+            second=0, microsecond=0
+        )
         return int((next_minute - datetime.now()).total_seconds())
 
     def get_remaining_requests(self, client_id: str, endpoint: str) -> int:
@@ -222,13 +224,19 @@ class CircuitBreakerMiddleware:
         """Configure circuit breakers for known services."""
 
         # Weaviate circuit breaker
-        self.breakers["weaviate"] = CircuitBreaker(fail_max=5, reset_timeout=60, name="weaviate")
+        self.breakers["weaviate"] = CircuitBreaker(
+            fail_max=5, reset_timeout=60, name="weaviate"
+        )
 
         # OpenAI/OpenRouter circuit breaker
-        self.breakers["openai"] = CircuitBreaker(fail_max=3, reset_timeout=30, name="openai")
+        self.breakers["openai"] = CircuitBreaker(
+            fail_max=3, reset_timeout=30, name="openai"
+        )
 
         # Redis circuit breaker
-        self.breakers["redis"] = CircuitBreaker(fail_max=10, reset_timeout=20, name="redis")
+        self.breakers["redis"] = CircuitBreaker(
+            fail_max=10, reset_timeout=20, name="redis"
+        )
 
     async def __call__(self, request: Request, call_next):
         # Check circuit breakers for relevant endpoints
@@ -264,7 +272,9 @@ class CircuitBreakerMiddleware:
 class RetryableHTTPClient:
     """HTTP client with automatic retry logic."""
 
-    def __init__(self, max_retries: int = 3, backoff_factor: float = 0.5, timeout: float = 30.0):
+    def __init__(
+        self, max_retries: int = 3, backoff_factor: float = 0.5, timeout: float = 30.0
+    ):
         self.max_retries = max_retries
         self.backoff_factor = backoff_factor
         self.timeout = timeout
@@ -274,9 +284,13 @@ class RetryableHTTPClient:
             retries=max_retries,
         )
 
-        self.client = httpx.AsyncClient(transport=self.transport, timeout=httpx.Timeout(timeout))
+        self.client = httpx.AsyncClient(
+            transport=self.transport, timeout=httpx.Timeout(timeout)
+        )
 
-    async def request_with_retry(self, method: str, url: str, **kwargs) -> httpx.Response:
+    async def request_with_retry(
+        self, method: str, url: str, **kwargs
+    ) -> httpx.Response:
         """Make request with exponential backoff retry."""
 
         last_exception = None
@@ -300,7 +314,9 @@ class RetryableHTTPClient:
                     logger.warning(f"Request failed (attempt {attempt + 1}): {e}")
                     await self._backoff(attempt)
                 else:
-                    logger.error(f"Request failed after {self.max_retries} attempts: {e}")
+                    logger.error(
+                        f"Request failed after {self.max_retries} attempts: {e}"
+                    )
 
         if last_exception:
             raise last_exception
@@ -367,7 +383,9 @@ class TimeoutMiddleware:
 # ============================================
 
 
-def with_retry(max_attempts: int = 3, backoff: float = 1.0, exceptions: tuple = (Exception,)):
+def with_retry(
+    max_attempts: int = 3, backoff: float = 1.0, exceptions: tuple = (Exception,)
+):
     """Decorator for automatic retry with exponential backoff."""
 
     def decorator(func: Callable) -> Callable:
@@ -389,7 +407,9 @@ def with_retry(max_attempts: int = 3, backoff: float = 1.0, exceptions: tuple = 
                         )
                         await asyncio.sleep(delay)
                     else:
-                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}: {e}")
+                        logger.error(
+                            f"All {max_attempts} attempts failed for {func.__name__}: {e}"
+                        )
 
             raise last_exception
 
@@ -411,7 +431,9 @@ def with_retry(max_attempts: int = 3, backoff: float = 1.0, exceptions: tuple = 
                         )
                         time.sleep(delay)
                     else:
-                        logger.error(f"All {max_attempts} attempts failed for {func.__name__}: {e}")
+                        logger.error(
+                            f"All {max_attempts} attempts failed for {func.__name__}: {e}"
+                        )
 
             raise last_exception
 

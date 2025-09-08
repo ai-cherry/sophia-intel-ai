@@ -74,7 +74,9 @@ class AsanaClient:
         if session and not session.closed:
             await session.close()
 
-    async def _make_request(self, method: str, endpoint: str, **kwargs) -> dict[str, Any]:
+    async def _make_request(
+        self, method: str, endpoint: str, **kwargs
+    ) -> dict[str, Any]:
         """Make authenticated request to Asana API"""
         if not self.session:
             await self.initialize_session()
@@ -126,7 +128,9 @@ class AsanaClient:
             "opt_fields": "name,assignee,completed,completed_at,created_at,modified_at,due_date,notes,tags,projects,parent,subtasks"
         }
 
-        response = await self._make_request("GET", f"/projects/{project_gid}/tasks", params=params)
+        response = await self._make_request(
+            "GET", f"/projects/{project_gid}/tasks", params=params
+        )
         return response.get("data", [])
 
     async def get_task_details(self, task_gid: str) -> dict[str, Any]:
@@ -171,7 +175,11 @@ class AsanaClient:
             project_analysis = {
                 "gid": project.get("gid"),
                 "name": project.get("name"),
-                "owner": project.get("owner", {}).get("name") if project.get("owner") else None,
+                "owner": (
+                    project.get("owner", {}).get("name")
+                    if project.get("owner")
+                    else None
+                ),
                 "status": (
                     project.get("current_status", {}).get("text")
                     if project.get("current_status")
@@ -193,7 +201,10 @@ class AsanaClient:
                     analysis["overdue_projects"] += 1
 
             # Count active projects
-            if project.get("current_status", {}).get("color") not in ["complete", "green"]:
+            if project.get("current_status", {}).get("color") not in [
+                "complete",
+                "green",
+            ]:
                 analysis["active_projects"] += 1
             else:
                 analysis["completed_projects"] += 1
@@ -287,7 +298,9 @@ class AsanaClient:
         for task in all_tasks:
             # Tasks created in period
             if task.get("created_at"):
-                created_date = datetime.fromisoformat(task["created_at"].replace("Z", "+00:00"))
+                created_date = datetime.fromisoformat(
+                    task["created_at"].replace("Z", "+00:00")
+                )
                 if created_date >= cutoff_date:
                     metrics["tasks_created"] += 1
 
@@ -297,14 +310,20 @@ class AsanaClient:
 
                 # Calculate completion time
                 if task.get("created_at") and task.get("completed_at"):
-                    created = datetime.fromisoformat(task["created_at"].replace("Z", "+00:00"))
-                    completed = datetime.fromisoformat(task["completed_at"].replace("Z", "+00:00"))
+                    created = datetime.fromisoformat(
+                        task["created_at"].replace("Z", "+00:00")
+                    )
+                    completed = datetime.fromisoformat(
+                        task["completed_at"].replace("Z", "+00:00")
+                    )
                     completion_time = (completed - created).days
                     completion_times.append(completion_time)
 
             # Overdue tasks
             if task.get("due_date") and not task.get("completed"):
-                due_date = datetime.fromisoformat(task["due_date"].replace("Z", "+00:00"))
+                due_date = datetime.fromisoformat(
+                    task["due_date"].replace("Z", "+00:00")
+                )
                 if due_date < datetime.now():
                     metrics["overdue_tasks"] += 1
 
@@ -321,12 +340,17 @@ class AsanaClient:
 
                 metrics["assignee_productivity"][assignee_name]["total_tasks"] += 1
                 if task.get("completed"):
-                    metrics["assignee_productivity"][assignee_name]["completed_tasks"] += 1
+                    metrics["assignee_productivity"][assignee_name][
+                        "completed_tasks"
+                    ] += 1
 
             # Project activity
             project_name = task.get("project_name", "Unknown")
             if project_name not in metrics["project_activity"]:
-                metrics["project_activity"][project_name] = {"total_tasks": 0, "completed_tasks": 0}
+                metrics["project_activity"][project_name] = {
+                    "total_tasks": 0,
+                    "completed_tasks": 0,
+                }
 
             metrics["project_activity"][project_name]["total_tasks"] += 1
             if task.get("completed"):
@@ -334,11 +358,15 @@ class AsanaClient:
 
         # Calculate completion rate
         if metrics["total_tasks"] > 0:
-            metrics["completion_rate"] = (metrics["completed_tasks"] / metrics["total_tasks"]) * 100
+            metrics["completion_rate"] = (
+                metrics["completed_tasks"] / metrics["total_tasks"]
+            ) * 100
 
         # Calculate average completion time
         if completion_times:
-            metrics["average_completion_time"] = sum(completion_times) / len(completion_times)
+            metrics["average_completion_time"] = sum(completion_times) / len(
+                completion_times
+            )
 
         # Calculate assignee completion rates
         for assignee_data in metrics["assignee_productivity"].values():
@@ -349,13 +377,17 @@ class AsanaClient:
 
         return metrics
 
-    async def create_task(self, project_gid: str, task_data: dict[str, Any]) -> dict[str, Any]:
+    async def create_task(
+        self, project_gid: str, task_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Create a new task"""
         data = {"data": task_data}
         response = await self._make_request("POST", "/tasks", json=data)
         return response.get("data", {})
 
-    async def update_task(self, task_gid: str, task_data: dict[str, Any]) -> dict[str, Any]:
+    async def update_task(
+        self, task_gid: str, task_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Update an existing task"""
         data = {"data": task_data}
         response = await self._make_request("PUT", f"/tasks/{task_gid}", json=data)
@@ -377,4 +409,8 @@ class AsanaClient:
             }
 
         except Exception as e:
-            return {"status": "error", "error": str(e), "last_check": datetime.now().isoformat()}
+            return {
+                "status": "error",
+                "error": str(e),
+                "last_check": datetime.now().isoformat(),
+            }

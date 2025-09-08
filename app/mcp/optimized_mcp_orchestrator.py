@@ -291,11 +291,16 @@ class OptimizedMCPOrchestrator:
 
         # Store in Redis
         await self.redis.hset(
-            "mcp:health:status", mapping={k: json.dumps(v) for k, v in health_results.items()}
+            "mcp:health:status",
+            mapping={k: json.dumps(v) for k, v in health_results.items()},
         )
 
     async def execute_operation(
-        self, capability: str, method: str, params: dict[str, Any], client_id: str = "default"
+        self,
+        capability: str,
+        method: str,
+        params: dict[str, Any],
+        client_id: str = "default",
     ) -> dict[str, Any]:
         """Execute MCP operation with performance tracking"""
         start_time = time.time()
@@ -351,7 +356,9 @@ class OptimizedMCPOrchestrator:
 
     # Real Operation Handlers
 
-    async def _handle_filesystem_operation(self, method: str, params: dict[str, Any]) -> Any:
+    async def _handle_filesystem_operation(
+        self, method: str, params: dict[str, Any]
+    ) -> Any:
         """Handle real filesystem operations"""
         if method == "read_file":
             file_path = Path(self.repo_path) / params["path"]
@@ -365,7 +372,9 @@ class OptimizedMCPOrchestrator:
                 "path": str(file_path),
                 "content": content,
                 "size": file_path.stat().st_size,
-                "modified": datetime.fromtimestamp(file_path.stat().st_mtime).isoformat(),
+                "modified": datetime.fromtimestamp(
+                    file_path.stat().st_mtime
+                ).isoformat(),
             }
 
         elif method == "write_file":
@@ -394,7 +403,9 @@ class OptimizedMCPOrchestrator:
                         "path": str(item.relative_to(self.repo_path)),
                         "type": "directory" if item.is_dir() else "file",
                         "size": item.stat().st_size if item.is_file() else None,
-                        "modified": datetime.fromtimestamp(item.stat().st_mtime).isoformat(),
+                        "modified": datetime.fromtimestamp(
+                            item.stat().st_mtime
+                        ).isoformat(),
                     }
                 )
 
@@ -433,7 +444,9 @@ class OptimizedMCPOrchestrator:
                 check=True,
             )
 
-            status_lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
+            status_lines = (
+                result.stdout.strip().split("\n") if result.stdout.strip() else []
+            )
             files = []
 
             for line in status_lines:
@@ -479,7 +492,10 @@ class OptimizedMCPOrchestrator:
                 if line:
                     parts = line.split(" ", 1)
                     commits.append(
-                        {"hash": parts[0], "message": parts[1] if len(parts) > 1 else ""}
+                        {
+                            "hash": parts[0],
+                            "message": parts[1] if len(parts) > 1 else "",
+                        }
                     )
 
             return {"commits": commits}
@@ -487,7 +503,9 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown git method: {method}")
 
-    async def _handle_memory_operation(self, method: str, params: dict[str, Any]) -> Any:
+    async def _handle_memory_operation(
+        self, method: str, params: dict[str, Any]
+    ) -> Any:
         """Handle memory operations with Redis backend"""
         if method == "store_memory":
             key = f"memory:{params['key']}"
@@ -534,7 +552,9 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown memory method: {method}")
 
-    async def _handle_embeddings_operation(self, method: str, params: dict[str, Any]) -> Any:
+    async def _handle_embeddings_operation(
+        self, method: str, params: dict[str, Any]
+    ) -> Any:
         """Handle embeddings operations"""
         if method == "generate_embeddings":
             # Mock embeddings - in production would use actual embedding models
@@ -559,7 +579,9 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown embeddings method: {method}")
 
-    async def _handle_code_analysis_operation(self, method: str, params: dict[str, Any]) -> Any:
+    async def _handle_code_analysis_operation(
+        self, method: str, params: dict[str, Any]
+    ) -> Any:
         """Handle code analysis operations"""
         if method == "analyze_code":
             file_path = Path(self.repo_path) / params["path"]
@@ -583,7 +605,9 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown code analysis method: {method}")
 
-    async def _handle_analytics_operation(self, method: str, params: dict[str, Any]) -> Any:
+    async def _handle_analytics_operation(
+        self, method: str, params: dict[str, Any]
+    ) -> Any:
         """Handle business analytics operations"""
         if method == "sales_metrics":
             # Mock sales data
@@ -597,7 +621,9 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown analytics method: {method}")
 
-    async def _handle_database_operation(self, method: str, params: dict[str, Any]) -> Any:
+    async def _handle_database_operation(
+        self, method: str, params: dict[str, Any]
+    ) -> Any:
         """Handle database operations"""
         if method == "query":
             # Mock database query
@@ -610,7 +636,9 @@ class OptimizedMCPOrchestrator:
         else:
             raise ValueError(f"Unknown database method: {method}")
 
-    def get_capability_description(self, capability: MCPCapabilityType) -> dict[str, Any]:
+    def get_capability_description(
+        self, capability: MCPCapabilityType
+    ) -> dict[str, Any]:
         """Get description for a specific capability"""
         descriptions = {
             MCPCapabilityType.FILESYSTEM: {
@@ -668,7 +696,10 @@ class OptimizedMCPOrchestrator:
             MCPCapabilityType.MEMORY: ["/memory/get", "/memory/set", "/memory/list"],
             MCPCapabilityType.EMBEDDINGS: ["/embeddings/create", "/embeddings/search"],
             MCPCapabilityType.CODE_ANALYSIS: ["/code/analyze", "/code/complexity"],
-            MCPCapabilityType.BUSINESS_ANALYTICS: ["/analytics/sales", "/analytics/users"],
+            MCPCapabilityType.BUSINESS_ANALYTICS: [
+                "/analytics/sales",
+                "/analytics/users",
+            ],
             MCPCapabilityType.WEB_SEARCH: ["/web/search", "/web/extract"],
             MCPCapabilityType.DATABASE: ["/database/query", "/database/execute"],
         }
@@ -715,7 +746,9 @@ class OptimizedMCPOrchestrator:
         domain: MCPDomain = None,
     ) -> dict[str, Any]:
         """Execute MCP request with capability type enum support"""
-        capability_str = capability.value if hasattr(capability, "value") else str(capability)
+        capability_str = (
+            capability.value if hasattr(capability, "value") else str(capability)
+        )
         return await self.execute_operation(capability_str, method, params, client_id)
 
     async def shutdown(self):
@@ -752,7 +785,9 @@ async def mcp_read_file(file_path: str, client_id: str = "default") -> dict[str,
     )
 
 
-async def mcp_git_status(repository: str = ".", client_id: str = "default") -> dict[str, Any]:
+async def mcp_git_status(
+    repository: str = ".", client_id: str = "default"
+) -> dict[str, Any]:
     """Convenience function for git status"""
     orchestrator = await get_mcp_orchestrator()
     return await orchestrator.execute_operation(

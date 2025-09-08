@@ -358,7 +358,9 @@ async def test_basic_functionality():
     print(f"   Confidence: {orchestrator_result.confidence:.2f}")
 
     # Test gateway classification
-    gateway_result = classifier.classify_component("create_user", "user_api.py", SAMPLE_GATEWAY)
+    gateway_result = classifier.classify_component(
+        "create_user", "user_api.py", SAMPLE_GATEWAY
+    )
 
     print(f"   Gateway classified as: {gateway_result.semantic_role.value}")
     print(f"   Confidence: {gateway_result.confidence:.2f}")
@@ -450,7 +452,9 @@ async def demonstrate_usage():
     # Example: Analyzing a complex component
     print("\n1. Complex Component Analysis:")
 
-    analysis = detailed_analysis("UserOrchestrator", "user_orchestrator.py", SAMPLE_ORCHESTRATOR)
+    analysis = detailed_analysis(
+        "UserOrchestrator", "user_orchestrator.py", SAMPLE_ORCHESTRATOR
+    )
 
     print("   Component: UserOrchestrator")
     print(f"   Role: {analysis['classification']['semantic_role']}")

@@ -62,26 +62,39 @@ class QuickNLP:
         """Initialize regex patterns for intent detection"""
         return {
             CommandIntent.SYSTEM_STATUS: [
-                re.compile(r"(show|get|Union[display, check]).*system.*status", re.IGNORECASE),
+                re.compile(
+                    r"(show|get|Union[display, check]).*system.*status", re.IGNORECASE
+                ),
                 re.compile(r"system\s+status", re.IGNORECASE),
                 re.compile(r"status\s+of\s+(Union[system, services]?)", re.IGNORECASE),
                 re.compile(r"how.*system.*doing", re.IGNORECASE),
             ],
             CommandIntent.RUN_AGENT: [
-                re.compile(r"(run|start|Union[execute, launch])\s+agent\s+(\w+)", re.IGNORECASE),
-                re.compile(r"agent\s+(\w+)\s+(run|Union[start, execute])", re.IGNORECASE),
+                re.compile(
+                    r"(run|start|Union[execute, launch])\s+agent\s+(\w+)", re.IGNORECASE
+                ),
+                re.compile(
+                    r"agent\s+(\w+)\s+(run|Union[start, execute])", re.IGNORECASE
+                ),
                 re.compile(r"activate\s+(\w+)\s+agent", re.IGNORECASE),
             ],
             CommandIntent.SCALE_SERVICE: [
                 re.compile(r"scale\s+(service\s+)?(\w+)\s+to\s+(\d+)", re.IGNORECASE),
                 re.compile(
-                    r"(Union[increase, decrease])\s+(\w+)\s+(instances?|replicas?)", re.IGNORECASE
+                    r"(Union[increase, decrease])\s+(\w+)\s+(instances?|replicas?)",
+                    re.IGNORECASE,
                 ),
-                re.compile(r"set\s+(\w+)\s+(instances?|replicas?)\s+to\s+(\d+)", re.IGNORECASE),
+                re.compile(
+                    r"set\s+(\w+)\s+(instances?|replicas?)\s+to\s+(\d+)", re.IGNORECASE
+                ),
             ],
             CommandIntent.EXECUTE_WORKFLOW: [
-                re.compile(r"(run|Union[execute, trigger])\s+workflow\s+(\w+)", re.IGNORECASE),
-                re.compile(r"workflow\s+(\w+)\s+(run|Union[execute, trigger])", re.IGNORECASE),
+                re.compile(
+                    r"(run|Union[execute, trigger])\s+workflow\s+(\w+)", re.IGNORECASE
+                ),
+                re.compile(
+                    r"workflow\s+(\w+)\s+(run|Union[execute, trigger])", re.IGNORECASE
+                ),
                 re.compile(r"start\s+(\w+)\s+workflow", re.IGNORECASE),
             ],
             CommandIntent.QUERY_DATA: [
@@ -90,12 +103,21 @@ class QuickNLP:
                 re.compile(r"find\s+(documents?|records?|items?)", re.IGNORECASE),
             ],
             CommandIntent.STOP_SERVICE: [
-                re.compile(r"(stop|Union[halt, shutdown])\s+(service\s+)?(\w+)", re.IGNORECASE),
-                re.compile(r"(service\s+)?(\w+)\s+(stop|Union[halt, shutdown])", re.IGNORECASE),
+                re.compile(
+                    r"(stop|Union[halt, shutdown])\s+(service\s+)?(\w+)", re.IGNORECASE
+                ),
+                re.compile(
+                    r"(service\s+)?(\w+)\s+(stop|Union[halt, shutdown])", re.IGNORECASE
+                ),
             ],
             CommandIntent.LIST_AGENTS: [
-                re.compile(r"(list|Union[show, display])\s+(all\s+)?agents?", re.IGNORECASE),
-                re.compile(r"what\s+agents?\s+(are\s+)?(Union[available, running])", re.IGNORECASE),
+                re.compile(
+                    r"(list|Union[show, display])\s+(all\s+)?agents?", re.IGNORECASE
+                ),
+                re.compile(
+                    r"what\s+agents?\s+(are\s+)?(Union[available, running])",
+                    re.IGNORECASE,
+                ),
             ],
             CommandIntent.GET_METRICS: [
                 re.compile(r"(show|Union[get, display])\s+metrics?", re.IGNORECASE),
@@ -164,7 +186,13 @@ class QuickNLP:
         agent_name = None
 
         for group in groups:
-            if group and group.lower() not in ["run", "start", "execute", "launch", "agent"]:
+            if group and group.lower() not in [
+                "run",
+                "start",
+                "execute",
+                "launch",
+                "agent",
+            ]:
                 agent_name = group
                 break
 
@@ -187,7 +215,13 @@ class QuickNLP:
         workflow_name = None
 
         for group in groups:
-            if group and group.lower() not in ["run", "execute", "trigger", "workflow", "start"]:
+            if group and group.lower() not in [
+                "run",
+                "execute",
+                "trigger",
+                "workflow",
+                "start",
+            ]:
                 workflow_name = group
                 break
 
@@ -222,7 +256,9 @@ class QuickNLP:
 
         return {"target": target}
 
-    async def _extract_with_ollama(self, text: str) -> tuple[CommandIntent, dict[str, Any], float]:
+    async def _extract_with_ollama(
+        self, text: str
+    ) -> tuple[CommandIntent, dict[str, Any], float]:
         """
         Use Ollama to extract intent when patterns don't match
         """
@@ -240,7 +276,12 @@ class QuickNLP:
 
             response = await http_post(
                 f"{self.ollama_url}/api/generate",
-                json={"model": "llama3.2", "prompt": prompt, "format": "json", "stream": False},
+                json={
+                    "model": "llama3.2",
+                    "prompt": prompt,
+                    "format": "json",
+                    "stream": False,
+                },
                 timeout=10,
             )
 
@@ -326,7 +367,11 @@ class QuickNLP:
                 "description": "Get performance metrics",
                 "examples": ["show metrics", "get metrics for ollama"],
             },
-            {"intent": "help", "description": "Show help", "examples": ["help", "what can you do"]},
+            {
+                "intent": "help",
+                "description": "Show help",
+                "examples": ["help", "what can you do"],
+            },
         ]
 
 
@@ -379,7 +424,13 @@ class CachedQuickNLP(QuickNLP):
         intent_keywords_map = {
             CommandIntent.SYSTEM_STATUS: {"system", "status", "health", "check"},
             CommandIntent.RUN_AGENT: {"run", "start", "execute", "agent", "launch"},
-            CommandIntent.SCALE_SERVICE: {"scale", "increase", "decrease", "replicas", "instances"},
+            CommandIntent.SCALE_SERVICE: {
+                "scale",
+                "increase",
+                "decrease",
+                "replicas",
+                "instances",
+            },
             CommandIntent.EXECUTE_WORKFLOW: {"workflow", "execute", "trigger", "run"},
             CommandIntent.QUERY_DATA: {"query", "search", "find", "data", "documents"},
             CommandIntent.STOP_SERVICE: {"stop", "halt", "shutdown", "service"},
@@ -451,7 +502,9 @@ class CachedQuickNLP(QuickNLP):
         candidate_intents = self._get_candidate_intents(text)
 
         # Try pattern matching on candidates first
-        intent, entities, confidence = self._optimized_match_patterns(text, candidate_intents)
+        intent, entities, confidence = self._optimized_match_patterns(
+            text, candidate_intents
+        )
 
         # If no pattern matched, use Ollama for intent extraction
         if intent == CommandIntent.UNKNOWN:
@@ -521,7 +574,9 @@ class CachedQuickNLP(QuickNLP):
         stats = self._cache_stats.copy()
         stats["cache_size"] = len(self._pattern_cache)
         stats["hit_rate"] = (
-            stats["hits"] / stats["total_requests"] if stats["total_requests"] > 0 else 0
+            stats["hits"] / stats["total_requests"]
+            if stats["total_requests"] > 0
+            else 0
         )
         return stats
 

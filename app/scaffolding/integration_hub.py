@@ -215,7 +215,9 @@ class ConfigurationManager:
         required_fields = schema.get("required", [])
         for field in required_fields:
             if field not in config:
-                logger.error(f"Missing required field '{field}' in config for {component_id}")
+                logger.error(
+                    f"Missing required field '{field}' in config for {component_id}"
+                )
                 return False
 
         return True
@@ -251,7 +253,11 @@ class ConfigurationManager:
                     "cache_embeddings": True,
                     "embedding_dimension": 1536,
                 },
-                "meta_tagging": {"enabled": True, "auto_tag_code": True, "semantic_analysis": True},
+                "meta_tagging": {
+                    "enabled": True,
+                    "auto_tag_code": True,
+                    "semantic_analysis": True,
+                },
                 "persona_manager": {
                     "enabled": True,
                     "default_persona": "sophia",
@@ -280,7 +286,9 @@ class EventBus:
         self.event_history: list[IntegrationEvent] = []
         self.max_history = 1000
 
-    def subscribe(self, event_type: str, callback: Callable[[IntegrationEvent], Awaitable[None]]):
+    def subscribe(
+        self, event_type: str, callback: Callable[[IntegrationEvent], Awaitable[None]]
+    ):
         """Subscribe to events of specific type"""
         self.subscribers[event_type].append(callback)
         logger.debug(f"Subscribed to {event_type} events")
@@ -298,7 +306,9 @@ class EventBus:
             await asyncio.gather(*tasks, return_exceptions=True)
 
             event.processed = True
-            logger.debug(f"Published {event.event_type} event to {len(callbacks)} subscribers")
+            logger.debug(
+                f"Published {event.event_type} event to {len(callbacks)} subscribers"
+            )
 
     def get_event_history(
         self, event_type: Optional[str] = None, limit: int = 100
@@ -433,7 +443,10 @@ class IntegrationHub:
 
         # Create component instance record
         component_instance = ComponentInstance(
-            metadata=metadata, instance=instance, config=config, status=ComponentStatus.REGISTERED
+            metadata=metadata,
+            instance=instance,
+            config=config,
+            status=ComponentStatus.REGISTERED,
         )
 
         self.components[component_id] = component_instance
@@ -468,7 +481,8 @@ class IntegrationHub:
         return [
             self.components[cid].instance
             for cid in component_ids
-            if cid in self.components and self.components[cid].status == ComponentStatus.HEALTHY
+            if cid in self.components
+            and self.components[cid].status == ComponentStatus.HEALTHY
         ]
 
     async def initialize_component(self, component_id: str) -> bool:
@@ -539,16 +553,24 @@ class IntegrationHub:
             if health_data.get("status") == "healthy":
                 if component.status != ComponentStatus.HEALTHY:
                     component.status = ComponentStatus.HEALTHY
-                    await self._publish_status_change(component_id, ComponentStatus.HEALTHY)
+                    await self._publish_status_change(
+                        component_id, ComponentStatus.HEALTHY
+                    )
             else:
                 if component.status == ComponentStatus.HEALTHY:
                     component.status = ComponentStatus.DEGRADED
-                    await self._publish_status_change(component_id, ComponentStatus.DEGRADED)
+                    await self._publish_status_change(
+                        component_id, ComponentStatus.DEGRADED
+                    )
 
             return health_data
 
         except Exception as e:
-            error_data = {"status": "failed", "error": str(e), "timestamp": datetime.utcnow()}
+            error_data = {
+                "status": "failed",
+                "error": str(e),
+                "timestamp": datetime.utcnow(),
+            }
 
             component.last_error = str(e)
             component.error_count += 1
@@ -674,7 +696,9 @@ class IntegrationHub:
                 "type": component.metadata.component_type.value,
                 "status": component.status.value,
                 "last_health_check": (
-                    component.last_health_check.isoformat() if component.last_health_check else None
+                    component.last_health_check.isoformat()
+                    if component.last_health_check
+                    else None
                 ),
                 "error_count": component.error_count,
                 "restart_count": component.restart_count,
@@ -761,7 +785,11 @@ class IntegrationHub:
                         component_type=ComponentType.EMBEDDING_SYSTEM,
                         name="Multi-Modal Embedding System",
                         description="Advanced embedding infrastructure for semantic understanding",
-                        provides={"embeddings", "semantic_similarity", "contextual_analysis"},
+                        provides={
+                            "embeddings",
+                            "semantic_similarity",
+                            "contextual_analysis",
+                        },
                         priority=2,
                     ),
                 )
@@ -808,7 +836,11 @@ class IntegrationHub:
                         component_type=ComponentType.MCP_ORCHESTRATOR,
                         name="MCP Orchestrator",
                         description="DAG-based execution with parallel processing",
-                        provides={"workflow_execution", "mcp_coordination", "parallel_processing"},
+                        provides={
+                            "workflow_execution",
+                            "mcp_coordination",
+                            "parallel_processing",
+                        },
                         requires={"memory_storage"},
                         dependencies={"memory_system"},
                         priority=4,
@@ -820,7 +852,9 @@ class IntegrationHub:
         # Documentation system
         if components_config.get("documentation_system", {}).get("enabled", True):
             try:
-                from app.documentation.living_docs import create_living_documentation_system
+                from app.documentation.living_docs import (
+                    create_living_documentation_system,
+                )
 
                 memory_system = await self.get_component("memory_system")
 
@@ -934,7 +968,9 @@ class IntegrationHub:
         component_id = event.payload.get("component_id")
         logger.warning(f"Component {component_id} is degraded")
 
-    async def _publish_status_change(self, component_id: str, new_status: ComponentStatus):
+    async def _publish_status_change(
+        self, component_id: str, new_status: ComponentStatus
+    ):
         """Publish component status change event"""
         await self.event_bus.publish(
             IntegrationEvent(
@@ -971,7 +1007,9 @@ async def main():
         # Get system health
         health = await hub.get_system_health()
         print(f"System status: {health.overall_status.value}")
-        print(f"Components: {health.healthy_components}/{health.component_count} healthy")
+        print(
+            f"Components: {health.healthy_components}/{health.component_count} healthy"
+        )
 
         # Get specific component
         memory_system = await hub.get_component("memory_system")

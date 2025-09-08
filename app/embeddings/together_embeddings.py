@@ -22,7 +22,9 @@ class EmbeddingModel(Enum):
     """Available Together AI embedding models."""
 
     # Long-context models
-    M2_BERT_32K = "togethercomputer/m2-bert-80M-32k-retrieval"  # 32K tokens, best for long docs
+    M2_BERT_32K = (
+        "togethercomputer/m2-bert-80M-32k-retrieval"  # 32K tokens, best for long docs
+    )
     M2_BERT_8K = "togethercomputer/m2-bert-80M-8k-retrieval"  # 8K tokens, balanced
     M2_BERT_2K = "togethercomputer/m2-bert-80M-2k-retrieval"  # 2K tokens, fast
 
@@ -32,8 +34,12 @@ class EmbeddingModel(Enum):
 
     # Specialized
     UAE_LARGE = "WhereIsAI/UAE-Large-V1"  # 512 tokens, maximum accuracy
-    GTE_MODERNBERT = "Alibaba-NLP/gte-modernbert-base"  # 8192 tokens, modern architecture
-    E5_MULTILINGUAL = "intfloat/multilingual-e5-large-instruct"  # 514 tokens, 100+ languages
+    GTE_MODERNBERT = (
+        "Alibaba-NLP/gte-modernbert-base"  # 8192 tokens, modern architecture
+    )
+    E5_MULTILINGUAL = (
+        "intfloat/multilingual-e5-large-instruct"  # 514 tokens, 100+ languages
+    )
 
 
 @dataclass
@@ -41,10 +47,16 @@ class EmbeddingConfig:
     """Configuration for embedding service."""
 
     # API Keys
-    portkey_api_key: str = field(default_factory=lambda: get_config().get("PORTKEY_API_KEY", ""))
-    together_api_key: str = field(default_factory=lambda: get_config().get("TOGETHER_API_KEY", ""))
+    portkey_api_key: str = field(
+        default_factory=lambda: get_config().get("PORTKEY_API_KEY", "")
+    )
+    together_api_key: str = field(
+        default_factory=lambda: get_config().get("TOGETHER_API_KEY", "")
+    )
     virtual_key: Optional[str] = field(
-        default_factory=lambda: get_config().get("PORTKEY_TOGETHER_VK", "together-ai-670469")
+        default_factory=lambda: get_config().get(
+            "PORTKEY_TOGETHER_VK", "together-ai-670469"
+        )
     )
 
     # Model selection
@@ -102,7 +114,8 @@ class TogetherEmbeddingService:
                 base_url=self.config.portkey_base_url,
                 default_headers={
                     "x-portkey-api-key": self.config.portkey_api_key,
-                    "x-portkey-virtual-key": self.config.virtual_key or "together-ai-670469",
+                    "x-portkey-virtual-key": self.config.virtual_key
+                    or "together-ai-670469",
                     "x-portkey-provider": "together-ai",
                     "x-portkey-config": json.dumps(self._get_portkey_config()),
                 },
@@ -114,7 +127,8 @@ class TogetherEmbeddingService:
         else:
             # Direct Together AI client
             self.together_client = OpenAI(
-                api_key=self.config.together_api_key, base_url=self.config.together_base_url
+                api_key=self.config.together_api_key,
+                base_url=self.config.together_base_url,
             )
             self.primary_client = self.together_client
             logger.info("Initialized direct Together AI client for embeddings")
@@ -143,7 +157,11 @@ class TogetherEmbeddingService:
                     }
                 ]
                 + [
-                    {"provider": "together-ai", "model": model.value, "weight": 0.8 - i * 0.1}
+                    {
+                        "provider": "together-ai",
+                        "model": model.value,
+                        "weight": 0.8 - i * 0.1,
+                    }
                     for i, model in enumerate(self.config.fallback_models)
                 ],
             },
@@ -154,7 +172,9 @@ class TogetherEmbeddingService:
         content = f"{model}:{text}"
         return hashlib.sha256(content.encode()).hexdigest()
 
-    def _check_cache(self, texts: list[str], model: str) -> tuple[list[list[float]], list[int]]:
+    def _check_cache(
+        self, texts: list[str], model: str
+    ) -> tuple[list[list[float]], list[int]]:
         """Check cache for embeddings. Returns cached embeddings and indices of cache misses."""
         if not self.config.cache_enabled:
             return [], list(range(len(texts)))
@@ -179,7 +199,9 @@ class TogetherEmbeddingService:
 
         return cached_embeddings, miss_indices
 
-    def _update_cache(self, texts: list[str], embeddings: list[list[float]], model: str):
+    def _update_cache(
+        self, texts: list[str], embeddings: list[list[float]], model: str
+    ):
         """Update cache with new embeddings."""
         if not self.config.cache_enabled:
             return
@@ -190,7 +212,10 @@ class TogetherEmbeddingService:
             self._cache[cache_key] = (embedding, now)
 
     async def embed_async(
-        self, texts: list[str], model: Optional[EmbeddingModel] = None, use_cache: bool = True
+        self,
+        texts: list[str],
+        model: Optional[EmbeddingModel] = None,
+        use_cache: bool = True,
     ) -> EmbeddingResult:
         """
         Asynchronously generate embeddings for texts.
@@ -295,7 +320,10 @@ class TogetherEmbeddingService:
         )
 
     def embed(
-        self, texts: list[str], model: Optional[EmbeddingModel] = None, use_cache: bool = True
+        self,
+        texts: list[str],
+        model: Optional[EmbeddingModel] = None,
+        use_cache: bool = True,
     ) -> EmbeddingResult:
         """
         Synchronous wrapper for embed_async.
@@ -380,7 +408,9 @@ class TogetherEmbeddingService:
 _embedding_service: Optional[TogetherEmbeddingService] = None
 
 
-def get_embedding_service(config: Optional[EmbeddingConfig] = None) -> TogetherEmbeddingService:
+def get_embedding_service(
+    config: Optional[EmbeddingConfig] = None,
+) -> TogetherEmbeddingService:
     """Get or create global embedding service instance."""
     global _embedding_service
     if _embedding_service is None:

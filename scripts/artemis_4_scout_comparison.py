@@ -211,7 +211,9 @@ This is a REAL repository scan, not a simulation.
                         agent_id=agent_id,
                         model=model,
                         provider=provider,
-                        response=data.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                        response=data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", ""),
                         execution_time=time.time() - start,
                         tokens_used=data.get("usage", {}).get("total_tokens", 0),
                         success=True,
@@ -270,7 +272,9 @@ This is a REAL repository scan, not a simulation.
                         agent_id=agent_id,
                         model=model,
                         provider=provider,
-                        response=data.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                        response=data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", ""),
                         execution_time=time.time() - start,
                         tokens_used=data.get("usage", {}).get("total_tokens", 0),
                         success=True,
@@ -329,7 +333,9 @@ This is a REAL repository scan, not a simulation.
                         agent_id=agent_id,
                         model=model,
                         provider=provider,
-                        response=data.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                        response=data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", ""),
                         execution_time=time.time() - start,
                         tokens_used=data.get("usage", {}).get("total_tokens", 0),
                         success=True,
@@ -388,7 +394,9 @@ This is a REAL repository scan, not a simulation.
                         agent_id=agent_id,
                         model=model,
                         provider=provider,
-                        response=data.get("choices", [{}])[0].get("message", {}).get("content", ""),
+                        response=data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", ""),
                         execution_time=time.time() - start,
                         tokens_used=data.get("usage", {}).get("total_tokens", 0),
                         success=True,
@@ -468,7 +476,13 @@ This is a REAL repository scan, not a simulation.
 
         # COMPLETENESS SCORE (covers all 5 objectives)
         completeness = 0
-        objectives = ["security", "architecture", "performance", "code quality", "recommendation"]
+        objectives = [
+            "security",
+            "architecture",
+            "performance",
+            "code quality",
+            "recommendation",
+        ]
         for obj in objectives:
             if obj in response_lower:
                 completeness += 20
@@ -588,13 +602,19 @@ This is a REAL repository scan, not a simulation.
                 {
                     "agent_id": r.agent_id,
                     "model": r.model,
-                    "response": r.response[:1000] + "..." if len(r.response) > 1000 else r.response,
+                    "response": (
+                        r.response[:1000] + "..."
+                        if len(r.response) > 1000
+                        else r.response
+                    ),
                 }
                 for r in results
             ],
         }
 
-        report_file = f"scout_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_file = (
+            f"scout_comparison_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(report_file, "w") as f:
             json.dump(report, f, indent=2)
 

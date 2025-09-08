@@ -152,7 +152,8 @@ class TesterAgent:
                 "stdout": result.stdout,
                 "stderr": result.stderr,
                 "passed": "PASSED" in result.stdout,
-                "test_count": result.stdout.count("PASSED") + result.stdout.count("FAILED"),
+                "test_count": result.stdout.count("PASSED")
+                + result.stdout.count("FAILED"),
             }
 
         except Exception as e:
@@ -203,7 +204,9 @@ class TesterAgent:
             return {
                 "simulations": simulations,
                 "total_simulations": len(simulations),
-                "passed_simulations": sum(1 for s in simulations if s.get("handled", False)),
+                "passed_simulations": sum(
+                    1 for s in simulations if s.get("handled", False)
+                ),
             }
 
         except Exception as e:

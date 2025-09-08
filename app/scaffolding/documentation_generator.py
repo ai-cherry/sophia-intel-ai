@@ -271,7 +271,9 @@ class DocumentationGenerator:
 
         # Group by type
         classes = [m for m in metadata_list if m.type == "class"]
-        functions = [m for m in metadata_list if m.type in ["function", "async_function"]]
+        functions = [
+            m for m in metadata_list if m.type in ["function", "async_function"]
+        ]
 
         # Document classes
         if classes:
@@ -318,7 +320,9 @@ class DocumentationGenerator:
         # Parse class
         try:
             tree = ast.parse(class_source)
-            class_node = next(node for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
+            class_node = next(
+                node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+            )
 
             # Get docstring
             docstring = ast.get_docstring(class_node) or "No description available"
@@ -331,7 +335,9 @@ class DocumentationGenerator:
                     methods.append(method_doc)
 
             # Generate examples
-            examples = self._generate_class_examples(metadata.name, methods, complexity_tier)
+            examples = self._generate_class_examples(
+                metadata.name, methods, complexity_tier
+            )
 
             section = DocumentationSection(
                 title=metadata.name,
@@ -392,7 +398,9 @@ class DocumentationGenerator:
             sig_info = self._extract_function_signature(func_node)
 
             # Generate examples
-            examples = self._generate_function_examples(metadata.name, sig_info, complexity_tier)
+            examples = self._generate_function_examples(
+                metadata.name, sig_info, complexity_tier
+            )
 
             section = DocumentationSection(
                 title=metadata.name,
@@ -513,7 +521,9 @@ print(result)""",
             )
 
         elif complexity_tier == ComplexityTier.INTERMEDIATE:
-            params = ", ".join(f"{p['name']}=value" for p in sig_info.get("parameters", [])[:2])
+            params = ", ".join(
+                f"{p['name']}=value" for p in sig_info.get("parameters", [])[:2]
+            )
             examples.append(
                 {
                     "title": "Common Usage",
@@ -601,7 +611,10 @@ result = obj.setup().process().get_result()""",
                     title=metadata.name,
                     content=docstring,
                     section_type="docstring",
-                    metadata={"type": metadata.type, "location": f"L{metadata.line_start}"},
+                    metadata={
+                        "type": metadata.type,
+                        "location": f"L{metadata.line_start}",
+                    },
                 )
 
                 section.subsections.append(sub_section)
@@ -755,7 +768,9 @@ Example:
 
         return ConceptMap(concepts, relationships, hierarchy)
 
-    def generate_living_documentation(self, output_dir: Path, watch: bool = False) -> None:
+    def generate_living_documentation(
+        self, output_dir: Path, watch: bool = False
+    ) -> None:
         """Generate living documentation that updates automatically"""
 
         output_dir.mkdir(parents=True, exist_ok=True)

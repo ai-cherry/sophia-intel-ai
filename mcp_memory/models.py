@@ -20,7 +20,9 @@ class MemoryRecord(BaseModel):
     agent_id: str = Field(default="default", description="Agent originating the memory")
     session_id: Optional[str] = Field(default=None, description="Session identifier")
     project_id: Optional[str] = Field(default=None, description="Project identifier")
-    vector_embedding: Optional[List[float]] = Field(default=None, description="Embedding vector")
+    vector_embedding: Optional[List[float]] = Field(
+        default=None, description="Embedding vector"
+    )
 
     @field_validator("metadata")
     @classmethod

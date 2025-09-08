@@ -41,7 +41,10 @@ except ImportError as e:
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("meta_tagging_init.log"), logging.StreamHandler(sys.stdout)],
+    handlers=[
+        logging.FileHandler("meta_tagging_init.log"),
+        logging.StreamHandler(sys.stdout),
+    ],
 )
 
 logger = logging.getLogger(__name__)
@@ -220,7 +223,9 @@ class MetaTaggingInitializer:
                     ]
 
                 except Exception as e:
-                    logger.warning(f"Failed to generate hints for {tag.component_name}: {e}")
+                    logger.warning(
+                        f"Failed to generate hints for {tag.component_name}: {e}"
+                    )
 
             result["hints_generated"] = len(all_hints)
             result["hints"] = [hint.to_dict() for hint in all_hints]
@@ -229,7 +234,9 @@ class MetaTaggingInitializer:
             self.stats["total_hints_generated"] += len(all_hints)
             self.stats["files_successfully_tagged"] += 1
 
-            logger.debug(f"Created {len(tags)} tags and {len(all_hints)} hints for {file_path}")
+            logger.debug(
+                f"Created {len(tags)} tags and {len(all_hints)} hints for {file_path}"
+            )
 
         except Exception as e:
             error_msg = f"Error processing {file_path}: {str(e)}"
@@ -251,7 +258,9 @@ class MetaTaggingInitializer:
         progress_callback: Optional[callable] = None,
     ) -> List[Dict[str, Any]]:
         """Process all files with controlled concurrency."""
-        logger.info(f"Processing {len(files)} files with max concurrency {max_concurrent}")
+        logger.info(
+            f"Processing {len(files)} files with max concurrency {max_concurrent}"
+        )
 
         semaphore = asyncio.Semaphore(max_concurrent)
         results = []
@@ -278,7 +287,9 @@ class MetaTaggingInitializer:
 
         return results
 
-    def generate_comprehensive_report(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def generate_comprehensive_report(
+        self, results: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
         """Generate a comprehensive analysis report."""
 
         # Basic statistics
@@ -343,9 +354,13 @@ class MetaTaggingInitializer:
 
                 # Count by severity
                 severity = hint_data.get("severity", 2)
-                severity_name = {1: "INFO", 2: "LOW", 3: "MEDIUM", 4: "HIGH", 5: "CRITICAL"}.get(
-                    severity, "MEDIUM"
-                )
+                severity_name = {
+                    1: "INFO",
+                    2: "LOW",
+                    3: "MEDIUM",
+                    4: "HIGH",
+                    5: "CRITICAL",
+                }.get(severity, "MEDIUM")
                 severity_stats[severity_name] = severity_stats.get(severity_name, 0) + 1
 
         # File type analysis
@@ -366,7 +381,9 @@ class MetaTaggingInitializer:
             ]
 
         # Optimization opportunities
-        optimization_hints = [h for h in all_hints if h.get("hint_type") == "optimization"]
+        optimization_hints = [
+            h for h in all_hints if h.get("hint_type") == "optimization"
+        ]
         security_hints = [h for h in all_hints if h.get("hint_type") == "security"]
 
         # Generate recommendations
@@ -381,7 +398,8 @@ class MetaTaggingInitializer:
                 "total_hints": len(all_hints),
                 "processing_duration": self.stats["duration_seconds"],
                 "average_tags_per_file": len(all_tags) / max(len(successful_files), 1),
-                "average_hints_per_file": len(all_hints) / max(len(successful_files), 1),
+                "average_hints_per_file": len(all_hints)
+                / max(len(successful_files), 1),
             },
             "file_analysis": {
                 "by_extension": file_extensions,
@@ -450,7 +468,9 @@ class MetaTaggingInitializer:
 
         # Critical security issues
         critical_security = [
-            h for h in hints if h.get("hint_type") == "security" and h.get("severity") >= 4
+            h
+            for h in hints
+            if h.get("hint_type") == "security" and h.get("severity") >= 4
         ]
         if critical_security:
             recommendations["immediate_actions"].append(
@@ -466,7 +486,9 @@ class MetaTaggingInitializer:
 
         # Complex orchestrators
         complex_orchestrators = [
-            t for t in tags if t.get("semantic_role") == "orchestrator" and t.get("complexity") >= 4
+            t
+            for t in tags
+            if t.get("semantic_role") == "orchestrator" and t.get("complexity") >= 4
         ]
         if complex_orchestrators:
             recommendations["architectural_improvements"].append(
@@ -497,7 +519,10 @@ class MetaTaggingInitializer:
         return recommendations
 
     async def run_initialization(
-        self, max_concurrent: int = 10, generate_report: bool = True, save_registry: bool = True
+        self,
+        max_concurrent: int = 10,
+        generate_report: bool = True,
+        save_registry: bool = True,
     ) -> Dict[str, Any]:
         """Run the complete initialization process."""
 
@@ -523,7 +548,9 @@ class MetaTaggingInitializer:
             # Process all files
             logger.info("Processing files...")
             results = await self.process_all_files(
-                files, max_concurrent=max_concurrent, progress_callback=progress_callback
+                files,
+                max_concurrent=max_concurrent,
+                progress_callback=progress_callback,
             )
 
             # Save registry
@@ -575,7 +602,10 @@ def main():
     )
 
     parser.add_argument(
-        "--root-dir", "-r", default=".", help="Root directory to scan (default: current directory)"
+        "--root-dir",
+        "-r",
+        default=".",
+        help="Root directory to scan (default: current directory)",
     )
 
     parser.add_argument(
@@ -604,11 +634,17 @@ def main():
         "--no-report", action="store_true", help="Skip generating the analysis report"
     )
 
-    parser.add_argument("--no-registry", action="store_true", help="Skip saving the registry file")
+    parser.add_argument(
+        "--no-registry", action="store_true", help="Skip saving the registry file"
+    )
 
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable verbose logging"
+    )
 
-    parser.add_argument("--quiet", "-q", action="store_true", help="Suppress progress output")
+    parser.add_argument(
+        "--quiet", "-q", action="store_true", help="Suppress progress output"
+    )
 
     args = parser.parse_args()
 
@@ -621,7 +657,9 @@ def main():
     # Initialize and run
     async def run_async():
         initializer = MetaTaggingInitializer(
-            root_directory=args.root_dir, output_path=args.output, report_path=args.report
+            root_directory=args.root_dir,
+            output_path=args.output,
+            report_path=args.report,
         )
 
         result = await initializer.run_initialization(
@@ -656,7 +694,9 @@ def main():
             hint_analysis = report.get("hint_analysis", {})
 
             print("\nKey Insights:")
-            print(f"- Average tags per file: {summary.get('average_tags_per_file', 0):.1f}")
+            print(
+                f"- Average tags per file: {summary.get('average_tags_per_file', 0):.1f}"
+            )
             print(f"- Critical issues found: {hint_analysis.get('critical_issues', 0)}")
             print(f"- Security concerns: {hint_analysis.get('security_concerns', 0)}")
             print(

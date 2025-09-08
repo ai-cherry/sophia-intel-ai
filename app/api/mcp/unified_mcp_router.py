@@ -42,9 +42,13 @@ class MCPRequest(BaseModel):
     """Generic MCP request"""
 
     method: str = Field(..., description="MCP method to execute")
-    params: dict[str, Any] = Field(default_factory=dict, description="Method parameters")
+    params: dict[str, Any] = Field(
+        default_factory=dict, description="Method parameters"
+    )
     client_id: Optional[str] = Field("default", description="Client identifier")
-    domain: Optional[str] = Field(None, description="Preferred domain (artemis, sophia, shared)")
+    domain: Optional[str] = Field(
+        None, description="Preferred domain (artemis, sophia, shared)"
+    )
     timeout: Optional[int] = Field(30, description="Request timeout in seconds")
     stream: Optional[bool] = Field(False, description="Enable streaming response")
 
@@ -55,7 +59,9 @@ class MCPResponse(BaseModel):
     success: bool = Field(..., description="Whether the request succeeded")
     data: Optional[Any] = Field(None, description="Response data")
     error: Optional[str] = Field(None, description="Error message if failed")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Request metadata")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Request metadata"
+    )
 
 
 class MCPHealthResponse(BaseModel):
@@ -458,7 +464,12 @@ async def get_servers():
                 "port": None,
                 "is_internal": True,
                 "last_health_check": datetime.now().isoformat(),
-                "capabilities": ["read_file", "write_file", "list_directory", "search_files"],
+                "capabilities": [
+                    "read_file",
+                    "write_file",
+                    "list_directory",
+                    "search_files",
+                ],
                 "max_connections": 50,
             },
             "artemis_git": {
@@ -618,7 +629,9 @@ async def get_mcp_metrics():
                 "timestamp": datetime.now().isoformat(),
                 "uptime_seconds": health["orchestrator"]["uptime_seconds"],
                 "total_requests": health["orchestrator"]["request_count"],
-                "requests_per_second": health["orchestrator"]["avg_requests_per_second"],
+                "requests_per_second": health["orchestrator"][
+                    "avg_requests_per_second"
+                ],
                 "active_connections": health["connections"]["active_connections"],
                 "server_health": {
                     "total_servers": health["registry"]["total_servers"],

@@ -206,7 +206,9 @@ class ExperienceReplayBuffer:
     experiences: deque = field(default_factory=lambda: deque(maxlen=10000))
 
     # Indexing for fast retrieval
-    by_mode: dict[SwarmExecutionMode, list[str]] = field(default_factory=lambda: defaultdict(list))
+    by_mode: dict[SwarmExecutionMode, list[str]] = field(
+        default_factory=lambda: defaultdict(list)
+    )
     by_success: dict[bool, list[str]] = field(default_factory=lambda: defaultdict(list))
     by_knowledge_type: dict[KnowledgeType, list[str]] = field(
         default_factory=lambda: defaultdict(list)
@@ -284,21 +286,29 @@ class ReinforcementLearningAlgorithm(LearningAlgorithm):
     def __init__(self, learning_rate: float = 0.1, discount_factor: float = 0.9):
         self.learning_rate = learning_rate
         self.discount_factor = discount_factor
-        self.q_table: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        self.q_table: dict[str, dict[str, float]] = defaultdict(
+            lambda: defaultdict(float)
+        )
 
     async def learn_from_experience(
         self, experience: LearningExperience, context: dict[str, Any]
     ) -> Optional[LearnedKnowledge]:
         """Update Q-values based on experience"""
-        state_key = self._encode_state(experience.problem_context, experience.execution_context)
-        action_key = self._encode_action(experience.execution_mode, experience.agent_states)
+        state_key = self._encode_state(
+            experience.problem_context, experience.execution_context
+        )
+        action_key = self._encode_action(
+            experience.execution_mode, experience.agent_states
+        )
 
         # Calculate reward based on success and quality
         reward = self._calculate_reward(experience)
 
         # Q-learning update
         current_q = self.q_table[state_key][action_key]
-        max_next_q = max(self.q_table[state_key].values()) if self.q_table[state_key] else 0.0
+        max_next_q = (
+            max(self.q_table[state_key].values()) if self.q_table[state_key] else 0.0
+        )
 
         new_q = current_q + self.learning_rate * (
             reward + self.discount_factor * max_next_q - current_q
@@ -353,7 +363,9 @@ class ReinforcementLearningAlgorithm(LearningAlgorithm):
         """Calculate reward for reinforcement learning"""
         base_reward = 1.0 if experience.success else -0.5
         quality_bonus = experience.quality_score * 0.5
-        efficiency_bonus = 1.0 / max(experience.performance_metrics.get("response_time", 1.0), 0.1)
+        efficiency_bonus = 1.0 / max(
+            experience.performance_metrics.get("response_time", 1.0), 0.1
+        )
 
         return base_reward + quality_bonus + min(efficiency_bonus, 1.0)
 
@@ -362,7 +374,9 @@ class TransferLearningAlgorithm(LearningAlgorithm):
     """Transfer learning between execution modes"""
 
     def __init__(self):
-        self.mode_similarities: dict[tuple[SwarmExecutionMode, SwarmExecutionMode], float] = {}
+        self.mode_similarities: dict[
+            tuple[SwarmExecutionMode, SwarmExecutionMode], float
+        ] = {}
         self._initialize_mode_similarities()
 
     def _initialize_mode_similarities(self):
@@ -383,9 +397,13 @@ class TransferLearningAlgorithm(LearningAlgorithm):
                 if mode1 == mode2:
                     self.mode_similarities[(mode1, mode2)] = 1.0
                 elif (mode1, mode2) in similarities:
-                    self.mode_similarities[(mode1, mode2)] = similarities[(mode1, mode2)]
+                    self.mode_similarities[(mode1, mode2)] = similarities[
+                        (mode1, mode2)
+                    ]
                 elif (mode2, mode1) in similarities:
-                    self.mode_similarities[(mode1, mode2)] = similarities[(mode2, mode1)]
+                    self.mode_similarities[(mode1, mode2)] = similarities[
+                        (mode2, mode1)
+                    ]
                 else:
                     self.mode_similarities[(mode1, mode2)] = 0.1
 
@@ -399,7 +417,9 @@ class TransferLearningAlgorithm(LearningAlgorithm):
         # Find similar execution modes for transfer
         similar_modes = []
         for mode in SwarmExecutionMode:
-            similarity = self.mode_similarities.get((experience.execution_mode, mode), 0.0)
+            similarity = self.mode_similarities.get(
+                (experience.execution_mode, mode), 0.0
+            )
             if similarity > 0.5 and mode != experience.execution_mode:
                 similar_modes.append((mode, similarity))
 
@@ -416,7 +436,8 @@ class TransferLearningAlgorithm(LearningAlgorithm):
             },
             conditions=experience.problem_context,
             expected_outcome={
-                "quality_score": experience.quality_score * 0.8,  # Reduced confidence for transfer
+                "quality_score": experience.quality_score
+                * 0.8,  # Reduced confidence for transfer
                 "success_probability": 0.7,
             },
             confidence=experience.confidence * 0.8,
@@ -447,7 +468,9 @@ class TransferLearningAlgorithm(LearningAlgorithm):
                     # Find target modes for transfer
                     target_modes = []
                     for mode in SwarmExecutionMode:
-                        similarity = self.mode_similarities.get((source_mode, mode), 0.0)
+                        similarity = self.mode_similarities.get(
+                            (source_mode, mode), 0.0
+                        )
                         if similarity > 0.5 and mode != source_mode:
                             target_modes.append(mode)
 
@@ -466,7 +489,10 @@ class TransferLearningAlgorithm(LearningAlgorithm):
                             ),
                             expected_outcome={
                                 "avg_quality": np.mean(
-                                    [exp.quality_score for exp in successful_experiences]
+                                    [
+                                        exp.quality_score
+                                        for exp in successful_experiences
+                                    ]
                                 )
                             },
                             confidence=0.7,
@@ -479,7 +505,9 @@ class TransferLearningAlgorithm(LearningAlgorithm):
 
         return learned_knowledge
 
-    def _extract_common_patterns(self, experiences: list[LearningExperience]) -> dict[str, Any]:
+    def _extract_common_patterns(
+        self, experiences: list[LearningExperience]
+    ) -> dict[str, Any]:
         """Extract common patterns from successful experiences"""
         patterns = {}
 
@@ -495,7 +523,9 @@ class TransferLearningAlgorithm(LearningAlgorithm):
 
         return patterns
 
-    def _merge_conditions(self, conditions_list: list[dict[str, Any]]) -> dict[str, Any]:
+    def _merge_conditions(
+        self, conditions_list: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Merge conditions from multiple experiences"""
         merged = {}
 
@@ -532,14 +562,18 @@ class CrossAgentKnowledgeDistiller:
         experiences: list[LearningExperience],
     ) -> dict[str, LearnedKnowledge]:
         """Distill knowledge from teacher agents to student agents"""
-        with tracer.start_span("knowledge_distillation", kind=SpanKind.INTERNAL) as span:
+        with tracer.start_span(
+            "knowledge_distillation", kind=SpanKind.INTERNAL
+        ) as span:
             span.set_attribute("teacher_count", len(teacher_agents))
             span.set_attribute("student_count", len(student_agents))
 
             distilled_knowledge = {}
 
             # Extract knowledge from teacher experiences
-            teacher_patterns = self._extract_teacher_patterns(experiences, teacher_agents)
+            teacher_patterns = self._extract_teacher_patterns(
+                experiences, teacher_agents
+            )
 
             # Create distilled knowledge for each student
             for student_agent in student_agents:
@@ -580,7 +614,8 @@ class CrossAgentKnowledgeDistiller:
         teacher_experiences = [
             exp
             for exp in experiences
-            if any(agent in exp.agent_states for agent in teacher_agents) and exp.success
+            if any(agent in exp.agent_states for agent in teacher_agents)
+            and exp.success
         ]
 
         if teacher_experiences:
@@ -600,7 +635,8 @@ class CrossAgentKnowledgeDistiller:
                 mode_performances[exp.execution_mode].append(exp.quality_score)
 
             patterns["optimal_configurations"] = {
-                mode.value: np.mean(scores) for mode, scores in mode_performances.items()
+                mode.value: np.mean(scores)
+                for mode, scores in mode_performances.items()
             }
 
         return patterns
@@ -617,7 +653,8 @@ class CrossAgentKnowledgeDistiller:
 
         # Find most applicable strategy for this student
         best_strategy = max(
-            teacher_patterns["successful_strategies"], key=lambda s: s["quality_achieved"]
+            teacher_patterns["successful_strategies"],
+            key=lambda s: s["quality_achieved"],
         )
 
         return LearnedKnowledge(
@@ -627,7 +664,9 @@ class CrossAgentKnowledgeDistiller:
                 "teacher_benchmarks": teacher_patterns["performance_benchmarks"],
                 "distillation_confidence": 0.8,
             },
-            conditions={"min_quality_required": best_strategy["quality_achieved"] * 0.9},
+            conditions={
+                "min_quality_required": best_strategy["quality_achieved"] * 0.9
+            },
             expected_outcome={"quality_improvement": 0.2, "success_probability": 0.8},
             confidence=0.8,
             applicable_modes=[SwarmExecutionMode(best_strategy["execution_mode"])],
@@ -681,8 +720,8 @@ class AdaptiveLearningSystem:
 
     def _initialize_algorithms(self):
         """Initialize learning algorithms"""
-        self.learning_algorithms[LearningType.REINFORCEMENT] = ReinforcementLearningAlgorithm(
-            learning_rate=self.learning_rate
+        self.learning_algorithms[LearningType.REINFORCEMENT] = (
+            ReinforcementLearningAlgorithm(learning_rate=self.learning_rate)
         )
         self.learning_algorithms[LearningType.TRANSFER] = TransferLearningAlgorithm()
 
@@ -705,7 +744,9 @@ class AdaptiveLearningSystem:
         while True:
             try:
                 # Get experience from queue (with timeout to prevent blocking)
-                experience = await asyncio.wait_for(self.learning_queue.get(), timeout=1.0)
+                experience = await asyncio.wait_for(
+                    self.learning_queue.get(), timeout=1.0
+                )
 
                 # Process learning from experience
                 await self._process_learning_experience(experience)
@@ -775,7 +816,9 @@ class AdaptiveLearningSystem:
             span.set_attribute("experience.success", experience.success)
             span.set_attribute("experience.quality_score", experience.quality_score)
 
-            logger.debug(f"📊 Captured experience: {experience.id} (success: {experience.success})")
+            logger.debug(
+                f"📊 Captured experience: {experience.id} (success: {experience.success})"
+            )
 
             return experience.id
 
@@ -822,7 +865,9 @@ class AdaptiveLearningSystem:
                         "knowledge_id": knowledge.id,
                         "knowledge_type": knowledge.knowledge_type.value,
                         "confidence": knowledge.confidence,
-                        "applicable_modes": [mode.value for mode in knowledge.applicable_modes],
+                        "applicable_modes": [
+                            mode.value for mode in knowledge.applicable_modes
+                        ],
                     },
                 )
 
@@ -883,7 +928,9 @@ class AdaptiveLearningSystem:
                         "optimal_agent_count"
                     ]
                 if "q_value" in pattern:
-                    application_result["expected_improvement"] = abs(pattern["q_value"]) / 10.0
+                    application_result["expected_improvement"] = (
+                        abs(pattern["q_value"]) / 10.0
+                    )
 
             elif knowledge.knowledge_type == KnowledgeType.AGENT_COLLABORATION:
                 # Apply collaboration knowledge
@@ -911,11 +958,15 @@ class AdaptiveLearningSystem:
         performance_threshold = np.median(list(agent_performance.values()))
 
         teacher_agents = [
-            agent for agent, perf in agent_performance.items() if perf > performance_threshold
+            agent
+            for agent, perf in agent_performance.items()
+            if perf > performance_threshold
         ]
 
         student_agents = [
-            agent for agent, perf in agent_performance.items() if perf <= performance_threshold
+            agent
+            for agent, perf in agent_performance.items()
+            if perf <= performance_threshold
         ]
 
         if not teacher_agents or not student_agents:
@@ -966,7 +1017,8 @@ class AdaptiveLearningSystem:
         recent_experiences = [
             exp
             for exp in self.experience_buffer.experiences
-            if (datetime.now(timezone.utc) - exp.timestamp).total_seconds() < 3600  # Last hour
+            if (datetime.now(timezone.utc) - exp.timestamp).total_seconds()
+            < 3600  # Last hour
         ]
 
         return {
@@ -976,7 +1028,9 @@ class AdaptiveLearningSystem:
             "knowledge_distribution": dict(knowledge_by_type),
             "recent_activity": {
                 "experiences_last_hour": len(recent_experiences),
-                "success_rate_last_hour": sum(1 for exp in recent_experiences if exp.success)
+                "success_rate_last_hour": sum(
+                    1 for exp in recent_experiences if exp.success
+                )
                 / max(len(recent_experiences), 1),
             },
             "learning_queue_size": self.learning_queue.qsize(),
@@ -1044,7 +1098,9 @@ class LearningEnhancedSwarmMixin:
                 "problem_type": problem.get("type", "general"),
                 "agent_count": len(self.agents),
             }
-            applicable_knowledge = await self.learning_system.get_applicable_knowledge(context)
+            applicable_knowledge = await self.learning_system.get_applicable_knowledge(
+                context
+            )
 
         # Apply pre-execution learning
         execution_modifications = {}
@@ -1074,9 +1130,13 @@ class LearningEnhancedSwarmMixin:
                         "execution_time": execution_time,
                         "applied_knowledge": [k.id for k in applicable_knowledge],
                     },
-                    agent_states={agent.__class__.__name__: {} for agent in self.agents},
+                    agent_states={
+                        agent.__class__.__name__: {} for agent in self.agents
+                    },
                     solution=(
-                        result.__dict__ if hasattr(result, "__dict__") else {"result": str(result)}
+                        result.__dict__
+                        if hasattr(result, "__dict__")
+                        else {"result": str(result)}
                     ),
                     metrics=self.metrics,
                 )
@@ -1134,7 +1194,9 @@ async def create_learning_system(
         memory_store=memory_store,
         message_bus=message_bus,
         learning_rate=config.get("learning_rate", 0.1) if config else 0.1,
-        experience_buffer_size=config.get("experience_buffer_size", 10000) if config else 10000,
+        experience_buffer_size=(
+            config.get("experience_buffer_size", 10000) if config else 10000
+        ),
     )
 
     await learning_system.start_learning_loop()
@@ -1165,9 +1227,14 @@ class LearningMiddleware:
 
     async def pre_execution(self, context: dict[str, Any]) -> dict[str, Any]:
         """Pre-execution learning enhancement"""
-        applicable_knowledge = await self.learning_system.get_applicable_knowledge(context)
+        applicable_knowledge = await self.learning_system.get_applicable_knowledge(
+            context
+        )
 
-        enhancements = {"applicable_knowledge": applicable_knowledge, "learning_suggestions": []}
+        enhancements = {
+            "applicable_knowledge": applicable_knowledge,
+            "learning_suggestions": [],
+        }
 
         for knowledge in applicable_knowledge:
             application = await self.learning_system.apply_knowledge(knowledge, context)
@@ -1199,7 +1266,9 @@ if __name__ == "__main__":
 
         # Create learning system
         learning_system = await create_learning_system(
-            memory_store=memory_store, message_bus=message_bus, config={"learning_rate": 0.15}
+            memory_store=memory_store,
+            message_bus=message_bus,
+            config={"learning_rate": 0.15},
         )
 
         print("🧠 Learning system demo initialized")
@@ -1210,7 +1279,13 @@ if __name__ == "__main__":
             execution_mode=SwarmExecutionMode.PARALLEL,
             problem_context={"type": "coding", "complexity": "medium"},
             execution_context={"agent_count": 5},
-            agent_states={"agent1": {}, "agent2": {}, "agent3": {}, "agent4": {}, "agent5": {}},
+            agent_states={
+                "agent1": {},
+                "agent2": {},
+                "agent3": {},
+                "agent4": {},
+                "agent5": {},
+            },
             solution={"success": True, "quality_score": 0.85, "confidence": 0.9},
             metrics=SwarmMetrics(),
         )

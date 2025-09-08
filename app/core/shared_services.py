@@ -101,7 +101,9 @@ class ServiceMetrics:
     p95_response_time: float = 0.0
     p99_response_time: float = 0.0
     throughput: float = 0.0
-    last_reset: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    last_reset: str = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
 
 
 # ==============================================================================
@@ -144,7 +146,9 @@ class BaseService:
             # Service-specific health check
             is_healthy = await self._health_check_impl()
 
-            response_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
+            response_time = (
+                datetime.now(timezone.utc) - start_time
+            ).total_seconds() * 1000
             uptime = (datetime.now(timezone.utc) - self.start_time).total_seconds()
 
             return ServiceHealth(
@@ -212,7 +216,11 @@ class UnifiedMemoryService(BaseService):
         }
 
     async def store(
-        self, domain: MemoryDomain, key: str, value: Any, metadata: Optional[dict[str, Any]] = None
+        self,
+        domain: MemoryDomain,
+        key: str,
+        value: Any,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> bool:
         """Store data in domain-specific memory"""
         try:
@@ -266,7 +274,9 @@ class MonitoringService(BaseService):
 
     def __init__(self):
         config = ServiceConfig(
-            name="PrometheusMonitoring", type=ServiceType.MONITORING, priority=ServicePriority.HIGH
+            name="PrometheusMonitoring",
+            type=ServiceType.MONITORING,
+            priority=ServicePriority.HIGH,
         )
         super().__init__(config)
         self._metrics_registry: dict[str, list[float]] = {}
@@ -284,14 +294,18 @@ class MonitoringService(BaseService):
 
             # Keep only last 1000 values per metric
             if len(self._metrics_registry[metric_name]) > 1000:
-                self._metrics_registry[metric_name] = self._metrics_registry[metric_name][-1000:]
+                self._metrics_registry[metric_name] = self._metrics_registry[
+                    metric_name
+                ][-1000:]
 
             self.metrics.request_count += 1
         except Exception as e:
             logger.error(f"Failed to record metric: {e}")
             self.metrics.error_count += 1
 
-    async def get_metric(self, metric_name: str, aggregation: str = "avg") -> Optional[float]:
+    async def get_metric(
+        self, metric_name: str, aggregation: str = "avg"
+    ) -> Optional[float]:
         """Get aggregated metric value"""
         try:
             if metric_name not in self._metrics_registry:
@@ -348,7 +362,9 @@ class StructuredLoggingService(BaseService):
 
     def __init__(self):
         config = ServiceConfig(
-            name="StructuredLogging", type=ServiceType.LOGGING, priority=ServicePriority.HIGH
+            name="StructuredLogging",
+            type=ServiceType.LOGGING,
+            priority=ServicePriority.HIGH,
         )
         super().__init__(config)
         self._log_buffer: list[dict[str, Any]] = []
@@ -389,7 +405,10 @@ class StructuredLoggingService(BaseService):
             self.metrics.error_count += 1
 
     async def query_logs(
-        self, domain: Optional[MemoryDomain] = None, level: Optional[str] = None, limit: int = 100
+        self,
+        domain: Optional[MemoryDomain] = None,
+        level: Optional[str] = None,
+        limit: int = 100,
     ) -> list[dict[str, Any]]:
         """Query logs with filters"""
         logs = self._log_buffer
@@ -414,7 +433,9 @@ class TracingService(BaseService):
 
     def __init__(self):
         config = ServiceConfig(
-            name="OpenTelemetryTracing", type=ServiceType.TRACING, priority=ServicePriority.NORMAL
+            name="OpenTelemetryTracing",
+            type=ServiceType.TRACING,
+            priority=ServicePriority.NORMAL,
         )
         super().__init__(config)
         self._active_spans: dict[str, dict[str, Any]] = {}
@@ -446,7 +467,10 @@ class TracingService(BaseService):
         return span_id
 
     async def end_span(
-        self, span_id: str, status: str = "ok", attributes: Optional[dict[str, Any]] = None
+        self,
+        span_id: str,
+        status: str = "ok",
+        attributes: Optional[dict[str, Any]] = None,
     ):
         """End a trace span"""
         if span_id not in self._active_spans:
@@ -540,7 +564,9 @@ class CacheService(BaseService):
             self.metrics.error_count += 1
             return False
 
-    async def get(self, key: str, domain: Optional[MemoryDomain] = None) -> Optional[Any]:
+    async def get(
+        self, key: str, domain: Optional[MemoryDomain] = None
+    ) -> Optional[Any]:
         """Get a cache value"""
         try:
             cache_key = f"{domain.value}:{key}" if domain else key
@@ -730,7 +756,9 @@ async def log_structured(
         logger.warning("Logging service not available")
 
 
-async def record_metric(metric_name: str, value: float, labels: Optional[dict[str, str]] = None):
+async def record_metric(
+    metric_name: str, value: float, labels: Optional[dict[str, str]] = None
+):
     """Convenience function for recording metrics"""
     monitoring_service = shared_services.get_monitoring_service()
     if monitoring_service:
@@ -748,13 +776,17 @@ async def start_trace(
     """Convenience function for starting a trace span"""
     tracing_service = shared_services.get_tracing_service()
     if tracing_service:
-        return await tracing_service.start_span(name, domain, parent_span_id, attributes)
+        return await tracing_service.start_span(
+            name, domain, parent_span_id, attributes
+        )
     else:
         logger.warning("Tracing service not available")
         return None
 
 
-async def end_trace(span_id: str, status: str = "ok", attributes: Optional[dict[str, Any]] = None):
+async def end_trace(
+    span_id: str, status: str = "ok", attributes: Optional[dict[str, Any]] = None
+):
     """Convenience function for ending a trace span"""
     tracing_service = shared_services.get_tracing_service()
     if tracing_service:
@@ -764,7 +796,10 @@ async def end_trace(span_id: str, status: str = "ok", attributes: Optional[dict[
 
 
 async def cache_set(
-    key: str, value: Any, ttl_seconds: Optional[int] = None, domain: Optional[MemoryDomain] = None
+    key: str,
+    value: Any,
+    ttl_seconds: Optional[int] = None,
+    domain: Optional[MemoryDomain] = None,
 ) -> bool:
     """Convenience function for setting cache value"""
     cache_service = shared_services.get_cache_service()
@@ -862,7 +897,9 @@ class ServiceHealthMonitor:
             return 0.0
 
         healthy_count = sum(
-            1 for h in history if h.status in [ServiceStatus.HEALTHY, ServiceStatus.DEGRADED]
+            1
+            for h in history
+            if h.status in [ServiceStatus.HEALTHY, ServiceStatus.DEGRADED]
         )
 
         return (healthy_count / len(history)) * 100

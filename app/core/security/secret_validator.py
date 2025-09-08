@@ -188,7 +188,9 @@ class ExternalAPIValidator:
         # Clean old entries
         if type_key in self._rate_limits:
             self._rate_limits[type_key] = [
-                timestamp for timestamp in self._rate_limits[type_key] if timestamp > hour_ago
+                timestamp
+                for timestamp in self._rate_limits[type_key]
+                if timestamp > hour_ago
             ]
         else:
             self._rate_limits[type_key] = []
@@ -240,7 +242,10 @@ class ExternalAPIValidator:
                     error_message="Rate limit exceeded",
                 )
 
-            headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            }
 
             # Use a lightweight endpoint
             url = "https://api.openai.com/v1/models"
@@ -336,7 +341,9 @@ class ExternalAPIValidator:
                 "messages": [{"role": "user", "content": "test"}],
             }
 
-            async with self._session.post(url, headers=headers, json=payload) as response:
+            async with self._session.post(
+                url, headers=headers, json=payload
+            ) as response:
                 self._record_api_call(SecretType.ANTHROPIC_API_KEY)
                 response_time = (time.time() - start_time) * 1000
 
@@ -404,7 +411,9 @@ class ExternalAPIValidator:
 
             # Create Redis client
             redis_client = redis.from_url(
-                connection_url, socket_timeout=self.config.timeout_seconds, retry_on_timeout=False
+                connection_url,
+                socket_timeout=self.config.timeout_seconds,
+                retry_on_timeout=False,
             )
 
             # Test connection

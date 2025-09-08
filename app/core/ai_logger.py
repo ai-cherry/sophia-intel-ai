@@ -107,7 +107,8 @@ class AILogger:
             console_handler = logging.StreamHandler()
             console_handler.setLevel(logging.INFO)
             formatter = logging.Formatter(
-                "%(asctime)s | %(levelname)-8s | %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+                "%(asctime)s | %(levelname)-8s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
             )
             console_handler.setFormatter(formatter)
             self.logger.addHandler(console_handler)
@@ -151,7 +152,9 @@ class AILogger:
             }
         return {}
 
-    def log(self, level: LogLevel, message: str, context: dict = None, trace_id: str = None):
+    def log(
+        self, level: LogLevel, message: str, context: dict = None, trace_id: str = None
+    ):
         """
         Main logging method that replaces print()
 
@@ -226,7 +229,9 @@ class AILogger:
         while True:
             try:
                 # Collect batch of logs for analysis
-                log_entry = await asyncio.wait_for(self.analysis_queue.get(), timeout=5.0)
+                log_entry = await asyncio.wait_for(
+                    self.analysis_queue.get(), timeout=5.0
+                )
                 batch.append(log_entry)
 
                 # Process batch if large enough or timeout
@@ -253,7 +258,8 @@ class AILogger:
             # Prepare context for AI
             context = {
                 "recent_errors": [
-                    {"message": log.message, "context": log.context} for log in self.error_context
+                    {"message": log.message, "context": log.context}
+                    for log in self.error_context
                 ],
                 "anomalies": anomalies,
                 "logs_to_analyze": [
@@ -284,7 +290,10 @@ class AILogger:
                 await self._trigger_alert(analysis)
 
             # Log the analysis
-            self.info("AI Analysis Complete", {"analysis": analysis, "logs_analyzed": len(logs)})
+            self.info(
+                "AI Analysis Complete",
+                {"analysis": analysis, "logs_analyzed": len(logs)},
+            )
 
         except Exception as e:
             self.error(f"AI analysis failed: {e}")
@@ -339,8 +348,12 @@ class AILogger:
         if total_logs == 0:
             return {"status": "no_data"}
 
-        error_rate = sum(1 for log in self.recent_logs if log.level == "ERROR") / total_logs
-        warning_rate = sum(1 for log in self.recent_logs if log.level == "WARNING") / total_logs
+        error_rate = (
+            sum(1 for log in self.recent_logs if log.level == "ERROR") / total_logs
+        )
+        warning_rate = (
+            sum(1 for log in self.recent_logs if log.level == "WARNING") / total_logs
+        )
 
         # Get AI insights
         prompt = f"""
@@ -356,7 +369,9 @@ class AILogger:
         response = await self.llm.ainvoke(prompt)
         return json.loads(response.content)
 
-    def get_logs(self, level: Optional[LogLevel] = None, limit: int = 100) -> list[LogEntry]:
+    def get_logs(
+        self, level: Optional[LogLevel] = None, limit: int = 100
+    ) -> list[LogEntry]:
         """Get recent logs, optionally filtered by level"""
 
         logs = list(self.recent_logs)

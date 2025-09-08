@@ -50,7 +50,9 @@ class EnhancedFlyManager:
             logger.info(f"❌ Failed to set secrets for {app_name}: {result.stderr}")
             return False
 
-    def configure_auto_scaling(self, app_name: str, scaling_config: dict[str, Any]) -> bool:
+    def configure_auto_scaling(
+        self, app_name: str, scaling_config: dict[str, Any]
+    ) -> bool:
         """Configure advanced auto-scaling for an app"""
 
         # Scale VM resources
@@ -94,7 +96,15 @@ class EnhancedFlyManager:
         """Deploy app and wait for health checks to pass"""
 
         # Deploy the app
-        deploy_cmd = ["fly", "deploy", "--config", config_file, "--app", app_name, "--remote-only"]
+        deploy_cmd = [
+            "fly",
+            "deploy",
+            "--config",
+            config_file,
+            "--app",
+            app_name,
+            "--remote-only",
+        ]
 
         logger.info(f"🚀 Deploying {app_name}...")
         deploy_result = subprocess.run(deploy_cmd, capture_output=True, text=True)
@@ -132,7 +142,10 @@ class LambdaGPUManager:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://cloud.lambdalabs.com/api/v1"
-        self.headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
 
     def provision_gpu_cluster(self, cluster_config: dict[str, Any]) -> dict:
         """Provision GPU instances for AI workloads"""
@@ -142,7 +155,9 @@ class LambdaGPUManager:
         for i in range(cluster_config.get("instance_count", 2)):
             try:
                 payload = {
-                    "instance_type_name": cluster_config.get("instance_type", "gpu_1x_a10"),
+                    "instance_type_name": cluster_config.get(
+                        "instance_type", "gpu_1x_a10"
+                    ),
                     "region_name": cluster_config.get("region", "us-west-1"),
                     "ssh_key_names": cluster_config.get("ssh_keys", ["default"]),
                     "quantity": 1,
@@ -161,7 +176,9 @@ class LambdaGPUManager:
                         f"✅ GPU instance {i+1} launched: {instance_data['instance_ids'][0]}"
                     )
                 else:
-                    logger.info(f"⚠️  GPU instance {i+1} launch warning: {response.text}")
+                    logger.info(
+                        f"⚠️  GPU instance {i+1} launch warning: {response.text}"
+                    )
 
             except Exception as e:
                 logger.info(f"❌ GPU instance {i+1} failed: {str(e)}")
@@ -202,7 +219,10 @@ class PortkeyGatewayManager:
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.base_url = "https://api.portkey.ai/v1"
-        self.headers = {"x-portkey-api-key": api_key, "Content-Type": "application/json"}
+        self.headers = {
+            "x-portkey-api-key": api_key,
+            "Content-Type": "application/json",
+        }
 
     def setup_production_gateway(self, gateway_config: dict[str, Any]) -> dict:
         """Setup production-ready LLM gateway with fallback chains"""
@@ -212,7 +232,11 @@ class PortkeyGatewayManager:
             "strategy": {"mode": "fallback"},
             "targets": [
                 {"provider": "openai", "model": "gpt-4o-mini", "weight": 1.0},
-                {"provider": "anthropic", "model": "claude-3-haiku-20240307", "weight": 0.8},
+                {
+                    "provider": "anthropic",
+                    "model": "claude-3-haiku-20240307",
+                    "weight": 0.8,
+                },
                 {
                     "provider": "together-ai",
                     "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
@@ -244,7 +268,9 @@ class EnhancedInfrastructureManager:
             self.lambda_manager = LambdaGPUManager(os.environ["LAMBDA_API_KEY"])
 
         self.redis_manager = None
-        if os.environ.get("REDIS_CLOUD_API_KEY") and os.environ.get("REDIS_CLOUD_SECRET_KEY"):
+        if os.environ.get("REDIS_CLOUD_API_KEY") and os.environ.get(
+            "REDIS_CLOUD_SECRET_KEY"
+        ):
             self.redis_manager = RedisCloudManager(
                 os.environ["REDIS_CLOUD_API_KEY"], os.environ["REDIS_CLOUD_SECRET_KEY"]
             )
@@ -372,7 +398,9 @@ class EnhancedInfrastructureManager:
         # 2. Configure secrets for all services
         logger.info("\n🔐 Configuring Production Secrets...")
         for service_name in services:
-            success = self.fly_manager.set_secrets_bulk(service_name, service_secrets[service_name])
+            success = self.fly_manager.set_secrets_bulk(
+                service_name, service_secrets[service_name]
+            )
             results[f"{service_name}_secrets"] = success
 
         # 3. Configure auto-scaling
@@ -438,7 +466,9 @@ class EnhancedInfrastructureManager:
         results["deployments"] = deployment_results
 
         # 8. Generate final summary
-        successful_deployments = sum(1 for success in deployment_results.values() if success)
+        successful_deployments = sum(
+            1 for success in deployment_results.values() if success
+        )
         total_services = len(deployment_results)
 
         logger.info("\n" + "=" * 70)
@@ -530,7 +560,9 @@ async def main():
     with open("enhanced-deployment-results.json", "w") as f:
         json.dump(results, f, indent=2)
 
-    logger.info("\n💾 Enhanced deployment results saved to: enhanced-deployment-results.json")
+    logger.info(
+        "\n💾 Enhanced deployment results saved to: enhanced-deployment-results.json"
+    )
 
     # Return success status
     deployments = results.get("deployments", {})

@@ -59,7 +59,9 @@ class UnifiedEmbeddingCoordinator:
 
     def __init__(self):
         # Strategy defaults can be overridden via environment
-        self.default_strategy = get_config().get("EMBEDDING_STRATEGY_DEFAULT", "auto").lower()
+        self.default_strategy = (
+            get_config().get("EMBEDDING_STRATEGY_DEFAULT", "auto").lower()
+        )
         self.strategies = ["performance", "accuracy", "hybrid", "auto"]
 
     def _batch_by_model(

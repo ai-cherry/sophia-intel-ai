@@ -54,7 +54,9 @@ class TierHealth:
     error_rate: float = 0.0
     capacity_usage: float = 0.0
     connection_count: int = 0
-    last_health_check: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_health_check: datetime = field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     consecutive_failures: int = 0
     quality_score: float = 1.0
 
@@ -89,7 +91,9 @@ class RoutingRule:
 class CircuitBreaker:
     """Circuit breaker for memory tier protection"""
 
-    def __init__(self, tier: MemoryTier, failure_threshold: int = 5, recovery_timeout: int = 60):
+    def __init__(
+        self, tier: MemoryTier, failure_threshold: int = 5, recovery_timeout: int = 60
+    ):
         self.tier = tier
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
@@ -128,7 +132,9 @@ class CircuitBreaker:
         if self.last_failure_time is None:
             return True
 
-        time_since_failure = (datetime.now(timezone.utc) - self.last_failure_time).total_seconds()
+        time_since_failure = (
+            datetime.now(timezone.utc) - self.last_failure_time
+        ).total_seconds()
         return time_since_failure >= self.recovery_timeout
 
 
@@ -187,7 +193,10 @@ class MemoryRouter:
             raise
 
     async def route_store_operation(
-        self, content: str, metadata: MemoryMetadata, embedding: Optional[list[float]] = None
+        self,
+        content: str,
+        metadata: MemoryMetadata,
+        embedding: Optional[list[float]] = None,
     ) -> tuple[str, list[MemoryTier]]:
         """Route a store operation to optimal tiers"""
 
@@ -214,7 +223,9 @@ class MemoryRouter:
 
             for tier in healthy_tiers:
                 try:
-                    if await self._store_in_tier(tier, memory_id, content, metadata, embedding):
+                    if await self._store_in_tier(
+                        tier, memory_id, content, metadata, embedding
+                    ):
                         successful_tiers.append(tier)
                         self.circuit_breakers[tier].record_success()
                         self._update_tier_metrics(tier, time.time() - start_time, True)
@@ -409,7 +420,9 @@ class MemoryRouter:
                     "state": cb.state,
                     "failure_count": cb.failure_count,
                     "last_failure": (
-                        cb.last_failure_time.isoformat() if cb.last_failure_time else None
+                        cb.last_failure_time.isoformat()
+                        if cb.last_failure_time
+                        else None
                     ),
                 }
                 for tier, cb in self.circuit_breakers.items()
@@ -477,7 +490,9 @@ class MemoryRouter:
             # Attempt a simple health check operation
             if tier == MemoryTier.L1_CACHE:
                 if self.memory_interface.redis_manager:
-                    health_result = await self.memory_interface.redis_manager.health_check()
+                    health_result = (
+                        await self.memory_interface.redis_manager.health_check()
+                    )
                     health.available = health_result.get("healthy", False)
                 else:
                     health.available = False
@@ -487,15 +502,19 @@ class MemoryRouter:
                     # Test primary vector DB
                     from app.core.vector_db_config import VectorDBType
 
-                    health.available = self.memory_interface.vector_manager.test_connection(
-                        VectorDBType.QDRANT
+                    health.available = (
+                        self.memory_interface.vector_manager.test_connection(
+                            VectorDBType.QDRANT
+                        )
                     )
                 else:
                     health.available = False
 
             elif tier == MemoryTier.L3_PERSISTENT:
                 if self.memory_interface.mem0_manager:
-                    health.available = self.memory_interface.mem0_manager.test_connection()
+                    health.available = (
+                        self.memory_interface.mem0_manager.test_connection()
+                    )
                 else:
                     health.available = False
 
@@ -520,7 +539,9 @@ class MemoryRouter:
             health.consecutive_failures += 1
             health.quality_score = max(0.1, health.quality_score - 0.2)
 
-    async def _determine_store_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
+    async def _determine_store_tiers(
+        self, metadata: MemoryMetadata
+    ) -> list[MemoryTier]:
         """Determine optimal storage tiers based on metadata and strategy"""
 
         if self.routing_strategy == RoutingStrategy.PERFORMANCE_FIRST:
@@ -534,14 +555,18 @@ class MemoryRouter:
         else:  # BALANCED
             return self._get_balanced_tiers(metadata)
 
-    def _get_performance_optimized_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
+    def _get_performance_optimized_tiers(
+        self, metadata: MemoryMetadata
+    ) -> list[MemoryTier]:
         """Get tiers optimized for performance"""
         if metadata.priority in [MemoryPriority.CRITICAL, MemoryPriority.HIGH]:
             return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC]
         else:
             return [MemoryTier.L1_CACHE, MemoryTier.L3_PERSISTENT]
 
-    def _get_reliability_optimized_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
+    def _get_reliability_optimized_tiers(
+        self, metadata: MemoryMetadata
+    ) -> list[MemoryTier]:
         """Get tiers optimized for reliability"""
         # Store in multiple tiers for redundancy
         return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
@@ -557,13 +582,19 @@ class MemoryRouter:
     def _get_balanced_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
         """Get balanced tier allocation"""
         if metadata.priority == MemoryPriority.CRITICAL:
-            return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
+            return [
+                MemoryTier.L1_CACHE,
+                MemoryTier.L2_SEMANTIC,
+                MemoryTier.L3_PERSISTENT,
+            ]
         elif metadata.priority == MemoryPriority.HIGH:
             return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC]
         else:
             return [MemoryTier.L1_CACHE, MemoryTier.L3_PERSISTENT]
 
-    async def _get_intelligent_tiers(self, metadata: MemoryMetadata) -> list[MemoryTier]:
+    async def _get_intelligent_tiers(
+        self, metadata: MemoryMetadata
+    ) -> list[MemoryTier]:
         """AI-driven tier selection based on patterns and performance"""
 
         # Start with balanced approach
@@ -585,11 +616,21 @@ class MemoryRouter:
     def _get_tier_access_order(self, priority: MemoryPriority) -> list[MemoryTier]:
         """Get tier access order based on priority"""
         if priority == MemoryPriority.CRITICAL or priority == MemoryPriority.HIGH:
-            return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
+            return [
+                MemoryTier.L1_CACHE,
+                MemoryTier.L2_SEMANTIC,
+                MemoryTier.L3_PERSISTENT,
+            ]
         else:
-            return [MemoryTier.L1_CACHE, MemoryTier.L3_PERSISTENT, MemoryTier.L2_SEMANTIC]
+            return [
+                MemoryTier.L1_CACHE,
+                MemoryTier.L3_PERSISTENT,
+                MemoryTier.L2_SEMANTIC,
+            ]
 
-    async def _determine_search_tiers(self, request: MemorySearchRequest) -> list[MemoryTier]:
+    async def _determine_search_tiers(
+        self, request: MemorySearchRequest
+    ) -> list[MemoryTier]:
         """Determine which tiers to search"""
 
         search_tiers = []
@@ -621,7 +662,11 @@ class MemoryRouter:
 
     async def _get_fallback_tiers(self) -> list[MemoryTier]:
         """Get any available tier as fallback"""
-        for tier in [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]:
+        for tier in [
+            MemoryTier.L1_CACHE,
+            MemoryTier.L2_SEMANTIC,
+            MemoryTier.L3_PERSISTENT,
+        ]:
             if self.tier_health[tier].available:
                 return [tier]
 
@@ -643,7 +688,9 @@ class MemoryRouter:
         # No matching rules, return original tiers
         return tiers
 
-    def _rule_matches(self, rule: RoutingRule, metadata: MemoryMetadata, operation: str) -> bool:
+    def _rule_matches(
+        self, rule: RoutingRule, metadata: MemoryMetadata, operation: str
+    ) -> bool:
         """Check if routing rule matches current context"""
 
         conditions = rule.conditions
@@ -657,7 +704,10 @@ class MemoryRouter:
             return False
 
         # Check priority
-        if "priority" in conditions and conditions["priority"] != metadata.priority.value:
+        if (
+            "priority" in conditions
+            and conditions["priority"] != metadata.priority.value
+        ):
             return False
 
         # Check domain
@@ -708,7 +758,9 @@ class MemoryRouter:
             logger.error(f"Failed to store in tier {tier.value}: {e}")
             return False
 
-    async def _retrieve_from_tier(self, tier: MemoryTier, memory_id: str) -> Optional[MemoryEntry]:
+    async def _retrieve_from_tier(
+        self, tier: MemoryTier, memory_id: str
+    ) -> Optional[MemoryEntry]:
         """Retrieve content from specific tier"""
         try:
             return await self.memory_interface._retrieve_from_tier(tier, memory_id)
@@ -733,7 +785,9 @@ class MemoryRouter:
             logger.error(f"Failed to search tier {tier.value}: {e}")
             return []
 
-    def _update_tier_metrics(self, tier: MemoryTier, response_time_ms: float, success: bool):
+    def _update_tier_metrics(
+        self, tier: MemoryTier, response_time_ms: float, success: bool
+    ):
         """Update tier performance metrics"""
 
         # Update tier usage count
@@ -747,7 +801,9 @@ class MemoryRouter:
 
         # Update response time (exponential moving average)
         alpha = 0.1
-        health.response_time_ms = alpha * response_time_ms + (1 - alpha) * health.response_time_ms
+        health.response_time_ms = (
+            alpha * response_time_ms + (1 - alpha) * health.response_time_ms
+        )
 
         # Update error rate
         if not success:

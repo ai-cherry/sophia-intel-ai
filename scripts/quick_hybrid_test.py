@@ -31,8 +31,12 @@ async def quick_test():
     for name, req_type in tests:
         print(f"\nTest: {name} [{req_type.value}]")
         try:
-            result = await provider.complete("Say OK if working", req_type, temperature=0)
-            print(f"✅ {result['provider']} ({result['method']}): {result['latency_ms']}ms")
+            result = await provider.complete(
+                "Say OK if working", req_type, temperature=0
+            )
+            print(
+                f"✅ {result['provider']} ({result['method']}): {result['latency_ms']}ms"
+            )
             success += 1
         except Exception as e:
             print(f"❌ Failed: {str(e)[:100]}")

@@ -426,7 +426,9 @@ class ProjectManager:
 
         # Calculate total work
         total_work = sum(
-            self.tasks[task_id].estimated_hours for task_id in sprint.tasks if task_id in self.tasks
+            self.tasks[task_id].estimated_hours
+            for task_id in sprint.tasks
+            if task_id in self.tasks
         )
 
         # Generate ideal burndown line
@@ -440,7 +442,10 @@ class ProjectManager:
         return {
             "ideal": ideal_line,
             "actual": actual_line,
-            "dates": [(sprint.start_date + timedelta(days=i)).isoformat() for i in range(days + 1)],
+            "dates": [
+                (sprint.start_date + timedelta(days=i)).isoformat()
+                for i in range(days + 1)
+            ],
         }
 
     def estimate_completion(self, project_id: str) -> Dict[str, Any]:
@@ -466,7 +471,9 @@ class ProjectManager:
             if task_id in self.tasks and self.tasks[task_id].status == TaskStatus.DONE
         )
 
-        completion_percentage = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+        completion_percentage = (
+            (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+        )
 
         # Estimate remaining time
         avg_velocity = self._calculate_average_velocity(project.sprints)
@@ -515,7 +522,13 @@ class ProjectManager:
     # Helper methods
     def _calculate_task_stats(self, task_ids: List[str]) -> Dict:
         """Calculate task statistics"""
-        stats = {"total": len(task_ids), "todo": 0, "in_progress": 0, "done": 0, "blocked": 0}
+        stats = {
+            "total": len(task_ids),
+            "todo": 0,
+            "in_progress": 0,
+            "done": 0,
+            "blocked": 0,
+        }
 
         for task_id in task_ids:
             if task_id in self.tasks:
@@ -559,7 +572,9 @@ class ProjectManager:
             "total_budget": project.budget,
             "spent": spent,
             "remaining": project.budget - spent,
-            "percentage_used": (spent / project.budget * 100) if project.budget > 0 else 0,
+            "percentage_used": (
+                (spent / project.budget * 100) if project.budget > 0 else 0
+            ),
         }
 
     def _calculate_timeline_progress(self, project: Project) -> Dict:
@@ -570,7 +585,9 @@ class ProjectManager:
         return {
             "elapsed_days": elapsed_days,
             "total_days": total_days,
-            "percentage_complete": (elapsed_days / total_days * 100) if total_days > 0 else 0,
+            "percentage_complete": (
+                (elapsed_days / total_days * 100) if total_days > 0 else 0
+            ),
         }
 
     def _identify_risks(self, project: Project) -> List[str]:
@@ -581,7 +598,8 @@ class ProjectManager:
         blocked_count = sum(
             1
             for task_id in project.tasks
-            if task_id in self.tasks and self.tasks[task_id].status == TaskStatus.BLOCKED
+            if task_id in self.tasks
+            and self.tasks[task_id].status == TaskStatus.BLOCKED
         )
         if blocked_count > 0:
             risks.append(f"{blocked_count} tasks are blocked")
@@ -622,7 +640,9 @@ class ProjectManager:
         if not sprint_ids:
             return 0
 
-        total_velocity = sum(self.get_sprint_velocity(sprint_id) for sprint_id in sprint_ids)
+        total_velocity = sum(
+            self.get_sprint_velocity(sprint_id) for sprint_id in sprint_ids
+        )
 
         return total_velocity / len(sprint_ids)
 

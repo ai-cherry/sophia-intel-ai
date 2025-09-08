@@ -190,7 +190,9 @@ class PrioritizedSwarmFactory:
                 "name": model_config["name"],
                 "model": model_config["model"],
                 "role": model_config["role"],
-                "system_prompt": self._generate_scouting_prompt(model_config, repo_path),
+                "system_prompt": self._generate_scouting_prompt(
+                    model_config, repo_path
+                ),
                 "priority": model_config["priority"],
                 "metadata": model_config,
             }
@@ -217,7 +219,9 @@ class PrioritizedSwarmFactory:
                 "name": model_config["name"],
                 "model": model_config["model"],
                 "role": model_config["role"],
-                "system_prompt": self._generate_reasoning_prompt(model_config, complexity_level),
+                "system_prompt": self._generate_reasoning_prompt(
+                    model_config, complexity_level
+                ),
                 "priority": model_config["priority"],
                 "metadata": model_config,
             }
@@ -339,7 +343,9 @@ Your role: Deep strategic and business reasoning.
             "optimization": "Use Grok Code Fast for 90% cost savings on simple tasks",
         }
 
-    def _generate_scouting_execution_plan(self, objectives: list[str]) -> dict[str, Any]:
+    def _generate_scouting_execution_plan(
+        self, objectives: list[str]
+    ) -> dict[str, Any]:
         """Generate execution plan for repository scouting"""
         return {
             "phases": [
@@ -382,7 +388,9 @@ Your role: Deep strategic and business reasoning.
                 "consensus": "Require agreement from 2/3 agents",
             }
 
-    def get_cost_estimate(self, swarm_type: SwarmType, estimated_tokens: int) -> dict[str, float]:
+    def get_cost_estimate(
+        self, swarm_type: SwarmType, estimated_tokens: int
+    ) -> dict[str, float]:
         """Estimate costs for different swarm configurations"""
         cost_per_million = {
             "grok-code-fast-1": {"input": 0.20, "output": 1.50},

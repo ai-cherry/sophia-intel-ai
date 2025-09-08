@@ -71,7 +71,9 @@ async def get_redis_metrics() -> dict[str, Any]:
             "status": health_summary["status"],
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Metrics collection failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Metrics collection failed: {str(e)}"
+        )
 
 
 @router.get("/streams", summary="Get Redis Streams Status")
@@ -111,7 +113,9 @@ async def get_redis_alerts(
                 level_enum = HealthStatus(level.lower())
                 alerts = [alert for alert in alerts if alert.level == level_enum]
             except ValueError:
-                raise HTTPException(status_code=400, detail=f"Invalid alert level: {level}")
+                raise HTTPException(
+                    status_code=400, detail=f"Invalid alert level: {level}"
+                )
 
         # Limit results
         alerts = alerts[-limit:] if alerts else []
@@ -137,7 +141,9 @@ async def get_redis_alerts(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Alerts retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Alerts retrieval failed: {str(e)}"
+        )
 
 
 @router.get("/pay-ready", summary="Get Pay Ready Redis Status")
@@ -151,20 +157,27 @@ async def get_pay_ready_status() -> dict[str, Any]:
 
         return {"timestamp": datetime.utcnow().isoformat(), **pay_ready_data}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Pay Ready status failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Pay Ready status failed: {str(e)}"
+        )
 
 
 @router.post("/monitoring/start", summary="Start Redis Health Monitoring")
 async def start_monitoring(
     background_tasks: BackgroundTasks,
-    interval: float = Query(30.0, ge=10.0, le=300.0, description="Monitoring interval in seconds"),
+    interval: float = Query(
+        30.0, ge=10.0, le=300.0, description="Monitoring interval in seconds"
+    ),
 ) -> dict[str, str]:
     """
     Start continuous Redis health monitoring with specified interval.
     """
     try:
         if redis_health_monitor.monitoring_active:
-            return {"status": "already_active", "message": "Health monitoring is already active"}
+            return {
+                "status": "already_active",
+                "message": "Health monitoring is already active",
+            }
 
         # Start monitoring in background
         background_tasks.add_task(redis_health_monitor.start_monitoring, interval)
@@ -174,7 +187,9 @@ async def start_monitoring(
             "message": f"Health monitoring started with {interval}s interval",
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to start monitoring: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to start monitoring: {str(e)}"
+        )
 
 
 @router.post("/monitoring/stop", summary="Stop Redis Health Monitoring")
@@ -186,7 +201,9 @@ async def stop_monitoring() -> dict[str, str]:
         await redis_health_monitor.stop_monitoring()
         return {"status": "stopped", "message": "Health monitoring stopped"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to stop monitoring: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to stop monitoring: {str(e)}"
+        )
 
 
 @router.get("/monitoring/status", summary="Get Monitoring Status")
@@ -235,7 +252,9 @@ async def get_memory_usage() -> dict[str, Any]:
         namespace_usage = {}
 
         async with redis_manager.get_connection() as redis:
-            for namespace in [ns for ns in dir(RedisNamespaces) if not ns.startswith("_")]:
+            for namespace in [
+                ns for ns in dir(RedisNamespaces) if not ns.startswith("_")
+            ]:
                 namespace_value = getattr(RedisNamespaces, namespace)
                 if isinstance(namespace_value, str):
                     pattern = f"{namespace_value}:*"
@@ -266,7 +285,9 @@ async def get_memory_usage() -> dict[str, Any]:
             "namespace_usage": namespace_usage,
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Memory usage analysis failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Memory usage analysis failed: {str(e)}"
+        )
 
 
 @router.post("/test/connection", summary="Test Redis Connection")

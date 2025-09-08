@@ -253,7 +253,9 @@ class BaseDomainOrchestra(ABC):
                 # No tasks in queue, continue monitoring
                 continue
             except Exception as e:
-                logger.error(f"Error in task processing loop for {self.domain.value}: {e}")
+                logger.error(
+                    f"Error in task processing loop for {self.domain.value}: {e}"
+                )
 
     async def _execute_task(self, task: DomainTask):
         """Execute a domain task"""
@@ -371,7 +373,9 @@ class BaseDomainOrchestra(ABC):
         """Register callback for cross-domain request completion"""
         self.cross_domain_callbacks[request_id] = callback
 
-    async def handle_cross_domain_request(self, request: CrossDomainRequest) -> dict[str, Any]:
+    async def handle_cross_domain_request(
+        self, request: CrossDomainRequest
+    ) -> dict[str, Any]:
         """Handle incoming cross-domain request"""
         logger.info(
             f"{self.domain.value} handling cross-domain request from {request.source_domain.value}"
@@ -428,7 +432,8 @@ class BaseDomainOrchestra(ABC):
 
         # Update success rate
         total_tasks = (
-            self.performance_metrics["tasks_completed"] + self.performance_metrics["tasks_failed"]
+            self.performance_metrics["tasks_completed"]
+            + self.performance_metrics["tasks_failed"]
         )
         if total_tasks > 0:
             self.performance_metrics["success_rate"] = (
@@ -498,7 +503,9 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
         campaign_config = task.input_data.get("campaign_config", {})
 
         # Simulate campaign launch
-        logger.info(f"Launching marketing campaign: {campaign_config.get('name', 'Unnamed')}")
+        logger.info(
+            f"Launching marketing campaign: {campaign_config.get('name', 'Unnamed')}"
+        )
 
         return {
             "campaign_launched": True,
@@ -533,7 +540,9 @@ class MarketingDomainOrchestra(BaseDomainOrchestra):
                 "conversions": 125,
                 "roi": 3.2,
             },
-            "recommendations": ["Increase budget allocation to high-performing segments"],
+            "recommendations": [
+                "Increase budget allocation to high-performing segments"
+            ],
         }
 
     async def _handle_general_marketing_task(self, task: DomainTask) -> dict[str, Any]:
@@ -592,7 +601,10 @@ class SalesDomainOrchestra(BaseDomainOrchestra):
             "win_probability": 0.65,
             "deal_size": 25000,
             "close_date_estimate": datetime.now() + timedelta(days=45),
-            "risk_factors": ["Budget approval pending", "Multiple stakeholders involved"],
+            "risk_factors": [
+                "Budget approval pending",
+                "Multiple stakeholders involved",
+            ],
         }
 
     async def _handle_forecast_update(self, task: DomainTask) -> dict[str, Any]:
@@ -754,7 +766,9 @@ class InfrastructureDomainOrchestra(BaseDomainOrchestra):
             "health_check_passed": True,
         }
 
-    async def _handle_general_infrastructure_task(self, task: DomainTask) -> dict[str, Any]:
+    async def _handle_general_infrastructure_task(
+        self, task: DomainTask
+    ) -> dict[str, Any]:
         """Handle general infrastructure task"""
         return {
             "task_completed": True,
@@ -794,7 +808,10 @@ class SecurityDomainOrchestra(BaseDomainOrchestra):
             "high_risk_threats": 2,
             "medium_risk_threats": 8,
             "low_risk_threats": 35,
-            "recommended_actions": ["Update firewall rules", "Review access permissions"],
+            "recommended_actions": [
+                "Update firewall rules",
+                "Review access permissions",
+            ],
         }
 
     async def _handle_compliance_check(self, task: DomainTask) -> dict[str, Any]:
@@ -872,10 +889,14 @@ class DomainOrchestraFactory:
         orchestras = {}
         for domain in business_domains:
             try:
-                orchestras[domain] = DomainOrchestraFactory.create_domain_orchestra(domain, config)
+                orchestras[domain] = DomainOrchestraFactory.create_domain_orchestra(
+                    domain, config
+                )
             except ValueError:
                 # Create a default orchestra for domains without specific implementations
-                logger.warning(f"No specific implementation for {domain}, using base orchestra")
+                logger.warning(
+                    f"No specific implementation for {domain}, using base orchestra"
+                )
 
         return orchestras
 
@@ -894,7 +915,11 @@ class DomainOrchestraFactory:
         orchestras = {}
         for domain in technical_domains:
             try:
-                orchestras[domain] = DomainOrchestraFactory.create_domain_orchestra(domain, config)
+                orchestras[domain] = DomainOrchestraFactory.create_domain_orchestra(
+                    domain, config
+                )
             except ValueError:
                 # Create a default orchestra for domains without specific implementations
-                logger.warning(f"No specific implementation for {domain}, using base orchestra")
+                logger.warning(
+                    f"No specific implementation for {domain}, using base orchestra"
+                )

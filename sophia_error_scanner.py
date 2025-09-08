@@ -463,7 +463,9 @@ class SophiaErrorScanner:
                 try:
                     if self._apply_fix(error):
                         self.fixed_issues.append(error)
-                        print(f"✅ Fixed: {error.get('file', 'unknown')}:{error.get('line', '?')}")
+                        print(
+                            f"✅ Fixed: {error.get('file', 'unknown')}:{error.get('line', '?')}"
+                        )
                     else:
                         print(
                             f"⚠️  Manual fix required: {error.get('file', 'unknown')}:{error.get('line', '?')}"
@@ -510,9 +512,12 @@ class SophiaErrorScanner:
                 line = lines[line_num - 1]
                 # Remove TODO/FIXME comments
                 if any(
-                    placeholder in line.upper() for placeholder in ["TODO", "FIXME", "XXX", "HACK"]
+                    placeholder in line.upper()
+                    for placeholder in ["TODO", "FIXME", "XXX", "HACK"]
                 ):
-                    lines[line_num - 1] = re.sub(r"#\s*(TODO|FIXME|XXX|HACK).*", "", line)
+                    lines[line_num - 1] = re.sub(
+                        r"#\s*(TODO|FIXME|XXX|HACK).*", "", line
+                    )
 
                     with open(file_path, "w", encoding="utf-8") as f:
                         f.writelines(lines)
@@ -529,7 +534,9 @@ class SophiaErrorScanner:
             # Extract module name and try to install
             module_name = error_msg.split("Cannot import")[-1].strip()
             try:
-                subprocess.run(["pip", "install", module_name], check=True, capture_output=True)
+                subprocess.run(
+                    ["pip", "install", module_name], check=True, capture_output=True
+                )
                 return True
             except subprocess.CalledProcessError:
                 pass
@@ -623,7 +630,9 @@ def main():
 
     # Apply automatic fixes
     if report["status"] == "FAIL":
-        print(f"\n❌ CRITICAL ERRORS DETECTED: {report['scan_summary']['total_errors']}")
+        print(
+            f"\n❌ CRITICAL ERRORS DETECTED: {report['scan_summary']['total_errors']}"
+        )
         scanner.auto_fix_all_errors()
 
         # Re-scan after fixes

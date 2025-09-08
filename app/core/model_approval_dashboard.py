@@ -320,7 +320,10 @@ class ModelApprovalDashboard:
         if add_orchestrator:
             approval.allowed_orchestrators.add(add_orchestrator)
 
-        if remove_orchestrator and remove_orchestrator in approval.allowed_orchestrators:
+        if (
+            remove_orchestrator
+            and remove_orchestrator in approval.allowed_orchestrators
+        ):
             approval.allowed_orchestrators.remove(remove_orchestrator)
 
         if add_agent:
@@ -356,7 +359,9 @@ class ModelApprovalDashboard:
             "by_model": self.usage_tracking,
             "by_cost_tier": {},
             "total_cost": sum(m["total_cost"] for m in self.usage_tracking.values()),
-            "total_tokens": sum(m["total_tokens"] for m in self.usage_tracking.values()),
+            "total_tokens": sum(
+                m["total_tokens"] for m in self.usage_tracking.values()
+            ),
         }
 
         # Group by cost tier
@@ -376,13 +381,25 @@ class ModelApprovalDashboard:
         summary = {
             "total_models": len(self.approvals),
             "approved": len(
-                [a for a in self.approvals.values() if a.status == ApprovalStatus.APPROVED]
+                [
+                    a
+                    for a in self.approvals.values()
+                    if a.status == ApprovalStatus.APPROVED
+                ]
             ),
             "restricted": len(
-                [a for a in self.approvals.values() if a.status == ApprovalStatus.RESTRICTED]
+                [
+                    a
+                    for a in self.approvals.values()
+                    if a.status == ApprovalStatus.RESTRICTED
+                ]
             ),
             "disabled": len(
-                [a for a in self.approvals.values() if a.status == ApprovalStatus.DISABLED]
+                [
+                    a
+                    for a in self.approvals.values()
+                    if a.status == ApprovalStatus.DISABLED
+                ]
             ),
             "cost_tiers": {"economy": [], "standard": [], "premium": []},
             "orchestrator_access": {},
@@ -396,7 +413,9 @@ class ModelApprovalDashboard:
 
         # Orchestrator access
         for orch in ["artemis", "sophia", "master"]:
-            summary["orchestrator_access"][orch] = self.get_approved_models(orchestrator=orch)
+            summary["orchestrator_access"][orch] = self.get_approved_models(
+                orchestrator=orch
+            )
 
         # Recommendations
         if "grok-code-fast-1" in self.approvals:

@@ -82,7 +82,9 @@ class TestArtemisUnifiedFactory:
     # ==============================================================================
 
     @pytest.mark.asyncio
-    async def test_create_technical_agent_with_tactical_personality(self, factory, mock_memory):
+    async def test_create_technical_agent_with_tactical_personality(
+        self, factory, mock_memory
+    ):
         """Test creation of technical agent with tactical personality traits"""
         agent_id = await factory.create_technical_agent("code_reviewer")
 
@@ -99,11 +101,19 @@ class TestArtemisUnifiedFactory:
         assert agent.tactical_traits["communication_style"] == "direct_tactical"
 
     @pytest.mark.asyncio
-    async def test_create_technical_agent_with_custom_config(self, factory, mock_memory):
+    async def test_create_technical_agent_with_custom_config(
+        self, factory, mock_memory
+    ):
         """Test creating technical agent with custom configuration"""
-        custom_config = {"clearance_level": 5, "mission_count": 10, "success_rate": 0.95}
+        custom_config = {
+            "clearance_level": 5,
+            "mission_count": 10,
+            "success_rate": 0.95,
+        }
 
-        agent_id = await factory.create_technical_agent("security_auditor", custom_config)
+        agent_id = await factory.create_technical_agent(
+            "security_auditor", custom_config
+        )
         agent = factory.active_agents[agent_id]
 
         assert agent.clearance_level == 5
@@ -115,7 +125,9 @@ class TestArtemisUnifiedFactory:
     @pytest.mark.asyncio
     async def test_create_technical_agent_invalid_template(self, factory):
         """Test error handling for invalid agent template"""
-        with pytest.raises(ValueError, match="Technical template 'invalid_template' not found"):
+        with pytest.raises(
+            ValueError, match="Technical template 'invalid_template' not found"
+        ):
             await factory.create_technical_agent("invalid_template")
 
     # ==============================================================================
@@ -250,7 +262,9 @@ class TestArtemisUnifiedFactory:
         }
 
         # Mock the create_technical_agent to avoid infinite recursion
-        with patch.object(factory, "create_technical_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_technical_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda template: f"mock_{template}_id"
 
             swarm_id = await factory.create_specialized_swarm(
@@ -278,10 +292,14 @@ class TestArtemisUnifiedFactory:
             "focus_areas": ["vulnerability_scanning", "threat_detection"],
         }
 
-        with patch.object(factory, "create_technical_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_technical_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda template: f"mock_{template}_id"
 
-            swarm_id = await factory.create_specialized_swarm(SwarmType.DOMAIN_TEAM, swarm_config)
+            swarm_id = await factory.create_specialized_swarm(
+                SwarmType.DOMAIN_TEAM, swarm_config
+            )
 
         assert swarm_id.startswith("domain_team_")
         swarm = factory.specialized_swarms[swarm_id]
@@ -295,8 +313,12 @@ class TestArtemisUnifiedFactory:
     async def test_execute_mission_operation_clean_sweep(self, factory, mock_memory):
         """Test execution of Operation Clean Sweep mission"""
         with (
-            patch.object(factory, "create_military_squad", new_callable=AsyncMock) as mock_squad,
-            patch.object(factory, "_execute_mission_phase", new_callable=AsyncMock) as mock_phase,
+            patch.object(
+                factory, "create_military_squad", new_callable=AsyncMock
+            ) as mock_squad,
+            patch.object(
+                factory, "_execute_mission_phase", new_callable=AsyncMock
+            ) as mock_phase,
             patch.object(
                 factory, "_broadcast_mission_update", new_callable=AsyncMock
             ) as mock_broadcast,
@@ -311,7 +333,9 @@ class TestArtemisUnifiedFactory:
             }
 
             result = await factory.execute_mission(
-                "operation_clean_sweep", target="/src", parameters={"depth": "comprehensive"}
+                "operation_clean_sweep",
+                target="/src",
+                parameters={"depth": "comprehensive"},
             )
 
         assert result["success"] is True
@@ -331,15 +355,21 @@ class TestArtemisUnifiedFactory:
     async def test_execute_mission_rapid_response(self, factory, mock_memory):
         """Test rapid response mission execution"""
         with (
-            patch.object(factory, "create_military_squad", new_callable=AsyncMock) as mock_squad,
-            patch.object(factory, "_execute_mission_phase", new_callable=AsyncMock) as mock_phase,
+            patch.object(
+                factory, "create_military_squad", new_callable=AsyncMock
+            ) as mock_squad,
+            patch.object(
+                factory, "_execute_mission_phase", new_callable=AsyncMock
+            ) as mock_phase,
         ):
 
             mock_squad.side_effect = lambda unit, params: f"squad_{unit}_test"
             mock_phase.return_value = {"success": True}
 
             result = await factory.execute_mission(
-                "rapid_response", target="critical_bug", parameters={"severity": "CRITICAL"}
+                "rapid_response",
+                target="critical_bug",
+                parameters={"severity": "CRITICAL"},
             )
 
         template = factory.mission_templates["rapid_response"]
@@ -376,7 +406,9 @@ class TestArtemisUnifiedFactory:
     @pytest.mark.asyncio
     async def test_create_technical_team(self, factory, mock_memory):
         """Test technical team creation"""
-        with patch.object(factory, "create_technical_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_technical_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda template: f"agent_{template}_id"
 
             team_config = {"name": "Elite Code Review Team", "type": "code_analysis"}
@@ -391,12 +423,16 @@ class TestArtemisUnifiedFactory:
         assert team["type"] == "code_analysis"
         assert team["status"] == "operational"
         assert team["tactical_readiness"] == "maximum"
-        assert len(team["agents"]) == 3  # code_reviewer, security_auditor, performance_optimizer
+        assert (
+            len(team["agents"]) == 3
+        )  # code_reviewer, security_auditor, performance_optimizer
 
     @pytest.mark.asyncio
     async def test_create_full_technical_team(self, factory, mock_memory):
         """Test creation of full technical team with all templates"""
-        with patch.object(factory, "create_technical_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_technical_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda template: f"agent_{template}_id"
 
             team_config = {"type": "full_technical"}
@@ -463,7 +499,10 @@ class TestArtemisUnifiedFactory:
 
         assert "code_reviewer" in templates
         assert templates["code_reviewer"]["name"] == "Code Review Specialist"
-        assert templates["code_reviewer"]["personality"] == TechnicalPersonality.CRITICAL_ANALYTICAL
+        assert (
+            templates["code_reviewer"]["personality"]
+            == TechnicalPersonality.CRITICAL_ANALYTICAL
+        )
         assert "static_code_analysis" in templates["code_reviewer"]["capabilities"]
 
     def test_get_military_units(self, factory):
@@ -472,7 +511,8 @@ class TestArtemisUnifiedFactory:
 
         assert "recon_battalion" in units
         assert (
-            units["recon_battalion"]["designation"] == "1st Reconnaissance Battalion 'Pathfinders'"
+            units["recon_battalion"]["designation"]
+            == "1st Reconnaissance Battalion 'Pathfinders'"
         )
         assert units["recon_battalion"]["unit_type"] == "reconnaissance"
         assert units["recon_battalion"]["squad_size"] == 2
@@ -562,7 +602,11 @@ class TestArtemisUnifiedFactory:
 
         factory.websocket_connections.add(mock_ws)
 
-        mission_data = {"status": MissionStatus.ACTIVE, "current_phase": 1, "phases_completed": []}
+        mission_data = {
+            "status": MissionStatus.ACTIVE,
+            "current_phase": 1,
+            "phases_completed": [],
+        }
 
         await factory._broadcast_mission_update("mission_123", mission_data)
 
@@ -588,7 +632,11 @@ class TestArtemisUnifiedFactory:
             assert capability in config.capabilities
 
         # Verify no Sophia capabilities
-        sophia_capabilities = ["business_intelligence", "sales_analytics", "customer_insights"]
+        sophia_capabilities = [
+            "business_intelligence",
+            "sales_analytics",
+            "customer_insights",
+        ]
 
         for capability in sophia_capabilities:
             assert capability not in config.capabilities

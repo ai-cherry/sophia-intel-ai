@@ -172,7 +172,11 @@ class PortkeyArtemisFactory(ArtemisUnifiedFactory):
     def _get_role_tools(self, role: TechnicalAgentRole) -> list[str]:
         """Get tools based on role"""
         tools_map = {
-            TechnicalAgentRole.CODE_REVIEWER: ["ast_parser", "linter", "complexity_analyzer"],
+            TechnicalAgentRole.CODE_REVIEWER: [
+                "ast_parser",
+                "linter",
+                "complexity_analyzer",
+            ],
             TechnicalAgentRole.SECURITY_AUDITOR: [
                 "vulnerability_scanner",
                 "dependency_checker",
@@ -365,7 +369,12 @@ class PortkeyArtemisFactory(ArtemisUnifiedFactory):
                     logger.error(f"Fallback to {fallback} failed: {fallback_error}")
                     continue
 
-            return {"success": False, "error": str(e), "agent": agent.name, "provider": provider}
+            return {
+                "success": False,
+                "error": str(e),
+                "agent": agent.name,
+                "provider": provider,
+            }
 
     def _generate_system_prompt(self, agent: AgentProfile) -> str:
         """Generate system prompt for agent"""
@@ -445,7 +454,9 @@ Your responses should be direct, technical, and focused on the mission objective
             ],
             "created_at": datetime.now(timezone.utc).isoformat(),
             "portkey_enabled": True,
-            "provider_diversity": len({a.tactical_traits.get("provider") for a in agents}),
+            "provider_diversity": len(
+                {a.tactical_traits.get("provider") for a in agents}
+            ),
         }
 
         # Store swarm configuration

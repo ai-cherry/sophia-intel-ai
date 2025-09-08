@@ -13,7 +13,9 @@ from datetime import datetime
 from pathlib import Path
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -139,7 +141,10 @@ class FinalTechnicalDebtValidator:
 
         # Build import graph
         for py_file in self.root_path.rglob("*.py"):
-            if any(excluded in str(py_file) for excluded in ["backup_", "__pycache__", ".git"]):
+            if any(
+                excluded in str(py_file)
+                for excluded in ["backup_", "__pycache__", ".git"]
+            ):
                 continue
 
             try:
@@ -184,7 +189,9 @@ class FinalTechnicalDebtValidator:
                             if not self._can_import_module(alias.name):
                                 broken_imports.append(
                                     {
-                                        "file": str(py_file.relative_to(self.root_path)),
+                                        "file": str(
+                                            py_file.relative_to(self.root_path)
+                                        ),
                                         "import": alias.name,
                                         "type": "import",
                                     }
@@ -218,7 +225,10 @@ class FinalTechnicalDebtValidator:
 
         # Find all file references
         for py_file in all_py_files:
-            if any(excluded in str(py_file) for excluded in ["backup_", "__pycache__", ".git"]):
+            if any(
+                excluded in str(py_file)
+                for excluded in ["backup_", "__pycache__", ".git"]
+            ):
                 continue
 
             try:
@@ -265,7 +275,10 @@ class FinalTechnicalDebtValidator:
         duplicates = []
 
         for py_file in self.root_path.rglob("*.py"):
-            if any(excluded in str(py_file) for excluded in ["backup_", "__pycache__", ".git"]):
+            if any(
+                excluded in str(py_file)
+                for excluded in ["backup_", "__pycache__", ".git"]
+            ):
                 continue
 
             try:
@@ -287,7 +300,9 @@ class FinalTechnicalDebtValidator:
                                 }
                             )
                         else:
-                            function_registry[func_name] = str(py_file.relative_to(self.root_path))
+                            function_registry[func_name] = str(
+                                py_file.relative_to(self.root_path)
+                            )
 
                     elif isinstance(node, ast.ClassDef):
                         class_name = node.name
@@ -303,18 +318,32 @@ class FinalTechnicalDebtValidator:
                                 }
                             )
                         else:
-                            class_registry[class_name] = str(py_file.relative_to(self.root_path))
+                            class_registry[class_name] = str(
+                                py_file.relative_to(self.root_path)
+                            )
 
             except Exception:
                 continue
 
         # Filter out acceptable duplicates (common names)
-        acceptable_duplicates = {"main", "test", "run", "init", "setup", "Config", "Base"}
-        significant_duplicates = [d for d in duplicates if d["name"] not in acceptable_duplicates]
+        acceptable_duplicates = {
+            "main",
+            "test",
+            "run",
+            "init",
+            "setup",
+            "Config",
+            "Base",
+        }
+        significant_duplicates = [
+            d for d in duplicates if d["name"] not in acceptable_duplicates
+        ]
 
         if significant_duplicates:
             self.critical_issues["duplicate_functionality"] = significant_duplicates
-            logger.warning(f"⚠️  Found {len(significant_duplicates)} duplicate definitions")
+            logger.warning(
+                f"⚠️  Found {len(significant_duplicates)} duplicate definitions"
+            )
         else:
             logger.info("✅ No significant duplicate functionality")
 
@@ -334,8 +363,12 @@ class FinalTechnicalDebtValidator:
         scattered_configs = []
         for pattern in ["*.json", "*.env", "*.yaml", "*.yml"]:
             for config_file in self.root_path.rglob(pattern):
-                if "config/" not in str(config_file) and "backup_" not in str(config_file):
-                    scattered_configs.append(str(config_file.relative_to(self.root_path)))
+                if "config/" not in str(config_file) and "backup_" not in str(
+                    config_file
+                ):
+                    scattered_configs.append(
+                        str(config_file.relative_to(self.root_path))
+                    )
 
         if scattered_configs:
             config_issues.extend([f"Scattered config: {c}" for c in scattered_configs])
@@ -355,7 +388,10 @@ class FinalTechnicalDebtValidator:
 
         # Check for hardcoded secrets
         for py_file in self.root_path.rglob("*.py"):
-            if any(excluded in str(py_file) for excluded in ["backup_", "__pycache__", ".git"]):
+            if any(
+                excluded in str(py_file)
+                for excluded in ["backup_", "__pycache__", ".git"]
+            ):
                 continue
 
             try:
@@ -374,7 +410,10 @@ class FinalTechnicalDebtValidator:
                 for pattern in secret_patterns:
                     matches = re.findall(pattern, content, re.IGNORECASE)
                     for match in matches:
-                        if "your_" not in match.lower() and "example" not in match.lower():
+                        if (
+                            "your_" not in match.lower()
+                            and "example" not in match.lower()
+                        ):
                             security_issues.append(
                                 {
                                     "file": str(py_file.relative_to(self.root_path)),
@@ -401,7 +440,10 @@ class FinalTechnicalDebtValidator:
         performance_issues = []
 
         for py_file in self.root_path.rglob("*.py"):
-            if any(excluded in str(py_file) for excluded in ["backup_", "__pycache__", ".git"]):
+            if any(
+                excluded in str(py_file)
+                for excluded in ["backup_", "__pycache__", ".git"]
+            ):
                 continue
 
             try:
@@ -428,7 +470,9 @@ class FinalTechnicalDebtValidator:
                 continue
 
         if performance_issues:
-            logger.warning(f"⚠️  Found {len(performance_issues)} performance suggestions")
+            logger.warning(
+                f"⚠️  Found {len(performance_issues)} performance suggestions"
+            )
         else:
             logger.info("✅ Performance validation passed")
 
@@ -550,16 +594,26 @@ class FinalTechnicalDebtValidator:
                 "orchestrator_consolidated": (
                     self.root_path / "app/core/super_orchestrator.py"
                 ).exists(),
-                "mcp_unified": (self.root_path / "dev_mcp_unified/core/mcp_server.py").exists(),
+                "mcp_unified": (
+                    self.root_path / "dev_mcp_unified/core/mcp_server.py"
+                ).exists(),
                 "config_unified": (self.root_path / "config/manager.py").exists(),
             },
             "quality_metrics": {
-                "circular_dependencies": len(self.critical_issues["circular_dependencies"]),
+                "circular_dependencies": len(
+                    self.critical_issues["circular_dependencies"]
+                ),
                 "broken_imports": len(self.critical_issues["broken_imports"]),
                 "orphaned_files": len(self.critical_issues["orphaned_files"]),
-                "duplicate_functions": len(self.critical_issues["duplicate_functionality"]),
-                "config_conflicts": len(self.critical_issues["configuration_conflicts"]),
-                "security_issues": len(self.critical_issues["security_vulnerabilities"]),
+                "duplicate_functions": len(
+                    self.critical_issues["duplicate_functionality"]
+                ),
+                "config_conflicts": len(
+                    self.critical_issues["configuration_conflicts"]
+                ),
+                "security_issues": len(
+                    self.critical_issues["security_vulnerabilities"]
+                ),
             },
         }
 

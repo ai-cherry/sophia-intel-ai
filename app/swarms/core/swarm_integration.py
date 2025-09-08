@@ -105,7 +105,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         self.intelligent_router = get_intelligent_router()
         self.scheduler = get_scheduler()
         # Slack delivery: only enabled for Sophia domain
-        self.delivery_engine = get_delivery_engine() if domain == MemoryDomain.SOPHIA else None
+        self.delivery_engine = (
+            get_delivery_engine() if domain == MemoryDomain.SOPHIA else None
+        )
 
         # External integrations
         self.integrations: dict[str, Any] = {}
@@ -178,7 +180,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                     pending_q = f"collab AND pending AND for:{agent}"
                     proposals_q = "collab AND pending_review"
                     pending = mcp.memory_search(pending_q, limit=20).get("results", [])
-                    proposals = mcp.memory_search(proposals_q, limit=20).get("results", [])
+                    proposals = mcp.memory_search(proposals_q, limit=20).get(
+                        "results", []
+                    )
                     context.integration_context["collab"] = {
                         "pending_tasks": [
                             {
@@ -213,7 +217,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         except Exception as e:
             logger.error(f"Integrated swarm execution failed: {e}")
             return Result(
-                success=False, content=f"Swarm execution failed: {str(e)}", errors=[str(e)]
+                success=False,
+                content=f"Swarm execution failed: {str(e)}",
+                errors=[str(e)],
             )
 
     async def _parse_swarm_request(self, task: Task) -> dict[str, Any]:
@@ -231,7 +237,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
             "content": task.content,
             "type": task.metadata.get("swarm_type", "auto_detect"),
             "domain": self.domain.value,
-            "coordination_pattern": task.metadata.get("coordination_pattern", "sequential"),
+            "coordination_pattern": task.metadata.get(
+                "coordination_pattern", "sequential"
+            ),
             "agents": task.metadata.get("agents", []),
             "context": task.metadata.get("context", {}),
         }
@@ -260,7 +268,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
             # Create message braider for this execution
             create_message_braider(
                 swarm_id=context.execution_id,
-                coordination_pattern=swarm_request.get("coordination_pattern", "sequential"),
+                coordination_pattern=swarm_request.get(
+                    "coordination_pattern", "sequential"
+                ),
             )
 
             # Execute swarm
@@ -318,7 +328,14 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
             return "business_intelligence"
 
         # Technical keywords
-        tech_keywords = ["code", "architecture", "system", "technical", "development", "security"]
+        tech_keywords = [
+            "code",
+            "architecture",
+            "system",
+            "technical",
+            "development",
+            "security",
+        ]
         if any(keyword in content_lower for keyword in tech_keywords):
             return "technical_analysis"
 
@@ -376,11 +393,17 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                 # Limit: 10 files x 50KB each (~500KB total)
                 loop = asyncio.get_event_loop()
                 loop.create_task(
-                    prefetch_and_index(repo_root=".", max_files=10, max_bytes_per_file=50_000)
+                    prefetch_and_index(
+                        repo_root=".", max_files=10, max_bytes_per_file=50_000
+                    )
                 )
                 # Also schedule delta indexing (feature-flagged)
                 loop.create_task(
-                    delta_index(repo_root=".", max_total_bytes=500_000, max_bytes_per_file=50_000)
+                    delta_index(
+                        repo_root=".",
+                        max_total_bytes=500_000,
+                        max_bytes_per_file=50_000,
+                    )
                 )
             except Exception:
                 # Non-blocking: ignore any prefetch scheduling errors
@@ -393,7 +416,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
         elif swarm_type == "security_micro":
             return self.artemis_factory.create_security_micro_swarm()
         elif swarm_type == "custom":
-            agents = request.get("agents", ["architect", "code_analyst", "quality_engineer"])
+            agents = request.get(
+                "agents", ["architect", "code_analyst", "quality_engineer"]
+            )
             return self.artemis_factory.create_custom_swarm(agents)
         else:
             return self.artemis_factory.create_code_review_swarm()
@@ -412,7 +437,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                 keyword in swarm_request["content"].lower()
                 for keyword in ["task", "issue", "ticket", "bug"]
             ):
-                linear_context = await self._load_linear_context(swarm_request["content"])
+                linear_context = await self._load_linear_context(
+                    swarm_request["content"]
+                )
                 if linear_context:
                     integration_data["linear"] = linear_context
 
@@ -485,13 +512,18 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
             insights = await gong_adapter.get_sales_insights(query=content[:100])
 
             if insights:
-                return {"sales_insights": insights, "loaded_at": datetime.now().isoformat()}
+                return {
+                    "sales_insights": insights,
+                    "loaded_at": datetime.now().isoformat(),
+                }
         except Exception as e:
             logger.error(f"Failed to load Gong context: {e}")
 
         return None
 
-    async def _store_swarm_results(self, swarm_result: SwarmResult, context: SwarmExecutionContext):
+    async def _store_swarm_results(
+        self, swarm_result: SwarmResult, context: SwarmExecutionContext
+    ):
         """Store swarm results in unified memory"""
 
         try:
@@ -562,13 +594,16 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
                             if not msgs:
                                 continue
                             role_preview = (
-                                msgs[-1].content if hasattr(msgs[-1], "content") else str(msgs[-1])
+                                msgs[-1].content
+                                if hasattr(msgs[-1], "content")
+                                else str(msgs[-1])
                             )[:4000]
                             self.mcp_stdio.memory_add(
                                 topic=f"Swarm Contribution: {swarm_type or 'unknown'} [{getattr(role, 'value', str(role))}]",
                                 content=role_preview,
                                 source="artemis.orchestrator",
-                                tags=base_tags + [f"role:{getattr(role, 'value', str(role))}"],
+                                tags=base_tags
+                                + [f"role:{getattr(role, 'value', str(role))}"],
                                 memory_type="semantic",
                             )
                     # Proposal entry for review-centric swarms
@@ -621,7 +656,9 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
 
             # Slack delivery only for Sophia
             if self.domain == MemoryDomain.SOPHIA and self.delivery_engine:
-                await self.delivery_engine.auto_deliver(swarm_result, notification_context)
+                await self.delivery_engine.auto_deliver(
+                    swarm_result, notification_context
+                )
 
             # Direct Slack notification only if source is Slack and Sophia domain
             if (

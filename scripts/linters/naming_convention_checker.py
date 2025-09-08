@@ -157,7 +157,9 @@ def check_file_naming(file_path: Path) -> List[Dict[str, Any]]:
                     "file": str(file_path),
                     "name": file_name,
                     "issue": "Python file should be snake_case.py",
-                    "suggestion": re.sub(r"([A-Z])", r"_\1", name_without_ext).lower().lstrip("_")
+                    "suggestion": re.sub(r"([A-Z])", r"_\1", name_without_ext)
+                    .lower()
+                    .lstrip("_")
                     + ".py",
                 }
             )
@@ -192,7 +194,8 @@ def check_mcp_naming(file_path: str) -> List[Dict[str, Any]]:
                         "line": line_num,
                         "name": class_name,
                         "issue": "MCP class should be PascalCase ending with MCPServer",
-                        "suggestion": class_name.replace("mcp", "MCP").replace("_", "") + "Server",
+                        "suggestion": class_name.replace("mcp", "MCP").replace("_", "")
+                        + "Server",
                     }
                 )
 
@@ -210,7 +213,10 @@ def main():
 
     # Check all Python files
     for py_file in Path(".").rglob("*.py"):
-        if any(skip in str(py_file) for skip in [".git", "node_modules", "__pycache__", ".venv"]):
+        if any(
+            skip in str(py_file)
+            for skip in [".git", "node_modules", "__pycache__", ".venv"]
+        ):
             continue
 
         file_path = str(py_file)
@@ -274,7 +280,9 @@ def main():
 
         print("\n📊 Summary:")
         print(f"  Total violations: {len(all_violations)}")
-        print(f"  Files affected: {len(set(v.get('file', '') for v in all_violations))}")
+        print(
+            f"  Files affected: {len(set(v.get('file', '') for v in all_violations))}"
+        )
 
         # Calculate compliance rate
         total_files = len(list(Path(".").rglob("*.py")))

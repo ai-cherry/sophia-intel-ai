@@ -32,7 +32,9 @@ async def main():
             print(f"      Agent: {latest.metadata.agent_name}")
             print(f"      Domain: {latest.metadata.domain}")
             print(f"      Tags: {', '.join(latest.metadata.performance_tags or [])}")
-            print(f"      Contexts: {', '.join(latest.metadata.business_context or [])}")
+            print(
+                f"      Contexts: {', '.join(latest.metadata.business_context or [])}"
+            )
 
     # Demonstrate context-aware prompt retrieval
     print("\n3. 🎯 Context-Aware Prompt Retrieval:")
@@ -91,7 +93,9 @@ async def main():
         print(f"📊 Branches for {sample_prompt_id}:")
         for branch in branches:
             status = "🔀 merged" if branch.is_merged else "🌿 active"
-            print(f"   {status} {branch.name} - {branch.description or 'No description'}")
+            print(
+                f"   {status} {branch.name} - {branch.description or 'No description'}"
+            )
 
     # Demonstrate performance tracking
     print("\n5. 📈 Performance Analytics:")
@@ -122,7 +126,9 @@ async def main():
             print(
                 f"   {i}. {prompt_version.metadata.agent_name} - {prompt_version.metadata.task_type}"
             )
-            print(f"      Score: {score:.2f} | Domain: {prompt_version.metadata.domain}")
+            print(
+                f"      Score: {score:.2f} | Domain: {prompt_version.metadata.domain}"
+            )
     else:
         print("📊 No performance data available yet")
 
@@ -142,7 +148,9 @@ async def main():
                 name="Hermes Market Analysis Optimization",
                 description="Testing improved market analysis prompts for PayReady context",
                 control_version=control_version,
-                test_versions=[control_version],  # In real scenario, would have different versions
+                test_versions=[
+                    control_version
+                ],  # In real scenario, would have different versions
                 traffic_split={control_version: 1.0},
                 success_metrics=["success_rate", "response_quality"],
                 start_time=datetime.now(timezone.utc),
@@ -154,7 +162,10 @@ async def main():
 
             # Simulate recording test results
             library.record_ab_test_result(
-                test_id, control_version, True, {"success_rate": 0.92, "response_quality": 8.7}
+                test_id,
+                control_version,
+                True,
+                {"success_rate": 0.92, "response_quality": 8.7},
             )
             print("✅ Recorded test result")
 

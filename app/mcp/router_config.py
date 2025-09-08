@@ -118,7 +118,9 @@ class MCPRouterConfiguration:
         """Start health monitoring if not already started"""
         if self._health_monitoring_task is None:
             try:
-                self._health_monitoring_task = asyncio.create_task(self._health_monitor_loop())
+                self._health_monitoring_task = asyncio.create_task(
+                    self._health_monitor_loop()
+                )
                 logger.info("MCP health monitoring started")
             except Exception as e:
                 logger.error(f"Failed to start MCP health monitoring: {e}")
@@ -138,7 +140,9 @@ class MCPRouterConfiguration:
             server_type=MCPServerType.CODE_ANALYSIS,
             allowed_domains={MemoryDomain.ARTEMIS},
             priority=1,
-            filters={"analysis_types": ["syntax", "security", "performance", "quality"]},
+            filters={
+                "analysis_types": ["syntax", "security", "performance", "quality"]
+            },
         )
 
         self.routing_rules[MCPServerType.DESIGN_SERVER] = RoutingRule(
@@ -169,8 +173,12 @@ class MCPRouterConfiguration:
             allowed_domains={MemoryDomain.ARTEMIS, MemoryDomain.SOPHIA},
             priority=1,
             filters={
-                "artemis": {"schemas": ["code_metrics", "technical_debt", "test_coverage"]},
-                "sophia": {"schemas": ["sales_data", "customer_health", "revenue_metrics"]},
+                "artemis": {
+                    "schemas": ["code_metrics", "technical_debt", "test_coverage"]
+                },
+                "sophia": {
+                    "schemas": ["sales_data", "customer_health", "revenue_metrics"]
+                },
             },
             load_balancing="least_connections",
         )
@@ -180,23 +188,37 @@ class MCPRouterConfiguration:
             allowed_domains={MemoryDomain.ARTEMIS, MemoryDomain.SOPHIA},
             priority=2,
             filters={
-                "artemis": {"stores": ["code_patterns", "best_practices", "documentation"]},
+                "artemis": {
+                    "stores": ["code_patterns", "best_practices", "documentation"]
+                },
                 "sophia": {
-                    "stores": ["business_insights", "market_intelligence", "customer_knowledge"]
+                    "stores": [
+                        "business_insights",
+                        "market_intelligence",
+                        "customer_knowledge",
+                    ]
                 },
             },
         )
 
         self.routing_rules[MCPServerType.INDEXING] = RoutingRule(
             server_type=MCPServerType.INDEXING,
-            allowed_domains={MemoryDomain.ARTEMIS, MemoryDomain.SOPHIA, MemoryDomain.SHARED},
+            allowed_domains={
+                MemoryDomain.ARTEMIS,
+                MemoryDomain.SOPHIA,
+                MemoryDomain.SHARED,
+            },
             priority=1,
             filters={"partitioning": "domain_based", "index_strategy": "hybrid"},
         )
 
         self.routing_rules[MCPServerType.EMBEDDING] = RoutingRule(
             server_type=MCPServerType.EMBEDDING,
-            allowed_domains={MemoryDomain.ARTEMIS, MemoryDomain.SOPHIA, MemoryDomain.SHARED},
+            allowed_domains={
+                MemoryDomain.ARTEMIS,
+                MemoryDomain.SOPHIA,
+                MemoryDomain.SHARED,
+            },
             priority=1,
             filters={
                 "namespaces": {
@@ -209,7 +231,11 @@ class MCPRouterConfiguration:
 
         self.routing_rules[MCPServerType.META_TAGGING] = RoutingRule(
             server_type=MCPServerType.META_TAGGING,
-            allowed_domains={MemoryDomain.ARTEMIS, MemoryDomain.SOPHIA, MemoryDomain.SHARED},
+            allowed_domains={
+                MemoryDomain.ARTEMIS,
+                MemoryDomain.SOPHIA,
+                MemoryDomain.SHARED,
+            },
             priority=2,
             filters={
                 "tag_domains": {
@@ -221,7 +247,11 @@ class MCPRouterConfiguration:
 
         self.routing_rules[MCPServerType.CHUNKING] = RoutingRule(
             server_type=MCPServerType.CHUNKING,
-            allowed_domains={MemoryDomain.ARTEMIS, MemoryDomain.SOPHIA, MemoryDomain.SHARED},
+            allowed_domains={
+                MemoryDomain.ARTEMIS,
+                MemoryDomain.SOPHIA,
+                MemoryDomain.SHARED,
+            },
             priority=3,
             filters={
                 "strategies": {
@@ -277,10 +307,14 @@ class MCPRouterConfiguration:
             server_type=MCPServerType.WEB_SEARCH,
             endpoint="ws://localhost:8020/mcp",
             connection_pool=ConnectionPool(
-                min_connections=2, max_connections=10, connection_timeout=30, retry_attempts=5
+                min_connections=2,
+                max_connections=10,
+                connection_timeout=30,
+                retry_attempts=5,
             ),
             health_check=HealthCheckConfig(
-                interval_seconds=30, failure_threshold=5  # More tolerant for external service
+                interval_seconds=30,
+                failure_threshold=5,  # More tolerant for external service
             ),
             capabilities=["search", "scrape", "monitor"],
             metadata={"domain": "sophia", "external": True},
@@ -304,7 +338,10 @@ class MCPRouterConfiguration:
             server_type=MCPServerType.DATABASE,
             endpoint="ws://localhost:8030/mcp",
             connection_pool=ConnectionPool(
-                min_connections=5, max_connections=10, connection_timeout=30, idle_timeout=600
+                min_connections=5,
+                max_connections=10,
+                connection_timeout=30,
+                idle_timeout=600,
             ),
             health_check=HealthCheckConfig(interval_seconds=20, failure_threshold=2),
             capabilities=["query", "insert", "update", "delete", "transaction"],
@@ -429,7 +466,9 @@ class MCPRouterConfiguration:
             # Wait for next health check interval
             await asyncio.sleep(30)
 
-    async def _check_server_health(self, server_name: str, config: MCPServerConfig) -> bool:
+    async def _check_server_health(
+        self, server_name: str, config: MCPServerConfig
+    ) -> bool:
         """
         Check health of a specific MCP server
 
@@ -484,13 +523,19 @@ class MCPRouterConfiguration:
         return {
             "total_servers": len(self.server_configs),
             "artemis_exclusive": [
-                s for s in self.server_configs.values() if s.metadata.get("domain") == "artemis"
+                s
+                for s in self.server_configs.values()
+                if s.metadata.get("domain") == "artemis"
             ],
             "sophia_exclusive": [
-                s for s in self.server_configs.values() if s.metadata.get("domain") == "sophia"
+                s
+                for s in self.server_configs.values()
+                if s.metadata.get("domain") == "sophia"
             ],
             "shared_servers": [
-                s for s in self.server_configs.values() if s.metadata.get("domain") == "shared"
+                s
+                for s in self.server_configs.values()
+                if s.metadata.get("domain") == "shared"
             ],
             "health_status": self.health_status,
             "routing_rules": len(self.routing_rules),

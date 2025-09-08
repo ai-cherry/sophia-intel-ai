@@ -46,7 +46,9 @@ class SimpleOpenAIChat:
         # Get real API key, fail if not available
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key or api_key == "dummy-key":
-            raise ValueError("OPENAI_API_KEY environment variable must be set with a valid API key")
+            raise ValueError(
+                "OPENAI_API_KEY environment variable must be set with a valid API key"
+            )
 
         self.client = OpenAI(api_key=api_key)
 

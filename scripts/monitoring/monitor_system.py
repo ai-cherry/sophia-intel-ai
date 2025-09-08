@@ -73,13 +73,17 @@ def check_system_resources() -> Dict[str, Any]:
 
         # Log alerts
         if result["cpu"]["alert"]:
-            logger.warning(f"CPU usage alert: {cpu_percent}% (threshold: {CPU_THRESHOLD}%)")
+            logger.warning(
+                f"CPU usage alert: {cpu_percent}% (threshold: {CPU_THRESHOLD}%)"
+            )
         if result["memory"]["alert"]:
             logger.warning(
                 f"Memory usage alert: {memory_percent}% (threshold: {MEMORY_THRESHOLD}%)"
             )
         if result["disk"]["alert"]:
-            logger.warning(f"Disk usage alert: {disk_percent}% (threshold: {DISK_THRESHOLD}%)")
+            logger.warning(
+                f"Disk usage alert: {disk_percent}% (threshold: {DISK_THRESHOLD}%)"
+            )
 
         return result
     except Exception as e:
@@ -98,13 +102,21 @@ def check_api_health() -> Dict[str, Any]:
     Check health of API endpoints
     """
     endpoints = [
-        {"name": "MCP Server", "url": "http://localhost:8000/health", "expected_status": 200},
+        {
+            "name": "MCP Server",
+            "url": "http://localhost:8000/health",
+            "expected_status": 200,
+        },
         {
             "name": "OpenRouter",
             "url": "https://openrouter.ai/api/v1/auth/key",
             "expected_status": 200,
         },
-        {"name": "Portkey", "url": "https://api.portkey.ai/v1/health", "expected_status": 200},
+        {
+            "name": "Portkey",
+            "url": "https://api.portkey.ai/v1/health",
+            "expected_status": 200,
+        },
         {
             "name": "Memory System",
             "url": "http://localhost:6333/health",
@@ -124,8 +136,12 @@ def check_api_health() -> Dict[str, Any]:
             elif "portkey.ai" in endpoint["url"] and os.getenv("PORTKEY_API_KEY"):
                 headers["x-portkey-api-key"] = os.getenv("PORTKEY_API_KEY")
 
-            response = requests.get(endpoint["url"], headers=headers, timeout=API_TIMEOUT)
-            status = "UP" if response.status_code == endpoint["expected_status"] else "DOWN"
+            response = requests.get(
+                endpoint["url"], headers=headers, timeout=API_TIMEOUT
+            )
+            status = (
+                "UP" if response.status_code == endpoint["expected_status"] else "DOWN"
+            )
             latency = response.elapsed.total_seconds() * 1000  # ms
 
             is_alert = status == "DOWN"
@@ -187,7 +203,9 @@ def check_processes() -> Dict[str, Any]:
 
             if is_alert:
                 any_alert = True
-                logger.warning(f"Process alert: {proc['name']} ({proc['pattern']}) is not running")
+                logger.warning(
+                    f"Process alert: {proc['name']} ({proc['pattern']}) is not running"
+                )
 
             results["processes"].append(
                 {
@@ -280,7 +298,11 @@ def check_costs() -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"Error checking costs: {e}")
-        return {"timestamp": datetime.datetime.now().isoformat(), "error": str(e), "alert": False}
+        return {
+            "timestamp": datetime.datetime.now().isoformat(),
+            "error": str(e),
+            "alert": False,
+        }
 
 
 def save_metrics(
@@ -348,8 +370,12 @@ def cleanup_old_metrics(metrics_dir: Path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Monitor system resources and API health")
-    parser.add_argument("--no-save", action="store_true", help="Don't save metrics to file")
+    parser = argparse.ArgumentParser(
+        description="Monitor system resources and API health"
+    )
+    parser.add_argument(
+        "--no-save", action="store_true", help="Don't save metrics to file"
+    )
     args = parser.parse_args()
 
     logger.info("Starting system monitoring")

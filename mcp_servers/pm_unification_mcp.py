@@ -114,7 +114,8 @@ class PMUnificationMCPServer(MCPServer):
         self.asana_client = asana.Client.access_token(self.config["asana_token"])
         self.linear_client = linear_sdk.LinearClient(self.config["linear_token"])
         self.gong_client = GongClient(
-            access_key=self.config["gong_access_key"], access_key_secret=self.config["gong_secret"]
+            access_key=self.config["gong_access_key"],
+            access_key_secret=self.config["gong_secret"],
         )
 
         # Initialize AI components
@@ -197,7 +198,9 @@ class PMUnificationMCPServer(MCPServer):
                 platform_data = await self._gather_platform_data(project_filter)
 
                 # Perform cross-platform analysis
-                health_analysis = await self._analyze_cross_platform_health(platform_data)
+                health_analysis = await self._analyze_cross_platform_health(
+                    platform_data
+                )
 
                 # Generate strategic insights
                 strategic_insights = await self._generate_strategic_insights(
@@ -237,7 +240,10 @@ class PMUnificationMCPServer(MCPServer):
 
             except Exception as e:
                 logger.error(f"Project health analysis failed: {e}")
-                return {"error": str(e), "analysis_timestamp": datetime.now().isoformat()}
+                return {
+                    "error": str(e),
+                    "analysis_timestamp": datetime.now().isoformat(),
+                }
 
         @self.tool("analyze_okr_alignment")
         async def analyze_okr_alignment(
@@ -265,10 +271,15 @@ class PMUnificationMCPServer(MCPServer):
                 okrs = await self._get_department_okrs(department)
 
                 if not okrs:
-                    return {"error": "No OKRs found for analysis", "alignment_score": 0.0}
+                    return {
+                        "error": "No OKRs found for analysis",
+                        "alignment_score": 0.0,
+                    }
 
                 # Perform semantic alignment analysis
-                alignment_results = await self._calculate_alignment_scores(project_data, okrs)
+                alignment_results = await self._calculate_alignment_scores(
+                    project_data, okrs
+                )
 
                 # Generate strategic recommendations if requested
                 recommendations = []
@@ -317,11 +328,15 @@ class PMUnificationMCPServer(MCPServer):
                 Escalation processing results with response strategy
             """
             try:
-                logger.info(f"Processing escalation: {trigger_data.get('trigger_type', 'Unknown')}")
+                logger.info(
+                    f"Processing escalation: {trigger_data.get('trigger_type', 'Unknown')}"
+                )
 
                 # Create escalation trigger object
                 trigger = EscalationTrigger(
-                    trigger_id=trigger_data.get("trigger_id", f"esc_{datetime.now().timestamp()}"),
+                    trigger_id=trigger_data.get(
+                        "trigger_id", f"esc_{datetime.now().timestamp()}"
+                    ),
                     project_id=trigger_data["project_id"],
                     trigger_type=trigger_data["trigger_type"],
                     severity=UrgencyLevel(trigger_data.get("severity", 2)),
@@ -330,7 +345,8 @@ class PMUnificationMCPServer(MCPServer):
                     stakeholders_to_notify=trigger_data.get("stakeholders", []),
                     escalation_deadline=datetime.fromisoformat(
                         trigger_data.get(
-                            "deadline", (datetime.now() + timedelta(hours=24)).isoformat()
+                            "deadline",
+                            (datetime.now() + timedelta(hours=24)).isoformat(),
                         )
                     ),
                 )
@@ -412,7 +428,9 @@ class PMUnificationMCPServer(MCPServer):
                 )
 
                 # Generate resource allocation insights
-                resource_insights = await self._analyze_resource_allocation(project_data)
+                resource_insights = await self._analyze_resource_allocation(
+                    project_data
+                )
 
                 # Create executive recommendations
                 recommendations = await self._generate_executive_recommendations(
@@ -432,8 +450,12 @@ class PMUnificationMCPServer(MCPServer):
                         "timeframe": timeframe,
                         "scope": briefing_scope,
                         "total_projects": len(project_data.get("projects", [])),
-                        "critical_issues": len(strategic_analysis.get("critical_risks", [])),
-                        "strategic_opportunities": len(strategic_analysis.get("opportunities", [])),
+                        "critical_issues": len(
+                            strategic_analysis.get("critical_risks", [])
+                        ),
+                        "strategic_opportunities": len(
+                            strategic_analysis.get("opportunities", [])
+                        ),
                     },
                     "okr_analysis": okr_analysis,
                     "strategic_analysis": strategic_analysis,
@@ -499,7 +521,9 @@ class PMUnificationMCPServer(MCPServer):
                         "successful": successful_syncs,
                         "total": total_syncs,
                         "success_rate": (
-                            (successful_syncs / total_syncs) * 100 if total_syncs > 0 else 0
+                            (successful_syncs / total_syncs) * 100
+                            if total_syncs > 0
+                            else 0
                         ),
                     },
                     "platform_results": sync_results,
@@ -529,7 +553,9 @@ class PMUnificationMCPServer(MCPServer):
                     return {"error": f"Project {project_id} not found"}
 
                 # Analyze project health and alignment
-                health_analysis = await self._analyze_project_health_single(project_data)
+                health_analysis = await self._analyze_project_health_single(
+                    project_data
+                )
                 okr_alignment = await self._analyze_project_okr_alignment(project_data)
 
                 return {
@@ -540,7 +566,9 @@ class PMUnificationMCPServer(MCPServer):
                 }
 
             except Exception as e:
-                logger.error(f"Failed to get project intelligence for {project_id}: {e}")
+                logger.error(
+                    f"Failed to get project intelligence for {project_id}: {e}"
+                )
                 return {"error": str(e)}
 
         @self.resource("okr_database")
@@ -638,7 +666,10 @@ class PMUnificationMCPServer(MCPServer):
 
                 if "priority" in project_filter:
                     query_filter["and"].append(
-                        {"property": "Priority", "select": {"equals": project_filter["priority"]}}
+                        {
+                            "property": "Priority",
+                            "select": {"equals": project_filter["priority"]},
+                        }
                     )
 
             # Execute Notion query
@@ -670,7 +701,9 @@ class PMUnificationMCPServer(MCPServer):
             logger.error(f"Failed to retrieve Notion projects: {e}")
             return {"error": str(e), "projects": []}
 
-    async def _get_department_okrs(self, department: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def _get_department_okrs(
+        self, department: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """Retrieve OKRs for specific department or all OKRs"""
         cache_key = f"okrs_{department or 'all'}"
 
@@ -719,7 +752,9 @@ class PMUnificationMCPServer(MCPServer):
         """Calculate semantic alignment scores between project and OKRs"""
         try:
             # Extract project description and goals
-            project_text = f"{project_data.get('title', '')} {project_data.get('description', '')}"
+            project_text = (
+                f"{project_data.get('title', '')} {project_data.get('description', '')}"
+            )
             project_embedding = self.semantic_model.encode([project_text])
 
             alignment_results = []
@@ -730,7 +765,8 @@ class PMUnificationMCPServer(MCPServer):
 
                 # Calculate semantic similarity
                 similarity = np.dot(project_embedding[0], okr_embedding[0]) / (
-                    np.linalg.norm(project_embedding[0]) * np.linalg.norm(okr_embedding[0])
+                    np.linalg.norm(project_embedding[0])
+                    * np.linalg.norm(okr_embedding[0])
                 )
 
                 alignment_results.append(
@@ -763,7 +799,11 @@ class PMUnificationMCPServer(MCPServer):
 
         except Exception as e:
             logger.error(f"Alignment score calculation failed: {e}")
-            return {"overall_score": 0.0, "matches": [], "context": "Alignment analysis failed"}
+            return {
+                "overall_score": 0.0,
+                "matches": [],
+                "context": "Alignment analysis failed",
+            }
 
     async def _generate_alignment_recommendations(
         self, alignment_results: Dict[str, Any], okrs: List[Dict[str, Any]]
@@ -825,7 +865,9 @@ class PMUnificationMCPServer(MCPServer):
 
         return recommendations
 
-    def _generate_alignment_context(self, alignment_results: List[Dict[str, Any]]) -> str:
+    def _generate_alignment_context(
+        self, alignment_results: List[Dict[str, Any]]
+    ) -> str:
         """Generate contextual description of alignment analysis"""
         if not alignment_results:
             return "No strategic alignment data available"
@@ -837,7 +879,9 @@ class PMUnificationMCPServer(MCPServer):
             else "moderate" if top_match["alignment_score"] > 0.4 else "weak"
         )
 
-        context = f"Project shows {alignment_level} alignment with strategic objectives. "
+        context = (
+            f"Project shows {alignment_level} alignment with strategic objectives. "
+        )
         context += f"Strongest alignment is with '{top_match['okr_title']}' "
         context += f"({top_match['department']} department) with a score of {top_match['alignment_score']:.2f}."
 

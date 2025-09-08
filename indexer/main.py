@@ -43,7 +43,9 @@ async def run() -> None:
         print("weaviate-client not installed; exiting")
         return
 
-    client = weaviate.connect_to_local(host=weaviate_url.replace("http://", "").replace("https://", ""))
+    client = weaviate.connect_to_local(
+        host=weaviate_url.replace("http://", "").replace("https://", "")
+    )
     try:
         # Ensure class exists (non-vectorized)
         if CLASS_NAME not in client.collections.list_all():
@@ -51,11 +53,22 @@ async def run() -> None:
                 CLASS_NAME,
                 vectorizer_config=weaviate.classes.config.Configure.Vectorizer.none(),
                 properties=[
-                    weaviate.classes.config.Property(name="repo", data_type=weaviate.classes.config.DataType.TEXT),
-                    weaviate.classes.config.Property(name="file_path", data_type=weaviate.classes.config.DataType.TEXT),
-                    weaviate.classes.config.Property(name="content", data_type=weaviate.classes.config.DataType.TEXT),
-                    weaviate.classes.config.Property(name="mtime", data_type=weaviate.classes.config.DataType.NUMBER),
-                    weaviate.classes.config.Property(name="size", data_type=weaviate.classes.config.DataType.NUMBER),
+                    weaviate.classes.config.Property(
+                        name="repo", data_type=weaviate.classes.config.DataType.TEXT
+                    ),
+                    weaviate.classes.config.Property(
+                        name="file_path",
+                        data_type=weaviate.classes.config.DataType.TEXT,
+                    ),
+                    weaviate.classes.config.Property(
+                        name="content", data_type=weaviate.classes.config.DataType.TEXT
+                    ),
+                    weaviate.classes.config.Property(
+                        name="mtime", data_type=weaviate.classes.config.DataType.NUMBER
+                    ),
+                    weaviate.classes.config.Property(
+                        name="size", data_type=weaviate.classes.config.DataType.NUMBER
+                    ),
                 ],
             )
 

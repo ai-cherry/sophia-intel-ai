@@ -69,14 +69,18 @@ sophia_vector_operations = Histogram(
 )
 
 sophia_system_resources = Gauge(
-    "sophia_system_resources", "System resource utilization", ["resource_type", "component"]
+    "sophia_system_resources",
+    "System resource utilization",
+    ["resource_type", "component"],
 )
 
 sophia_slo_metrics = Gauge(
     "sophia_slo_achievement", "SLO achievement percentage", ["slo_type", "target"]
 )
 
-sophia_info = Info("sophia_memory_architecture", "Sophia AI memory architecture information")
+sophia_info = Info(
+    "sophia_memory_architecture", "Sophia AI memory architecture information"
+)
 
 
 class SophiaTracer:
@@ -88,7 +92,9 @@ class SophiaTracer:
         self.tracer = trace.get_tracer(tracer_name)
         self.active_spans = {}
 
-    def start_memory_operation(self, operation: str, tenant_id: str = "default", **attributes):
+    def start_memory_operation(
+        self, operation: str, tenant_id: str = "default", **attributes
+    ):
         """Start tracing a memory operation with context"""
         span_name = f"memory.{operation}"
         span = self.tracer.start_span(span_name)
@@ -149,7 +155,9 @@ class SophiaTracer:
     def record_slo_metric(self, slo_type: str, target: float, actual: float):
         """Record SLO achievement metric"""
         achievement = min(100.0, (actual / target) * 100) if target > 0 else 0.0
-        sophia_slo_metrics.labels(slo_type=slo_type, target=str(target)).set(achievement)
+        sophia_slo_metrics.labels(slo_type=slo_type, target=str(target)).set(
+            achievement
+        )
 
         # Also create a span for SLO tracking
         with self.tracer.start_as_current_span("slo.measurement") as span:
@@ -224,7 +232,9 @@ class PerformanceMonitor:
                 achievement = min(100.0, (target / max(current, 0.001)) * 100)
             else:
                 # Higher is better for rates and efficiency
-                achievement = min(100.0, (current / target) * 100) if target > 0 else 0.0
+                achievement = (
+                    min(100.0, (current / target) * 100) if target > 0 else 0.0
+                )
 
             dashboard_data[metric_name] = {
                 "current": current,
@@ -261,7 +271,9 @@ def setup_tracing(
             SERVICE_VERSION: service_version,
             ResourceAttributes.SERVICE_NAMESPACE: "sophia-ai",
             ResourceAttributes.SERVICE_INSTANCE_ID: socket.gethostname(),
-            ResourceAttributes.DEPLOYMENT_ENVIRONMENT: os.getenv("ENVIRONMENT", "development"),
+            ResourceAttributes.DEPLOYMENT_ENVIRONMENT: os.getenv(
+                "ENVIRONMENT", "development"
+            ),
             "sophia.architecture": "unified_memory_hellfire",
             "sophia.component": "memory_bus",
             "sophia.tech_debt": "eliminated",
@@ -280,7 +292,9 @@ def setup_tracing(
         otlp_exporter = OTLPSpanExporter(
             endpoint=otlp_endpoint or os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
             headers=(
-                {"Authorization": f"Bearer {os.getenv('OTEL_EXPORTER_OTLP_HEADERS', '')}"}
+                {
+                    "Authorization": f"Bearer {os.getenv('OTEL_EXPORTER_OTLP_HEADERS', '')}"
+                }
                 if os.getenv("OTEL_EXPORTER_OTLP_HEADERS")
                 else None
             ),
@@ -394,7 +408,9 @@ def setup_auto_instrumentation():
         logger.error(f"Auto-instrumentation setup failed: {e}")
 
 
-def create_memory_operation_span(operation: str, tenant_id: str = "default", **attributes):
+def create_memory_operation_span(
+    operation: str, tenant_id: str = "default", **attributes
+):
     """
     Context manager for memory operation tracing
     """
@@ -488,7 +504,9 @@ def create_vector_operation_span(collection: str, operation: str, **attributes):
             cached = attributes.get("cached", "false")
 
             sophia_vector_operations.labels(
-                collection=self.collection, quantization_type=quantization, cached=cached
+                collection=self.collection,
+                quantization_type=quantization,
+                cached=cached,
             ).observe(duration)
 
             if exc_type:
@@ -506,7 +524,9 @@ def update_system_resource_metrics(component: str, metrics_data: Dict[str, float
     Update system resource metrics
     """
     for resource_type, value in metrics_data.items():
-        sophia_system_resources.labels(resource_type=resource_type, component=component).set(value)
+        sophia_system_resources.labels(
+            resource_type=resource_type, component=component
+        ).set(value)
 
 
 def initialize_observability(
@@ -537,7 +557,9 @@ def initialize_observability(
 
     # Setup metrics
     setup_metrics(
-        service_name=service_name, prometheus_port=prometheus_port, otlp_endpoint=otlp_endpoint
+        service_name=service_name,
+        prometheus_port=prometheus_port,
+        otlp_endpoint=otlp_endpoint,
     )
 
     # Setup auto-instrumentation
@@ -545,8 +567,12 @@ def initialize_observability(
 
     _initialized = True
 
-    logger.info("✅ Observability Inferno initialized - Zero observability gaps achieved")
-    logger.info(f"📊 Prometheus metrics available at http://localhost:{prometheus_port}/metrics")
+    logger.info(
+        "✅ Observability Inferno initialized - Zero observability gaps achieved"
+    )
+    logger.info(
+        f"📊 Prometheus metrics available at http://localhost:{prometheus_port}/metrics"
+    )
 
 
 def get_observability_status() -> Dict[str, Any]:

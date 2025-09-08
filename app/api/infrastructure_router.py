@@ -105,7 +105,10 @@ async def security_scan(description: str = "Scan for exposed secrets"):
                     "severity": "info",
                     "finding": "All API keys are properly configured as environment variables",
                 },
-                {"severity": "info", "finding": "No hardcoded credentials found in codebase"},
+                {
+                    "severity": "info",
+                    "finding": "No hardcoded credentials found in codebase",
+                },
                 {
                     "severity": "info",
                     "finding": "Secret rotation is configured for critical services",

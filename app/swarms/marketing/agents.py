@@ -113,7 +113,9 @@ class BaseMarketingAgent(ABC):
         self.is_active = True
         while self.is_active:
             try:
-                context = await asyncio.wait_for(self.processing_queue.get(), timeout=1.0)
+                context = await asyncio.wait_for(
+                    self.processing_queue.get(), timeout=1.0
+                )
                 output = await self.analyze(context)
                 await self.emit_output(output)
                 self._track_performance(output)
@@ -155,10 +157,16 @@ class BrandConsistencyAgent(BaseMarketingAgent):
     real-time content review, and brand compliance enforcement.
     """
 
-    def __init__(self, agent_id: str = "brand_consistency", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "brand_consistency", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
-        self.brand_violations_threshold = config.get("violations_threshold", 0.7) if config else 0.7
-        self.auto_reject_threshold = config.get("auto_reject_threshold", 0.5) if config else 0.5
+        self.brand_violations_threshold = (
+            config.get("violations_threshold", 0.7) if config else 0.7
+        )
+        self.auto_reject_threshold = (
+            config.get("auto_reject_threshold", 0.5) if config else 0.5
+        )
 
     def get_agent_type(self) -> str:
         return "brand_consistency"
@@ -178,7 +186,9 @@ class BrandConsistencyAgent(BaseMarketingAgent):
                 priority=MarketingAgentPriority.HIGH,
                 confidence=1.0,
                 analysis={"error": "No brand guidelines configured"},
-                alerts=["Brand guidelines not configured - unable to enforce consistency"],
+                alerts=[
+                    "Brand guidelines not configured - unable to enforce consistency"
+                ],
             )
 
         # Analyze active campaigns for brand compliance
@@ -200,7 +210,9 @@ class BrandConsistencyAgent(BaseMarketingAgent):
         # Generate recommendations and alerts
         if brand_health_score < self.brand_violations_threshold:
             priority = MarketingAgentPriority.HIGH
-            alerts.append(f"Brand compliance score below threshold: {brand_health_score:.2f}")
+            alerts.append(
+                f"Brand compliance score below threshold: {brand_health_score:.2f}"
+            )
             recommendations.append("Review and update brand guidelines enforcement")
 
         if content_violations["critical_violations"] > 0:
@@ -210,7 +222,9 @@ class BrandConsistencyAgent(BaseMarketingAgent):
             )
 
         # Auto-suggestions for improvement
-        recommendations.extend(await self._generate_brand_improvements(brand_compliance))
+        recommendations.extend(
+            await self._generate_brand_improvements(brand_compliance)
+        )
 
         return MarketingAgentOutput(
             agent_id=self.agent_id,
@@ -224,7 +238,9 @@ class BrandConsistencyAgent(BaseMarketingAgent):
             requires_immediate_action=priority == MarketingAgentPriority.CRITICAL,
         )
 
-    async def _analyze_campaign_compliance(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_campaign_compliance(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze brand compliance across active campaigns"""
         compliance_data = {
             "campaigns_analyzed": len(context.active_campaigns),
@@ -240,12 +256,16 @@ class BrandConsistencyAgent(BaseMarketingAgent):
             # In production, would fetch actual campaign content
             # For now, simulate compliance checking
             mock_content = f"Sample content for campaign {campaign_id}"
-            validation_result = context.brand_guidelines.validate_content(mock_content, "email")
+            validation_result = context.brand_guidelines.validate_content(
+                mock_content, "email"
+            )
 
             compliance_data["compliance_scores"][campaign_id] = validation_result[
                 "compliance_score"
             ]
-            compliance_data["violations_by_campaign"][campaign_id] = validation_result["violations"]
+            compliance_data["violations_by_campaign"][campaign_id] = validation_result[
+                "violations"
+            ]
 
             total_score += validation_result["compliance_score"]
             campaigns_with_data += 1
@@ -255,7 +275,9 @@ class BrandConsistencyAgent(BaseMarketingAgent):
 
         return compliance_data
 
-    async def _check_content_violations(self, context: MarketingContext) -> dict[str, Any]:
+    async def _check_content_violations(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Check for brand guideline violations in recent content"""
         violations = {
             "critical_violations": 0,
@@ -310,7 +332,9 @@ class BrandConsistencyAgent(BaseMarketingAgent):
 
         return sum(factors) / len(factors) if factors else 0.5
 
-    async def _suggest_channel_adaptations(self, context: MarketingContext) -> dict[str, list[str]]:
+    async def _suggest_channel_adaptations(
+        self, context: MarketingContext
+    ) -> dict[str, list[str]]:
         """Suggest channel-specific brand adaptations"""
         adaptations = {
             "email": [
@@ -332,18 +356,24 @@ class BrandConsistencyAgent(BaseMarketingAgent):
 
         return adaptations
 
-    async def _generate_brand_improvements(self, compliance_data: dict[str, Any]) -> list[str]:
+    async def _generate_brand_improvements(
+        self, compliance_data: dict[str, Any]
+    ) -> list[str]:
         """Generate specific brand improvement recommendations"""
         improvements = []
 
         overall_compliance = compliance_data.get("overall_compliance", 1.0)
 
         if overall_compliance < 0.8:
-            improvements.append("Conduct brand guidelines training for content creators")
+            improvements.append(
+                "Conduct brand guidelines training for content creators"
+            )
             improvements.append("Implement automated brand compliance checking")
 
         if overall_compliance < 0.6:
-            improvements.append("Review and simplify brand guidelines for better adoption")
+            improvements.append(
+                "Review and simplify brand guidelines for better adoption"
+            )
             improvements.append("Create brand-compliant templates for common use cases")
 
         # Check for specific violation patterns
@@ -371,10 +401,16 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
     industry trend analysis, and opportunity identification.
     """
 
-    def __init__(self, agent_id: str = "market_intelligence", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "market_intelligence", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
-        self.competitive_data_sources = config.get("competitive_sources", []) if config else []
-        self.analysis_depth = config.get("analysis_depth", "standard") if config else "standard"
+        self.competitive_data_sources = (
+            config.get("competitive_sources", []) if config else []
+        )
+        self.analysis_depth = (
+            config.get("analysis_depth", "standard") if config else "standard"
+        )
 
     def get_agent_type(self) -> str:
         return "market_intelligence"
@@ -430,10 +466,16 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
             analysis=analysis,
             insights=insights,
             recommendations=recommendations,
-            data_sources=["industry_reports", "competitive_intelligence", "customer_data"],
+            data_sources=[
+                "industry_reports",
+                "competitive_intelligence",
+                "customer_data",
+            ],
         )
 
-    async def _analyze_competitive_landscape(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_competitive_landscape(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze competitive landscape and threats"""
         competitive_analysis = {
             "competitors_tracked": len(context.competitive_landscape),
@@ -470,7 +512,9 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
 
         return competitive_analysis
 
-    async def _analyze_customer_behavior(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_customer_behavior(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze customer behavior patterns and trends"""
         behavior_analysis = {
             "segment_trends": {},
@@ -499,7 +543,9 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
 
         return behavior_analysis
 
-    async def _analyze_industry_trends(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_industry_trends(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze industry trends and market dynamics"""
         trend_analysis = {
             "emerging_trends": [],
@@ -539,7 +585,9 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
 
         return trend_analysis
 
-    async def _identify_market_opportunities(self, context: MarketingContext) -> dict[str, Any]:
+    async def _identify_market_opportunities(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Identify market opportunities and gaps"""
         opportunities = {
             "market_gaps": [],
@@ -576,12 +624,18 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
 
         # Count high-priority opportunities
         opportunities["high_priority_opportunities"] = len(
-            [opp for opp in opportunities["market_gaps"] if opp.get("priority") == "high"]
+            [
+                opp
+                for opp in opportunities["market_gaps"]
+                if opp.get("priority") == "high"
+            ]
         )
 
         return opportunities
 
-    async def _analyze_market_positioning(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_market_positioning(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze current market positioning and recommendations"""
         positioning = {
             "current_position": {},
@@ -628,7 +682,9 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
 
         return insights
 
-    async def _generate_trend_insights(self, trend_analysis: dict[str, Any]) -> list[str]:
+    async def _generate_trend_insights(
+        self, trend_analysis: dict[str, Any]
+    ) -> list[str]:
         """Generate insights from industry trends"""
         insights = []
 
@@ -636,13 +692,17 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
             if trend.get("impact_level") == "high":
                 insights.append(f"High-impact trend identified: {trend['trend']}")
 
-        market_growth = trend_analysis.get("market_dynamics", {}).get("market_growth_rate", 0)
+        market_growth = trend_analysis.get("market_dynamics", {}).get(
+            "market_growth_rate", 0
+        )
         if market_growth > 0.15:
             insights.append("Strong market growth creates expansion opportunities")
 
         return insights
 
-    async def _generate_opportunity_insights(self, opportunities: dict[str, Any]) -> list[str]:
+    async def _generate_opportunity_insights(
+        self, opportunities: dict[str, Any]
+    ) -> list[str]:
         """Generate insights from market opportunities"""
         insights = []
 
@@ -654,25 +714,35 @@ class MarketIntelligenceAgent(BaseMarketingAgent):
 
         for gap in opportunities.get("market_gaps", []):
             if gap.get("competition_level") == "low" and gap.get("priority") == "high":
-                insights.append(f"Low-competition, high-value opportunity: {gap['gap']}")
+                insights.append(
+                    f"Low-competition, high-value opportunity: {gap['gap']}"
+                )
 
         return insights
 
-    async def _generate_strategic_recommendations(self, analysis: dict[str, Any]) -> list[str]:
+    async def _generate_strategic_recommendations(
+        self, analysis: dict[str, Any]
+    ) -> list[str]:
         """Generate strategic recommendations from analysis"""
         recommendations = []
 
         # Competitive recommendations
         competitive = analysis.get("competitive_landscape", {})
         if competitive.get("threat_level", 0) > 0.6:
-            recommendations.append("Strengthen competitive differentiation in marketing materials")
+            recommendations.append(
+                "Strengthen competitive differentiation in marketing materials"
+            )
             recommendations.append("Accelerate product development roadmap")
 
         # Opportunity recommendations
         opportunities = analysis.get("market_opportunities", {})
         if opportunities.get("high_priority_opportunities", 0) > 0:
-            recommendations.append("Develop go-to-market strategy for identified opportunities")
-            recommendations.append("Allocate resources to capture high-priority market gaps")
+            recommendations.append(
+                "Develop go-to-market strategy for identified opportunities"
+            )
+            recommendations.append(
+                "Allocate resources to capture high-priority market gaps"
+            )
 
         # Positioning recommendations
         positioning = analysis.get("market_positioning", {})
@@ -690,10 +760,16 @@ class CampaignAutomationAgent(BaseMarketingAgent):
     cross-platform orchestration, and budget optimization.
     """
 
-    def __init__(self, agent_id: str = "campaign_automation", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "campaign_automation", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
-        self.optimization_threshold = config.get("optimization_threshold", 0.05) if config else 0.05
-        self.budget_alert_threshold = config.get("budget_alert_threshold", 0.8) if config else 0.8
+        self.optimization_threshold = (
+            config.get("optimization_threshold", 0.05) if config else 0.05
+        )
+        self.budget_alert_threshold = (
+            config.get("budget_alert_threshold", 0.8) if config else 0.8
+        )
 
     def get_agent_type(self) -> str:
         return "campaign_automation"
@@ -722,14 +798,18 @@ class CampaignAutomationAgent(BaseMarketingAgent):
         analysis["ab_test_optimization"] = ab_test_analysis
 
         # Automation opportunities identification
-        automation_opportunities = await self._identify_automation_opportunities(context)
+        automation_opportunities = await self._identify_automation_opportunities(
+            context
+        )
         analysis["automation_opportunities"] = automation_opportunities
 
         # Generate recommendations and alerts
         recommendations.extend(
             await self._generate_performance_recommendations(performance_analysis)
         )
-        recommendations.extend(await self._generate_budget_recommendations(budget_analysis))
+        recommendations.extend(
+            await self._generate_budget_recommendations(budget_analysis)
+        )
 
         # Check for alerts
         if budget_analysis.get("budget_utilization", 0) > self.budget_alert_threshold:
@@ -752,7 +832,9 @@ class CampaignAutomationAgent(BaseMarketingAgent):
             data_sources=["campaign_data", "budget_data", "performance_metrics"],
         )
 
-    async def _analyze_campaign_performance(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_campaign_performance(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze performance across all active campaigns"""
         performance_analysis = {
             "campaigns_analyzed": len(context.active_campaigns),
@@ -815,7 +897,9 @@ class CampaignAutomationAgent(BaseMarketingAgent):
 
         return performance_analysis
 
-    async def _analyze_budget_optimization(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_budget_optimization(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze budget utilization and optimization opportunities"""
         budget_analysis = {
             "total_budget": 0.0,
@@ -857,7 +941,9 @@ class CampaignAutomationAgent(BaseMarketingAgent):
 
         return budget_analysis
 
-    async def _analyze_channel_performance(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_channel_performance(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze performance across different marketing channels"""
         channel_analysis = {
             "channels_analyzed": [],
@@ -870,8 +956,16 @@ class CampaignAutomationAgent(BaseMarketingAgent):
         channel_metrics = {
             "email": {"conversion_rate": 0.08, "cost_per_conversion": 45.0, "roi": 3.2},
             "sms": {"conversion_rate": 0.12, "cost_per_conversion": 38.0, "roi": 4.1},
-            "linkedin": {"conversion_rate": 0.06, "cost_per_conversion": 62.0, "roi": 2.8},
-            "google_ads": {"conversion_rate": 0.04, "cost_per_conversion": 78.0, "roi": 2.1},
+            "linkedin": {
+                "conversion_rate": 0.06,
+                "cost_per_conversion": 62.0,
+                "roi": 2.8,
+            },
+            "google_ads": {
+                "conversion_rate": 0.04,
+                "cost_per_conversion": 78.0,
+                "roi": 2.1,
+            },
         }
 
         best_roi = 0.0
@@ -890,9 +984,13 @@ class CampaignAutomationAgent(BaseMarketingAgent):
         # Generate channel-specific recommendations
         for channel, metrics in channel_metrics.items():
             if metrics["roi"] > 3.0:
-                channel_analysis["channel_recommendations"][channel] = "Scale up investment"
+                channel_analysis["channel_recommendations"][
+                    channel
+                ] = "Scale up investment"
             elif metrics["roi"] < 2.0:
-                channel_analysis["channel_recommendations"][channel] = "Optimize or reduce spend"
+                channel_analysis["channel_recommendations"][
+                    channel
+                ] = "Optimize or reduce spend"
             else:
                 channel_analysis["channel_recommendations"][
                     channel
@@ -900,7 +998,9 @@ class CampaignAutomationAgent(BaseMarketingAgent):
 
         return channel_analysis
 
-    async def _analyze_ab_test_performance(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_ab_test_performance(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze A/B test results and optimization opportunities"""
         ab_analysis = {
             "active_tests": 0,
@@ -932,7 +1032,9 @@ class CampaignAutomationAgent(BaseMarketingAgent):
 
         return ab_analysis
 
-    async def _identify_automation_opportunities(self, context: MarketingContext) -> dict[str, Any]:
+    async def _identify_automation_opportunities(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Identify opportunities for campaign automation"""
         automation_opportunities = {
             "workflow_automation": [],
@@ -974,7 +1076,9 @@ class CampaignAutomationAgent(BaseMarketingAgent):
         avg_roi = overall_performance.get("average_roi", 0)
 
         if avg_roi < 2.0:
-            recommendations.append("Review targeting and messaging to improve overall ROI")
+            recommendations.append(
+                "Review targeting and messaging to improve overall ROI"
+            )
 
         underperforming_count = performance_analysis.get("underperforming_campaigns", 0)
         if underperforming_count > 0:
@@ -984,11 +1088,15 @@ class CampaignAutomationAgent(BaseMarketingAgent):
 
         top_performers = performance_analysis.get("top_performing_campaigns", [])
         if len(top_performers) > 0:
-            recommendations.append("Scale successful elements from top-performing campaigns")
+            recommendations.append(
+                "Scale successful elements from top-performing campaigns"
+            )
 
         return recommendations
 
-    async def _generate_budget_recommendations(self, budget_analysis: dict[str, Any]) -> list[str]:
+    async def _generate_budget_recommendations(
+        self, budget_analysis: dict[str, Any]
+    ) -> list[str]:
         """Generate budget optimization recommendations"""
         recommendations = []
 
@@ -1003,10 +1111,14 @@ class CampaignAutomationAgent(BaseMarketingAgent):
 
         # Channel-specific recommendations
         roi_by_channel = budget_analysis.get("roi_by_channel", {})
-        best_channel = max(roi_by_channel.items(), key=lambda x: x[1], default=(None, 0))
+        best_channel = max(
+            roi_by_channel.items(), key=lambda x: x[1], default=(None, 0)
+        )
 
         if best_channel[0] and best_channel[1] > 3.0:
-            recommendations.append(f"Increase investment in high-ROI channel: {best_channel[0]}")
+            recommendations.append(
+                f"Increase investment in high-ROI channel: {best_channel[0]}"
+            )
 
         # Add optimization opportunities
         recommendations.extend(budget_analysis.get("optimization_opportunities", []))
@@ -1022,12 +1134,16 @@ class CreativeOutreachAgent(BaseMarketingAgent):
     multi-channel sequences, and creative testing frameworks.
     """
 
-    def __init__(self, agent_id: str = "creative_outreach", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "creative_outreach", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
         self.personalization_threshold = (
             config.get("personalization_threshold", 0.7) if config else 0.7
         )
-        self.approval_required_threshold = config.get("approval_threshold", 0.8) if config else 0.8
+        self.approval_required_threshold = (
+            config.get("approval_threshold", 0.8) if config else 0.8
+        )
 
     def get_agent_type(self) -> str:
         return "creative_outreach"
@@ -1044,7 +1160,9 @@ class CreativeOutreachAgent(BaseMarketingAgent):
         analysis["creative_concepts"] = creative_concepts
 
         # Personalization opportunities
-        personalization_analysis = await self._analyze_personalization_opportunities(context)
+        personalization_analysis = await self._analyze_personalization_opportunities(
+            context
+        )
         analysis["personalization_opportunities"] = personalization_analysis
 
         # Multi-channel campaign design
@@ -1056,7 +1174,9 @@ class CreativeOutreachAgent(BaseMarketingAgent):
         analysis["testing_framework"] = testing_recommendations
 
         # Gift campaign opportunities
-        gift_campaign_analysis = await self._analyze_gift_campaign_opportunities(context)
+        gift_campaign_analysis = await self._analyze_gift_campaign_opportunities(
+            context
+        )
         analysis["gift_campaigns"] = gift_campaign_analysis
 
         # Generate insights and recommendations
@@ -1064,7 +1184,9 @@ class CreativeOutreachAgent(BaseMarketingAgent):
         recommendations.extend(await self._generate_creative_recommendations(analysis))
 
         # Check for high-value opportunities
-        high_value_opportunities = personalization_analysis.get("high_value_prospects", 0)
+        high_value_opportunities = personalization_analysis.get(
+            "high_value_prospects", 0
+        )
         if high_value_opportunities > 3:
             priority = MarketingAgentPriority.HIGH
             insights.append(
@@ -1083,7 +1205,9 @@ class CreativeOutreachAgent(BaseMarketingAgent):
             requires_approval=True,  # Creative campaigns typically need approval
         )
 
-    async def _generate_creative_concepts(self, context: MarketingContext) -> dict[str, Any]:
+    async def _generate_creative_concepts(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Generate creative campaign concepts"""
         concepts = {
             "email_concepts": [],
@@ -1185,7 +1309,9 @@ class CreativeOutreachAgent(BaseMarketingAgent):
 
         return personalization_analysis
 
-    async def _design_multi_channel_campaigns(self, context: MarketingContext) -> dict[str, Any]:
+    async def _design_multi_channel_campaigns(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Design multi-channel campaign sequences"""
         multi_channel_design = {
             "sequence_templates": [],
@@ -1201,7 +1327,11 @@ class CreativeOutreachAgent(BaseMarketingAgent):
                 "duration": "6 weeks",
                 "touches": [
                     {"week": 1, "channel": "email", "type": "value_introduction"},
-                    {"week": 2, "channel": "linkedin", "type": "thought_leadership_share"},
+                    {
+                        "week": 2,
+                        "channel": "linkedin",
+                        "type": "thought_leadership_share",
+                    },
                     {"week": 3, "channel": "email", "type": "case_study_relevant"},
                     {"week": 4, "channel": "direct_mail", "type": "personalized_gift"},
                     {"week": 5, "channel": "sms", "type": "meeting_request"},
@@ -1229,7 +1359,9 @@ class CreativeOutreachAgent(BaseMarketingAgent):
 
         return multi_channel_design
 
-    async def _generate_testing_framework(self, context: MarketingContext) -> dict[str, Any]:
+    async def _generate_testing_framework(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Generate A/B testing framework for creative campaigns"""
         testing_framework = {
             "test_categories": [],
@@ -1247,7 +1379,12 @@ class CreativeOutreachAgent(BaseMarketingAgent):
             },
             {
                 "category": "message_content",
-                "variables": ["tone", "value_proposition", "social_proof", "cta_placement"],
+                "variables": [
+                    "tone",
+                    "value_proposition",
+                    "social_proof",
+                    "cta_placement",
+                ],
                 "sample_size_required": 800,
             },
             {
@@ -1316,13 +1453,21 @@ class CreativeOutreachAgent(BaseMarketingAgent):
 
         # ROI expectations
         gift_analysis["expected_roi"] = {
-            "enterprise_gifts": {"cost_per_meeting": 125, "meeting_conversion_rate": 0.35},
-            "mid_market_gifts": {"cost_per_meeting": 85, "meeting_conversion_rate": 0.28},
+            "enterprise_gifts": {
+                "cost_per_meeting": 125,
+                "meeting_conversion_rate": 0.35,
+            },
+            "mid_market_gifts": {
+                "cost_per_meeting": 85,
+                "meeting_conversion_rate": 0.28,
+            },
         }
 
         return gift_analysis
 
-    async def _generate_creative_insights(self, creative_concepts: dict[str, Any]) -> list[str]:
+    async def _generate_creative_insights(
+        self, creative_concepts: dict[str, Any]
+    ) -> list[str]:
         """Generate insights from creative concept analysis"""
         insights = []
 
@@ -1333,15 +1478,23 @@ class CreativeOutreachAgent(BaseMarketingAgent):
             )
 
         video_concepts = creative_concepts.get("video_concepts", [])
-        high_production_videos = [v for v in video_concepts if v.get("production_effort") == "high"]
+        high_production_videos = [
+            v for v in video_concepts if v.get("production_effort") == "high"
+        ]
         if len(high_production_videos) > 0:
-            insights.append("High-production video concepts identified for premium prospects")
+            insights.append(
+                "High-production video concepts identified for premium prospects"
+            )
 
-        insights.append("Multi-modal creative approach enables comprehensive prospect engagement")
+        insights.append(
+            "Multi-modal creative approach enables comprehensive prospect engagement"
+        )
 
         return insights
 
-    async def _generate_creative_recommendations(self, analysis: dict[str, Any]) -> list[str]:
+    async def _generate_creative_recommendations(
+        self, analysis: dict[str, Any]
+    ) -> list[str]:
         """Generate creative campaign recommendations"""
         recommendations = []
 
@@ -1357,13 +1510,17 @@ class CreativeOutreachAgent(BaseMarketingAgent):
         # Multi-channel recommendations
         multi_channel = analysis.get("multi_channel_campaigns", {})
         if len(multi_channel.get("sequence_templates", [])) > 1:
-            recommendations.append("Deploy multi-channel sequences for different prospect segments")
+            recommendations.append(
+                "Deploy multi-channel sequences for different prospect segments"
+            )
 
         # Testing recommendations
         testing = analysis.get("testing_framework", {})
         high_impact_tests = testing.get("testing_priorities", {}).get("high_impact", [])
         if len(high_impact_tests) > 2:
-            recommendations.append("Prioritize high-impact creative elements for A/B testing")
+            recommendations.append(
+                "Prioritize high-impact creative elements for A/B testing"
+            )
 
         # Gift campaign recommendations
         gift_campaigns = analysis.get("gift_campaigns", {})
@@ -1373,7 +1530,9 @@ class CreativeOutreachAgent(BaseMarketingAgent):
             if "enterprise" in p.get("segment", "")
         ]
         if len(enterprise_prospects) > 0:
-            recommendations.append("Launch strategic gift campaigns for enterprise prospects")
+            recommendations.append(
+                "Launch strategic gift campaigns for enterprise prospects"
+            )
 
         return recommendations
 
@@ -1386,10 +1545,16 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
     predictive insights, and ROI optimization recommendations.
     """
 
-    def __init__(self, agent_id: str = "performance_analytics", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "performance_analytics", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
-        self.performance_threshold = config.get("performance_threshold", 0.75) if config else 0.75
-        self.attribution_window_days = config.get("attribution_window", 30) if config else 30
+        self.performance_threshold = (
+            config.get("performance_threshold", 0.75) if config else 0.75
+        )
+        self.attribution_window_days = (
+            config.get("attribution_window", 30) if config else 30
+        )
 
     def get_agent_type(self) -> str:
         return "performance_analytics"
@@ -1423,7 +1588,9 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
 
         # Generate insights and recommendations
         insights.extend(await self._extract_performance_insights(analysis))
-        recommendations.extend(await self._generate_optimization_recommendations(analysis))
+        recommendations.extend(
+            await self._generate_optimization_recommendations(analysis)
+        )
 
         # Determine priority based on performance
         overall_score = performance_overview.get("overall_performance_score", 0.8)
@@ -1443,7 +1610,9 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
             data_sources=["campaign_data", "conversion_data", "attribution_data"],
         )
 
-    async def _analyze_overall_performance(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_overall_performance(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze overall marketing performance across all channels"""
         performance_overview = {
             "time_period": "last_30_days",
@@ -1477,14 +1646,20 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
         score_factors = [
             min(metrics["overall_roi"] / 3.0, 1.0),  # Target ROI of 3.0
             min(metrics["average_conversion_rate"] / 0.05, 1.0),  # Target 5% conversion
-            max(0, 1 - (metrics["cost_per_acquisition"] - 80) / 100),  # Target CPA of $80
+            max(
+                0, 1 - (metrics["cost_per_acquisition"] - 80) / 100
+            ),  # Target CPA of $80
         ]
 
-        performance_overview["overall_performance_score"] = sum(score_factors) / len(score_factors)
+        performance_overview["overall_performance_score"] = sum(score_factors) / len(
+            score_factors
+        )
 
         return performance_overview
 
-    async def _analyze_attribution_patterns(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_attribution_patterns(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze attribution patterns across touchpoints"""
         attribution_analysis = {
             "attribution_models": {},
@@ -1522,14 +1697,20 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
 
         # Common conversion paths
         attribution_analysis["conversion_paths"] = [
-            {"path": "email -> linkedin -> email", "conversions": 45, "avg_value": 1200},
+            {
+                "path": "email -> linkedin -> email",
+                "conversions": 45,
+                "avg_value": 1200,
+            },
             {"path": "linkedin -> email -> sms", "conversions": 32, "avg_value": 950},
             {"path": "email -> sms -> email", "conversions": 28, "avg_value": 1100},
         ]
 
         return attribution_analysis
 
-    async def _analyze_segment_performance(self, context: MarketingContext) -> dict[str, Any]:
+    async def _analyze_segment_performance(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Analyze performance by market segment"""
         segment_performance = {
             "segment_metrics": {},
@@ -1551,10 +1732,13 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
 
         # Identify top performers
         segments_by_roi = sorted(
-            segment_performance["segment_metrics"].items(), key=lambda x: x[1]["roi"], reverse=True
+            segment_performance["segment_metrics"].items(),
+            key=lambda x: x[1]["roi"],
+            reverse=True,
         )
         segment_performance["top_performing_segments"] = [
-            {"segment": segment, "roi": metrics["roi"]} for segment, metrics in segments_by_roi[:3]
+            {"segment": segment, "roi": metrics["roi"]}
+            for segment, metrics in segments_by_roi[:3]
         ]
 
         # Segment optimization opportunities
@@ -1567,11 +1751,15 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
             if metrics["cost_per_acquisition"] > 100:
                 opportunities.append("Optimize ad spend and bidding")
 
-            segment_performance["optimization_opportunities"][segment_name] = opportunities
+            segment_performance["optimization_opportunities"][
+                segment_name
+            ] = opportunities
 
         return segment_performance
 
-    async def _generate_predictive_insights(self, context: MarketingContext) -> dict[str, Any]:
+    async def _generate_predictive_insights(
+        self, context: MarketingContext
+    ) -> dict[str, Any]:
         """Generate predictive insights and forecasts"""
         predictive_insights = {
             "performance_forecast": {},
@@ -1585,7 +1773,10 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
             "predicted_conversions": 520,
             "predicted_revenue": 78000,
             "confidence_interval": {"low": 65000, "high": 91000},
-            "key_growth_drivers": ["enterprise segment expansion", "improved email performance"],
+            "key_growth_drivers": [
+                "enterprise segment expansion",
+                "improved email performance",
+            ],
         }
 
         # Trend predictions
@@ -1638,7 +1829,10 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
         # Channel optimization
         roi_optimization["channel_optimization"] = {
             "email": ["Improve subject line personalization", "Optimize send timing"],
-            "sms": ["Enhance message relevance", "Reduce frequency for low-engagement segments"],
+            "sms": [
+                "Enhance message relevance",
+                "Reduce frequency for low-engagement segments",
+            ],
             "linkedin": ["Expand sponsored content", "Improve targeting precision"],
         }
 
@@ -1651,7 +1845,9 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
 
         return roi_optimization
 
-    async def _extract_performance_insights(self, analysis: dict[str, Any]) -> list[str]:
+    async def _extract_performance_insights(
+        self, analysis: dict[str, Any]
+    ) -> list[str]:
         """Extract key insights from performance analysis"""
         insights = []
 
@@ -1693,7 +1889,9 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
 
         return insights
 
-    async def _generate_optimization_recommendations(self, analysis: dict[str, Any]) -> list[str]:
+    async def _generate_optimization_recommendations(
+        self, analysis: dict[str, Any]
+    ) -> list[str]:
         """Generate optimization recommendations"""
         recommendations = []
 
@@ -1702,24 +1900,32 @@ class PerformanceAnalyticsAgent(BaseMarketingAgent):
         overall_score = performance_overview.get("overall_performance_score", 0.8)
 
         if overall_score < 0.7:
-            recommendations.append("Conduct comprehensive performance audit and optimization")
+            recommendations.append(
+                "Conduct comprehensive performance audit and optimization"
+            )
 
         # ROI optimization recommendations
         roi_optimization = analysis.get("roi_optimization", {})
         budget_reallocation = roi_optimization.get("budget_reallocation", {})
 
         if budget_reallocation.get("expected_roi_improvement", 0) > 0.1:
-            recommendations.append("Implement recommended budget reallocation for ROI improvement")
+            recommendations.append(
+                "Implement recommended budget reallocation for ROI improvement"
+            )
 
         # Channel optimization recommendations
         channel_optimization = roi_optimization.get("channel_optimization", {})
         for channel, optimizations in channel_optimization.items():
             if len(optimizations) > 1:
-                recommendations.append(f"Focus optimization efforts on {channel} channel")
+                recommendations.append(
+                    f"Focus optimization efforts on {channel} channel"
+                )
 
         # Segment optimization recommendations
         segment_performance = analysis.get("segment_performance", {})
-        optimization_opportunities = segment_performance.get("optimization_opportunities", {})
+        optimization_opportunities = segment_performance.get(
+            "optimization_opportunities", {}
+        )
 
         for segment, opportunities in optimization_opportunities.items():
             if len(opportunities) > 2:

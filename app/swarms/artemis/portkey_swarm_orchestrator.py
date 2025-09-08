@@ -95,7 +95,9 @@ class ArtemisPortkeyAgent:
         if self.session:
             await self.session.close()
 
-    async def execute_task(self, task: SwarmTask, context: dict[str, Any] = None) -> dict[str, Any]:
+    async def execute_task(
+        self, task: SwarmTask, context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Execute a task using the agent's LLM"""
         await self.initialize()
 
@@ -206,7 +208,9 @@ Focus on quality assurance and system reliability."""
         """Make authenticated call to Portkey API"""
         headers = {
             "Authorization": f"Bearer {self.portkey_config.api_key}",
-            "x-portkey-virtual-key": self.portkey_config.virtual_keys[self.config.llm_provider],
+            "x-portkey-virtual-key": self.portkey_config.virtual_keys[
+                self.config.llm_provider
+            ],
             "Content-Type": "application/json",
         }
 
@@ -248,7 +252,10 @@ Focus on quality assurance and system reliability."""
             structure_score += 0.3
         if "```" in response:  # Code blocks
             structure_score += 0.3
-        if any(word in response.lower() for word in ["implement", "create", "build", "analyze"]):
+        if any(
+            word in response.lower()
+            for word in ["implement", "create", "build", "analyze"]
+        ):
             structure_score += 0.4
 
         return min(length_score + structure_score, 1.0)
@@ -402,7 +409,9 @@ class ArtemisSwarmOrchestrator:
             self.portkey_config,
         )
 
-        logger.info(f"✅ Initialized {len(self.agents)} Artemis agents with Portkey connections")
+        logger.info(
+            f"✅ Initialized {len(self.agents)} Artemis agents with Portkey connections"
+        )
 
     async def deploy_sophia_enhancements(self) -> dict[str, Any]:
         """Deploy the full Sophia dashboard enhancement swarm"""
@@ -536,8 +545,12 @@ class ArtemisSwarmOrchestrator:
         results = {}
 
         # Phase 1: Architecture and planning (Lead Architect)
-        architecture_task = next(t for t in tasks if t.task_type == "architecture_planning")
-        architecture_result = await self.agents["lead_architect"].execute_task(architecture_task)
+        architecture_task = next(
+            t for t in tasks if t.task_type == "architecture_planning"
+        )
+        architecture_result = await self.agents["lead_architect"].execute_task(
+            architecture_task
+        )
         results[architecture_task.task_id] = architecture_result
 
         # Share architectural decisions with all agents via message bus
@@ -585,13 +598,17 @@ class ArtemisSwarmOrchestrator:
 
         # Get primary agent for task
         primary_agent_id = task.assigned_agents[0]
-        primary_result = await self.agents[primary_agent_id].execute_task(task, enhanced_context)
+        primary_result = await self.agents[primary_agent_id].execute_task(
+            task, enhanced_context
+        )
 
         # If multiple agents assigned, get additional input
         if len(task.assigned_agents) > 1:
             additional_results = []
             for agent_id in task.assigned_agents[1:]:
-                additional_result = await self.agents[agent_id].execute_task(task, enhanced_context)
+                additional_result = await self.agents[agent_id].execute_task(
+                    task, enhanced_context
+                )
                 additional_results.append(additional_result)
             primary_result["additional_insights"] = additional_results
 
@@ -617,7 +634,9 @@ class ArtemisSwarmOrchestrator:
         """Process and aggregate deployment results"""
 
         total_cost = sum(r.get("cost_estimate", 0) for r in results.values())
-        avg_confidence = sum(r.get("confidence", 0) for r in results.values()) / len(results)
+        avg_confidence = sum(r.get("confidence", 0) for r in results.values()) / len(
+            results
+        )
 
         # Extract key deliverables
         deliverables = {}
@@ -650,7 +669,9 @@ class ArtemisSwarmOrchestrator:
             "success": avg_confidence > 0.7,
         }
 
-    async def _broadcast_deployment_complete(self, deployment_id: str, result: dict[str, Any]):
+    async def _broadcast_deployment_complete(
+        self, deployment_id: str, result: dict[str, Any]
+    ):
         """Broadcast deployment completion to WebSocket subscribers"""
         await self.websocket_manager.broadcast(
             "swarm_deployments",
@@ -676,10 +697,13 @@ class ArtemisSwarmOrchestrator:
         completed_count = self.metrics["tasks_completed"]
 
         self.metrics["average_execution_time"] = (
-            current_avg_time * (completed_count - result["tasks_completed"]) + execution_time
+            current_avg_time * (completed_count - result["tasks_completed"])
+            + execution_time
         ) / completed_count
 
-        success_count = sum(1 for h in self.execution_history if h.get("success", False))
+        success_count = sum(
+            1 for h in self.execution_history if h.get("success", False)
+        )
         success_count += 1 if result["success"] else 0
         total_deployments = len(self.execution_history) + 1
 
@@ -709,8 +733,12 @@ class ArtemisSwarmOrchestrator:
         for agent_id, agent in self.agents.items():
             agent_metrics[agent_id] = {
                 "executions": len(agent.execution_history),
-                "total_cost": sum(h.get("cost_estimate", 0) for h in agent.execution_history),
-                "avg_confidence": sum(h.get("confidence", 0) for h in agent.execution_history)
+                "total_cost": sum(
+                    h.get("cost_estimate", 0) for h in agent.execution_history
+                ),
+                "avg_confidence": sum(
+                    h.get("confidence", 0) for h in agent.execution_history
+                )
                 / max(len(agent.execution_history), 1),
                 "specializations": agent.config.specialized_capabilities,
             }

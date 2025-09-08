@@ -331,7 +331,9 @@ class ComprehensiveSwarmFactory:
         else:
             # Custom mythology swarm
             agents = custom_agents or ["hermes", "athena", "minerva"]
-            return self.mythology_factory.create_custom_swarm(agents, config.coordination_pattern)
+            return self.mythology_factory.create_custom_swarm(
+                agents, config.coordination_pattern
+            )
 
     async def _create_military_swarm(
         self, config: SwarmFactoryConfig, custom_agents: Optional[list[str]]
@@ -434,7 +436,11 @@ class ComprehensiveSwarmFactory:
             name="TACTICAL-1 - Intelligence Analyst",
             description="Rapid tactical analysis with military precision and divine insight",
             model_preferences=["gpt-4", "deepseek-chat"],
-            specializations=["tactical_intelligence", "rapid_assessment", "threat_analysis"],
+            specializations=[
+                "tactical_intelligence",
+                "rapid_assessment",
+                "threat_analysis",
+            ],
             reasoning_style="Rapid military-style analysis enhanced with mythological wisdom",
             confidence_threshold=0.85,
             max_tokens=6000,
@@ -470,7 +476,9 @@ class ComprehensiveSwarmFactory:
         agents = []
         for agent_id in custom_agents:
             try:
-                agent_instance_id = self.base_factory.create_agent_from_blueprint(agent_id)
+                agent_instance_id = self.base_factory.create_agent_from_blueprint(
+                    agent_id
+                )
                 agents.append(agent_instance_id)
             except Exception as e:
                 logger.warning(f"Failed to create agent {agent_id}: {e}")
@@ -515,7 +523,9 @@ class ComprehensiveSwarmFactory:
 
         return MicroSwarmCoordinator(swarm_config)
 
-    async def execute_swarm(self, swarm_id: str, context: ExecutionContext) -> SwarmExecutionResult:
+    async def execute_swarm(
+        self, swarm_id: str, context: ExecutionContext
+    ) -> SwarmExecutionResult:
         """
         Execute a swarm with comprehensive monitoring and delivery
 
@@ -571,7 +581,8 @@ class ComprehensiveSwarmFactory:
                 execution_time_ms=execution_time_ms,
                 total_cost=swarm_result.total_cost,
                 tokens_used=sum(
-                    msg.metadata.get("tokens_used", 0) for msg in swarm_result.reasoning_chain
+                    msg.metadata.get("tokens_used", 0)
+                    for msg in swarm_result.reasoning_chain
                 ),
                 models_used=list(
                     {
@@ -579,7 +590,9 @@ class ComprehensiveSwarmFactory:
                         for msg in swarm_result.reasoning_chain
                     }
                 ),
-                agents_participated=[role.value for role in swarm_result.agent_contributions],
+                agents_participated=[
+                    role.value for role in swarm_result.agent_contributions
+                ],
                 agent_contributions=swarm_result.agent_contributions,
                 coordination_pattern=coordinator.config.coordination_pattern,
                 factory_config=config,
@@ -589,9 +602,13 @@ class ComprehensiveSwarmFactory:
 
             # Auto-deliver results if configured
             if config and config.auto_deliver_results and config.slack_delivery_config:
-                delivery_config = context.delivery_overrides or config.slack_delivery_config
+                delivery_config = (
+                    context.delivery_overrides or config.slack_delivery_config
+                )
                 delivery_result = await self.slack_delivery.deliver_result(
-                    swarm_result=swarm_result, config=delivery_config, context=execution_context
+                    swarm_result=swarm_result,
+                    config=delivery_config,
+                    context=execution_context,
                 )
                 result.delivery_results.append(
                     {
@@ -608,7 +625,9 @@ class ComprehensiveSwarmFactory:
             # Store result
             self.execution_history.append(result)
 
-            logger.info(f"Swarm execution completed: {execution_id} in {execution_time_ms:.2f}ms")
+            logger.info(
+                f"Swarm execution completed: {execution_id} in {execution_time_ms:.2f}ms"
+            )
 
             return result
 
@@ -663,7 +682,8 @@ class ComprehensiveSwarmFactory:
         # Update averages
         total = self.execution_metrics["total_executions"]
         self.execution_metrics["avg_execution_time"] = (
-            self.execution_metrics["avg_execution_time"] * (total - 1) + result.execution_time_ms
+            self.execution_metrics["avg_execution_time"] * (total - 1)
+            + result.execution_time_ms
         ) / total
 
         # Update swarm type counts
@@ -705,12 +725,16 @@ class ComprehensiveSwarmFactory:
 
         # Recent performance (last 24 hours)
         recent_cutoff = datetime.now() - timedelta(hours=24)
-        recent_executions = [r for r in self.execution_history if r.executed_at >= recent_cutoff]
+        recent_executions = [
+            r for r in self.execution_history if r.executed_at >= recent_cutoff
+        ]
 
         return {
             "overview": {
                 "total_executions": self.execution_metrics["total_executions"],
-                "successful_executions": self.execution_metrics["successful_executions"],
+                "successful_executions": self.execution_metrics[
+                    "successful_executions"
+                ],
                 "success_rate": success_rate,
                 "total_cost_usd": self.execution_metrics["total_cost"],
                 "avg_execution_time_ms": self.execution_metrics["avg_execution_time"],
@@ -722,12 +746,14 @@ class ComprehensiveSwarmFactory:
             "recent_performance": {
                 "executions_24h": len(recent_executions),
                 "success_rate_24h": (
-                    len([r for r in recent_executions if r.success]) / len(recent_executions)
+                    len([r for r in recent_executions if r.success])
+                    / len(recent_executions)
                     if recent_executions
                     else 0
                 ),
                 "avg_cost_24h": (
-                    sum(r.total_cost for r in recent_executions) / len(recent_executions)
+                    sum(r.total_cost for r in recent_executions)
+                    / len(recent_executions)
                     if recent_executions
                     else 0
                 ),
@@ -776,7 +802,9 @@ class ComprehensiveSwarmFactory:
                 )
 
         # Sort by success rate and confidence
-        performers.sort(key=lambda x: (x["success_rate"], x["avg_confidence"]), reverse=True)
+        performers.sort(
+            key=lambda x: (x["success_rate"], x["avg_confidence"]), reverse=True
+        )
         return performers[:5]
 
     def _get_cost_analysis(self) -> dict[str, Any]:
@@ -795,7 +823,9 @@ class ComprehensiveSwarmFactory:
 
             # Cost by swarm
             swarm_type = result.swarm_type.value
-            cost_by_swarm[swarm_type] = cost_by_swarm.get(swarm_type, 0.0) + result.total_cost
+            cost_by_swarm[swarm_type] = (
+                cost_by_swarm.get(swarm_type, 0.0) + result.total_cost
+            )
 
         return {
             "total_cost": sum(r.total_cost for r in self.execution_history),
@@ -807,7 +837,8 @@ class ComprehensiveSwarmFactory:
             "cost_trend": (
                 "increasing"
                 if len(self.execution_history) > 1
-                and self.execution_history[-1].total_cost > self.execution_history[-2].total_cost
+                and self.execution_history[-1].total_cost
+                > self.execution_history[-2].total_cost
                 else "stable"
             ),
         }

@@ -447,7 +447,9 @@ class TestVersioningEngine:
         await storage.create_knowledge(sample_entity)
 
         # Create version
-        version = await engine.create_version(sample_entity, "test_user", "Initial version")
+        version = await engine.create_version(
+            sample_entity, "test_user", "Initial version"
+        )
 
         assert version.version_number == 1
         assert version.changed_by == "test_user"

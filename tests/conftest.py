@@ -251,7 +251,9 @@ def rate_limited_agent() -> MockAgent:
 @pytest.fixture
 def artemis_orchestrator(artemis_factory, domain_enforcer, mcp_router):
     """Mock Artemis orchestrator"""
-    with patch("app.artemis.artemis_orchestrator.ArtemisOrchestrator") as MockOrchestrator:
+    with patch(
+        "app.artemis.artemis_orchestrator.ArtemisOrchestrator"
+    ) as MockOrchestrator:
         orchestrator = MockOrchestrator.return_value
 
         # Set dependencies
@@ -388,7 +390,11 @@ def sample_mission_data():
         "mission_id": "MISSION-001",
         "type": "reconnaissance",
         "priority": "high",
-        "objectives": ["Scan repository", "Identify vulnerabilities", "Generate report"],
+        "objectives": [
+            "Scan repository",
+            "Identify vulnerabilities",
+            "Generate report",
+        ],
         "resources": {"agents": 4, "time_limit": 300, "clearance": "secret"},
         "status": "pending",
     }
@@ -450,7 +456,12 @@ def temp_test_dir(tmp_path):
 @pytest.fixture
 def mock_env_vars(monkeypatch):
     """Set test environment variables"""
-    test_env = {"TEST_MODE": "true", "LOG_LEVEL": "DEBUG", "MAX_CONCURRENT": "8", "DOMAIN": "test"}
+    test_env = {
+        "TEST_MODE": "true",
+        "LOG_LEVEL": "DEBUG",
+        "MAX_CONCURRENT": "8",
+        "DOMAIN": "test",
+    }
 
     for key, value in test_env.items():
         monkeypatch.setenv(key, value)
@@ -525,6 +536,10 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "unit: marks tests as unit tests")
     config.addinivalue_line("markers", "e2e: marks tests as end-to-end tests")
     config.addinivalue_line("markers", "load: marks tests as load/performance tests")
-    config.addinivalue_line("markers", "artemis: marks tests specific to Artemis domain")
+    config.addinivalue_line(
+        "markers", "artemis: marks tests specific to Artemis domain"
+    )
     config.addinivalue_line("markers", "sophia: marks tests specific to Sophia domain")
-    config.addinivalue_line("markers", "resilience: marks tests for resilience patterns")
+    config.addinivalue_line(
+        "markers", "resilience: marks tests for resilience patterns"
+    )

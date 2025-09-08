@@ -41,7 +41,9 @@ class FeatureFlags:
         # Log feature status on startup
         enabled_count = sum(1 for v in self.features.values() if v)
         total_count = len(self.features)
-        logger.info(f"Feature flags initialized: {enabled_count}/{total_count} features enabled")
+        logger.info(
+            f"Feature flags initialized: {enabled_count}/{total_count} features enabled"
+        )
 
         # Log missing critical features
         missing_critical = self.get_missing_critical_apis()
@@ -142,7 +144,12 @@ def get_available_models() -> List[Dict]:
     if flags.is_enabled("chat_gpt"):
         models.extend(
             [
-                {"id": "gpt-4", "name": "GPT-4", "provider": "openai", "available": True},
+                {
+                    "id": "gpt-4",
+                    "name": "GPT-4",
+                    "provider": "openai",
+                    "available": True,
+                },
                 {
                     "id": "gpt-3.5-turbo",
                     "name": "GPT-3.5 Turbo",
@@ -172,7 +179,12 @@ def get_available_models() -> List[Dict]:
 
     if flags.is_enabled("chat_grok"):
         models.append(
-            {"id": "grok-beta", "name": "Grok Beta", "provider": "xai", "available": True}
+            {
+                "id": "grok-beta",
+                "name": "Grok Beta",
+                "provider": "xai",
+                "available": True,
+            }
         )
 
     # Always include local fallback

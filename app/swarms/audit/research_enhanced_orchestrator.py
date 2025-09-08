@@ -22,7 +22,10 @@ from app.swarms.audit.premium_research_config import (
     get_research_formation_config,
     validate_research_quality,
 )
-from app.swarms.enhanced_memory_integration import EnhancedSwarmMemoryClient, auto_tag_and_store
+from app.swarms.enhanced_memory_integration import (
+    EnhancedSwarmMemoryClient,
+    auto_tag_and_store,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +92,9 @@ class ResearchEnhancedOrchestrator:
     Implements 2025 best practices for multi-agent research systems
     """
 
-    def __init__(self, formation: str = "full_research_spectrum", codebase_path: str = "."):
+    def __init__(
+        self, formation: str = "full_research_spectrum", codebase_path: str = "."
+    ):
         self.formation = formation
         self.codebase_path = Path(codebase_path)
         self.formation_config = get_research_formation_config(formation)
@@ -198,10 +203,17 @@ class ResearchEnhancedOrchestrator:
                     id="industry_best_practices_synthesis",
                     description="Synthesis of current industry best practices across domains",
                     research_capability=ResearchCapability.BEST_PRACTICES_RESEARCH,
-                    assigned_agents=["research_commander", "synthesis_engine", "validation_agent"],
+                    assigned_agents=[
+                        "research_commander",
+                        "synthesis_engine",
+                        "validation_agent",
+                    ],
                     research_depth="comprehensive",
                     min_sources=22,
-                    dependencies=["architecture_literature_review", "security_research_review"],
+                    dependencies=[
+                        "architecture_literature_review",
+                        "security_research_review",
+                    ],
                     expected_duration=16,
                 ),
                 ResearchTask(
@@ -270,7 +282,9 @@ class ResearchEnhancedOrchestrator:
         """Execute comprehensive research-enhanced audit"""
 
         start_time = time.time()
-        logger.info(f"🔬 Starting research-enhanced audit with {self.formation} formation")
+        logger.info(
+            f"🔬 Starting research-enhanced audit with {self.formation} formation"
+        )
         logger.info(f"📚 {len(self.research_tasks)} research tasks planned")
 
         try:
@@ -295,7 +309,13 @@ class ResearchEnhancedOrchestrator:
 
             execution_time = time.time() - start_time
             record_cost(
-                "research_enhanced_audit", self.formation, "audit", 0.0, 0, 0, execution_time
+                "research_enhanced_audit",
+                self.formation,
+                "audit",
+                0.0,
+                0,
+                0,
+                execution_time,
             )
 
             # Add research metrics to result
@@ -305,15 +325,21 @@ class ResearchEnhancedOrchestrator:
                     "research_metrics": self.research_metrics,
                     "research_findings_count": len(self.research_findings),
                     "formation_used": self.formation,
-                    "research_quality_validation": validate_research_quality(self.research_metrics),
+                    "research_quality_validation": validate_research_quality(
+                        self.research_metrics
+                    ),
                 }
             )
 
-            logger.info(f"✅ Research-enhanced audit completed in {execution_time/60:.1f} minutes")
+            logger.info(
+                f"✅ Research-enhanced audit completed in {execution_time/60:.1f} minutes"
+            )
             return result
 
         except Exception as e:
-            record_cost("research_enhanced_audit", "failed", "audit_error", 0.0, 0, 0, 0)
+            record_cost(
+                "research_enhanced_audit", "failed", "audit_error", 0.0, 0, 0, 0
+            )
             logger.error(f"❌ Research-enhanced audit failed: {e}")
             raise
 
@@ -322,7 +348,8 @@ class ResearchEnhancedOrchestrator:
 
         # Initialize memory client
         self.memory_client = EnhancedSwarmMemoryClient(
-            swarm_type=f"research_audit_{self.formation}", swarm_id=f"research_{int(time.time())}"
+            swarm_type=f"research_audit_{self.formation}",
+            swarm_id=f"research_{int(time.time())}",
         )
 
         # Initialize API clients
@@ -440,8 +467,12 @@ class ResearchEnhancedOrchestrator:
                         self.research_findings.append(finding)
 
                 # Update metrics
-                self.research_metrics["total_sources_reviewed"] += result.get("sources_reviewed", 0)
-                self.research_metrics["citations_generated"] += len(result.get("citations", []))
+                self.research_metrics["total_sources_reviewed"] += result.get(
+                    "sources_reviewed", 0
+                )
+                self.research_metrics["citations_generated"] += len(
+                    result.get("citations", [])
+                )
 
         self.phase_results[ResearchPhase.LITERATURE_REVIEW] = results
         return results
@@ -566,7 +597,9 @@ class ResearchEnhancedOrchestrator:
                 results[task.id] = result
 
                 # Update security-specific metrics
-                self.research_metrics["validation_rounds_completed"] += task.validation_rounds
+                self.research_metrics[
+                    "validation_rounds_completed"
+                ] += task.validation_rounds
 
         return results
 
@@ -622,9 +655,9 @@ class ResearchEnhancedOrchestrator:
             validation_results[category] = validation_result
 
             # Update metrics
-            self.research_metrics["cross_validation_agreements"] += validation_result.get(
-                "agreements", 0
-            )
+            self.research_metrics[
+                "cross_validation_agreements"
+            ] += validation_result.get("agreements", 0)
 
         return validation_results
 
@@ -675,8 +708,12 @@ class ResearchEnhancedOrchestrator:
             "overall_quality_score": sum(quality_validation.values())
             / len(quality_validation)
             * 100,
-            "research_completeness": len(self.research_findings) / len(self.research_tasks) * 100,
-            "methodology_adherence": self.research_metrics.get("methodology_rigor_score", 75),
+            "research_completeness": len(self.research_findings)
+            / len(self.research_tasks)
+            * 100,
+            "methodology_adherence": self.research_metrics.get(
+                "methodology_rigor_score", 75
+            ),
         }
 
         return validation_result
@@ -734,7 +771,9 @@ class ResearchEnhancedOrchestrator:
             [t for t in self.research_tasks if t.research_depth == "comprehensive"]
         )
 
-        depth_score = (deep_tasks * 3 + comprehensive_tasks * 2) / (total_tasks * 3) * 100
+        depth_score = (
+            (deep_tasks * 3 + comprehensive_tasks * 2) / (total_tasks * 3) * 100
+        )
         return min(depth_score, 100.0)
 
     def _generate_research_recommendations(self) -> list[str]:

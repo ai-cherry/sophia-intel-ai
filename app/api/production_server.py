@@ -95,7 +95,9 @@ def create_production_app() -> FastAPI:
 
     # Include routers with proper prefixes
     app.include_router(health_router, prefix="/health", tags=["health"])
-    app.include_router(orchestration_router, prefix="/api/orchestration", tags=["orchestration"])
+    app.include_router(
+        orchestration_router, prefix="/api/orchestration", tags=["orchestration"]
+    )
     app.include_router(embedding_router, prefix="/api/embeddings", tags=["embeddings"])
     app.include_router(memory_router, prefix="/api/memory", tags=["memory"])
     app.include_router(teams_router, prefix="/api/teams", tags=["teams"])
@@ -106,7 +108,9 @@ def create_production_app() -> FastAPI:
     async def global_exception_handler(request: Request, exc: Exception):
         """Global exception handler for production"""
         request_id = request.headers.get("X-Request-ID", "unknown")
-        logger.error(f"Unhandled exception in request {request_id}: {exc}", exc_info=True)
+        logger.error(
+            f"Unhandled exception in request {request_id}: {exc}", exc_info=True
+        )
 
         if settings.debug:
             error_response = create_error_response(
@@ -136,7 +140,9 @@ def create_production_app() -> FastAPI:
         error_response = create_error_response(
             request_id=request_id,
             error_code=f"HTTP_{exc.status_code}",
-            error_message=exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+            error_message=(
+                exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+            ),
             error_details={"status_code": exc.status_code} if settings.debug else None,
         )
 
@@ -155,7 +161,9 @@ def create_production_app() -> FastAPI:
             request_id=request_id,
             error_code="VALIDATION_ERROR",
             error_message="Request validation failed",
-            error_details={"validation_errors": exc.errors()} if settings.debug else None,
+            error_details=(
+                {"validation_errors": exc.errors()} if settings.debug else None
+            ),
         )
 
         return JSONResponse(status_code=422, content=error_response.dict())
@@ -212,7 +220,9 @@ def create_production_app() -> FastAPI:
         except ImportError:
             return JSONResponse(
                 status_code=501,
-                content={"detail": "Metrics not available - prometheus_client not installed"},
+                content={
+                    "detail": "Metrics not available - prometheus_client not installed"
+                },
             )
 
     return app

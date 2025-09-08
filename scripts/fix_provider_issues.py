@@ -73,7 +73,11 @@ async def test_model(provider: str, model: str, vk: str) -> dict:
         return {
             "success": True,
             "model": model,
-            "response": response.choices[0].message.content if response.choices else "No response",
+            "response": (
+                response.choices[0].message.content
+                if response.choices
+                else "No response"
+            ),
         }
 
     except Exception as e:
@@ -158,7 +162,9 @@ async def main():
         if fix["working_model"]:
             print(f"  ✅ {fix['provider']}: Now using {fix['working_model']}")
         else:
-            print(f"  ❌ {fix['provider']}: Still broken (tested {fix['models_tested']} models)")
+            print(
+                f"  ❌ {fix['provider']}: Still broken (tested {fix['models_tested']} models)"
+            )
 
     # Additional diagnostics
     print("\n🔍 DIAGNOSTICS:")

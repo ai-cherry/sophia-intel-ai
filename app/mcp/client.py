@@ -59,14 +59,18 @@ class MCPBridgeClient:
 
         try:
             # Test HTTP endpoint
-            response = await self.http_client.get(f"{self.endpoints[self.domain]['memory']}/health")
+            response = await self.http_client.get(
+                f"{self.endpoints[self.domain]['memory']}/health"
+            )
 
             if response.status_code == 200:
                 self.connected = True
                 logger.info(f"✅ Connected to MCP bridge ({self.domain} domain)")
                 return True
             else:
-                logger.error(f"❌ MCP bridge health check failed: {response.status_code}")
+                logger.error(
+                    f"❌ MCP bridge health check failed: {response.status_code}"
+                )
                 return False
 
         except Exception as e:

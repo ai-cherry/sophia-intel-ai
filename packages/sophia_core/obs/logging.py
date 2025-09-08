@@ -171,7 +171,9 @@ class RedactingFormatter(logging.Formatter):
         level = level_mapping.get(record.levelno, LogLevel.INFO)
 
         # Create structured log record
-        log_record = LogRecord(level=level, message=record.getMessage(), component=component)
+        log_record = LogRecord(
+            level=level, message=record.getMessage(), component=component
+        )
 
         # Extract context from record attributes
         if hasattr(record, "session_id"):
@@ -230,7 +232,9 @@ class RedactingFormatter(logging.Formatter):
             log_record.error = str(record.exc_info[1])
 
             if self.include_traceback:
-                log_record.traceback = "".join(traceback.format_exception(*record.exc_info))
+                log_record.traceback = "".join(
+                    traceback.format_exception(*record.exc_info)
+                )
 
         # Format as JSON
         return log_record.to_json(redact=self.redact_enabled)
@@ -241,7 +245,9 @@ class StructuredLogger:
     Structured logger with automatic redaction and context tracking.
     """
 
-    def __init__(self, name: str, level: LogLevel = LogLevel.INFO, redact_enabled: bool = True):
+    def __init__(
+        self, name: str, level: LogLevel = LogLevel.INFO, redact_enabled: bool = True
+    ):
         """
         Initialize structured logger.
 
@@ -343,7 +349,9 @@ class StructuredLogger:
         """Log error message."""
         self.log(LogLevel.ERROR, message, error=error, **fields)
 
-    def critical(self, message: str, error: Optional[Exception] = None, **fields) -> None:
+    def critical(
+        self, message: str, error: Optional[Exception] = None, **fields
+    ) -> None:
         """Log critical message."""
         self.log(LogLevel.CRITICAL, message, error=error, **fields)
 
@@ -404,7 +412,9 @@ def setup_logging(
     if json_format:
         formatter = RedactingFormatter(redact_enabled=redact_enabled)
     else:
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
@@ -568,4 +578,6 @@ def log_memory_operation(
     if agent_id:
         activity_fields["agent_id"] = agent_id
 
-    logger.activity(f"memory_{operation}", "memory", status, duration_ms, **activity_fields)
+    logger.activity(
+        f"memory_{operation}", "memory", status, duration_ms, **activity_fields
+    )

@@ -49,8 +49,12 @@ class WorkflowMonitor:
         )
         self.system_info = Info("sophia_workflow_system", "System information")
         self.system_info.info({"version": "1.0.0", "environment": "production"})
-        self.memory_usage = Gauge("sophia_workflow_memory_usage_bytes", "Memory usage in bytes")
-        self.task_queue_size = Gauge("sophia_workflow_queue_size", "Number of tasks in queue")
+        self.memory_usage = Gauge(
+            "sophia_workflow_memory_usage_bytes", "Memory usage in bytes"
+        )
+        self.task_queue_size = Gauge(
+            "sophia_workflow_queue_size", "Number of tasks in queue"
+        )
         self.task_complexity = Counter(
             "sophia_workflow_task_complexity_total",
             "Task complexity distribution",
@@ -128,7 +132,9 @@ class WorkflowMonitor:
         except ImportError:
             pass
 
-    async def start_metrics_updater(self, interval: int = 120, smart_polling: bool = True):
+    async def start_metrics_updater(
+        self, interval: int = 120, smart_polling: bool = True
+    ):
         """Start optimized background task to update system metrics with smart polling"""
         last_activity = time.time()
         active_polling_interval = 30

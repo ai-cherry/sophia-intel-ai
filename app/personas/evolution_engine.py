@@ -112,7 +112,9 @@ class EvolutionEngine:
 
         logger.info("EvolutionEngine initialized")
 
-    async def analyze_persona_performance(self, persona: Persona) -> PerformanceAnalysis:
+    async def analyze_persona_performance(
+        self, persona: Persona
+    ) -> PerformanceAnalysis:
         """
         Conduct comprehensive performance analysis for a persona.
 
@@ -182,7 +184,9 @@ class EvolutionEngine:
 
         # Keep only recent analyses (last 50)
         if len(self.performance_analyses[persona.name]) > 50:
-            self.performance_analyses[persona.name] = self.performance_analyses[persona.name][-50:]
+            self.performance_analyses[persona.name] = self.performance_analyses[
+                persona.name
+            ][-50:]
 
         logger.info(
             f"Completed performance analysis for {persona.name}: {overall_performance:.3f} overall"
@@ -241,7 +245,8 @@ class EvolutionEngine:
                 changes=changes,
                 performance_before=performance_before,
                 performance_after=performance_after,
-                success_impact=sum(performance_after.values()) - sum(performance_before.values()),
+                success_impact=sum(performance_after.values())
+                - sum(performance_before.values()),
                 confidence=analysis.confidence_level,
             )
 
@@ -252,9 +257,13 @@ class EvolutionEngine:
 
             # Keep only recent evolution history (last 100 events)
             if len(self.evolution_history[persona.name]) > 100:
-                self.evolution_history[persona.name] = self.evolution_history[persona.name][-100:]
+                self.evolution_history[persona.name] = self.evolution_history[
+                    persona.name
+                ][-100:]
 
-            logger.info(f"Successfully evolved {persona.name} using {strategy.value} strategy")
+            logger.info(
+                f"Successfully evolved {persona.name} using {strategy.value} strategy"
+            )
             return True
 
         except Exception as e:
@@ -262,7 +271,10 @@ class EvolutionEngine:
             return False
 
     async def _apply_evolution_strategy(
-        self, persona: Persona, analysis: PerformanceAnalysis, strategy: EvolutionStrategy
+        self,
+        persona: Persona,
+        analysis: PerformanceAnalysis,
+        strategy: EvolutionStrategy,
     ) -> dict[str, Any]:
         """Apply the specified evolution strategy to the persona."""
         changes = {}
@@ -394,10 +406,16 @@ class EvolutionEngine:
 
         return changes
 
-    def _get_recent_performance(self, persona: Persona, days: int = 30) -> list[PerformanceMetrics]:
+    def _get_recent_performance(
+        self, persona: Persona, days: int = 30
+    ) -> list[PerformanceMetrics]:
         """Get recent performance metrics for a persona."""
         cutoff_date = datetime.now() - timedelta(days=days)
-        return [perf for perf in persona.performance_history if perf.timestamp >= cutoff_date]
+        return [
+            perf
+            for perf in persona.performance_history
+            if perf.timestamp >= cutoff_date
+        ]
 
     def _calculate_overall_performance(
         self, performance_metrics: list[PerformanceMetrics]
@@ -423,7 +441,9 @@ class EvolutionEngine:
                 + weights["quality_score"] * metric.quality_score
                 + weights["user_satisfaction"] * (metric.user_satisfaction or 0.0)
                 + weights["response_time"]
-                * max(0.0, 1.0 - min(1.0, metric.response_time / 10.0))  # Invert and normalize
+                * max(
+                    0.0, 1.0 - min(1.0, metric.response_time / 10.0)
+                )  # Invert and normalize
             )
             total_score += score
             total_weight += 1.0
@@ -493,7 +513,9 @@ class EvolutionEngine:
             access_frequency = domain_access_count.get(ka_name, 0) / max(1, total_tasks)
             performance_quality = knowledge.expertise_level
 
-            utilization[ka_name] = (access_frequency * 0.4) + (performance_quality * 0.6)
+            utilization[ka_name] = (access_frequency * 0.4) + (
+                performance_quality * 0.6
+            )
 
         return utilization
 
@@ -642,7 +664,9 @@ class EvolutionEngine:
         if mean_performance == 0:
             return 0.0
 
-        std_performance = statistics.stdev(domain_averages) if len(domain_averages) > 1 else 0
+        std_performance = (
+            statistics.stdev(domain_averages) if len(domain_averages) > 1 else 0
+        )
         coefficient_of_variation = std_performance / mean_performance
 
         # Lower variation indicates better adaptation (more consistent performance)
@@ -656,7 +680,9 @@ class EvolutionEngine:
         if not persona.knowledge_areas:
             return 0.0
 
-        expertise_levels = [ka.expertise_level for ka in persona.knowledge_areas.values()]
+        expertise_levels = [
+            ka.expertise_level for ka in persona.knowledge_areas.values()
+        ]
 
         # High specialization = high variance in expertise levels
         # Low specialization = similar expertise levels across areas
@@ -711,10 +737,14 @@ class EvolutionEngine:
         """
         try:
             if knowledge_area not in source_persona.knowledge_areas:
-                logger.warning(f"Knowledge area '{knowledge_area}' not found in source persona")
+                logger.warning(
+                    f"Knowledge area '{knowledge_area}' not found in source persona"
+                )
                 return False
 
-            source_expertise = source_persona.knowledge_areas[knowledge_area].expertise_level
+            source_expertise = source_persona.knowledge_areas[
+                knowledge_area
+            ].expertise_level
 
             # Only share if source has high expertise
             if source_expertise < self.config["cross_persona_sharing_threshold"]:
@@ -727,7 +757,9 @@ class EvolutionEngine:
             target_knowledge = target_persona.knowledge_areas[knowledge_area]
 
             # Transfer knowledge (limited by learning capacity)
-            transfer_amount = min(0.1, (source_expertise - target_knowledge.expertise_level) * 0.2)
+            transfer_amount = min(
+                0.1, (source_expertise - target_knowledge.expertise_level) * 0.2
+            )
 
             if transfer_amount > 0:
                 target_knowledge.expertise_level = min(
@@ -762,9 +794,15 @@ class EvolutionEngine:
         if evolution_events:
             insights["evolution_summary"] = {
                 "total_evolutions": len(evolution_events),
-                "successful_evolutions": len([e for e in evolution_events if e.success_impact > 0]),
-                "avg_success_impact": statistics.mean([e.success_impact for e in evolution_events]),
-                "most_used_strategy": statistics.mode([e.strategy.value for e in evolution_events]),
+                "successful_evolutions": len(
+                    [e for e in evolution_events if e.success_impact > 0]
+                ),
+                "avg_success_impact": statistics.mean(
+                    [e.success_impact for e in evolution_events]
+                ),
+                "most_used_strategy": statistics.mode(
+                    [e.strategy.value for e in evolution_events]
+                ),
                 "recent_evolution_frequency": len(
                     [
                         e
@@ -791,18 +829,28 @@ class EvolutionEngine:
         if evolution_events and analyses:
             insights["learning_patterns"] = {
                 "learning_rate": analyses[-1].learning_rate_assessment,
-                "preferred_evolution_triggers": self._analyze_evolution_triggers(evolution_events),
-                "effectiveness_by_strategy": self._analyze_strategy_effectiveness(evolution_events),
-                "knowledge_growth_rate": self._calculate_knowledge_growth_rate(evolution_events),
+                "preferred_evolution_triggers": self._analyze_evolution_triggers(
+                    evolution_events
+                ),
+                "effectiveness_by_strategy": self._analyze_strategy_effectiveness(
+                    evolution_events
+                ),
+                "knowledge_growth_rate": self._calculate_knowledge_growth_rate(
+                    evolution_events
+                ),
             }
 
         # Generate actionable recommendations
         if analyses:
-            insights["recommendations"] = self._generate_actionable_recommendations(analyses[-1])
+            insights["recommendations"] = self._generate_actionable_recommendations(
+                analyses[-1]
+            )
 
         return insights
 
-    def _analyze_evolution_triggers(self, evolution_events: list[EvolutionEvent]) -> dict[str, int]:
+    def _analyze_evolution_triggers(
+        self, evolution_events: list[EvolutionEvent]
+    ) -> dict[str, int]:
         """Analyze which triggers are most common for this persona."""
         trigger_counts = {}
         for event in evolution_events:
@@ -824,10 +872,13 @@ class EvolutionEngine:
             strategy_impacts[strategy].append(event.success_impact)
 
         return {
-            strategy: statistics.mean(impacts) for strategy, impacts in strategy_impacts.items()
+            strategy: statistics.mean(impacts)
+            for strategy, impacts in strategy_impacts.items()
         }
 
-    def _calculate_knowledge_growth_rate(self, evolution_events: list[EvolutionEvent]) -> float:
+    def _calculate_knowledge_growth_rate(
+        self, evolution_events: list[EvolutionEvent]
+    ) -> float:
         """Calculate rate of knowledge acquisition over time."""
         if len(evolution_events) < 2:
             return 0.0
@@ -835,7 +886,9 @@ class EvolutionEngine:
         knowledge_changes = []
         for event in evolution_events:
             knowledge_change = sum(
-                change for key, change in event.changes.items() if key.startswith("knowledge_")
+                change
+                for key, change in event.changes.items()
+                if key.startswith("knowledge_")
             )
             knowledge_changes.append(knowledge_change)
 
@@ -844,7 +897,9 @@ class EvolutionEngine:
 
         return statistics.mean(knowledge_changes)
 
-    def _generate_actionable_recommendations(self, analysis: PerformanceAnalysis) -> dict[str, Any]:
+    def _generate_actionable_recommendations(
+        self, analysis: PerformanceAnalysis
+    ) -> dict[str, Any]:
         """Generate specific, actionable recommendations."""
         recommendations = {
             "immediate_actions": [],
@@ -862,19 +917,29 @@ class EvolutionEngine:
 
         # Medium-term goals based on performance trend
         if analysis.performance_trend == "declining":
-            recommendations["medium_term_goals"].append("Stabilize performance across all domains")
+            recommendations["medium_term_goals"].append(
+                "Stabilize performance across all domains"
+            )
         elif analysis.performance_trend == "stable":
-            recommendations["medium_term_goals"].append("Identify breakthrough opportunities")
+            recommendations["medium_term_goals"].append(
+                "Identify breakthrough opportunities"
+            )
         else:
             recommendations["medium_term_goals"].append("Maintain improvement momentum")
 
         # Long-term strategy based on specialization level
         if analysis.specialization_level < 0.3:
-            recommendations["long_term_strategy"] = "Develop deeper specialization in core domains"
+            recommendations["long_term_strategy"] = (
+                "Develop deeper specialization in core domains"
+            )
         elif analysis.specialization_level > 0.7:
-            recommendations["long_term_strategy"] = "Expand capabilities to adjacent domains"
+            recommendations["long_term_strategy"] = (
+                "Expand capabilities to adjacent domains"
+            )
         else:
-            recommendations["long_term_strategy"] = "Balance specialization with versatility"
+            recommendations["long_term_strategy"] = (
+                "Balance specialization with versatility"
+            )
 
         return recommendations
 

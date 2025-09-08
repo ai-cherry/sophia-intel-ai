@@ -65,8 +65,12 @@ if not readiness["portkey"]:
     )
 
 roles = ("analyst", "strategist", "validator")
-if not any(readiness["llm"][r]["provider"] and readiness["llm"][r]["model"] for r in roles):
-    if not (readiness["llm"]["force"]["provider"] and readiness["llm"]["force"]["model"]):
+if not any(
+    readiness["llm"][r]["provider"] and readiness["llm"][r]["model"] for r in roles
+):
+    if not (
+        readiness["llm"]["force"]["provider"] and readiness["llm"]["force"]["model"]
+    ):
         readiness["warnings"].append(
             "No per-role LLM_* vars set and no LLM_FORCE_* defaults; set either to run swarms"
         )

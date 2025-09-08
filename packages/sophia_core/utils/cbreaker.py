@@ -75,7 +75,10 @@ class CircuitBreaker:
 
     def _should_attempt_reset(self) -> bool:
         """Check if enough time has passed to attempt reset."""
-        return self._last_failure_time and time.time() - self._last_failure_time >= self.timeout
+        return (
+            self._last_failure_time
+            and time.time() - self._last_failure_time >= self.timeout
+        )
 
     async def _record_success(self):
         """Record a successful call."""
@@ -97,7 +100,9 @@ class CircuitBreaker:
             if self._state == CircuitState.HALF_OPEN:
                 self._state = CircuitState.OPEN
                 self._success_count = 0
-                logger.warning(f"Circuit breaker '{self.name}' reopened (still failing)")
+                logger.warning(
+                    f"Circuit breaker '{self.name}' reopened (still failing)"
+                )
             elif self._failure_count >= self.failure_threshold:
                 self._state = CircuitState.OPEN
                 logger.error(
@@ -164,7 +169,9 @@ class CircuitBreaker:
             if self._state == CircuitState.HALF_OPEN:
                 self._state = CircuitState.OPEN
                 self._success_count = 0
-                logger.warning(f"Circuit breaker '{self.name}' reopened (still failing)")
+                logger.warning(
+                    f"Circuit breaker '{self.name}' reopened (still failing)"
+                )
             elif self._failure_count >= self.failure_threshold:
                 self._state = CircuitState.OPEN
                 logger.error(
@@ -199,7 +206,11 @@ def circuit_breaker(
     def decorator(func: Callable) -> Callable:
         breaker_name = name or func.__name__
         breaker = CircuitBreaker(
-            breaker_name, failure_threshold, success_threshold, timeout, expected_exception
+            breaker_name,
+            failure_threshold,
+            success_threshold,
+            timeout,
+            expected_exception,
         )
 
         @wraps(func)

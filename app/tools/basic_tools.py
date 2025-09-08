@@ -75,7 +75,9 @@ def list_directory(dir_path: str = ".") -> dict[str, Any]:
                 {
                     "name": item,
                     "type": "directory" if os.path.isdir(full_path) else "file",
-                    "size": os.path.getsize(full_path) if os.path.isfile(full_path) else 0,
+                    "size": (
+                        os.path.getsize(full_path) if os.path.isfile(full_path) else 0
+                    ),
                 }
             )
 
@@ -184,7 +186,10 @@ class GitCommit:
     def __call__(self, message: str):
         try:
             result = subprocess.run(
-                ["git", "commit", "-m", message], capture_output=True, text=True, timeout=10
+                ["git", "commit", "-m", message],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
             return {
                 "success": result.returncode == 0,
@@ -221,7 +226,10 @@ class RunTypeCheck:
     def __call__(self, file_path: str = "."):
         try:
             result = subprocess.run(
-                ["python3", "-m", "mypy", file_path], capture_output=True, text=True, timeout=20
+                ["python3", "-m", "mypy", file_path],
+                capture_output=True,
+                text=True,
+                timeout=20,
             )
             return {
                 "success": result.returncode == 0,
@@ -238,7 +246,10 @@ class RunLint:
     def __call__(self, file_path: str = "."):
         try:
             result = subprocess.run(
-                ["python3", "-m", "flake8", file_path], capture_output=True, text=True, timeout=20
+                ["python3", "-m", "flake8", file_path],
+                capture_output=True,
+                text=True,
+                timeout=20,
             )
             return {
                 "success": result.returncode == 0,
@@ -255,7 +266,10 @@ class FormatCode:
     def __call__(self, file_path: str):
         try:
             result = subprocess.run(
-                ["python3", "-m", "black", file_path], capture_output=True, text=True, timeout=20
+                ["python3", "-m", "black", file_path],
+                capture_output=True,
+                text=True,
+                timeout=20,
             )
             return {
                 "success": result.returncode == 0,

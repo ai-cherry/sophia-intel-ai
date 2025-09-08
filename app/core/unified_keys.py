@@ -47,7 +47,9 @@ class UnifiedKeysManager:
             return
 
         # Main Portkey configuration
-        self.portkey_api_key = os.getenv("PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I")
+        self.portkey_api_key = os.getenv(
+            "PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I"
+        )
         self.portkey_base_url = "https://api.portkey.ai/v1"
 
         # Portkey Virtual Keys (exact names from dashboard)
@@ -102,7 +104,11 @@ class UnifiedKeysManager:
                 key=os.getenv("MISTRAL_VK", "mistral-vk-f92861"),
                 type=KeyType.PORTKEY_VIRTUAL,
                 provider="mistral",
-                models=["mistral-small-latest", "mistral-medium-latest", "mistral-large-latest"],
+                models=[
+                    "mistral-small-latest",
+                    "mistral-medium-latest",
+                    "mistral-large-latest",
+                ],
                 description="Mistral AI models via Portkey",
             ),
             "XAI-VK": APIKeyConfig(
@@ -183,7 +189,9 @@ class UnifiedKeysManager:
                 ],
             ),
             "DEEPSEEK": APIKeyConfig(
-                key=os.getenv("DEEPSEEK_API_KEY", "sk-c8a5f1725d7b4f96b29a3d041848cb74"),
+                key=os.getenv(
+                    "DEEPSEEK_API_KEY", "sk-c8a5f1725d7b4f96b29a3d041848cb74"
+                ),
                 type=KeyType.DIRECT_API,
                 provider="deepseek",
                 base_url="https://api.deepseek.com/v1",
@@ -201,7 +209,8 @@ class UnifiedKeysManager:
             ),
             "PERPLEXITY": APIKeyConfig(
                 key=os.getenv(
-                    "PERPLEXITY_API_KEY", "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"
+                    "PERPLEXITY_API_KEY",
+                    "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",
                 ),
                 type=KeyType.DIRECT_API,
                 provider="perplexity",
@@ -210,21 +219,31 @@ class UnifiedKeysManager:
             ),
             "GROQ": APIKeyConfig(
                 key=os.getenv(
-                    "GROQ_API_KEY", "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"
+                    "GROQ_API_KEY",
+                    "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",
                 ),
                 type=KeyType.DIRECT_API,
                 provider="groq",
-                models=["llama-3.1-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
+                models=[
+                    "llama-3.1-70b-versatile",
+                    "llama-3.1-8b-instant",
+                    "mixtral-8x7b-32768",
+                ],
             ),
             "MISTRAL": APIKeyConfig(
                 key=os.getenv("MISTRAL_API_KEY", "jCGVZEeBzppPH0pPVL0vxRCPnZuWL90i"),
                 type=KeyType.DIRECT_API,
                 provider="mistral",
-                models=["mistral-small-latest", "mistral-medium-latest", "mistral-large-latest"],
+                models=[
+                    "mistral-small-latest",
+                    "mistral-medium-latest",
+                    "mistral-large-latest",
+                ],
             ),
             "TOGETHER_AI": APIKeyConfig(
                 key=os.getenv(
-                    "TOGETHER_AI_API_KEY", "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo"
+                    "TOGETHER_AI_API_KEY",
+                    "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo",
                 ),
                 type=KeyType.DIRECT_API,
                 provider="together",
@@ -235,21 +254,29 @@ class UnifiedKeysManager:
                 ],
             ),
             "HUGGINGFACE": APIKeyConfig(
-                key=os.getenv("HUGGINGFACE_API_TOKEN", "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"),
+                key=os.getenv(
+                    "HUGGINGFACE_API_TOKEN", "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"
+                ),
                 type=KeyType.DIRECT_API,
                 provider="huggingface",
                 base_url="https://api-inference.huggingface.co",
-                models=["microsoft/Phi-3-mini-4k-instruct", "meta-llama/Llama-2-7b-chat-hf"],
+                models=[
+                    "microsoft/Phi-3-mini-4k-instruct",
+                    "meta-llama/Llama-2-7b-chat-hf",
+                ],
             ),
             "GEMINI": APIKeyConfig(
-                key=os.getenv("GEMINI_API_KEY", "AIzaSyA0rewcfUHo87WMEz4a8Og1eAWTslxlgEE"),
+                key=os.getenv(
+                    "GEMINI_API_KEY", "AIzaSyA0rewcfUHo87WMEz4a8Og1eAWTslxlgEE"
+                ),
                 type=KeyType.DIRECT_API,
                 provider="gemini",
                 models=["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"],
             ),
             "LLAMA": APIKeyConfig(
                 key=os.getenv(
-                    "LLAMA_API_KEY", "llx-MfsEhU0wHNL7PcRN4YEFM3eWcPQggq7edEr52IdnvkHZPPYj"
+                    "LLAMA_API_KEY",
+                    "llx-MfsEhU0wHNL7PcRN4YEFM3eWcPQggq7edEr52IdnvkHZPPYj",
                 ),
                 type=KeyType.DIRECT_API,
                 provider="llama",
@@ -281,7 +308,9 @@ class UnifiedKeysManager:
                 description="Access to 300+ models including GPT-5, Grok-4, O-series, and more",
             ),
             "COHERE": APIKeyConfig(
-                key=os.getenv("COHERE_API_KEY", "your_cohere_api_key_here"),  # Need real key
+                key=os.getenv(
+                    "COHERE_API_KEY", "your_cohere_api_key_here"
+                ),  # Need real key
                 type=KeyType.DIRECT_API,
                 provider="cohere",
                 models=["command-r", "command-r-plus"],
@@ -301,7 +330,9 @@ class UnifiedKeysManager:
                 description="Qdrant vector database",
             ),
             "WEAVIATE": APIKeyConfig(
-                key=os.getenv("WEAVIATE_API_KEY", "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"),
+                key=os.getenv(
+                    "WEAVIATE_API_KEY", "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"
+                ),
                 type=KeyType.VECTOR_DB,
                 provider="weaviate",
                 base_url="https://w6bigpoxsrwvq7wlgmmdva.c0.us-west3.gcp.weaviate.cloud",
@@ -309,7 +340,8 @@ class UnifiedKeysManager:
             ),
             "REDIS": APIKeyConfig(
                 key=os.getenv(
-                    "REDIS_USER_KEY", "S666q3cr9wmzpetc6iud02iqv26774azveodh2pfadrd7pgq8l7"
+                    "REDIS_USER_KEY",
+                    "S666q3cr9wmzpetc6iud02iqv26774azveodh2pfadrd7pgq8l7",
                 ),
                 type=KeyType.VECTOR_DB,
                 provider="redis",
@@ -317,7 +349,9 @@ class UnifiedKeysManager:
                 description="Redis cache and vector storage",
             ),
             "MEM0": APIKeyConfig(
-                key=os.getenv("MEM0_API_KEY", "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"),
+                key=os.getenv(
+                    "MEM0_API_KEY", "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"
+                ),
                 type=KeyType.VECTOR_DB,
                 provider="mem0",
                 base_url="https://api.mem0.ai",
@@ -354,14 +388,17 @@ class UnifiedKeysManager:
             ),
             "PULUMI": APIKeyConfig(
                 key=os.getenv(
-                    "PULUMI_ACCESS_TOKEN", "pul-f60e05d69c13efa7a73abea7a7bf09c668fbc2dc"
+                    "PULUMI_ACCESS_TOKEN",
+                    "pul-f60e05d69c13efa7a73abea7a7bf09c668fbc2dc",
                 ),
                 type=KeyType.INFRASTRUCTURE,
                 provider="pulumi",
                 description="Pulumi infrastructure as code",
             ),
             "AGNO": APIKeyConfig(
-                key=os.getenv("AGNO_API_KEY", "phi-0cnOaV2N-MKID0LJTszPjAdj7XhunqMQFG4IwLPG9dI"),
+                key=os.getenv(
+                    "AGNO_API_KEY", "phi-0cnOaV2N-MKID0LJTszPjAdj7XhunqMQFG4IwLPG9dI"
+                ),
                 type=KeyType.INFRASTRUCTURE,
                 provider="agno",
                 description="Agno/PhiData framework",
@@ -419,15 +456,31 @@ class UnifiedKeysManager:
     def get_working_providers(self) -> dict[str, list]:
         """Get list of working providers based on test results"""
         return {
-            "portkey_working": ["openai", "anthropic", "deepseek", "mistral", "together", "cohere"],
+            "portkey_working": [
+                "openai",
+                "anthropic",
+                "deepseek",
+                "mistral",
+                "together",
+                "cohere",
+            ],
             "direct_working": ["openai", "anthropic", "deepseek"],
-            "needs_fix": ["groq", "perplexity", "gemini", "huggingface", "openrouter", "xai"],
+            "needs_fix": [
+                "groq",
+                "perplexity",
+                "gemini",
+                "huggingface",
+                "openrouter",
+                "xai",
+            ],
         }
 
     def get_provider_status(self) -> dict[str, Any]:
         """Get comprehensive status of all providers"""
         status = {
-            "portkey_api_key": self.portkey_api_key[:20] + "..." if self.portkey_api_key else None,
+            "portkey_api_key": (
+                self.portkey_api_key[:20] + "..." if self.portkey_api_key else None
+            ),
             "total_virtual_keys": len(self.portkey_virtual_keys),
             "total_direct_keys": len(self.direct_api_keys),
             "vector_databases": len(self.vector_db_keys),

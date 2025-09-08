@@ -312,7 +312,9 @@ class MetaTagRegistry:
             results = [tag for tag in results if tag.complexity == complexity]
 
         if capabilities:
-            results = [tag for tag in results if capabilities.issubset(tag.capabilities)]
+            results = [
+                tag for tag in results if capabilities.issubset(tag.capabilities)
+            ]
 
         if tags:
             results = [tag for tag in results if tags.intersection(tag.tags)]
@@ -346,7 +348,8 @@ class MetaTagRegistry:
         return [
             tag
             for tag in self._tags.values()
-            if tag.modification_risk in [ModificationRisk.HIGH, ModificationRisk.CRITICAL]
+            if tag.modification_risk
+            in [ModificationRisk.HIGH, ModificationRisk.CRITICAL]
         ]
 
     def get_optimization_candidates(self) -> list[MetaTag]:
@@ -415,7 +418,8 @@ class MetaTagRegistry:
             "high_risk_components": len(self.get_high_risk_components()),
             "optimization_candidates": len(self.get_optimization_candidates()),
             "avg_confidence": (
-                sum(tag.confidence_score for tag in self._tags.values()) / len(self._tags)
+                sum(tag.confidence_score for tag in self._tags.values())
+                / len(self._tags)
                 if self._tags
                 else 0
             ),
@@ -454,8 +458,21 @@ class AutoTagger:
                 r"controller",
             ],
             SemanticRole.SERVICE: [r"service", r"business", r"logic", r"operation"],
-            SemanticRole.AGENT: [r"agent", r"swarm", r"ai", r"autonomous", r"intelligent"],
-            SemanticRole.MODEL: [r"model", r"neural", r"ml", r"predict", r"inference", r"train"],
+            SemanticRole.AGENT: [
+                r"agent",
+                r"swarm",
+                r"ai",
+                r"autonomous",
+                r"intelligent",
+            ],
+            SemanticRole.MODEL: [
+                r"model",
+                r"neural",
+                r"ml",
+                r"predict",
+                r"inference",
+                r"train",
+            ],
             SemanticRole.REPOSITORY: [
                 r"repository",
                 r"repo",
@@ -494,7 +511,9 @@ class AutoTagger:
 
             # Try AST analysis for Python files
             if file_path.endswith(".py"):
-                tags.extend(await self._analyze_python_file(file_path, content, content_hash))
+                tags.extend(
+                    await self._analyze_python_file(file_path, content, content_hash)
+                )
             else:
                 # Basic analysis for other files
                 tag = await self._analyze_generic_file(file_path, content, content_hash)
@@ -522,7 +541,9 @@ class AutoTagger:
             # Analyze classes
             for node in ast.walk(tree):
                 if isinstance(node, ast.ClassDef):
-                    tag = await self._create_class_tag(file_path, node, content, content_hash)
+                    tag = await self._create_class_tag(
+                        file_path, node, content, content_hash
+                    )
                     tags.append(tag)
 
                 elif isinstance(node, ast.FunctionDef):
@@ -602,7 +623,9 @@ class AutoTagger:
 
         return tag
 
-    async def _create_module_tag(self, file_path: str, content: str, content_hash: str) -> MetaTag:
+    async def _create_module_tag(
+        self, file_path: str, content: str, content_hash: str
+    ) -> MetaTag:
         """Create meta-tag for a module."""
         module_name = Path(file_path).stem
 
@@ -663,7 +686,9 @@ class AutoTagger:
 
         # Basic metrics
         tag.lines_of_code = len(content.splitlines())
-        tag.complexity = Complexity.LOW if tag.lines_of_code < 50 else Complexity.MODERATE
+        tag.complexity = (
+            Complexity.LOW if tag.lines_of_code < 50 else Complexity.MODERATE
+        )
 
         return tag
 
@@ -709,7 +734,9 @@ class AutoTagger:
         elif isinstance(node, ast.ClassDef):
             # Class complexity based on methods and attributes
             methods = [
-                n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+                n
+                for n in node.body
+                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
             ]
             if len(methods) < 3:
                 return Complexity.LOW
@@ -727,7 +754,9 @@ class AutoTagger:
         complexity = 1  # Base complexity
 
         for child in ast.walk(node):
-            if isinstance(child, (ast.If, ast.While, ast.For, ast.AsyncFor, ast.ExceptHandler)):
+            if isinstance(
+                child, (ast.If, ast.While, ast.For, ast.AsyncFor, ast.ExceptHandler)
+            ):
                 complexity += 1
             elif isinstance(child, ast.BoolOp):
                 complexity += len(child.values) - 1
@@ -778,7 +807,9 @@ class AutoTagger:
 
         # Test requirements based on complexity
         if tag.complexity.value >= Complexity.MODERATE.value:
-            tag.test_requirements.append("Unit tests recommended for moderate+ complexity")
+            tag.test_requirements.append(
+                "Unit tests recommended for moderate+ complexity"
+            )
 
         if "async" in tag.capabilities:
             tag.test_requirements.append("Async testing patterns required")
@@ -821,7 +852,9 @@ async def auto_tag_directory(
 
     for pattern in file_patterns:
         for file_path in Path(directory_path).rglob(pattern):
-            if file_path.is_file() and not any(part.startswith(".") for part in file_path.parts):
+            if file_path.is_file() and not any(
+                part.startswith(".") for part in file_path.parts
+            ):
                 try:
                     tags = await tagger.tag_file(str(file_path))
                     results[str(file_path)] = tags

@@ -86,7 +86,11 @@ PORTKEY_CONFIG = {
             },
         ],
     },
-    "retry": {"attempts": 3, "on_status_codes": [429, 500, 502, 503], "exponential_backoff": True},
+    "retry": {
+        "attempts": 3,
+        "on_status_codes": [429, 500, 502, 503],
+        "exponential_backoff": True,
+    },
     "cache": {"enabled": True, "ttl": 3600, "mode": "semantic"},
     "timeout": {"request_timeout": 120, "stream_timeout": 300},
 }
@@ -142,7 +146,9 @@ class PortkeyLoadBalancer:
             config=PORTKEY_CONFIG,
         )
 
-        logger.info("✅ Portkey Load Balancer initialized with REAL multi-model configuration")
+        logger.info(
+            "✅ Portkey Load Balancer initialized with REAL multi-model configuration"
+        )
 
     async def execute_with_routing(
         self,

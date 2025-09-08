@@ -21,7 +21,13 @@ class AIAgentTester:
             # Import would be here - placeholder for now
             print("Testing Sophia Orchestrator...")
 
-            personas = ["executive", "technical", "friendly", "eviction-advisor", "sales-coach"]
+            personas = [
+                "executive",
+                "technical",
+                "friendly",
+                "eviction-advisor",
+                "sales-coach",
+            ]
             for persona in personas:
                 # Placeholder test - would make real API call
                 print(f"  ✅ {persona} persona: Simulated test passed")

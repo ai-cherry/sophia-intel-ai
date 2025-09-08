@@ -167,7 +167,9 @@ class TestMCPServerOrchestration:
         }
 
         # Store insight in memory system
-        if hasattr(mem0, "store_memory") and hasattr(unified, "coordinate_memory_storage"):
+        if hasattr(mem0, "store_memory") and hasattr(
+            unified, "coordinate_memory_storage"
+        ):
             memory_id = await unified.coordinate_memory_storage(
                 content=bi_insight, memory_type="business_insight", source="bi_server"
             )
@@ -206,7 +208,11 @@ class TestMCPServerOrchestration:
 
         # BI provides customer data
         customer_data = {
-            "apollo_data": {"company": "TechCorp", "employees": 500, "industry": "Technology"},
+            "apollo_data": {
+                "company": "TechCorp",
+                "employees": 500,
+                "industry": "Technology",
+            },
             "hubspot_data": {"deal_stage": "negotiation", "deal_value": 50000},
             "gong_data": {"sentiment": "positive", "next_meeting": "2024-02-15"},
             "intercom_data": {"satisfaction_score": 4.2, "support_tickets": 2},
@@ -224,7 +230,9 @@ class TestMCPServerOrchestration:
             workflow_id = await artemis.create_workflow_with_context(workflow_request)
 
             # Memory system should store workflow context
-            context_memory = await mem0.store_workflow_context(workflow_id, customer_data)
+            context_memory = await mem0.store_workflow_context(
+                workflow_id, customer_data
+            )
 
             assert workflow_id is not None
             assert context_memory["workflow_id"] == workflow_id
@@ -262,14 +270,24 @@ class TestMCPServerOrchestration:
 
         # Store historical context in memory
         historical_context = [
-            {"request_type": "lead_analysis", "routed_to": "bi", "success": True, "duration": 2.3},
+            {
+                "request_type": "lead_analysis",
+                "routed_to": "bi",
+                "success": True,
+                "duration": 2.3,
+            },
             {
                 "request_type": "workflow_execution",
                 "routed_to": "artemis",
                 "success": True,
                 "duration": 15.7,
             },
-            {"request_type": "memory_query", "routed_to": "mem0", "success": True, "duration": 0.8},
+            {
+                "request_type": "memory_query",
+                "routed_to": "mem0",
+                "success": True,
+                "duration": 0.8,
+            },
         ]
 
         for context in historical_context:
@@ -304,7 +322,9 @@ class TestMCPServerOrchestration:
             ]
 
             if lead_analysis_history:
-                best_server = max(lead_analysis_history, key=lambda x: x["success"])["routed_to"]
+                best_server = max(lead_analysis_history, key=lambda x: x["success"])[
+                    "routed_to"
+                ]
                 confidence = 0.9  # High confidence based on history
             else:
                 best_server = "bi"  # Default for lead analysis
@@ -341,7 +361,10 @@ class TestMCPServerOrchestration:
             assert recovery_action["retry_scheduled"] is True
         else:
             # Mock error handling
-            fallback_options = ["artemis", "mem0"]  # Servers that might have relevant data
+            fallback_options = [
+                "artemis",
+                "mem0",
+            ]  # Servers that might have relevant data
 
             recovery_action = {
                 "failed_server": "bi",
@@ -410,22 +433,36 @@ class TestMCPServerOrchestration:
             # Analyze bottlenecks
             if performance_data["unified"]["cache_hit_ratio"] < 0.8:
                 recommendations.append(
-                    {"server": "unified", "action": "increase_cache_size", "priority": "high"}
+                    {
+                        "server": "unified",
+                        "action": "increase_cache_size",
+                        "priority": "high",
+                    }
                 )
 
             if performance_data["artemis"]["queue_length"] > 10:
                 recommendations.append(
-                    {"server": "artemis", "action": "scale_agent_pool", "priority": "medium"}
+                    {
+                        "server": "artemis",
+                        "action": "scale_agent_pool",
+                        "priority": "medium",
+                    }
                 )
 
             if performance_data["bi"]["avg_query_time"] > 2.0:
                 recommendations.append(
-                    {"server": "bi", "action": "optimize_query_caching", "priority": "medium"}
+                    {
+                        "server": "bi",
+                        "action": "optimize_query_caching",
+                        "priority": "medium",
+                    }
                 )
 
             optimization_plan = {
                 "recommendations": recommendations,
-                "priority_actions": [r for r in recommendations if r["priority"] == "high"],
+                "priority_actions": [
+                    r for r in recommendations if r["priority"] == "high"
+                ],
                 "estimated_improvement": "15-25% performance gain",
             }
 
@@ -463,7 +500,11 @@ class TestDataFlowIntegration:
 
         # 1. BI gathers customer data from multiple sources
         customer_data_sources = {
-            "apollo": {"company": "InnovaCorp", "employees": 250, "location": "San Francisco"},
+            "apollo": {
+                "company": "InnovaCorp",
+                "employees": 250,
+                "location": "San Francisco",
+            },
             "hubspot": {"deal_id": "deal_456", "stage": "proposal", "value": 75000},
             "gong": {
                 "last_call_sentiment": "very_positive",
@@ -478,7 +519,10 @@ class TestDataFlowIntegration:
             "data_sources": customer_data_sources,
             "risk_score": 0.15,  # Low risk
             "opportunity_score": 0.82,  # High opportunity
-            "recommended_actions": ["schedule_technical_demo", "prepare_implementation_plan"],
+            "recommended_actions": [
+                "schedule_technical_demo",
+                "prepare_implementation_plan",
+            ],
         }
 
         # 2. Store insights in memory system
@@ -588,8 +632,16 @@ class TestDataFlowIntegration:
         else:
             # Mock similar customer search
             similar_customers = [
-                {"customer_id": "saastech_001", "employees": 275, "success_score": 0.89},
-                {"customer_id": "growthcorp_002", "employees": 220, "success_score": 0.92},
+                {
+                    "customer_id": "saastech_001",
+                    "employees": 275,
+                    "success_score": 0.89,
+                },
+                {
+                    "customer_id": "growthcorp_002",
+                    "employees": 220,
+                    "success_score": 0.92,
+                },
                 {"customer_id": "scaleit_003", "employees": 240, "success_score": 0.85},
             ]
 
@@ -606,7 +658,11 @@ class TestDataFlowIntegration:
                     "automated_security_scanning",
                     "api_first_integration",
                 ],
-                "success_factors": ["early_automation", "security_focus", "scalable_architecture"],
+                "success_factors": [
+                    "early_automation",
+                    "security_focus",
+                    "scalable_architecture",
+                ],
                 "implementation_timeline": "3-6 months",
             }
 
@@ -623,7 +679,11 @@ class TestDataFlowIntegration:
             strategy_workflow = {
                 "workflow_id": str(uuid.uuid4()),
                 "phases": [
-                    {"phase": "assessment", "duration": "2 weeks", "agents": ["plannr"]},
+                    {
+                        "phase": "assessment",
+                        "duration": "2 weeks",
+                        "agents": ["plannr"],
+                    },
                     {
                         "phase": "architecture_design",
                         "duration": "3 weeks",
@@ -634,7 +694,11 @@ class TestDataFlowIntegration:
                         "duration": "8 weeks",
                         "agents": ["coder", "tester"],
                     },
-                    {"phase": "deployment", "duration": "2 weeks", "agents": ["deployer"]},
+                    {
+                        "phase": "deployment",
+                        "duration": "2 weeks",
+                        "agents": ["deployer"],
+                    },
                 ],
                 "estimated_timeline": "15 weeks",
                 "success_probability": 0.87,
@@ -654,7 +718,9 @@ class TestDataFlowIntegration:
                     "key_strategies": results["success_patterns"]["common_strategies"],
                     "implementation_plan": results["strategy_workflow"]["phases"],
                     "timeline": results["strategy_workflow"]["estimated_timeline"],
-                    "success_probability": results["strategy_workflow"]["success_probability"],
+                    "success_probability": results["strategy_workflow"][
+                        "success_probability"
+                    ],
                 },
                 "confidence": 0.88,
                 "sources": ["memory_analysis", "bi_patterns", "strategy_generation"],
@@ -767,7 +833,10 @@ class TestSecurityAndAuthentication:
         """Set up servers with security configurations"""
         security_config = {
             "authentication": {"enabled": True, "method": "jwt", "token_expiry": 3600},
-            "authorization": {"rbac_enabled": True, "permissions": ["read", "write", "admin"]},
+            "authorization": {
+                "rbac_enabled": True,
+                "permissions": ["read", "write", "admin"],
+            },
             "encryption": {"in_transit": True, "at_rest": True},
         }
 
@@ -811,7 +880,9 @@ class TestSecurityAndAuthentication:
 
             # Check timestamp (not too old)
             request_time = datetime.fromisoformat(secure_request["timestamp"])
-            time_valid = (datetime.now() - request_time).total_seconds() < 300  # 5 minutes
+            time_valid = (
+                datetime.now() - request_time
+            ).total_seconds() < 300  # 5 minutes
 
             validation_result = {
                 "authenticated": token_valid,
@@ -841,7 +912,11 @@ class TestSecurityAndAuthentication:
                 "roles": ["analyst"],
                 "permissions": ["read", "write"],
             },
-            "viewer_user": {"user_id": "viewer_001", "roles": ["viewer"], "permissions": ["read"]},
+            "viewer_user": {
+                "user_id": "viewer_001",
+                "roles": ["viewer"],
+                "permissions": ["read"],
+            },
         }
 
         # Test access to sensitive BI data
@@ -910,7 +985,9 @@ class TestSecurityAndAuthentication:
             assert encrypted_payload["ciphertext"] != json.dumps(sensitive_data)
 
             # Mock decryption at destination
-            decrypted_data = json.loads(base64.b64decode(encrypted_payload["ciphertext"]).decode())
+            decrypted_data = json.loads(
+                base64.b64decode(encrypted_payload["ciphertext"]).decode()
+            )
             assert decrypted_data == sensitive_data
 
     async def test_audit_logging_across_servers(self, secure_server_setup):
@@ -1046,7 +1123,9 @@ class TestPerformanceAndScalability:
 
         # Execute all requests concurrently
         start_time = time.time()
-        results = await asyncio.gather(*[process_request(req) for req in concurrent_requests])
+        results = await asyncio.gather(
+            *[process_request(req) for req in concurrent_requests]
+        )
         total_time = time.time() - start_time
 
         # Verify performance metrics
@@ -1073,7 +1152,8 @@ class TestPerformanceAndScalability:
         for i in range(1000):  # 1000 memory entries
             memory_entry = {
                 "id": f"mem_{i:04d}",
-                "content": f"Memory content {i} with additional data " * 20,  # ~500 chars each
+                "content": f"Memory content {i} with additional data "
+                * 20,  # ~500 chars each
                 "type": "stress_test",
                 "metadata": {"batch": i // 100, "index": i},
             }
@@ -1191,4 +1271,6 @@ class TestPerformanceAndScalability:
 
 if __name__ == "__main__":
     # Run the integration tests
-    pytest.main([__file__, "-v", "--tb=short", "-x"])  # Stop on first failure for debugging
+    pytest.main(
+        [__file__, "-v", "--tb=short", "-x"]
+    )  # Stop on first failure for debugging

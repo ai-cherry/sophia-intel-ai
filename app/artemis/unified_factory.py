@@ -241,7 +241,12 @@ class ArtemisUnifiedFactory:
                 "code_quality_assessment",
                 "best_practices_validation",
             ],
-            tools=["code_analyzers", "security_scanners", "performance_profilers", "linting_tools"],
+            tools=[
+                "code_analyzers",
+                "security_scanners",
+                "performance_profilers",
+                "linting_tools",
+            ],
             virtual_key=(
                 portkey_manager.providers[ModelProvider.DEEPSEEK].virtual_key
                 if portkey_manager
@@ -304,7 +309,12 @@ class ArtemisUnifiedFactory:
                 "optimization_strategies",
                 "capacity_planning",
             ],
-            tools=["profilers", "load_testing_tools", "monitoring_systems", "benchmark_tools"],
+            tools=[
+                "profilers",
+                "load_testing_tools",
+                "monitoring_systems",
+                "benchmark_tools",
+            ],
             virtual_key=(
                 portkey_manager.providers[ModelProvider.GROQ].virtual_key
                 if portkey_manager
@@ -477,7 +487,10 @@ class ArtemisUnifiedFactory:
                 },
             ],
             total_duration="7-15 minutes",
-            success_criteria={"critical_issues_fixed": "100%", "deployment_ready": True},
+            success_criteria={
+                "critical_issues_fixed": "100%",
+                "deployment_ready": True,
+            },
             priority="HIGH",
         )
 
@@ -539,7 +552,8 @@ class ArtemisUnifiedFactory:
             "active_tasks": self._concurrent_tasks,
             "max_concurrent": self.config.max_concurrent_tasks,
             "queued_tasks": len(self._task_queue),
-            "capacity_available": self._concurrent_tasks < self.config.max_concurrent_tasks,
+            "capacity_available": self._concurrent_tasks
+            < self.config.max_concurrent_tasks,
             "utilization": self._concurrent_tasks / self.config.max_concurrent_tasks,
         }
 
@@ -553,7 +567,11 @@ class ArtemisUnifiedFactory:
         """Create a technical agent from templates"""
         if not await self._acquire_task_slot():
             return await self.queue_task(
-                {"type": "create_agent", "template": template_name, "config": custom_config}
+                {
+                    "type": "create_agent",
+                    "template": template_name,
+                    "config": custom_config,
+                }
             )
 
         try:
@@ -616,7 +634,11 @@ class ArtemisUnifiedFactory:
         """Create a military squad from unit configuration"""
         if not await self._acquire_task_slot():
             return await self.queue_task(
-                {"type": "create_squad", "unit": unit_designation, "parameters": mission_parameters}
+                {
+                    "type": "create_squad",
+                    "unit": unit_designation,
+                    "parameters": mission_parameters,
+                }
             )
 
         try:
@@ -675,7 +697,11 @@ class ArtemisUnifiedFactory:
         """Create a specialized swarm (refactoring, domain team, etc.)"""
         if not await self._acquire_task_slot():
             return await self.queue_task(
-                {"type": "create_swarm", "swarm_type": swarm_type, "config": swarm_config}
+                {
+                    "type": "create_swarm",
+                    "swarm_type": swarm_type,
+                    "config": swarm_config,
+                }
             )
 
         try:
@@ -706,7 +732,9 @@ class ArtemisUnifiedFactory:
 
             self.specialized_swarms[swarm_id] = swarm_instance
 
-            logger.info(f"🔧 Created specialized swarm: {swarm_id} ({swarm_type.value})")
+            logger.info(
+                f"🔧 Created specialized swarm: {swarm_id} ({swarm_type.value})"
+            )
             return swarm_id
 
         finally:
@@ -834,7 +862,11 @@ class ArtemisUnifiedFactory:
 
         # Define team composition based on type
         team_compositions = {
-            "code_analysis": ["code_reviewer", "security_auditor", "performance_optimizer"],
+            "code_analysis": [
+                "code_reviewer",
+                "security_auditor",
+                "performance_optimizer",
+            ],
             "security_audit": ["security_auditor"],
             "architecture_review": ["code_reviewer", "performance_optimizer"],
             "full_technical": list(self.agent_templates.keys()),
@@ -862,14 +894,18 @@ class ArtemisUnifiedFactory:
 
         self.active_swarms[team_id] = team_info
 
-        logger.info(f"⚔️ Created technical team: {team_id} with {len(team_agents)} agents")
+        logger.info(
+            f"⚔️ Created technical team: {team_id} with {len(team_agents)} agents"
+        )
         return team_id
 
     # ==============================================================================
     # WEBSOCKET AND REAL-TIME UPDATES
     # ==============================================================================
 
-    async def _broadcast_mission_update(self, mission_id: str, mission_data: dict[str, Any]):
+    async def _broadcast_mission_update(
+        self, mission_id: str, mission_data: dict[str, Any]
+    ):
         """Broadcast mission updates via WebSocket"""
         if self.websocket_connections:
             update = {
@@ -894,12 +930,16 @@ class ArtemisUnifiedFactory:
     async def add_websocket_connection(self, websocket: WebSocket):
         """Add WebSocket connection for real-time updates"""
         self.websocket_connections.add(websocket)
-        logger.info(f"WebSocket connection added. Total: {len(self.websocket_connections)}")
+        logger.info(
+            f"WebSocket connection added. Total: {len(self.websocket_connections)}"
+        )
 
     async def remove_websocket_connection(self, websocket: WebSocket):
         """Remove WebSocket connection"""
         self.websocket_connections.discard(websocket)
-        logger.info(f"WebSocket connection removed. Total: {len(self.websocket_connections)}")
+        logger.info(
+            f"WebSocket connection removed. Total: {len(self.websocket_connections)}"
+        )
 
     # ==============================================================================
     # QUERY AND STATUS METHODS
@@ -1036,7 +1076,9 @@ async def create_agent(request: dict[str, Any]):
         if not template:
             raise HTTPException(status_code=400, detail="Template name required")
 
-        agent_id = await artemis_unified_factory.create_technical_agent(template, config)
+        agent_id = await artemis_unified_factory.create_technical_agent(
+            template, config
+        )
 
         return {
             "success": True,
@@ -1061,7 +1103,12 @@ async def create_squad(request: dict[str, Any]):
 
         squad_id = await artemis_unified_factory.create_military_squad(unit, parameters)
 
-        return {"success": True, "squad_id": squad_id, "unit": unit, "status": "deployed"}
+        return {
+            "success": True,
+            "squad_id": squad_id,
+            "unit": unit,
+            "status": "deployed",
+        }
     except Exception as e:
         logger.error(f"Squad creation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1078,7 +1125,9 @@ async def execute_mission(request: dict[str, Any]):
         if not mission_type:
             raise HTTPException(status_code=400, detail="Mission type required")
 
-        result = await artemis_unified_factory.execute_mission(mission_type, target, parameters)
+        result = await artemis_unified_factory.execute_mission(
+            mission_type, target, parameters
+        )
 
         return result
     except Exception as e:

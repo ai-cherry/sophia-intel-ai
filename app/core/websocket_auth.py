@@ -162,7 +162,10 @@ class WebSocketAuthenticator:
             self.redis = None
 
     async def authenticate_websocket(
-        self, websocket: WebSocket, token: Optional[str] = None, client_id: Optional[str] = None
+        self,
+        websocket: WebSocket,
+        token: Optional[str] = None,
+        client_id: Optional[str] = None,
     ) -> AuthenticatedUser:
         """
         Authenticate WebSocket connection
@@ -243,7 +246,9 @@ class WebSocketAuthenticator:
             # Validate session if exists
             await self._validate_session(user)
 
-            logger.info(f"WebSocket authenticated: {username} ({user_id}) from {client_host}")
+            logger.info(
+                f"WebSocket authenticated: {username} ({user_id}) from {client_host}"
+            )
             return user
 
         except ExpiredSignatureError:
@@ -254,7 +259,9 @@ class WebSocketAuthenticator:
             logger.error(f"Authentication error: {e}")
             raise HTTPException(status_code=401, detail="Authentication failed")
 
-    def _get_user_permissions(self, role: UserRole, tenant_type: TenantType) -> set[str]:
+    def _get_user_permissions(
+        self, role: UserRole, tenant_type: TenantType
+    ) -> set[str]:
         """Get user permissions based on role and tenant"""
         permissions = set()
 
@@ -272,7 +279,9 @@ class WebSocketAuthenticator:
 
         return permissions
 
-    async def check_permission(self, user: AuthenticatedUser, required_permission: str) -> bool:
+    async def check_permission(
+        self, user: AuthenticatedUser, required_permission: str
+    ) -> bool:
         """
         Check if user has required permission
 
@@ -289,7 +298,10 @@ class WebSocketAuthenticator:
         return required_permission in user.permissions
 
     async def check_tenant_access(
-        self, user: AuthenticatedUser, resource_tenant_id: str, resource_type: Optional[str] = None
+        self,
+        user: AuthenticatedUser,
+        resource_tenant_id: str,
+        resource_type: Optional[str] = None,
     ) -> bool:
         """
         Check if user can access resource from specific tenant
@@ -325,7 +337,9 @@ class WebSocketAuthenticator:
 
         return False
 
-    async def create_session(self, user: AuthenticatedUser, websocket: WebSocket) -> SessionInfo:
+    async def create_session(
+        self, user: AuthenticatedUser, websocket: WebSocket
+    ) -> SessionInfo:
         """Create new WebSocket session"""
         session = SessionInfo(
             session_id=user.session_id,
@@ -353,9 +367,12 @@ class WebSocketAuthenticator:
                 "user_agent": user.user_agent or "",
             }
 
-            await self.redis.hset(f"websocket_session:{user.session_id}", mapping=session_data)
+            await self.redis.hset(
+                f"websocket_session:{user.session_id}", mapping=session_data
+            )
             await self.redis.expire(
-                f"websocket_session:{user.session_id}", self.session_timeout_minutes * 60
+                f"websocket_session:{user.session_id}",
+                self.session_timeout_minutes * 60,
             )
 
         logger.info(f"Created WebSocket session: {user.session_id} for {user.username}")
@@ -421,14 +438,18 @@ class WebSocketAuthenticator:
             return
 
         try:
-            session_data = await self.redis.hgetall(f"websocket_session:{user.session_id}")
+            session_data = await self.redis.hgetall(
+                f"websocket_session:{user.session_id}"
+            )
             if session_data:
                 # Validate session data matches user
                 if (
                     session_data.get("user_id") != user.user_id
                     or session_data.get("tenant_id") != user.tenant_id
                 ):
-                    raise HTTPException(status_code=401, detail="Session validation failed")
+                    raise HTTPException(
+                        status_code=401, detail="Session validation failed"
+                    )
         except Exception as e:
             logger.error(f"Session validation error: {e}")
 
@@ -484,7 +505,10 @@ class WebSocketAuthenticator:
         timeout = timedelta(minutes=self.session_timeout_minutes)
 
         for session_id, session in self.active_sessions.items():
-            if datetime.utcnow() - session.last_heartbeat > timeout or not session.is_active:
+            if (
+                datetime.utcnow() - session.last_heartbeat > timeout
+                or not session.is_active
+            ):
                 expired_sessions.append(session_id)
 
         for session_id in expired_sessions:

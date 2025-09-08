@@ -80,7 +80,9 @@ class AIMLAPIManager:
 
     def __init__(self):
         if not hasattr(self, "_initialized"):
-            self.api_key = os.getenv("AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9")
+            self.api_key = os.getenv(
+                "AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"
+            )
             self.base_url = os.getenv("AIMLAPI_BASE_URL", "https://api.aimlapi.com/v1")
 
             # Initialize OpenAI-compatible client
@@ -181,7 +183,12 @@ class AIMLAPIManager:
             "grok-4-heavy": AIMLModelConfig(
                 model_id="x-ai/grok-4-heavy",
                 family=AIMLModelFamily.GROK,
-                capabilities=["multi_agent_reasoning", "complex_problems", "vision", "tools"],
+                capabilities=[
+                    "multi_agent_reasoning",
+                    "complex_problems",
+                    "vision",
+                    "tools",
+                ],
                 context_window=256000,
                 max_tokens=100000,
                 supports_vision=True,
@@ -191,7 +198,13 @@ class AIMLAPIManager:
             "grok-4": AIMLModelConfig(
                 model_id="x-ai/grok-4-0709",
                 family=AIMLModelFamily.GROK,
-                capabilities=["chat", "reasoning", "vision", "tools", "real_time_search"],
+                capabilities=[
+                    "chat",
+                    "reasoning",
+                    "vision",
+                    "tools",
+                    "real_time_search",
+                ],
                 context_window=256000,
                 max_tokens=32768,
                 supports_vision=True,
@@ -304,7 +317,12 @@ class AIMLAPIManager:
             "llama-4-scout": AIMLModelConfig(
                 model_id="meta-llama/llama-4-scout",
                 family=AIMLModelFamily.LLAMA,
-                capabilities=["reconnaissance", "pattern_finding", "repository_scouting", "tools"],
+                capabilities=[
+                    "reconnaissance",
+                    "pattern_finding",
+                    "repository_scouting",
+                    "tools",
+                ],
                 context_window=131072,
                 max_tokens=16384,
                 supports_tools=True,
@@ -322,7 +340,13 @@ class AIMLAPIManager:
             "qwen3-coder-480b": AIMLModelConfig(
                 model_id="alibaba/qwen3-coder-480b-a35b-instruct",
                 family=AIMLModelFamily.QWEN,
-                capabilities=["coding", "agentic", "tools", "reasoning", "long_context"],
+                capabilities=[
+                    "coding",
+                    "agentic",
+                    "tools",
+                    "reasoning",
+                    "long_context",
+                ],
                 context_window=256000,  # Can handle up to 1M with extrapolation
                 max_tokens=65536,
                 supports_tools=True,
@@ -365,7 +389,11 @@ class AIMLAPIManager:
             "gemini-2.5-flash": AIMLModelConfig(
                 model_id="google/gemini-2.5-flash",
                 family=AIMLModelFamily.GEMINI25,
-                capabilities=["fast_processing", "repository_scanning", "quick_analysis"],
+                capabilities=[
+                    "fast_processing",
+                    "repository_scanning",
+                    "quick_analysis",
+                ],
                 context_window=100000,
                 max_tokens=16384,
                 supports_vision=True,
@@ -402,7 +430,12 @@ class AIMLAPIManager:
             "sonar-pro": AIMLModelConfig(
                 model_id="perplexity/sonar-pro",
                 family=AIMLModelFamily.PERPLEXITY,
-                capabilities=["web_search", "real_time_info", "citation_heavy", "research"],
+                capabilities=[
+                    "web_search",
+                    "real_time_info",
+                    "citation_heavy",
+                    "research",
+                ],
                 context_window=128000,
                 max_tokens=16384,
                 supports_tools=True,
@@ -420,7 +453,9 @@ class AIMLAPIManager:
     def list_models(self, family: Optional[AIMLModelFamily] = None) -> list[str]:
         """List available models, optionally filtered by family"""
         if family:
-            return [name for name, config in self.models.items() if config.family == family]
+            return [
+                name for name, config in self.models.items() if config.family == family
+            ]
         return list(self.models.keys())
 
     def get_best_model_for_task(
@@ -463,7 +498,9 @@ class AIMLAPIManager:
         ]
 
         for family in priority_order:
-            family_models = [name for name, config in candidates if config.family == family]
+            family_models = [
+                name for name, config in candidates if config.family == family
+            ]
             if family_models:
                 return family_models[0]
 

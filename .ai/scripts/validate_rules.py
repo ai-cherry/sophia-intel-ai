@@ -51,7 +51,12 @@ class RulesValidator:
                 # Skip test directories and node_modules
                 if any(
                     part in str(file_path)
-                    for part in ["node_modules", "__pycache__", ".git", "tests/fixtures"]
+                    for part in [
+                        "node_modules",
+                        "__pycache__",
+                        ".git",
+                        "tests/fixtures",
+                    ]
                 ):
                     continue
 
@@ -128,7 +133,10 @@ class RulesValidator:
         for file_path in self.project_root.rglob("*"):
             if file_path.is_file():
                 # Skip git files and dependencies
-                if any(part in str(file_path) for part in [".git", "node_modules", "__pycache__"]):
+                if any(
+                    part in str(file_path)
+                    for part in [".git", "node_modules", "__pycache__"]
+                ):
                     continue
 
                 mod_time = datetime.fromtimestamp(file_path.stat().st_mtime)
@@ -243,7 +251,9 @@ class RulesValidator:
                     unapproved = []
                     for line in content.split("\n"):
                         if line and not line.startswith("#"):
-                            package = line.split("==")[0].split(">=")[0].split("<")[0].strip()
+                            package = (
+                                line.split("==")[0].split(">=")[0].split("<")[0].strip()
+                            )
 
                             # Check if package is in approved list
                             approved = False
@@ -254,7 +264,11 @@ class RulesValidator:
                                             approved = True
                                             break
 
-                            if not approved and package and package not in ["", "-r", "-e"]:
+                            if (
+                                not approved
+                                and package
+                                and package not in ["", "-r", "-e"]
+                            ):
                                 unapproved.append(package)
 
                     if unapproved:
@@ -282,7 +296,9 @@ class RulesValidator:
                     for dep, _version in dependencies.items():
                         # Check major frameworks
                         if dep in ["vue", "angular", "svelte", "ember"]:
-                            self.errors.append(f"❌ Unapproved framework in {package_file}: {dep}")
+                            self.errors.append(
+                                f"❌ Unapproved framework in {package_file}: {dep}"
+                            )
 
                 except Exception as e:
                     self.warnings.append(f"⚠️  Could not read {package_file}: {e}")

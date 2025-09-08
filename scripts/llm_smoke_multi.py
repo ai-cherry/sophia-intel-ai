@@ -103,11 +103,21 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Multi-transport LLM smoke test")
     parser.add_argument("--provider", help="Provider to test (e.g., openai, anthropic)")
     parser.add_argument("--model", help="Model ID for the provider")
-    parser.add_argument("--prompt", default="Say 'ready' if you're online.", help="Test prompt")
-    parser.add_argument("--transport", choices=["direct", "portkey"], help="Force transport type")
-    parser.add_argument("--max-tokens", type=int, default=50, help="Max tokens to generate")
-    parser.add_argument("--temperature", type=float, default=0.0, help="Sampling temperature")
-    parser.add_argument("--test-all", action="store_true", help="Test all configured providers")
+    parser.add_argument(
+        "--prompt", default="Say 'ready' if you're online.", help="Test prompt"
+    )
+    parser.add_argument(
+        "--transport", choices=["direct", "portkey"], help="Force transport type"
+    )
+    parser.add_argument(
+        "--max-tokens", type=int, default=50, help="Max tokens to generate"
+    )
+    parser.add_argument(
+        "--temperature", type=float, default=0.0, help="Sampling temperature"
+    )
+    parser.add_argument(
+        "--test-all", action="store_true", help="Test all configured providers"
+    )
 
     args = parser.parse_args()
 

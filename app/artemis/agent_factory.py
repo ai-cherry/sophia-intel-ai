@@ -13,4 +13,3 @@ warn(
 )
 
 from app.artemis.factories.agent_factory import *  # noqa: F401,F403
-

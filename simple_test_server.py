@@ -43,7 +43,10 @@ try:
         update_memory,
     )
     from app.memory.unified.execution_store import ExecutionType, execution_store
-    from app.memory.unified.intelligence_store import IntelligenceType, intelligence_store
+    from app.memory.unified.intelligence_store import (
+        IntelligenceType,
+        intelligence_store,
+    )
     from app.memory.unified.knowledge_store import KnowledgeType, knowledge_store
     from app.memory.unified.pattern_store import PatternType, pattern_store
     from app.memory.unified.vector_store import vector_store
@@ -215,7 +218,8 @@ class ConnectionManager:
                 "avg_age_seconds": sum(ages) / len(ages) if ages else 0,
             },
             "total_messages_processed": sum(
-                meta.get("message_count", 0) for meta in self.connection_metadata.values()
+                meta.get("message_count", 0)
+                for meta in self.connection_metadata.values()
             ),
         }
 
@@ -246,7 +250,9 @@ class ConnectionManager:
             if isinstance(result, Exception):
                 connection_id = list(self.active_connections.keys())[i]
                 failed_connections.append(connection_id)
-                logger.warning(f"Failed to broadcast to connection {connection_id}: {result}")
+                logger.warning(
+                    f"Failed to broadcast to connection {connection_id}: {result}"
+                )
 
         # Clean up failed connections
         for connection_id in failed_connections:
@@ -254,7 +260,9 @@ class ConnectionManager:
             if websocket:
                 self.disconnect(websocket)
 
-    async def _safe_send_message(self, connection_id: str, websocket: WebSocket, message: dict):
+    async def _safe_send_message(
+        self, connection_id: str, websocket: WebSocket, message: dict
+    ):
         """Safely send message to a specific connection"""
         try:
             await websocket.send_text(json.dumps(message))
@@ -382,7 +390,9 @@ class APICache:
             logger.error(f"Cache SET error for {endpoint}: {e}")
             return False
 
-    async def delete(self, endpoint: str, query_params: dict = None, headers: dict = None) -> bool:
+    async def delete(
+        self, endpoint: str, query_params: dict = None, headers: dict = None
+    ) -> bool:
         """Delete cached response"""
         if not REDIS_AVAILABLE or not redis_manager:
             return False
@@ -405,12 +415,16 @@ class APICache:
         try:
             # Use Redis SCAN to find matching keys
             keys = []
-            async for key in redis_manager.redis.scan_iter(match=f"api_cache:{pattern}*"):
+            async for key in redis_manager.redis.scan_iter(
+                match=f"api_cache:{pattern}*"
+            ):
                 keys.append(key)
 
             if keys:
                 deleted = await redis_manager.redis.delete(*keys)
-                logger.info(f"Cleared {deleted} cache entries matching pattern: {pattern}")
+                logger.info(
+                    f"Cleared {deleted} cache entries matching pattern: {pattern}"
+                )
                 return deleted
             else:
                 return 0
@@ -452,7 +466,9 @@ api_cache = APICache()
 
 
 def cached_endpoint(
-    ttl: Optional[int] = None, include_query_params: bool = True, include_headers: bool = False
+    ttl: Optional[int] = None,
+    include_query_params: bool = True,
+    include_headers: bool = False,
 ):
     """Decorator for caching API endpoint responses"""
 
@@ -463,7 +479,9 @@ def cached_endpoint(
             endpoint = request.url.path if request else func.__name__
 
             # Extract parameters for cache key
-            query_params = dict(request.query_params) if request and include_query_params else None
+            query_params = (
+                dict(request.query_params) if request and include_query_params else None
+            )
             headers = dict(request.headers) if request and include_headers else None
 
             # Try to get from cache first
@@ -474,11 +492,15 @@ def cached_endpoint(
 
             # Execute the original function
             response = (
-                await func(request, *args, **kwargs) if request else await func(*args, **kwargs)
+                await func(request, *args, **kwargs)
+                if request
+                else await func(*args, **kwargs)
             )
 
             # Cache the response
-            await api_cache.set(endpoint, response, query_params, headers, custom_ttl=ttl)
+            await api_cache.set(
+                endpoint, response, query_params, headers, custom_ttl=ttl
+            )
 
             return response
 
@@ -599,11 +621,17 @@ async def system_status(request: Request):
     return {
         "systems": {"total": 3, "active": 3, "errors": 0},
         "infrastructure": {
-            "weaviate": {"status": "healthy", "url": "http://localhost:8081", "port": 8081},
+            "weaviate": {
+                "status": "healthy",
+                "url": "http://localhost:8081",
+                "port": 8081,
+            },
             "postgresql": {"status": "healthy", "host": "localhost", "port": 5432},
             "redis": {"status": "healthy", "host": "localhost", "port": 6379},
         },
-        "ui": {"agent_dashboard": {"status": "running", "url": "http://localhost:3001"}},
+        "ui": {
+            "agent_dashboard": {"status": "running", "url": "http://localhost:3001"}
+        },
         "cost": {"today": 0.00, "tokens": 0},
         "health_score": 100,
         "cache_enabled": REDIS_AVAILABLE,
@@ -760,7 +788,9 @@ async def execute_command(request: CommandRequest):
     elif "swarm" in command or "spawn" in command:
         result = "Code generation swarm spawned successfully. Agent ID: GENESIS-001"
         # Update active systems count
-        manager.system_stats["active_systems"] = min(5, manager.system_stats["active_systems"] + 1)
+        manager.system_stats["active_systems"] = min(
+            5, manager.system_stats["active_systems"] + 1
+        )
     elif "debug" in command:
         result = "Debug mode activated. Enhanced logging enabled."
     elif "optimize" in command:
@@ -881,13 +911,19 @@ async def optimize_systems():
     result = {
         "action": "optimize",
         "status": "completed",
-        "improvements": {"performance": "+15%", "memory_usage": "-8%", "response_time": "-12%"},
+        "improvements": {
+            "performance": "+15%",
+            "memory_usage": "-8%",
+            "response_time": "-12%",
+        },
         "message": "System optimization completed successfully",
         "timestamp": datetime.now().isoformat(),
     }
 
     # Slightly improve health score
-    manager.system_stats["health_score"] = min(100, manager.system_stats["health_score"] + 1)
+    manager.system_stats["health_score"] = min(
+        100, manager.system_stats["health_score"] + 1
+    )
 
     await manager.broadcast(
         {
@@ -922,14 +958,18 @@ async def sophia_chat(request: ChatRequest):
         # Search actual Gong data from memory
         gong_results = []
         for memory_id, data in gong_memory_store.items():
-            if data.get("source") == "gong_integration" or "gong" in data.get("tags", []):
+            if data.get("source") == "gong_integration" or "gong" in data.get(
+                "tags", []
+            ):
                 gong_results.append(data)
 
         if gong_results:
             # Create dynamic response based on actual data
             recent_calls = len(gong_results)
             latest_content = (
-                gong_results[-1].get("content", "No content") if gong_results else "No recent calls"
+                gong_results[-1].get("content", "No content")
+                if gong_results
+                else "No recent calls"
             )
             response = f"**Real Gong Intelligence:** I found {recent_calls} Gong events in memory. Latest: {latest_content[:200]}{'...' if len(latest_content) > 200 else ''} This data comes from the active n8n → memory pipeline that's processing your actual Gong webhooks."
         else:
@@ -1025,12 +1065,19 @@ async def search_memory(query: str = "", source: str = "", limit: int = 10):
             or query.lower() in data.get("topic", "").lower()
         ):
             if not source or data.get("source") == source:
-                results.append({"memory_id": memory_id, "relevance_score": 0.85, "data": data})
+                results.append(
+                    {"memory_id": memory_id, "relevance_score": 0.85, "data": data}
+                )
 
         if len(results) >= limit:
             break
 
-    return {"status": "success", "query": query, "results_found": len(results), "results": results}
+    return {
+        "status": "success",
+        "query": query,
+        "results_found": len(results),
+        "results": results,
+    }
 
 
 # Research endpoint for Intelligence Hub
@@ -1060,7 +1107,11 @@ async def analyze_document():
     """Handle document analysis requests"""
     result = "<strong>Document Analysis Complete:</strong>\n\nExecutive Summary: Document structure is solid with key insights identified.\n\nKey Points:\n• Strategic implications are clear and actionable\n• Technical requirements are well-defined\n• Implementation timeline is realistic\n\n<em>Artemis Critique: Actually not bad - whoever wrote this knew what they were doing.</em>"
 
-    return {"result": result, "status": "success", "timestamp": datetime.now().isoformat()}
+    return {
+        "result": result,
+        "status": "success",
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 # MCP Status endpoints to fix 404 errors
@@ -1169,7 +1220,11 @@ async def get_all_mcp_status(request: Request):
                 ],
             },
         },
-        "summary": {"total_servers": 6, "operational_servers": 6, "total_connections": 12},
+        "summary": {
+            "total_servers": 6,
+            "operational_servers": 6,
+            "total_connections": 12,
+        },
     }
 
 
@@ -1316,7 +1371,9 @@ async def clear_cache_pattern(pattern: str):
             "timestamp": datetime.now().isoformat(),
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to clear cache pattern: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to clear cache pattern: {str(e)}"
+        )
 
 
 @app.post("/api/cache/warm")
@@ -1412,7 +1469,9 @@ async def discover_mcp_servers(
 ):
     """Discover MCP servers based on criteria"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Central Registry not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Central Registry not available"
+        )
 
     try:
         registry = await get_central_registry()
@@ -1423,12 +1482,18 @@ async def discover_mcp_servers(
         status_list = [ServerStatus(status_filter)] if status_filter else None
 
         servers = await registry.discover_servers(
-            domain=domain_filter, capabilities=capability_filter, status_filter=status_list
+            domain=domain_filter,
+            capabilities=capability_filter,
+            status_filter=status_list,
         )
 
         return {
             "timestamp": datetime.now().isoformat(),
-            "query": {"domain": domain, "capability": capability, "status_filter": status_filter},
+            "query": {
+                "domain": domain,
+                "capability": capability,
+                "status_filter": status_filter,
+            },
             "servers_found": len(servers),
             "servers": [server.dict() for server in servers],
         }
@@ -1442,7 +1507,9 @@ async def discover_mcp_servers(
 async def get_mcp_server_details(server_id: str):
     """Get detailed information about a specific MCP server"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Central Registry not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Central Registry not available"
+        )
 
     try:
         registry = await get_central_registry()
@@ -1468,7 +1535,9 @@ async def get_mcp_server_details(server_id: str):
 async def update_mcp_server_status(server_id: str, status_data: dict):
     """Update the status of an MCP server"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Central Registry not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Central Registry not available"
+        )
 
     try:
         registry = await get_central_registry()
@@ -1495,7 +1564,9 @@ async def update_mcp_server_status(server_id: str, status_data: dict):
 async def register_mcp_server(registration_data: dict):
     """Register a new MCP server with the central registry"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Central Registry not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Central Registry not available"
+        )
 
     try:
         registry = await get_central_registry()
@@ -1505,9 +1576,13 @@ async def register_mcp_server(registration_data: dict):
             server_id=registration_data["server_id"],
             name=registration_data["name"],
             domain=MCPDomain(registration_data["domain"]),
-            capabilities=[MCPCapabilityType(cap) for cap in registration_data["capabilities"]],
+            capabilities=[
+                MCPCapabilityType(cap) for cap in registration_data["capabilities"]
+            ],
             endpoint=registration_data["endpoint"],
-            connection_type=ConnectionType(registration_data.get("connection_type", "websocket")),
+            connection_type=ConnectionType(
+                registration_data.get("connection_type", "websocket")
+            ),
             priority=registration_data.get("priority", 10),
             max_connections=registration_data.get("max_connections", 10),
             timeout_seconds=registration_data.get("timeout_seconds", 30),
@@ -1536,7 +1611,9 @@ async def register_mcp_server(registration_data: dict):
 async def unregister_mcp_server(server_id: str):
     """Unregister an MCP server from the central registry"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Central Registry not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Central Registry not available"
+        )
 
     try:
         registry = await get_central_registry()
@@ -1563,7 +1640,9 @@ async def unregister_mcp_server(server_id: str):
 async def get_available_capabilities():
     """Get all available MCP capabilities across domains"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Central Registry not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Central Registry not available"
+        )
 
     try:
         # Get capabilities from enum
@@ -1578,7 +1657,10 @@ async def get_available_capabilities():
             ],
             "sophia": [
                 {"name": cap.value, "description": "Sophia domain capability"}
-                for cap in [MCPCapabilityType.BUSINESS_ANALYTICS, MCPCapabilityType.MEMORY]
+                for cap in [
+                    MCPCapabilityType.BUSINESS_ANALYTICS,
+                    MCPCapabilityType.MEMORY,
+                ]
             ],
             "shared": [
                 {"name": cap.value, "description": "Shared domain capability"}
@@ -1602,10 +1684,14 @@ async def get_available_capabilities():
 
 
 @app.get("/api/mcp/registry/load-balance/{domain}/{capability}")
-async def get_load_balanced_server(domain: str, capability: str, strategy: str = "priority"):
+async def get_load_balanced_server(
+    domain: str, capability: str, strategy: str = "priority"
+):
     """Get the best server for a specific request using load balancing"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Central Registry not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Central Registry not available"
+        )
 
     try:
         registry = await get_central_registry()
@@ -1619,12 +1705,17 @@ async def get_load_balanced_server(domain: str, capability: str, strategy: str =
 
         if not selected_server:
             raise HTTPException(
-                status_code=404, detail=f"No available servers for {domain}/{capability}"
+                status_code=404,
+                detail=f"No available servers for {domain}/{capability}",
             )
 
         return {
             "timestamp": datetime.now().isoformat(),
-            "request": {"domain": domain, "capability": capability, "strategy": strategy},
+            "request": {
+                "domain": domain,
+                "capability": capability,
+                "strategy": strategy,
+            },
             "selected_server": selected_server.dict(),
             "load_balance_success": True,
         }
@@ -1632,7 +1723,9 @@ async def get_load_balanced_server(domain: str, capability: str, strategy: str =
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Failed to get load balanced server for {domain}/{capability}: {e}")
+        logger.error(
+            f"Failed to get load balanced server for {domain}/{capability}: {e}"
+        )
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1640,7 +1733,9 @@ async def get_load_balanced_server(domain: str, capability: str, strategy: str =
 async def get_mcp_bridge_status():
     """Get status of MCP bridge integration"""
     if not MCP_REGISTRY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="MCP Bridge integration not available")
+        raise HTTPException(
+            status_code=503, detail="MCP Bridge integration not available"
+        )
 
     try:
         bridge_manager = await get_bridge_manager()
@@ -1668,7 +1763,9 @@ async def get_mcp_bridge_status():
 async def get_memory_health():
     """Get comprehensive memory system health status"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         # Initialize memory systems
@@ -1694,14 +1791,20 @@ async def get_memory_health():
         }
     except Exception as e:
         logger.error(f"Memory health check failed: {e}")
-        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 @app.post("/api/memory/store")
 async def store_memory_content(request: MemoryStoreRequest):
     """Store content in unified memory system"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         # Map string values to enums
@@ -1721,8 +1824,12 @@ async def store_memory_content(request: MemoryStoreRequest):
             "low": MemoryPriority.LOW,
         }
 
-        memory_context = context_map.get(request.context.lower(), MemoryContext.KNOWLEDGE)
-        memory_priority = priority_map.get(request.priority.lower(), MemoryPriority.STANDARD)
+        memory_context = context_map.get(
+            request.context.lower(), MemoryContext.KNOWLEDGE
+        )
+        memory_priority = priority_map.get(
+            request.priority.lower(), MemoryPriority.STANDARD
+        )
 
         # Store memory
         memory_id = await store_memory(
@@ -1756,7 +1863,9 @@ async def store_memory_content(request: MemoryStoreRequest):
 async def get_memory_by_id(memory_id: str):
     """Retrieve specific memory by ID"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         memory_entry = await get_memory(memory_id)
@@ -1793,7 +1902,9 @@ async def get_memory_by_id(memory_id: str):
 async def search_memory_content(request: MemorySearchRequest):
     """Search memory content across all stores"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         # Map context filters
@@ -1869,13 +1980,17 @@ async def search_memory_content(request: MemorySearchRequest):
 async def update_memory_content(memory_id: str, request: MemoryUpdateRequest):
     """Update existing memory content"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         success = await update_memory(memory_id, request.content)
 
         if not success:
-            raise HTTPException(status_code=404, detail="Memory not found or update failed")
+            raise HTTPException(
+                status_code=404, detail="Memory not found or update failed"
+            )
 
         return {
             "status": "success",
@@ -1895,13 +2010,17 @@ async def update_memory_content(memory_id: str, request: MemoryUpdateRequest):
 async def delete_memory_content(memory_id: str):
     """Delete memory content"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         success = await delete_memory(memory_id)
 
         if not success:
-            raise HTTPException(status_code=404, detail="Memory not found or deletion failed")
+            raise HTTPException(
+                status_code=404, detail="Memory not found or deletion failed"
+            )
 
         return {
             "status": "success",
@@ -1924,7 +2043,9 @@ async def delete_memory_content(memory_id: str):
 async def rag_query(request: RAGQueryRequest):
     """Perform RAG query across unified memory system"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         # Map domain and synthesis mode
@@ -1969,7 +2090,9 @@ async def rag_query(request: RAGQueryRequest):
             "synthesized_context": result.synthesized_context,
             "key_insights": result.key_insights,
             "cross_references": result.cross_references,
-            "reasoning_chain": result.reasoning_chain if request.include_reasoning else [],
+            "reasoning_chain": (
+                result.reasoning_chain if request.include_reasoning else []
+            ),
             "processing_time_ms": result.processing_time_ms,
             "strategy_used": result.strategy_used.value,
             "synthesis_mode": result.synthesis_mode.value,
@@ -2003,7 +2126,9 @@ async def query_intelligence(
 ):
     """Query intelligence insights specifically"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         domain_map = {
@@ -2055,7 +2180,9 @@ async def query_intelligence(
 async def get_memory_analytics():
     """Get comprehensive memory system analytics"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         # Gather analytics from all components
@@ -2087,7 +2214,9 @@ async def get_memory_analytics():
             analytics["specialized_stores"][
                 "knowledge"
             ] = await knowledge_store.get_knowledge_summary()
-            analytics["specialized_stores"]["vector"] = await vector_store.get_vector_analytics()
+            analytics["specialized_stores"][
+                "vector"
+            ] = await vector_store.get_vector_analytics()
         except Exception as store_error:
             logger.warning(f"Failed to get some store analytics: {store_error}")
             analytics["specialized_stores"]["error"] = str(store_error)
@@ -2096,17 +2225,23 @@ async def get_memory_analytics():
             "status": "success",
             "analytics": analytics,
             "system_summary": {
-                "total_memory_requests": analytics["unified_memory"].get("total_requests", 0),
+                "total_memory_requests": analytics["unified_memory"].get(
+                    "total_requests", 0
+                ),
                 "cache_hit_rate": analytics["unified_memory"].get("cache_hits", 0)
                 / max(analytics["unified_memory"].get("total_requests", 1), 1),
-                "avg_response_time_ms": analytics["unified_memory"].get("avg_response_time_ms", 0),
+                "avg_response_time_ms": analytics["unified_memory"].get(
+                    "avg_response_time_ms", 0
+                ),
                 "routing_success_rate": (
                     analytics["memory_router"]["metrics"]["successful_routes"]
                     / max(analytics["memory_router"]["metrics"]["total_requests"], 1)
                     if analytics["memory_router"]["metrics"]["total_requests"] > 0
                     else 0
                 ),
-                "rag_queries": analytics["rag_system"]["performance_metrics"]["total_queries"],
+                "rag_queries": analytics["rag_system"]["performance_metrics"][
+                    "total_queries"
+                ],
             },
         }
 
@@ -2119,7 +2254,9 @@ async def get_memory_analytics():
 async def get_router_status():
     """Get detailed memory router status and configuration"""
     if not UNIFIED_MEMORY_AVAILABLE:
-        raise HTTPException(status_code=503, detail="Unified Memory System not available")
+        raise HTTPException(
+            status_code=503, detail="Unified Memory System not available"
+        )
 
     try:
         status = await memory_router.get_routing_status()

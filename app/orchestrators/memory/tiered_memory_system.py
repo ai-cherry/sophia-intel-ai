@@ -244,7 +244,9 @@ class SessionMemory:
         if message.get("role") == "user":
             # Track time patterns
             hour = datetime.now().hour
-            time_category = "morning" if hour < 12 else "afternoon" if hour < 18 else "evening"
+            time_category = (
+                "morning" if hour < 12 else "afternoon" if hour < 18 else "evening"
+            )
 
             if "time_preferences" not in self.user_patterns:
                 self.user_patterns["time_preferences"] = {}
@@ -255,9 +257,13 @@ class SessionMemory:
 
             # Track command style
             if content.startswith(("please", "could you", "can you")):
-                self.user_patterns["polite_style"] = self.user_patterns.get("polite_style", 0) + 1
+                self.user_patterns["polite_style"] = (
+                    self.user_patterns.get("polite_style", 0) + 1
+                )
             elif len(content.split()) <= 3:
-                self.user_patterns["concise_style"] = self.user_patterns.get("concise_style", 0) + 1
+                self.user_patterns["concise_style"] = (
+                    self.user_patterns.get("concise_style", 0) + 1
+                )
 
     def get_session_summary(self) -> dict:
         """Get session summary"""
@@ -357,7 +363,8 @@ class ProjectMemory:
             "description": description,
             "solution": solution,
             "tags": tags or [],
-            "occurrences": self.known_issues.get(issue_id, {}).get("occurrences", 0) + 1,
+            "occurrences": self.known_issues.get(issue_id, {}).get("occurrences", 0)
+            + 1,
             "last_seen": datetime.now().isoformat(),
         }
 
@@ -502,7 +509,9 @@ class GlobalMemory:
 
         # Keep only top 10 practices per category
         self.best_practices[category] = sorted(
-            self.best_practices[category], key=lambda x: x.get("success_rate", 0), reverse=True
+            self.best_practices[category],
+            key=lambda x: x.get("success_rate", 0),
+            reverse=True,
         )[:10]
 
     def record_pattern_usage(self, pattern_name: str, context: dict, success: bool):
@@ -519,13 +528,17 @@ class GlobalMemory:
             self.design_patterns[pattern_name]["success_count"] += 1
 
         self.design_patterns[pattern_name]["contexts"].append(
-            {"context": context, "success": success, "timestamp": datetime.now().isoformat()}
+            {
+                "context": context,
+                "success": success,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         # Keep only last 20 contexts
-        self.design_patterns[pattern_name]["contexts"] = self.design_patterns[pattern_name][
-            "contexts"
-        ][-20:]
+        self.design_patterns[pattern_name]["contexts"] = self.design_patterns[
+            pattern_name
+        ]["contexts"][-20:]
 
     def update_tech_knowledge(self, technology: str, knowledge: dict):
         """Update technology-specific knowledge"""
@@ -533,7 +546,9 @@ class GlobalMemory:
             self.tech_stack_knowledge[technology] = {}
 
         self.tech_stack_knowledge[technology].update(knowledge)
-        self.tech_stack_knowledge[technology]["last_updated"] = datetime.now().isoformat()
+        self.tech_stack_knowledge[technology][
+            "last_updated"
+        ] = datetime.now().isoformat()
 
     def get_recommendations(self, context: dict) -> list[dict]:
         """Get recommendations based on global knowledge"""
@@ -556,7 +571,9 @@ class GlobalMemory:
         # Check for relevant design patterns
         for pattern_name, pattern_data in self.design_patterns.items():
             if pattern_data["usage_count"] > 5:
-                success_rate = pattern_data["success_count"] / pattern_data["usage_count"]
+                success_rate = (
+                    pattern_data["success_count"] / pattern_data["usage_count"]
+                )
                 if success_rate > 0.7:
                     recommendations.append(
                         {
@@ -576,7 +593,10 @@ class MemorySystem:
     """
 
     def __init__(
-        self, session_id: str, project_path: Optional[str] = None, redis_url: Optional[str] = None
+        self,
+        session_id: str,
+        project_path: Optional[str] = None,
+        redis_url: Optional[str] = None,
     ):
         self.session_id = session_id
         self.project_path = project_path
@@ -595,7 +615,9 @@ class MemorySystem:
             await self.session.initialize()
             self._initialized = True
 
-    async def add_interaction(self, role: str, content: str, metadata: Optional[dict] = None):
+    async def add_interaction(
+        self, role: str, content: str, metadata: Optional[dict] = None
+    ):
         """Add an interaction to memory system"""
         # Add to working memory
         self.working.add_message(role, content, metadata)
@@ -614,7 +636,9 @@ class MemorySystem:
             if self.project:
                 self.project.save_to_cache()
 
-    async def get_context(self, query: str, include_tiers: list[MemoryTier] = None) -> dict:
+    async def get_context(
+        self, query: str, include_tiers: list[MemoryTier] = None
+    ) -> dict:
         """Get relevant context from specified memory tiers"""
         context = {"query": query, "timestamp": datetime.now().isoformat()}
 
@@ -667,12 +691,18 @@ class MemorySystem:
             },
             "session_memory": self.session.get_session_summary(),
             "project_memory": {
-                "architecture_modules": len(self.project.architecture_map) if self.project else 0,
+                "architecture_modules": (
+                    len(self.project.architecture_map) if self.project else 0
+                ),
                 "known_issues": len(self.project.known_issues) if self.project else 0,
-                "conventions": len(self.project.convention_patterns) if self.project else 0,
+                "conventions": (
+                    len(self.project.convention_patterns) if self.project else 0
+                ),
             },
             "global_memory": {
-                "best_practices": sum(len(p) for p in self.global_memory.best_practices.values()),
+                "best_practices": sum(
+                    len(p) for p in self.global_memory.best_practices.values()
+                ),
                 "design_patterns": len(self.global_memory.design_patterns),
                 "tech_knowledge": len(self.global_memory.tech_stack_knowledge),
             },

@@ -11,12 +11,25 @@ import redis.asyncio as redis
 import structlog
 
 # Import our search quality components
-from contextual_bandit import ProductionContextualBandit, ProviderContext, create_contextual_bandit
-from cross_encoder_reranking import OptimizedCrossEncoderReranker, create_cross_encoder_reranker
+from contextual_bandit import (
+    ProductionContextualBandit,
+    ProviderContext,
+    create_contextual_bandit,
+)
+from cross_encoder_reranking import (
+    OptimizedCrossEncoderReranker,
+    create_cross_encoder_reranker,
+)
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 from pydantic import BaseModel, Field
 from reciprocal_rank_fusion import (
     OptimizedReciprocalRankFusion,
@@ -47,12 +60,16 @@ structlog.configure(
 logger = structlog.get_logger()
 
 # Prometheus metrics
-REQUEST_COUNT = Counter("search_quality_requests_total", "Total requests", ["endpoint", "method"])
+REQUEST_COUNT = Counter(
+    "search_quality_requests_total", "Total requests", ["endpoint", "method"]
+)
 REQUEST_DURATION = Histogram(
     "search_quality_request_duration_seconds", "Request duration", ["endpoint"]
 )
 ACTIVE_REQUESTS = Gauge("search_quality_active_requests", "Active requests")
-BANDIT_SELECTIONS = Counter("bandit_selections_total", "Bandit selections", ["provider"])
+BANDIT_SELECTIONS = Counter(
+    "bandit_selections_total", "Bandit selections", ["provider"]
+)
 RRF_FUSIONS = Counter("rrf_fusions_total", "RRF fusions")
 RERANKING_OPERATIONS = Counter("reranking_operations_total", "Reranking operations")
 
@@ -175,7 +192,10 @@ async def lifespan(app: FastAPI):
 
         # Warm up models with sample data
         sample_queries = ["artificial intelligence", "machine learning", "data science"]
-        sample_docs = ["AI is transforming industries", "ML algorithms improve over time"]
+        sample_docs = [
+            "AI is transforming industries",
+            "ML algorithms improve over time",
+        ]
         await reranker.warm_up_model(sample_queries, sample_docs)
 
         logger.info("Search Quality Service started successfully")
@@ -433,7 +453,9 @@ async def rerank_results(request: RerankingRequest):
         with REQUEST_DURATION.labels(endpoint="rerank").time():
             # Perform reranking
             reranked_results, reranking_metadata = await reranker.rerank_results(
-                query=request.query, results=request.results, preserve_top_k=request.preserve_top_k
+                query=request.query,
+                results=request.results,
+                preserve_top_k=request.preserve_top_k,
             )
 
             # Update metrics
@@ -507,8 +529,8 @@ async def search_pipeline(
             # Step 1: Provider selection (if not specified)
             if not providers:
                 provider_context = ProviderContext(**context.dict())
-                selected_provider, confidence, selection_metadata = await bandit.select_provider(
-                    context=provider_context
+                selected_provider, confidence, selection_metadata = (
+                    await bandit.select_provider(context=provider_context)
                 )
                 providers = [selected_provider]
 
@@ -538,7 +560,10 @@ async def search_pipeline(
 
             # Step 3: RRF Fusion
             fused_results, fusion_metadata = rrf_fusion.fuse_results(
-                provider_results=actual_results, query=query, boost_recent=True, boost_quality=True
+                provider_results=actual_results,
+                query=query,
+                boost_recent=True,
+                boost_quality=True,
             )
 
             # Step 4: Cross-encoder reranking (if enabled)
@@ -559,7 +584,9 @@ async def search_pipeline(
                     results_for_reranking.append(result_dict)
 
                 reranked_results, reranking_metadata = await reranker.rerank_results(
-                    query=query, results=results_for_reranking, preserve_top_k=preserve_top_k
+                    query=query,
+                    results=results_for_reranking,
+                    preserve_top_k=preserve_top_k,
                 )
 
                 # Convert back to dict format
@@ -599,9 +626,16 @@ async def search_pipeline(
                     }
                     final_results.append(result_dict)
 
-                pipeline_metadata = {"fusion_metadata": fusion_metadata, "reranking_enabled": False}
+                pipeline_metadata = {
+                    "fusion_metadata": fusion_metadata,
+                    "reranking_enabled": False,
+                }
 
-            return {"query": query, "results": final_results, "metadata": pipeline_metadata}
+            return {
+                "query": query,
+                "results": final_results,
+                "metadata": pipeline_metadata,
+            }
 
     except Exception as e:
         logger.error(f"Search pipeline failed: {e}")

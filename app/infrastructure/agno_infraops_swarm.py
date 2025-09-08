@@ -55,7 +55,11 @@ class InfraAgent:
         self.tools = tools
         self.instructions = instructions
         self.memory = []
-        self.metrics = {"tasks_completed": 0, "avg_response_time_ms": 0.0, "success_rate": 1.0}
+        self.metrics = {
+            "tasks_completed": 0,
+            "avg_response_time_ms": 0.0,
+            "success_rate": 1.0,
+        }
 
     async def process(self, task: InfraTask) -> dict[str, Any]:
         """Process infrastructure task"""
@@ -72,7 +76,9 @@ class InfraAgent:
             self._update_metrics(latency, success=True)
 
             # Store in memory
-            self.memory.append({"task_id": task.id, "result": result, "timestamp": datetime.now()})
+            self.memory.append(
+                {"task_id": task.id, "result": result, "timestamp": datetime.now()}
+            )
 
             return {
                 "status": "success",
@@ -108,7 +114,9 @@ class InfraAgent:
 
         # Update success rate
         if success:
-            self.metrics["success_rate"] = (self.metrics["success_rate"] * (n - 1) + 1) / n
+            self.metrics["success_rate"] = (
+                self.metrics["success_rate"] * (n - 1) + 1
+            ) / n
         else:
             self.metrics["success_rate"] = (self.metrics["success_rate"] * (n - 1)) / n
 
@@ -280,11 +288,19 @@ class InfraOpsSwarm:
     def _select_agents_for_task(self, task: InfraTask) -> list[str]:
         """Select relevant agents based on task type"""
         agent_mapping = {
-            InfraTaskType.DEPLOYMENT: ["InfraLead", "DeploymentEngine", "SecurityGuard"],
+            InfraTaskType.DEPLOYMENT: [
+                "InfraLead",
+                "DeploymentEngine",
+                "SecurityGuard",
+            ],
             InfraTaskType.SECURITY_SCAN: ["SecurityGuard", "InfraLead"],
             InfraTaskType.SECRET_ROTATION: ["SecurityGuard", "DeploymentEngine"],
             InfraTaskType.HEALTH_CHECK: ["MonitoringAgent", "RecoveryAgent"],
-            InfraTaskType.INCIDENT_RESPONSE: ["RecoveryAgent", "InfraLead", "MonitoringAgent"],
+            InfraTaskType.INCIDENT_RESPONSE: [
+                "RecoveryAgent",
+                "InfraLead",
+                "MonitoringAgent",
+            ],
             InfraTaskType.SCALING: ["DeploymentEngine", "MonitoringAgent"],
             InfraTaskType.BACKUP: ["DeploymentEngine", "RecoveryAgent"],
         }
@@ -313,7 +329,9 @@ class InfraOpsSwarm:
 
         return valid_results
 
-    async def _achieve_consensus(self, agent_results: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _achieve_consensus(
+        self, agent_results: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Achieve consensus among agents for approval decisions"""
         # Count successful agents
         successful = sum(1 for r in agent_results if r["status"] == "success")
@@ -330,7 +348,9 @@ class InfraOpsSwarm:
         }
 
     def _aggregate_results(
-        self, agent_results: list[dict[str, Any]], consensus_result: Optional[dict[str, Any]]
+        self,
+        agent_results: list[dict[str, Any]],
+        consensus_result: Optional[dict[str, Any]],
     ) -> dict[str, Any]:
         """Aggregate results from all agents"""
         # Collect all actions and recommendations
@@ -413,7 +433,11 @@ if __name__ == "__main__":
         deployment_task = {
             "type": "deployment",
             "description": "Deploy new API service to production",
-            "context": {"environment": "production", "service": "api-gateway", "version": "v2.1.0"},
+            "context": {
+                "environment": "production",
+                "service": "api-gateway",
+                "version": "v2.1.0",
+            },
             "require_approval": True,
             "priority": 8,
         }
@@ -438,12 +462,16 @@ if __name__ == "__main__":
         status = swarm.get_swarm_status()
         logger.info("\nSwarm status:")
         logger.info(f"  Total tasks: {status['swarm_metrics']['total_tasks']}")
-        logger.info(f"  Avg latency: {status['swarm_metrics']['avg_swarm_latency_ms']:.2f}ms")
+        logger.info(
+            f"  Avg latency: {status['swarm_metrics']['avg_swarm_latency_ms']:.2f}ms"
+        )
 
         # Health check
         health = await swarm.health_check()
         logger.info("\nHealth check:")
-        logger.info(f"  Healthy agents: {health['healthy_agents']}/{health['total_agents']}")
+        logger.info(
+            f"  Healthy agents: {health['healthy_agents']}/{health['total_agents']}"
+        )
         logger.info(f"  Health: {health['health_percentage']:.1f}%")
 
     asyncio.run(test_infraops_swarm())

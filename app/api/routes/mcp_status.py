@@ -10,7 +10,14 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from pydantic import BaseModel
 
 from app.api.middleware.auth import get_current_user
@@ -75,7 +82,9 @@ class MCPSystemOverview(BaseModel):
 # ==================== HELPER FUNCTIONS ====================
 
 
-async def _get_server_health_status(server_name: str, server_config: Any) -> MCPServerHealth:
+async def _get_server_health_status(
+    server_name: str, server_config: Any
+) -> MCPServerHealth:
     """Get detailed health status for a specific MCP server"""
     try:
         # Simulate health check - in production this would ping the actual server
@@ -133,7 +142,9 @@ async def _get_server_health_status(server_name: str, server_config: Any) -> MCP
             connections={
                 "active": active_connections,
                 "max": max_connections,
-                "utilization": active_connections / max_connections if max_connections > 0 else 0.0,
+                "utilization": (
+                    active_connections / max_connections if max_connections > 0 else 0.0
+                ),
             },
             business_context=business_context,
         )
@@ -179,7 +190,11 @@ async def _get_server_performance_metrics(server_name: str) -> dict[str, Any]:
     # Adjust metrics based on server type
     if "filesystem" in server_name:
         base_metrics.update(
-            {"response_time_ms": 50, "throughput_ops_per_sec": 200, "uptime_percentage": 99.8}
+            {
+                "response_time_ms": 50,
+                "throughput_ops_per_sec": 200,
+                "uptime_percentage": 99.8,
+            }
         )
     elif "web_search" in server_name:
         base_metrics.update(
@@ -187,7 +202,11 @@ async def _get_server_performance_metrics(server_name: str) -> dict[str, Any]:
         )
     elif "analytics" in server_name:
         base_metrics.update(
-            {"response_time_ms": 180, "throughput_ops_per_sec": 125, "uptime_percentage": 99.8}
+            {
+                "response_time_ms": 180,
+                "throughput_ops_per_sec": 125,
+                "uptime_percentage": 99.8,
+            }
         )
 
     return base_metrics
@@ -237,7 +256,9 @@ async def _get_domain_summary(domain: str) -> MCPDomainSummary:
     for allocation in allocations:
         server_config = mcp_registry.servers.get(allocation.server_name)
         if server_config:
-            health = await _get_server_health_status(allocation.server_name, server_config)
+            health = await _get_server_health_status(
+                allocation.server_name, server_config
+            )
             server_healths.append(health)
 
     # Calculate summary metrics
@@ -247,10 +268,14 @@ async def _get_domain_summary(domain: str) -> MCPDomainSummary:
     down_servers = sum(1 for h in server_healths if h.status == "down")
 
     total_connections = sum(h.connections["active"] for h in server_healths)
-    avg_response_time = sum(h.response_time_ms for h in server_healths) / max(total_servers, 1)
+    avg_response_time = sum(h.response_time_ms for h in server_healths) / max(
+        total_servers, 1
+    )
 
     # Calculate overall health score
-    health_score = (operational_servers * 100 + degraded_servers * 50) / max(total_servers * 100, 1)
+    health_score = (operational_servers * 100 + degraded_servers * 50) / max(
+        total_servers * 100, 1
+    )
 
     # Add Pay Ready context for Sophia domain
     pay_ready_context = None
@@ -285,7 +310,11 @@ def _get_mythology_agents_status() -> list[dict[str, Any]]:
             "title": "Sales Intelligence & Market Analysis",
             "assigned_mcp_servers": ["sophia_web_search", "sophia_sales_intelligence"],
             "status": "operational",
-            "primary_metric": {"label": "Processing Volume", "value": "$2.1B", "trend": "up"},
+            "primary_metric": {
+                "label": "Processing Volume",
+                "value": "$2.1B",
+                "trend": "up",
+            },
             "pay_ready_context": "property_management_sales",
         },
         {
@@ -295,7 +324,11 @@ def _get_mythology_agents_status() -> list[dict[str, Any]]:
             "title": "Client Health & Portfolio Management",
             "assigned_mcp_servers": ["sophia_analytics", "shared_database"],
             "status": "operational",
-            "primary_metric": {"label": "Portfolio Health", "value": "88%", "trend": "stable"},
+            "primary_metric": {
+                "label": "Portfolio Health",
+                "value": "88%",
+                "trend": "stable",
+            },
             "pay_ready_context": "tenant_landlord_satisfaction",
         },
         {
@@ -305,7 +338,11 @@ def _get_mythology_agents_status() -> list[dict[str, Any]]:
             "title": "Strategic Operations",
             "assigned_mcp_servers": ["sophia_analytics", "shared_knowledge_base"],
             "status": "operational",
-            "primary_metric": {"label": "Strategic KPIs", "value": "94%", "trend": "up"},
+            "primary_metric": {
+                "label": "Strategic KPIs",
+                "value": "94%",
+                "trend": "up",
+            },
             "pay_ready_context": "strategic_initiatives",
         },
         {
@@ -325,7 +362,11 @@ def _get_mythology_agents_status() -> list[dict[str, Any]]:
             "title": "Performance & Monitoring",
             "assigned_mcp_servers": ["artemis_filesystem", "shared_indexing"],
             "status": "operational",
-            "primary_metric": {"label": "System Health", "value": "99.8%", "trend": "stable"},
+            "primary_metric": {
+                "label": "System Health",
+                "value": "99.8%",
+                "trend": "stable",
+            },
             "pay_ready_context": "performance_optimization",
         },
     ]
@@ -335,7 +376,9 @@ def _get_mythology_agents_status() -> list[dict[str, Any]]:
 
 
 @router.get("/", response_model=MCPSystemOverview)
-async def get_mcp_system_overview(user: str = Depends(get_current_user)) -> MCPSystemOverview:
+async def get_mcp_system_overview(
+    user: str = Depends(get_current_user),
+) -> MCPSystemOverview:
     """
     Get system-wide MCP status overview
 
@@ -384,11 +427,15 @@ async def get_mcp_system_overview(user: str = Depends(get_current_user)) -> MCPS
 
     except Exception as e:
         logger.error(f"Failed to get MCP system overview: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get system overview: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get system overview: {str(e)}"
+        )
 
 
 @router.get("/domain/{domain}", response_model=MCPDomainSummary)
-async def get_domain_status(domain: str, user: str = Depends(get_current_user)) -> MCPDomainSummary:
+async def get_domain_status(
+    domain: str, user: str = Depends(get_current_user)
+) -> MCPDomainSummary:
     """
     Get detailed status for a specific domain
 
@@ -405,7 +452,9 @@ async def get_domain_status(domain: str, user: str = Depends(get_current_user)) 
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to get domain status for {domain}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get domain status: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get domain status: {str(e)}"
+        )
 
 
 @router.get("/servers", response_model=list[MCPServerHealth])
@@ -443,7 +492,9 @@ async def get_all_servers_status(
 
     except Exception as e:
         logger.error(f"Failed to get servers status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get servers status: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get servers status: {str(e)}"
+        )
 
 
 @router.get("/server/{server_name}", response_model=MCPServerHealth)
@@ -459,7 +510,9 @@ async def get_server_status(
     try:
         server_config = mcp_registry.servers.get(server_name)
         if not server_config:
-            raise HTTPException(status_code=404, detail=f"Server not found: {server_name}")
+            raise HTTPException(
+                status_code=404, detail=f"Server not found: {server_name}"
+            )
 
         return await _get_server_health_status(server_name, server_config)
 
@@ -467,7 +520,9 @@ async def get_server_status(
         raise
     except Exception as e:
         logger.error(f"Failed to get server status for {server_name}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get server status: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get server status: {str(e)}"
+        )
 
 
 @router.get("/mythology-agents", response_model=list[dict[str, Any]])
@@ -487,7 +542,9 @@ async def get_mythology_agents_status(
 
 
 @router.post("/server/{server_name}/restart")
-async def restart_server(server_name: str, user: str = Depends(get_current_user)) -> dict[str, Any]:
+async def restart_server(
+    server_name: str, user: str = Depends(get_current_user)
+) -> dict[str, Any]:
     """
     Restart a specific MCP server (if supported)
 
@@ -497,7 +554,9 @@ async def restart_server(server_name: str, user: str = Depends(get_current_user)
     try:
         server_config = mcp_registry.servers.get(server_name)
         if not server_config:
-            raise HTTPException(status_code=404, detail=f"Server not found: {server_name}")
+            raise HTTPException(
+                status_code=404, detail=f"Server not found: {server_name}"
+            )
 
         # In production, this would trigger actual server restart
         # For now, just simulate the action
@@ -524,7 +583,9 @@ async def restart_server(server_name: str, user: str = Depends(get_current_user)
         raise
     except Exception as e:
         logger.error(f"Failed to restart server {server_name}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to restart server: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to restart server: {str(e)}"
+        )
 
 
 # ==================== WEBSOCKET ENDPOINT ====================

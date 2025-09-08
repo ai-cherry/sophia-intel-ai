@@ -84,7 +84,11 @@ class OpenRouterIntegration:
                 cost_per_1k_tokens=0.25,
                 max_tokens=4096,
                 context_window=200000,
-                recommended_use_cases=["quick_responses", "simple_queries", "classification"],
+                recommended_use_cases=[
+                    "quick_responses",
+                    "simple_queries",
+                    "classification",
+                ],
             ),
             "meta-llama/llama-3.1-8b-instruct": ModelConfig(
                 model_id="meta-llama/llama-3.1-8b-instruct",
@@ -113,7 +117,11 @@ class OpenRouterIntegration:
                 max_tokens=16384,
                 context_window=128000,
                 supports_function_calling=True,
-                recommended_use_cases=["function_calling", "structured_output", "reasoning"],
+                recommended_use_cases=[
+                    "function_calling",
+                    "structured_output",
+                    "reasoning",
+                ],
             ),
             # Premium tier - highest quality
             "anthropic/claude-3-opus": ModelConfig(
@@ -123,7 +131,11 @@ class OpenRouterIntegration:
                 cost_per_1k_tokens=15.0,
                 max_tokens=4096,
                 context_window=200000,
-                recommended_use_cases=["complex_analysis", "creative_writing", "expert_reasoning"],
+                recommended_use_cases=[
+                    "complex_analysis",
+                    "creative_writing",
+                    "expert_reasoning",
+                ],
             ),
             "openai/gpt-4": ModelConfig(
                 model_id="openai/gpt-4",
@@ -133,7 +145,11 @@ class OpenRouterIntegration:
                 max_tokens=8192,
                 context_window=8192,
                 supports_function_calling=True,
-                recommended_use_cases=["complex_reasoning", "code_generation", "expert_analysis"],
+                recommended_use_cases=[
+                    "complex_reasoning",
+                    "code_generation",
+                    "expert_analysis",
+                ],
             ),
         }
 
@@ -202,7 +218,9 @@ class OpenRouterIntegration:
         # Filter by cost constraint
         if max_cost_per_1k:
             available_models = [
-                m for m in available_models if self.models[m].cost_per_1k_tokens <= max_cost_per_1k
+                m
+                for m in available_models
+                if self.models[m].cost_per_1k_tokens <= max_cost_per_1k
             ]
 
         # Filter by function calling requirement
@@ -237,7 +255,9 @@ class OpenRouterIntegration:
 
             candidate = available_models[0]
 
-        logger.info(f"🎯 Selected model: {self.models[candidate].name} for use case: {use_case}")
+        logger.info(
+            f"🎯 Selected model: {self.models[candidate].name} for use case: {use_case}"
+        )
         return candidate
 
     @cached(ttl=300, prefix="openrouter_models")
@@ -276,7 +296,9 @@ class OpenRouterIntegration:
             # Select model if not specified
             if not model:
                 model = self.select_model(
-                    use_case=use_case, require_function_calling=bool(functions), prefer_speed=stream
+                    use_case=use_case,
+                    require_function_calling=bool(functions),
+                    prefer_speed=stream,
                 )
 
             # Get model config
@@ -329,7 +351,11 @@ class OpenRouterIntegration:
                     await self._track_usage(model, None, response_time, success=False)
 
                     return {
-                        "error": {"status": response.status, "message": error_text, "model": model}
+                        "error": {
+                            "status": response.status,
+                            "message": error_text,
+                            "model": model,
+                        }
                     }
 
         except Exception as e:
@@ -337,7 +363,9 @@ class OpenRouterIntegration:
             logger.error(f"❌ Chat completion error: {e}")
 
             # Track failed usage
-            await self._track_usage(model or "unknown", None, response_time, success=False)
+            await self._track_usage(
+                model or "unknown", None, response_time, success=False
+            )
 
             return {"error": {"message": str(e), "model": model}}
 
@@ -375,7 +403,8 @@ class OpenRouterIntegration:
             self.usage_stats.avg_response_time_ms = response_time
         else:
             self.usage_stats.avg_response_time_ms = (
-                alpha * response_time + (1 - alpha) * self.usage_stats.avg_response_time_ms
+                alpha * response_time
+                + (1 - alpha) * self.usage_stats.avg_response_time_ms
             )
 
         self.usage_stats.last_request_time = datetime.now().isoformat()
@@ -411,7 +440,10 @@ class OpenRouterIntegration:
         recommendations = []
 
         for model_id, config in self.models.items():
-            if not config.recommended_use_cases or use_case in config.recommended_use_cases:
+            if (
+                not config.recommended_use_cases
+                or use_case in config.recommended_use_cases
+            ):
                 score = 100  # Base score
 
                 # Adjust score based on tier and use case

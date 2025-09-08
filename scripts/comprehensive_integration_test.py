@@ -54,7 +54,9 @@ class ComprehensiveIntegrationTest:
             # Test basic memory operations
 
             # Test if memory system can be initialized
-            self.log("✅ MCP Server: Unified memory system imported successfully", "SUCCESS")
+            self.log(
+                "✅ MCP Server: Unified memory system imported successfully", "SUCCESS"
+            )
             self.results["mcp_server"] = {
                 "status": "working",
                 "memory_system": "UnifiedMemorySystem available",
@@ -85,7 +87,9 @@ class ComprehensiveIntegrationTest:
                 # We'll test via OpenRouter since it includes Together AI models
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
-                    headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"},
+                    headers={
+                        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"
+                    },
                     timeout=10.0,
                 )
 
@@ -94,7 +98,8 @@ class ComprehensiveIntegrationTest:
                     together_models = [
                         m
                         for m in models.get("data", [])
-                        if "together" in m.get("id", "").lower() or "m2-bert" in m.get("id", "")
+                        if "together" in m.get("id", "").lower()
+                        or "m2-bert" in m.get("id", "")
                     ]
 
                     self.log(
@@ -111,7 +116,10 @@ class ComprehensiveIntegrationTest:
 
         except Exception as e:
             self.log(f"❌ Together AI embeddings test failed: {e}", "ERROR")
-            self.results["together_ai_embeddings"] = {"status": "failed", "error": str(e)}
+            self.results["together_ai_embeddings"] = {
+                "status": "failed",
+                "error": str(e),
+            }
             return False
 
     async def test_openrouter_ai_swarms(self):
@@ -123,7 +131,9 @@ class ComprehensiveIntegrationTest:
                 # Get available models
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
-                    headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"},
+                    headers={
+                        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"
+                    },
                     timeout=10.0,
                 )
 
@@ -134,15 +144,22 @@ class ComprehensiveIntegrationTest:
                     # Filter for latest 2025 models
                     latest_models = {
                         "gpt_5": [m for m in model_data if "gpt-5" in m.get("id", "")],
-                        "gemini_25": [m for m in model_data if "gemini-2.5" in m.get("id", "")],
+                        "gemini_25": [
+                            m for m in model_data if "gemini-2.5" in m.get("id", "")
+                        ],
                         "claude_4": [
                             m
                             for m in model_data
-                            if "claude-4" in m.get("id", "") or "claude-sonnet-4" in m.get("id", "")
+                            if "claude-4" in m.get("id", "")
+                            or "claude-sonnet-4" in m.get("id", "")
                         ],
-                        "llama_4": [m for m in model_data if "llama-4" in m.get("id", "")],
+                        "llama_4": [
+                            m for m in model_data if "llama-4" in m.get("id", "")
+                        ],
                         "reasoning_models": [
-                            m for m in model_data if "reasoning" in m.get("description", "").lower()
+                            m
+                            for m in model_data
+                            if "reasoning" in m.get("description", "").lower()
                         ],
                     }
 
@@ -166,7 +183,10 @@ class ComprehensiveIntegrationTest:
                         json={
                             "model": "anthropic/claude-3-haiku",  # Reliable test model
                             "messages": [
-                                {"role": "user", "content": "Hi, test AI swarm connection"}
+                                {
+                                    "role": "user",
+                                    "content": "Hi, test AI swarm connection",
+                                }
                             ],
                             "max_tokens": 20,
                         },
@@ -195,12 +215,17 @@ class ComprehensiveIntegrationTest:
                                 "gemini_25_models": len(latest_models["gemini_25"]),
                                 "claude_4_models": len(latest_models["claude_4"]),
                                 "llama_4_models": len(latest_models["llama_4"]),
-                                "reasoning_models": len(latest_models["reasoning_models"]),
+                                "reasoning_models": len(
+                                    latest_models["reasoning_models"]
+                                ),
                             },
                         }
                         return True
                     else:
-                        self.log(f"❌ OpenRouter chat failed: {chat_response.status_code}", "ERROR")
+                        self.log(
+                            f"❌ OpenRouter chat failed: {chat_response.status_code}",
+                            "ERROR",
+                        )
                         return False
 
         except Exception as e:
@@ -260,7 +285,9 @@ class ComprehensiveIntegrationTest:
 
         try:
             # Check Agent UI configuration
-            ui_env_path = os.path.join(os.path.dirname(__file__), "..", "agent-ui", ".env.local")
+            ui_env_path = os.path.join(
+                os.path.dirname(__file__), "..", "agent-ui", ".env.local"
+            )
 
             if os.path.exists(ui_env_path):
                 with open(ui_env_path) as f:
@@ -330,20 +357,32 @@ class ComprehensiveIntegrationTest:
 
             # Test memory system
             memory_system_path = os.path.join(
-                os.path.dirname(__file__), "..", "pulumi", "mcp-server", "src", "unified_memory.py"
+                os.path.dirname(__file__),
+                "..",
+                "pulumi",
+                "mcp-server",
+                "src",
+                "unified_memory.py",
             )
             has_memory_system = os.path.exists(memory_system_path)
 
             # Test API gateway
             gateway_path = os.path.join(
-                os.path.dirname(__file__), "..", "app", "api", "advanced_gateway_2025.py"
+                os.path.dirname(__file__),
+                "..",
+                "app",
+                "api",
+                "advanced_gateway_2025.py",
             )
             has_gateway = os.path.exists(gateway_path)
 
             workflow_complete = has_vector_store and has_memory_system and has_gateway
 
             if workflow_complete:
-                self.log("✅ Complete Workflow: All components present and integrated", "SUCCESS")
+                self.log(
+                    "✅ Complete Workflow: All components present and integrated",
+                    "SUCCESS",
+                )
                 self.results["complete_workflow"] = {
                     "status": "fully_integrated",
                     "components": {
@@ -421,7 +460,9 @@ class ComprehensiveIntegrationTest:
         self.save_results()
 
         if passed_tests == total_tests:
-            self.log("🎉 ALL INTEGRATIONS VERIFIED - SYSTEM FULLY FUNCTIONAL!", "SUCCESS")
+            self.log(
+                "🎉 ALL INTEGRATIONS VERIFIED - SYSTEM FULLY FUNCTIONAL!", "SUCCESS"
+            )
             return True
         else:
             self.log("⚠️  Some integrations need attention", "WARNING")

@@ -73,7 +73,10 @@ class LinearClient:
         if not self.api_key:
             raise ValueError("Linear API key not configured")
 
-        self.headers = {"Authorization": self.api_key, "Content-Type": "application/json"}
+        self.headers = {
+            "Authorization": self.api_key,
+            "Content-Type": "application/json",
+        }
 
         logger.info("🔧 Linear client initialized")
 
@@ -130,8 +133,12 @@ class LinearClient:
 
                     # Check for GraphQL errors
                     if "errors" in result:
-                        error_messages = [err.get("message", "") for err in result["errors"]]
-                        raise Exception(f"Linear GraphQL errors: {'; '.join(error_messages)}")
+                        error_messages = [
+                            err.get("message", "") for err in result["errors"]
+                        ]
+                        raise Exception(
+                            f"Linear GraphQL errors: {'; '.join(error_messages)}"
+                        )
 
                     return result.get("data", {})
                 elif response.status == 401:
@@ -441,7 +448,9 @@ class LinearClient:
         result = await self._make_graphql_request(query, variables)
         return result.get("issue", {})
 
-    async def get_projects(self, team_id: str = None, first: int = 50) -> list[dict[str, Any]]:
+    async def get_projects(
+        self, team_id: str = None, first: int = 50
+    ) -> list[dict[str, Any]]:
         """Get projects (simplified query to avoid complexity limits)"""
         query = """
         query($first: Int!, $filter: ProjectFilter) {
@@ -569,7 +578,9 @@ class LinearClient:
         if team_id:
             date_filter["team"] = {"id": {"eq": team_id}}
 
-        issues = await self.get_issues(team_id=team_id, first=200, filter_query=date_filter)
+        issues = await self.get_issues(
+            team_id=team_id, first=200, filter_query=date_filter
+        )
 
         analysis = {
             "period_days": days,
@@ -643,7 +654,9 @@ class LinearClient:
             # Team performance tracking
             assignee = issue.get("assignee", {})
             if assignee:
-                assignee_name = assignee.get("displayName") or assignee.get("name", "Unknown")
+                assignee_name = assignee.get("displayName") or assignee.get(
+                    "name", "Unknown"
+                )
                 if assignee_name not in analysis["team_performance"]:
                     analysis["team_performance"][assignee_name] = {
                         "total_issues": 0,
@@ -657,12 +670,22 @@ class LinearClient:
                 if state_type == "completed":
                     analysis["team_performance"][assignee_name]["completed_issues"] += 1
                 elif state_type == "started":
-                    analysis["team_performance"][assignee_name]["in_progress_issues"] += 1
+                    analysis["team_performance"][assignee_name][
+                        "in_progress_issues"
+                    ] += 1
 
             # Completion time analysis for completed issues
-            if state_type == "completed" and issue.get("completedAt") and issue.get("createdAt"):
-                created_at = datetime.fromisoformat(issue["createdAt"].replace("Z", "+00:00"))
-                completed_at = datetime.fromisoformat(issue["completedAt"].replace("Z", "+00:00"))
+            if (
+                state_type == "completed"
+                and issue.get("completedAt")
+                and issue.get("createdAt")
+            ):
+                created_at = datetime.fromisoformat(
+                    issue["createdAt"].replace("Z", "+00:00")
+                )
+                completed_at = datetime.fromisoformat(
+                    issue["completedAt"].replace("Z", "+00:00")
+                )
                 completion_time = (
                     completed_at - created_at
                 ).total_seconds() / 86400  # Convert to days
@@ -694,10 +717,12 @@ class LinearClient:
             ) * 100
 
         if completion_times:
-            analysis["velocity_metrics"]["average_completion_time"] = sum(completion_times) / len(
+            analysis["velocity_metrics"]["average_completion_time"] = sum(
+                completion_times
+            ) / len(completion_times)
+            analysis["velocity_metrics"]["cycle_time_distribution"] = sorted(
                 completion_times
             )
-            analysis["velocity_metrics"]["cycle_time_distribution"] = sorted(completion_times)
 
         # Calculate throughput per week
         weeks_in_period = days / 7
@@ -708,7 +733,9 @@ class LinearClient:
 
         # Calculate average estimate
         if estimates:
-            analysis["estimate_accuracy"]["average_estimate"] = sum(estimates) / len(estimates)
+            analysis["estimate_accuracy"]["average_estimate"] = sum(estimates) / len(
+                estimates
+            )
 
         # Calculate team member completion rates
         for member_data in analysis["team_performance"].values():
@@ -734,12 +761,16 @@ class LinearClient:
         active_members = len(
             [m for m in analysis["team_performance"].values() if m["total_issues"] > 0]
         )
-        engagement_score = min(active_members * 5, 20)  # 5 points per active member, cap at 20
+        engagement_score = min(
+            active_members * 5, 20
+        )  # 5 points per active member, cap at 20
         health_factors.append(engagement_score)
 
         # Factor 4: Velocity consistency (10% weight)
         if analysis["velocity_metrics"]["throughput_per_week"] > 0:
-            velocity_score = min(analysis["velocity_metrics"]["throughput_per_week"] * 2, 10)
+            velocity_score = min(
+                analysis["velocity_metrics"]["throughput_per_week"] * 2, 10
+            )
             health_factors.append(velocity_score)
 
         analysis["health_score"] = sum(health_factors)
@@ -756,7 +787,8 @@ class LinearClient:
             )
 
         if (
-            analysis["estimate_accuracy"]["total_estimated"] / max(analysis["total_issues"], 1)
+            analysis["estimate_accuracy"]["total_estimated"]
+            / max(analysis["total_issues"], 1)
             < 0.5
         ):
             analysis["recommendations"].append(
@@ -764,7 +796,9 @@ class LinearClient:
             )
 
         if active_members < 2:
-            analysis["recommendations"].append("Low team engagement - review workload distribution")
+            analysis["recommendations"].append(
+                "Low team engagement - review workload distribution"
+            )
 
         return analysis
 
@@ -782,7 +816,9 @@ class LinearClient:
         if team_id:
             date_filter["team"] = {"id": {"eq": team_id}}
 
-        issues = await self.get_issues(team_id=team_id, first=300, filter_query=date_filter)
+        issues = await self.get_issues(
+            team_id=team_id, first=300, filter_query=date_filter
+        )
 
         analysis = {
             "period_days": days,
@@ -854,7 +890,9 @@ class LinearClient:
             # Assignee analysis
             assignee = issue.get("assignee", {})
             if assignee:
-                assignee_name = assignee.get("displayName") or assignee.get("name", "Unknown")
+                assignee_name = assignee.get("displayName") or assignee.get(
+                    "name", "Unknown"
+                )
                 if assignee_name not in analysis["assignee_patterns"]:
                     analysis["assignee_patterns"][assignee_name] = {
                         "assigned": 0,
@@ -865,20 +903,28 @@ class LinearClient:
 
             # Priority analysis
             priority = issue.get("priority", 0)
-            priority_key = {1: "urgent", 2: "high", 3: "medium", 4: "low"}.get(priority, "low")
+            priority_key = {1: "urgent", 2: "high", 3: "medium", 4: "low"}.get(
+                priority, "low"
+            )
             analysis["priority_trends"][priority_key]["count"] += 1
 
             # Completion time analysis by priority
             if issue.get("completedAt") and issue.get("createdAt"):
-                created_at = datetime.fromisoformat(issue["createdAt"].replace("Z", "+00:00"))
-                completed_at = datetime.fromisoformat(issue["completedAt"].replace("Z", "+00:00"))
+                created_at = datetime.fromisoformat(
+                    issue["createdAt"].replace("Z", "+00:00")
+                )
+                completed_at = datetime.fromisoformat(
+                    issue["completedAt"].replace("Z", "+00:00")
+                )
                 completion_time = (completed_at - created_at).total_seconds() / 86400
 
                 priority_completion_times[priority].append(completion_time)
                 time_to_complete_list.append(completion_time)
 
                 if assignee:
-                    assignee_name = assignee.get("displayName") or assignee.get("name", "Unknown")
+                    assignee_name = assignee.get("displayName") or assignee.get(
+                        "name", "Unknown"
+                    )
                     if assignee_name in analysis["assignee_patterns"]:
                         analysis["assignee_patterns"][assignee_name]["completed"] += 1
 
@@ -908,7 +954,10 @@ class LinearClient:
             if cycle:
                 cycle_name = cycle.get("name", "Unknown Cycle")
                 if cycle_name not in analysis["cycle_patterns"]:
-                    analysis["cycle_patterns"][cycle_name] = {"total": 0, "completed": 0}
+                    analysis["cycle_patterns"][cycle_name] = {
+                        "total": 0,
+                        "completed": 0,
+                    }
                 analysis["cycle_patterns"][cycle_name]["total"] += 1
                 if issue.get("completedAt"):
                     analysis["cycle_patterns"][cycle_name]["completed"] += 1
@@ -937,17 +986,19 @@ class LinearClient:
         for priority, times in priority_completion_times.items():
             if times:
                 priority_key = {1: "urgent", 2: "high", 3: "medium", 4: "low"}[priority]
-                analysis["priority_trends"][priority_key]["avg_completion_time"] = sum(times) / len(
+                analysis["priority_trends"][priority_key]["avg_completion_time"] = sum(
                     times
-                )
+                ) / len(times)
 
         if estimates:
-            analysis["issue_complexity"]["avg_estimate"] = sum(estimates) / len(estimates)
+            analysis["issue_complexity"]["avg_estimate"] = sum(estimates) / len(
+                estimates
+            )
 
         if comment_counts:
-            analysis["collaboration_metrics"]["avg_comments_per_issue"] = sum(comment_counts) / len(
+            analysis["collaboration_metrics"]["avg_comments_per_issue"] = sum(
                 comment_counts
-            )
+            ) / len(comment_counts)
 
         if time_to_complete_list:
             analysis["lifecycle_metrics"]["average_time_to_complete"] = sum(
@@ -980,7 +1031,9 @@ class LinearClient:
 
         return analysis
 
-    async def get_team_performance_metrics(self, team_id: str, days: int = 30) -> dict[str, Any]:
+    async def get_team_performance_metrics(
+        self, team_id: str, days: int = 30
+    ) -> dict[str, Any]:
         """Get comprehensive team performance and efficiency metrics"""
         logger.info(f"📈 Analyzing team performance metrics for {days} days...")
 
@@ -999,12 +1052,12 @@ class LinearClient:
                 "completion_rate": velocity_analysis.get("velocity_metrics", {}).get(
                     "completion_rate", 0
                 ),
-                "throughput_per_week": velocity_analysis.get("velocity_metrics", {}).get(
-                    "throughput_per_week", 0
-                ),
-                "avg_completion_time": velocity_analysis.get("velocity_metrics", {}).get(
-                    "average_completion_time", 0
-                ),
+                "throughput_per_week": velocity_analysis.get(
+                    "velocity_metrics", {}
+                ).get("throughput_per_week", 0),
+                "avg_completion_time": velocity_analysis.get(
+                    "velocity_metrics", {}
+                ).get("average_completion_time", 0),
             },
             "member_performance": velocity_analysis.get("team_performance", {}),
             "workload_distribution": {
@@ -1042,7 +1095,9 @@ class LinearClient:
                 [m["completion_rate"] for m in metrics["member_performance"].values()]
             ) / max(len(metrics["member_performance"]), 1)
 
-            metrics["collaboration_score"] = (engagement_ratio * 50) + (avg_completion_rate * 0.5)
+            metrics["collaboration_score"] = (engagement_ratio * 50) + (
+                avg_completion_rate * 0.5
+            )
 
         # Identify potential bottlenecks
         state_distribution = velocity_analysis.get("state_distribution", {})
@@ -1208,9 +1263,9 @@ class LinearClient:
                         "workload_score": 0,
                     }
                 dashboard["resource_allocation"][lead_name]["projects"] += 1
-                dashboard["resource_allocation"][lead_name]["total_issues"] += project_analysis[
-                    "issue_count"
-                ]
+                dashboard["resource_allocation"][lead_name][
+                    "total_issues"
+                ] += project_analysis["issue_count"]
 
             dashboard["project_details"].append(project_analysis)
 
@@ -1236,8 +1291,13 @@ class LinearClient:
                 f"{dashboard['timeline_analysis']['behind_schedule']} projects behind schedule"
             )
 
-        if dashboard["timeline_analysis"]["no_timeline"] > dashboard["total_projects"] / 2:
-            dashboard["risk_factors"].append("Over 50% of projects lack defined timelines")
+        if (
+            dashboard["timeline_analysis"]["no_timeline"]
+            > dashboard["total_projects"] / 2
+        ):
+            dashboard["risk_factors"].append(
+                "Over 50% of projects lack defined timelines"
+            )
 
         overloaded_leads = [
             name
@@ -1386,7 +1446,11 @@ class LinearClient:
             }
 
         except Exception as e:
-            return {"status": "error", "error": str(e), "last_check": datetime.now().isoformat()}
+            return {
+                "status": "error",
+                "error": str(e),
+                "last_check": datetime.now().isoformat(),
+            }
 
     # Utility Methods for Sophia's Analysis
 
@@ -1434,23 +1498,27 @@ class LinearClient:
                 "development_metrics": {
                     "velocity_health_score": velocity_analysis.get("health_score", 0),
                     "total_issues_analyzed": velocity_analysis.get("total_issues", 0),
-                    "completion_rate": velocity_analysis.get("velocity_metrics", {}).get(
-                        "completion_rate", 0
-                    ),
-                    "throughput_per_week": velocity_analysis.get("velocity_metrics", {}).get(
-                        "throughput_per_week", 0
-                    ),
-                    "average_completion_time": velocity_analysis.get("velocity_metrics", {}).get(
-                        "average_completion_time", 0
-                    ),
+                    "completion_rate": velocity_analysis.get(
+                        "velocity_metrics", {}
+                    ).get("completion_rate", 0),
+                    "throughput_per_week": velocity_analysis.get(
+                        "velocity_metrics", {}
+                    ).get("throughput_per_week", 0),
+                    "average_completion_time": velocity_analysis.get(
+                        "velocity_metrics", {}
+                    ).get("average_completion_time", 0),
                 },
                 "team_insights": {
                     "member_count": team_performance.get("member_count", 0),
-                    "collaboration_score": team_performance.get("collaboration_score", 0),
+                    "collaboration_score": team_performance.get(
+                        "collaboration_score", 0
+                    ),
                     "active_members": len(
                         [
                             m
-                            for m in team_performance.get("member_performance", {}).values()
+                            for m in team_performance.get(
+                                "member_performance", {}
+                            ).values()
                             if m.get("total_issues", 0) > 0
                         ]
                     ),
@@ -1461,15 +1529,17 @@ class LinearClient:
                 "project_portfolio": {
                     "total_projects": project_health.get("total_projects", 0),
                     "health_distribution": project_health.get("project_health", {}),
-                    "overall_project_health": project_health.get("overall_health_score", 0),
+                    "overall_project_health": project_health.get(
+                        "overall_health_score", 0
+                    ),
                     "timeline_risks": len(project_health.get("risk_factors", [])),
                 },
                 "issue_intelligence": {
                     "pattern_analysis_period": issue_patterns.get("period_days", 0),
                     "total_patterns_analyzed": issue_patterns.get("total_issues", 0),
-                    "collaboration_score": issue_patterns.get("collaboration_metrics", {}).get(
-                        "avg_comments_per_issue", 0
-                    ),
+                    "collaboration_score": issue_patterns.get(
+                        "collaboration_metrics", {}
+                    ).get("avg_comments_per_issue", 0),
                     "estimate_coverage": self._calculate_estimate_coverage(
                         issue_patterns.get("issue_complexity", {})
                     ),
@@ -1490,14 +1560,20 @@ class LinearClient:
 
         except Exception as e:
             logger.error(f"Failed to create intelligence summary: {e}")
-            return {"status": "error", "error": str(e), "timestamp": datetime.now().isoformat()}
+            return {
+                "status": "error",
+                "error": str(e),
+                "timestamp": datetime.now().isoformat(),
+            }
 
     def _assess_workload_balance(self, member_performance: dict[str, Any]) -> str:
         """Assess workload balance across team members"""
         if not member_performance:
             return "No data"
 
-        issue_counts = [member.get("total_issues", 0) for member in member_performance.values()]
+        issue_counts = [
+            member.get("total_issues", 0) for member in member_performance.values()
+        ]
         if not issue_counts:
             return "No data"
 
@@ -1523,7 +1599,9 @@ class LinearClient:
 
         return (with_estimates / total) * 100
 
-    def _consolidate_recommendations(self, recommendation_lists: list[list[str]]) -> list[str]:
+    def _consolidate_recommendations(
+        self, recommendation_lists: list[list[str]]
+    ) -> list[str]:
         """Consolidate and prioritize recommendations from multiple sources"""
         all_recommendations = []
         for rec_list in recommendation_lists:
@@ -1559,14 +1637,20 @@ class LinearClient:
         project_score = projects.get("overall_health_score", 0) * 0.30
 
         # Process maturity value (20% weight)
-        estimate_coverage = self._calculate_estimate_coverage(patterns.get("issue_complexity", {}))
+        estimate_coverage = self._calculate_estimate_coverage(
+            patterns.get("issue_complexity", {})
+        )
         process_score = estimate_coverage * 0.20
 
-        overall_value = velocity_score + productivity_score + project_score + process_score
+        overall_value = (
+            velocity_score + productivity_score + project_score + process_score
+        )
 
         # Risk assessment
         risk_factors = len(projects.get("risk_factors", []))
-        risk_level = "High" if risk_factors >= 3 else "Medium" if risk_factors >= 1 else "Low"
+        risk_level = (
+            "High" if risk_factors >= 3 else "Medium" if risk_factors >= 1 else "Low"
+        )
 
         return {
             "overall_score": round(overall_value, 2),
@@ -1577,7 +1661,9 @@ class LinearClient:
             "risk_level": risk_level,
             "risk_factors": risk_factors,
             "value_tier": (
-                "High" if overall_value >= 75 else "Medium" if overall_value >= 50 else "Low"
+                "High"
+                if overall_value >= 75
+                else "Medium" if overall_value >= 50 else "Low"
             ),
             "development_readiness": (
                 "Production Ready" if overall_value >= 80 else "Needs Improvement"

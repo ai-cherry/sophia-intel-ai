@@ -17,7 +17,9 @@ from pydantic import BaseModel, Field, conint, constr, validator
 class TimestampedModel(BaseModel):
     """Base model with timestamp."""
 
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
 
 
 class StatusModel(BaseModel):
@@ -90,12 +92,18 @@ class RunRequest(BaseModel):
 
     team_id: Optional[str] = Field(None, description="Team identifier")
     workflow_id: Optional[str] = Field(None, description="Workflow identifier")
-    message: constr(min_length=1, max_length=10000) = Field(..., description="Task message")
+    message: constr(min_length=1, max_length=10000) = Field(
+        ..., description="Task message"
+    )
     stream: bool = Field(default=True, description="Enable streaming")
     use_memory: bool = Field(default=True, description="Use memory context")
     context: Optional[dict[str, Any]] = Field(None, description="Additional context")
-    parameters: Optional[dict[str, Any]] = Field(None, description="Execution parameters")
-    timeout: conint(ge=1, le=3600) = Field(default=300, description="Timeout in seconds")
+    parameters: Optional[dict[str, Any]] = Field(
+        None, description="Execution parameters"
+    )
+    timeout: conint(ge=1, le=3600) = Field(
+        default=300, description="Timeout in seconds"
+    )
 
 
 class RunResponse(TimestampedModel):
@@ -128,10 +136,14 @@ class MemoryEntry(TimestampedModel):
     topic: str = Field(..., min_length=1, max_length=500, description="Memory topic")
     content: str = Field(..., min_length=1, description="Memory content")
     source: str = Field(default="user", description="Memory source")
-    memory_type: MemoryType = Field(default=MemoryType.EPISODIC, description="Memory type")
+    memory_type: MemoryType = Field(
+        default=MemoryType.EPISODIC, description="Memory type"
+    )
     tags: list[str] = Field(default_factory=list, description="Memory tags")
     embedding: Optional[list[float]] = Field(None, description="Vector embedding")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
     access_count: int = Field(default=0, ge=0, description="Access count")
 
     @validator("tags")
@@ -161,7 +173,9 @@ class WorkflowStep(BaseModel):
     agent: Optional[str] = Field(None, description="Agent to execute")
     inputs: Optional[dict[str, Any]] = Field(None, description="Step inputs")
     outputs: Optional[dict[str, Any]] = Field(None, description="Step outputs")
-    conditions: Optional[dict[str, Any]] = Field(None, description="Execution conditions")
+    conditions: Optional[dict[str, Any]] = Field(
+        None, description="Execution conditions"
+    )
 
 
 class WorkflowInfo(BaseModel):
@@ -193,7 +207,9 @@ class SearchMode(str, Enum):
 class SearchRequest(BaseModel):
     """Search request model."""
 
-    query: constr(min_length=1, max_length=1000) = Field(..., description="Search query")
+    query: constr(min_length=1, max_length=1000) = Field(
+        ..., description="Search query"
+    )
     mode: SearchMode = Field(default=SearchMode.HYBRID, description="Search mode")
     limit: conint(ge=1, le=100) = Field(default=10, description="Result limit")
     offset: conint(ge=0) = Field(default=0, description="Result offset")
@@ -246,8 +262,12 @@ class IndexingRequest(BaseModel):
     path: str = Field(..., description="Path to index")
     recursive: bool = Field(default=True, description="Index recursively")
     force: bool = Field(default=False, description="Force reindexing")
-    file_patterns: Optional[list[str]] = Field(None, description="File patterns to include")
-    exclude_patterns: Optional[list[str]] = Field(None, description="Patterns to exclude")
+    file_patterns: Optional[list[str]] = Field(
+        None, description="File patterns to include"
+    )
+    exclude_patterns: Optional[list[str]] = Field(
+        None, description="Patterns to exclude"
+    )
     batch_size: conint(ge=1, le=1000) = Field(default=100, description="Batch size")
 
 
@@ -278,13 +298,17 @@ class ComponentHealth(BaseModel):
     healthy: bool = Field(..., description="Health status")
     latency_ms: Optional[int] = Field(None, ge=0, description="Response latency")
     details: Optional[dict[str, Any]] = Field(None, description="Health details")
-    last_check: datetime = Field(default_factory=datetime.utcnow, description="Last check time")
+    last_check: datetime = Field(
+        default_factory=datetime.utcnow, description="Last check time"
+    )
 
 
 class SystemHealth(TimestampedModel):
     """System health status."""
 
-    status: Literal["healthy", "degraded", "unhealthy"] = Field(..., description="Overall status")
+    status: Literal["healthy", "degraded", "unhealthy"] = Field(
+        ..., description="Overall status"
+    )
     components: list[ComponentHealth] = Field(..., description="Component statuses")
     uptime_seconds: int = Field(..., ge=0, description="System uptime")
     version: str = Field(..., description="System version")

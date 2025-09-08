@@ -148,7 +148,9 @@ Report all findings with military precision and tactical recommendations.""",
                     if hasattr(response, "choices")
                     else str(response)
                 )
-                print(f"✅ [T+{elapsed:.1f}s] RECON-ALPHA: Mission complete (via Portkey)")
+                print(
+                    f"✅ [T+{elapsed:.1f}s] RECON-ALPHA: Mission complete (via Portkey)"
+                )
 
                 return {
                     "agent_number": 1,
@@ -197,7 +199,10 @@ Report all findings with military precision and tactical recommendations.""",
                     json={
                         "model": model,
                         "messages": [
-                            {"role": "system", "content": self.universal_prompt["system"]},
+                            {
+                                "role": "system",
+                                "content": self.universal_prompt["system"],
+                            },
                             {"role": "user", "content": self.universal_prompt["user"]},
                         ],
                         "temperature": 0.3,
@@ -235,7 +240,9 @@ Report all findings with military precision and tactical recommendations.""",
 
         except Exception as e:
             elapsed = time.time() - start_time
-            print(f"❌ [T+{elapsed:.1f}s] STRIKE-BRAVO: Mission failed - {str(e)[:100]}")
+            print(
+                f"❌ [T+{elapsed:.1f}s] STRIKE-BRAVO: Mission failed - {str(e)[:100]}"
+            )
             return {
                 "agent_number": 2,
                 "agent_name": agent_name,
@@ -290,7 +297,9 @@ Report all findings with military precision and tactical recommendations.""",
 
         except Exception as e:
             elapsed = time.time() - start_time
-            print(f"❌ [T+{elapsed:.1f}s] INTEL-CHARLIE: Mission failed - {str(e)[:100]}")
+            print(
+                f"❌ [T+{elapsed:.1f}s] INTEL-CHARLIE: Mission failed - {str(e)[:100]}"
+            )
             return {
                 "agent_number": 3,
                 "agent_name": agent_name,
@@ -336,7 +345,9 @@ Report all findings with military precision and tactical recommendations.""",
                 if response.status_code == 200:
                     data = response.json()
                     content = (
-                        data[0].get("generated_text", "") if isinstance(data, list) else str(data)
+                        data[0].get("generated_text", "")
+                        if isinstance(data, list)
+                        else str(data)
                     )
                     print(f"✅ [T+{elapsed:.1f}s] SCOUT-DELTA: Reconnaissance complete")
 
@@ -364,7 +375,9 @@ Report all findings with military precision and tactical recommendations.""",
             else:
                 content = str(response)
 
-            print(f"✅ [T+{elapsed:.1f}s] SCOUT-DELTA: Reconnaissance complete (via AIMLAPI)")
+            print(
+                f"✅ [T+{elapsed:.1f}s] SCOUT-DELTA: Reconnaissance complete (via AIMLAPI)"
+            )
 
             return {
                 "agent_number": 4,
@@ -435,7 +448,9 @@ Report all findings with military precision and tactical recommendations.""",
         }
 
         # Save results
-        output_file = f"artemis_military_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        output_file = (
+            f"artemis_military_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
 
@@ -507,7 +522,9 @@ Report all findings with military precision and tactical recommendations.""",
 
                 # Prioritization - check for priority markers
                 priority_markers = ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
-                has_priorities = sum(1 for marker in priority_markers if marker in findings.upper())
+                has_priorities = sum(
+                    1 for marker in priority_markers if marker in findings.upper()
+                )
                 scores["prioritization"] = min(10, has_priorities * 2.5)
 
                 # Communication - clarity and structure
@@ -515,7 +532,9 @@ Report all findings with military precision and tactical recommendations.""",
                     scores["communication"] += 3
                 if "•" in findings or "-" in findings:  # Has bullet points
                     scores["communication"] += 3
-                if "file" in findings.lower() or "path" in findings.lower():  # Specific references
+                if (
+                    "file" in findings.lower() or "path" in findings.lower()
+                ):  # Specific references
                     scores["communication"] += 4
 
                 # Calculate total score
@@ -545,7 +564,9 @@ Report all findings with military precision and tactical recommendations.""",
                 )
 
         # Rank agents by total score
-        successful_agents = [a for a in scoring_report["agents_scored"] if "total_score" in a]
+        successful_agents = [
+            a for a in scoring_report["agents_scored"] if "total_score" in a
+        ]
         if successful_agents:
             successful_agents.sort(key=lambda x: x["total_score"], reverse=True)
             for i, agent in enumerate(successful_agents):
@@ -575,7 +596,9 @@ async def main():
 
     for agent in results["agents"]:
         print(f"\n{'='*70}")
-        print(f" {agent.get('military_role', 'UNKNOWN')}: {agent.get('agent_name', 'Unknown')}")
+        print(
+            f" {agent.get('military_role', 'UNKNOWN')}: {agent.get('agent_name', 'Unknown')}"
+        )
         if "model" in agent:
             print(f" Model: {agent['model']}")
             print(f" Provider: {agent.get('provider', 'Unknown')}")
@@ -617,7 +640,9 @@ async def main():
             if "rank" in agent_score:
                 print(f"   🥇 Rank: #{agent_score['rank']}")
         else:
-            print(f"\n❌ {agent_score['agent_name']}: {agent_score.get('status', 'FAILED')}")
+            print(
+                f"\n❌ {agent_score['agent_name']}: {agent_score.get('status', 'FAILED')}"
+            )
 
     # Summary
     print("\n" + "=" * 70)

@@ -111,9 +111,15 @@ class VectorStore:
 
         # Vector database preferences by use case
         self.db_preferences = {
-            VectorOperation.SIMILARITY_SEARCH: [VectorDBType.QDRANT, VectorDBType.WEAVIATE],
+            VectorOperation.SIMILARITY_SEARCH: [
+                VectorDBType.QDRANT,
+                VectorDBType.WEAVIATE,
+            ],
             VectorOperation.CLUSTERING: [VectorDBType.QDRANT],
-            VectorOperation.RECOMMENDATION: [VectorDBType.WEAVIATE, VectorDBType.QDRANT],
+            VectorOperation.RECOMMENDATION: [
+                VectorDBType.WEAVIATE,
+                VectorDBType.QDRANT,
+            ],
             VectorOperation.CLASSIFICATION: [VectorDBType.QDRANT],
             VectorOperation.ANOMALY_DETECTION: [VectorDBType.QDRANT],
         }
@@ -124,7 +130,10 @@ class VectorStore:
             EmbeddingModel.OPENAI_3_SMALL: {"dimensions": 1536, "max_tokens": 8191},
             EmbeddingModel.OPENAI_3_LARGE: {"dimensions": 3072, "max_tokens": 8191},
             EmbeddingModel.COHERE_EMBED: {"dimensions": 1024, "max_tokens": 2048},
-            EmbeddingModel.SENTENCE_TRANSFORMERS: {"dimensions": 384, "max_tokens": 512},
+            EmbeddingModel.SENTENCE_TRANSFORMERS: {
+                "dimensions": 384,
+                "max_tokens": 512,
+            },
         }
 
     async def store_embedding(
@@ -179,7 +188,9 @@ class VectorStore:
             db_type=vector_db,
             vector=embedding,
             metadata=vector_metadata,
-            collection_name=f"unified_vectors_{domain}" if domain else "unified_vectors",
+            collection_name=(
+                f"unified_vectors_{domain}" if domain else "unified_vectors"
+            ),
         )
 
         if success:
@@ -196,7 +207,9 @@ class VectorStore:
             return None
 
     async def semantic_search(
-        self, query: SemanticQuery, operation: VectorOperation = VectorOperation.SIMILARITY_SEARCH
+        self,
+        query: SemanticQuery,
+        operation: VectorOperation = VectorOperation.SIMILARITY_SEARCH,
     ) -> list[SemanticResult]:
         """Perform semantic search across vector databases"""
 
@@ -266,7 +279,10 @@ class VectorStore:
         return await self.semantic_search(query)
 
     async def cluster_content(
-        self, content_ids: list[str], num_clusters: int = 5, domain: Optional[str] = None
+        self,
+        content_ids: list[str],
+        num_clusters: int = 5,
+        domain: Optional[str] = None,
     ) -> dict[str, Any]:
         """Cluster content based on semantic similarity"""
 
@@ -301,7 +317,10 @@ class VectorStore:
             return []
 
     async def detect_anomalies(
-        self, content: str, reference_domain: Optional[str] = None, anomaly_threshold: float = 0.3
+        self,
+        content: str,
+        reference_domain: Optional[str] = None,
+        anomaly_threshold: float = 0.3,
     ) -> dict[str, Any]:
         """Detect if content is anomalous compared to reference set"""
 
@@ -319,7 +338,9 @@ class VectorStore:
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-    async def get_vector_analytics(self, domain: Optional[str] = None) -> dict[str, Any]:
+    async def get_vector_analytics(
+        self, domain: Optional[str] = None
+    ) -> dict[str, Any]:
         """Get analytics on vector store usage and performance"""
 
         analytics = {
@@ -430,7 +451,9 @@ class VectorStore:
             logger.error(f"Search failed for {db_type.value}: {e}")
             return []
 
-    def _deduplicate_results(self, results: list[SemanticResult]) -> list[SemanticResult]:
+    def _deduplicate_results(
+        self, results: list[SemanticResult]
+    ) -> list[SemanticResult]:
         """Remove duplicate results based on content or memory ID"""
 
         seen_ids = set()
@@ -475,7 +498,9 @@ class VectorStore:
             created_at = result.metadata.get("created_at")
             if created_at:
                 try:
-                    created_time = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+                    created_time = datetime.fromisoformat(
+                        created_at.replace("Z", "+00:00")
+                    )
                     days_old = (datetime.now(timezone.utc) - created_time).days
                     recency_factor = max(0.5, 1.0 - days_old / 365)  # Decay over a year
                     score *= recency_factor
@@ -512,7 +537,9 @@ class VectorStore:
 
         # Content type match
         if query.content_types and result.content_type in query.content_types:
-            explanations.append(f"Matches preferred content type: {result.content_type}")
+            explanations.append(
+                f"Matches preferred content type: {result.content_type}"
+            )
 
         # Quality factor
         quality = result.metadata.get("quality_score", 1.0)

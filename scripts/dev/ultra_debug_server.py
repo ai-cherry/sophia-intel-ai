@@ -30,7 +30,11 @@ async def health_check():
 @app.get("/teams")
 async def get_teams():
     return [
-        {"id": "coding-team", "name": "Coding Team", "description": "5 agents for coding tasks"},
+        {
+            "id": "coding-team",
+            "name": "Coding Team",
+            "description": "5 agents for coding tasks",
+        },
         {
             "id": "coding-swarm",
             "name": "Coding Swarm",
@@ -52,8 +56,16 @@ async def get_teams():
 @app.get("/workflows")
 async def get_workflows():
     return [
-        {"id": "pr-lifecycle", "name": "PR Lifecycle", "description": "Complete PR workflow"},
-        {"id": "code-review", "name": "Code Review", "description": "Automated code review"},
+        {
+            "id": "pr-lifecycle",
+            "name": "PR Lifecycle",
+            "description": "Complete PR workflow",
+        },
+        {
+            "id": "code-review",
+            "name": "Code Review",
+            "description": "Automated code review",
+        },
     ]
 
 
@@ -81,8 +93,12 @@ async def run_team_ultra_debug(request: Request):
 
         # Check each field
         print("\nField Analysis:")
-        print(f"  message: {json_data.get('message')!r} (type: {type(json_data.get('message'))})")
-        print(f"  team_id: {json_data.get('team_id')!r} (type: {type(json_data.get('team_id'))})")
+        print(
+            f"  message: {json_data.get('message')!r} (type: {type(json_data.get('message'))})"
+        )
+        print(
+            f"  team_id: {json_data.get('team_id')!r} (type: {type(json_data.get('team_id'))})"
+        )
         print(
             f"  additional_data: {json_data.get('additional_data')!r} (type: {type(json_data.get('additional_data'))})"
         )

@@ -139,7 +139,9 @@ class BaseAgent(ABC):
         self._shutdown_event = asyncio.Event()
 
         # Configure logging
-        self.logger = logging.getLogger(f"{self.__class__.__name__}[{self.agent_id[:8]}]")
+        self.logger = logging.getLogger(
+            f"{self.__class__.__name__}[{self.agent_id[:8]}]"
+        )
         self.logger.setLevel(getattr(logging, config.log_level.upper()))
 
         self.logger.info(f"Initializing {config.agent_name} ({config.agent_type})")
@@ -211,7 +213,9 @@ class BaseAgent(ABC):
             self.logger.debug(traceback.format_exc())
             return False
 
-    async def process_task(self, task_id: str, task_data: dict[str, Any]) -> dict[str, Any]:
+    async def process_task(
+        self, task_id: str, task_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """Process a task with standardized error handling and metrics"""
         start_time = datetime.now()
 
@@ -229,7 +233,9 @@ class BaseAgent(ABC):
             processing_time = (datetime.now() - start_time).total_seconds()
             self.metrics.update_task_completion(processing_time, success=True)
 
-            self.logger.info(f"Task {task_id} completed successfully in {processing_time:.2f}s")
+            self.logger.info(
+                f"Task {task_id} completed successfully in {processing_time:.2f}s"
+            )
             self.status = AgentStatus.READY
 
             return {
@@ -275,7 +281,9 @@ class BaseAgent(ABC):
                 "average_processing_time": self.metrics.average_processing_time,
                 "uptime_seconds": self.metrics.uptime_seconds,
                 "last_activity": (
-                    self.metrics.last_activity.isoformat() if self.metrics.last_activity else None
+                    self.metrics.last_activity.isoformat()
+                    if self.metrics.last_activity
+                    else None
                 ),
             },
             "active_tasks": len(self.active_tasks),
@@ -418,7 +426,9 @@ class BaseAgent(ABC):
 
     def _log_performance(self, operation: str, duration: float, **kwargs):
         """Log performance metrics"""
-        self.logger.info(f"Performance: {operation} completed in {duration:.3f}s", extra=kwargs)
+        self.logger.info(
+            f"Performance: {operation} completed in {duration:.3f}s", extra=kwargs
+        )
 
     def _log_error(self, operation: str, error: Exception, **kwargs):
         """Log errors with context"""
@@ -430,7 +440,9 @@ class BaseAgent(ABC):
         if self.resilience_config.checkpoint_interval > 0:
             self._background_tasks.append(asyncio.create_task(self._checkpoint_loop()))
         if self.resilience_config.health_check_interval > 0:
-            self._background_tasks.append(asyncio.create_task(self._health_check_loop()))
+            self._background_tasks.append(
+                asyncio.create_task(self._health_check_loop())
+            )
         await self._load_checkpoint()
 
     async def _checkpoint_loop(self) -> None:

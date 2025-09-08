@@ -106,10 +106,14 @@ class AgentMCPStartupVerifier:
             dir_path = self.project_root / dir_name
             if dir_path.exists():
                 # Find main.py and agent files
-                agent_files = list(dir_path.rglob("main.py")) + list(dir_path.rglob("*agent*.py"))
+                agent_files = list(dir_path.rglob("main.py")) + list(
+                    dir_path.rglob("*agent*.py")
+                )
                 for agent_file in agent_files:
                     agent_name = (
-                        agent_file.parent.name if agent_file.name == "main.py" else agent_file.stem
+                        agent_file.parent.name
+                        if agent_file.name == "main.py"
+                        else agent_file.stem
                     )
                     discovered_agents[agent_name] = {
                         "path": str(agent_file),
@@ -163,7 +167,9 @@ class AgentMCPStartupVerifier:
                 if result["status"] == "success":
                     print(f"✅ MCP server {server_name} started successfully")
                 else:
-                    print(f"❌ MCP server {server_name} failed to start: {result.get('error')}")
+                    print(
+                        f"❌ MCP server {server_name} failed to start: {result.get('error')}"
+                    )
 
             except Exception as e:
                 startup_results[server_name] = {"status": "failed", "error": str(e)}
@@ -185,7 +191,9 @@ class AgentMCPStartupVerifier:
             # Try to import and validate the server
             import importlib.util
 
-            spec = importlib.util.spec_from_file_location(f"{server_name}_server", server_path)
+            spec = importlib.util.spec_from_file_location(
+                f"{server_name}_server", server_path
+            )
             if spec is None:
                 return {"status": "failed", "error": "Cannot load server module"}
 
@@ -198,7 +206,10 @@ class AgentMCPStartupVerifier:
                 and not hasattr(module, "server")
                 and not hasattr(module, "main")
             ):
-                return {"status": "failed", "error": "No valid MCP server entry point found"}
+                return {
+                    "status": "failed",
+                    "error": "No valid MCP server entry point found",
+                }
 
             # Start the server process
             cmd = [sys.executable, server_path]
@@ -225,7 +236,11 @@ class AgentMCPStartupVerifier:
                     }
                 )
 
-                return {"status": "success", "pid": process.pid, "command": " ".join(cmd)}
+                return {
+                    "status": "success",
+                    "pid": process.pid,
+                    "command": " ".join(cmd),
+                }
             else:
                 stdout, stderr = await process.communicate()
                 return {
@@ -244,7 +259,12 @@ class AgentMCPStartupVerifier:
         startup_results = {}
 
         # Priority order for agent startup
-        priority_agents = ["chat_service", "orchestrator", "neural_engine", "enhanced_orchestrator"]
+        priority_agents = [
+            "chat_service",
+            "orchestrator",
+            "neural_engine",
+            "enhanced_orchestrator",
+        ]
 
         # Start priority agents first
         for agent_name in priority_agents:
@@ -307,10 +327,19 @@ class AgentMCPStartupVerifier:
             # Check if process is still running
             if process.returncode is None:
                 self.running_processes.append(
-                    {"name": agent_name, "type": "agent", "process": process, "pid": process.pid}
+                    {
+                        "name": agent_name,
+                        "type": "agent",
+                        "process": process,
+                        "pid": process.pid,
+                    }
                 )
 
-                return {"status": "success", "pid": process.pid, "command": " ".join(cmd)}
+                return {
+                    "status": "success",
+                    "pid": process.pid,
+                    "command": " ".join(cmd),
+                }
             else:
                 stdout, stderr = await process.communicate()
                 return {
@@ -383,7 +412,9 @@ class AgentMCPStartupVerifier:
 
             # Wait for response (with timeout)
             try:
-                response_line = await asyncio.wait_for(process.stdout.readline(), timeout=5.0)
+                response_line = await asyncio.wait_for(
+                    process.stdout.readline(), timeout=5.0
+                )
                 response = json.loads(response_line.decode())
 
                 if "result" in response:
@@ -418,12 +449,19 @@ class AgentMCPStartupVerifier:
             # For HTTP-based agents, try HTTP communication
             if "service" in agent_name.lower() or "router" in agent_name.lower():
                 # Try to find the port the service is running on
-                port = 8000 + len([p for p in self.running_processes if p["name"] == agent_name])
+                port = 8000 + len(
+                    [p for p in self.running_processes if p["name"] == agent_name]
+                )
 
                 async with httpx.AsyncClient() as client:
                     try:
-                        response = await client.get(f"http://localhost:{port}/health", timeout=5.0)
-                        return {"status": "success", "http_status": response.status_code}
+                        response = await client.get(
+                            f"http://localhost:{port}/health", timeout=5.0
+                        )
+                        return {
+                            "status": "success",
+                            "http_status": response.status_code,
+                        }
                     except httpx.RequestError:
                         return {"status": "failed", "error": "HTTP request failed"}
 
@@ -454,7 +492,9 @@ class AgentMCPStartupVerifier:
                     if i != j:
                         # Test if comp1 can communicate with comp2
                         key = f"{comp1['name']}_to_{comp2['name']}"
-                        communication_matrix[key] = {"status": "assumed_ok"}  # Simplified test
+                        communication_matrix[key] = {
+                            "status": "assumed_ok"
+                        }  # Simplified test
 
             return {
                 "status": "success",
@@ -558,7 +598,10 @@ class AgentMCPStartupVerifier:
         total_components = len(self.running_processes)
 
         if total_components < 3:
-            return {"status": "insufficient", "reason": "Not enough components for end-to-end test"}
+            return {
+                "status": "insufficient",
+                "reason": "Not enough components for end-to-end test",
+            }
 
         return {
             "status": "success",
@@ -627,7 +670,9 @@ class AgentMCPStartupVerifier:
 
             # Check open connections
             connections = process.connections()
-            listening_ports = [conn.laddr.port for conn in connections if conn.status == "LISTEN"]
+            listening_ports = [
+                conn.laddr.port for conn in connections if conn.status == "LISTEN"
+            ]
 
             return {
                 "status": "checked",
@@ -743,7 +788,9 @@ class AgentMCPStartupVerifier:
                 "total_steps": total_steps,
                 "successful_steps": successful_steps,
                 "success_rate": (
-                    f"{(successful_steps/total_steps)*100:.1f}%" if total_steps > 0 else "0%"
+                    f"{(successful_steps/total_steps)*100:.1f}%"
+                    if total_steps > 0
+                    else "0%"
                 ),
                 "running_components": running_components,
                 "total_discovered": total_discovered,
@@ -779,7 +826,9 @@ class AgentMCPStartupVerifier:
         actions = []
 
         failed_steps = [
-            name for name, result in self.startup_results.items() if result["status"] == "FAILED"
+            name
+            for name, result in self.startup_results.items()
+            if result["status"] == "FAILED"
         ]
 
         if failed_steps:

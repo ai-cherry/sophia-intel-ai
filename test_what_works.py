@@ -42,7 +42,9 @@ class WhatActuallyWorks:
                 # Test Python syntax
                 try:
                     result = subprocess.run(
-                        ["python3", "-m", "py_compile", script_path], capture_output=True, text=True
+                        ["python3", "-m", "py_compile", script_path],
+                        capture_output=True,
+                        text=True,
                     )
                     if result.returncode == 0:
                         self.working.append(f"{script} - SYNTAX OK")
@@ -97,7 +99,9 @@ class WhatActuallyWorks:
 
         # Check if Docker is available
         try:
-            result = subprocess.run(["docker", "--version"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["docker", "--version"], capture_output=True, text=True
+            )
             if result.returncode == 0:
                 self.working.append("Docker - AVAILABLE")
                 print("✅ Docker - AVAILABLE")

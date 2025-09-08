@@ -105,7 +105,9 @@ class AirbyteClient:
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
 
         async with aiohttp.ClientSession() as session:
-            async with session.request(method, url, headers=headers, json=data) as response:
+            async with session.request(
+                method, url, headers=headers, json=data
+            ) as response:
                 if response.status >= 400:
                     error_text = await response.text()
                     raise aiohttp.ClientResponseError(
@@ -137,7 +139,9 @@ class AirbyteClient:
         logger.info(f"Using workspace: {self.workspace_id}")
         return self.workspace_id
 
-    async def create_gong_source(self, source_name: str, gong_config: dict[str, Any]) -> str:
+    async def create_gong_source(
+        self, source_name: str, gong_config: dict[str, Any]
+    ) -> str:
         """Create Gong source configuration"""
         if not self.workspace_id:
             await self.set_workspace()
@@ -252,37 +256,51 @@ class AirbyteClient:
             status=SyncStatus(response["status"]),
             created_at=datetime.fromisoformat(response["createdAt"]),
             started_at=(
-                datetime.fromisoformat(response["startedAt"]) if response.get("startedAt") else None
+                datetime.fromisoformat(response["startedAt"])
+                if response.get("startedAt")
+                else None
             ),
             ended_at=(
-                datetime.fromisoformat(response["endedAt"]) if response.get("endedAt") else None
+                datetime.fromisoformat(response["endedAt"])
+                if response.get("endedAt")
+                else None
             ),
             records_synced=response.get("recordsSynced", 0),
             bytes_synced=response.get("bytesSynced", 0),
             error_message=response.get("errorMessage"),
         )
 
-    async def wait_for_job_completion(self, job_id: str, timeout_seconds: int = 3600) -> SyncJob:
+    async def wait_for_job_completion(
+        self, job_id: str, timeout_seconds: int = 3600
+    ) -> SyncJob:
         """Wait for sync job to complete with timeout"""
         start_time = time.time()
 
         while time.time() - start_time < timeout_seconds:
             job = await self.get_job_status(job_id)
 
-            if job.status in [SyncStatus.SUCCEEDED, SyncStatus.FAILED, SyncStatus.CANCELLED]:
+            if job.status in [
+                SyncStatus.SUCCEEDED,
+                SyncStatus.FAILED,
+                SyncStatus.CANCELLED,
+            ]:
                 return job
 
             logger.info(f"Job {job_id} status: {job.status}")
             await asyncio.sleep(30)  # Check every 30 seconds
 
-        raise TimeoutError(f"Job {job_id} did not complete within {timeout_seconds} seconds")
+        raise TimeoutError(
+            f"Job {job_id} did not complete within {timeout_seconds} seconds"
+        )
 
     async def get_connections(self) -> list[AirbyteConnection]:
         """Get all connections in workspace"""
         if not self.workspace_id:
             await self.set_workspace()
 
-        response = await self.make_request("GET", f"/workspaces/{self.workspace_id}/connections")
+        response = await self.make_request(
+            "GET", f"/workspaces/{self.workspace_id}/connections"
+        )
 
         connections = []
         for conn_data in response.get("data", []):
@@ -380,7 +398,10 @@ class GongAirbyteOrchestrator:
                                 "title": {"type": "string"},
                                 "url": {"type": "string"},
                                 "status": {"type": "string"},
-                                "actualStart": {"type": "string", "format": "date-time"},
+                                "actualStart": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                },
                                 "actualEnd": {"type": "string", "format": "date-time"},
                                 "duration": {"type": "integer"},
                                 "participants": {"type": "array"},
@@ -462,7 +483,9 @@ class GongAirbyteOrchestrator:
         )  # 2 hours timeout
 
         if job.status == SyncStatus.SUCCEEDED:
-            logger.info(f"Sync completed successfully. Records synced: {job.records_synced}")
+            logger.info(
+                f"Sync completed successfully. Records synced: {job.records_synced}"
+            )
         else:
             logger.error(f"Sync failed: {job.error_message}")
 
@@ -476,7 +499,12 @@ class GongAirbyteOrchestrator:
             pipeline_connection = None
             if self.connection_id:
                 pipeline_connection = next(
-                    (conn for conn in connections if conn.connection_id == self.connection_id), None
+                    (
+                        conn
+                        for conn in connections
+                        if conn.connection_id == self.connection_id
+                    ),
+                    None,
                 )
 
             return {

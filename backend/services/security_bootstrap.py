@@ -67,15 +67,33 @@ class VulnerabilityScanner:
 
                 return {
                     "critical": len(
-                        [v for v in vulnerabilities.values() if v.get("severity") == "critical"]
+                        [
+                            v
+                            for v in vulnerabilities.values()
+                            if v.get("severity") == "critical"
+                        ]
                     ),
                     "high": len(
-                        [v for v in vulnerabilities.values() if v.get("severity") == "high"]
+                        [
+                            v
+                            for v in vulnerabilities.values()
+                            if v.get("severity") == "high"
+                        ]
                     ),
                     "medium": len(
-                        [v for v in vulnerabilities.values() if v.get("severity") == "moderate"]
+                        [
+                            v
+                            for v in vulnerabilities.values()
+                            if v.get("severity") == "moderate"
+                        ]
                     ),
-                    "low": len([v for v in vulnerabilities.values() if v.get("severity") == "low"]),
+                    "low": len(
+                        [
+                            v
+                            for v in vulnerabilities.values()
+                            if v.get("severity") == "low"
+                        ]
+                    ),
                 }
         except Exception as e:
             logger.warning(f"NPM audit failed: {e}")
@@ -147,7 +165,9 @@ class PatchManager:
     def __init__(self):
         self.patch_strategies = ["update", "force_update", "alternative_package"]
 
-    async def patch_vulnerabilities(self, scan_results: Dict[str, int]) -> Dict[str, Any]:
+    async def patch_vulnerabilities(
+        self, scan_results: Dict[str, int]
+    ) -> Dict[str, Any]:
         """Apply patches for identified vulnerabilities"""
         patch_results = {
             "npm_patches": 0,
@@ -169,7 +189,9 @@ class PatchManager:
         total_patches = npm_patches + python_patches
 
         if total_vulnerabilities > 0:
-            patch_results["success_rate"] = min(total_patches / total_vulnerabilities, 1.0)
+            patch_results["success_rate"] = min(
+                total_patches / total_vulnerabilities, 1.0
+            )
 
         logger.info(f"Patch results: {patch_results}")
         return patch_results
@@ -270,12 +292,15 @@ class SecurityBootstrap:
             final_scan = await self.vulnerability_scanner.deep_scan()
 
             if final_scan["critical"] > 0 or final_scan["high"] > 0:
-                raise SecurityException(f"Unable to eliminate all vulnerabilities: {final_scan}")
+                raise SecurityException(
+                    f"Unable to eliminate all vulnerabilities: {final_scan}"
+                )
 
         return {
             "initial_vulnerabilities": initial_scan,
             "final_vulnerabilities": final_scan,
-            "vulnerabilities_fixed": sum(initial_scan.values()) - sum(final_scan.values()),
+            "vulnerabilities_fixed": sum(initial_scan.values())
+            - sum(final_scan.values()),
             "security_score": 10.0 if sum(final_scan.values()) == 0 else 8.0,
             "compliance": ["SOC2", "ISO27001", "HIPAA"],
             "timestamp": datetime.utcnow().isoformat(),
@@ -298,7 +323,10 @@ class SecurityBootstrap:
 
             # Check if vulnerabilities remain
             audit_check = await asyncio.create_subprocess_exec(
-                "npm", "audit", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                "npm",
+                "audit",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
             audit_stdout, _ = await audit_check.communicate()
 
@@ -306,7 +334,11 @@ class SecurityBootstrap:
             if b"vulnerabilities" in audit_stdout:
                 await self.force_update_npm_packages()
 
-            return {"type": "npm", "status": "completed", "fixed": self.count_fixed(stdout)}
+            return {
+                "type": "npm",
+                "status": "completed",
+                "fixed": self.count_fixed(stdout),
+            }
 
         except Exception as e:
             logger.error(f"NPM vulnerability patching failed: {e}")
@@ -450,7 +482,9 @@ jobs:
             "services_configured": len(services),
         }
 
-    async def apply_security_policy(self, service: str, policies: Dict[str, Any]) -> None:
+    async def apply_security_policy(
+        self, service: str, policies: Dict[str, Any]
+    ) -> None:
         """Apply security policy to a specific service"""
         logger.info(f"Applying security policies to {service}")
 
@@ -484,7 +518,10 @@ jobs:
 
             # Install updated packages
             process = await asyncio.create_subprocess_exec(
-                "npm", "install", stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+                "npm",
+                "install",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
             )
             await process.communicate()
 
@@ -499,7 +536,9 @@ jobs:
             # Extract number of fixes if possible
             import re
 
-            matches = re.findall(r"(\d+)\s+vulnerabilit(?:y|ies)\s+fixed", output_str.lower())
+            matches = re.findall(
+                r"(\d+)\s+vulnerabilit(?:y|ies)\s+fixed", output_str.lower()
+            )
             if matches:
                 return int(matches[0])
         return 1 if "fixed" in output_str.lower() else 0

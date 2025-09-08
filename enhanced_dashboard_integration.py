@@ -104,7 +104,9 @@ class EnhancedSophiaDashboard:
         with open(metrics_file, "w") as f:
             json.dump(data, f, indent=2)
 
-    async def collect_comprehensive_metrics(self, environment: str = None) -> DashboardMetrics:
+    async def collect_comprehensive_metrics(
+        self, environment: str = None
+    ) -> DashboardMetrics:
         """Collect comprehensive metrics for dashboard"""
 
         logger.info("📊 Collecting comprehensive metrics for dashboard")
@@ -124,7 +126,9 @@ class EnhancedSophiaDashboard:
 
             # Collect secret validation metrics
             validation_results = await secret_manager.validate_all_secrets(environment)
-            secret_health_report = secret_manager.generate_secret_health_report(validation_results)
+            secret_health_report = secret_manager.generate_secret_health_report(
+                validation_results
+            )
 
             # Collect environment status
             env_status = env_manager.get_environment_status(environment)
@@ -133,13 +137,17 @@ class EnhancedSophiaDashboard:
             api_response_times = {}
             for secret_name, result in validation_results.items():
                 if result.response_time > 0:
-                    api_response_times[secret_name] = result.response_time * 1000  # Convert to ms
+                    api_response_times[secret_name] = (
+                        result.response_time * 1000
+                    )  # Convert to ms
 
             # Get system uptime
             system_uptime = self._get_system_uptime()
 
             # Generate alerts
-            alerts = self._generate_alerts(secret_health_report, api_response_times, env_status)
+            alerts = self._generate_alerts(
+                secret_health_report, api_response_times, env_status
+            )
 
             # Create metrics object
             metrics = DashboardMetrics(
@@ -244,7 +252,10 @@ class EnhancedSophiaDashboard:
 
         # API response time alerts
         for api_name, response_time in response_times.items():
-            if response_time > self.config["alert_thresholds"]["response_time_critical"]:
+            if (
+                response_time
+                > self.config["alert_thresholds"]["response_time_critical"]
+            ):
                 alerts.append(
                     {
                         "level": "critical",
@@ -254,7 +265,9 @@ class EnhancedSophiaDashboard:
                         "api": api_name,
                     }
                 )
-            elif response_time > self.config["alert_thresholds"]["response_time_warning"]:
+            elif (
+                response_time > self.config["alert_thresholds"]["response_time_warning"]
+            ):
                 alerts.append(
                     {
                         "level": "warning",
@@ -388,9 +401,17 @@ class EnhancedSophiaDashboard:
                     "current_endpoint": "/api/environment/current",
                     "switch_endpoint": "/api/environment/switch",
                     "environments": [
-                        {"name": "production", "label": "Production", "color": "#dc3545"},
+                        {
+                            "name": "production",
+                            "label": "Production",
+                            "color": "#dc3545",
+                        },
                         {"name": "staging", "label": "Staging", "color": "#ffc107"},
-                        {"name": "development", "label": "Development", "color": "#28a745"},
+                        {
+                            "name": "development",
+                            "label": "Development",
+                            "color": "#28a745",
+                        },
                     ],
                 },
             },
@@ -653,7 +674,9 @@ async def main():
 
     if integration_result["status"] == "success":
         print("✅ Integration setup complete!")
-        print(f"📁 Integration directory: {integration_result['integration_directory']}")
+        print(
+            f"📁 Integration directory: {integration_result['integration_directory']}"
+        )
         print(f"📊 Created {integration_result['widgets_count']} dashboard widgets")
         print(f"🔌 Created {integration_result['endpoints_count']} API endpoints")
         print(f"📋 Created {integration_result['panels_count']} dashboard panels")

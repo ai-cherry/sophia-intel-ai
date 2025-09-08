@@ -19,7 +19,9 @@ except ValueError:
     model_tokens_total = REGISTRY._names_to_collectors["model_tokens_total"]
 
 try:
-    model_latency_seconds = Histogram("model_latency_seconds", "Model request latency", ["model"])
+    model_latency_seconds = Histogram(
+        "model_latency_seconds", "Model request latency", ["model"]
+    )
 except ValueError:
     model_latency_seconds = REGISTRY._names_to_collectors["model_latency_seconds"]
 
@@ -31,7 +33,9 @@ except ValueError:
     model_cost_usd_total = REGISTRY._names_to_collectors["model_cost_usd_total"]
 
 try:
-    model_cost_usd_today = Counter("model_cost_usd_today", "Cost so far today per model", ["model"])
+    model_cost_usd_today = Counter(
+        "model_cost_usd_today", "Cost so far today per model", ["model"]
+    )
 except ValueError:
     model_cost_usd_today = REGISTRY._names_to_collectors["model_cost_usd_today"]
 
@@ -123,7 +127,9 @@ class OpenRouterGateway:
         """Unified chat completion for OpenRouter models with GPT-5 optimizations"""
         # GPT-5 specific text transformation when enabled
         if model == "openai/gpt-5" and kwargs.get("think_hard"):
-            messages[0]["content"] = f"Think step-by-step about this: {messages[0]['content']}"
+            messages[0][
+                "content"
+            ] = f"Think step-by-step about this: {messages[0]['content']}"
 
         start_time = time.time()
         try:
@@ -147,7 +153,9 @@ class OpenRouterGateway:
                 # Avoid infinite recursion in fallbacks
                 new_kwargs = kwargs.copy()
                 new_kwargs["think_hard"] = False
-                return await self.chat_completion(fallback_model, messages, **new_kwargs)
+                return await self.chat_completion(
+                    fallback_model, messages, **new_kwargs
+                )
             raise
 
     def _track_cost(self, model: str, usage):
@@ -160,7 +168,9 @@ class OpenRouterGateway:
 
         # Update Prometheus counters
         model_tokens_total.labels(model=model, type="input").inc(usage.prompt_tokens)
-        model_tokens_total.labels(model=model, type="output").inc(usage.completion_tokens)
+        model_tokens_total.labels(model=model, type="output").inc(
+            usage.completion_tokens
+        )
         model_cost_usd_total.labels(model=model, type="input").inc(input_cost)
         model_cost_usd_total.labels(model=model, type="output").inc(output_cost)
         model_cost_usd_today.labels(model=model).inc(input_cost + output_cost)
@@ -185,7 +195,9 @@ class OpenRouterGateway:
             "deepseek/deepseek-chat-v3.1": ["z-ai/glm-4.5-air"],
             "z-ai/glm-4.5-air": None,
         }
-        return fallback_chain.get(model, [None])[0] if fallback_chain.get(model) else None
+        return (
+            fallback_chain.get(model, [None])[0] if fallback_chain.get(model) else None
+        )
 
 
 # Test only for local development

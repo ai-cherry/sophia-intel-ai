@@ -50,14 +50,18 @@ class ChatMessage(BaseModel):
 
 
 class OpusConfig(BaseModel):
-    model: str = Field(default="anthropic/claude-opus-4-1-20250805", description="Model identifier")
+    model: str = Field(
+        default="anthropic/claude-opus-4-1-20250805", description="Model identifier"
+    )
     provider: str = Field(
         default="openrouter", description="Provider: openrouter, anthropic, or portkey"
     )
     temperature: float = Field(
         default=0.7, ge=0.0, le=1.0, description="Temperature for response generation"
     )
-    max_tokens: int = Field(default=4096, ge=1, le=8192, description="Maximum tokens in response")
+    max_tokens: int = Field(
+        default=4096, ge=1, le=8192, description="Maximum tokens in response"
+    )
     requirements: Optional[Dict[str, str]] = Field(
         default=None, description="Task-specific requirements"
     )
@@ -65,7 +69,9 @@ class OpusConfig(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[ChatMessage] = Field(..., description="Conversation messages")
-    config: OpusConfig = Field(default_factory=OpusConfig, description="Model configuration")
+    config: OpusConfig = Field(
+        default_factory=OpusConfig, description="Model configuration"
+    )
     stream: bool = Field(default=False, description="Enable streaming response")
 
 
@@ -96,11 +102,15 @@ def reset_daily_stats():
         daily_reset_time = today
 
 
-def calculate_cost(provider: str, model: str, input_tokens: int, output_tokens: int) -> float:
+def calculate_cost(
+    provider: str, model: str, input_tokens: int, output_tokens: int
+) -> float:
     """Calculate cost based on provider and model"""
     # Pricing per 1K tokens (approximate)
     pricing = {
-        "openrouter": {"anthropic/claude-opus-4-1-20250805": {"input": 0.015, "output": 0.075}},
+        "openrouter": {
+            "anthropic/claude-opus-4-1-20250805": {"input": 0.015, "output": 0.075}
+        },
         "anthropic": {"claude-opus-4-1-20250805": {"input": 0.015, "output": 0.075}},
         "portkey": {
             "anthropic/claude-opus-4-1-20250805": {
@@ -110,7 +120,9 @@ def calculate_cost(provider: str, model: str, input_tokens: int, output_tokens: 
         },
     }
 
-    model_pricing = pricing.get(provider, {}).get(model, {"input": 0.015, "output": 0.075})
+    model_pricing = pricing.get(provider, {}).get(
+        model, {"input": 0.015, "output": 0.075}
+    )
 
     input_cost = (input_tokens / 1000) * model_pricing["input"]
     output_cost = (output_tokens / 1000) * model_pricing["output"]
@@ -141,19 +153,27 @@ async def call_openrouter(messages: List[Dict], config: OpusConfig) -> Dict[str,
     # Add task-specific optimizations
     if config.requirements:
         if config.requirements.get("taskType") == "coding":
-            payload["temperature"] = min(config.temperature, 0.3)  # Lower temp for coding
+            payload["temperature"] = min(
+                config.temperature, 0.3
+            )  # Lower temp for coding
         elif config.requirements.get("volume") == "high":
-            payload["model"] = "anthropic/claude-3-5-sonnet-20241022"  # Cost optimization
+            payload["model"] = (
+                "anthropic/claude-3-5-sonnet-20241022"  # Cost optimization
+            )
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload,
         )
         response.raise_for_status()
         return response.json()
 
 
-async def call_anthropic_direct(messages: List[Dict], config: OpusConfig) -> Dict[str, Any]:
+async def call_anthropic_direct(
+    messages: List[Dict], config: OpusConfig
+) -> Dict[str, Any]:
     """Call Claude Opus 4.1 directly via Anthropic API"""
     if not ANTHROPIC_API_KEY:
         raise HTTPException(status_code=500, detail="Anthropic API key not configured")
@@ -240,7 +260,10 @@ async def chat_with_opus(
 
     # Intelligent provider selection
     provider_priority = ["openrouter", "portkey", "anthropic"]
-    if request.config.requirements and request.config.requirements.get("volume") == "high":
+    if (
+        request.config.requirements
+        and request.config.requirements.get("volume") == "high"
+    ):
         provider_priority = [
             "openrouter",
             "anthropic",
@@ -264,7 +287,9 @@ async def chat_with_opus(
                     result = await call_anthropic_direct(messages, request.config)
                     # Convert Anthropic response format
                     if "content" in result and isinstance(result["content"], list):
-                        content = result["content"][0]["text"] if result["content"] else ""
+                        content = (
+                            result["content"][0]["text"] if result["content"] else ""
+                        )
                         result = {
                             "choices": [{"message": {"content": content}}],
                             "usage": result.get("usage", {}),
@@ -280,14 +305,17 @@ async def chat_with_opus(
     else:
         # All providers failed
         raise HTTPException(
-            status_code=503, detail=f"All providers unavailable. Last error: {str(last_error)}"
+            status_code=503,
+            detail=f"All providers unavailable. Last error: {str(last_error)}",
         )
 
     # Extract response content
     if "choices" in result and result["choices"]:
         content = result["choices"][0]["message"]["content"]
     else:
-        raise HTTPException(status_code=500, detail="Invalid response format from provider")
+        raise HTTPException(
+            status_code=500, detail="Invalid response format from provider"
+        )
 
     # Calculate metrics
     response_time = time.time() - start_time
@@ -304,7 +332,8 @@ async def chat_with_opus(
     usage_stats.tokens_used += total_tokens
     usage_stats.cost_today += cost
     usage_stats.average_response_time = (
-        usage_stats.average_response_time * (usage_stats.requests_today - 1) + response_time
+        usage_stats.average_response_time * (usage_stats.requests_today - 1)
+        + response_time
     ) / usage_stats.requests_today
 
     # Prepare response
@@ -382,15 +411,22 @@ async def sophia_opus_integration():
         # Mock permissions
         actual_permissions = {"chat": True, "analytics": True}
 
-        response = await chat_with_opus(sophia_request, MockRequest(), actual_permissions)
+        response = await chat_with_opus(
+            sophia_request, MockRequest(), actual_permissions
+        )
         return {
             "status": "success",
             "message": "Opus 4.1 integration test completed",
             "response": (
-                response.content[:100] + "..." if len(response.content) > 100 else response.content
+                response.content[:100] + "..."
+                if len(response.content) > 100
+                else response.content
             ),
             "provider": response.metadata["provider"],
             "cost": response.metadata["cost"],
         }
     except Exception as e:
-        return {"status": "error", "message": f"Opus 4.1 integration test failed: {str(e)}"}
+        return {
+            "status": "error",
+            "message": f"Opus 4.1 integration test failed: {str(e)}",
+        }

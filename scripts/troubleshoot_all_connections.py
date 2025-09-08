@@ -59,7 +59,9 @@ class ConnectionTester:
         try:
             from portkey_ai import Portkey
 
-            client = Portkey(api_key=os.environ["PORTKEY_API_KEY"], virtual_key=config["vk"])
+            client = Portkey(
+                api_key=os.environ["PORTKEY_API_KEY"], virtual_key=config["vk"]
+            )
 
             start = time.time()
             response = client.chat.completions.create(
@@ -74,7 +76,9 @@ class ConnectionTester:
                 "method": "portkey",
                 "status": "success",
                 "response": (
-                    response.choices[0].message.content if response.choices else "No response"
+                    response.choices[0].message.content
+                    if response.choices
+                    else "No response"
                 ),
                 "latency_ms": latency,
                 "model": config["model"],
@@ -134,7 +138,9 @@ class ConnectionTester:
             return {
                 "method": "direct",
                 "status": "success",
-                "response": response.content[0].text if response.content else "No response",
+                "response": (
+                    response.content[0].text if response.content else "No response"
+                ),
                 "latency_ms": latency,
             }
 
@@ -192,7 +198,9 @@ class ConnectionTester:
 
             start = time.time()
             response = requests.post(
-                "https://api.together.xyz/v1/chat/completions", headers=headers, json=data
+                "https://api.together.xyz/v1/chat/completions",
+                headers=headers,
+                json=data,
             )
             latency = int((time.time() - start) * 1000)
 
@@ -223,13 +231,17 @@ class ConnectionTester:
         # Test Portkey
         if provider in PORTKEY_CONFIGS:
             print("  📡 Testing via Portkey...")
-            portkey_result = await self.test_portkey(provider, PORTKEY_CONFIGS[provider])
+            portkey_result = await self.test_portkey(
+                provider, PORTKEY_CONFIGS[provider]
+            )
             results["portkey"] = portkey_result
 
             if portkey_result["status"] == "success":
                 print(f"    ✅ Portkey works! ({portkey_result['latency_ms']}ms)")
             else:
-                print(f"    ❌ Portkey failed: {portkey_result.get('error', 'Unknown')[:100]}")
+                print(
+                    f"    ❌ Portkey failed: {portkey_result.get('error', 'Unknown')[:100]}"
+                )
 
         # Test direct API
         print("  🔌 Testing direct API...")
@@ -254,10 +266,15 @@ class ConnectionTester:
         elif direct_result["status"] == "not_implemented":
             print(f"    ⏭️  Direct API not implemented for {provider}")
         else:
-            print(f"    ❌ Direct API failed: {direct_result.get('error', 'Unknown')[:100]}")
+            print(
+                f"    ❌ Direct API failed: {direct_result.get('error', 'Unknown')[:100]}"
+            )
 
         # Determine best method
-        if portkey_result.get("status") == "success" and direct_result.get("status") == "success":
+        if (
+            portkey_result.get("status") == "success"
+            and direct_result.get("status") == "success"
+        ):
             # Both work, choose faster
             if portkey_result["latency_ms"] < direct_result["latency_ms"]:
                 results["recommendation"] = "use_portkey"
@@ -299,7 +316,12 @@ class ConnectionTester:
 
     def generate_recommendations(self) -> Dict[str, Any]:
         """Generate recommendations based on test results"""
-        recommendations = {"use_portkey": [], "use_direct": [], "broken": [], "config_needed": []}
+        recommendations = {
+            "use_portkey": [],
+            "use_direct": [],
+            "broken": [],
+            "config_needed": [],
+        }
 
         for provider, result in self.results.items():
             recommendation = result.get("recommendation", "unknown")
@@ -311,7 +333,9 @@ class ConnectionTester:
                 # Check if we have the API key
                 key_name = f"{provider.upper()}_API_KEY"
                 if not DIRECT_API_KEYS.get(key_name):
-                    recommendations["config_needed"].append(f"Add {key_name} to environment")
+                    recommendations["config_needed"].append(
+                        f"Add {key_name} to environment"
+                    )
             elif recommendation == "provider_broken":
                 recommendations["broken"].append(provider)
 
@@ -338,7 +362,9 @@ async def main():
         print(f"  • {provider}: {', '.join(methods)}")
 
     # Show broken providers
-    broken = [p for p in results if results[p].get("recommendation") == "provider_broken"]
+    broken = [
+        p for p in results if results[p].get("recommendation") == "provider_broken"
+    ]
     if broken:
         print(f"\n❌ Broken Providers: {len(broken)}")
         for provider in broken:
@@ -372,7 +398,9 @@ async def main():
             print(f"   • {provider}")
 
     # Save results
-    output_file = f"connection_troubleshoot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = (
+        f"connection_troubleshoot_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(output_file, "w") as f:
         json.dump(results, f, indent=2)
 

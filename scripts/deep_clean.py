@@ -106,11 +106,22 @@ class DeepCleaner:
 
         logger.info("\n🗑️  Cleaning archive files...")
 
-        patterns = ["*.backup", "*.bak", "*.old", "*.orig", "*~", "*.tmp", "*.archive", "*.copy"]
+        patterns = [
+            "*.backup",
+            "*.bak",
+            "*.old",
+            "*.orig",
+            "*~",
+            "*.tmp",
+            "*.archive",
+            "*.copy",
+        ]
 
         for pattern in patterns:
             for file_path in self.root.rglob(pattern):
-                if ".venv" not in str(file_path) and "node_modules" not in str(file_path):
+                if ".venv" not in str(file_path) and "node_modules" not in str(
+                    file_path
+                ):
                     if not self.dry_run:
                         file_path.unlink()
                     self.deleted_items.append(str(file_path))
@@ -149,7 +160,9 @@ class DeepCleaner:
 
                     import re
 
-                    manager_classes = re.findall(r"^class\s+(\w*Manager)", content, re.MULTILINE)
+                    manager_classes = re.findall(
+                        r"^class\s+(\w*Manager)", content, re.MULTILINE
+                    )
 
                     for manager_class in manager_classes:
                         if manager_class not in allowed_managers:
@@ -451,7 +464,9 @@ def main():
 
     parser = argparse.ArgumentParser(description="Deep clean the codebase")
     parser.add_argument("--dry-run", action="store_true", help="Perform dry run")
-    parser.add_argument("--update-docs", action="store_true", help="Update documentation")
+    parser.add_argument(
+        "--update-docs", action="store_true", help="Update documentation"
+    )
     parser.add_argument(
         "--aggressive", action="store_true", help="Aggressive cleaning (delete more)"
     )

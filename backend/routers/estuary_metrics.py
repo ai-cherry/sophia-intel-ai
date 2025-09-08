@@ -75,7 +75,8 @@ async def get_estuary_health():
             "summary": {
                 "healthy_components": sum(components_healthy),
                 "total_components": len(components_healthy),
-                "health_percentage": (sum(components_healthy) / len(components_healthy)) * 100,
+                "health_percentage": (sum(components_healthy) / len(components_healthy))
+                * 100,
             },
         }
 
@@ -121,7 +122,9 @@ async def get_estuary_metrics():
 
     except Exception as e:
         logger.error(f"Metrics collection failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Metrics collection failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Metrics collection failed: {str(e)}"
+        )
 
 
 @router.get("/data-sources")
@@ -132,10 +135,14 @@ async def get_data_sources():
 
         # Get captures and collections
         captures = (
-            await estuary_pool.get_captures() if hasattr(estuary_pool, "get_captures") else []
+            await estuary_pool.get_captures()
+            if hasattr(estuary_pool, "get_captures")
+            else []
         )
         collections = (
-            await estuary_pool.get_collections() if hasattr(estuary_pool, "get_collections") else []
+            await estuary_pool.get_collections()
+            if hasattr(estuary_pool, "get_collections")
+            else []
         )
 
         # Test data access for key sources
@@ -178,7 +185,9 @@ async def get_data_sources():
 
     except Exception as e:
         logger.error(f"Data sources check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Data sources check failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Data sources check failed: {str(e)}"
+        )
 
 
 @router.post("/query")
@@ -266,7 +275,10 @@ async def get_recent_predictions():
                     "opportunity": "Enterprise Deal - BigCorp",
                     "health_score": 68,
                     "stage": "Negotiation",
-                    "recommendations": ["Accelerate timeline", "Involve executive sponsor"],
+                    "recommendations": [
+                        "Accelerate timeline",
+                        "Involve executive sponsor",
+                    ],
                     "timestamp": datetime.now().isoformat(),
                 }
             ],
@@ -288,7 +300,9 @@ async def get_recent_predictions():
 
     except Exception as e:
         logger.error(f"Predictions retrieval failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Predictions retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Predictions retrieval failed: {str(e)}"
+        )
 
 
 @router.get("/cost-savings")
@@ -338,7 +352,9 @@ async def get_cost_savings():
 
     except Exception as e:
         logger.error(f"Cost savings analysis failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Cost savings analysis failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Cost savings analysis failed: {str(e)}"
+        )
 
 
 @router.post("/setup/captures")
@@ -361,7 +377,9 @@ async def setup_data_captures():
 
         # Calculate success rate
         successful_setups = sum(
-            1 for result in [gong_result, salesforce_result] if result.get("status") == "success"
+            1
+            for result in [gong_result, salesforce_result]
+            if result.get("status") == "success"
         )
 
         return {

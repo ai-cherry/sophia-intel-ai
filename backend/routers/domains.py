@@ -50,7 +50,9 @@ class DomainStatsResponse(BaseModel):
     total_queries: int = Field(default=0, description="Total queries processed")
     avg_response_time: float = Field(default=0.0, description="Average response time")
     success_rate: float = Field(default=0.0, description="Success rate percentage")
-    last_activity: Optional[datetime] = Field(None, description="Last activity timestamp")
+    last_activity: Optional[datetime] = Field(
+        None, description="Last activity timestamp"
+    )
 
 
 # Domain configuration
@@ -74,7 +76,12 @@ DOMAIN_CONFIG = {
         "icon": "trending-up",
         "category": "Sales & Marketing",
         "permissions_required": ["domains.sales"],
-        "features": ["pipeline_analytics", "gong_integration", "deal_insights", "forecasting"],
+        "features": [
+            "pipeline_analytics",
+            "gong_integration",
+            "deal_insights",
+            "forecasting",
+        ],
     },
     Domain.MARKETING: {
         "display_name": "Marketing Analytics",
@@ -82,7 +89,12 @@ DOMAIN_CONFIG = {
         "icon": "megaphone",
         "category": "Sales & Marketing",
         "permissions_required": ["domains.marketing"],
-        "features": ["campaign_analytics", "lead_scoring", "attribution_analysis", "roi_tracking"],
+        "features": [
+            "campaign_analytics",
+            "lead_scoring",
+            "attribution_analysis",
+            "roi_tracking",
+        ],
     },
     Domain.BI: {
         "display_name": "Business Intelligence",
@@ -129,7 +141,12 @@ DOMAIN_CONFIG = {
         "icon": "settings",
         "category": "Core",
         "permissions_required": ["domains.admin", "admin.view"],
-        "features": ["user_management", "role_configuration", "system_settings", "audit_logs"],
+        "features": [
+            "user_management",
+            "role_configuration",
+            "system_settings",
+            "audit_logs",
+        ],
     },
     Domain.SUPPORT: {
         "display_name": "Customer Support",
@@ -233,7 +250,9 @@ async def get_accessible_domains(
         return DomainAccessResponse(
             accessible_domains=accessible_domains,
             domain_groups=domain_groups,
-            user_role=user_role.value if isinstance(user_role, Role) else str(user_role),
+            user_role=(
+                user_role.value if isinstance(user_role, Role) else str(user_role)
+            ),
             total_domains=len(accessible_domains),
         )
 
@@ -276,7 +295,8 @@ async def get_domain_info(
             config = DOMAIN_CONFIG.get(domain_enum, {})
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain not found: {domain_name}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Domain not found: {domain_name}",
             )
 
         return DomainInfo(
@@ -310,7 +330,9 @@ async def get_domain_info(
 @require_permission("system.monitor")
 async def get_domain_stats(
     domain_name: str,
-    days: int = Query(default=30, ge=1, le=365, description="Number of days for statistics"),
+    days: int = Query(
+        default=30, ge=1, le=365, description="Number of days for statistics"
+    ),
 ) -> DomainStatsResponse:
     """
     Get usage statistics for a specific domain
@@ -326,7 +348,8 @@ async def get_domain_stats(
             Domain(domain_name)
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain not found: {domain_name}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Domain not found: {domain_name}",
             )
 
         # Placeholder implementation - in real system, query analytics database
@@ -378,11 +401,14 @@ async def activate_domain(
             Domain(domain_name)
         except ValueError:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Domain not found: {domain_name}"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Domain not found: {domain_name}",
             )
 
         # Placeholder implementation - in real system, update user preferences
-        logger.info(f"🟢 Domain activated: {domain_name} for user {user_context.get('user_id')}")
+        logger.info(
+            f"🟢 Domain activated: {domain_name} for user {user_context.get('user_id')}"
+        )
 
         return {
             "message": f"Domain {domain_name} activated successfully",
@@ -429,13 +455,17 @@ async def get_domain_categories() -> Dict[str, List[str]]:
 
 # Health check endpoint
 @router.get(
-    "/health", summary="Domains service health check", description="Check domains service health"
+    "/health",
+    summary="Domains service health check",
+    description="Check domains service health",
 )
 async def domains_health_check():
     """Health check for domains service"""
     try:
         total_domains = len(DOMAIN_CONFIG)
-        categories = len(set(config.get("category", "Other") for config in DOMAIN_CONFIG.values()))
+        categories = len(
+            set(config.get("category", "Other") for config in DOMAIN_CONFIG.values())
+        )
 
         return {
             "status": "healthy",

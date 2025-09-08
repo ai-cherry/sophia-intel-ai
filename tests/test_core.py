@@ -39,7 +39,9 @@ def test_minimal_mcp_servers():
     # Check for essential servers only
     essential = ["artemis", "base", "business_intelligence", "security"]
     for server in essential:
-        assert Path(f"mcp_servers/{server}").exists(), f"Missing essential server: {server}"
+        assert Path(
+            f"mcp_servers/{server}"
+        ).exists(), f"Missing essential server: {server}"
 
 
 def test_minimal_agents():

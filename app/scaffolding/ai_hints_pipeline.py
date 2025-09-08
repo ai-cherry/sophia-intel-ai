@@ -136,8 +136,16 @@ class AIHintsGenerator:
             (r"time\.sleep\(", "blocking_sleep", "Use async sleep in async context"),
             (r"\+ \[.*\]", "list_concatenation", "Use extend() instead of + for lists"),
             (r"except:$", "bare_except", "Specify exception types"),
-            (r"if .* == True:", "explicit_bool_check", "Use 'if variable:' for boolean checks"),
-            (r"len\(.*\) > 0", "len_comparison", "Use 'if collection:' for emptiness check"),
+            (
+                r"if .* == True:",
+                "explicit_bool_check",
+                "Use 'if variable:' for boolean checks",
+            ),
+            (
+                r"len\(.*\) > 0",
+                "len_comparison",
+                "Use 'if collection:' for emptiness check",
+            ),
             (r"dict\(\)", "dict_constructor", "Use {} for empty dict"),
             (r"list\(\)", "list_constructor", "Use [] for empty list"),
         ]
@@ -147,7 +155,9 @@ class AIHintsGenerator:
         hints = AIHints()
 
         # Calculate modification risk
-        hints.modification_risk = self._calculate_modification_risk(metadata, source_code)
+        hints.modification_risk = self._calculate_modification_risk(
+            metadata, source_code
+        )
 
         # Determine test requirements
         hints.test_requirements = self._determine_test_requirements(
@@ -166,7 +176,9 @@ class AIHintsGenerator:
         hints.side_effects = self._identify_side_effects(source_code)
 
         # Check concurrency safety
-        hints.concurrency_safe = self._check_concurrency_safety(source_code, hints.side_effects)
+        hints.concurrency_safe = self._check_concurrency_safety(
+            source_code, hints.side_effects
+        )
 
         # Check idempotency
         hints.idempotent = self._check_idempotency(metadata, source_code)
@@ -176,7 +188,9 @@ class AIHintsGenerator:
 
         return hints
 
-    def _calculate_modification_risk(self, metadata: CodeMetadata, source_code: str) -> float:
+    def _calculate_modification_risk(
+        self, metadata: CodeMetadata, source_code: str
+    ) -> float:
         """Calculate the risk of modifying this code"""
         risk_score = 0.0
         risk_factors = []
@@ -213,7 +227,9 @@ class AIHintsGenerator:
 
         return risk_score
 
-    def _determine_test_requirements(self, metadata: CodeMetadata, risk: float) -> list[str]:
+    def _determine_test_requirements(
+        self, metadata: CodeMetadata, risk: float
+    ) -> list[str]:
         """Determine required test strategies"""
         requirements = []
 
@@ -235,7 +251,10 @@ class AIHintsGenerator:
             "api_endpoint": [TestStrategy.INTEGRATION_TEST, TestStrategy.LOAD_TEST],
             "repository": [TestStrategy.INTEGRATION_TEST],
             "validator": [TestStrategy.UNIT_TEST, TestStrategy.SECURITY_TEST],
-            "llm_interface": [TestStrategy.INTEGRATION_TEST, TestStrategy.PERFORMANCE_TEST],
+            "llm_interface": [
+                TestStrategy.INTEGRATION_TEST,
+                TestStrategy.PERFORMANCE_TEST,
+            ],
         }
 
         if metadata.semantic_role.value in role_tests:
@@ -270,7 +289,9 @@ class AIHintsGenerator:
         # Long functions
         if len(lines) > 100:
             score += 0.3
-            suggestions.append("long_function: Consider breaking into smaller functions")
+            suggestions.append(
+                "long_function: Consider breaking into smaller functions"
+            )
 
         # Deep nesting
         max_indent = (
@@ -281,7 +302,9 @@ class AIHintsGenerator:
 
         if max_indent > 4:
             score += 0.3
-            suggestions.append("deep_nesting: Reduce nesting depth for better readability")
+            suggestions.append(
+                "deep_nesting: Reduce nesting depth for better readability"
+            )
 
         # Duplicate code detection (simple check)
         code_blocks = []
@@ -295,7 +318,9 @@ class AIHintsGenerator:
                     block_str = "\n".join(current_block)
                     if block_str in code_blocks:
                         score += 0.2
-                        suggestions.append("duplicate_code: Extract duplicate code to functions")
+                        suggestions.append(
+                            "duplicate_code: Extract duplicate code to functions"
+                        )
                         break
                     code_blocks.append(block_str)
                 current_block = []
@@ -303,7 +328,9 @@ class AIHintsGenerator:
         # Check complexity
         if metadata.complexity == ComplexityLevel.CRITICAL:
             score += 0.4
-            suggestions.append("high_complexity: Consider refactoring to reduce complexity")
+            suggestions.append(
+                "high_complexity: Consider refactoring to reduce complexity"
+            )
 
         return {
             "score": min(score, 1.0),
@@ -338,11 +365,15 @@ class AIHintsGenerator:
             side_effects.append("io_operations")
 
         # Check for network operations
-        if any(op in source_code for op in ["requests.", "httpx.", "aiohttp.", "urllib."]):
+        if any(
+            op in source_code for op in ["requests.", "httpx.", "aiohttp.", "urllib."]
+        ):
             side_effects.append("network_operations")
 
         # Check for database operations
-        if any(op in source_code for op in [".execute(", ".query(", ".insert(", ".update("]):
+        if any(
+            op in source_code for op in [".execute(", ".query(", ".insert(", ".update("]
+        ):
             side_effects.append("database_operations")
 
         # Check for global state
@@ -358,12 +389,16 @@ class AIHintsGenerator:
             side_effects.append("environment_modification")
 
         # Check for threading/async
-        if any(op in source_code for op in ["threading.", "asyncio.", "multiprocessing."]):
+        if any(
+            op in source_code for op in ["threading.", "asyncio.", "multiprocessing."]
+        ):
             side_effects.append("concurrent_execution")
 
         return side_effects
 
-    def _check_concurrency_safety(self, source_code: str, side_effects: list[str]) -> bool:
+    def _check_concurrency_safety(
+        self, source_code: str, side_effects: list[str]
+    ) -> bool:
         """Check if code is safe for concurrent execution"""
 
         # Not safe if modifies global state
@@ -385,7 +420,8 @@ class AIHintsGenerator:
 
         # Check for proper locking
         has_locks = any(
-            lock in source_code for lock in ["Lock(", "RLock(", "Semaphore(", "asyncio.Lock("]
+            lock in source_code
+            for lock in ["Lock(", "RLock(", "Semaphore(", "asyncio.Lock("]
         )
 
         # If has concurrent operations but no locks, not safe
@@ -418,7 +454,10 @@ class AIHintsGenerator:
         # Repository methods are often idempotent by design
         if metadata.semantic_role.value == "repository":
             # Check for specific patterns
-            if any(method in metadata.name for method in ["get", "find", "fetch", "retrieve"]):
+            if any(
+                method in metadata.name
+                for method in ["get", "find", "fetch", "retrieve"]
+            ):
                 return True
 
         return True

@@ -63,7 +63,9 @@ class GongEnhancedOrchestrator(SophiaAGNOOrchestrator):
 
         # Create query embedding
         try:
-            response = openai.embeddings.create(model="text-embedding-3-small", input=query)
+            response = openai.embeddings.create(
+                model="text-embedding-3-small", input=query
+            )
             query_vector = response.data[0].embedding
         except Exception as e:
             logger.error(f"Embedding error: {e}")
@@ -93,7 +95,9 @@ class GongEnhancedOrchestrator(SophiaAGNOOrchestrator):
                 )
 
             if conditions:
-                where_clause = f"where: {{operator: And, operands: [{{{', '.join(conditions)}}}]}}"
+                where_clause = (
+                    f"where: {{operator: And, operands: [{{{', '.join(conditions)}}}]}}"
+                )
 
         graphql_query = {
             "query": f"""
@@ -129,12 +133,16 @@ class GongEnhancedOrchestrator(SophiaAGNOOrchestrator):
 
         try:
             response = requests.post(
-                f"{self.weaviate_endpoint}/v1/graphql", headers=headers, json=graphql_query
+                f"{self.weaviate_endpoint}/v1/graphql",
+                headers=headers,
+                json=graphql_query,
             )
 
             if response.status_code == 200:
                 data = response.json()
-                chunks = data.get("data", {}).get("Get", {}).get("GongTranscriptChunk", [])
+                chunks = (
+                    data.get("data", {}).get("Get", {}).get("GongTranscriptChunk", [])
+                )
 
                 # Format results
                 results = []
@@ -146,7 +154,9 @@ class GongEnhancedOrchestrator(SophiaAGNOOrchestrator):
                             "speaker": chunk.get("speaker"),
                             "call_title": chunk.get("callTitle"),
                             "timestamp": f"{chunk.get('startMs', 0) / 1000:.1f}s",
-                            "relevance": chunk.get("_additional", {}).get("certainty", 0),
+                            "relevance": chunk.get("_additional", {}).get(
+                                "certainty", 0
+                            ),
                             "account": chunk.get("accountName"),
                             "participants": chunk.get("participants", []),
                         }
@@ -268,7 +278,8 @@ class GongEnhancedOrchestrator(SophiaAGNOOrchestrator):
         # Format context
         context = "\n\n".join(
             [
-                f"From {r['call_title']} ({r['account']}):\n" f"{r['speaker']}: {r['text']}"
+                f"From {r['call_title']} ({r['account']}):\n"
+                f"{r['speaker']}: {r['text']}"
                 for r in results[:5]
             ]
         )
@@ -309,7 +320,10 @@ class GongEnhancedOrchestrator(SophiaAGNOOrchestrator):
             response = await openai.chat.completions.create(
                 model="gpt-4o",
                 messages=[
-                    {"role": "system", "content": "You are a sales intelligence analyst."},
+                    {
+                        "role": "system",
+                        "content": "You are a sales intelligence analyst.",
+                    },
                     {"role": "user", "content": prompt},
                 ],
                 temperature=0.3,
@@ -372,7 +386,15 @@ class GongEnhancedOrchestrator(SophiaAGNOOrchestrator):
         Enhanced orchestration with Gong intelligence
         """
         # Check if task involves sales/customer data
-        sales_keywords = ["sales", "customer", "call", "meeting", "deal", "account", "gong"]
+        sales_keywords = [
+            "sales",
+            "customer",
+            "call",
+            "meeting",
+            "deal",
+            "account",
+            "gong",
+        ]
 
         if any(keyword in task.lower() for keyword in sales_keywords):
             logger.info("Routing to Gong-enhanced processing")

@@ -52,7 +52,9 @@ class DeadCodeEliminator:
 
     def __init__(self, dry_run: bool = True):
         self.dry_run = dry_run
-        self.backup_dir = Path("backup_dead_code") / datetime.now().strftime("%Y%m%d_%H%M%S")
+        self.backup_dir = Path("backup_dead_code") / datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
         self.removed_files: list[str] = []
         self.cleaned_imports: list[str] = []
         self.errors: list[str] = []
@@ -122,7 +124,12 @@ class DeadCodeEliminator:
                 file_path.unlink()
 
             self.removed_files.append(
-                {"path": filepath, "reason": reason, "lines": line_count, "size": file_size}
+                {
+                    "path": filepath,
+                    "reason": reason,
+                    "lines": line_count,
+                    "size": file_size,
+                }
             )
 
             logger.info(f"  ✅ Removed {filepath} ({line_count} lines, {reason})")
@@ -135,10 +142,14 @@ class DeadCodeEliminator:
         """Clean unused imports using autoflake."""
         try:
             # Check if autoflake is installed
-            result = subprocess.run(["which", "autoflake"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["which", "autoflake"], capture_output=True, text=True
+            )
 
             if result.returncode != 0:
-                logger.info("  ⚠️  autoflake not installed. Install with: pip install autoflake")
+                logger.info(
+                    "  ⚠️  autoflake not installed. Install with: pip install autoflake"
+                )
                 return
 
             # Clean high-priority files first
@@ -216,7 +227,9 @@ class DeadCodeEliminator:
         logger.info(f"Files removed: {report['summary']['files_removed']}")
         logger.info(f"Lines removed: {report['summary']['total_lines_removed']:,}")
         logger.info(f"Bytes removed: {report['summary']['total_bytes_removed']:,}")
-        logger.info(f"Files with imports cleaned: {report['summary']['imports_cleaned']}")
+        logger.info(
+            f"Files with imports cleaned: {report['summary']['imports_cleaned']}"
+        )
 
         if self.errors:
             logger.info(f"\n⚠️  Errors encountered: {len(self.errors)}")
@@ -239,7 +252,9 @@ def main():
     parser.add_argument(
         "--live", action="store_true", help="Run in live mode (actually remove files)"
     )
-    parser.add_argument("--no-imports", action="store_true", help="Skip import cleaning")
+    parser.add_argument(
+        "--no-imports", action="store_true", help="Skip import cleaning"
+    )
     parser.add_argument("--force", action="store_true", help="Skip confirmation prompt")
 
     args = parser.parse_args()

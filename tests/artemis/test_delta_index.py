@@ -14,7 +14,9 @@ async def test_delta_index_synthetic(tmp_path):
             files = []
             for p in repo.rglob("*"):
                 if p.is_file():
-                    files.append({"path": str(p.relative_to(repo)), "bytes": p.stat().st_size})
+                    files.append(
+                        {"path": str(p.relative_to(repo)), "bytes": p.stat().st_size}
+                    )
             return {"files": files}
 
         def fs_read(self, path, max_bytes=50000):
@@ -26,7 +28,9 @@ async def test_delta_index_synthetic(tmp_path):
 
         async def fake_upsert(chunks, domain):
             return type(
-                "Rep", (), {"chunks_stored": len(chunks), "chunks_processed": len(chunks)}
+                "Rep",
+                (),
+                {"chunks_stored": len(chunks), "chunks_processed": len(chunks)},
             )()
 
         with patch("app.swarms.scout.delta_index.get_memory_router") as gmr:

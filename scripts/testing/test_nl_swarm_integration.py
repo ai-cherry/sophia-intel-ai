@@ -64,7 +64,9 @@ class QualityControlTester:
         else:
             self.failed_tests += 1
 
-        self.test_results.append({"test": test_name, "passed": passed, "details": details})
+        self.test_results.append(
+            {"test": test_name, "passed": passed, "details": details}
+        )
 
     async def test_config_loading(self) -> bool:
         """Test configuration file loading"""
@@ -73,7 +75,9 @@ class QualityControlTester:
         try:
             # Check if config file exists
             config_path = Path("app/config/nl_swarm_integration.json")
-            self.print_test("Config file exists", config_path.exists(), f"Path: {config_path}")
+            self.print_test(
+                "Config file exists", config_path.exists(), f"Path: {config_path}"
+            )
 
             # Load and validate config
             if config_path.exists():
@@ -110,7 +114,9 @@ class QualityControlTester:
 
         try:
             # Initialize dispatcher
-            dispatcher = SmartCommandDispatcher(config_file="app/config/nl_swarm_integration.json")
+            dispatcher = SmartCommandDispatcher(
+                config_file="app/config/nl_swarm_integration.json"
+            )
             self.print_test("Dispatcher initialization", True, "Successfully created")
 
             # Test simple command (should use Lite mode)
@@ -129,21 +135,28 @@ class QualityControlTester:
             complexity = dispatcher.optimizer.calculate_task_complexity(task)
 
             self.print_test(
-                "Complexity calculation", 0 <= complexity <= 1, f"Complexity: {complexity:.2f}"
+                "Complexity calculation",
+                0 <= complexity <= 1,
+                f"Complexity: {complexity:.2f}",
             )
 
             # Test mode selection
             mode = ExecutionMode.LITE if complexity < 0.3 else ExecutionMode.BALANCED
             self.print_test(
-                "Mode selection logic", mode == ExecutionMode.LITE, f"Selected: {mode.value}"
+                "Mode selection logic",
+                mode == ExecutionMode.LITE,
+                f"Selected: {mode.value}",
             )
 
             # Test circuit breakers
             cb_test = all(
-                isinstance(cb, CircuitBreaker) for cb in dispatcher.circuit_breakers.values()
+                isinstance(cb, CircuitBreaker)
+                for cb in dispatcher.circuit_breakers.values()
             )
             self.print_test(
-                "Circuit breakers", cb_test, f"Breakers: {list(dispatcher.circuit_breakers.keys())}"
+                "Circuit breakers",
+                cb_test,
+                f"Breakers: {list(dispatcher.circuit_breakers.keys())}",
             )
 
             # Test performance metrics
@@ -243,7 +256,9 @@ class QualityControlTester:
             # Test context summary
             summary = await memory.get_context_summary("test-002")
             self.print_test(
-                "Context summary", "session_id" in summary, "Summary generated for session"
+                "Context summary",
+                "session_id" in summary,
+                "Summary generated for session",
             )
 
             await memory.disconnect()
@@ -280,12 +295,16 @@ class QualityControlTester:
             # Test circuit breaker
             cb = optimizer.get_circuit_breaker("test_component")
             self.print_test(
-                "Circuit breaker creation", cb.state == "closed", f"Initial state: {cb.state}"
+                "Circuit breaker creation",
+                cb.state == "closed",
+                f"Initial state: {cb.state}",
             )
 
             # Test degradation manager
             health = optimizer.degradation_manager.get_system_health_score()
-            self.print_test("System health check", health == 1.0, f"Health score: {health:.1%}")
+            self.print_test(
+                "System health check", health == 1.0, f"Health score: {health:.1%}"
+            )
 
             return True
 
@@ -307,7 +326,9 @@ class QualityControlTester:
                 # Check for new imports
                 has_dispatcher = "SmartCommandDispatcher" in content
                 self.print_test(
-                    "SmartCommandDispatcher import", has_dispatcher, "Import found in endpoints"
+                    "SmartCommandDispatcher import",
+                    has_dispatcher,
+                    "Import found in endpoints",
                 )
 
                 # Check for new endpoints
@@ -352,7 +373,9 @@ class QualityControlTester:
             session_id = "integration-test"
 
             for command, expected_mode, _max_time in test_cases:
-                result = await dispatcher.process_command(text=command, session_id=session_id)
+                result = await dispatcher.process_command(
+                    text=command, session_id=session_id
+                )
 
                 mode_match = result.execution_mode == expected_mode
 
@@ -389,7 +412,9 @@ class QualityControlTester:
         logger.info(f"  {Colors.BOLD}Pass Rate: {pass_rate:.1f}%{Colors.ENDC}")
 
         if pass_rate >= 80:
-            logger.info(f"\n{Colors.OKGREEN}{Colors.BOLD}✓ QUALITY CONTROL PASSED{Colors.ENDC}")
+            logger.info(
+                f"\n{Colors.OKGREEN}{Colors.BOLD}✓ QUALITY CONTROL PASSED{Colors.ENDC}"
+            )
             logger.info(
                 f"{Colors.OKGREEN}The NL-Swarm integration meets production quality standards!{Colors.ENDC}"
             )
@@ -416,7 +441,9 @@ class QualityControlTester:
                 indent=2,
             )
 
-        logger.info(f"\n{Colors.OKCYAN}Detailed report saved to: {report_path}{Colors.ENDC}")
+        logger.info(
+            f"\n{Colors.OKCYAN}Detailed report saved to: {report_path}{Colors.ENDC}"
+        )
 
     async def run_all_tests(self):
         """Run all quality control tests"""

@@ -47,7 +47,9 @@ def fix_perplexity():
 
     from openai import OpenAI
 
-    client = OpenAI(api_key=os.environ["PERPLEXITY_API_KEY"], base_url="https://api.perplexity.ai")
+    client = OpenAI(
+        api_key=os.environ["PERPLEXITY_API_KEY"], base_url="https://api.perplexity.ai"
+    )
 
     # ✅ CORRECT Model Names (2025) based on research
     valid_models = [
@@ -153,18 +155,26 @@ def fix_huggingface():
 
             if response.status_code == 200:
                 result = response.json()
-                print(f"{Colors.GREEN}✅ {model} WORKS: {str(result)[:100]}{Colors.ENDC}")
+                print(
+                    f"{Colors.GREEN}✅ {model} WORKS: {str(result)[:100]}{Colors.ENDC}"
+                )
                 return True
             elif response.status_code == 503:
-                print(f"{Colors.YELLOW}⚠️  {model}: Model loading, retry needed{Colors.ENDC}")
+                print(
+                    f"{Colors.YELLOW}⚠️  {model}: Model loading, retry needed{Colors.ENDC}"
+                )
                 time.sleep(3)
                 # Retry once
-                response = requests.post(api_url, headers=headers, json=payload, timeout=10)
+                response = requests.post(
+                    api_url, headers=headers, json=payload, timeout=10
+                )
                 if response.status_code == 200:
                     print(f"{Colors.GREEN}✅ {model} WORKS after retry{Colors.ENDC}")
                     return True
             else:
-                print(f"{Colors.RED}❌ {model}: HTTP {response.status_code}{Colors.ENDC}")
+                print(
+                    f"{Colors.RED}❌ {model}: HTTP {response.status_code}{Colors.ENDC}"
+                )
 
         except Exception as e:
             print(f"{Colors.RED}❌ {model}: {str(e)[:100]}{Colors.ENDC}")
@@ -204,15 +214,21 @@ def fix_mem0():
                 print(f"{Colors.GREEN}✅ {format_name} format WORKS{Colors.ENDC}")
                 return True
             elif response.status_code == 401:
-                print(f"{Colors.YELLOW}⚠️  {format_name}: Still unauthorized{Colors.ENDC}")
+                print(
+                    f"{Colors.YELLOW}⚠️  {format_name}: Still unauthorized{Colors.ENDC}"
+                )
             else:
-                print(f"{Colors.YELLOW}⚠️  {format_name}: HTTP {response.status_code}{Colors.ENDC}")
+                print(
+                    f"{Colors.YELLOW}⚠️  {format_name}: HTTP {response.status_code}{Colors.ENDC}"
+                )
 
         except Exception as e:
             print(f"{Colors.RED}❌ {format_name}: {str(e)[:100]}{Colors.ENDC}")
 
     # If all fail, key might be expired
-    print(f"\n{Colors.RED}❌ All authentication formats failed - key might be expired{Colors.ENDC}")
+    print(
+        f"\n{Colors.RED}❌ All authentication formats failed - key might be expired{Colors.ENDC}"
+    )
     print("Visit https://app.mem0.ai to generate a new API key")
     return False
 
@@ -244,10 +260,14 @@ def fix_qdrant():
 
                 # Try to get collections
                 collections = client.get_collections()
-                print(f"{Colors.GREEN}✅ Part {i+1} WORKS! Collections: {collections}{Colors.ENDC}")
+                print(
+                    f"{Colors.GREEN}✅ Part {i+1} WORKS! Collections: {collections}{Colors.ENDC}"
+                )
 
                 # Save the working part
-                print(f"\n{Colors.GREEN}Use this key part: {key_part[:20]}...{Colors.ENDC}")
+                print(
+                    f"\n{Colors.GREEN}Use this key part: {key_part[:20]}...{Colors.ENDC}"
+                )
                 return True
 
             except Exception as e:
@@ -268,7 +288,9 @@ def fix_qdrant():
                 timeout=10,
             )
             collections = client.get_collections()
-            print(f"{Colors.GREEN}✅ Key WORKS! Collections: {collections}{Colors.ENDC}")
+            print(
+                f"{Colors.GREEN}✅ Key WORKS! Collections: {collections}{Colors.ENDC}"
+            )
             return True
         except Exception as e:
             print(f"{Colors.RED}❌ Key failed: {str(e)[:100]}{Colors.ENDC}")
@@ -358,7 +380,9 @@ def save_fixed_configuration():
     with open("fixed_api_configurations.json", "w") as f:
         json.dump(fixed_config, f, indent=2)
 
-    print(f"{Colors.GREEN}✅ Configuration saved to fixed_api_configurations.json{Colors.ENDC}")
+    print(
+        f"{Colors.GREEN}✅ Configuration saved to fixed_api_configurations.json{Colors.ENDC}"
+    )
     return fixed_config
 
 
@@ -390,13 +414,21 @@ def main():
     total = len(results)
 
     for service, status in results.items():
-        icon = f"{Colors.GREEN}✅{Colors.ENDC}" if status else f"{Colors.RED}❌{Colors.ENDC}"
+        icon = (
+            f"{Colors.GREEN}✅{Colors.ENDC}"
+            if status
+            else f"{Colors.RED}❌{Colors.ENDC}"
+        )
         print(f"{icon} {service.upper()}: {'FIXED' if status else 'NEEDS ATTENTION'}")
 
-    print(f"\n{Colors.BOLD}Success Rate: {working}/{total} ({working*100//total}%){Colors.ENDC}")
+    print(
+        f"\n{Colors.BOLD}Success Rate: {working}/{total} ({working*100//total}%){Colors.ENDC}"
+    )
 
     if working == total:
-        print(f"\n{Colors.GREEN}{Colors.BOLD}🎉 ALL APIS FIXED AND WORKING!{Colors.ENDC}")
+        print(
+            f"\n{Colors.GREEN}{Colors.BOLD}🎉 ALL APIS FIXED AND WORKING!{Colors.ENDC}"
+        )
     else:
         print(
             f"\n{Colors.YELLOW}{Colors.BOLD}⚠️  Some APIs still need manual intervention{Colors.ENDC}"

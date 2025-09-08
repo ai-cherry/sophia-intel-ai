@@ -100,7 +100,9 @@ class ExperimentalSwarmEvolutionAdapter:
         if not self.config.enable_evolution:
             logger.info("Evolution is DISABLED - swarm will use standard configuration")
         elif not self.config.acknowledge_experimental:
-            logger.warning("⚠️ Experimental evolution not acknowledged - will remain disabled")
+            logger.warning(
+                "⚠️ Experimental evolution not acknowledged - will remain disabled"
+            )
 
     async def initialize_evolution(self, base_swarm_config: dict[str, Any]) -> bool:
         """
@@ -131,7 +133,9 @@ class ExperimentalSwarmEvolutionAdapter:
 
             # Initialize population
             success = await self.evolution_engine.initialize_experimental_population(
-                swarm_type=self.swarm_type, base_chromosome=base_chromosome, population_size=5
+                swarm_type=self.swarm_type,
+                base_chromosome=base_chromosome,
+                population_size=5,
             )
 
             if success:
@@ -139,7 +143,9 @@ class ExperimentalSwarmEvolutionAdapter:
                 self.evolution_active = True
                 self.current_best_chromosome = base_chromosome
 
-                logger.info(f"🧪 Experimental evolution initialized for {self.swarm_type}")
+                logger.info(
+                    f"🧪 Experimental evolution initialized for {self.swarm_type}"
+                )
 
                 # Log initialization in memory
                 if self.memory_client:
@@ -155,11 +161,15 @@ class ExperimentalSwarmEvolutionAdapter:
 
                 return True
             else:
-                logger.error(f"Failed to initialize experimental evolution for {self.swarm_type}")
+                logger.error(
+                    f"Failed to initialize experimental evolution for {self.swarm_type}"
+                )
                 return False
 
         except Exception as e:
-            logger.error(f"Error initializing experimental evolution for {self.swarm_type}: {e}")
+            logger.error(
+                f"Error initializing experimental evolution for {self.swarm_type}: {e}"
+            )
             return False
 
     def _should_initialize_evolution(self) -> bool:
@@ -208,7 +218,9 @@ class ExperimentalSwarmEvolutionAdapter:
 
         return chromosome
 
-    async def record_execution_performance(self, execution_result: dict[str, Any]) -> None:
+    async def record_execution_performance(
+        self, execution_result: dict[str, Any]
+    ) -> None:
         """
         Record performance of a swarm execution.
 
@@ -219,7 +231,9 @@ class ExperimentalSwarmEvolutionAdapter:
 
         # Extract performance metrics
         performance_data = {
-            "execution_id": execution_result.get("execution_id", f"exec_{self.execution_count}"),
+            "execution_id": execution_result.get(
+                "execution_id", f"exec_{self.execution_count}"
+            ),
             "timestamp": datetime.now().isoformat(),
             "quality_score": execution_result.get("quality_score", 0.5),
             "speed_score": execution_result.get("speed_score", 0.5),
@@ -257,7 +271,9 @@ class ExperimentalSwarmEvolutionAdapter:
             return
 
         # Check evolution frequency
-        executions_since_evolution = self.execution_count - self.last_evolution_execution
+        executions_since_evolution = (
+            self.execution_count - self.last_evolution_execution
+        )
         if executions_since_evolution < self.config.evolution_frequency:
             return
 
@@ -285,20 +301,28 @@ class ExperimentalSwarmEvolutionAdapter:
                 / len(recent_performance),
                 "speed_score": sum(p["speed_score"] for p in recent_performance)
                 / len(recent_performance),
-                "efficiency_score": sum(p["efficiency_score"] for p in recent_performance)
+                "efficiency_score": sum(
+                    p["efficiency_score"] for p in recent_performance
+                )
                 / len(recent_performance),
-                "reliability_score": sum(p["reliability_score"] for p in recent_performance)
+                "reliability_score": sum(
+                    p["reliability_score"] for p in recent_performance
+                )
                 / len(recent_performance),
             }
 
             # Perform evolution
-            best_chromosome = await self.evolution_engine.experimental_evolve_population(
-                swarm_type=self.swarm_type, performance_data=avg_performance
+            best_chromosome = (
+                await self.evolution_engine.experimental_evolve_population(
+                    swarm_type=self.swarm_type, performance_data=avg_performance
+                )
             )
 
             if best_chromosome:
                 # Check if evolution improved performance
-                if await self._validate_evolution_improvement(best_chromosome, avg_performance):
+                if await self._validate_evolution_improvement(
+                    best_chromosome, avg_performance
+                ):
                     self.current_best_chromosome = best_chromosome
                     self.last_evolution_execution = self.execution_count
 
@@ -366,7 +390,9 @@ class ExperimentalSwarmEvolutionAdapter:
 
     async def _trigger_rollback(self, reason: str) -> None:
         """Trigger rollback to previous configuration."""
-        logger.warning(f"🧪 Triggering evolution rollback for {self.swarm_type}: {reason}")
+        logger.warning(
+            f"🧪 Triggering evolution rollback for {self.swarm_type}: {reason}"
+        )
 
         self.safety_violations.append(
             {
@@ -438,7 +464,8 @@ class ExperimentalSwarmEvolutionAdapter:
             "experimental_mode": self.config.experimental_mode.value,
             "execution_count": self.execution_count,
             "last_evolution": self.last_evolution_execution,
-            "executions_since_evolution": self.execution_count - self.last_evolution_execution,
+            "executions_since_evolution": self.execution_count
+            - self.last_evolution_execution,
             "performance_history_length": len(self.performance_history),
             "baseline_performance": self.baseline_performance,
             "safety_violations": len(self.safety_violations),
@@ -458,7 +485,9 @@ class ExperimentalSwarmEvolutionAdapter:
             )
 
         if self.evolution_engine:
-            engine_status = self.evolution_engine.get_experimental_status(self.swarm_type)
+            engine_status = self.evolution_engine.get_experimental_status(
+                self.swarm_type
+            )
             status["engine_status"] = engine_status
 
         return status
@@ -477,8 +506,10 @@ class ExperimentalSwarmEvolutionAdapter:
         avg_metrics = {
             "quality_score": sum(p["quality_score"] for p in recent) / len(recent),
             "speed_score": sum(p["speed_score"] for p in recent) / len(recent),
-            "efficiency_score": sum(p["efficiency_score"] for p in recent) / len(recent),
-            "reliability_score": sum(p["reliability_score"] for p in recent) / len(recent),
+            "efficiency_score": sum(p["efficiency_score"] for p in recent)
+            / len(recent),
+            "reliability_score": sum(p["reliability_score"] for p in recent)
+            / len(recent),
             "success_rate": sum(1 for p in recent if p["success"]) / len(recent),
         }
 
@@ -505,7 +536,9 @@ class ExperimentalSwarmEvolutionAdapter:
 
     async def shutdown(self):
         """Gracefully shutdown the evolution adapter."""
-        logger.info(f"🧪 Shutting down experimental evolution adapter for {self.swarm_type}")
+        logger.info(
+            f"🧪 Shutting down experimental evolution adapter for {self.swarm_type}"
+        )
 
         if self.evolution_engine:
             await self.evolution_engine.experimental_shutdown()

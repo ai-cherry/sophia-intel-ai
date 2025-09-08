@@ -15,7 +15,11 @@ from typing import Any, Optional
 import redis.asyncio as redis
 from pydantic import BaseModel, Field, validator
 
-from .optimized_mcp_orchestrator import MCPCapabilityType, MCPDomain, OptimizedMCPOrchestrator
+from .optimized_mcp_orchestrator import (
+    MCPCapabilityType,
+    MCPDomain,
+    OptimizedMCPOrchestrator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +93,9 @@ class MCPServerRegistration(BaseModel):
         # Convert datetime fields to ISO format
         if "created_at" in result and isinstance(result["created_at"], datetime):
             result["created_at"] = result["created_at"].isoformat()
-        if "last_health_check" in result and isinstance(result["last_health_check"], datetime):
+        if "last_health_check" in result and isinstance(
+            result["last_health_check"], datetime
+        ):
             result["last_health_check"] = result["last_health_check"].isoformat()
         # Convert enums to values
         if "domain" in result:
@@ -112,7 +118,8 @@ class MCPServerRegistration(BaseModel):
             )
         if "capabilities" in result:
             result["capabilities"] = [
-                c.value if hasattr(c, "value") else str(c) for c in result["capabilities"]
+                c.value if hasattr(c, "value") else str(c)
+                for c in result["capabilities"]
             ]
         if "tags" in result:
             result["tags"] = list(result["tags"])
@@ -140,7 +147,8 @@ class ServerLoadBalancer:
         available_servers = [
             s
             for s in servers
-            if not exclude_unhealthy or s.status in [ServerStatus.HEALTHY, ServerStatus.DEGRADED]
+            if not exclude_unhealthy
+            or s.status in [ServerStatus.HEALTHY, ServerStatus.DEGRADED]
         ]
 
         if not available_servers:
@@ -252,7 +260,9 @@ class CentralMCPRegistry:
 
             # Validate registration
             if server_id in self.registered_servers:
-                logger.warning(f"Server {server_id} already registered, updating registration")
+                logger.warning(
+                    f"Server {server_id} already registered, updating registration"
+                )
 
             # Store registration
             self.registered_servers[server_id] = registration
@@ -328,7 +338,9 @@ class CentralMCPRegistry:
 
         # Filter by capabilities
         if capabilities:
-            servers = [s for s in servers if any(cap in s.capabilities for cap in capabilities)]
+            servers = [
+                s for s in servers if any(cap in s.capabilities for cap in capabilities)
+            ]
 
         # Filter by status
         if status_filter:
@@ -362,7 +374,9 @@ class CentralMCPRegistry:
             return None
 
         # Use load balancer to select best server
-        selected = self.load_balancer.select_server(candidate_servers, load_balance_strategy)
+        selected = self.load_balancer.select_server(
+            candidate_servers, load_balance_strategy
+        )
 
         if selected:
             self.metrics["load_balancer_requests"] += 1
@@ -386,7 +400,9 @@ class CentralMCPRegistry:
 
         if old_status != status:
             self.metrics["server_status_changes"] += 1
-            logger.info(f"Server {server_id} status changed: {old_status.value} → {status.value}")
+            logger.info(
+                f"Server {server_id} status changed: {old_status.value} → {status.value}"
+            )
 
         # Persist status change
         await self._persist_registration(self.registered_servers[server_id])
@@ -397,7 +413,9 @@ class CentralMCPRegistry:
         status_counts = {}
         for status in ServerStatus:
             status_counts[status.value] = sum(
-                1 for server in self.registered_servers.values() if server.status == status
+                1
+                for server in self.registered_servers.values()
+                if server.status == status
             )
 
         domain_counts = {}
@@ -454,7 +472,9 @@ class CentralMCPRegistry:
         if server_id in self.health_check_tasks:
             self.health_check_tasks[server_id].cancel()
 
-        self.health_check_tasks[server_id] = asyncio.create_task(self._health_check_loop(server_id))
+        self.health_check_tasks[server_id] = asyncio.create_task(
+            self._health_check_loop(server_id)
+        )
 
     async def _health_check_loop(self, server_id: str):
         """Health check loop for a specific server"""
@@ -471,10 +491,17 @@ class CentralMCPRegistry:
                 else:
                     registration.consecutive_failures += 1
 
-                    if registration.consecutive_failures >= registration.max_consecutive_failures:
-                        await self.update_server_status(server_id, ServerStatus.UNHEALTHY)
+                    if (
+                        registration.consecutive_failures
+                        >= registration.max_consecutive_failures
+                    ):
+                        await self.update_server_status(
+                            server_id, ServerStatus.UNHEALTHY
+                        )
                     else:
-                        await self.update_server_status(server_id, ServerStatus.DEGRADED)
+                        await self.update_server_status(
+                            server_id, ServerStatus.DEGRADED
+                        )
 
                 self.metrics["health_checks_performed"] += 1
 
@@ -510,7 +537,9 @@ class CentralMCPRegistry:
 
                 # Cleanup completed tasks
                 completed_tasks = [
-                    server_id for server_id, task in self.health_check_tasks.items() if task.done()
+                    server_id
+                    for server_id, task in self.health_check_tasks.items()
+                    if task.done()
                 ]
 
                 for server_id in completed_tasks:
@@ -535,7 +564,9 @@ class CentralMCPRegistry:
             await self.redis.hset(key, mapping={"data": json.dumps(data)})
 
         except Exception as e:
-            logger.error(f"Failed to persist registration {registration.server_id}: {e}")
+            logger.error(
+                f"Failed to persist registration {registration.server_id}: {e}"
+            )
 
     async def _delete_registration(self, server_id: str):
         """Delete registration from Redis"""
@@ -568,14 +599,20 @@ class CentralMCPRegistry:
 
                         # Convert back to enums
                         data["domain"] = MCPDomain(data["domain"])
-                        data["connection_type"] = ConnectionType(data["connection_type"])
+                        data["connection_type"] = ConnectionType(
+                            data["connection_type"]
+                        )
                         data["status"] = ServerStatus(data["status"])
-                        data["capabilities"] = [MCPCapabilityType(c) for c in data["capabilities"]]
+                        data["capabilities"] = [
+                            MCPCapabilityType(c) for c in data["capabilities"]
+                        ]
                         data["tags"] = set(data["tags"])
 
                         # Handle datetime fields
                         if "created_at" in data:
-                            data["created_at"] = datetime.fromisoformat(data["created_at"])
+                            data["created_at"] = datetime.fromisoformat(
+                                data["created_at"]
+                            )
                         if "last_health_check" in data and data["last_health_check"]:
                             data["last_health_check"] = datetime.fromisoformat(
                                 data["last_health_check"]
@@ -585,13 +622,20 @@ class CentralMCPRegistry:
 
                         # Restore to registry
                         self.registered_servers[registration.server_id] = registration
-                        if registration.server_id not in self.domain_servers[registration.domain]:
-                            self.domain_servers[registration.domain].append(registration.server_id)
+                        if (
+                            registration.server_id
+                            not in self.domain_servers[registration.domain]
+                        ):
+                            self.domain_servers[registration.domain].append(
+                                registration.server_id
+                            )
 
                 except Exception as e:
                     logger.error(f"Failed to load registration from {key}: {e}")
 
-            logger.info(f"✅ Loaded {len(self.registered_servers)} registrations from storage")
+            logger.info(
+                f"✅ Loaded {len(self.registered_servers)} registrations from storage"
+            )
 
         except Exception as e:
             logger.error(f"Failed to load registrations from storage: {e}")
@@ -607,7 +651,9 @@ class CentralMCPRegistry:
 
                 # Sync with orchestrator if available
                 if self.orchestrator:
-                    orchestrator_capabilities = await self.orchestrator.get_capabilities()
+                    orchestrator_capabilities = (
+                        await self.orchestrator.get_capabilities()
+                    )
 
                     # Auto-register orchestrator servers if not already registered
                     for server_id, config in orchestrator_capabilities.items():
@@ -620,7 +666,8 @@ class CentralMCPRegistry:
                                 capabilities=[
                                     MCPCapabilityType(cap["name"])
                                     for cap in config["capabilities"]
-                                    if cap["name"] in [c.value for c in MCPCapabilityType]
+                                    if cap["name"]
+                                    in [c.value for c in MCPCapabilityType]
                                 ],
                                 endpoint="internal://orchestrator",
                                 connection_type=ConnectionType.HTTP,
@@ -629,7 +676,9 @@ class CentralMCPRegistry:
                             )
 
                             await self.register_server(registration)
-                            logger.info(f"Auto-registered orchestrator server: {server_id}")
+                            logger.info(
+                                f"Auto-registered orchestrator server: {server_id}"
+                            )
 
             except Exception as e:
                 logger.error(f"Registry sync error: {e}")
@@ -644,7 +693,9 @@ class CentralMCPRegistry:
 
         # Wait for tasks to complete
         if self.health_check_tasks:
-            await asyncio.gather(*self.health_check_tasks.values(), return_exceptions=True)
+            await asyncio.gather(
+                *self.health_check_tasks.values(), return_exceptions=True
+            )
 
         # Close Redis connection
         if self.redis:
@@ -678,7 +729,8 @@ async def register_mcp_server(registration: MCPServerRegistration) -> bool:
 
 
 async def discover_mcp_servers(
-    domain: Optional[MCPDomain] = None, capabilities: Optional[list[MCPCapabilityType]] = None
+    domain: Optional[MCPDomain] = None,
+    capabilities: Optional[list[MCPCapabilityType]] = None,
 ) -> list[MCPServerRegistration]:
     """Convenience function to discover MCP servers"""
     registry = await get_central_registry()

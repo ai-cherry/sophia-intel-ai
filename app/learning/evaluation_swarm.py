@@ -168,7 +168,11 @@ class EvaluationReport:
                 for i in self.insights
             ],
             "patterns_discovered": [
-                {"name": p.name, "description": p.description, "success_rate": p.success_rate}
+                {
+                    "name": p.name,
+                    "description": p.description,
+                    "success_rate": p.success_rate,
+                }
                 for p in self.patterns_discovered
             ],
             "recommendations": self.recommendations,
@@ -207,7 +211,9 @@ class PerformanceAnalyst:
 
         # Calculate efficiency scores
         speed_score = max(0, 100 - (avg_time / 30) * 100)  # 30s baseline
-        token_efficiency = max(0, 100 - (avg_tokens / 1000) * 100)  # 1000 tokens baseline
+        token_efficiency = max(
+            0, 100 - (avg_tokens / 1000) * 100
+        )  # 1000 tokens baseline
 
         return {
             "total_executions": len(executions),
@@ -216,7 +222,9 @@ class PerformanceAnalyst:
             "bottlenecks": bottlenecks,
             "speed_score": speed_score,
             "token_efficiency": token_efficiency,
-            "recommendations": self._generate_performance_recommendations(bottlenecks, avg_time),
+            "recommendations": self._generate_performance_recommendations(
+                bottlenecks, avg_time
+            ),
         }
 
     def _generate_performance_recommendations(
@@ -226,14 +234,18 @@ class PerformanceAnalyst:
         recommendations = []
 
         if bottlenecks:
-            recommendations.append(f"Optimize {len(bottlenecks)} slow executions identified")
+            recommendations.append(
+                f"Optimize {len(bottlenecks)} slow executions identified"
+            )
 
         if avg_time > 20:
             recommendations.append("Consider using faster models for simple tasks")
             recommendations.append("Implement caching for repeated queries")
 
         if avg_time < 5:
-            recommendations.append("Performance is excellent - maintain current configuration")
+            recommendations.append(
+                "Performance is excellent - maintain current configuration"
+            )
 
         return recommendations
 
@@ -285,7 +297,9 @@ class QualityAuditor:
             "avg_completeness_score": avg_completeness,
             "issues_found": issues_found,
             "total_issues": len(issues_found),
-            "recommendations": self._generate_quality_recommendations(avg_quality, issues_found),
+            "recommendations": self._generate_quality_recommendations(
+                avg_quality, issues_found
+            ),
         }
 
     def _generate_quality_recommendations(
@@ -295,7 +309,9 @@ class QualityAuditor:
         recommendations = []
 
         if avg_quality < 70:
-            recommendations.append("Implement quality gates to ensure minimum standards")
+            recommendations.append(
+                "Implement quality gates to ensure minimum standards"
+            )
             recommendations.append("Add validation checks before final output")
 
         if issues:
@@ -304,7 +320,9 @@ class QualityAuditor:
                 recommendations.append(f"Address issue: {issue_type}")
 
         if avg_quality > 85:
-            recommendations.append("Quality standards are high - maintain current practices")
+            recommendations.append(
+                "Quality standards are high - maintain current practices"
+            )
 
         return recommendations
 
@@ -333,7 +351,11 @@ class ProcessOptimizer:
         for agent, count in agent_usage.items():
             if count / total_uses > 0.5:
                 patterns.append(
-                    {"type": "over_reliance", "agent": agent, "usage_rate": count / total_uses}
+                    {
+                        "type": "over_reliance",
+                        "agent": agent,
+                        "usage_rate": count / total_uses,
+                    }
                 )
 
         # Check for inefficient routing
@@ -353,7 +375,9 @@ class ProcessOptimizer:
             "patterns": patterns,
             "routing_issues": routing_issues,
             "optimization_potential": len(patterns) + len(routing_issues),
-            "recommendations": self._generate_process_recommendations(patterns, routing_issues),
+            "recommendations": self._generate_process_recommendations(
+                patterns, routing_issues
+            ),
         }
 
     def _generate_process_recommendations(
@@ -374,7 +398,9 @@ class ProcessOptimizer:
             )
 
         if not patterns and not routing_issues:
-            recommendations.append("Process efficiency is good - no major issues detected")
+            recommendations.append(
+                "Process efficiency is good - no major issues detected"
+            )
 
         return recommendations
 
@@ -440,7 +466,9 @@ class LearningExtractor:
             "successful_strategies": successful_strategies,
             "failure_modes": failure_modes,
             "patterns": [p.__dict__ for p in patterns],
-            "recommendations": self._generate_learning_recommendations(patterns, failure_modes),
+            "recommendations": self._generate_learning_recommendations(
+                patterns, failure_modes
+            ),
         }
 
     def _generate_learning_recommendations(
@@ -502,11 +530,16 @@ class RetrospectiveSwarm:
 
             # Synthesize insights
             insights = self._synthesize_insights(
-                performance_analysis, quality_audit, process_optimization, learning_extraction
+                performance_analysis,
+                quality_audit,
+                process_optimization,
+                learning_extraction,
             )
 
             # Generate grade
-            grade = self._calculate_grade(performance_analysis, quality_audit, process_optimization)
+            grade = self._calculate_grade(
+                performance_analysis, quality_audit, process_optimization
+            )
 
             # Generate recommendations
             recommendations = self._consolidate_recommendations(
@@ -524,7 +557,9 @@ class RetrospectiveSwarm:
                 project_id=project_id,
                 grade=grade,
                 insights=insights,
-                patterns_discovered=[Pattern(**p) for p in learning_extraction.get("patterns", [])],
+                patterns_discovered=[
+                    Pattern(**p) for p in learning_extraction.get("patterns", [])
+                ],
                 recommendations=recommendations,
                 config_updates=config_updates,
                 learning_applied=False,  # Will be set to True after applying
@@ -560,7 +595,9 @@ class RetrospectiveSwarm:
                     "execution_time": 8.5,
                     "total_tokens": 450,
                     "synthesized_response": "Analysis complete",
-                    "individual_results": {"agent1": {"confidence": 0.85, "tokens_used": 450}},
+                    "individual_results": {
+                        "agent1": {"confidence": 0.85, "tokens_used": 450}
+                    },
                 },
                 "status": "complete",
             }
@@ -634,7 +671,9 @@ class RetrospectiveSwarm:
 
         return insights
 
-    def _calculate_grade(self, performance: dict, quality: dict, process: dict) -> SwarmGrade:
+    def _calculate_grade(
+        self, performance: dict, quality: dict, process: dict
+    ) -> SwarmGrade:
         """Calculate overall grade for the project."""
         grade = SwarmGrade()
 

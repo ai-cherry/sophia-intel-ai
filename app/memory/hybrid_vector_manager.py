@@ -46,13 +46,19 @@ class HybridVectorManager:
         self.config = config or CollectionConfig()
         self.collections = {}
 
-    async def create_collection(self, name: str, config: Optional[CollectionConfig] = None):
+    async def create_collection(
+        self, name: str, config: Optional[CollectionConfig] = None
+    ):
         """Create a new collection"""
         self.collections[name] = config or self.config
         return True
 
     async def search(
-        self, collection: str, query: str, query_type: QueryType = QueryType.HYBRID, limit: int = 10
+        self,
+        collection: str,
+        query: str,
+        query_type: QueryType = QueryType.HYBRID,
+        limit: int = 10,
     ) -> list[VectorSearchResult]:
         """Perform search in collection"""
         # Stub implementation - returns empty results

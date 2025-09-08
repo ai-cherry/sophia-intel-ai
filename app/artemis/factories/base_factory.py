@@ -57,4 +57,3 @@ class ArtemisAgentTemplate(ModelFieldsModel):
     tools: list[str] = []
     virtual_key: str = "openai-vk-190a60"
     tactical_traits: dict[str, Any] = {}
-

@@ -201,7 +201,9 @@ class AirtableRecord:
                 break
 
         # Check if all conflicts are resolved
-        unresolved_conflicts = [c for c in self.sync_conflicts if not c.get("resolved", False)]
+        unresolved_conflicts = [
+            c for c in self.sync_conflicts if not c.get("resolved", False)
+        ]
         if not unresolved_conflicts:
             self.sync_status = SyncStatus.PENDING
 
@@ -219,7 +221,9 @@ class SyncConfiguration:
     bi_directional: bool = True
 
     # Sync rules
-    sync_tables: dict[str, list[str]] = field(default_factory=dict)  # base_id -> table_names
+    sync_tables: dict[str, list[str]] = field(
+        default_factory=dict
+    )  # base_id -> table_names
     field_mappings: dict[str, dict[str, str]] = field(
         default_factory=dict
     )  # table -> field mappings
@@ -231,7 +235,9 @@ class SyncConfiguration:
     manual_approval_required: bool = False
 
     # Conflict resolution
-    conflict_resolution_strategy: str = "manual"  # manual, source_wins, target_wins, merge
+    conflict_resolution_strategy: str = (
+        "manual"  # manual, source_wins, target_wins, merge
+    )
     notification_webhooks: list[str] = field(default_factory=list)
 
     # Performance
@@ -352,7 +358,9 @@ class FoundationalKnowledge:
     related_concepts: list[str] = field(default_factory=list)
 
     # Context and usage
-    business_domains: list[str] = field(default_factory=list)  # marketing, sales, finance
+    business_domains: list[str] = field(
+        default_factory=list
+    )  # marketing, sales, finance
     use_cases: list[str] = field(default_factory=list)
     importance_level: str = "medium"  # critical, high, medium, low
     confidence_level: float = 0.9  # 0.0 to 1.0
@@ -405,7 +413,9 @@ class FoundationalKnowledge:
         elif relationship_type == "child":
             if related_id not in self.child_knowledge:
                 self.child_knowledge.append(related_id)
-        elif relationship_type == "related" and related_id not in self.related_knowledge:
+        elif (
+            relationship_type == "related" and related_id not in self.related_knowledge
+        ):
             self.related_knowledge.append(related_id)
 
         self.updated_at = datetime.now()
@@ -480,7 +490,9 @@ class SyncOperation:
         """Complete operation with status"""
         self.completed_at = datetime.now()
         if self.started_at:
-            self.duration_seconds = (self.completed_at - self.started_at).total_seconds()
+            self.duration_seconds = (
+                self.completed_at - self.started_at
+            ).total_seconds()
 
         if success:
             self.status = SyncStatus.COMPLETED

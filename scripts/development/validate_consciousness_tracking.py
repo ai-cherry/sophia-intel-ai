@@ -81,7 +81,9 @@ class ConsciousnessTrackingValidator:
         mock_memory_client.search_memory = MagicMock(return_value=[])
 
         # Create consciousness tracker
-        tracker = ConsciousnessTracker("test_swarm", "validation_test", mock_memory_client)
+        tracker = ConsciousnessTracker(
+            "test_swarm", "validation_test", mock_memory_client
+        )
 
         results = {
             "initialization": False,
@@ -166,7 +168,9 @@ class ConsciousnessTrackingValidator:
             ctx["execution_data"]["quality_score"] = 0.5 + (i * 0.05)
             await tracker.measure_consciousness(ctx)
 
-        results["pattern_breakthrough"] = len(tracker.breakthrough_patterns) >= initial_patterns
+        results["pattern_breakthrough"] = (
+            len(tracker.breakthrough_patterns) >= initial_patterns
+        )
 
         # Test real-time monitoring
         results["real_time_monitoring"] = (
@@ -259,8 +263,16 @@ class ConsciousnessTrackingValidator:
         mock_memory_client.store_memory = MagicMock(return_value={"id": "test_memory"})
         mock_memory_client.search_memory = MagicMock(
             return_value=[
-                {"content": json.dumps({"consciousness_level": 0.7, "quality_score": 0.8})},
-                {"content": json.dumps({"consciousness_level": 0.6, "quality_score": 0.7})},
+                {
+                    "content": json.dumps(
+                        {"consciousness_level": 0.7, "quality_score": 0.8}
+                    )
+                },
+                {
+                    "content": json.dumps(
+                        {"consciousness_level": 0.6, "quality_score": 0.7}
+                    )
+                },
             ]
         )
         mock_memory_client.store_pattern = MagicMock(return_value=None)
@@ -294,7 +306,8 @@ class ConsciousnessTrackingValidator:
         )
 
         results["performance_correlation"] = (
-            "correlations" in correlation_result and "predictive_insights" in correlation_result
+            "correlations" in correlation_result
+            and "predictive_insights" in correlation_result
         )
 
         self.validation_results["memory_correlation"] = results
@@ -327,14 +340,18 @@ class ConsciousnessTrackingValidator:
             "collective_trajectory": [0.5, 0.6, 0.65],
         }
 
-        correlation_result = await tracker.correlate_with_collective_consciousness(global_data)
+        correlation_result = await tracker.correlate_with_collective_consciousness(
+            global_data
+        )
 
         results["collective_correlation"] = (
             "relative_position" in correlation_result
             and "synchronization_score" in correlation_result
         )
 
-        results["inter_swarm_sync"] = correlation_result.get("synchronization_score", 0) >= 0
+        results["inter_swarm_sync"] = (
+            correlation_result.get("synchronization_score", 0) >= 0
+        )
         results["contribution_calculation"] = (
             correlation_result.get("collective_contribution", 0) > 0
         )
@@ -353,7 +370,9 @@ class ConsciousnessTrackingValidator:
         for category, results in self.validation_results.items():
             if isinstance(results, dict) and "overall_status" not in category:
                 category_total = len(results)
-                category_passed = sum(1 for result in results.values() if result is True)
+                category_passed = sum(
+                    1 for result in results.values() if result is True
+                )
                 total_tests += category_total
                 passed_tests += category_passed
 

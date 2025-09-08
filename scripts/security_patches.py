@@ -70,7 +70,9 @@ class SecurityPatcher:
             content = f.read()
 
         # Update Python version requirement
-        content = re.sub(r'requires-python = ">=3\.11"', 'requires-python = ">=3.12"', content)
+        content = re.sub(
+            r'requires-python = ">=3\.11"', 'requires-python = ">=3.12"', content
+        )
 
         # Update dependency versions
         updates = {
@@ -116,7 +118,15 @@ class SecurityPatcher:
             {
                 "name": "Bandit - Code security analysis",
                 "cmd": ["python", "-m", "pip", "install", "bandit"],
-                "scan_cmd": ["bandit", "-r", ".", "-f", "json", "-o", "bandit-report.json"],
+                "scan_cmd": [
+                    "bandit",
+                    "-r",
+                    ".",
+                    "-f",
+                    "json",
+                    "-o",
+                    "bandit-report.json",
+                ],
             },
             {
                 "name": "Semgrep - Static analysis",
@@ -152,7 +162,9 @@ class SecurityPatcher:
                 if result.returncode == 0:
                     print(f"✅ {scan['name']} completed successfully")
                 else:
-                    print(f"⚠️ {scan['name']} found issues (exit code: {result.returncode})")
+                    print(
+                        f"⚠️ {scan['name']} found issues (exit code: {result.returncode})"
+                    )
 
             except Exception as e:
                 print(f"❌ Error running {scan['name']}: {e}")
@@ -169,7 +181,10 @@ class SecurityPatcher:
             if subprocess.run(["which", "uv"], capture_output=True).returncode == 0:
                 print("🚀 Using UV for dependency installation...")
                 result = subprocess.run(
-                    ["uv", "sync", "--dev"], cwd=self.repo_root, capture_output=True, text=True
+                    ["uv", "sync", "--dev"],
+                    cwd=self.repo_root,
+                    capture_output=True,
+                    text=True,
                 )
             else:
                 print("🐍 Using pip for dependency installation...")
@@ -249,7 +264,11 @@ print('✅ Basic functionality tests passed')
             try:
                 print(f"🧪 Running {test['name']}...")
                 result = subprocess.run(
-                    test["cmd"], cwd=self.repo_root, capture_output=True, text=True, timeout=30
+                    test["cmd"],
+                    cwd=self.repo_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
 
                 if result.returncode == 0:
@@ -314,7 +333,9 @@ print('✅ Basic functionality tests passed')
 """
             )
             for scan_name, result in scan_results.items():
-                status = "✅ PASSED" if result.get("returncode") == 0 else "⚠️ ISSUES FOUND"
+                status = (
+                    "✅ PASSED" if result.get("returncode") == 0 else "⚠️ ISSUES FOUND"
+                )
                 f.write(f"- **{scan_name}**: {status}\n")
 
             f.write(

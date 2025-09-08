@@ -168,7 +168,9 @@ class CleanSlateExecutor:
                             lines = content.split("\n")
                             import_idx = 0
                             for i, line in enumerate(lines):
-                                if line.startswith("import ") or line.startswith("from "):
+                                if line.startswith("import ") or line.startswith(
+                                    "from "
+                                ):
                                     import_idx = i
                             lines.insert(import_idx + 1, import_line)
                             content = "\n".join(lines)
@@ -254,9 +256,15 @@ class CleanSlateExecutor:
         logger.info(f"   Files modified: {report['statistics']['files_modified']}")
         logger.info(f"   Files created: {report['statistics']['files_created']}")
         logger.info("\n   Remaining components:")
-        logger.info(f"   - Orchestrators: {report['components_remaining']['orchestrators']}")
-        logger.info(f"   - Managers: {report['components_remaining']['managers']} (embedded)")
-        logger.info(f"   - Docker files: {report['components_remaining']['docker_files']}")
+        logger.info(
+            f"   - Orchestrators: {report['components_remaining']['orchestrators']}"
+        )
+        logger.info(
+            f"   - Managers: {report['components_remaining']['managers']} (embedded)"
+        )
+        logger.info(
+            f"   - Docker files: {report['components_remaining']['docker_files']}"
+        )
         logger.info(f"\n   Full report saved to: {report_path}")
 
     def verify_system(self):
@@ -265,10 +273,15 @@ class CleanSlateExecutor:
         logger.info("\n🔍 Verifying system...")
 
         checks = {
-            "super_orchestrator_exists": (Path("app/core/super_orchestrator.py")).exists(),
+            "super_orchestrator_exists": (
+                Path("app/core/super_orchestrator.py")
+            ).exists(),
             "ai_logger_exists": (Path("app/core/ai_logger.py")).exists(),
             "single_dockerfile": len(list(self.root.glob("Dockerfile*"))) == 1,
-            "no_duplicate_orchestrators": len(list(self.root.glob("app/**/*orchestr*.py"))) <= 2,
+            "no_duplicate_orchestrators": len(
+                list(self.root.glob("app/**/*orchestr*.py"))
+            )
+            <= 2,
         }
 
         all_passed = all(checks.values())
@@ -289,9 +302,13 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Execute Operation Clean Slate")
-    parser.add_argument("--dry-run", action="store_true", help="Perform dry run without changes")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Perform dry run without changes"
+    )
     parser.add_argument("--no-backup", action="store_true", help="Skip backup creation")
-    parser.add_argument("--verify-only", action="store_true", help="Only verify system state")
+    parser.add_argument(
+        "--verify-only", action="store_true", help="Only verify system state"
+    )
 
     args = parser.parse_args()
 

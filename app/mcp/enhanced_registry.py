@@ -157,7 +157,12 @@ class MCPServerRegistry:
                     access_level="shared",
                     priority=2,
                     filters={
-                        "tag_categories": ["code", "architecture", "security", "performance"],
+                        "tag_categories": [
+                            "code",
+                            "architecture",
+                            "security",
+                            "performance",
+                        ],
                         "auto_tag": True,
                     },
                 ),
@@ -250,7 +255,11 @@ class MCPServerRegistry:
                     domain=MemoryDomain.SOPHIA,
                     access_level="shared",
                     priority=3,
-                    filters={"strategy": "semantic_based", "chunk_size": 1024, "overlap": 100},
+                    filters={
+                        "strategy": "semantic_based",
+                        "chunk_size": 1024,
+                        "overlap": 100,
+                    },
                 ),
             ]
         )
@@ -410,7 +419,9 @@ class MCPServerRegistry:
         allocations = self.get_servers_for_domain(domain, server_type)
 
         if not allocations:
-            logger.error(f"No servers available for domain {domain} and type {server_type}")
+            logger.error(
+                f"No servers available for domain {domain} and type {server_type}"
+            )
             return None
 
         # Find the best available server
@@ -440,7 +451,9 @@ class MCPServerRegistry:
 
                 return allocation.server_name, connection_config
 
-        logger.warning(f"All servers at capacity for domain {domain} and type {server_type}")
+        logger.warning(
+            f"All servers at capacity for domain {domain} and type {server_type}"
+        )
         return None
 
     def release_connection(self, server_name: str, domain: MemoryDomain) -> bool:
@@ -538,7 +551,9 @@ class MCPServerRegistry:
             "partition_count": sum(len(p) for p in self.partitions.values()),
         }
 
-    def validate_domain_access(self, domain: MemoryDomain, server_type: MCPServerType) -> bool:
+    def validate_domain_access(
+        self, domain: MemoryDomain, server_type: MCPServerType
+    ) -> bool:
         """
         Validate if a domain can access a server type
 
@@ -559,8 +574,16 @@ class MCPServerRegistry:
     def get_connection_summary(self) -> dict[str, Any]:
         """Get summary of all connections and allocations"""
         summary = {
-            "artemis": {"exclusive_servers": [], "shared_servers": [], "total_connections": 0},
-            "sophia": {"exclusive_servers": [], "shared_servers": [], "total_connections": 0},
+            "artemis": {
+                "exclusive_servers": [],
+                "shared_servers": [],
+                "total_connections": 0,
+            },
+            "sophia": {
+                "exclusive_servers": [],
+                "shared_servers": [],
+                "total_connections": 0,
+            },
             "shared": {"servers": [], "total_connections": 0},
         }
 
@@ -568,9 +591,13 @@ class MCPServerRegistry:
             allocations = self.allocations.get(domain, [])
             for allocation in allocations:
                 if allocation.access_level == "exclusive":
-                    summary[domain.value]["exclusive_servers"].append(allocation.server_name)
+                    summary[domain.value]["exclusive_servers"].append(
+                        allocation.server_name
+                    )
                 else:
-                    summary[domain.value]["shared_servers"].append(allocation.server_name)
+                    summary[domain.value]["shared_servers"].append(
+                        allocation.server_name
+                    )
 
                 connections = self.active_connections.get(allocation.server_name, 0)
                 summary[domain.value]["total_connections"] += connections

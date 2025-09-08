@@ -63,8 +63,16 @@ class PerformanceProfiler:
             "median": statistics.median(values),
             "min": min(values),
             "max": max(values),
-            "p95": sorted(values)[int(0.95 * len(values))] if len(values) >= 20 else max(values),
-            "p99": sorted(values)[int(0.99 * len(values))] if len(values) >= 100 else max(values),
+            "p95": (
+                sorted(values)[int(0.95 * len(values))]
+                if len(values) >= 20
+                else max(values)
+            ),
+            "p99": (
+                sorted(values)[int(0.99 * len(values))]
+                if len(values) >= 100
+                else max(values)
+            ),
         }
 
 
@@ -112,7 +120,9 @@ def test_memory_baseline(profiler):
     baseline_memory = process.memory_info().rss / 1024 / 1024  # MB
 
     # Target: <100MB baseline
-    assert baseline_memory < 100, f"Baseline memory {baseline_memory:.1f}MB exceeds 100MB target"
+    assert (
+        baseline_memory < 100
+    ), f"Baseline memory {baseline_memory:.1f}MB exceeds 100MB target"
 
 
 # ================================
@@ -190,7 +200,9 @@ async def test_api_concurrent_requests(profiler):
                 avg_response_time < PERFORMANCE_TARGETS["api_response_time_ms"] * 2
             ), f"Average response time {avg_response_time:.1f}ms too high for concurrency {concurrency}"
 
-            print(f"Concurrency {concurrency}: {throughput:.1f} RPS, avg {avg_response_time:.1f}ms")
+            print(
+                f"Concurrency {concurrency}: {throughput:.1f} RPS, avg {avg_response_time:.1f}ms"
+            )
 
 
 # ================================
@@ -213,7 +225,9 @@ def test_agent_memory_efficiency(profiler):
     # Create multiple agents
     agents = []
     for i in range(50):
-        config = AgentConfig(agent_id=f"test-{i}", agent_name=f"TestAgent{i}", capabilities=[])
+        config = AgentConfig(
+            agent_id=f"test-{i}", agent_name=f"TestAgent{i}", capabilities=[]
+        )
         agents.append(Agent(config))
 
     # Measure memory after agent creation
@@ -221,7 +235,9 @@ def test_agent_memory_efficiency(profiler):
     memory_per_agent = (current - baseline) / 50
 
     # Target: <2MB per agent
-    assert memory_per_agent < 2.0, f"Memory per agent {memory_per_agent:.2f}MB exceeds 2MB target"
+    assert (
+        memory_per_agent < 2.0
+    ), f"Memory per agent {memory_per_agent:.2f}MB exceeds 2MB target"
 
     # Cleanup test
     del agents
@@ -252,7 +268,9 @@ async def test_async_memory_usage(profiler):
     memory_increase = current - baseline
 
     # Target: <50MB increase for 100 concurrent tasks
-    assert memory_increase < 50, f"Memory increase {memory_increase:.1f}MB exceeds 50MB target"
+    assert (
+        memory_increase < 50
+    ), f"Memory increase {memory_increase:.1f}MB exceeds 50MB target"
 
     assert len(results) == 100
     assert all(result == 49995000 for result in results)
@@ -341,7 +359,9 @@ async def test_full_stack_performance(profiler):
         total_time = profiler.end_timer("full_stack")
 
         # Target: <500ms for full stack test
-        assert total_time < 500, f"Full stack test time {total_time:.1f}ms exceeds 500ms target"
+        assert (
+            total_time < 500
+        ), f"Full stack test time {total_time:.1f}ms exceeds 500ms target"
 
 
 # ================================

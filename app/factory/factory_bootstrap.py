@@ -15,7 +15,10 @@ from app.core.portkey_manager import get_portkey_manager
 
 # Core factory components
 from app.factory.comprehensive_swarm_factory import get_comprehensive_factory
-from app.factory.deployment_config import get_deployment_manager, start_automated_deployments
+from app.factory.deployment_config import (
+    get_deployment_manager,
+    start_automated_deployments,
+)
 from app.factory.model_routing_config import get_routing_engine
 from app.factory.slack_delivery_templates import get_template_manager
 from app.memory.unified_memory_router import get_memory_router
@@ -114,7 +117,9 @@ class FactoryBootstrap:
             }
 
             if success:
-                logger.info(f"✅ Factory bootstrap completed successfully in {bootstrap_time:.2f}s")
+                logger.info(
+                    f"✅ Factory bootstrap completed successfully in {bootstrap_time:.2f}s"
+                )
                 self._log_success_summary(result)
             else:
                 logger.error(
@@ -181,7 +186,9 @@ class FactoryBootstrap:
 
             if rule_count > 0:
                 self.component_status["model_routing"] = True
-                self._log_success("Model Routing Engine", f"{rule_count} routing rules loaded")
+                self._log_success(
+                    "Model Routing Engine", f"{rule_count} routing rules loaded"
+                )
             else:
                 self._log_failure("Model Routing Engine", "No routing rules found")
 
@@ -203,10 +210,13 @@ class FactoryBootstrap:
             if swarm_count > 0:
                 self.component_status["comprehensive_factory"] = True
                 self._log_success(
-                    "Comprehensive Factory", f"{swarm_count} swarm configurations available"
+                    "Comprehensive Factory",
+                    f"{swarm_count} swarm configurations available",
                 )
             else:
-                self._log_failure("Comprehensive Factory", "No swarm configurations found")
+                self._log_failure(
+                    "Comprehensive Factory", "No swarm configurations found"
+                )
 
         except Exception as e:
             self._log_failure("Comprehensive Factory", str(e))
@@ -223,7 +233,9 @@ class FactoryBootstrap:
             delivery_engine.get_delivery_statistics()
 
             self.component_status["slack_delivery"] = True
-            self._log_success("Slack Delivery Engine", "Initialized with delivery templates")
+            self._log_success(
+                "Slack Delivery Engine", "Initialized with delivery templates"
+            )
 
         except Exception as e:
             self._log_failure("Slack Delivery Engine", str(e))
@@ -238,10 +250,13 @@ class FactoryBootstrap:
             if template_count > 0:
                 self.component_status["template_manager"] = True
                 self._log_success(
-                    "Template Manager", f"{template_count} delivery configurations loaded"
+                    "Template Manager",
+                    f"{template_count} delivery configurations loaded",
                 )
             else:
-                self._log_warning("Template Manager", "No delivery configurations found")
+                self._log_warning(
+                    "Template Manager", "No delivery configurations found"
+                )
 
         except Exception as e:
             self._log_failure("Template Manager", str(e))
@@ -261,13 +276,16 @@ class FactoryBootstrap:
             if template_count > 0:
                 self.component_status["deployment_manager"] = True
                 self._log_success(
-                    "Deployment Manager", f"{template_count} deployment templates loaded"
+                    "Deployment Manager",
+                    f"{template_count} deployment templates loaded",
                 )
 
                 # Start scheduler if requested
                 if start_scheduler:
                     await start_automated_deployments()
-                    self._log_success("Deployment Scheduler", "Automated deployments started")
+                    self._log_success(
+                        "Deployment Scheduler", "Automated deployments started"
+                    )
 
             else:
                 self._log_failure("Deployment Manager", "No deployment templates found")
@@ -316,11 +334,19 @@ class FactoryBootstrap:
                 # Test creating a swarm configuration (not actual swarm)
                 test_config = list(factory.swarm_configs.values())[0]
                 validation_results.append(
-                    ("Factory Configuration", True, f"Test config '{test_config.name}' accessible")
+                    (
+                        "Factory Configuration",
+                        True,
+                        f"Test config '{test_config.name}' accessible",
+                    )
                 )
             else:
                 validation_results.append(
-                    ("Factory Configuration", False, "No swarm configurations available")
+                    (
+                        "Factory Configuration",
+                        False,
+                        "No swarm configurations available",
+                    )
                 )
 
         except Exception as e:
@@ -358,7 +384,10 @@ class FactoryBootstrap:
             factory = get_comprehensive_factory()
 
             # Create a simple test swarm
-            from app.factory.comprehensive_swarm_factory import SwarmFactoryConfig, SwarmType
+            from app.factory.comprehensive_swarm_factory import (
+                SwarmFactoryConfig,
+                SwarmType,
+            )
             from app.swarms.core.micro_swarm_base import CoordinationPattern
 
             test_config = SwarmFactoryConfig(
@@ -525,7 +554,9 @@ async def main():
     """CLI interface for factory bootstrap"""
 
     if len(sys.argv) < 2:
-        print("Usage: python factory_bootstrap.py [quick|production|development|minimal]")
+        print(
+            "Usage: python factory_bootstrap.py [quick|production|development|minimal]"
+        )
         sys.exit(1)
 
     mode = sys.argv[1].lower()

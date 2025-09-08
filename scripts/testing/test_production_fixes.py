@@ -155,7 +155,9 @@ async def test_health_monitoring():
         detailed_health = await health_monitor.get_system_health(detailed=True)
         assert "components" in detailed_health
         assert "system_metrics" in detailed_health
-        print(f"✓ Detailed health check: {len(detailed_health['components'])} components")
+        print(
+            f"✓ Detailed health check: {len(detailed_health['components'])} components"
+        )
 
         # Test specific component checks
         memory_health = await health_monitor._check_memory()
@@ -184,7 +186,11 @@ async def test_integration():
         print("✓ Orchestrator initialized")
 
         # Test basic request processing
-        test_request = {"type": "query", "query_type": "metrics", "content": "integration test"}
+        test_request = {
+            "type": "query",
+            "query_type": "metrics",
+            "content": "integration test",
+        }
 
         result = await orchestrator.process_request(test_request)
         assert "type" in result
@@ -219,7 +225,12 @@ async def generate_test_report():
             "system_integration",
         ],
         "status": "completed",
-        "summary": {"total_tests": 6, "passed": 6, "failed": 0, "warnings": 0},  # Assuming all pass
+        "summary": {
+            "total_tests": 6,
+            "passed": 6,
+            "failed": 0,
+            "warnings": 0,
+        },  # Assuming all pass
     }
 
     # Save report

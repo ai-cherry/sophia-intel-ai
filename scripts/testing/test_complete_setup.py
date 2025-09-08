@@ -99,7 +99,9 @@ class CompleteSetupTester:
                     if response.status_code == 200:
                         result = response.json()
                         content = (
-                            result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                            result.get("choices", [{}])[0]
+                            .get("message", {})
+                            .get("content", "")
                         )
                         logger.info(f"   ✅ Success: {content[:50]}")
                     else:
@@ -117,7 +119,10 @@ class CompleteSetupTester:
         logger.info("=" * 60)
 
         # Fix: Use "together-ai" instead of "together"
-        config = {"provider": "together-ai", "api_key": self.together_key}  # Correct provider name
+        config = {
+            "provider": "together-ai",
+            "api_key": self.together_key,
+        }  # Correct provider name
 
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
@@ -136,7 +141,9 @@ class CompleteSetupTester:
 
                 if response.status_code == 200:
                     result = response.json()
-                    embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
+                    embedding_dim = len(
+                        result.get("data", [{}])[0].get("embedding", [])
+                    )
                     logger.info(f"✅ Embeddings working! Dimension: {embedding_dim}")
                 else:
                     logger.info(f"❌ Failed: Status {response.status_code}")
@@ -168,14 +175,20 @@ class CompleteSetupTester:
                     },
                     json={
                         "model": "meta-llama/llama-3.2-3b-instruct",
-                        "messages": [{"role": "user", "content": "Say 'Direct OK' in 2 words"}],
+                        "messages": [
+                            {"role": "user", "content": "Say 'Direct OK' in 2 words"}
+                        ],
                         "max_tokens": 10,
                     },
                 )
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        result.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     logger.info(f"  ✅ OpenRouter: {content}")
                 else:
                     logger.info(f"  ❌ OpenRouter: Failed ({response.status_code})")
@@ -195,14 +208,20 @@ class CompleteSetupTester:
                     },
                     json={
                         "model": "meta-llama/Llama-3.2-3B-Instruct-Turbo",
-                        "messages": [{"role": "user", "content": "Say 'Together OK' in 2 words"}],
+                        "messages": [
+                            {"role": "user", "content": "Say 'Together OK' in 2 words"}
+                        ],
                         "max_tokens": 10,
                     },
                 )
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        result.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     logger.info(f"  ✅ Together AI: {content}")
                 else:
                     logger.info(f"  ❌ Together AI: Failed ({response.status_code})")

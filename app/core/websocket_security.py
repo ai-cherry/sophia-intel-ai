@@ -120,23 +120,48 @@ class WebSocketSecurityMiddleware:
         return {
             "subscribe": [
                 InputValidationRule(
-                    "channel", r"^[a-zA-Z0-9_\-.:]+$", 100, True, True, "Channel name validation"
+                    "channel",
+                    r"^[a-zA-Z0-9_\-.:]+$",
+                    100,
+                    True,
+                    True,
+                    "Channel name validation",
                 )
             ],
             "pay_ready_query": [
                 InputValidationRule(
-                    "account_id", r"^[a-zA-Z0-9_\-]{1,50}$", 50, True, True, "Pay Ready account ID"
+                    "account_id",
+                    r"^[a-zA-Z0-9_\-]{1,50}$",
+                    50,
+                    True,
+                    True,
+                    "Pay Ready account ID",
                 ),
                 InputValidationRule(
-                    "filters", r"^[\w\s\-_.,:|=<>()]+$", 500, False, True, "Query filters"
+                    "filters",
+                    r"^[\w\s\-_.,:|=<>()]+$",
+                    500,
+                    False,
+                    True,
+                    "Query filters",
                 ),
             ],
             "sophia_intelligence_query": [
                 InputValidationRule(
-                    "query_text", r"^[\w\s\-_.,?!]+$", 1000, True, True, "Intelligence query text"
+                    "query_text",
+                    r"^[\w\s\-_.,?!]+$",
+                    1000,
+                    True,
+                    True,
+                    "Intelligence query text",
                 ),
                 InputValidationRule(
-                    "team_id", r"^[a-zA-Z0-9_\-]{1,30}$", 30, False, True, "Team identifier"
+                    "team_id",
+                    r"^[a-zA-Z0-9_\-]{1,30}$",
+                    30,
+                    False,
+                    True,
+                    "Team identifier",
                 ),
             ],
             "artemis_operation": [
@@ -149,7 +174,12 @@ class WebSocketSecurityMiddleware:
                     "Artemis operation type",
                 ),
                 InputValidationRule(
-                    "target", r"^[a-zA-Z0-9_\-.:]+$", 100, False, True, "Operation target"
+                    "target",
+                    r"^[a-zA-Z0-9_\-.:]+$",
+                    100,
+                    False,
+                    True,
+                    "Operation target",
                 ),
             ],
             "general": [
@@ -249,7 +279,9 @@ class WebSocketSecurityMiddleware:
             await self.redis.ping()
             logger.info("WebSocket security middleware initialized with Redis")
         except Exception as e:
-            logger.warning(f"Redis connection failed, using in-memory security tracking: {e}")
+            logger.warning(
+                f"Redis connection failed, using in-memory security tracking: {e}"
+            )
             self.redis = None
 
         # Start background tasks
@@ -258,7 +290,10 @@ class WebSocketSecurityMiddleware:
             asyncio.create_task(self._threat_analysis_loop())
 
     async def validate_input(
-        self, message: dict[str, Any], message_type: str, user: Optional[AuthenticatedUser] = None
+        self,
+        message: dict[str, Any],
+        message_type: str,
+        user: Optional[AuthenticatedUser] = None,
     ) -> tuple[bool, dict[str, Any], Optional[SecurityEvent]]:
         """
         Validate incoming message input
@@ -299,7 +334,9 @@ class WebSocketSecurityMiddleware:
                         # Basic sanitization
                         sanitized_value = self._sanitize_string(value)
                         if len(sanitized_value) > 2000:  # Default max length
-                            validation_errors.append(f"Field {field} exceeds maximum length")
+                            validation_errors.append(
+                                f"Field {field} exceeds maximum length"
+                            )
                             continue
                         sanitized_message[field] = sanitized_value
                     else:
@@ -321,8 +358,12 @@ class WebSocketSecurityMiddleware:
                         continue
 
                     # Check pattern
-                    if applicable_rule.pattern and not re.match(applicable_rule.pattern, value):
-                        validation_errors.append(f"Field {field} contains invalid characters")
+                    if applicable_rule.pattern and not re.match(
+                        applicable_rule.pattern, value
+                    ):
+                        validation_errors.append(
+                            f"Field {field} contains invalid characters"
+                        )
                         continue
 
                     # Threat detection
@@ -345,7 +386,9 @@ class WebSocketSecurityMiddleware:
                     event_id=self._generate_event_id(),
                     event_type=SecurityEventType.MALICIOUS_INPUT,
                     threat_level=(
-                        ThreatLevel.HIGH if len(security_issues) > 2 else ThreatLevel.MEDIUM
+                        ThreatLevel.HIGH
+                        if len(security_issues) > 2
+                        else ThreatLevel.MEDIUM
                     ),
                     timestamp=datetime.utcnow(),
                     client_id=message.get("client_id", "unknown"),
@@ -399,7 +442,10 @@ class WebSocketSecurityMiddleware:
         return threats
 
     async def check_tenant_isolation(
-        self, user: AuthenticatedUser, resource_identifier: str, operation: str = "access"
+        self,
+        user: AuthenticatedUser,
+        resource_identifier: str,
+        operation: str = "access",
     ) -> tuple[bool, Optional[SecurityEvent]]:
         """
         Check tenant isolation for resource access
@@ -503,7 +549,9 @@ class WebSocketSecurityMiddleware:
                 anomalies.append("cross_tenant_pay_ready_access")
 
             # Check for privilege escalation attempts
-            if "admin" in str(message_data).lower() and user.role not in [UserRole.ADMIN]:
+            if "admin" in str(message_data).lower() and user.role not in [
+                UserRole.ADMIN
+            ]:
                 anomalies.append("privilege_escalation_attempt")
 
             # Check for data exfiltration patterns
@@ -517,7 +565,9 @@ class WebSocketSecurityMiddleware:
 
             # Create security event if anomalies detected
             if anomalies:
-                threat_level = ThreatLevel.CRITICAL if len(anomalies) > 2 else ThreatLevel.MEDIUM
+                threat_level = (
+                    ThreatLevel.CRITICAL if len(anomalies) > 2 else ThreatLevel.MEDIUM
+                )
 
                 security_event = SecurityEvent(
                     event_id=self._generate_event_id(),
@@ -534,7 +584,9 @@ class WebSocketSecurityMiddleware:
                         "user_patterns": user_patterns,
                         "message_size": len(message_str),
                     },
-                    raw_message=message_str if len(message_str) < 1000 else message_str[:1000],
+                    raw_message=(
+                        message_str if len(message_str) < 1000 else message_str[:1000]
+                    ),
                     blocked=threat_level == ThreatLevel.CRITICAL,
                 )
 
@@ -575,7 +627,9 @@ class WebSocketSecurityMiddleware:
 
             # Store in Redis for centralized monitoring
             if self.redis:
-                await self.redis.lpush("websocket_security_events", json.dumps(log_data))
+                await self.redis.lpush(
+                    "websocket_security_events", json.dumps(log_data)
+                )
                 await self.redis.ltrim("websocket_security_events", 0, 10000)
 
                 # Set expiration for compliance
@@ -603,7 +657,9 @@ class WebSocketSecurityMiddleware:
                 f"blocked_client:{client_id}", duration_seconds, block_until.isoformat()
             )
 
-    async def is_client_blocked(self, client_id: str) -> tuple[bool, Optional[datetime]]:
+    async def is_client_blocked(
+        self, client_id: str
+    ) -> tuple[bool, Optional[datetime]]:
         """Check if client is currently blocked"""
         # Check in-memory blocks
         if client_id in self.blocked_clients:
@@ -662,7 +718,9 @@ class WebSocketSecurityMiddleware:
 
                 # Clean old security events
                 cutoff = now - timedelta(hours=24)
-                self.recent_events = [e for e in self.recent_events if e.timestamp > cutoff]
+                self.recent_events = [
+                    e for e in self.recent_events if e.timestamp > cutoff
+                ]
 
                 await asyncio.sleep(300)  # Run every 5 minutes
 
@@ -678,7 +736,9 @@ class WebSocketSecurityMiddleware:
 
                 # Analyze recent events for patterns
                 recent_cutoff = datetime.utcnow() - timedelta(minutes=10)
-                recent_events = [e for e in self.recent_events if e.timestamp > recent_cutoff]
+                recent_events = [
+                    e for e in self.recent_events if e.timestamp > recent_cutoff
+                ]
 
                 if len(recent_events) > 50:  # High event rate
                     logger.warning(
@@ -689,7 +749,9 @@ class WebSocketSecurityMiddleware:
                 ip_counts = {}
                 for event in recent_events:
                     if event.ip_address:
-                        ip_counts[event.ip_address] = ip_counts.get(event.ip_address, 0) + 1
+                        ip_counts[event.ip_address] = (
+                            ip_counts.get(event.ip_address, 0) + 1
+                        )
 
                 for ip, count in ip_counts.items():
                     if count > 10:  # Same IP with many violations
@@ -711,7 +773,9 @@ class WebSocketSecurityMiddleware:
         event_types = {}
         threat_levels = {}
         for event in recent_events:
-            event_types[event.event_type.value] = event_types.get(event.event_type.value, 0) + 1
+            event_types[event.event_type.value] = (
+                event_types.get(event.event_type.value, 0) + 1
+            )
             threat_levels[event.threat_level.value] = (
                 threat_levels.get(event.threat_level.value, 0) + 1
             )
@@ -751,7 +815,9 @@ class WebSocketSecurityMiddleware:
         event_type: Optional[SecurityEventType] = None,
     ) -> list[dict[str, Any]]:
         """Get recent security events with filtering"""
-        events = self.recent_events[-limit:] if not threat_level and not event_type else []
+        events = (
+            self.recent_events[-limit:] if not threat_level and not event_type else []
+        )
 
         if threat_level or event_type:
             events = [

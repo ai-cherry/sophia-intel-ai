@@ -138,14 +138,23 @@ class PortkeyManager:
                         ],
                     },
                     "code.generation": {
-                        "primary": {"vk": "deepseek-vk-24102f", "model": "deepseek-coder"},
+                        "primary": {
+                            "vk": "deepseek-vk-24102f",
+                            "model": "deepseek-coder",
+                        },
                         "fallbacks": [
-                            {"vk": "vkj-openrouter-cc4151", "model": "qwen-3-coder-plus"},
+                            {
+                                "vk": "vkj-openrouter-cc4151",
+                                "model": "qwen-3-coder-plus",
+                            },
                             {"vk": "openai-vk-190a60", "model": "gpt-4o"},
                         ],
                     },
                     "research.web": {
-                        "primary": {"vk": "perplexity-vk-56c172", "model": "sonar-large"},
+                        "primary": {
+                            "vk": "perplexity-vk-56c172",
+                            "model": "sonar-large",
+                        },
                         "fallbacks": [
                             {"vk": "gemini-vk-3d6108", "model": "gemini-2.0-pro"},
                             {"vk": "xai-vk-e65d0f", "model": "grok-5"},
@@ -233,7 +242,9 @@ class PortkeyManager:
             primary = self._find_cheaper_alternative(task_type, max_cost_usd)
 
         # Build fallback configs
-        fallback_configs = [self._build_model_config(fb["vk"], fb["model"]) for fb in fallbacks]
+        fallback_configs = [
+            self._build_model_config(fb["vk"], fb["model"]) for fb in fallbacks
+        ]
 
         return RoutingDecision(
             provider=self._vk_to_provider(primary["vk"]),
@@ -309,7 +320,9 @@ class PortkeyManager:
         cost_per_1k = costs.get(model, 0.01)
         return (tokens / 1000) * cost_per_1k
 
-    def _find_cheaper_alternative(self, task_type: TaskType, max_cost: float) -> dict[str, str]:
+    def _find_cheaper_alternative(
+        self, task_type: TaskType, max_cost: float
+    ) -> dict[str, str]:
         """Find a cheaper alternative model"""
         # Fast tier models for cost optimization
         return {"vk": "groq-vk-6b9b52", "model": "llama3-70b"}
@@ -367,7 +380,9 @@ class PortkeyManager:
                     **kwargs,
                 )
                 self._record_usage(fallback.provider, fallback.model, response.usage)
-                logger.info(f"Succeeded with fallback: {fallback.provider}/{fallback.model}")
+                logger.info(
+                    f"Succeeded with fallback: {fallback.provider}/{fallback.model}"
+                )
                 return response
             except Exception as e:
                 logger.warning(f"Fallback {fallback.provider} failed: {e}")
@@ -432,7 +447,9 @@ class PortkeyManager:
                 return vectors  # type: ignore[return-value]
             raise ValueError("Embedding provider returned incomplete vectors")
         except Exception as e:
-            logger.warning(f"Embedding provider '{prov}' failed; using local fallback: {e}")
+            logger.warning(
+                f"Embedding provider '{prov}' failed; using local fallback: {e}"
+            )
             return self._local_embed(texts)
 
     def _local_embed(self, texts: list[str], dim: int = 256) -> list[list[float]]:
@@ -482,7 +499,11 @@ class PortkeyManager:
         """Record usage statistics"""
         key = f"{provider}/{model}"
         if key not in self._usage_stats:
-            self._usage_stats[key] = {"requests": 0, "total_tokens": 0, "total_cost": 0.0}
+            self._usage_stats[key] = {
+                "requests": 0,
+                "total_tokens": 0,
+                "total_cost": 0.0,
+            }
 
         stats = self._usage_stats[key]
         stats["requests"] += 1

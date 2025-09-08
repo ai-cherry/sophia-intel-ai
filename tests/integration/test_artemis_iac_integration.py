@@ -70,7 +70,9 @@ async def test_artemis_iac_integration():
         print("✅ Validation successful!")
         print(f"Validation score: {validation_result.value['validation_score']}/100")
         if validation_result.value["security_issues"]:
-            print(f"Security issues found: {len(validation_result.value['security_issues'])}")
+            print(
+                f"Security issues found: {len(validation_result.value['security_issues'])}"
+            )
         if validation_result.value["recommendations"]:
             print(f"Recommendations: {len(validation_result.value['recommendations'])}")
     else:

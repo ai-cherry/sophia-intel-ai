@@ -18,7 +18,10 @@ from datetime import datetime
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("logs/memory_benchmark.log"), logging.StreamHandler()],
+    handlers=[
+        logging.FileHandler("logs/memory_benchmark.log"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger("memory_benchmark")
 
@@ -28,7 +31,9 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 try:
     from memory.mem0_bridge import Mem0Bridge
 except ImportError:
-    logger.error("Error: Could not import Mem0Bridge. Make sure memory/mem0_bridge.py exists.")
+    logger.error(
+        "Error: Could not import Mem0Bridge. Make sure memory/mem0_bridge.py exists."
+    )
     sys.exit(1)
 
 
@@ -85,11 +90,22 @@ class MemoryBenchmark:
                 "timestamp": datetime.now().isoformat(),
                 "priority": random.choice(["high", "medium", "low"]),
                 "tags": random.sample(
-                    ["python", "javascript", "database", "api", "ui", "test", "security"], k=2
+                    [
+                        "python",
+                        "javascript",
+                        "database",
+                        "api",
+                        "ui",
+                        "test",
+                        "security",
+                    ],
+                    k=2,
                 ),
             }
 
-            self.memories.append({"content": content, "relevance": relevance, "metadata": metadata})
+            self.memories.append(
+                {"content": content, "relevance": relevance, "metadata": metadata}
+            )
 
         logger.info(f"Generated {len(self.memories)} test memories")
         return self.memories
@@ -136,8 +152,12 @@ class MemoryBenchmark:
 
         # Add more random queries if needed
         while len(queries) < num_queries:
-            category = random.choice(["bug", "feature", "documentation", "refactor", "test"])
-            element = random.choice(["authentication", "database", "api", "ui", "settings"])
+            category = random.choice(
+                ["bug", "feature", "documentation", "refactor", "test"]
+            )
+            element = random.choice(
+                ["authentication", "database", "api", "ui", "settings"]
+            )
             queries.append(f"{category} {element}")
 
         # Use only the number of queries requested
@@ -155,7 +175,9 @@ class MemoryBenchmark:
             expected = sum(
                 1
                 for memory in self.memories
-                if any(term in memory["content"].lower() for term in query.lower().split())
+                if any(
+                    term in memory["content"].lower() for term in query.lower().split()
+                )
             )
             total_expected += expected
 
@@ -210,8 +232,12 @@ async def main():
     parser.add_argument(
         "--memories", type=int, default=100, help="Number of test memories to generate"
     )
-    parser.add_argument("--queries", type=int, default=20, help="Number of test queries to run")
-    parser.add_argument("--agent", type=str, default="benchmark", help="Agent ID for the benchmark")
+    parser.add_argument(
+        "--queries", type=int, default=20, help="Number of test queries to run"
+    )
+    parser.add_argument(
+        "--agent", type=str, default="benchmark", help="Agent ID for the benchmark"
+    )
     parser.add_argument(
         "--skip-cleanup", action="store_true", help="Skip cleaning up test memories"
     )

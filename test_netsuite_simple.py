@@ -69,7 +69,10 @@ def generate_oauth_header(method, url):
 
     # Build authorization header
     auth_header = "OAuth " + ", ".join(
-        [f'{k}="{urllib.parse.quote(str(v), safe="")}"' for k, v in oauth_params.items()]
+        [
+            f'{k}="{urllib.parse.quote(str(v), safe="")}"'
+            for k, v in oauth_params.items()
+        ]
     )
 
     return auth_header
@@ -83,9 +86,7 @@ def test_netsuite_connection():
     print(f"Token ID: {TOKEN_ID[:20]}...")
 
     # Test URL - metadata catalog endpoint
-    url = (
-        f"https://{ACCOUNT_ID}.suitetalk.api.netsuite.com/services/rest/record/v1/metadata-catalog"
-    )
+    url = f"https://{ACCOUNT_ID}.suitetalk.api.netsuite.com/services/rest/record/v1/metadata-catalog"
 
     print(f"\nTesting URL: {url}\n")
 

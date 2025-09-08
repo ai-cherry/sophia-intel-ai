@@ -56,7 +56,11 @@ class ValidationResult:
 
     @property
     def success_rate(self) -> float:
-        return (self.passed_checks / self.total_checks * 100) if self.total_checks > 0 else 0
+        return (
+            (self.passed_checks / self.total_checks * 100)
+            if self.total_checks > 0
+            else 0
+        )
 
     @property
     def is_migration_valid(self) -> bool:
@@ -106,7 +110,8 @@ class ESCMigrationValidator:
         # Initialize audit logger
         audit_backends = [
             AuditStorageBackend(
-                backend_type="file", connection_params={"file_path": "logs/validation_audit.log"}
+                backend_type="file",
+                connection_params={"file_path": "logs/validation_audit.log"},
             )
         ]
         self.audit_logger = ESCAuditLogger(audit_backends)
@@ -178,7 +183,9 @@ class ESCMigrationValidator:
         # Load from configuration files
         await self._load_from_config_files()
 
-        console.print(f"[green]✓[/green] Loaded {len(self.expected_secrets)} expected secrets")
+        console.print(
+            f"[green]✓[/green] Loaded {len(self.expected_secrets)} expected secrets"
+        )
 
         await self.audit_logger.log_event(
             level=AuditLevel.INFO,
@@ -258,9 +265,13 @@ class ESCMigrationValidator:
                         for secret_info in secrets:
                             expected = ExpectedSecret(
                                 key=secret_info["key"],
-                                original_key=secret_info.get("original_key", secret_info["key"]),
+                                original_key=secret_info.get(
+                                    "original_key", secret_info["key"]
+                                ),
                                 source_file=secret_info["source_file"],
-                                environments=secret_info.get("environments", self.environments),
+                                environments=secret_info.get(
+                                    "environments", self.environments
+                                ),
                                 category=category,
                                 provider=secret_info.get("provider"),
                                 is_required=secret_info.get("is_required", True),
@@ -313,7 +324,9 @@ class ESCMigrationValidator:
         except Exception as e:
             logger.warning(f"Error parsing ESC env file {file_path}: {e}")
 
-    def _extract_secrets_from_dict(self, data: Dict[str, Any], prefix: str = "") -> List[str]:
+    def _extract_secrets_from_dict(
+        self, data: Dict[str, Any], prefix: str = ""
+    ) -> List[str]:
         """Extract secret keys from nested dictionary"""
         secrets = []
 
@@ -344,7 +357,9 @@ class ESCMigrationValidator:
 
         if not self.esc_manager:
             self.validation_result.warnings += 1
-            console.print("[yellow]⚠[/yellow] Skipping ESC environment validation (no API token)")
+            console.print(
+                "[yellow]⚠[/yellow] Skipping ESC environment validation (no API token)"
+            )
             return
 
         with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
@@ -355,7 +370,9 @@ class ESCMigrationValidator:
             async with self.esc_manager:
                 for environment in self.environments:
                     try:
-                        config = await self.esc_manager.get_environment_config(environment)
+                        config = await self.esc_manager.get_environment_config(
+                            environment
+                        )
 
                         if config:
                             self.validation_result.passed_checks += 1
@@ -364,8 +381,12 @@ class ESCMigrationValidator:
                             )
                         else:
                             self.validation_result.failed_checks += 1
-                            error_msg = f"Environment '{environment}' not found or empty"
-                            self.validation_result.environment_issues[environment] = [error_msg]
+                            error_msg = (
+                                f"Environment '{environment}' not found or empty"
+                            )
+                            self.validation_result.environment_issues[environment] = [
+                                error_msg
+                            ]
                             console.print(f"[red]✗[/red] {error_msg}")
 
                         self.validation_result.total_checks += 1
@@ -374,7 +395,9 @@ class ESCMigrationValidator:
                         self.validation_result.failed_checks += 1
                         self.validation_result.total_checks += 1
                         error_msg = f"Cannot access environment '{environment}': {e}"
-                        self.validation_result.environment_issues[environment] = [error_msg]
+                        self.validation_result.environment_issues[environment] = [
+                            error_msg
+                        ]
                         console.print(f"[red]✗[/red] {error_msg}")
 
                     progress.advance(env_task)
@@ -385,7 +408,9 @@ class ESCMigrationValidator:
 
         if not self.esc_manager:
             self.validation_result.warnings += 1
-            console.print("[yellow]⚠[/yellow] Skipping completeness validation (no API token)")
+            console.print(
+                "[yellow]⚠[/yellow] Skipping completeness validation (no API token)"
+            )
             return
 
         missing_by_env = {}
@@ -412,7 +437,9 @@ class ESCMigrationValidator:
                                 if expected.is_required:
                                     self.validation_result.failed_checks += 1
                                     missing_key = f"{environment}.{expected.key}"
-                                    self.validation_result.missing_secrets.append(missing_key)
+                                    self.validation_result.missing_secrets.append(
+                                        missing_key
+                                    )
                                     missing_by_env[environment].append(expected.key)
                                 else:
                                     self.validation_result.warnings += 1
@@ -422,7 +449,9 @@ class ESCMigrationValidator:
                         except Exception as e:
                             self.validation_result.failed_checks += 1
                             self.validation_result.total_checks += 1
-                            error_msg = f"Error checking {expected.key} in {environment}: {e}"
+                            error_msg = (
+                                f"Error checking {expected.key} in {environment}: {e}"
+                            )
                             self.validation_result.access_failures.append(error_msg)
 
                     progress.advance(check_task)
@@ -430,7 +459,9 @@ class ESCMigrationValidator:
         # Report missing secrets
         for environment, missing_keys in missing_by_env.items():
             if missing_keys:
-                console.print(f"[red]✗[/red] Missing secrets in {environment}: {len(missing_keys)}")
+                console.print(
+                    f"[red]✗[/red] Missing secrets in {environment}: {len(missing_keys)}"
+                )
                 for key in missing_keys[:5]:  # Show first 5
                     console.print(f"    • {key}")
                 if len(missing_keys) > 5:
@@ -444,7 +475,9 @@ class ESCMigrationValidator:
 
         if not self.esc_manager:
             self.validation_result.warnings += 1
-            console.print("[yellow]⚠[/yellow] Skipping accessibility validation (no API token)")
+            console.print(
+                "[yellow]⚠[/yellow] Skipping accessibility validation (no API token)"
+            )
             return
 
         access_errors = 0
@@ -479,10 +512,14 @@ class ESCMigrationValidator:
 
                         self.validation_result.total_checks += 1
 
-                    console.print(f"[green]✓[/green] Config loader working for {environment}")
+                    console.print(
+                        f"[green]✓[/green] Config loader working for {environment}"
+                    )
                 else:
                     access_errors += 1
-                    console.print(f"[red]✗[/red] Config loader failed for {environment}")
+                    console.print(
+                        f"[red]✗[/red] Config loader failed for {environment}"
+                    )
 
                 await config_loader.shutdown()
 
@@ -495,7 +532,9 @@ class ESCMigrationValidator:
         if access_errors > 0:
             self.validation_result.failed_checks += access_errors
         else:
-            console.print("[green]✓[/green] All environments accessible via config loader")
+            console.print(
+                "[green]✓[/green] All environments accessible via config loader"
+            )
 
     async def _validate_secret_formats(self):
         """Validate secret formats and values"""
@@ -503,7 +542,9 @@ class ESCMigrationValidator:
 
         if not self.esc_manager:
             self.validation_result.warnings += 1
-            console.print("[yellow]⚠[/yellow] Skipping format validation (no API token)")
+            console.print(
+                "[yellow]⚠[/yellow] Skipping format validation (no API token)"
+            )
             return
 
         format_validators = {
@@ -536,7 +577,9 @@ class ESCMigrationValidator:
                             self.validation_result.total_checks += 1
 
                         except Exception as e:
-                            logger.warning(f"Format validation error for {expected.key}: {e}")
+                            logger.warning(
+                                f"Format validation error for {expected.key}: {e}"
+                            )
 
         if format_issues == 0:
             console.print("[green]✓[/green] Secret formats appear valid")
@@ -590,18 +633,26 @@ class ESCMigrationValidator:
             if self.esc_manager:
                 async with self.esc_manager:
                     qdrant_key = await self.esc_manager.get_secret(
-                        "infrastructure.vector_db.qdrant.api_key", "dev", use_cache=False
+                        "infrastructure.vector_db.qdrant.api_key",
+                        "dev",
+                        use_cache=False,
                     )
                     weaviate_key = await self.esc_manager.get_secret(
-                        "infrastructure.vector_db.weaviate.api_key", "dev", use_cache=False
+                        "infrastructure.vector_db.weaviate.api_key",
+                        "dev",
+                        use_cache=False,
                     )
 
                     if qdrant_key or weaviate_key:
                         self.validation_result.passed_checks += 1
-                        console.print("[green]✓[/green] Vector database configuration available")
+                        console.print(
+                            "[green]✓[/green] Vector database configuration available"
+                        )
                     else:
                         self.validation_result.failed_checks += 1
-                        console.print("[red]✗[/red] Vector database configuration missing")
+                        console.print(
+                            "[red]✗[/red] Vector database configuration missing"
+                        )
 
                     self.validation_result.total_checks += 1
 
@@ -671,7 +722,9 @@ class ESCMigrationValidator:
 
         report = {
             "validation_completed": datetime.now().isoformat(),
-            "overall_status": "PASSED" if self.validation_result.is_migration_valid else "FAILED",
+            "overall_status": (
+                "PASSED" if self.validation_result.is_migration_valid else "FAILED"
+            ),
             "summary": {
                 "total_checks": self.validation_result.total_checks,
                 "passed_checks": self.validation_result.passed_checks,
@@ -703,16 +756,26 @@ class ESCMigrationValidator:
         table.add_column("Status", style="yellow")
 
         table.add_row("Total Checks", str(self.validation_result.total_checks), "")
-        table.add_row("Passed", str(self.validation_result.passed_checks), "[green]✓[/green]")
+        table.add_row(
+            "Passed", str(self.validation_result.passed_checks), "[green]✓[/green]"
+        )
         table.add_row(
             "Failed",
             str(self.validation_result.failed_checks),
-            "[red]✗[/red]" if self.validation_result.failed_checks > 0 else "[green]✓[/green]",
+            (
+                "[red]✗[/red]"
+                if self.validation_result.failed_checks > 0
+                else "[green]✓[/green]"
+            ),
         )
         table.add_row(
             "Warnings",
             str(self.validation_result.warnings),
-            "[yellow]⚠[/yellow]" if self.validation_result.warnings > 0 else "[green]✓[/green]",
+            (
+                "[yellow]⚠[/yellow]"
+                if self.validation_result.warnings > 0
+                else "[green]✓[/green]"
+            ),
         )
         table.add_row("Success Rate", f"{self.validation_result.success_rate:.1f}%", "")
 
@@ -824,7 +887,9 @@ async def main():
         result = await validator.validate_migration()
 
         if result.is_migration_valid:
-            console.print("\n[bold green]🎉 Migration validation successful![/bold green]")
+            console.print(
+                "\n[bold green]🎉 Migration validation successful![/bold green]"
+            )
             return 0
         else:
             console.print("\n[bold red]❌ Migration validation failed[/bold red]")

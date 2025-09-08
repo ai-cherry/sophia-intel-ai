@@ -57,7 +57,9 @@ class SophiaMemoryService(BaseMemoryService):
                     self.weaviate_client.query.get(
                         self.collection_name, ["content", "metadata", "source", "type"]
                     )
-                    .with_hybrid(query=query, alpha=0.5)  # Balance between vector and keyword
+                    .with_hybrid(
+                        query=query, alpha=0.5
+                    )  # Balance between vector and keyword
                     .with_limit(limit * 2)  # Get more for filtering
                 )
 
@@ -66,7 +68,9 @@ class SophiaMemoryService(BaseMemoryService):
 
                 weaviate_results = weaviate_query.do()
 
-                if self.collection_name in weaviate_results.get("data", {}).get("Get", {}):
+                if self.collection_name in weaviate_results.get("data", {}).get(
+                    "Get", {}
+                ):
                     results = weaviate_results["data"]["Get"][self.collection_name]
             except Exception as e:
                 print(f"Weaviate search error: {e}")
@@ -161,7 +165,9 @@ if __name__ == "__main__":
             # Index in Weaviate for vector search
             if self.weaviate_client:
                 try:
-                    self.weaviate_client.data_object.create(document, self.collection_name)
+                    self.weaviate_client.data_object.create(
+                        document, self.collection_name
+                    )
                 except Exception as e:
                     print(f"Weaviate indexing error: {e}")
 
@@ -171,7 +177,9 @@ if __name__ == "__main__":
             print(f"Indexing error: {e}")
             return False
 
-    async def enrich_with_context(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def enrich_with_context(
+        self, results: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """
         Add business context to results
         Includes related metrics, temporal context, and data sources
@@ -186,7 +194,9 @@ if __name__ == "__main__":
             if "customer" in content:
                 metric_context.extend(["cac", "churn_rate", "nps", "retention"])
             if "sales" in content:
-                metric_context.extend(["conversion_rate", "pipeline_value", "deal_velocity"])
+                metric_context.extend(
+                    ["conversion_rate", "pipeline_value", "deal_velocity"]
+                )
 
             if metric_context:
                 result["metric_context"] = metric_context
@@ -362,12 +372,16 @@ if __name__ == "__main__":
 
         # High impact keywords
         if any(
-            word in content_lower for word in ["revenue", "profit", "loss", "critical", "urgent"]
+            word in content_lower
+            for word in ["revenue", "profit", "loss", "critical", "urgent"]
         ):
             return "high"
 
         # Medium impact keywords
-        if any(word in content_lower for word in ["performance", "efficiency", "growth", "metric"]):
+        if any(
+            word in content_lower
+            for word in ["performance", "efficiency", "growth", "metric"]
+        ):
             return "medium"
 
         return "low"

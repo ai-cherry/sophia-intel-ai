@@ -95,7 +95,12 @@ class QualityControlSwarm:
             "Code structure, patterns, and maintainability analysis",
             "claude-3-5-sonnet-20241022",
             "anthropic",
-            ["architecture_review", "design_patterns", "technical_debt", "maintainability"],
+            [
+                "architecture_review",
+                "design_patterns",
+                "technical_debt",
+                "maintainability",
+            ],
             0.06,
             15,
         ),
@@ -105,7 +110,12 @@ class QualityControlSwarm:
             "Security audits, vulnerability detection, and compliance",
             "gpt-4-turbo",
             "openai",
-            ["vulnerability_scan", "dependency_audit", "crypto_review", "auth_analysis"],
+            [
+                "vulnerability_scan",
+                "dependency_audit",
+                "crypto_review",
+                "auth_analysis",
+            ],
             0.08,
             20,
         ),
@@ -115,7 +125,12 @@ class QualityControlSwarm:
             "Performance analysis, load testing, and optimization",
             "claude-3-sonnet",
             "anthropic",
-            ["load_testing", "memory_analysis", "cpu_profiling", "database_optimization"],
+            [
+                "load_testing",
+                "memory_analysis",
+                "cpu_profiling",
+                "database_optimization",
+            ],
             0.07,
             25,
         ),
@@ -360,7 +375,11 @@ class QualityControlSwarm:
 
         code_metrics = {
             "lines_of_code": 12847,
-            "cyclomatic_complexity": {"average": 4.2, "maximum": 15, "functions_over_limit": 3},
+            "cyclomatic_complexity": {
+                "average": 4.2,
+                "maximum": 15,
+                "functions_over_limit": 3,
+            },
             "test_coverage": 87.5,
             "maintainability_index": 78,
             "technical_debt_ratio": 12.3,
@@ -579,8 +598,16 @@ class QualityControlSwarm:
                 "focus_indicators": "partial",
                 "skip_links": True,
             },
-            "screen_reader_compatibility": {"nvda": "good", "jaws": "good", "voiceover": "fair"},
-            "color_contrast": {"aa_compliant": 78, "aaa_compliant": 45, "total_elements": 124},
+            "screen_reader_compatibility": {
+                "nvda": "good",
+                "jaws": "good",
+                "voiceover": "fair",
+            },
+            "color_contrast": {
+                "aa_compliant": 78,
+                "aaa_compliant": 45,
+                "total_elements": 124,
+            },
         }
 
         return {
@@ -595,7 +622,9 @@ class QualityControlSwarm:
             "status": "completed",
         }
 
-    async def _execute_ui_review(self, agent: QualityAgent, audit: QualityAudit) -> dict[str, Any]:
+    async def _execute_ui_review(
+        self, agent: QualityAgent, audit: QualityAudit
+    ) -> dict[str, Any]:
         """Execute UI/UX review"""
 
         ui_issues = [
@@ -664,7 +693,9 @@ class QualityControlSwarm:
             "status": "completed",
         }
 
-    async def _execute_api_audit(self, agent: QualityAgent, audit: QualityAudit) -> dict[str, Any]:
+    async def _execute_api_audit(
+        self, agent: QualityAgent, audit: QualityAudit
+    ) -> dict[str, Any]:
         """Execute API quality audit"""
 
         api_issues = [
@@ -701,7 +732,11 @@ class QualityControlSwarm:
                 "p95": "450ms",
                 "slowest_endpoint": "/api/reports/generate",
             },
-            "error_rates": {"4xx_errors": "2.1%", "5xx_errors": "0.3%", "timeout_errors": "0.1%"},
+            "error_rates": {
+                "4xx_errors": "2.1%",
+                "5xx_errors": "0.3%",
+                "timeout_errors": "0.1%",
+            },
             "security_measures": {
                 "authentication": "JWT",
                 "authorization": "RBAC",
@@ -730,7 +765,9 @@ class QualityControlSwarm:
             "status": "completed",
         }
 
-    async def _execute_data_audit(self, agent: QualityAgent, audit: QualityAudit) -> dict[str, Any]:
+    async def _execute_data_audit(
+        self, agent: QualityAgent, audit: QualityAudit
+    ) -> dict[str, Any]:
         """Execute data quality audit"""
 
         data_issues = [
@@ -846,7 +883,9 @@ class QualityControlSwarm:
         synthesizer = self._get_agent("qa_synthesizer_01")
 
         total_issues = sum(
-            len(result.get("issues", [])) for result in domain_results if isinstance(result, dict)
+            len(result.get("issues", []))
+            for result in domain_results
+            if isinstance(result, dict)
         )
         critical_issues = sum(
             1
@@ -906,10 +945,14 @@ class QualityControlSwarm:
             "next_audit_recommended": (datetime.now() + timedelta(days=90)).isoformat(),
         }
 
-    async def _generate_automated_fixes(self, issues: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _generate_automated_fixes(
+        self, issues: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Generate automated fix suggestions"""
 
-        fixable_issues = [issue for issue in issues if issue.get("automated_fix", False)]
+        fixable_issues = [
+            issue for issue in issues if issue.get("automated_fix", False)
+        ]
 
         automated_fixes = []
         for issue in fixable_issues:
@@ -934,9 +977,7 @@ class QualityControlSwarm:
         if issue_id.startswith("CQ"):  # Code Quality
             return "# Add type hints and refactor complex functions\n# Implementation details would be generated based on specific issue"
         elif issue_id.startswith("SEC"):  # Security
-            return (
-                "# Move hardcoded secrets to environment variables\n# Implement input sanitization"
-            )
+            return "# Move hardcoded secrets to environment variables\n# Implement input sanitization"
         elif issue_id.startswith("UI"):  # UI Issues
             return "# Standardize spacing using design tokens\n# Add loading states to components"
         else:
@@ -954,7 +995,9 @@ class QualityControlSwarm:
         base_score = sum(domain_scores.values()) / len(domain_scores)
 
         # Penalize for critical issues
-        critical_penalty = sum(10 for issue in issues if issue.get("severity") == "critical")
+        critical_penalty = sum(
+            10 for issue in issues if issue.get("severity") == "critical"
+        )
         high_penalty = sum(5 for issue in issues if issue.get("severity") == "high")
         medium_penalty = sum(2 for issue in issues if issue.get("severity") == "medium")
 
@@ -993,7 +1036,9 @@ class QualityControlSwarm:
     ) -> dict[str, str]:
         """Check compliance status for various frameworks"""
 
-        compliance_issues = [issue for issue in issues if issue.get("compliance_impact")]
+        compliance_issues = [
+            issue for issue in issues if issue.get("compliance_impact")
+        ]
 
         frameworks = set()
         for issue in compliance_issues:
@@ -1010,7 +1055,13 @@ class QualityControlSwarm:
         status = {}
         for framework in frameworks:
             if (
-                len([i for i in compliance_issues if framework in i.get("compliance_impact", "")])
+                len(
+                    [
+                        i
+                        for i in compliance_issues
+                        if framework in i.get("compliance_impact", "")
+                    ]
+                )
                 > 0
             ):
                 status[framework] = "Non-Compliant"

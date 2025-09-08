@@ -42,9 +42,15 @@ class ServiceRegistry:
         register_service(StateManagerProtocol, lambda: StateManager(), singleton=True)
         register_service(ToolRegistryProtocol, lambda: ToolRegistry(), singleton=True)
         register_service(TaskAnalyzerProtocol, lambda: TaskAnalyzer(), singleton=True)
-        register_service(MetricsCollectorProtocol, lambda: WorkflowMonitor(), singleton=True)
-        register_service(MemoryServiceProtocol, lambda: RealMemoryService(), singleton=True)
-        register_service(MemoryRouterProtocol, lambda: EnhancedMemoryRouter(), singleton=True)
+        register_service(
+            MetricsCollectorProtocol, lambda: WorkflowMonitor(), singleton=True
+        )
+        register_service(
+            MemoryServiceProtocol, lambda: RealMemoryService(), singleton=True
+        )
+        register_service(
+            MemoryRouterProtocol, lambda: EnhancedMemoryRouter(), singleton=True
+        )
 
         async def create_workflow_engine():
             from core.container import resolve_service

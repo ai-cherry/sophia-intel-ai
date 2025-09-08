@@ -93,7 +93,10 @@ I speak with authority born of divine knowledge, yet remain practical in my guid
                     "analysis_focus": "Primary focus area for analysis",
                     "market_segment": "Target market segment to analyze",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.MARKET_INTELLIGENCE],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.MARKET_INTELLIGENCE,
+                ],
                 performance_tags=[
                     "market_intelligence",
                     "competitive_analysis",
@@ -135,7 +138,10 @@ My intelligence is comprehensive yet actionable, divine yet practical.""",
                     "intelligence_focus": "Key intelligence areas to focus on",
                     "business_context": "Business context for competitive analysis",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.STRATEGIC_PLANNING],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.STRATEGIC_PLANNING,
+                ],
                 performance_tags=[
                     "competitive_intelligence",
                     "strategic_analysis",
@@ -179,7 +185,10 @@ I deliver not just information, but persuasive intelligence that drives action."
                     "key_message": "Core message to convey",
                     "business_context": "Business context driving communications",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.GONG_INTEGRATION],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.GONG_INTEGRATION,
+                ],
                 performance_tags=[
                     "communication_strategy",
                     "stakeholder_engagement",
@@ -228,7 +237,10 @@ I heal organizations as I heal bodies - with precision, compassion, and divine k
                     "symptoms": "Observable problems or dysfunction",
                     "business_context": "Business context and background",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.TECHNICAL_EXCELLENCE],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.TECHNICAL_EXCELLENCE,
+                ],
                 performance_tags=[
                     "business_diagnostics",
                     "organizational_health",
@@ -273,7 +285,10 @@ I don't just fix problems - I restore vibrant organizational health.""",
                     "target_performance": "Desired performance outcomes",
                     "business_context": "Business context and constraints",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.TECHNICAL_EXCELLENCE],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.TECHNICAL_EXCELLENCE,
+                ],
                 performance_tags=[
                     "performance_optimization",
                     "efficiency_improvement",
@@ -318,7 +333,10 @@ Healing is not just about fixing what's broken - it's about creating resilient, 
                     "stakeholder_groups": "Key stakeholders affected by the change",
                     "business_context": "Business drivers and context for change",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.GONG_INTEGRATION],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.GONG_INTEGRATION,
+                ],
                 performance_tags=[
                     "change_management",
                     "organizational_transformation",
@@ -371,8 +389,15 @@ I don't just plan for success - I engineer inevitable victory through wisdom."""
                     "time_horizon": "Strategic planning timeframe",
                     "business_context": "Business context and constraints",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.STRATEGIC_PLANNING],
-                performance_tags=["strategic_planning", "competitive_strategy", "long_term_vision"],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.STRATEGIC_PLANNING,
+                ],
+                performance_tags=[
+                    "strategic_planning",
+                    "competitive_strategy",
+                    "long_term_vision",
+                ],
                 usage_examples=[
                     "Develop PayReady's 3-year market expansion strategy",
                     "Plan competitive response to new market entrants",
@@ -414,7 +439,10 @@ Victory comes not from brute force, but from superior strategy and divine wisdom
                     "strategic_goals": "Desired competitive outcomes",
                     "business_context": "Market context and business environment",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.MARKET_INTELLIGENCE],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.MARKET_INTELLIGENCE,
+                ],
                 performance_tags=[
                     "competitive_strategy",
                     "market_positioning",
@@ -461,8 +489,15 @@ My wisdom comes from understanding that the best decisions serve both immediate 
                     "success_criteria": "How success will be measured",
                     "business_context": "Business context and constraints",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.STRATEGIC_PLANNING],
-                performance_tags=["strategic_decisions", "stakeholder_analysis", "wise_judgment"],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.STRATEGIC_PLANNING,
+                ],
+                performance_tags=[
+                    "strategic_decisions",
+                    "stakeholder_analysis",
+                    "wise_judgment",
+                ],
                 usage_examples=[
                     "Decide on PayReady platform architecture evolution",
                     "Choose between partnership opportunities",
@@ -510,8 +545,15 @@ I speak hard truths because leadership requires facing reality, not comfortable 
                     "success_definition": "How ultimate success is defined",
                     "business_context": "Current business context and position",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.STRATEGIC_PLANNING],
-                performance_tags=["strategic_vision", "long_term_planning", "leadership_guidance"],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.STRATEGIC_PLANNING,
+                ],
+                performance_tags=[
+                    "strategic_vision",
+                    "long_term_planning",
+                    "leadership_guidance",
+                ],
                 usage_examples=[
                     "Envision PayReady's 10-year evolution in embedded finance",
                     "Develop transformational vision for market leadership",
@@ -553,7 +595,10 @@ Every great strategy requires giving up something valuable to gain something mor
                     "stakeholder_interests": "Stakeholder groups affected by decisions",
                     "business_context": "Business context and constraints",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.STRATEGIC_PLANNING],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.STRATEGIC_PLANNING,
+                ],
                 performance_tags=[
                     "sacrifice_analysis",
                     "trade_off_assessment",
@@ -600,7 +645,10 @@ The ravens of thought and memory bring me intelligence from across all business 
                     "decision_context": "How knowledge will be used for decisions",
                     "business_context": "Business context and urgency",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.MARKET_INTELLIGENCE],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.MARKET_INTELLIGENCE,
+                ],
                 performance_tags=[
                     "intelligence_gathering",
                     "market_research",
@@ -653,8 +701,15 @@ I don't approve strategies - I forge them into unbreakable excellence through ri
                     "risk_factors": "Known risks and potential failure points",
                     "business_context": "Business context and constraints",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.TECHNICAL_EXCELLENCE],
-                performance_tags=["strategic_validation", "assumption_testing", "risk_assessment"],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.TECHNICAL_EXCELLENCE,
+                ],
+                performance_tags=[
+                    "strategic_validation",
+                    "assumption_testing",
+                    "risk_assessment",
+                ],
                 usage_examples=[
                     "Validate PayReady's market expansion strategy",
                     "Test partnership strategy assumptions",
@@ -696,7 +751,10 @@ My analysis is comprehensive, structured, and intellectually honest.""",
                     "available_data": "Information and data available for analysis",
                     "business_context": "Business context and implications",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.TECHNICAL_EXCELLENCE],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.TECHNICAL_EXCELLENCE,
+                ],
                 performance_tags=[
                     "systematic_analysis",
                     "problem_decomposition",
@@ -743,8 +801,15 @@ True innovation comes from the marriage of systematic thinking and creative wisd
                     "available_resources": "Resources available for implementation",
                     "business_context": "Business context and environment",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.TECHNICAL_EXCELLENCE],
-                performance_tags=["creative_solutions", "innovative_thinking", "problem_solving"],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.TECHNICAL_EXCELLENCE,
+                ],
+                performance_tags=[
+                    "creative_solutions",
+                    "innovative_thinking",
+                    "problem_solving",
+                ],
                 usage_examples=[
                     "Solve PayReady's complex integration challenges",
                     "Create innovative partnership models",
@@ -796,7 +861,10 @@ I create blueprints for systems that developers love to work with and businesses
                     "technology_constraints": "Technology stack and constraint considerations",
                     "business_context": "Business drivers and context",
                 },
-                business_contexts=[BusinessContext.PAY_READY, BusinessContext.TECHNICAL_EXCELLENCE],
+                business_contexts=[
+                    BusinessContext.PAY_READY,
+                    BusinessContext.TECHNICAL_EXCELLENCE,
+                ],
                 performance_tags=[
                     "system_architecture",
                     "scalability_design",
@@ -882,11 +950,16 @@ class MythologyPromptManager:
         """Get the best prompt version for specific context"""
 
         # Search for matching prompts
-        prompts = self.library.search_prompts(agent_name=agent_name, tags=[business_context.value])
+        prompts = self.library.search_prompts(
+            agent_name=agent_name, tags=[business_context.value]
+        )
 
         # Find the best match
         for prompt in prompts:
-            if prompt.metadata.agent_name == agent_name and task_type in prompt.prompt_id:
+            if (
+                prompt.metadata.agent_name == agent_name
+                and task_type in prompt.prompt_id
+            ):
 
                 content = prompt.content
 
@@ -939,12 +1012,15 @@ class MythologyPromptManager:
             content=modified_content,
             metadata=new_metadata,
             branch=branch_name,
-            commit_message=commit_message or f"Add {business_context.value} context variant",
+            commit_message=commit_message
+            or f"Add {business_context.value} context variant",
         )
 
         return variant_version.id
 
-    def get_performance_insights(self, agent_name: Optional[str] = None) -> dict[str, Any]:
+    def get_performance_insights(
+        self, agent_name: Optional[str] = None
+    ) -> dict[str, Any]:
         """Get performance insights for mythology prompts"""
 
         leaderboard = self.library.get_performance_leaderboard(
@@ -992,14 +1068,18 @@ class MythologyPromptManager:
             success_rate = latest_version.performance_metrics.get("success_rate", 0)
 
             if success_rate < 0.7:
-                suggestions.append("Consider simplifying prompt language for better clarity")
+                suggestions.append(
+                    "Consider simplifying prompt language for better clarity"
+                )
                 suggestions.append("Add more specific examples and context")
                 suggestions.append("Test different variable placeholder formats")
 
         # Analyze business context coverage
         if latest_version.metadata.business_context:
             if len(latest_version.metadata.business_context) < 2:
-                suggestions.append("Consider creating variants for additional business contexts")
+                suggestions.append(
+                    "Consider creating variants for additional business contexts"
+                )
 
         # Check for recent updates
         if len(versions) == 1:

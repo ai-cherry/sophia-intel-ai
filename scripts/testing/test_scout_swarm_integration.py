@@ -74,11 +74,17 @@ async def test_mcp_connectivity():
             response = await client.get("http://localhost:8000/health")
             if response.status_code == 200:
                 health_data = response.json()
-                results["simple_server"] = {"status": "connected", "health": health_data}
+                results["simple_server"] = {
+                    "status": "connected",
+                    "health": health_data,
+                }
                 print("✅ Simple Test Server: CONNECTED")
                 print(f"   Health: {json.dumps(health_data, indent=2)}")
             else:
-                results["simple_server"] = {"status": "error", "code": response.status_code}
+                results["simple_server"] = {
+                    "status": "error",
+                    "code": response.status_code,
+                }
                 print("❌ Simple Test Server: ERROR")
     except Exception as e:
         results["simple_server"] = {"status": "failed", "error": str(e)}
@@ -172,7 +178,9 @@ async def test_rapid_scan(swarm: UltimateScoutSwarm):
         start_time = time.time()
 
         # Execute rapid scan only
-        report = await swarm.execute_tiered_scan(TEST_REPO, scan_depth="rapid", include_audit=False)
+        report = await swarm.execute_tiered_scan(
+            TEST_REPO, scan_depth="rapid", include_audit=False
+        )
 
         execution_time = time.time() - start_time
 
@@ -321,7 +329,9 @@ async def test_artemis_integration():
             f"  Critical Vulnerabilities: {tactical_report['threat_assessment']['critical_vulnerabilities']}"
         )
         print(f"  Total Issues: {tactical_report['threat_assessment']['total_issues']}")
-        print(f"  Scouts Deployed: {tactical_report['execution_metrics']['scouts_deployed']}")
+        print(
+            f"  Scouts Deployed: {tactical_report['execution_metrics']['scouts_deployed']}"
+        )
         print(f"  Execution Time: {tactical_report['execution_metrics']['time']:.2f}s")
 
         # Display tactical recommendations
@@ -405,7 +415,9 @@ async def run_all_tests():
                 print(f"✅ {test_name}: PASSED")
                 success_count += 1
             else:
-                print(f"❌ {test_name}: FAILED - {result.get('error', 'Unknown error')}")
+                print(
+                    f"❌ {test_name}: FAILED - {result.get('error', 'Unknown error')}"
+                )
                 failure_count += 1
         else:
             print(f"⚠️  {test_name}: PARTIAL")
@@ -422,7 +434,9 @@ async def run_all_tests():
         if isinstance(value, dict):
             # Remove non-serializable objects
             clean_value = {
-                k: v for k, v in value.items() if k not in ["swarm", "factory", "report"]
+                k: v
+                for k, v in value.items()
+                if k not in ["swarm", "factory", "report"]
             }
             serializable_results[key] = clean_value
         else:
@@ -456,7 +470,9 @@ if __name__ == "__main__":
 
     # Exit with appropriate code
     if all(
-        r.get("success", False) for r in results.values() if isinstance(r, dict) and "success" in r
+        r.get("success", False)
+        for r in results.values()
+        if isinstance(r, dict) and "success" in r
     ):
         print("\n🎆 ALL TESTS PASSED! Scout Swarm is operational!")
         sys.exit(0)

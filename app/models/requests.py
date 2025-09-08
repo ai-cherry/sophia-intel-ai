@@ -10,8 +10,12 @@ class EmbeddingRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     text: str = Field(..., min_length=1, max_length=8192, description="Text to embed")
-    model: str = Field(default="text-embedding-ada-002", description="Embedding model to use")
-    max_tokens: int = Field(default=150, ge=1, le=8192, description="Maximum tokens to process")
+    model: str = Field(
+        default="text-embedding-ada-002", description="Embedding model to use"
+    )
+    max_tokens: int = Field(
+        default=150, ge=1, le=8192, description="Maximum tokens to process"
+    )
 
     @validator("text")
     def validate_text_content(cls, v):
@@ -23,11 +27,17 @@ class EmbeddingRequest(BaseModel):
 class MemoryStoreRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
-    content: str = Field(..., min_length=1, max_length=65536, description="Content to store")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Associated metadata")
+    content: str = Field(
+        ..., min_length=1, max_length=65536, description="Content to store"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Associated metadata"
+    )
     tags: Optional[list[str]] = Field(None, max_items=20, description="Content tags")
     source: Optional[str] = Field(None, max_length=255, description="Content source")
-    priority: Optional[int] = Field(default=0, ge=0, le=10, description="Storage priority")
+    priority: Optional[int] = Field(
+        default=0, ge=0, le=10, description="Storage priority"
+    )
 
     @validator("content")
     def validate_content(cls, v):
@@ -49,12 +59,18 @@ class MemorySearchRequest(BaseModel):
 
     query: str = Field(..., min_length=1, max_length=1024, description="Search query")
     filters: dict[str, Any] = Field(default_factory=dict, description="Search filters")
-    top_k: int = Field(default=5, ge=1, le=100, description="Number of results to return")
+    top_k: int = Field(
+        default=5, ge=1, le=100, description="Number of results to return"
+    )
     similarity_threshold: Optional[float] = Field(
         None, ge=0.0, le=1.0, description="Minimum similarity score"
     )
-    include_metadata: bool = Field(default=True, description="Include metadata in results")
-    search_type: str = Field(default="semantic", description="Type of search to perform")
+    include_metadata: bool = Field(
+        default=True, description="Include metadata in results"
+    )
+    search_type: str = Field(
+        default="semantic", description="Type of search to perform"
+    )
 
     @validator("query")
     def validate_query(cls, v):
@@ -89,7 +105,9 @@ class MessageRole(str, Enum):
 
 class ChatMessage(BaseModel):
     role: MessageRole = Field(..., description="Message role")
-    content: str = Field(..., min_length=1, max_length=32768, description="Message content")
+    content: str = Field(
+        ..., min_length=1, max_length=32768, description="Message content"
+    )
     name: Optional[str] = Field(None, max_length=64, description="Message author name")
 
     @validator("content")
@@ -112,7 +130,9 @@ class ChatRequest(BaseModel):
     max_tokens: Optional[int] = Field(
         default=1000, ge=1, le=32768, description="Maximum tokens to generate"
     )
-    stream: Optional[bool] = Field(default=False, description="Enable streaming response")
+    stream: Optional[bool] = Field(
+        default=False, description="Enable streaming response"
+    )
     top_p: Optional[float] = Field(
         default=None, ge=0.0, le=1.0, description="Nucleus sampling parameter"
     )
@@ -154,14 +174,30 @@ class SwarmResponse(BaseModel):
     model_config = ConfigDict(validate_assignment=True)
 
     content: str = Field(..., min_length=1, description="Response content")
-    status: ExecutionStatus = Field(default=ExecutionStatus.SUCCESS, description="Execution status")
-    swarm_type: Optional[str] = Field(None, max_length=100, description="Type of swarm used")
-    execution_time: Optional[float] = Field(None, ge=0, description="Execution time in seconds")
-    agent_count: Optional[int] = Field(None, ge=1, le=100, description="Number of agents involved")
-    model_used: Optional[str] = Field(None, description="Model that generated the response")
-    token_usage: Optional[dict[str, int]] = Field(None, description="Token usage statistics")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+    status: ExecutionStatus = Field(
+        default=ExecutionStatus.SUCCESS, description="Execution status"
+    )
+    swarm_type: Optional[str] = Field(
+        None, max_length=100, description="Type of swarm used"
+    )
+    execution_time: Optional[float] = Field(
+        None, ge=0, description="Execution time in seconds"
+    )
+    agent_count: Optional[int] = Field(
+        None, ge=1, le=100, description="Number of agents involved"
+    )
+    model_used: Optional[str] = Field(
+        None, description="Model that generated the response"
+    )
+    token_usage: Optional[dict[str, int]] = Field(
+        None, description="Token usage statistics"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional metadata"
+    )
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
     request_id: Optional[str] = Field(None, description="Unique request identifier")
 
     @validator("content")

@@ -61,10 +61,14 @@ class ServiceConfig:
             mcp_server_url=get_config().get("MCP_SERVER_URL", "cls.mcp_server_url"),
             n8n_url=get_config().get("N8N_URL", "cls.n8n_url"),
             max_websocket_connections=int(
-                get_config().get("MAX_WEBSOCKET_CONNECTIONS", cls.max_websocket_connections)
+                get_config().get(
+                    "MAX_WEBSOCKET_CONNECTIONS", cls.max_websocket_connections
+                )
             ),
             connection_idle_timeout_seconds=int(
-                get_config().get("CONNECTION_IDLE_TIMEOUT", cls.connection_idle_timeout_seconds)
+                get_config().get(
+                    "CONNECTION_IDLE_TIMEOUT", cls.connection_idle_timeout_seconds
+                )
             ),
         )
 
@@ -119,7 +123,10 @@ class DIContainer:
         logger.info("DIContainer initialized")
 
     def register(
-        self, service_type: type[T], factory: Callable[..., T], lifetime: str = "transient"
+        self,
+        service_type: type[T],
+        factory: Callable[..., T],
+        lifetime: str = "transient",
     ):
         """
         Register a service factory
@@ -168,7 +175,9 @@ class DIContainer:
 
             elif lifetime == "scoped":
                 if not scope:
-                    raise ValueError(f"Scope required for scoped service {service_type.__name__}")
+                    raise ValueError(
+                        f"Scope required for scoped service {service_type.__name__}"
+                    )
 
                 if scope not in self._scoped_services:
                     self._scoped_services[scope] = {}
@@ -330,7 +339,9 @@ class WebSocketConnectionPool:
         return {
             **self.metrics,
             "utilization": (
-                len(self.connections) / self.max_connections if self.max_connections > 0 else 0
+                len(self.connections) / self.max_connections
+                if self.max_connections > 0
+                else 0
             ),
         }
 
@@ -352,7 +363,9 @@ class SessionStateManager:
 
         # Start cleanup task
         self._cleanup_task = asyncio.create_task(self._cleanup_loop())
-        logger.info(f"SessionStateManager initialized with max history {self.max_history}")
+        logger.info(
+            f"SessionStateManager initialized with max history {self.max_history}"
+        )
 
     async def get_session(self, session_id: str) -> dict[str, Any]:
         """Get or create session state"""
@@ -375,7 +388,9 @@ class SessionStateManager:
         session = await self.get_session(session_id)
 
         async with self._lock:
-            session["history"].append({**entry, "timestamp": datetime.utcnow().isoformat()})
+            session["history"].append(
+                {**entry, "timestamp": datetime.utcnow().isoformat()}
+            )
 
             # Trim history if needed
             if len(session["history"]) > self.max_history:
@@ -439,9 +454,13 @@ def register_services(container: DIContainer):
     config = container.config
 
     # Register infrastructure services
-    container.register_singleton(WebSocketConnectionPool, lambda: WebSocketConnectionPool(config))
+    container.register_singleton(
+        WebSocketConnectionPool, lambda: WebSocketConnectionPool(config)
+    )
 
-    container.register_singleton(SessionStateManager, lambda: SessionStateManager(config))
+    container.register_singleton(
+        SessionStateManager, lambda: SessionStateManager(config)
+    )
 
     # Register embedding services
     container.register_singleton(PortkeyGateway, lambda: PortkeyGateway())
@@ -459,7 +478,9 @@ def register_services(container: DIContainer):
         ),
     )
 
-    container.register_singleton(UnifiedOrchestratorFacade, lambda: UnifiedOrchestratorFacade())
+    container.register_singleton(
+        UnifiedOrchestratorFacade, lambda: UnifiedOrchestratorFacade()
+    )
 
     # OrchestraManager removed - functionality integrated into SuperOrchestrator
 

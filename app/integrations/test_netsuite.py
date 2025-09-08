@@ -52,12 +52,16 @@ async def test_netsuite_connection():
         # OAuth 2.0
         client_id=os.getenv("NETSUITE_CLIENT_ID", ""),
         client_secret=os.getenv("NETSUITE_CLIENT_SECRET", ""),
-        redirect_uri=os.getenv("NETSUITE_REDIRECT_URI", "https://localhost:8080/callback"),
+        redirect_uri=os.getenv(
+            "NETSUITE_REDIRECT_URI", "https://localhost:8080/callback"
+        ),
         scope=os.getenv("NETSUITE_SCOPE", "rest_webservices"),
         # Features
         suiteql_enabled=os.getenv("NETSUITE_SUITEQL_ENABLED", "true").lower() == "true",
-        restlet_enabled=os.getenv("NETSUITE_RESTLET_ENABLED", "false").lower() == "true",
-        webhook_enabled=os.getenv("NETSUITE_WEBHOOK_ENABLED", "false").lower() == "true",
+        restlet_enabled=os.getenv("NETSUITE_RESTLET_ENABLED", "false").lower()
+        == "true",
+        webhook_enabled=os.getenv("NETSUITE_WEBHOOK_ENABLED", "false").lower()
+        == "true",
     )
 
     print("\n=== NetSuite Integration Test ===\n")

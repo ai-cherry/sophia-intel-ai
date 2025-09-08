@@ -200,7 +200,9 @@ export const {component_name}: React.FC<{component_name}Props> = ({{ {props_dest
         original_code = request.context.get("original_code", "")
 
         # Analyze code for refactoring opportunities
-        refactor_suggestions = self._analyze_for_refactoring(original_code, request.language)
+        refactor_suggestions = self._analyze_for_refactoring(
+            original_code, request.language
+        )
 
         # Apply refactoring
         refactored_code = self._apply_refactoring(original_code, refactor_suggestions)
@@ -270,7 +272,9 @@ Framework: {request.framework or 'None'}
 
     def _generate_with_templates(self, request: CodeRequest) -> str:
         """Generate code using templates"""
-        template_key = f"{request.language}_{request.context.get('template_type', 'function')}"
+        template_key = (
+            f"{request.language}_{request.context.get('template_type', 'function')}"
+        )
         template = self.templates.get(template_key, "# No template available")
 
         # Fill in template with request data

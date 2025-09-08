@@ -43,7 +43,9 @@ class TestDatabaseIntegrations:
             )
 
             # Insert test data
-            await conn.execute("INSERT INTO test_table (name) VALUES ($1)", "neon_integration_test")
+            await conn.execute(
+                "INSERT INTO test_table (name) VALUES ($1)", "neon_integration_test"
+            )
 
             # Query test data
             test_data = await conn.fetchrow(
@@ -78,12 +80,15 @@ class TestDatabaseIntegrations:
             async with httpx.AsyncClient() as client:
                 # Test SET operation
                 set_response = await client.post(
-                    f"{redis_url}/set/test_key/upstash_integration_test", headers=headers
+                    f"{redis_url}/set/test_key/upstash_integration_test",
+                    headers=headers,
                 )
                 assert set_response.status_code == 200
 
                 # Test GET operation
-                get_response = await client.get(f"{redis_url}/get/test_key", headers=headers)
+                get_response = await client.get(
+                    f"{redis_url}/get/test_key", headers=headers
+                )
                 assert get_response.status_code == 200
                 data = get_response.json()
                 assert data["result"] == "upstash_integration_test"
@@ -96,7 +101,9 @@ class TestDatabaseIntegrations:
 
                 # Wait for expiration
                 await asyncio.sleep(1.1)
-                expired_response = await client.get(f"{redis_url}/get/test_expire", headers=headers)
+                expired_response = await client.get(
+                    f"{redis_url}/get/test_expire", headers=headers
+                )
                 expired_data = expired_response.json()
                 assert expired_data["result"] is None
 
@@ -143,7 +150,9 @@ class TestDatabaseIntegrations:
                 assert response.status_code == 200
 
                 # Test collections endpoint
-                response = await client.get(f"{qdrant_url}/collections", headers=headers)
+                response = await client.get(
+                    f"{qdrant_url}/collections", headers=headers
+                )
                 assert response.status_code == 200
 
                 # Create test collection
@@ -153,7 +162,10 @@ class TestDatabaseIntegrations:
                     headers=headers,
                     json={"vectors": {"size": 384, "distance": "Cosine"}},
                 )
-                assert create_response.status_code in [200, 409]  # 409 if already exists
+                assert create_response.status_code in [
+                    200,
+                    409,
+                ]  # 409 if already exists
 
                 # Test vector insertion
                 test_vector = [0.1] * 384  # 384-dimensional test vector
@@ -181,7 +193,10 @@ class TestDatabaseIntegrations:
                 assert search_response.status_code == 200
                 search_data = search_response.json()
                 assert len(search_data["result"]) > 0
-                assert search_data["result"][0]["payload"]["test"] == "qdrant_cloud_integration"
+                assert (
+                    search_data["result"][0]["payload"]["test"]
+                    == "qdrant_cloud_integration"
+                )
 
                 # Cleanup - delete test collection
                 delete_response = await client.delete(
@@ -225,7 +240,9 @@ class TestDatabaseIntegrations:
             async with httpx.AsyncClient() as client:
                 start_time = time.time()
                 for i in range(100):
-                    await client.post(f"{redis_url}/set/perf_test_{i}/{i}", headers=headers)
+                    await client.post(
+                        f"{redis_url}/set/perf_test_{i}/{i}", headers=headers
+                    )
                     await client.get(f"{redis_url}/get/perf_test_{i}", headers=headers)
                 redis_time = time.time() - start_time
 

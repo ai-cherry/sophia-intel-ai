@@ -150,7 +150,9 @@ class Prospect:
 
         # Check recent contact frequency
         if self.last_contacted:
-            hours_since_contact = (datetime.now() - self.last_contacted).total_seconds() / 3600
+            hours_since_contact = (
+                datetime.now() - self.last_contacted
+            ).total_seconds() / 3600
             if hours_since_contact < 24:  # Minimum 24 hours between contacts
                 return False
 
@@ -222,7 +224,11 @@ class MessageTemplate:
             subject = subject.replace(placeholder, str(value))
             body = body.replace(placeholder, str(value))
 
-        return {"subject": subject, "body": body, "rendered_at": datetime.now().isoformat()}
+        return {
+            "subject": subject,
+            "body": body,
+            "rendered_at": datetime.now().isoformat(),
+        }
 
     def update_performance(self, delivered: bool, responded: bool):
         """Update template performance metrics"""
@@ -281,7 +287,9 @@ class ComplianceRecord:
         self.updated_at = datetime.now()
 
         # Add system flag
-        self.system_flags.append(f"VIOLATION_{violation_type.upper()}_{datetime.now().isoformat()}")
+        self.system_flags.append(
+            f"VIOLATION_{violation_type.upper()}_{datetime.now().isoformat()}"
+        )
 
     def resolve_violation(self, action: str, reviewer: str, notes: str = ""):
         """Resolve compliance violation"""
@@ -541,7 +549,9 @@ class OutreachCampaign:
         if self.messages_delivered > 0:
             metrics["response_rate"] = self.responses_received / self.messages_delivered
             metrics["meeting_rate"] = self.meetings_scheduled / self.messages_delivered
-            metrics["opportunity_rate"] = self.opportunities_created / self.messages_delivered
+            metrics["opportunity_rate"] = (
+                self.opportunities_created / self.messages_delivered
+            )
 
         if self.budget_spent > 0:
             # Simple ROI calculation - would need revenue attribution in production

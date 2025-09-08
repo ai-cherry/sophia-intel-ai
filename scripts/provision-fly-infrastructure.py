@@ -38,7 +38,10 @@ class FlyInfrastructureProvisioner:
 
     def __init__(self, api_token: str):
         self.api_token = api_token
-        self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+        self.headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json",
+        }
         self.base_url = "https://api.fly.io/v1"
         self.org_slug = "personal"  # Use personal org
 
@@ -46,7 +49,9 @@ class FlyInfrastructureProvisioner:
         """Create a Fly.io application"""
         payload = {"app_name": app_name, "org_slug": self.org_slug}
 
-        response = requests.post(f"{self.base_url}/apps", headers=self.headers, json=payload)
+        response = requests.post(
+            f"{self.base_url}/apps", headers=self.headers, json=payload
+        )
 
         if response.status_code in [200, 201]:
             logger.info(f"✅ Created Fly.io app: {app_name}")
@@ -54,11 +59,15 @@ class FlyInfrastructureProvisioner:
         elif response.status_code == 422 and "already exists" in response.text.lower():
             logger.info(f"📱 App {app_name} already exists, continuing...")
             # Get existing app info
-            get_response = requests.get(f"{self.base_url}/apps/{app_name}", headers=self.headers)
+            get_response = requests.get(
+                f"{self.base_url}/apps/{app_name}", headers=self.headers
+            )
             if get_response.status_code == 200:
                 return get_response.json()
             else:
-                logger.info(f"Warning: Could not get existing app info: {get_response.text}")
+                logger.info(
+                    f"Warning: Could not get existing app info: {get_response.text}"
+                )
                 return {"name": app_name, "status": "exists"}
         else:
             logger.info(
@@ -73,7 +82,9 @@ class FlyInfrastructureProvisioner:
         payload = {"name": volume_name, "size_gb": size_gb, "region": region}
 
         response = requests.post(
-            f"{self.base_url}/apps/{app_name}/volumes", headers=self.headers, json=payload
+            f"{self.base_url}/apps/{app_name}/volumes",
+            headers=self.headers,
+            json=payload,
         )
 
         if response.status_code in [200, 201]:
@@ -81,12 +92,24 @@ class FlyInfrastructureProvisioner:
             return response.json()
         elif "already exists" in response.text.lower():
             logger.info(f"💾 Volume '{volume_name}' already exists for {app_name}")
-            return {"name": volume_name, "size_gb": size_gb, "region": region, "status": "exists"}
+            return {
+                "name": volume_name,
+                "size_gb": size_gb,
+                "region": region,
+                "status": "exists",
+            }
         else:
             logger.info(f"⚠️  Volume creation warning for {app_name}: {response.text}")
-            return {"name": volume_name, "size_gb": size_gb, "region": region, "status": "warning"}
+            return {
+                "name": volume_name,
+                "size_gb": size_gb,
+                "region": region,
+                "status": "warning",
+            }
 
-    def deploy_service(self, spec: ServiceSpec, primary_region: str = "sjc") -> dict[str, Any]:
+    def deploy_service(
+        self, spec: ServiceSpec, primary_region: str = "sjc"
+    ) -> dict[str, Any]:
         """Deploy a service with app and volume"""
 
         logger.info(f"\n🚀 Deploying {spec.name}...")
@@ -429,8 +452,12 @@ def main():
     logger.info("📊 SOPHIA INTEL AI INFRASTRUCTURE DEPLOYMENT SUMMARY")
     logger.info("=" * 60)
 
-    successful_deployments = len([s for s in deployed_services.values() if "error" not in s])
-    logger.info(f"🏗️  Total Services Configured: {successful_deployments}/{len(services)}")
+    successful_deployments = len(
+        [s for s in deployed_services.values() if "error" not in s]
+    )
+    logger.info(
+        f"🏗️  Total Services Configured: {successful_deployments}/{len(services)}"
+    )
     logger.info(f"💾 Total Storage Provisioned: {total_storage}GB")
     logger.info(f"⚖️  Total Maximum Instances: {total_max_instances}")
     logger.info("🌍 Primary Region: sjc (San Jose)")
@@ -443,10 +470,14 @@ def main():
             logger.info(f"    - Public:   {result['public_url']}")
             logger.info(f"    - Internal: {result['internal_url']}")
         else:
-            logger.info(f"  • {service_name}: ❌ CONFIGURATION FAILED - {result['error']}")
+            logger.info(
+                f"  • {service_name}: ❌ CONFIGURATION FAILED - {result['error']}"
+            )
 
     logger.info("\n🔗 INTERNAL NETWORKING:")
-    logger.info("  Services communicate via Fly.io internal networking (.internal domains)")
+    logger.info(
+        "  Services communicate via Fly.io internal networking (.internal domains)"
+    )
     logger.info("  Health checks configured for all services")
     logger.info("  TLS/HTTPS enabled for all public endpoints")
 
@@ -460,8 +491,12 @@ def main():
         )
 
     logger.info("\n🎯 NEXT STEPS:")
-    logger.info("  1. Deploy each service using: fly deploy --config fly-<service-name>.toml")
-    logger.info("  2. Configure secrets via: fly secrets set KEY=VALUE --app <service-name>")
+    logger.info(
+        "  1. Deploy each service using: fly deploy --config fly-<service-name>.toml"
+    )
+    logger.info(
+        "  2. Configure secrets via: fly secrets set KEY=VALUE --app <service-name>"
+    )
     logger.info("  3. Test internal service communication")
     logger.info("  4. Validate health check endpoints")
     logger.info("  5. Monitor auto-scaling behavior")

@@ -29,11 +29,17 @@ class NeuralInferenceRequest(BaseModel):
     """Request model for neural inference"""
 
     query: str = Field(..., description="Input query for neural reasoning")
-    context: Optional[List[str]] = Field(None, description="Additional context documents")
-    max_tokens: int = Field(4096, ge=1, le=32768, description="Maximum tokens to generate")
+    context: Optional[List[str]] = Field(
+        None, description="Additional context documents"
+    )
+    max_tokens: int = Field(
+        4096, ge=1, le=32768, description="Maximum tokens to generate"
+    )
     temperature: float = Field(0.6, ge=0.0, le=2.0, description="Sampling temperature")
     top_p: float = Field(0.95, ge=0.0, le=1.0, description="Top-p sampling")
-    reasoning_depth: int = Field(5, ge=1, le=10, description="Reasoning depth for complex queries")
+    reasoning_depth: int = Field(
+        5, ge=1, le=10, description="Reasoning depth for complex queries"
+    )
     output_format: str = Field("text", description="Output format: text, json, code")
     use_cache: bool = Field(True, description="Whether to use caching")
 
@@ -176,7 +182,9 @@ class NeuralEngineManager:
 
         return None
 
-    async def _store_cache(self, cache_key: str, response_data: Dict[str, Any], ttl: int = 3600):
+    async def _store_cache(
+        self, cache_key: str, response_data: Dict[str, Any], ttl: int = 3600
+    ):
         """Store response in cache"""
         if not cache_client:
             return
@@ -188,7 +196,9 @@ class NeuralEngineManager:
         except Exception as e:
             logger.warning(f"Cache write error: {e}")
 
-    def _optimize_context(self, context_docs: List[str], max_tokens: int = 120000) -> str:
+    def _optimize_context(
+        self, context_docs: List[str], max_tokens: int = 120000
+    ) -> str:
         """Optimize context for 128K window"""
         if not context_docs:
             return ""
@@ -223,7 +233,9 @@ class NeuralEngineManager:
             if cached_response:
                 cache_hit = True
                 cached_response["cache_hit"] = True
-                cached_response["latency_ms"] = (time.perf_counter() - start_time) * 1000
+                cached_response["latency_ms"] = (
+                    time.perf_counter() - start_time
+                ) * 1000
                 return NeuralInferenceResponse(**cached_response)
 
         # Prepare prompt with context
@@ -302,7 +314,9 @@ class NeuralEngineManager:
 
         if torch.cuda.is_available():
             gpu_memory_used = torch.cuda.memory_allocated() / 1024**3  # GB
-            gpu_memory_total = torch.cuda.get_device_properties(0).total_memory / 1024**3  # GB
+            gpu_memory_total = (
+                torch.cuda.get_device_properties(0).total_memory / 1024**3
+            )  # GB
 
         cache_connected = False
         if cache_client:

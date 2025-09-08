@@ -62,7 +62,9 @@ class UniversalRegistry:
         self.systems: dict[str, RegisteredSystem] = {}
         self.type_index: dict[SystemType, set[str]] = {t: set() for t in SystemType}
         self.capability_index: dict[str, set[str]] = {}
-        self.status_index: dict[SystemStatus, set[str]] = {s: set() for s in SystemStatus}
+        self.status_index: dict[SystemStatus, set[str]] = {
+            s: set() for s in SystemStatus
+        }
 
     async def register(self, system: RegisteredSystem) -> bool:
         """Register any AI system"""
@@ -106,7 +108,9 @@ class UniversalRegistry:
         active_statuses = [SystemStatus.ACTIVE, SystemStatus.PROCESSING]
         result = []
         for status in active_statuses:
-            result.extend([self.systems[sid] for sid in self.status_index.get(status, [])])
+            result.extend(
+                [self.systems[sid] for sid in self.status_index.get(status, [])]
+            )
         return result
 
     def get_health_report(self) -> dict[str, Any]:
@@ -296,7 +300,11 @@ class NaturalLanguageController:
     async def _handle_swarm_command(self, entities: dict) -> dict:
         """Handle micro-swarm specific commands"""
         # This integrates with the micro-swarm plan
-        return {"response": "Micro-swarm command processing", "entities": entities, "success": True}
+        return {
+            "response": "Micro-swarm command processing",
+            "entities": entities,
+            "success": True,
+        }
 
     async def _handle_analysis_command(self, entities: dict) -> dict:
         """Handle analysis commands"""
@@ -309,12 +317,20 @@ class NaturalLanguageController:
             "recommendations": self._generate_recommendations(),
         }
 
-        return {"response": "System analysis complete", "analysis": analysis, "success": True}
+        return {
+            "response": "System analysis complete",
+            "analysis": analysis,
+            "success": True,
+        }
 
     async def _handle_coordination_command(self, entities: dict) -> dict:
         """Handle coordination between systems"""
         # This would coordinate multiple systems
-        return {"response": "Coordination initiated", "entities": entities, "success": True}
+        return {
+            "response": "Coordination initiated",
+            "entities": entities,
+            "success": True,
+        }
 
     async def _handle_generic_command(self, command: str) -> dict:
         """Handle unknown commands with AI interpretation"""
@@ -439,7 +455,11 @@ class RealTimeMonitor:
         total_systems = len(self.registry.systems)
         if total_systems > 0:
             error_systems = len(
-                [s for s in self.registry.systems.values() if s.status == SystemStatus.ERROR]
+                [
+                    s
+                    for s in self.registry.systems.values()
+                    if s.status == SystemStatus.ERROR
+                ]
             )
             error_rate = error_systems / total_systems
 

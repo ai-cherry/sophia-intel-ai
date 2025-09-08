@@ -30,7 +30,14 @@ class DuplicateDetector:
         for py_file in self.root_path.rglob("*.py"):
             if any(
                 skip in py_file.parts
-                for skip in ["venv", "__pycache__", "node_modules", ".git", "build", "dist"]
+                for skip in [
+                    "venv",
+                    "__pycache__",
+                    "node_modules",
+                    ".git",
+                    "build",
+                    "dist",
+                ]
             ):
                 continue
 
@@ -43,7 +50,10 @@ class DuplicateDetector:
                         self.classes[node.name].append(str(py_file))
                     elif isinstance(node, ast.FunctionDef):
                         # Only track top-level functions to avoid method duplicates
-                        if not any(isinstance(parent, ast.ClassDef) for parent in ast.walk(tree)):
+                        if not any(
+                            isinstance(parent, ast.ClassDef)
+                            for parent in ast.walk(tree)
+                        ):
                             self.functions[node.name].append(str(py_file))
             except Exception as e:
                 self.warnings.append(f"⚠️  Could not parse {py_file}: {e}")
@@ -70,7 +80,9 @@ class DuplicateDetector:
                     func_pattern = r"(?:export\s+)?(?:const|function)\s+(\w+)\s*[:=]?\s*(?:\([^)]*\)|<[^>]*>)?\s*(?:=>|{)"
                     for match in re.finditer(func_pattern, content):
                         component_name = match.group(1)
-                        if component_name[0].isupper():  # React components start with capital
+                        if component_name[
+                            0
+                        ].isupper():  # React components start with capital
                             self.components[component_name].append(str(component_file))
 
                     # Class components
@@ -86,7 +98,14 @@ class DuplicateDetector:
         for py_file in self.root_path.rglob("*.py"):
             if any(
                 skip in py_file.parts
-                for skip in ["venv", "__pycache__", "node_modules", ".git", "build", "dist"]
+                for skip in [
+                    "venv",
+                    "__pycache__",
+                    "node_modules",
+                    ".git",
+                    "build",
+                    "dist",
+                ]
             ):
                 continue
 
@@ -169,7 +188,9 @@ class DuplicateDetector:
         for i, name1 in enumerate(class_names):
             for name2 in class_names[i + 1 :]:
                 if name1.lower() == name2.lower() and name1 != name2:
-                    self.warnings.append(f"⚠️  Similar class names found: '{name1}' and '{name2}'")
+                    self.warnings.append(
+                        f"⚠️  Similar class names found: '{name1}' and '{name2}'"
+                    )
                 elif self._is_similar(name1, name2):
                     self.warnings.append(
                         f"⚠️  Potentially confusing class names: '{name1}' and '{name2}'"

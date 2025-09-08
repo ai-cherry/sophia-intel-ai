@@ -48,14 +48,23 @@ class CompletePortkeySetup:
                     },
                     json={
                         "model": "meta-llama/llama-3.2-3b-instruct",
-                        "messages": [{"role": "user", "content": "Say 'OpenRouter OK' in 2 words"}],
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": "Say 'OpenRouter OK' in 2 words",
+                            }
+                        ],
                         "max_tokens": 10,
                     },
                 )
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        result.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     logger.info(f"  ✅ OpenRouter: Working - {content}")
                     results["openrouter"] = True
                 else:
@@ -84,8 +93,12 @@ class CompletePortkeySetup:
 
                 if response.status_code == 200:
                     result = response.json()
-                    embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
-                    logger.info(f"  ✅ Together AI: Working - Embedding dimension: {embedding_dim}")
+                    embedding_dim = len(
+                        result.get("data", [{}])[0].get("embedding", [])
+                    )
+                    logger.info(
+                        f"  ✅ Together AI: Working - Embedding dimension: {embedding_dim}"
+                    )
                     results["together"] = True
                 else:
                     logger.info(f"  ❌ Together AI: Failed ({response.status_code})")
@@ -109,7 +122,10 @@ class CompletePortkeySetup:
                 "provider": "openrouter",
                 "base_url": "https://openrouter.ai/api/v1",
                 "api_key": self.openrouter_key,
-                "headers": {"HTTP-Referer": "http://localhost:3000", "X-Title": "Sophia Intel AI"},
+                "headers": {
+                    "HTTP-Referer": "http://localhost:3000",
+                    "X-Title": "Sophia Intel AI",
+                },
             },
             "embeddings": {
                 "description": "Embeddings via Together AI",
@@ -159,7 +175,10 @@ class CompletePortkeySetup:
                     json={
                         "model": "meta-llama/llama-3.2-3b-instruct",
                         "messages": [
-                            {"role": "user", "content": "Say 'Portkey chat working' in 3 words"}
+                            {
+                                "role": "user",
+                                "content": "Say 'Portkey chat working' in 3 words",
+                            }
                         ],
                         "max_tokens": 10,
                     },
@@ -167,7 +186,11 @@ class CompletePortkeySetup:
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        result.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     logger.info(f"  ✅ Chat via Portkey: {content}")
                     return True
                 else:
@@ -204,8 +227,12 @@ class CompletePortkeySetup:
 
                 if response.status_code == 200:
                     result = response.json()
-                    embedding_dim = len(result.get("data", [{}])[0].get("embedding", []))
-                    logger.info(f"  ✅ Embeddings via Portkey: Dimension {embedding_dim}")
+                    embedding_dim = len(
+                        result.get("data", [{}])[0].get("embedding", [])
+                    )
+                    logger.info(
+                        f"  ✅ Embeddings via Portkey: Dimension {embedding_dim}"
+                    )
                     return True
                 else:
                     logger.info(f"  ❌ Failed: Status {response.status_code}")

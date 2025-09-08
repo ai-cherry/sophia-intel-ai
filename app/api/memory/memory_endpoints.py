@@ -10,7 +10,8 @@ from app.mcp.memory_adapter import UnifiedMemoryAdapter
 
 # OpenAPI Security Scheme
 security = HTTPBearer(
-    scheme_name="Bearer Token", description="Bearer token authentication for memory API access"
+    scheme_name="Bearer Token",
+    description="Bearer token authentication for memory API access",
 )
 
 router = APIRouter(
@@ -20,7 +21,9 @@ router = APIRouter(
         429: {
             "description": "Too Many Requests - Rate limit exceeded",
             "headers": {
-                "Retry-After": {"description": "Number of seconds to wait before retrying"}
+                "Retry-After": {
+                    "description": "Number of seconds to wait before retrying"
+                }
             },
         }
     },
@@ -47,8 +50,12 @@ class StandardErrorResponse(BaseModel):
         ..., description="Type of error (validation, rate_limit, server_error, etc.)"
     )
     message: str = Field(..., description="Human-readable error message")
-    details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
-    request_id: Optional[str] = Field(None, description="Unique request identifier for tracking")
+    details: Optional[Dict[str, Any]] = Field(
+        None, description="Additional error details"
+    )
+    request_id: Optional[str] = Field(
+        None, description="Unique request identifier for tracking"
+    )
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
 
 
@@ -60,7 +67,9 @@ class MemoryStoreRequest(BaseModel):
 
 class MemorySearchRequest(BaseModel):
     query: str = Field(..., description="Search query")
-    session_ids: Optional[List[str]] = Field(None, description="Specific sessions to search")
+    session_ids: Optional[List[str]] = Field(
+        None, description="Specific sessions to search"
+    )
     max_results: int = Field(10, ge=1, le=100, description="Maximum results to return")
     include_metadata: bool = Field(True, description="Include metadata in results")
 
@@ -99,7 +108,9 @@ def check_rate_limit(client_id: str, endpoint: str, response: Response) -> bool:
     return True
 
 
-def get_client_id(authorization: Optional[HTTPAuthorizationCredentials] = Depends(security)) -> str:
+def get_client_id(
+    authorization: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> str:
     """Extract client identifier for rate limiting (simplified for demo)"""
     if authorization and authorization.credentials:
         return f"user_{authorization.credentials[:8]}"  # Use first 8 chars of token as client ID
@@ -107,7 +118,10 @@ def get_client_id(authorization: Optional[HTTPAuthorizationCredentials] = Depend
 
 
 def create_error_response(
-    error_type: str, message: str, details: Optional[Dict[str, Any]] = None, status_code: int = 500
+    error_type: str,
+    message: str,
+    details: Optional[Dict[str, Any]] = None,
+    status_code: int = 500,
 ) -> HTTPException:
     """Create standardized error response"""
     error_data = StandardErrorResponse(
@@ -125,7 +139,9 @@ async def memory_health():
     try:
         # Test memory adapter connectivity
         health_status = (
-            await memory_adapter.health_check() if hasattr(memory_adapter, "health_check") else True
+            await memory_adapter.health_check()
+            if hasattr(memory_adapter, "health_check")
+            else True
         )
 
         return {
@@ -197,7 +213,9 @@ async def memory_version():
 
 @router.post("/store")
 async def store_memory(
-    request: MemoryStoreRequest, response: Response, client_id: str = Depends(get_client_id)
+    request: MemoryStoreRequest,
+    response: Response,
+    client_id: str = Depends(get_client_id),
 ):
     """Store conversation memory with rate limiting and error handling"""
     try:
@@ -240,7 +258,10 @@ async def store_memory(
         raise
     except Exception as e:
         raise create_error_response(
-            "server_error", "Failed to store memory", {"original_error": str(e)}, status_code=500
+            "server_error",
+            "Failed to store memory",
+            {"original_error": str(e)},
+            status_code=500,
         )
 
 
@@ -275,7 +296,9 @@ async def retrieve_memory(
                 status_code=400,
             )
 
-        result = await memory_adapter.retrieve_context(session_id, last_n, include_system)
+        result = await memory_adapter.retrieve_context(
+            session_id, last_n, include_system
+        )
 
         return {
             "success": True,
@@ -299,7 +322,9 @@ async def retrieve_memory(
 
 @router.post("/search")
 async def search_memory(
-    request: MemorySearchRequest, response: Response, client_id: str = Depends(get_client_id)
+    request: MemorySearchRequest,
+    response: Response,
+    client_id: str = Depends(get_client_id),
 ):
     """Search memory content with advanced filtering"""
     try:
@@ -353,7 +378,9 @@ async def search_memory(
 
 
 @router.delete("/session/{session_id}")
-async def delete_session_memory(session_id: str, client_id: str = Depends(get_client_id)):
+async def delete_session_memory(
+    session_id: str, client_id: str = Depends(get_client_id)
+):
     """Delete all memory for a specific session"""
     try:
         # Mock implementation - would integrate with actual memory deletion
@@ -384,7 +411,9 @@ async def get_memory_stats():
 
         for client_data in rate_limit_store.values():
             for endpoint_requests in client_data.values():
-                if any(current_time - req_time < 3600 for req_time in endpoint_requests):
+                if any(
+                    current_time - req_time < 3600 for req_time in endpoint_requests
+                ):
                     active_clients += 1
                     break
 

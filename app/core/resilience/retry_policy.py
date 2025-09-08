@@ -121,7 +121,9 @@ class ExponentialBackoffPolicy(RetryPolicyBase):
 
     def calculate_delay(self, attempt: int) -> float:
         # Calculate exponential delay
-        delay = min(self.initial_delay * (self.multiplier ** (attempt - 1)), self.max_delay)
+        delay = min(
+            self.initial_delay * (self.multiplier ** (attempt - 1)), self.max_delay
+        )
 
         # Add jitter if enabled
         if self.jitter:
@@ -151,7 +153,9 @@ class LinearBackoffPolicy(RetryPolicyBase):
 
     def calculate_delay(self, attempt: int) -> float:
         # Calculate linear delay
-        delay = min(self.initial_delay + (self.increment * (attempt - 1)), self.max_delay)
+        delay = min(
+            self.initial_delay + (self.increment * (attempt - 1)), self.max_delay
+        )
 
         # Add jitter if enabled
         if self.jitter:
@@ -166,7 +170,11 @@ class FibonacciBackoffPolicy(RetryPolicyBase):
     """Fibonacci sequence backoff"""
 
     def __init__(
-        self, unit_delay: float, max_delay: float, jitter: bool = True, jitter_factor: float = 0.1
+        self,
+        unit_delay: float,
+        max_delay: float,
+        jitter: bool = True,
+        jitter_factor: float = 0.1,
     ):
         self.unit_delay = unit_delay
         self.max_delay = max_delay
@@ -308,7 +316,9 @@ class RetryPolicy:
 
         # Create retry budget if enabled
         self.budget = (
-            RetryBudget(self.config.budget_percentage, self.config.budget_min_throughput)
+            RetryBudget(
+                self.config.budget_percentage, self.config.budget_min_throughput
+            )
             if self.config.use_retry_budget
             else None
         )
@@ -374,7 +384,9 @@ class RetryPolicy:
             # Check retry budget if enabled
             if self.budget and attempt > 1:
                 if not await self.budget.can_retry():
-                    logger.warning(f"Retry budget exhausted, failing after {attempt-1} attempts")
+                    logger.warning(
+                        f"Retry budget exhausted, failing after {attempt-1} attempts"
+                    )
                     if last_exception:
                         raise last_exception
                     raise RetryBudgetExceededException("Retry budget exceeded")
@@ -413,7 +425,8 @@ class RetryPolicy:
 
                 # Check if exception is retryable
                 is_retryable = any(
-                    isinstance(e, exc_type) for exc_type in self.config.retry_on_exceptions
+                    isinstance(e, exc_type)
+                    for exc_type in self.config.retry_on_exceptions
                 )
 
                 if not is_retryable:
@@ -428,7 +441,9 @@ class RetryPolicy:
                         try:
                             self.config.on_failure(attempt, e)
                         except Exception as callback_error:
-                            logger.error(f"Error in on_failure callback: {callback_error}")
+                            logger.error(
+                                f"Error in on_failure callback: {callback_error}"
+                            )
 
                     logger.error(f"All {self.config.max_attempts} attempts failed: {e}")
                     raise
@@ -467,7 +482,8 @@ class RetryPolicy:
             )
             / max(sum(self.retry_counts.values()), 1),
             "success_rate": (
-                self.successful_attempts / max(self.successful_attempts + self.failed_attempts, 1)
+                self.successful_attempts
+                / max(self.successful_attempts + self.failed_attempts, 1)
             ),
         }
 

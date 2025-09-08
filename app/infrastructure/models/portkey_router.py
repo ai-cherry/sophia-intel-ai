@@ -111,7 +111,11 @@ class PortkeyRouterModel:
             self.primary_client = Portkey(
                 api_key=os.getenv("PORTKEY_API_KEY"),
                 virtual_key=PORTKEY_VIRTUAL_KEYS["OPENAI"],
-                config={"retry_count": 2, "retry_delay": 1, "timeout": self.timeout_seconds},
+                config={
+                    "retry_count": 2,
+                    "retry_delay": 1,
+                    "timeout": self.timeout_seconds,
+                },
             )
 
             # Fallback: Grok-4 via xAI virtual key
@@ -139,7 +143,9 @@ class PortkeyRouterModel:
             self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
 
             if not self.openrouter_api_key:
-                logger.warning("OpenRouter API key not found - emergency fallback disabled")
+                logger.warning(
+                    "OpenRouter API key not found - emergency fallback disabled"
+                )
                 self.enable_emergency_fallback = False
                 return
 
@@ -150,7 +156,9 @@ class PortkeyRouterModel:
             self.enable_emergency_fallback = False
 
     @with_circuit_breaker(name="portkey_primary_model")
-    async def _call_primary_model(self, messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
+    async def _call_primary_model(
+        self, messages: list[dict[str, str]], **kwargs
+    ) -> dict[str, Any]:
         """Call GPT-5 via Portkey OpenAI virtual key"""
 
         with tracer.start_as_current_span("portkey_gpt5_call") as span:
@@ -266,7 +274,9 @@ class PortkeyRouterModel:
                             "usage": data.get("usage"),
                         }
                     else:
-                        raise ModelError(f"OpenRouter API error: {response.status_code}")
+                        raise ModelError(
+                            f"OpenRouter API error: {response.status_code}"
+                        )
 
             except Exception as e:
                 span.set_attribute("status", "error")
@@ -315,18 +325,26 @@ class PortkeyRouterModel:
                         logger.info("🔄 Attempting fallback model (Grok-4)")
                         result = await self._call_fallback_model(messages, **kwargs)
                         span.set_attribute("final_model", "grok-4")
-                        logger.info(f"✅ Grok-4 fallback success: {len(result['content'])} chars")
+                        logger.info(
+                            f"✅ Grok-4 fallback success: {len(result['content'])} chars"
+                        )
                         return result
 
                     except Exception as fallback_error:
                         logger.warning(f"⚠️  Fallback model failed: {fallback_error}")
-                        span.add_event("fallback_model_failed", {"error": str(fallback_error)})
+                        span.add_event(
+                            "fallback_model_failed", {"error": str(fallback_error)}
+                        )
 
                         # Try emergency fallback (Direct OpenRouter)
                         if self.enable_emergency_fallback:
                             try:
-                                logger.info("🆘 Attempting emergency fallback (OpenRouter)")
-                                result = await self._call_emergency_fallback(messages, **kwargs)
+                                logger.info(
+                                    "🆘 Attempting emergency fallback (OpenRouter)"
+                                )
+                                result = await self._call_emergency_fallback(
+                                    messages, **kwargs
+                                )
                                 span.set_attribute("final_model", "grok-4-openrouter")
                                 logger.info(
                                     f"✅ Emergency fallback success: {len(result['content'])} chars"
@@ -334,9 +352,12 @@ class PortkeyRouterModel:
                                 return result
 
                             except Exception as emergency_error:
-                                logger.error(f"❌ Emergency fallback failed: {emergency_error}")
+                                logger.error(
+                                    f"❌ Emergency fallback failed: {emergency_error}"
+                                )
                                 span.add_event(
-                                    "emergency_fallback_failed", {"error": str(emergency_error)}
+                                    "emergency_fallback_failed",
+                                    {"error": str(emergency_error)},
                                 )
 
                                 # All models failed
@@ -401,7 +422,9 @@ class PortkeyRouterModel:
         return {
             "request_count": self.request_count,
             "total_cost": round(self.total_cost, 4),
-            "average_cost_per_request": round(self.total_cost / max(1, self.request_count), 4),
+            "average_cost_per_request": round(
+                self.total_cost / max(1, self.request_count), 4
+            ),
             "model_usage": self.model_usage_stats,
             "configuration": {
                 "fallback_enabled": self.enable_fallback,

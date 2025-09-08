@@ -4,7 +4,15 @@ import tempfile
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, UploadFile
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+)
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
@@ -160,7 +168,8 @@ async def get_training_status(
 
 @router.post("/gong/query")
 async def query_gong_knowledge(
-    request: dict[str, Any], credentials: HTTPAuthorizationCredentials = Depends(security)
+    request: dict[str, Any],
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> JSONResponse:
     """
     Query learned Gong sales knowledge
@@ -188,7 +197,8 @@ async def query_gong_knowledge(
 
 @router.post("/gong/feedback")
 async def submit_training_feedback(
-    request: dict[str, Any], credentials: HTTPAuthorizationCredentials = Depends(security)
+    request: dict[str, Any],
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> JSONResponse:
     """
     Submit feedback about Gong training quality
@@ -231,7 +241,9 @@ async def get_training_metrics(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-async def process_gong_training(csv_path: str, objectives: Optional[list[str]], job_id: str):
+async def process_gong_training(
+    csv_path: str, objectives: Optional[list[str]], job_id: str
+):
     """
     Background task to process Gong CSV training
 
@@ -251,7 +263,9 @@ async def process_gong_training(csv_path: str, objectives: Optional[list[str]], 
         logger.info(f"Gong training completed for job {job_id}: {result}")
 
     except Exception as e:
-        logger.error(f"Error in background training for job {job_id}: {e}", exc_info=True)
+        logger.error(
+            f"Error in background training for job {job_id}: {e}", exc_info=True
+        )
         # Store error state for status endpoint
         # Store in Redis or database
     finally:

@@ -41,7 +41,9 @@ class TestAnthropicIntegration:
                 json={
                     "model": "claude-3-sonnet-20240229",
                     "max_tokens": 50,
-                    "messages": [{"role": "user", "content": "Hello, this is a connection test."}],
+                    "messages": [
+                        {"role": "user", "content": "Hello, this is a connection test."}
+                    ],
                 },
             )
 
@@ -112,7 +114,9 @@ class TestAnthropicIntegration:
                         chunks.append(chunk)
 
                 assert len(chunks) > 0
-                print(f"✅ Anthropic streaming successful - {len(chunks)} chunks received")
+                print(
+                    f"✅ Anthropic streaming successful - {len(chunks)} chunks received"
+                )
 
         except Exception as e:
             pytest.fail(f"Anthropic streaming failed: {e}")

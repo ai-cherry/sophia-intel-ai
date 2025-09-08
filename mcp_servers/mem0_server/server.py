@@ -109,8 +109,14 @@ class Mem0MCPServer(Server):
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "content": {"type": "string", "description": "Memory content to store"},
-                        "user_id": {"type": "string", "description": "User/agent identifier"},
+                        "content": {
+                            "type": "string",
+                            "description": "Memory content to store",
+                        },
+                        "user_id": {
+                            "type": "string",
+                            "description": "User/agent identifier",
+                        },
                         "domain": {
                             "type": "string",
                             "description": "Business domain (gong, salesforce, etc.)",
@@ -138,10 +144,23 @@ class Mem0MCPServer(Server):
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "query": {"type": "string", "description": "Memory search query"},
-                        "user_id": {"type": "string", "description": "User/agent identifier"},
-                        "domain": {"type": "string", "description": "Business domain filter"},
-                        "limit": {"type": "integer", "description": "Max results", "default": 10},
+                        "query": {
+                            "type": "string",
+                            "description": "Memory search query",
+                        },
+                        "user_id": {
+                            "type": "string",
+                            "description": "User/agent identifier",
+                        },
+                        "domain": {
+                            "type": "string",
+                            "description": "Business domain filter",
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Max results",
+                            "default": 10,
+                        },
                         "adaptive": {
                             "type": "boolean",
                             "description": "Enable adaptive learning",
@@ -166,7 +185,10 @@ class Mem0MCPServer(Server):
                             "items": {"type": "string"},
                             "description": "Domains to correlate",
                         },
-                        "user_id": {"type": "string", "description": "User/agent identifier"},
+                        "user_id": {
+                            "type": "string",
+                            "description": "User/agent identifier",
+                        },
                         "correlation_type": {
                             "type": "string",
                             "enum": ["temporal", "semantic", "causal"],
@@ -186,7 +208,10 @@ class Mem0MCPServer(Server):
                 inputSchema={
                     "type": "object",
                     "properties": {
-                        "user_id": {"type": "string", "description": "User/agent identifier"},
+                        "user_id": {
+                            "type": "string",
+                            "description": "User/agent identifier",
+                        },
                         "strategy": {
                             "type": "string",
                             "enum": ["frequency", "recency", "importance"],
@@ -267,7 +292,9 @@ class Mem0MCPServer(Server):
             cache_key = f"{user_id}:{query}:{domain}"
             if cache_key in self.memory_cache:
                 cached_result = self.memory_cache[cache_key]
-                if (datetime.now() - cached_result["timestamp"]).seconds < self.cache_ttl:
+                if (
+                    datetime.now() - cached_result["timestamp"]
+                ).seconds < self.cache_ttl:
                     logger.info(f"🚀 Cache hit for memory recall: {query[:50]}...")
                     return cached_result["data"]
 
@@ -276,7 +303,9 @@ class Mem0MCPServer(Server):
 
             # Filter by domain if specified
             if domain:
-                memories = [m for m in memories if m.get("metadata", {}).get("domain") == domain]
+                memories = [
+                    m for m in memories if m.get("metadata", {}).get("domain") == domain
+                ]
 
             # Limit results
             memories = memories[:limit]
@@ -301,14 +330,18 @@ class Mem0MCPServer(Server):
                 "query": query,
                 "domain": domain,
                 "adaptive_insights": (
-                    self._generate_adaptive_insights(user_id, domain) if adaptive else None
+                    self._generate_adaptive_insights(user_id, domain)
+                    if adaptive
+                    else None
                 ),
             }
 
             # Cache result for performance
             self.memory_cache[cache_key] = {"data": result, "timestamp": datetime.now()}
 
-            logger.info(f"✅ Recalled {len(memories)} memories for query: {query[:50]}...")
+            logger.info(
+                f"✅ Recalled {len(memories)} memories for query: {query[:50]}..."
+            )
             return result
 
         except Exception as e:
@@ -352,7 +385,9 @@ class Mem0MCPServer(Server):
             logger.error(f"❌ Error correlating memories: {e}")
             return {"success": False, "error": str(e)}
 
-    async def optimize_memory(self, user_id: str, strategy: str = "frequency") -> Dict[str, Any]:
+    async def optimize_memory(
+        self, user_id: str, strategy: str = "frequency"
+    ) -> Dict[str, Any]:
         """Optimize memory storage based on access patterns"""
         try:
             optimization_results = {}
@@ -361,13 +396,19 @@ class Mem0MCPServer(Server):
             all_memories = await self.mem0.get_all(user_id=user_id)
 
             if strategy == "frequency":
-                optimization_results = self._optimize_by_frequency(user_id, all_memories)
+                optimization_results = self._optimize_by_frequency(
+                    user_id, all_memories
+                )
             elif strategy == "recency":
                 optimization_results = self._optimize_by_recency(user_id, all_memories)
             elif strategy == "importance":
-                optimization_results = self._optimize_by_importance(user_id, all_memories)
+                optimization_results = self._optimize_by_importance(
+                    user_id, all_memories
+                )
 
-            logger.info(f"✅ Optimized memories for {user_id} using {strategy} strategy")
+            logger.info(
+                f"✅ Optimized memories for {user_id} using {strategy} strategy"
+            )
 
             return {
                 "success": True,
@@ -396,7 +437,9 @@ class Mem0MCPServer(Server):
 
         return min(1.0, (frequency_score + recency_score) / 2)
 
-    def _generate_adaptive_insights(self, user_id: str, domain: Optional[str]) -> Dict[str, Any]:
+    def _generate_adaptive_insights(
+        self, user_id: str, domain: Optional[str]
+    ) -> Dict[str, Any]:
         """Generate adaptive insights based on memory patterns"""
         context_key = f"{user_id}:{domain or 'global'}"
 
@@ -410,7 +453,9 @@ class Mem0MCPServer(Server):
             "adaptation_score": adaptation_score,
             "access_frequency": context.access_count,
             "learning_effectiveness": (
-                "high" if adaptation_score > 0.7 else "medium" if adaptation_score > 0.3 else "low"
+                "high"
+                if adaptation_score > 0.7
+                else "medium" if adaptation_score > 0.3 else "low"
             ),
             "recommendations": [],
         }
@@ -421,7 +466,9 @@ class Mem0MCPServer(Server):
                 "Consider more frequent memory access for better learning"
             )
         if context.access_count > 100:
-            insights["recommendations"].append("High usage detected - consider memory optimization")
+            insights["recommendations"].append(
+                "High usage detected - consider memory optimization"
+            )
 
         return insights
 

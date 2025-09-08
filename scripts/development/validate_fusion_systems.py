@@ -74,14 +74,19 @@ class FusionSystemsValidator:
         try:
             # Check if main file exists
             main_file = self.project_root / "swarms" / "mem0_agno_self_pruning.py"
-            sophia_file = self.project_root / "swarms" / "sophia_mem0_agno_self_pruning.py"
+            sophia_file = (
+                self.project_root / "swarms" / "sophia_mem0_agno_self_pruning.py"
+            )
 
             result["files_present"] = main_file.exists()
             result["tests_present"] = sophia_file.exists()
 
             if result["files_present"]:
                 try:
-                    from mem0_agno_self_pruning import MemoryOptimizationSwarm, RedisPruningAgent
+                    from mem0_agno_self_pruning import (
+                        MemoryOptimizationSwarm,
+                        RedisPruningAgent,
+                    )
 
                     result["imports_valid"] = True
                     print("  ✅ Redis optimization module imports successfully")
@@ -93,7 +98,11 @@ class FusionSystemsValidator:
                 print("  ❌ Main file not found")
 
             # Determine status
-            if result["files_present"] and result["imports_valid"] and result["tests_present"]:
+            if (
+                result["files_present"]
+                and result["imports_valid"]
+                and result["tests_present"]
+            ):
                 result["status"] = "valid"
                 print("  ✅ Redis optimization system validation passed")
             else:
@@ -112,7 +121,12 @@ class FusionSystemsValidator:
         print("🧠 Validating Edge RAG System...")
 
         system_name = "edge_rag"
-        result = {"status": "unknown", "files_present": False, "imports_valid": False, "errors": []}
+        result = {
+            "status": "unknown",
+            "files_present": False,
+            "imports_valid": False,
+            "errors": [],
+        }
 
         try:
             # Check if main file exists
@@ -152,7 +166,12 @@ class FusionSystemsValidator:
         print("🔀 Validating Hybrid Routing System...")
 
         system_name = "hybrid_routing"
-        result = {"status": "unknown", "files_present": False, "imports_valid": False, "errors": []}
+        result = {
+            "status": "unknown",
+            "files_present": False,
+            "imports_valid": False,
+            "errors": [],
+        }
 
         try:
             # Check if main file exists
@@ -192,7 +211,12 @@ class FusionSystemsValidator:
         print("📊 Validating Cross-DB Analytics System...")
 
         system_name = "cross_db_analytics"
-        result = {"status": "unknown", "files_present": False, "imports_valid": False, "errors": []}
+        result = {
+            "status": "unknown",
+            "files_present": False,
+            "imports_valid": False,
+            "errors": [],
+        }
 
         try:
             # Check if main file exists
@@ -241,7 +265,9 @@ class FusionSystemsValidator:
 
         try:
             # Check if router file exists
-            router_file = self.project_root / "backend" / "routers" / "fusion_metrics.py"
+            router_file = (
+                self.project_root / "backend" / "routers" / "fusion_metrics.py"
+            )
             sophia_file = self.project_root / "backend" / "sophia_fusion_metrics_api.py"
             main_file = self.project_root / "backend" / "main.py"
 
@@ -250,7 +276,9 @@ class FusionSystemsValidator:
             if main_file.exists():
                 main_content = main_file.read_text()
                 result["router_imported"] = "fusion_metrics" in main_content
-                result["main_updated"] = "app.include_router(fusion_metrics.router)" in main_content
+                result["main_updated"] = (
+                    "app.include_router(fusion_metrics.router)" in main_content
+                )
 
             if result["router_file_present"]:
                 try:
@@ -321,7 +349,9 @@ class FusionSystemsValidator:
                 if result["component_valid"]:
                     print("  ✅ Dashboard component structure is valid")
                 else:
-                    result["errors"].append("Dashboard component missing required elements")
+                    result["errors"].append(
+                        "Dashboard component missing required elements"
+                    )
                     print("  ❌ Dashboard component missing required elements")
             else:
                 result["errors"].append("Dashboard file not found")
@@ -356,12 +386,17 @@ class FusionSystemsValidator:
 
         try:
             # Check if workflow file exists
-            workflow_file = self.project_root / ".github" / "workflows" / "fusion-systems-test.yml"
+            workflow_file = (
+                self.project_root / ".github" / "workflows" / "fusion-systems-test.yml"
+            )
             result["workflow_file_present"] = workflow_file.exists()
 
             # Check if test files exist
             sophia_files = [
-                self.project_root / "tests" / "integration" / "sophia_fusion_systems.py",
+                self.project_root
+                / "tests"
+                / "integration"
+                / "sophia_fusion_systems.py",
                 self.project_root / "swarms" / "sophia_mem0_agno_self_pruning.py",
                 self.project_root / "backend" / "sophia_fusion_metrics_api.py",
             ]
@@ -414,7 +449,8 @@ class FusionSystemsValidator:
     def calculate_overall_status(self):
         """Calculate overall validation status"""
         all_systems_valid = all(
-            system["status"] == "valid" for system in self.validation_results["systems"].values()
+            system["status"] == "valid"
+            for system in self.validation_results["systems"].values()
         )
 
         all_integrations_valid = all(
@@ -425,7 +461,8 @@ class FusionSystemsValidator:
         if all_systems_valid and all_integrations_valid:
             self.validation_results["overall_status"] = "valid"
         elif any(
-            system["status"] == "error" for system in self.validation_results["systems"].values()
+            system["status"] == "error"
+            for system in self.validation_results["systems"].values()
         ) or any(
             integration["status"] == "error"
             for integration in self.validation_results["integration"].values()
@@ -444,7 +481,9 @@ class FusionSystemsValidator:
         status_emoji = {"valid": "✅", "invalid": "❌", "error": "💥", "unknown": "❓"}
 
         overall_status = self.validation_results["overall_status"]
-        print(f"Overall Status: {status_emoji[overall_status]} {overall_status.upper()}")
+        print(
+            f"Overall Status: {status_emoji[overall_status]} {overall_status.upper()}"
+        )
         print()
 
         # Systems status
@@ -459,7 +498,9 @@ class FusionSystemsValidator:
 
         # Integration status
         print("🔌 INTEGRATION COMPONENTS:")
-        for integration_name, integration_result in self.validation_results["integration"].items():
+        for integration_name, integration_result in self.validation_results[
+            "integration"
+        ].items():
             status = integration_result["status"]
             print(f"  {status_emoji[status]} {integration_name}: {status}")
             if integration_result["errors"]:

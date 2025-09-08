@@ -118,13 +118,17 @@ class GongIngestionPipeline:
                 data = response.json()
                 return data.get("transcript", [])
             else:
-                logger.warning(f"No transcript for call {call_id}: {response.status_code}")
+                logger.warning(
+                    f"No transcript for call {call_id}: {response.status_code}"
+                )
                 return []
         except Exception as e:
             logger.error(f"Error fetching transcript: {e}")
             return []
 
-    def chunk_transcript(self, transcript: list[dict], call_id: str) -> list[TranscriptChunk]:
+    def chunk_transcript(
+        self, transcript: list[dict], call_id: str
+    ) -> list[TranscriptChunk]:
         """
         Intelligent chunking of transcript by speaker turns and token limits
         Groups consecutive messages by same speaker within token limits
@@ -151,7 +155,9 @@ class GongIngestionPipeline:
                 # Save current chunk
                 if current_chunk:
                     chunk_text = " ".join([s["segment"] for s in current_chunk])
-                    chunk_id = hashlib.md5(f"{call_id}_{chunk_index}".encode()).hexdigest()
+                    chunk_id = hashlib.md5(
+                        f"{call_id}_{chunk_index}".encode()
+                    ).hexdigest()
 
                     chunks.append(
                         TranscriptChunk(
@@ -201,11 +207,15 @@ class GongIngestionPipeline:
         logger.info(f"Created {len(chunks)} chunks for call {call_id}")
         return chunks
 
-    @retry(wait=wait_exponential(multiplier=1, min=1, max=60), stop=stop_after_attempt(3))
+    @retry(
+        wait=wait_exponential(multiplier=1, min=1, max=60), stop=stop_after_attempt(3)
+    )
     def create_embeddings(self, texts: list[str]) -> list[list[float]]:
         """Create embeddings using OpenAI API with retry logic"""
         try:
-            response = openai.embeddings.create(model="text-embedding-3-small", input=texts)
+            response = openai.embeddings.create(
+                model="text-embedding-3-small", input=texts
+            )
             embeddings = [item.embedding for item in response.data]
             self.stats["embeddings_created"] += len(embeddings)
             return embeddings
@@ -214,7 +224,10 @@ class GongIngestionPipeline:
             raise
 
     def store_in_weaviate(
-        self, chunks: list[TranscriptChunk], embeddings: list[list[float]], call_data: GongCallData
+        self,
+        chunks: list[TranscriptChunk],
+        embeddings: list[list[float]],
+        call_data: GongCallData,
     ):
         """Store chunks with embeddings in Weaviate"""
         headers = {
@@ -250,7 +263,9 @@ class GongIngestionPipeline:
 
         try:
             response = requests.post(
-                f"{self.weaviate_endpoint}/v1/batch/objects", headers=headers, json=batch_data
+                f"{self.weaviate_endpoint}/v1/batch/objects",
+                headers=headers,
+                json=batch_data,
             )
 
             if response.status_code in [200, 201]:
@@ -258,7 +273,9 @@ class GongIngestionPipeline:
                 logger.info(f"✅ Stored {len(objects)} chunks in Weaviate")
                 return True
             else:
-                logger.error(f"Weaviate error: {response.status_code} - {response.text}")
+                logger.error(
+                    f"Weaviate error: {response.status_code} - {response.text}"
+                )
                 return False
         except Exception as e:
             logger.error(f"Storage error: {e}")
@@ -302,7 +319,9 @@ class GongIngestionPipeline:
             if "GongTranscriptChunk" not in existing_classes:
                 logger.info("Creating GongTranscriptChunk class...")
                 create_response = requests.post(
-                    f"{self.weaviate_endpoint}/v1/schema", headers=headers, json=chunk_schema
+                    f"{self.weaviate_endpoint}/v1/schema",
+                    headers=headers,
+                    json=chunk_schema,
                 )
                 if create_response.status_code in [200, 201]:
                     logger.info("✅ GongTranscriptChunk class created")

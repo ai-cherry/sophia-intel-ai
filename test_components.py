@@ -26,7 +26,9 @@ async def test_monitoring_agents():
         cost_agent.track_request("openai", 0.05)
         cost_agent.track_request("anthropic", 0.03)
         metrics = await cost_agent.collect_metrics()
-        print(f"✓ CostTrackerAgent: Tracked ${sum(m.value for m in metrics):.2f} in costs")
+        print(
+            f"✓ CostTrackerAgent: Tracked ${sum(m.value for m in metrics):.2f} in costs"
+        )
 
         # Test PerformanceAgent
         perf_agent = PerformanceAgent()
@@ -53,18 +55,24 @@ async def test_bridge():
         # Test business to technical translation
         business_req = "Increase payment processing speed"
         insight = bridge.translate_to_technical(business_req)
-        print(f"✓ Business->Technical: '{business_req}' -> '{insight.translated_content[:50]}...'")
+        print(
+            f"✓ Business->Technical: '{business_req}' -> '{insight.translated_content[:50]}...'"
+        )
 
         # Test technical to business translation
         tech_metric = {"api_latency_ms": "45ms", "improvement": "50%"}
         insight = bridge.translate_to_business(tech_metric)
-        print(f"✓ Technical->Business: {tech_metric} -> '{insight.translated_content[:50]}...'")
+        print(
+            f"✓ Technical->Business: {tech_metric} -> '{insight.translated_content[:50]}...'"
+        )
 
         # Test unified insight creation
         business_ctx = {"summary": "Growth phase", "priority": "growth"}
         technical_ctx = {"implementation": "Microservices", "uptime": "99.9%"}
         unified = bridge.create_unified_insight(business_ctx, technical_ctx)
-        print(f"✓ Unified Insight: Created with {len(unified['recommendations'])} recommendations")
+        print(
+            f"✓ Unified Insight: Created with {len(unified['recommendations'])} recommendations"
+        )
 
         return True
     except Exception as e:
@@ -76,13 +84,21 @@ async def test_chains():
     """Test composable agent chains"""
     print("\n=== Testing Composable Agent Chains ===")
     try:
-        from app.chains.composable_agent_chains import AgentStatus, ChainBuilder, ChainOrchestrator
+        from app.chains.composable_agent_chains import (
+            AgentStatus,
+            ChainBuilder,
+            ChainOrchestrator,
+        )
 
         # Test sequential chain
         chain = ChainBuilder.analyze_and_optimize()
         context = await chain.execute("Test data")
-        success_count = sum(1 for r in context.results if r.status == AgentStatus.SUCCESS)
-        print(f"✓ Sequential Chain: {success_count}/{len(context.results)} agents succeeded")
+        success_count = sum(
+            1 for r in context.results if r.status == AgentStatus.SUCCESS
+        )
+        print(
+            f"✓ Sequential Chain: {success_count}/{len(context.results)} agents succeeded"
+        )
 
         # Test parallel chain
         parallel_chain = ChainBuilder.parallel_analysis()
@@ -125,7 +141,9 @@ async def test_integration():
         context = ChainContext(initial_input=insight.translated_content)
         result = await analysis.execute(context)
 
-        print(f"✓ Integration Test: Components work together (status: {result.status.value})")
+        print(
+            f"✓ Integration Test: Components work together (status: {result.status.value})"
+        )
         return True
     except Exception as e:
         print(f"✗ Integration test failed: {e}")

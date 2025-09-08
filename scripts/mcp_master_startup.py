@@ -31,7 +31,9 @@ class MCPMasterController:
         self.server_processes = {}
         self.connection_status = {}
         self.log_file = (
-            self.repo_path / "logs" / f"mcp_startup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+            self.repo_path
+            / "logs"
+            / f"mcp_startup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
         )
 
         # Ensure log directory exists
@@ -46,7 +48,12 @@ class MCPMasterController:
                 "command": ["python3", "-m", "mcp.servers.filesystem"],
                 "health_endpoint": "/health",
                 "required_for": ["unified-agent-cli"],
-                "capabilities": ["read_files", "write_files", "list_directory", "file_search"],
+                "capabilities": [
+                    "read_files",
+                    "write_files",
+                    "list_directory",
+                    "file_search",
+                ],
             },
             "git": {
                 "name": "MCP Git Server",
@@ -120,7 +127,9 @@ class MCPMasterController:
         """Kill any process using a specific port"""
         try:
             # Find process using the port
-            result = subprocess.run(["lsof", "-i", f":{port}"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["lsof", "-i", f":{port}"], capture_output=True, text=True
+            )
 
             if result.stdout:
                 lines = result.stdout.strip().split("\n")[1:]  # Skip header
@@ -164,7 +173,11 @@ class MCPMasterController:
 
             # Start process
             process = subprocess.Popen(
-                command, cwd=self.repo_path, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                command,
+                cwd=self.repo_path,
+                env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
 
             self.server_processes[server_id] = process
@@ -230,7 +243,9 @@ class MCPMasterController:
             else:
                 # Start Redis
                 subprocess.Popen(
-                    ["redis-server"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    ["redis-server"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
                 )
                 await asyncio.sleep(2)
                 results["redis"] = await self.check_server_health(
@@ -253,7 +268,9 @@ class MCPMasterController:
                 if healthy:
                     self.log(f"✅ {config['name']} is healthy", "SUCCESS")
                 else:
-                    self.log(f"⚠️ {config['name']} started but health check failed", "WARNING")
+                    self.log(
+                        f"⚠️ {config['name']} started but health check failed", "WARNING"
+                    )
             else:
                 results[server_id] = False
 
@@ -275,7 +292,9 @@ class MCPMasterController:
                 },
                 "memory": {
                     "command": "python3",
-                    "args": [str(self.repo_path / "app" / "memory" / "supermemory_mcp.py")],
+                    "args": [
+                        str(self.repo_path / "app" / "memory" / "supermemory_mcp.py")
+                    ],
                     "env": {},
                 },
             }
@@ -305,7 +324,11 @@ class MCPMasterController:
                     "url": "http://localhost:8001",
                     "capabilities": ["filesystem"],
                 },
-                {"name": "sophia-git", "url": "http://localhost:8002", "capabilities": ["git"]},
+                {
+                    "name": "sophia-git",
+                    "url": "http://localhost:8002",
+                    "capabilities": ["git"],
+                },
                 {
                     "name": "sophia-memory",
                     "url": "http://localhost:8003",
@@ -352,8 +375,12 @@ class MCPMasterController:
             self.log("\n✅ RUNNING SERVERS:")
             for server_id, config in running:
                 self.log(f"  • {config['name']} (port {config.get('port', 'N/A')})")
-                self.log(f"    Capabilities: {', '.join(config.get('capabilities', []))}")
-                self.log(f"    Required for: {', '.join(config.get('required_for', []))}")
+                self.log(
+                    f"    Capabilities: {', '.join(config.get('capabilities', []))}"
+                )
+                self.log(
+                    f"    Required for: {', '.join(config.get('required_for', []))}"
+                )
 
         # Report failed servers
         if failed:

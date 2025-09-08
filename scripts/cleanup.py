@@ -125,7 +125,11 @@ def cleanup_repository():
     for dir_path in required_dirs:
         Path(dir_path).mkdir(parents=True, exist_ok=True)
         init_file = Path(dir_path) / "__init__.py"
-        if not init_file.exists() and "scripts" not in dir_path and "docs" not in dir_path:
+        if (
+            not init_file.exists()
+            and "scripts" not in dir_path
+            and "docs" not in dir_path
+        ):
             init_file.write_text(f'"""Module: {dir_path}"""')
 
     # Create .env if it doesn't exist

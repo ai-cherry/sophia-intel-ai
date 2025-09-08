@@ -83,15 +83,22 @@ class SecurityTester:
         self.test_results.append(result)
 
         if result.status == "vulnerable":
-            severity_symbol = {"low": "🟡", "medium": "🟠", "high": "🔴", "critical": "🚨"}.get(
-                result.severity, "❓"
-            )
+            severity_symbol = {
+                "low": "🟡",
+                "medium": "🟠",
+                "high": "🔴",
+                "critical": "🚨",
+            }.get(result.severity, "❓")
 
-            print(f"{severity_symbol} {result.vulnerability_type}: {result.description}")
+            print(
+                f"{severity_symbol} {result.vulnerability_type}: {result.description}"
+            )
 
     def generate_report(self, component: str) -> VulnerabilityReport:
         """Generate vulnerability assessment report"""
-        component_results = [r for r in self.test_results if component in r.test_name.lower()]
+        component_results = [
+            r for r in self.test_results if component in r.test_name.lower()
+        ]
 
         severity_counts = {
             "critical": len([r for r in component_results if r.severity == "critical"]),
@@ -100,7 +107,9 @@ class SecurityTester:
             "low": len([r for r in component_results if r.severity == "low"]),
         }
 
-        vulnerabilities_found = len([r for r in component_results if r.status == "vulnerable"])
+        vulnerabilities_found = len(
+            [r for r in component_results if r.status == "vulnerable"]
+        )
 
         return VulnerabilityReport(
             component=component,
@@ -135,14 +144,24 @@ class TestAuthenticationSecurity:
         print("🔐 Testing JWT None Algorithm vulnerability...")
 
         # Create JWT with 'none' algorithm
-        none_payload = {"sub": "admin", "iat": int(time.time()), "exp": int(time.time()) + 3600}
+        none_payload = {
+            "sub": "admin",
+            "iat": int(time.time()),
+            "exp": int(time.time()) + 3600,
+        }
         none_header = {"alg": "none", "typ": "JWT"}
 
         none_token = (
-            base64.urlsafe_b64encode(json.dumps(none_header).encode()).decode().rstrip("=") + "."
+            base64.urlsafe_b64encode(json.dumps(none_header).encode())
+            .decode()
+            .rstrip("=")
+            + "."
         )
         none_token += (
-            base64.urlsafe_b64encode(json.dumps(none_payload).encode()).decode().rstrip("=") + "."
+            base64.urlsafe_b64encode(json.dumps(none_payload).encode())
+            .decode()
+            .rstrip("=")
+            + "."
         )
 
         for service_name, base_url in security_tester.base_urls.items():
@@ -159,7 +178,10 @@ class TestAuthenticationSecurity:
                                 status="vulnerable",
                                 severity="high",
                                 description=f"{service_name} accepts JWT tokens with 'none' algorithm",
-                                details={"token": none_token, "response_status": response.status},
+                                details={
+                                    "token": none_token,
+                                    "response_status": response.status,
+                                },
                                 timestamp=datetime.now(),
                             )
                         )
@@ -243,7 +265,9 @@ class TestAuthenticationSecurity:
                     url = base_url + "/protected" + attempt.get("path_suffix", "")
 
                     async with security_tester.session.get(
-                        url, headers=attempt.get("headers", {}), params=attempt.get("params", {})
+                        url,
+                        headers=attempt.get("headers", {}),
+                        params=attempt.get("params", {}),
                     ) as response:
                         if response.status == 200:
                             security_tester.record_result(
@@ -376,19 +400,32 @@ class TestInputValidationSecurity:
                     try:
                         # Test in URL parameters
                         async with security_tester.session.get(
-                            f"{base_url}{endpoint}", params={"id": payload, "search": payload}
+                            f"{base_url}{endpoint}",
+                            params={"id": payload, "search": payload},
                         ) as response:
                             await self._check_sql_injection_response(
-                                security_tester, service_name, endpoint, payload, response
+                                security_tester,
+                                service_name,
+                                endpoint,
+                                payload,
+                                response,
                             )
 
                         # Test in POST body
                         async with security_tester.session.post(
                             f"{base_url}{endpoint}",
-                            json={"username": payload, "query": payload, "filter": payload},
+                            json={
+                                "username": payload,
+                                "query": payload,
+                                "filter": payload,
+                            },
                         ) as response:
                             await self._check_sql_injection_response(
-                                security_tester, service_name, endpoint, payload, response
+                                security_tester,
+                                service_name,
+                                endpoint,
+                                payload,
+                                response,
                             )
 
                     except:
@@ -548,23 +585,35 @@ class TestInputValidationSecurity:
                     try:
                         # Test in URL parameters
                         async with security_tester.session.get(
-                            f"{base_url}{endpoint}", params={"q": payload, "message": payload}
+                            f"{base_url}{endpoint}",
+                            params={"q": payload, "message": payload},
                         ) as response:
                             await self._check_xss_response(
-                                security_tester, service_name, endpoint, payload, response
+                                security_tester,
+                                service_name,
+                                endpoint,
+                                payload,
+                                response,
                             )
 
                         # Test in POST data
                         async with security_tester.session.post(
-                            f"{base_url}{endpoint}", json={"content": payload, "message": payload}
+                            f"{base_url}{endpoint}",
+                            json={"content": payload, "message": payload},
                         ) as response:
                             await self._check_xss_response(
-                                security_tester, service_name, endpoint, payload, response
+                                security_tester,
+                                service_name,
+                                endpoint,
+                                payload,
+                                response,
                             )
                     except:
                         pass
 
-    async def _check_xss_response(self, security_tester, service_name, endpoint, payload, response):
+    async def _check_xss_response(
+        self, security_tester, service_name, endpoint, payload, response
+    ):
         """Check response for XSS vulnerabilities"""
         try:
             response_text = await response.text()
@@ -578,7 +627,9 @@ class TestInputValidationSecurity:
                     payload.replace("'", "&#x27;").replace('"', "&quot;"),
                 ]
 
-                is_properly_encoded = any(variant in response_text for variant in encoded_variants)
+                is_properly_encoded = any(
+                    variant in response_text for variant in encoded_variants
+                )
 
                 if not is_properly_encoded:
                     security_tester.record_result(
@@ -638,7 +689,9 @@ class TestAPISecurityVulnerabilities:
                             "Access-Control-Request-Headers": "Content-Type",
                         },
                     ) as response:
-                        cors_header = response.headers.get("Access-Control-Allow-Origin", "")
+                        cors_header = response.headers.get(
+                            "Access-Control-Allow-Origin", ""
+                        )
 
                         if cors_header == "*" or cors_header == origin:
                             severity = "high" if origin in ["*", "null"] else "medium"
@@ -682,7 +735,10 @@ class TestAPISecurityVulnerabilities:
                                     status="vulnerable",
                                     severity="medium",
                                     description=f"{service_name} allows {method} method",
-                                    details={"method": method, "status_code": response.status},
+                                    details={
+                                        "method": method,
+                                        "status_code": response.status,
+                                    },
                                     timestamp=datetime.now(),
                                 )
                             )
@@ -709,7 +765,9 @@ class TestAPISecurityVulnerabilities:
             try:
                 # First, trigger rate limiting with rapid requests
                 for i in range(20):  # Rapid requests
-                    async with security_tester.session.get(f"{base_url}/api/test") as response:
+                    async with security_tester.session.get(
+                        f"{base_url}/api/test"
+                    ) as response:
                         if response.status == 429:  # Rate limited
                             # Now try to bypass with headers
                             for headers in bypass_headers:
@@ -774,7 +832,9 @@ class TestAPISecurityVulnerabilities:
 
                                 response_lower = response_text.lower()
                                 found_sensitive = [
-                                    kw for kw in sensitive_keywords if kw in response_lower
+                                    kw
+                                    for kw in sensitive_keywords
+                                    if kw in response_lower
                                 ]
 
                                 if found_sensitive:
@@ -851,12 +911,16 @@ class TestDataProtectionSecurity:
         for service_name, base_url in security_tester.base_urls.items():
             for endpoint in sensitive_endpoints:
                 try:
-                    async with security_tester.session.get(f"{base_url}{endpoint}") as response:
+                    async with security_tester.session.get(
+                        f"{base_url}{endpoint}"
+                    ) as response:
                         if response.status == 200:
                             response_text = await response.text()
 
                             for pattern in sensitive_patterns:
-                                matches = re.finditer(pattern, response_text, re.IGNORECASE)
+                                matches = re.finditer(
+                                    pattern, response_text, re.IGNORECASE
+                                )
                                 for match in matches:
                                     security_tester.record_result(
                                         SecurityTestResult(
@@ -887,14 +951,20 @@ class TestDataProtectionSecurity:
                 # Test SSL/TLS configuration
                 if base_url.startswith("https://"):
                     hostname = base_url.split("://")[1].split(":")[0]
-                    port = int(base_url.split(":")[-1]) if ":" in base_url.split("://")[1] else 443
+                    port = (
+                        int(base_url.split(":")[-1])
+                        if ":" in base_url.split("://")[1]
+                        else 443
+                    )
 
                     context = ssl.create_default_context()
                     context.check_hostname = False
                     context.verify_mode = ssl.CERT_NONE
 
                     with socket.create_connection((hostname, port), timeout=5) as sock:
-                        with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                        with context.wrap_socket(
+                            sock, server_hostname=hostname
+                        ) as ssock:
                             cipher = ssock.cipher()
 
                             # Check for weak ciphers
@@ -941,7 +1011,10 @@ class TestDataProtectionSecurity:
                                         status="vulnerable",
                                         severity="medium",
                                         description=f"{service_name} uses weak hashing",
-                                        details={"endpoint": endpoint, "pattern": pattern},
+                                        details={
+                                            "endpoint": endpoint,
+                                            "pattern": pattern,
+                                        },
                                         timestamp=datetime.now(),
                                     )
                                 )
@@ -973,7 +1046,11 @@ class TestSecurityHeaders:
             "X-XSS-Protection": "1; mode=block",
             "Strict-Transport-Security": "max-age=",
             "Content-Security-Policy": "",
-            "Referrer-Policy": ["no-referrer", "strict-origin", "strict-origin-when-cross-origin"],
+            "Referrer-Policy": [
+                "no-referrer",
+                "strict-origin",
+                "strict-origin-when-cross-origin",
+            ],
         }
 
         for service_name, base_url in security_tester.base_urls.items():
@@ -999,7 +1076,8 @@ class TestSecurityHeaders:
 
                             if isinstance(expected_values, list):
                                 if not any(
-                                    expected in header_value for expected in expected_values
+                                    expected in header_value
+                                    for expected in expected_values
                                 ):
                                     security_tester.record_result(
                                         SecurityTestResult(
@@ -1016,7 +1094,9 @@ class TestSecurityHeaders:
                                             timestamp=datetime.now(),
                                         )
                                     )
-                            elif expected_values and expected_values not in header_value:
+                            elif (
+                                expected_values and expected_values not in header_value
+                            ):
                                 security_tester.record_result(
                                     SecurityTestResult(
                                         test_name=f"{service_name}_weak_security_header",
@@ -1064,7 +1144,10 @@ class TestSecurityHeaders:
                                     status="vulnerable",
                                     severity="low",
                                     description=f"{service_name} {description}",
-                                    details={"header": header_name, "value": headers[header_name]},
+                                    details={
+                                        "header": header_name,
+                                        "value": headers[header_name],
+                                    },
                                     timestamp=datetime.now(),
                                 )
                             )
@@ -1148,7 +1231,9 @@ class TestComprehensiveSecurityAssessment:
         print(f"  High Severity Issues: {total_high}")
 
         # Security assertions
-        assert total_critical == 0, f"Critical security vulnerabilities found: {total_critical}"
+        assert (
+            total_critical == 0
+        ), f"Critical security vulnerabilities found: {total_critical}"
         assert total_high <= 2, f"Too many high-severity vulnerabilities: {total_high}"
 
         if total_vulnerabilities == 0:
@@ -1161,4 +1246,6 @@ class TestComprehensiveSecurityAssessment:
 
 if __name__ == "__main__":
     # Run security vulnerability tests
-    pytest.main([__file__, "-v", "--tb=short", "-x", "--durations=10"])  # Stop on first failure
+    pytest.main(
+        [__file__, "-v", "--tb=short", "-x", "--durations=10"]
+    )  # Stop on first failure

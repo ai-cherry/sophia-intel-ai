@@ -77,7 +77,9 @@ class AsanaEnhancedConnector:
         self.websocket_manager = websocket_manager
         self.stuck_account_cache: dict[str, StuckAccountAlert] = {}
 
-    async def detect_stuck_accounts(self, workspace_gid: str) -> list[StuckAccountAlert]:
+    async def detect_stuck_accounts(
+        self, workspace_gid: str
+    ) -> list[StuckAccountAlert]:
         """Detect stuck accounts across Asana projects and tasks"""
         alerts = []
 
@@ -86,12 +88,16 @@ class AsanaEnhancedConnector:
             projects = await self.asana_client.get_projects(workspace_gid)
 
             for project in projects:
-                project_alerts = await self._analyze_project_for_stuck_conditions(project)
+                project_alerts = await self._analyze_project_for_stuck_conditions(
+                    project
+                )
                 alerts.extend(project_alerts)
 
                 # Get project tasks and analyze
                 tasks = await self.asana_client.get_project_tasks(project["gid"])
-                task_alerts = await self._analyze_tasks_for_stuck_conditions(tasks, project)
+                task_alerts = await self._analyze_tasks_for_stuck_conditions(
+                    tasks, project
+                )
                 alerts.extend(task_alerts)
 
         except Exception as e:
@@ -114,7 +120,9 @@ class AsanaEnhancedConnector:
 
         # Check for overdue projects
         if project.get("due_date"):
-            due_date = datetime.fromisoformat(project["due_date"].replace("Z", "+00:00"))
+            due_date = datetime.fromisoformat(
+                project["due_date"].replace("Z", "+00:00")
+            )
             if due_date < now:
                 days_overdue = (now - due_date).days
 
@@ -135,7 +143,10 @@ class AsanaEnhancedConnector:
                         title=f"Overdue Project: {project['name']}",
                         description=f"Project is {days_overdue} days overdue",
                         detected_at=now,
-                        metrics={"days_overdue": days_overdue, "due_date": project["due_date"]},
+                        metrics={
+                            "days_overdue": days_overdue,
+                            "due_date": project["due_date"],
+                        },
                         recommended_actions=[
                             "Review project timeline and dependencies",
                             "Reassign resources if needed",
@@ -182,7 +193,9 @@ class AsanaEnhancedConnector:
 
             # Check for overdue tasks
             if task.get("due_date"):
-                due_date = datetime.fromisoformat(task["due_date"].replace("Z", "+00:00"))
+                due_date = datetime.fromisoformat(
+                    task["due_date"].replace("Z", "+00:00")
+                )
                 if due_date < now:
                     days_overdue = (now - due_date).days
 
@@ -201,7 +214,10 @@ class AsanaEnhancedConnector:
                             title=f"Overdue Task: {task['name']}",
                             description=f"Task is {days_overdue} days overdue in project {project['name']}",
                             detected_at=now,
-                            metrics={"days_overdue": days_overdue, "project": project["name"]},
+                            metrics={
+                                "days_overdue": days_overdue,
+                                "project": project["name"],
+                            },
                             recommended_actions=[
                                 "Reassess task priority and deadline",
                                 "Check for blockers with assignee",
@@ -215,7 +231,9 @@ class AsanaEnhancedConnector:
 
             # Check for tasks with no recent activity
             if task.get("modified_at"):
-                modified_date = datetime.fromisoformat(task["modified_at"].replace("Z", "+00:00"))
+                modified_date = datetime.fromisoformat(
+                    task["modified_at"].replace("Z", "+00:00")
+                )
                 days_since_activity = (now - modified_date).days
 
                 if days_since_activity > 3 and not task.get("completed"):
@@ -258,7 +276,9 @@ class AsanaEnhancedConnector:
                 "recommended_actions": alert.recommended_actions,
                 "affected_stakeholders": alert.affected_stakeholders,
                 "detected_at": alert.detected_at.isoformat(),
-                "last_activity": alert.last_activity.isoformat() if alert.last_activity else None,
+                "last_activity": (
+                    alert.last_activity.isoformat() if alert.last_activity else None
+                ),
             },
         )
 
@@ -285,7 +305,9 @@ class LinearEnhancedConnector:
 
                 # Get team issues and analyze
                 issues = await self._get_team_issues(team["id"])
-                issue_alerts = await self._analyze_issues_for_stuck_conditions(issues, team)
+                issue_alerts = await self._analyze_issues_for_stuck_conditions(
+                    issues, team
+                )
                 alerts.extend(issue_alerts)
 
         except Exception as e:
@@ -293,7 +315,9 @@ class LinearEnhancedConnector:
 
         return alerts
 
-    async def _analyze_team_velocity(self, team: dict[str, Any]) -> list[StuckAccountAlert]:
+    async def _analyze_team_velocity(
+        self, team: dict[str, Any]
+    ) -> list[StuckAccountAlert]:
         """Analyze team velocity for stuck conditions"""
         alerts = []
 
@@ -307,7 +331,9 @@ class LinearEnhancedConnector:
 
             # Check for significant velocity drop
             if historical_avg > 0 and current_velocity < (historical_avg * 0.6):
-                velocity_drop = ((historical_avg - current_velocity) / historical_avg) * 100
+                velocity_drop = (
+                    (historical_avg - current_velocity) / historical_avg
+                ) * 100
 
                 alerts.append(
                     StuckAccountAlert(
@@ -357,7 +383,9 @@ class LinearEnhancedConnector:
         for issue in issues:
             # Check for issues in "In Progress" state too long
             if issue.get("state", {}).get("type") == "started":
-                updated_at = datetime.fromisoformat(issue["updatedAt"].replace("Z", "+00:00"))
+                updated_at = datetime.fromisoformat(
+                    issue["updatedAt"].replace("Z", "+00:00")
+                )
                 days_in_progress = (now - updated_at).days
 
                 if days_in_progress > 5:
@@ -375,7 +403,10 @@ class LinearEnhancedConnector:
                             description=f"Issue has been in progress for {days_in_progress} days with no updates",
                             detected_at=now,
                             last_activity=updated_at,
-                            metrics={"days_in_progress": days_in_progress, "team": team["name"]},
+                            metrics={
+                                "days_in_progress": days_in_progress,
+                                "team": team["name"],
+                            },
                             recommended_actions=[
                                 "Check with assignee on progress",
                                 "Identify blockers or dependencies",
@@ -419,7 +450,9 @@ class SlackEnhancedConnector:
         # Placeholder - would use Slack API to get channels
         return []
 
-    async def _analyze_channel_activity(self, channel: dict[str, Any]) -> list[StuckAccountAlert]:
+    async def _analyze_channel_activity(
+        self, channel: dict[str, Any]
+    ) -> list[StuckAccountAlert]:
         """Analyze channel for communication gaps"""
         alerts = []
 
@@ -486,7 +519,11 @@ class EnhancedIntegrationOrchestrator:
 
         except Exception as e:
             logger.error(f"Stuck account detection failed: {e}")
-            return {"status": "failed", "error": str(e), "timestamp": start_time.isoformat()}
+            return {
+                "status": "failed",
+                "error": str(e),
+                "timestamp": start_time.isoformat(),
+            }
 
     async def _generate_operational_intelligence(
         self, alerts: list[StuckAccountAlert]
@@ -515,7 +552,9 @@ class EnhancedIntegrationOrchestrator:
             )
 
         # Analyze overdue task patterns
-        overdue_alerts = [a for a in alerts if a.alert_type == StuckAccountType.OVERDUE_TASKS]
+        overdue_alerts = [
+            a for a in alerts if a.alert_type == StuckAccountType.OVERDUE_TASKS
+        ]
         if len(overdue_alerts) > 3:
             intelligence.append(
                 OperationalIntelligence(
@@ -539,7 +578,9 @@ class EnhancedIntegrationOrchestrator:
 
         return intelligence
 
-    def _group_alerts_by_severity(self, alerts: list[StuckAccountAlert]) -> dict[str, int]:
+    def _group_alerts_by_severity(
+        self, alerts: list[StuckAccountAlert]
+    ) -> dict[str, int]:
         """Group alerts by severity level"""
         severity_counts = {severity.value: 0 for severity in StuckAccountSeverity}
         for alert in alerts:
@@ -554,7 +595,9 @@ class EnhancedIntegrationOrchestrator:
         return type_counts
 
     async def _broadcast_detection_summary(
-        self, alerts: list[StuckAccountAlert], intelligence: list[OperationalIntelligence]
+        self,
+        alerts: list[StuckAccountAlert],
+        intelligence: list[OperationalIntelligence],
     ):
         """Broadcast detection summary to subscribers"""
         await self.websocket_manager.broadcast_operational_intelligence(
@@ -570,7 +613,8 @@ class EnhancedIntegrationOrchestrator:
                     [
                         a
                         for a in alerts
-                        if a.severity in [StuckAccountSeverity.HIGH, StuckAccountSeverity.CRITICAL]
+                        if a.severity
+                        in [StuckAccountSeverity.HIGH, StuckAccountSeverity.CRITICAL]
                     ]
                 ),
             },
@@ -579,8 +623,12 @@ class EnhancedIntegrationOrchestrator:
     async def get_operational_dashboard_data(self) -> dict[str, Any]:
         """Get comprehensive operational dashboard data"""
         return {
-            "active_alerts": len(list(self.asana_connector.stuck_account_cache.values())),
-            "recent_intelligence": [intel.__dict__ for intel in self.intelligence_cache[-10:]],
+            "active_alerts": len(
+                list(self.asana_connector.stuck_account_cache.values())
+            ),
+            "recent_intelligence": [
+                intel.__dict__ for intel in self.intelligence_cache[-10:]
+            ],
             "system_health": await self._calculate_system_health(),
             "recommendations": await self._get_top_recommendations(),
             "last_scan": datetime.utcnow().isoformat(),
@@ -624,7 +672,9 @@ class EnhancedIntegrationOrchestrator:
         return {
             "score": health_score,
             "status": (
-                "healthy" if health_score > 80 else "warning" if health_score > 60 else "critical"
+                "healthy"
+                if health_score > 80
+                else "warning" if health_score > 60 else "critical"
             ),
             "total_alerts": total_alerts,
         }
@@ -634,6 +684,8 @@ class EnhancedIntegrationOrchestrator:
         recommendations = set()
 
         for intel in self.intelligence_cache[-5:]:  # Last 5 intelligence insights
-            recommendations.update(intel.recommendations[:2])  # Top 2 recommendations each
+            recommendations.update(
+                intel.recommendations[:2]
+            )  # Top 2 recommendations each
 
         return list(recommendations)[:10]  # Return top 10

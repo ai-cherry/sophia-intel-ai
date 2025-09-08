@@ -21,7 +21,9 @@ SERVICE_MAP = {
 }
 
 
-async def check_service_health(service_name: str, url: str, timeout: float = 2.0) -> dict:
+async def check_service_health(
+    service_name: str, url: str, timeout: float = 2.0
+) -> dict:
     """Check health of a single service"""
     # Use shared HTTP client with retries/timeouts
     client = HttpClient(timeout=timeout, max_retries=1)
@@ -30,7 +32,8 @@ async def check_service_health(service_name: str, url: str, timeout: float = 2.0
         resp = await client.get(target)
         return {
             "status": "healthy" if resp.status_code < 400 else "unhealthy",
-            "latency": getattr(resp, "elapsed", 0) and resp.elapsed.total_seconds() * 1000,
+            "latency": getattr(resp, "elapsed", 0)
+            and resp.elapsed.total_seconds() * 1000,
             "status_code": resp.status_code,
         }
     except Exception as e:
@@ -156,7 +159,13 @@ async def proxy_request(service: str, path: str, request: Request):
 
             # Forward headers (excluding hop-by-hop headers)
             headers = dict(request.headers)
-            hop_by_hop = ["host", "connection", "keep-alive", "transfer-encoding", "upgrade"]
+            hop_by_hop = [
+                "host",
+                "connection",
+                "keep-alive",
+                "transfer-encoding",
+                "upgrade",
+            ]
             headers = {k: v for k, v in headers.items() if k.lower() not in hop_by_hop}
             headers["X-Forwarded-For"] = "hub"
             headers["X-Forwarded-Host"] = "localhost:8005"
@@ -178,7 +187,9 @@ async def proxy_request(service: str, path: str, request: Request):
             )
 
     except httpx.ConnectError:
-        raise HTTPException(status_code=503, detail=f"Service '{service}' is unavailable")
+        raise HTTPException(
+            status_code=503, detail=f"Service '{service}' is unavailable"
+        )
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail=f"Service '{service}' timeout")
     except Exception as e:
@@ -213,7 +224,11 @@ async def websocket_events(websocket: WebSocket):
             await asyncio.sleep(5)
             status = await get_service_status()
             await websocket.send_json(
-                {"type": "status_update", "data": status, "timestamp": datetime.now().isoformat()}
+                {
+                    "type": "status_update",
+                    "data": status,
+                    "timestamp": datetime.now().isoformat(),
+                }
             )
 
     except Exception as e:

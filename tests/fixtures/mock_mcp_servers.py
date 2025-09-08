@@ -76,7 +76,13 @@ class MockMCPServer:
     def _setup_capabilities(self) -> Dict[str, Any]:
         """Setup server capabilities based on type"""
         capabilities_map = {
-            "FILESYSTEM": {"read": True, "write": True, "list": True, "delete": True, "move": True},
+            "FILESYSTEM": {
+                "read": True,
+                "write": True,
+                "list": True,
+                "delete": True,
+                "move": True,
+            },
             "CODE_ANALYSIS": {
                 "analyze": True,
                 "lint": True,
@@ -84,7 +90,12 @@ class MockMCPServer:
                 "refactor": True,
                 "test": True,
             },
-            "WEB_SEARCH": {"search": True, "fetch": True, "scrape": True, "index": True},
+            "WEB_SEARCH": {
+                "search": True,
+                "fetch": True,
+                "scrape": True,
+                "index": True,
+            },
             "DATABASE": {
                 "query": True,
                 "insert": True,
@@ -92,7 +103,12 @@ class MockMCPServer:
                 "delete": True,
                 "transaction": True,
             },
-            "NOTIFICATION": {"send": True, "schedule": True, "template": True, "history": True},
+            "NOTIFICATION": {
+                "send": True,
+                "schedule": True,
+                "template": True,
+                "history": True,
+            },
         }
 
         return capabilities_map.get(self.server_type, {})
@@ -118,7 +134,10 @@ class MockMCPServer:
         # Check rate limiting
         if self._is_rate_limited():
             return MockServerResponse(
-                success=False, data=None, error="Rate limit exceeded", server_id=self.server_id
+                success=False,
+                data=None,
+                error="Rate limit exceeded",
+                server_id=self.server_id,
             )
 
         # Simulate latency
@@ -187,7 +206,9 @@ class MockMCPServer:
         self.request_times.append(current_time)
         return False
 
-    def _generate_mock_data(self, operation: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def _generate_mock_data(
+        self, operation: str, params: Optional[Dict[str, Any]] = None
+    ) -> Any:
         """Generate mock data based on operation and server type"""
         if self.server_type == "FILESYSTEM":
             if operation == "read":
@@ -304,7 +325,10 @@ class MockMCPServerCluster:
         self.load_balancing_strategy = "round_robin"
 
     async def execute_with_load_balancing(
-        self, operation: str, params: Optional[Dict[str, Any]] = None, strategy: str = "round_robin"
+        self,
+        operation: str,
+        params: Optional[Dict[str, Any]] = None,
+        strategy: str = "round_robin",
     ) -> MockServerResponse:
         """
         Execute operation with load balancing
@@ -321,7 +345,10 @@ class MockMCPServerCluster:
 
         if not server:
             return MockServerResponse(
-                success=False, data=None, error="No healthy servers available", server_id="cluster"
+                success=False,
+                data=None,
+                error="No healthy servers available",
+                server_id="cluster",
             )
 
         return await server.execute(operation, params)
@@ -352,7 +379,10 @@ class MockMCPServerCluster:
             return self._select_server("round_robin")
 
     async def execute_with_failover(
-        self, operation: str, params: Optional[Dict[str, Any]] = None, max_retries: int = 3
+        self,
+        operation: str,
+        params: Optional[Dict[str, Any]] = None,
+        max_retries: int = 3,
     ) -> MockServerResponse:
         """
         Execute operation with automatic failover
@@ -370,7 +400,9 @@ class MockMCPServerCluster:
         for attempt in range(max_retries):
             # Find a server we haven't tried
             available_servers = [
-                s for s in self.servers if s.server_id not in attempted_servers and s.is_healthy
+                s
+                for s in self.servers
+                if s.server_id not in attempted_servers and s.is_healthy
             ]
 
             if not available_servers:
@@ -414,7 +446,9 @@ class MockMCPServerCluster:
             "healthy_servers": healthy_count,
             "total_requests": total_requests,
             "total_failures": total_failures,
-            "overall_success_rate": ((total_requests - total_failures) / max(total_requests, 1)),
+            "overall_success_rate": (
+                (total_requests - total_failures) / max(total_requests, 1)
+            ),
             "servers": [s.get_stats() for s in self.servers],
         }
 

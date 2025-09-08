@@ -39,7 +39,9 @@ class TestFusionMetricsAPI:
 
     def test_get_fusion_metrics_with_redis(self, mock_redis_client):
         """Test getting fusion metrics with Redis available"""
-        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
+        with patch(
+            "routers.fusion_metrics.get_redis_client", return_value=mock_redis_client
+        ):
             # Mock Redis responses for each system
             def mock_get(key):
                 if "redis_optimization" in key:
@@ -135,7 +137,9 @@ class TestFusionMetricsAPI:
 
     def test_get_system_health_with_redis(self, mock_redis_client):
         """Test getting system health with Redis available"""
-        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
+        with patch(
+            "routers.fusion_metrics.get_redis_client", return_value=mock_redis_client
+        ):
             # Mock Redis responses
             def mock_get(key):
                 if "redis_optimization" in key:
@@ -186,7 +190,9 @@ class TestFusionMetricsAPI:
 
     def test_get_performance_metrics_with_redis(self, mock_redis_client):
         """Test getting performance metrics with Redis available"""
-        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
+        with patch(
+            "routers.fusion_metrics.get_redis_client", return_value=mock_redis_client
+        ):
             # Mock Redis responses
             def mock_get(key):
                 if "edge_rag" in key:
@@ -299,7 +305,9 @@ class TestFusionMetricsAPI:
 
     def test_get_fusion_status_with_redis(self, mock_redis_client):
         """Test getting fusion status with Redis available"""
-        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
+        with patch(
+            "routers.fusion_metrics.get_redis_client", return_value=mock_redis_client
+        ):
             # Mock Redis responses
             def mock_get(key):
                 return json.dumps({"status": "active"})
@@ -363,7 +371,9 @@ class TestRedisClientManagement:
 
                 # Verify client
                 assert client == mock_client
-                mock_redis.assert_called_once_with("${REDIS_URL}", decode_responses=True)
+                mock_redis.assert_called_once_with(
+                    "${REDIS_URL}", decode_responses=True
+                )
                 mock_client.ping.assert_called_once()
 
     def test_get_redis_client_connection_error(self):
@@ -371,7 +381,9 @@ class TestRedisClientManagement:
         with patch.dict(os.environ, {"REDIS_URL": "${REDIS_URL}"}):
             with patch("redis.from_url") as mock_redis:
                 mock_client = Mock()
-                mock_client.ping.side_effect = redis.ConnectionError("Connection failed")
+                mock_client.ping.side_effect = redis.ConnectionError(
+                    "Connection failed"
+                )
                 mock_redis.return_value = mock_client
 
                 # Test client creation
@@ -392,7 +404,9 @@ class TestRedisClientManagement:
                 client = get_redis_client()
 
                 # Verify default URL is used
-                mock_redis.assert_called_once_with("${REDIS_URL}", decode_responses=True)
+                mock_redis.assert_called_once_with(
+                    "${REDIS_URL}", decode_responses=True
+                )
 
 
 class TestErrorHandling:

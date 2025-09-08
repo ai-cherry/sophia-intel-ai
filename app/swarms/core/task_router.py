@@ -183,7 +183,9 @@ class TaskRouter:
 
         if not candidates:
             # Fallback to any available provider
-            logger.warning(f"No optimal provider for {requirements.task_type}, using fallback")
+            logger.warning(
+                f"No optimal provider for {requirements.task_type}, using fallback"
+            )
             return self._get_fallback_provider(requirements)
 
         # Score and rank candidates
@@ -235,14 +237,19 @@ class TaskRouter:
             "warning": "Provider at capacity",
         }
 
-    def _get_candidate_providers(self, requirements: TaskRequirements) -> list[tuple[str, str]]:
+    def _get_candidate_providers(
+        self, requirements: TaskRequirements
+    ) -> list[tuple[str, str]]:
         """Get list of candidate providers for a task"""
 
         candidates = []
 
         for virtual_key, provider in self.VIRTUAL_KEY_PROVIDERS.items():
             # Check if provider is avoided
-            if requirements.avoid_providers and provider in requirements.avoid_providers:
+            if (
+                requirements.avoid_providers
+                and provider in requirements.avoid_providers
+            ):
                 continue
 
             # Check if provider is in preferred list
@@ -272,8 +279,9 @@ class TaskRouter:
         if requirements.max_latency_seconds:
             if "ultra_fast" in provider_config.get("special_features", []):
                 latency_multiplier = 1.2
-            elif requirements.max_latency_seconds < 2.0 and "ultra_fast" not in provider_config.get(
-                "special_features", []
+            elif (
+                requirements.max_latency_seconds < 2.0
+                and "ultra_fast" not in provider_config.get("special_features", [])
             ):
                 latency_multiplier = 0.5
 
@@ -294,14 +302,20 @@ class TaskRouter:
         availability_multiplier = 1.0
         if virtual_key and virtual_key in self.rate_monitor.rate_limits:
             availability = self.rate_monitor.rate_limits[virtual_key].get_availability()
-            availability_multiplier = 0.5 + (availability * 0.5)  # 0.5 to 1.0 based on availability
+            availability_multiplier = 0.5 + (
+                availability * 0.5
+            )  # 0.5 to 1.0 based on availability
 
         # Calculate final score
-        final_score = (base_score * latency_multiplier + feature_bonus) * availability_multiplier
+        final_score = (
+            base_score * latency_multiplier + feature_bonus
+        ) * availability_multiplier
 
         return min(1.0, final_score)
 
-    def _get_selection_reason(self, provider: str, requirements: TaskRequirements) -> str:
+    def _get_selection_reason(
+        self, provider: str, requirements: TaskRequirements
+    ) -> str:
         """Get human-readable reason for provider selection"""
 
         provider_config = self.PROVIDER_STRENGTHS.get(provider, {})
@@ -319,20 +333,24 @@ class TaskRouter:
             reasons.append("ultra-fast response")
 
         if requirements.required_capabilities:
-            matching = [cap for cap in requirements.required_capabilities if cap in features]
+            matching = [
+                cap for cap in requirements.required_capabilities if cap in features
+            ]
             if matching:
                 reasons.append(f"has {', '.join(matching)}")
 
         return "; ".join(reasons) if reasons else "best available option"
 
-    def _get_fallback_provider(self, requirements: TaskRequirements) -> tuple[str, dict[str, Any]]:
+    def _get_fallback_provider(
+        self, requirements: TaskRequirements
+    ) -> tuple[str, dict[str, Any]]:
         """Get a fallback provider when no optimal match exists"""
 
         # Try OpenRouter as it has access to many models
         if "vkj-openrouter-cc4151" in self.rate_monitor.rate_limits:
-            if self.rate_monitor.rate_limits["vkj-openrouter-cc4151"].can_handle_request(
-                requirements.estimated_tokens
-            ):
+            if self.rate_monitor.rate_limits[
+                "vkj-openrouter-cc4151"
+            ].can_handle_request(requirements.estimated_tokens):
                 return "vkj-openrouter-cc4151", {
                     "provider": "openrouter",
                     "reason": "fallback - model variety",
@@ -340,7 +358,9 @@ class TaskRouter:
                 }
 
         # Get any available provider
-        best_key = self.rate_monitor.get_best_key_for_task(requirements.estimated_tokens)
+        best_key = self.rate_monitor.get_best_key_for_task(
+            requirements.estimated_tokens
+        )
         if best_key:
             return best_key, {
                 "provider": self.VIRTUAL_KEY_PROVIDERS.get(best_key, "unknown"),
@@ -407,17 +427,25 @@ def route_coding_task(code: str, task: str = "generate") -> tuple[str, dict[str,
     return router.route_task(requirements)
 
 
-def route_research_task(query: str, need_realtime: bool = False) -> tuple[str, dict[str, Any]]:
+def route_research_task(
+    query: str, need_realtime: bool = False
+) -> tuple[str, dict[str, Any]]:
     """Route a research task to the best provider"""
 
     router = TaskRouter()
 
     requirements = TaskRequirements(
-        task_type=TaskType.WEB_RESEARCH if need_realtime else TaskType.TECHNICAL_RESEARCH,
+        task_type=(
+            TaskType.WEB_RESEARCH if need_realtime else TaskType.TECHNICAL_RESEARCH
+        ),
         estimated_tokens=500,
-        preferred_providers=["perplexity"] if need_realtime else ["anthropic", "openai"],
+        preferred_providers=(
+            ["perplexity"] if need_realtime else ["anthropic", "openai"]
+        ),
         required_capabilities=(
-            ["real_time_search", "citations"] if need_realtime else ["thorough_analysis"]
+            ["real_time_search", "citations"]
+            if need_realtime
+            else ["thorough_analysis"]
         ),
     )
 
@@ -440,7 +468,9 @@ def route_fast_task(prompt: str) -> tuple[str, dict[str, Any]]:
     return router.route_task(requirements)
 
 
-def route_analysis_task(content: str, analysis_type: str = "general") -> tuple[str, dict[str, Any]]:
+def route_analysis_task(
+    content: str, analysis_type: str = "general"
+) -> tuple[str, dict[str, Any]]:
     """Route an analysis task to the best provider"""
 
     router = TaskRouter()
@@ -475,9 +505,13 @@ if __name__ == "__main__":
     test_tasks = [
         TaskRequirements(TaskType.CODE_GENERATION, estimated_tokens=2000),
         TaskRequirements(
-            TaskType.WEB_RESEARCH, estimated_tokens=500, required_capabilities=["real_time_search"]
+            TaskType.WEB_RESEARCH,
+            estimated_tokens=500,
+            required_capabilities=["real_time_search"],
         ),
-        TaskRequirements(TaskType.QUICK_ANSWER, estimated_tokens=100, max_latency_seconds=0.5),
+        TaskRequirements(
+            TaskType.QUICK_ANSWER, estimated_tokens=100, max_latency_seconds=0.5
+        ),
         TaskRequirements(TaskType.DEEP_ANALYSIS, estimated_tokens=3000),
         TaskRequirements(TaskType.CREATIVE_WRITING, estimated_tokens=1500),
     ]

@@ -173,7 +173,9 @@ class NeuralResponse(ServiceResponse):
         base_dict = super().to_dict()
         base_dict.update(
             {
-                "prompt": self.prompt[:100] + "..." if len(self.prompt) > 100 else self.prompt,
+                "prompt": (
+                    self.prompt[:100] + "..." if len(self.prompt) > 100 else self.prompt
+                ),
                 "model": self.model,
                 "tokens_generated": self.tokens_generated,
                 "inference_time_ms": self.inference_time_ms,
@@ -273,7 +275,11 @@ class ResponseFactory:
         """Create a health check response with proper metadata"""
         return HealthResponse(
             success=status == "healthy",
-            status=ResponseStatus.SUCCESS if status == "healthy" else ResponseStatus.PARTIAL,
+            status=(
+                ResponseStatus.SUCCESS
+                if status == "healthy"
+                else ResponseStatus.PARTIAL
+            ),
             data={"status": status},
             service_name=service_name,
             confidence=1.0 if status == "healthy" else 0.5,

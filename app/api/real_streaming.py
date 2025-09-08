@@ -244,7 +244,9 @@ async def stream_coding_swarm_execution(
                 "system_prompt": "You are a technical judge. Make final decisions on code quality and next steps.",
                 "original_task": request.message,
                 "generation_result": (
-                    generation_result["content"][:500] if generation_result["success"] else None
+                    generation_result["content"][:500]
+                    if generation_result["success"]
+                    else None
                 ),
             },
         )
@@ -269,12 +271,22 @@ async def stream_coding_swarm_execution(
                 "phase": "complete",
                 "token": "🎯 Coding Swarm execution complete!",
                 "final_results": {
-                    "planning": planning_result["content"] if planning_result["success"] else None,
-                    "generation": (
-                        generation_result["content"] if generation_result["success"] else None
+                    "planning": (
+                        planning_result["content"]
+                        if planning_result["success"]
+                        else None
                     ),
-                    "review": critic_result["content"] if critic_result["success"] else None,
-                    "decision": judge_result["content"] if judge_result["success"] else None,
+                    "generation": (
+                        generation_result["content"]
+                        if generation_result["success"]
+                        else None
+                    ),
+                    "review": (
+                        critic_result["content"] if critic_result["success"] else None
+                    ),
+                    "decision": (
+                        judge_result["content"] if judge_result["success"] else None
+                    ),
                     "success": all(
                         [
                             planning_result["success"],
@@ -376,7 +388,9 @@ async def stream_general_ai_execution(
         ) + "\n"
 
 
-async def stream_real_swarm_request(swarm_request: SwarmRequest) -> AsyncGenerator[str, None]:
+async def stream_real_swarm_request(
+    swarm_request: SwarmRequest,
+) -> AsyncGenerator[str, None]:
     """Stream execution of a real swarm request."""
     try:
         yield json.dumps(

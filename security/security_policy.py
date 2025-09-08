@@ -79,7 +79,9 @@ class SecurityPolicy:
         }
 
         # Password hashing context
-        self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
+        self.pwd_context = CryptContext(
+            schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12
+        )
 
         # Input validation patterns
         self.validation_patterns = {
@@ -140,7 +142,12 @@ class SecurityPolicy:
         data = re.sub(r"javascript:", "", data, flags=re.IGNORECASE)
 
         # Remove SQL injection patterns
-        data = re.sub(r"(union|select|drop|insert|update|delete)\s+", "", data, flags=re.IGNORECASE)
+        data = re.sub(
+            r"(union|select|drop|insert|update|delete)\s+",
+            "",
+            data,
+            flags=re.IGNORECASE,
+        )
 
         # Remove path traversal
         data = re.sub(r"\.\./", "", data)
@@ -180,7 +187,9 @@ class SecurityPolicy:
         f = Fernet(key)
         return f.encrypt(data.encode()).decode()
 
-    def decrypt_sensitive_data(self, encrypted_data: str, key: Optional[bytes] = None) -> str:
+    def decrypt_sensitive_data(
+        self, encrypted_data: str, key: Optional[bytes] = None
+    ) -> str:
         """
         Decrypt sensitive data
         """

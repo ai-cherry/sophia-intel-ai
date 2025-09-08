@@ -140,7 +140,10 @@ def validate_config(config: SecurityConfig) -> list[str]:
     """Validate security configuration and return any warnings"""
     warnings = []
 
-    if config.secret_key in ["your-secret-key-change-this", "dev-secret-key-not-secure"]:
+    if config.secret_key in [
+        "your-secret-key-change-this",
+        "dev-secret-key-not-secure",
+    ]:
         warnings.append("Using default/insecure secret key - change for production")
 
     if len(config.secret_key) < 32:
@@ -153,7 +156,9 @@ def validate_config(config: SecurityConfig) -> list[str]:
         warnings.append("Session timeout > 2 hours may pose security risk")
 
     if config.audit_retention_days < 30:
-        warnings.append("Audit retention < 30 days may not meet compliance requirements")
+        warnings.append(
+            "Audit retention < 30 days may not meet compliance requirements"
+        )
 
     if not config.redis_url:
         warnings.append("Redis URL not configured - using in-memory storage only")

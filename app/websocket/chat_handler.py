@@ -134,7 +134,9 @@ class SophiaChatHandler:
             # Remove session
             del self.active_sessions[session_id]
 
-            logger.info(f"🔌 WebSocket disconnected: session={session_id}, user={session.user_id}")
+            logger.info(
+                f"🔌 WebSocket disconnected: session={session_id}, user={session.user_id}"
+            )
 
     async def handle_message(self, session_id: str, message: Dict):
         """Handle incoming WebSocket message"""
@@ -325,7 +327,9 @@ class SophiaChatHandler:
                     "content": result["result"]["coaching_advice"],
                     "metadata": {
                         "agent": "sales_coach",
-                        "pipeline_insights": result["result"].get("pipeline_insights", {}),
+                        "pipeline_insights": result["result"].get(
+                            "pipeline_insights", {}
+                        ),
                         "recommendations": result["result"].get("recommendations", []),
                     },
                 }
@@ -359,7 +363,9 @@ class SophiaChatHandler:
                     "metadata": {
                         "agent": "customer_support_coach",
                         "support_metrics": result["result"].get("support_metrics", {}),
-                        "improvement_areas": result["result"].get("improvement_areas", []),
+                        "improvement_areas": result["result"].get(
+                            "improvement_areas", []
+                        ),
                     },
                 }
             else:
@@ -380,7 +386,10 @@ class SophiaChatHandler:
         try:
             # Use Revenue Ops Gateway for client health analysis
             result = await self.revenue_ops.call_tool(
-                {"tool": "health.client_analysis", "params": {"query": message, "context": context}}
+                {
+                    "tool": "health.client_analysis",
+                    "params": {"query": message, "context": context},
+                }
             )
 
             if result.get("success"):
@@ -422,8 +431,12 @@ class SophiaChatHandler:
                     "content": result["result"]["strategy_insights"],
                     "metadata": {
                         "agent": "product_strategist",
-                        "feature_analysis": result["result"].get("feature_analysis", {}),
-                        "roadmap_insights": result["result"].get("roadmap_insights", []),
+                        "feature_analysis": result["result"].get(
+                            "feature_analysis", {}
+                        ),
+                        "roadmap_insights": result["result"].get(
+                            "roadmap_insights", []
+                        ),
                     },
                 }
             else:
@@ -477,7 +490,10 @@ class SophiaChatHandler:
         try:
             # Use Revenue Ops Gateway for executive intelligence
             result = await self.revenue_ops.call_tool(
-                {"tool": "executive.ceo_insights", "params": {"query": message, "context": context}}
+                {
+                    "tool": "executive.ceo_insights",
+                    "params": {"query": message, "context": context},
+                }
             )
 
             if result.get("success"):
@@ -485,7 +501,9 @@ class SophiaChatHandler:
                     "content": result["result"]["executive_insights"],
                     "metadata": {
                         "agent": "ceo_coach",
-                        "strategic_metrics": result["result"].get("strategic_metrics", {}),
+                        "strategic_metrics": result["result"].get(
+                            "strategic_metrics", {}
+                        ),
                         "action_items": result["result"].get("action_items", []),
                         "risk_alerts": result["result"].get("risk_alerts", []),
                     },
@@ -535,7 +553,9 @@ class SophiaChatHandler:
                     try:
                         await self.active_sessions[session_id].send_message(message)
                     except Exception as e:
-                        logger.error(f"Failed to broadcast to session {session_id}: {e}")
+                        logger.error(
+                            f"Failed to broadcast to session {session_id}: {e}"
+                        )
 
     async def broadcast_to_all(self, message: Dict):
         """Broadcast message to all active sessions"""
@@ -543,7 +563,9 @@ class SophiaChatHandler:
             try:
                 await session.send_message(message)
             except Exception as e:
-                logger.error(f"Failed to broadcast to session {session.session_id}: {e}")
+                logger.error(
+                    f"Failed to broadcast to session {session.session_id}: {e}"
+                )
 
     def get_session_stats(self) -> Dict:
         """Get session statistics"""

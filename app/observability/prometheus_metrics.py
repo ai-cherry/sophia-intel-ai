@@ -42,7 +42,10 @@ llm_cost_per_request = Histogram(
 
 # Cache Performance Metrics
 llm_cache_hits_total = Counter(
-    "llm_cache_hits_total", "Total number of cache hits", ["cache_type", "model"], registry=registry
+    "llm_cache_hits_total",
+    "Total number of cache hits",
+    ["cache_type", "model"],
+    registry=registry,
 )
 
 llm_cache_misses_total = Counter(
@@ -53,14 +56,21 @@ llm_cache_misses_total = Counter(
 )
 
 llm_cache_errors_total = Counter(
-    "llm_cache_errors_total", "Total number of cache errors", ["error_type"], registry=registry
+    "llm_cache_errors_total",
+    "Total number of cache errors",
+    ["error_type"],
+    registry=registry,
 )
 
 llm_cache_cost_saved_total = Counter(
-    "llm_cache_cost_saved_total", "Total cost saved through caching in USD", registry=registry
+    "llm_cache_cost_saved_total",
+    "Total cost saved through caching in USD",
+    registry=registry,
 )
 
-cache_hit_rate = Gauge("cache_hit_rate", "Current cache hit rate percentage", registry=registry)
+cache_hit_rate = Gauge(
+    "cache_hit_rate", "Current cache hit rate percentage", registry=registry
+)
 
 # LLM Performance Metrics
 llm_request_duration_seconds = Histogram(
@@ -79,7 +89,10 @@ llm_tokens_total = Counter(
 )
 
 llm_tokens_remaining = Gauge(
-    "llm_tokens_remaining", "Tokens remaining before rate limit", ["provider"], registry=registry
+    "llm_tokens_remaining",
+    "Tokens remaining before rate limit",
+    ["provider"],
+    registry=registry,
 )
 
 llm_fallback_triggers_total = Counter(
@@ -91,7 +104,9 @@ llm_fallback_triggers_total = Counter(
 
 # Swarm Performance Metrics
 consensus_swarm_success_rate = Gauge(
-    "consensus_swarm_success_rate", "Success rate of consensus swarm operations", registry=registry
+    "consensus_swarm_success_rate",
+    "Success rate of consensus swarm operations",
+    registry=registry,
 )
 
 agent_execution_duration_seconds = Histogram(
@@ -119,12 +134,16 @@ lambda_gpu_utilization_percent = Gauge(
 )
 
 lambda_gpu_queue_length = Gauge(
-    "lambda_gpu_queue_length", "Number of tasks waiting for GPU processing", registry=registry
+    "lambda_gpu_queue_length",
+    "Number of tasks waiting for GPU processing",
+    registry=registry,
 )
 
 # Memory System Metrics
 memory_deduplication_rate = Gauge(
-    "memory_deduplication_rate", "Memory deduplication effectiveness rate", registry=registry
+    "memory_deduplication_rate",
+    "Memory deduplication effectiveness rate",
+    registry=registry,
 )
 
 vector_store_query_duration_seconds = Histogram(
@@ -163,7 +182,10 @@ request_blocked_total = Counter(
 )
 
 jwt_invalid_total = Counter(
-    "jwt_invalid_total", "Total number of invalid JWT attempts", ["error_type"], registry=registry
+    "jwt_invalid_total",
+    "Total number of invalid JWT attempts",
+    ["error_type"],
+    registry=registry,
 )
 
 rate_limit_exceeded_total = Counter(
@@ -209,7 +231,9 @@ class MetricsTracker:
     ):
         """Track metrics for an LLM request."""
         # Cost metrics
-        llm_api_cost_total.labels(provider=provider, model=model, task_type=task_type).inc(cost)
+        llm_api_cost_total.labels(
+            provider=provider, model=model, task_type=task_type
+        ).inc(cost)
         llm_cost_per_request.labels(provider=provider, model=model).observe(cost)
 
         # Performance metrics
@@ -228,14 +252,24 @@ class MetricsTracker:
         else:
             llm_cache_misses_total.labels(cache_type="semantic", model=model).inc()
 
-    def track_http_request(self, method: str, endpoint: str, status: int, duration: float):
+    def track_http_request(
+        self, method: str, endpoint: str, status: int, duration: float
+    ):
         """Track HTTP request metrics."""
-        http_requests_total.labels(method=method, endpoint=endpoint, status=str(status)).inc()
-        http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(duration)
+        http_requests_total.labels(
+            method=method, endpoint=endpoint, status=str(status)
+        ).inc()
+        http_request_duration_seconds.labels(method=method, endpoint=endpoint).observe(
+            duration
+        )
 
-    def track_agent_execution(self, role: str, task_type: str, duration: float, success: bool):
+    def track_agent_execution(
+        self, role: str, task_type: str, duration: float, success: bool
+    ):
         """Track agent execution metrics."""
-        agent_execution_duration_seconds.labels(role=role, task_type=task_type).observe(duration)
+        agent_execution_duration_seconds.labels(role=role, task_type=task_type).observe(
+            duration
+        )
         if role == "consensus":
             consensus_swarm_success_rate.set(1.0 if success else 0.0)
 
@@ -245,7 +279,9 @@ class MetricsTracker:
         if total > 0:
             cache_hit_rate.set((hits / total) * 100)
 
-    def track_gpu_metrics(self, utilization: float, queue_length: int, instance: str = "default"):
+    def track_gpu_metrics(
+        self, utilization: float, queue_length: int, instance: str = "default"
+    ):
         """Track GPU utilization metrics."""
         lambda_gpu_utilization_percent.labels(gpu_instance=instance).set(utilization)
         lambda_gpu_queue_length.set(queue_length)
@@ -323,7 +359,14 @@ def track_llm_metrics(provider: str, model: str, task_type: str = "general"):
                 cache_hit = result.get("cache_hit", False)
 
                 metrics_tracker.track_llm_request(
-                    provider, model, task_type, cost, tokens_in, tokens_out, duration, cache_hit
+                    provider,
+                    model,
+                    task_type,
+                    cost,
+                    tokens_in,
+                    tokens_out,
+                    duration,
+                    cache_hit,
                 )
 
                 return result
@@ -345,7 +388,14 @@ def track_llm_metrics(provider: str, model: str, task_type: str = "general"):
                 cache_hit = result.get("cache_hit", False)
 
                 metrics_tracker.track_llm_request(
-                    provider, model, task_type, cost, tokens_in, tokens_out, duration, cache_hit
+                    provider,
+                    model,
+                    task_type,
+                    cost,
+                    tokens_in,
+                    tokens_out,
+                    duration,
+                    cache_hit,
                 )
 
                 return result
@@ -385,7 +435,9 @@ async def update_system_metrics():
 
             # Update GPU metrics (example values - replace with actual GPU monitoring)
             metrics_tracker.track_gpu_metrics(
-                utilization=75.5, queue_length=3, instance="lambda-h100"  # Get from Lambda Labs API
+                utilization=75.5,
+                queue_length=3,
+                instance="lambda-h100",  # Get from Lambda Labs API
             )
 
             # Update database health (example values - replace with actual health checks)

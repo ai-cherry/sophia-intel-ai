@@ -90,7 +90,9 @@ class ResourceManager:
                 signal.signal(sig, self._signal_handler)
         except ValueError:
             # Signal handling might not work in all environments
-            logger.warning("Could not setup signal handlers - graceful shutdown may be limited")
+            logger.warning(
+                "Could not setup signal handlers - graceful shutdown may be limited"
+            )
 
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals"""
@@ -109,7 +111,9 @@ class ResourceManager:
 
         async with self._get_lock(resource_id):
             if resource_id in self.resources:
-                logger.warning(f"Resource {resource_id} already registered, updating...")
+                logger.warning(
+                    f"Resource {resource_id} already registered, updating..."
+                )
                 await self._cleanup_resource(resource_id)
 
             managed_resource = ManagedResource(
@@ -181,7 +185,9 @@ class ResourceManager:
             logger.error(f"Failed to cleanup resource {resource_id}: {e}")
             return False
 
-    def register_cleanup_handler(self, resource_type: ResourceType, cleanup_func: Callable):
+    def register_cleanup_handler(
+        self, resource_type: ResourceType, cleanup_func: Callable
+    ):
         """Register a cleanup handler for a resource type"""
         self.cleanup_registry[resource_type].append(cleanup_func)
 
@@ -284,7 +290,9 @@ class ResourceManager:
     async def _emergency_cleanup(self):
         """Emergency cleanup of least recently used resources"""
         # Sort by last access time and clean up oldest 10%
-        sorted_resources = sorted(self.resources.items(), key=lambda x: x[1].last_accessed)
+        sorted_resources = sorted(
+            self.resources.items(), key=lambda x: x[1].last_accessed
+        )
 
         cleanup_count = max(1, len(sorted_resources) // 10)
 
@@ -330,7 +338,9 @@ class ResourceManager:
         except asyncio.TimeoutError:
             logger.warning("Resource cleanup timed out")
 
-        logger.info(f"Graceful shutdown complete. Cleaned up {len(resource_ids)} resources")
+        logger.info(
+            f"Graceful shutdown complete. Cleaned up {len(resource_ids)} resources"
+        )
 
     def get_resource_summary(self) -> dict[str, Any]:
         """Get summary of managed resources"""
@@ -386,7 +396,9 @@ class ResourceManager:
     ):
         """Context manager for automatic resource management"""
         try:
-            await self.register_resource(resource_id, resource_type, resource_object, cleanup_func)
+            await self.register_resource(
+                resource_id, resource_type, resource_object, cleanup_func
+            )
             yield resource_object
         finally:
             await self.unregister_resource(resource_id)
@@ -441,5 +453,9 @@ async def cleanup_api_connection(connection):
 
 # Register standard cleanup handlers
 resource_manager.register_cleanup_handler(ResourceType.AGNO_TEAM, cleanup_agno_team)
-resource_manager.register_cleanup_handler(ResourceType.MEMORY_SESSION, cleanup_memory_session)
-resource_manager.register_cleanup_handler(ResourceType.API_CONNECTION, cleanup_api_connection)
+resource_manager.register_cleanup_handler(
+    ResourceType.MEMORY_SESSION, cleanup_memory_session
+)
+resource_manager.register_cleanup_handler(
+    ResourceType.API_CONNECTION, cleanup_api_connection
+)

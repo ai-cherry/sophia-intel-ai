@@ -26,17 +26,27 @@ class APIVersion(str, Enum):
 class VersionedRequest(BaseModel):
     """Base class for versioned requests"""
 
-    api_version: APIVersion = Field(default=APIVersion.LATEST, description="API version")
-    request_id: Optional[str] = Field(default=None, description="Unique request ID for tracking")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Request timestamp")
+    api_version: APIVersion = Field(
+        default=APIVersion.LATEST, description="API version"
+    )
+    request_id: Optional[str] = Field(
+        default=None, description="Unique request ID for tracking"
+    )
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Request timestamp"
+    )
 
 
 class VersionedResponse(BaseModel):
     """Base class for versioned responses"""
 
     api_version: APIVersion = Field(description="API version used")
-    request_id: Optional[str] = Field(default=None, description="Request ID from original request")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+    request_id: Optional[str] = Field(
+        default=None, description="Request ID from original request"
+    )
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
 
 
 class APIResponse(BaseModel):
@@ -45,7 +55,9 @@ class APIResponse(BaseModel):
     success: bool = Field(description="Whether the request was successful")
     data: Any = Field(default=None, description="Response data")
     error: Optional[str] = Field(default=None, description="Error message if any")
-    timestamp: datetime = Field(default_factory=datetime.utcnow, description="Response timestamp")
+    timestamp: datetime = Field(
+        default_factory=datetime.utcnow, description="Response timestamp"
+    )
 
 
 def create_api_response(
@@ -68,8 +80,12 @@ class ChatRequestV1(VersionedRequest):
 
     api_version: APIVersion = APIVersion.V1
     message: str = Field(min_length=1, max_length=10000, description="User message")
-    session_id: str = Field(min_length=1, max_length=100, description="Session identifier")
-    client_id: Optional[str] = Field(default=None, max_length=100, description="Client identifier")
+    session_id: str = Field(
+        min_length=1, max_length=100, description="Session identifier"
+    )
+    client_id: Optional[str] = Field(
+        default=None, max_length=100, description="Client identifier"
+    )
     user_context: Optional[dict[str, Any]] = Field(
         default_factory=dict, description="User context data"
     )
@@ -106,7 +122,9 @@ class StreamTokenV1(BaseModel):
 
     type: str = Field(description="Token type: token, status, error, complete, manager")
     content: Optional[str] = Field(default=None, description="Token content")
-    metadata: Optional[dict[str, Any]] = Field(default_factory=dict, description="Token metadata")
+    metadata: Optional[dict[str, Any]] = Field(
+        default_factory=dict, description="Token metadata"
+    )
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
 
 
@@ -139,12 +157,16 @@ class ChatRequestV2(ChatRequestV1):
     optimization_mode: Optional[OptimizationMode] = Field(
         default=OptimizationMode.AUTO, description="Optimization mode"
     )
-    swarm_type: Optional[SwarmType] = Field(default=None, description="Specific swarm type to use")
+    swarm_type: Optional[SwarmType] = Field(
+        default=None, description="Specific swarm type to use"
+    )
     use_memory: bool = Field(default=True, description="Enable memory context")
     max_response_tokens: Optional[int] = Field(
         default=None, ge=1, le=100000, description="Max response tokens"
     )
-    temperature: Optional[float] = Field(default=None, ge=0, le=2, description="LLM temperature")
+    temperature: Optional[float] = Field(
+        default=None, ge=0, le=2, description="LLM temperature"
+    )
     optimization_hints: Optional[dict[str, Any]] = Field(
         default_factory=dict, description="Optimization hints"
     )
@@ -154,11 +176,17 @@ class ChatResponseV2(ChatResponseV1):
     """Version 2 chat response with enhanced features"""
 
     api_version: APIVersion = APIVersion.V2
-    manager_response: Optional[str] = Field(default=None, description="AI manager response")
+    manager_response: Optional[str] = Field(
+        default=None, description="AI manager response"
+    )
     intent: Optional[str] = Field(default=None, description="Detected intent")
-    confidence: Optional[float] = Field(default=None, ge=0, le=1, description="Intent confidence")
+    confidence: Optional[float] = Field(
+        default=None, ge=0, le=1, description="Intent confidence"
+    )
     swarm_used: Optional[str] = Field(default=None, description="Swarm type used")
-    tokens_used: Optional[int] = Field(default=None, ge=0, description="Tokens consumed")
+    tokens_used: Optional[int] = Field(
+        default=None, ge=0, description="Tokens consumed"
+    )
 
 
 # ==================== WebSocket Messages ====================
@@ -183,8 +211,12 @@ class WebSocketMessage(BaseModel):
 
     type: WebSocketMessageType = Field(description="Message type")
     data: dict[str, Any] = Field(description="Message data")
-    timestamp: Optional[str] = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    correlation_id: Optional[str] = Field(default=None, description="Correlation ID for tracking")
+    timestamp: Optional[str] = Field(
+        default_factory=lambda: datetime.utcnow().isoformat()
+    )
+    correlation_id: Optional[str] = Field(
+        default=None, description="Correlation ID for tracking"
+    )
 
 
 class WebSocketChatData(BaseModel):
@@ -211,7 +243,9 @@ class ComponentHealth(BaseModel):
     """Component health status"""
 
     status: HealthStatus = Field(description="Component health status")
-    details: Optional[dict[str, Any]] = Field(default_factory=dict, description="Health details")
+    details: Optional[dict[str, Any]] = Field(
+        default_factory=dict, description="Health details"
+    )
     last_check: datetime = Field(default_factory=datetime.utcnow)
 
 
@@ -286,7 +320,11 @@ class ManagerInterface(Protocol):
         ...
 
     def generate_response(
-        self, intent: str, parameters: dict[str, Any], context: Any, result: Optional[Any] = None
+        self,
+        intent: str,
+        parameters: dict[str, Any],
+        context: Any,
+        result: Optional[Any] = None,
     ) -> str:
         """Generate response"""
         ...
@@ -303,7 +341,9 @@ class APIContractFactory:
     """Factory for creating versioned API contracts"""
 
     @staticmethod
-    def create_chat_request(data: dict[str, Any]) -> Union[ChatRequestV1, ChatRequestV2]:
+    def create_chat_request(
+        data: dict[str, Any],
+    ) -> Union[ChatRequestV1, ChatRequestV2]:
         """
         Create appropriate chat request based on API version
 
@@ -343,7 +383,13 @@ class APIContractFactory:
                 k: v
                 for k, v in data.items()
                 if k
-                not in ["manager_response", "intent", "confidence", "swarm_used", "tokens_used"]
+                not in [
+                    "manager_response",
+                    "intent",
+                    "confidence",
+                    "swarm_used",
+                    "tokens_used",
+                ]
             }
             return ChatResponseV1(**v1_data)
         else:
@@ -361,7 +407,9 @@ class BackwardCompatibilityAdapter:
     def __init__(self):
         self.factory = APIContractFactory()
 
-    def adapt_request(self, raw_data: dict[str, Any]) -> Union[ChatRequestV1, ChatRequestV2]:
+    def adapt_request(
+        self, raw_data: dict[str, Any]
+    ) -> Union[ChatRequestV1, ChatRequestV2]:
         """
         Adapt raw request data to appropriate version
 
@@ -435,7 +483,9 @@ class RequestValidationMiddleware:
             raise ValueError(f"Invalid request: {str(e)}")
 
     async def validate_response(
-        self, request: Union[ChatRequestV1, ChatRequestV2], response_data: dict[str, Any]
+        self,
+        request: Union[ChatRequestV1, ChatRequestV2],
+        response_data: dict[str, Any],
     ) -> Union[ChatResponseV1, ChatResponseV2]:
         """
         Validate and format response data

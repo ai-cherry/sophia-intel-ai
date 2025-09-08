@@ -131,7 +131,9 @@ class KnowledgeGraph:
         """Update relationships when adding new knowledge"""
         for existing_id, existing_knowledge in self.nodes.items():
             if existing_id != new_knowledge.id:
-                similarity = self._calculate_knowledge_similarity(new_knowledge, existing_knowledge)
+                similarity = self._calculate_knowledge_similarity(
+                    new_knowledge, existing_knowledge
+                )
 
                 if similarity > 0.6:  # Threshold for creating relationship
                     edge_id = f"{new_knowledge.id}:{existing_id}"
@@ -206,7 +208,9 @@ class KnowledgeGraph:
 
         for edge_id, edge_data in self.edges.items():
             if knowledge_id in edge_id:
-                other_id = edge_id.replace(f"{knowledge_id}:", "").replace(f":{knowledge_id}", "")
+                other_id = edge_id.replace(f"{knowledge_id}:", "").replace(
+                    f":{knowledge_id}", ""
+                )
 
                 if other_id in self.nodes:
                     related.append((self.nodes[other_id], edge_data["similarity"]))
@@ -217,7 +221,11 @@ class KnowledgeGraph:
 
     def get_domain_knowledge(self, domain: MemoryDomain) -> list[CrossDomainKnowledge]:
         """Get all knowledge from a specific domain"""
-        return [knowledge for knowledge in self.nodes.values() if knowledge.source_domain == domain]
+        return [
+            knowledge
+            for knowledge in self.nodes.values()
+            if knowledge.source_domain == domain
+        ]
 
     def get_applicable_knowledge(
         self, target_domain: MemoryDomain, task_context: dict[str, Any]
@@ -228,7 +236,9 @@ class KnowledgeGraph:
         for knowledge in self.nodes.values():
             if target_domain in knowledge.target_domains:
                 # Calculate applicability score based on context
-                applicability = self._calculate_context_applicability(knowledge, task_context)
+                applicability = self._calculate_context_applicability(
+                    knowledge, task_context
+                )
 
                 if applicability > 0.5:
                     knowledge.applicability_score = applicability
@@ -354,7 +364,9 @@ class PatternLearningEngine:
         self, result: CollaborationResult, context: dict[str, Any]
     ) -> Optional[LearnedPattern]:
         """Extract optimization patterns from successful collaboration"""
-        if not result.success or result.execution_time_ms > 5000:  # Skip slow executions
+        if (
+            not result.success or result.execution_time_ms > 5000
+        ):  # Skip slow executions
             return None
 
         pattern_id = f"optimization_{datetime.now().timestamp()}"
@@ -427,7 +439,10 @@ class PatternLearningEngine:
         return applicable
 
     def _is_pattern_applicable(
-        self, pattern: LearnedPattern, context: dict[str, Any], domains: list[MemoryDomain]
+        self,
+        pattern: LearnedPattern,
+        context: dict[str, Any],
+        domains: list[MemoryDomain],
     ) -> bool:
         """Check if a pattern is applicable to the current context"""
         # Check domain compatibility
@@ -479,11 +494,15 @@ class PatternMatcher:
                         matches += 1
                 elif expected_value == actual_value:
                     matches += 1
-                elif isinstance(expected_value, list) and isinstance(actual_value, list):
+                elif isinstance(expected_value, list) and isinstance(
+                    actual_value, list
+                ):
                     # Check list overlap
                     overlap = len(set(expected_value).intersection(set(actual_value)))
                     if overlap > 0:
-                        matches += overlap / len(set(expected_value).union(set(actual_value)))
+                        matches += overlap / len(
+                            set(expected_value).union(set(actual_value))
+                        )
 
         return matches / total_conditions if total_conditions > 0 else 0.0
 
@@ -513,7 +532,11 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
                 "monthly_cost_usd": 5000.0,
             },
             data_sources=["sophia_knowledge", "artemis_knowledge", "shared_patterns"],
-            quality_thresholds={"confidence_min": 0.6, "citation_min": 1, "source_diversity": 0.5},
+            quality_thresholds={
+                "confidence_min": 0.6,
+                "citation_min": 1,
+                "source_diversity": 0.5,
+            },
         )
 
         super().__init__(config)
@@ -589,20 +612,30 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         """Determine the type of collaboration needed"""
         content_lower = task.content.lower()
 
-        if any(keyword in content_lower for keyword in ["share", "knowledge", "learn", "pattern"]):
+        if any(
+            keyword in content_lower
+            for keyword in ["share", "knowledge", "learn", "pattern"]
+        ):
             return CollaborationType.KNOWLEDGE_SHARING
-        elif any(keyword in content_lower for keyword in ["handoff", "transfer", "delegate"]):
+        elif any(
+            keyword in content_lower for keyword in ["handoff", "transfer", "delegate"]
+        ):
             return CollaborationType.TASK_HANDOFF
         elif any(
-            keyword in content_lower for keyword in ["together", "collaborate", "joint", "combine"]
+            keyword in content_lower
+            for keyword in ["together", "collaborate", "joint", "combine"]
         ):
             return CollaborationType.JOINT_EXECUTION
-        elif any(keyword in content_lower for keyword in ["pattern", "learn", "optimize"]):
+        elif any(
+            keyword in content_lower for keyword in ["pattern", "learn", "optimize"]
+        ):
             return CollaborationType.PATTERN_LEARNING
         else:
             return CollaborationType.CONTEXT_ENRICHMENT
 
-    async def _facilitate_knowledge_sharing(self, task: UnifiedTask, routing: Any) -> UnifiedResult:
+    async def _facilitate_knowledge_sharing(
+        self, task: UnifiedTask, routing: Any
+    ) -> UnifiedResult:
         """Facilitate knowledge sharing between domains"""
         result = UnifiedResult(success=False, content={})
 
@@ -623,7 +656,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
                 shared_knowledge.append(knowledge)
 
             # Create enhanced context for target domain
-            enhanced_context = await self._create_enhanced_context(shared_knowledge, task.metadata)
+            enhanced_context = await self._create_enhanced_context(
+                shared_knowledge, task.metadata
+            )
 
             # Update sharing metrics
             self.sharing_metrics["total_knowledge_shared"] += len(shared_knowledge)
@@ -633,7 +668,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
                 "shared_knowledge": shared_knowledge,
                 "enhanced_context": enhanced_context,
                 "knowledge_count": len(shared_knowledge),
-                "applicability_scores": [k.applicability_score for k in shared_knowledge],
+                "applicability_scores": [
+                    k.applicability_score for k in shared_knowledge
+                ],
             }
             result.confidence = 0.8
 
@@ -642,7 +679,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
         return result
 
-    async def _facilitate_task_handoff(self, task: UnifiedTask, routing: Any) -> UnifiedResult:
+    async def _facilitate_task_handoff(
+        self, task: UnifiedTask, routing: Any
+    ) -> UnifiedResult:
         """Facilitate task handoff between orchestrators"""
         result = UnifiedResult(success=False, content={})
 
@@ -651,7 +690,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             target_domain = self._determine_handoff_target(task)
 
             if target_domain not in self.connected_orchestrators:
-                raise ValueError(f"Target orchestrator {target_domain.value} not available")
+                raise ValueError(
+                    f"Target orchestrator {target_domain.value} not available"
+                )
 
             target_orchestrator = self.connected_orchestrators[target_domain]
 
@@ -678,7 +719,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
         return result
 
-    async def _facilitate_joint_execution(self, task: UnifiedTask, routing: Any) -> UnifiedResult:
+    async def _facilitate_joint_execution(
+        self, task: UnifiedTask, routing: Any
+    ) -> UnifiedResult:
         """Facilitate joint execution across multiple orchestrators"""
         result = UnifiedResult(success=False, content={})
 
@@ -704,7 +747,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
                 dict(zip(participating_domains, sub_results)), task
             )
 
-            result.success = all(r.success for r in sub_results if isinstance(r, UnifiedResult))
+            result.success = all(
+                r.success for r in sub_results if isinstance(r, UnifiedResult)
+            )
             result.content = {
                 "participating_domains": [d.value for d in participating_domains],
                 "sub_results": {
@@ -720,7 +765,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
         return result
 
-    async def _facilitate_pattern_learning(self, task: UnifiedTask, routing: Any) -> UnifiedResult:
+    async def _facilitate_pattern_learning(
+        self, task: UnifiedTask, routing: Any
+    ) -> UnifiedResult:
         """Facilitate pattern learning from cross-domain interactions"""
         result = UnifiedResult(success=False, content={})
 
@@ -778,7 +825,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             )
 
             # Process LLM response to determine collaboration strategy
-            collaboration_strategy = await self._process_collaboration_response(response, task)
+            collaboration_strategy = await self._process_collaboration_response(
+                response, task
+            )
 
             # Execute collaboration strategy
             strategy_result = await self._execute_collaboration_strategy(
@@ -798,7 +847,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
     # Helper methods for collaboration facilitation
 
-    def _extract_domains_from_task(self, task: UnifiedTask) -> tuple[MemoryDomain, MemoryDomain]:
+    def _extract_domains_from_task(
+        self, task: UnifiedTask
+    ) -> tuple[MemoryDomain, MemoryDomain]:
         """Extract source and target domains from task metadata"""
         source_domain = task.metadata.get("source_domain", MemoryDomain.SHARED)
         target_domain = task.metadata.get("target_domain", MemoryDomain.SHARED)
@@ -812,7 +863,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         return source_domain, target_domain
 
     async def _create_enhanced_context(
-        self, shared_knowledge: list[CrossDomainKnowledge], task_metadata: dict[str, Any]
+        self,
+        shared_knowledge: list[CrossDomainKnowledge],
+        task_metadata: dict[str, Any],
     ) -> dict[str, Any]:
         """Create enhanced context from shared knowledge"""
         enhanced_context = {
@@ -837,7 +890,10 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
                 enhanced_context["cross_domain_patterns"].append(knowledge.content)
             elif knowledge.knowledge_type == "recommendation":
                 enhanced_context["recommended_approaches"].append(knowledge.content)
-            elif knowledge.knowledge_type == "warning" or knowledge.knowledge_type == "failure":
+            elif (
+                knowledge.knowledge_type == "warning"
+                or knowledge.knowledge_type == "failure"
+            ):
                 enhanced_context["potential_pitfalls"].append(knowledge.content)
 
         return enhanced_context
@@ -864,7 +920,15 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         # Code excellence indicators
         elif any(
             keyword in content_lower
-            for keyword in ["code", "function", "class", "test", "refactor", "debug", "optimize"]
+            for keyword in [
+                "code",
+                "function",
+                "class",
+                "test",
+                "refactor",
+                "debug",
+                "optimize",
+            ]
         ):
             return MemoryDomain.ARTEMIS
 
@@ -934,7 +998,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             "recommendations": handoff_result.recommendations,
         }
 
-    def _determine_joint_execution_domains(self, task: UnifiedTask) -> list[MemoryDomain]:
+    def _determine_joint_execution_domains(
+        self, task: UnifiedTask
+    ) -> list[MemoryDomain]:
         """Determine which domains should participate in joint execution"""
         content_lower = task.content.lower()
         participating_domains = []
@@ -949,7 +1015,13 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         # Check for code excellence needs
         if any(
             keyword in content_lower
-            for keyword in ["code", "development", "technical", "implementation", "architecture"]
+            for keyword in [
+                "code",
+                "development",
+                "technical",
+                "implementation",
+                "architecture",
+            ]
         ):
             participating_domains.append(MemoryDomain.ARTEMIS)
 
@@ -1021,7 +1093,10 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
         # Combine insights
         for domain, result in successful_results.items():
             synthesis["combined_insights"].extend(
-                [{"domain": domain.value, "insight": insight} for insight in result.insights]
+                [
+                    {"domain": domain.value, "insight": insight}
+                    for insight in result.insights
+                ]
             )
 
         # Generate cross-domain recommendations
@@ -1077,7 +1152,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             if collab.get("timestamp", datetime.min) > cutoff_time
         ]
 
-    async def _generate_pattern_insights(self, patterns: list[LearnedPattern]) -> dict[str, Any]:
+    async def _generate_pattern_insights(
+        self, patterns: list[LearnedPattern]
+    ) -> dict[str, Any]:
         """Generate insights about learned patterns"""
         insights = {
             "pattern_distribution": {},
@@ -1094,7 +1171,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
             )
 
         # Identify high-success patterns
-        success_patterns = [p for p in patterns if p.success_rate > 0.8 and p.usage_count > 2]
+        success_patterns = [
+            p for p in patterns if p.success_rate > 0.8 and p.usage_count > 2
+        ]
         insights["success_patterns"] = [
             {"id": p.id, "type": p.pattern_type.value, "success_rate": p.success_rate}
             for p in success_patterns
@@ -1110,7 +1189,9 @@ class CrossLearningOrchestrator(UnifiedBaseOrchestrator):
 
         return insights
 
-    def _prepare_collaboration_messages(self, task: UnifiedTask) -> list[dict[str, str]]:
+    def _prepare_collaboration_messages(
+        self, task: UnifiedTask
+    ) -> list[dict[str, str]]:
         """Prepare messages for LLM-guided collaboration"""
         system_prompt = """You are a Cross-Learning Coordination AI that facilitates collaboration between different AI orchestrators.
 
@@ -1158,7 +1239,9 @@ Provide a structured response with clear action items."""
     ) -> dict[str, Any]:
         """Process LLM response to extract collaboration strategy"""
         content = (
-            response.choices[0].message.content if hasattr(response, "choices") else str(response)
+            response.choices[0].message.content
+            if hasattr(response, "choices")
+            else str(response)
         )
 
         # Simple extraction - would be more sophisticated in production
@@ -1189,7 +1272,9 @@ Provide a structured response with clear action items."""
             if len(participating_domains) == 1:
                 # Simple execution in single domain
                 if participating_domains[0] in self.connected_orchestrators:
-                    orchestrator = self.connected_orchestrators[participating_domains[0]]
+                    orchestrator = self.connected_orchestrators[
+                        participating_domains[0]
+                    ]
                     result = await orchestrator.execute(task)
                     strategy_result = {
                         "success": result.success,
@@ -1238,7 +1323,9 @@ Provide a structured response with clear action items."""
             "details": {"multi_domain_results": results},
         }
 
-    async def _learn_from_collaboration(self, task: UnifiedTask, result: UnifiedResult) -> None:
+    async def _learn_from_collaboration(
+        self, task: UnifiedTask, result: UnifiedResult
+    ) -> None:
         """Learn from collaboration execution"""
         # Create collaboration result for learning
         collaboration_result = CollaborationResult(
@@ -1393,4 +1480,6 @@ Provide a structured response with clear action items."""
         self, target_domain: MemoryDomain, context: dict[str, Any], limit: int = 10
     ) -> list[CrossDomainKnowledge]:
         """Get knowledge applicable to target domain"""
-        return self.knowledge_graph.get_applicable_knowledge(target_domain, context)[:limit]
+        return self.knowledge_graph.get_applicable_knowledge(target_domain, context)[
+            :limit
+        ]

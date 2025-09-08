@@ -71,13 +71,22 @@ class BrutalRepoAudit:
                     base = os.path.basename(file_path)
                     if any(
                         keyword in base.lower()
-                        for keyword in ["dashboard", "secret", "env", "deploy", "setup", "config"]
+                        for keyword in [
+                            "dashboard",
+                            "secret",
+                            "env",
+                            "deploy",
+                            "setup",
+                            "config",
+                        ]
                     ):
                         similar_files.append(file_path)
 
                 if len(similar_files) > 1:
                     self.log_issue(
-                        "DUPLICATES", "HIGH", f"Multiple similar files found: {similar_files}"
+                        "DUPLICATES",
+                        "HIGH",
+                        f"Multiple similar files found: {similar_files}",
                     )
                     self.duplicates.extend(similar_files)
 
@@ -99,31 +108,47 @@ class BrutalRepoAudit:
         # Find conflicting deployment scripts
         deploy_scripts = []
         for pattern in ["deploy*", "*deploy*", "setup*", "*setup*"]:
-            deploy_scripts.extend(glob.glob(f"{self.repo_path}/**/{pattern}.sh", recursive=True))
-            deploy_scripts.extend(glob.glob(f"{self.repo_path}/**/{pattern}.py", recursive=True))
+            deploy_scripts.extend(
+                glob.glob(f"{self.repo_path}/**/{pattern}.sh", recursive=True)
+            )
+            deploy_scripts.extend(
+                glob.glob(f"{self.repo_path}/**/{pattern}.py", recursive=True)
+            )
 
         if len(deploy_scripts) > 5:
             self.log_issue(
-                "CONFLICTS", "HIGH", f"Too many deployment scripts ({len(deploy_scripts)})"
+                "CONFLICTS",
+                "HIGH",
+                f"Too many deployment scripts ({len(deploy_scripts)})",
             )
 
         # Find conflicting Docker files
-        docker_files = glob.glob(f"{self.repo_path}/**/docker-compose*.yml", recursive=True)
-        docker_files.extend(glob.glob(f"{self.repo_path}/**/Dockerfile*", recursive=True))
+        docker_files = glob.glob(
+            f"{self.repo_path}/**/docker-compose*.yml", recursive=True
+        )
+        docker_files.extend(
+            glob.glob(f"{self.repo_path}/**/Dockerfile*", recursive=True)
+        )
 
         if len(docker_files) > 4:
             self.log_issue(
-                "CONFLICTS", "MEDIUM", f"Multiple Docker configurations ({len(docker_files)})"
+                "CONFLICTS",
+                "MEDIUM",
+                f"Multiple Docker configurations ({len(docker_files)})",
             )
 
         # Find conflicting secret management
         secret_files = []
         for pattern in ["*secret*", "*env*manager*", "*pulumi*"]:
-            secret_files.extend(glob.glob(f"{self.repo_path}/**/{pattern}.py", recursive=True))
+            secret_files.extend(
+                glob.glob(f"{self.repo_path}/**/{pattern}.py", recursive=True)
+            )
 
         if len(secret_files) > 3:
             self.log_issue(
-                "CONFLICTS", "CRITICAL", f"Multiple secret management systems ({len(secret_files)})"
+                "CONFLICTS",
+                "CRITICAL",
+                f"Multiple secret management systems ({len(secret_files)})",
             )
 
     def test_what_works(self):
@@ -141,20 +166,28 @@ class BrutalRepoAudit:
 
             try:
                 result = subprocess.run(
-                    ["python3", "-m", "py_compile", py_file], capture_output=True, text=True
+                    ["python3", "-m", "py_compile", py_file],
+                    capture_output=True,
+                    text=True,
                 )
                 if result.returncode == 0:
                     working_python.append(py_file)
                 else:
                     broken_python.append((py_file, result.stderr))
                     self.log_issue(
-                        "BROKEN_CODE", "HIGH", f"Syntax error in {py_file}: {result.stderr.strip()}"
+                        "BROKEN_CODE",
+                        "HIGH",
+                        f"Syntax error in {py_file}: {result.stderr.strip()}",
                     )
             except Exception as e:
                 broken_python.append((py_file, str(e)))
-                self.log_issue("BROKEN_CODE", "HIGH", f"Cannot compile {py_file}: {str(e)}")
+                self.log_issue(
+                    "BROKEN_CODE", "HIGH", f"Cannot compile {py_file}: {str(e)}"
+                )
 
-        print(f"Python files: {len(working_python)} working, {len(broken_python)} broken")
+        print(
+            f"Python files: {len(working_python)} working, {len(broken_python)} broken"
+        )
 
         # Test shell scripts
         shell_scripts = glob.glob(f"{self.repo_path}/**/*.sh", recursive=True)
@@ -163,16 +196,22 @@ class BrutalRepoAudit:
 
         for sh_file in shell_scripts:
             try:
-                result = subprocess.run(["bash", "-n", sh_file], capture_output=True, text=True)
+                result = subprocess.run(
+                    ["bash", "-n", sh_file], capture_output=True, text=True
+                )
                 if result.returncode == 0:
                     working_shell.append(sh_file)
                 else:
                     broken_shell.append((sh_file, result.stderr))
-                    self.log_issue("BROKEN_SCRIPT", "MEDIUM", f"Shell syntax error in {sh_file}")
+                    self.log_issue(
+                        "BROKEN_SCRIPT", "MEDIUM", f"Shell syntax error in {sh_file}"
+                    )
             except Exception as e:
                 broken_shell.append((sh_file, str(e)))
 
-        print(f"Shell scripts: {len(working_shell)} working, {len(broken_shell)} broken")
+        print(
+            f"Shell scripts: {len(working_shell)} working, {len(broken_shell)} broken"
+        )
 
         # Test if key files exist and are executable
         key_files = [
@@ -190,7 +229,9 @@ class BrutalRepoAudit:
                     self.working_shit.append(f"{key_file} (executable)")
                 else:
                     self.log_issue(
-                        "BROKEN_PERMS", "MEDIUM", f"{key_file} exists but not executable"
+                        "BROKEN_PERMS",
+                        "MEDIUM",
+                        f"{key_file} exists but not executable",
                     )
             else:
                 self.log_issue("MISSING_FILE", "HIGH", f"Key file missing: {key_file}")
@@ -203,9 +244,13 @@ class BrutalRepoAudit:
         req_files = glob.glob(f"{self.repo_path}/**/requirements*.txt", recursive=True)
 
         if not req_files:
-            self.log_issue("MISSING_DEPS", "CRITICAL", "No requirements.txt files found")
+            self.log_issue(
+                "MISSING_DEPS", "CRITICAL", "No requirements.txt files found"
+            )
         elif len(req_files) > 3:
-            self.log_issue("CONFLICTS", "MEDIUM", f"Too many requirements files: {req_files}")
+            self.log_issue(
+                "CONFLICTS", "MEDIUM", f"Too many requirements files: {req_files}"
+            )
 
         # Check for import errors in Python files
         python_files = glob.glob(f"{self.repo_path}/**/*.py", recursive=True)
@@ -221,7 +266,9 @@ class BrutalRepoAudit:
 
                 # Find imports
                 imports = re.findall(
-                    r"^(?:from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)", content, re.MULTILINE
+                    r"^(?:from|import)\s+([a-zA-Z_][a-zA-Z0-9_]*)",
+                    content,
+                    re.MULTILINE,
                 )
 
                 # Check for common problematic imports
@@ -231,7 +278,9 @@ class BrutalRepoAudit:
                         # Try to import it
                         try:
                             result = subprocess.run(
-                                ["python3", "-c", f"import {imp}"], capture_output=True, text=True
+                                ["python3", "-c", f"import {imp}"],
+                                capture_output=True,
+                                text=True,
                             )
                             if result.returncode != 0:
                                 import_issues.append((py_file, imp))
@@ -257,7 +306,9 @@ class BrutalRepoAudit:
         config_files = []
 
         for pattern in config_patterns:
-            config_files.extend(glob.glob(f"{self.repo_path}/**/{pattern}", recursive=True))
+            config_files.extend(
+                glob.glob(f"{self.repo_path}/**/{pattern}", recursive=True)
+            )
 
         # Group by type
         config_types = defaultdict(list)
@@ -282,7 +333,9 @@ class BrutalRepoAudit:
         for config_type, files in config_types.items():
             if len(files) > 2:
                 self.log_issue(
-                    "CONFIG_CHAOS", "MEDIUM", f"Too many {config_type} configs: {len(files)} files"
+                    "CONFIG_CHAOS",
+                    "MEDIUM",
+                    f"Too many {config_type} configs: {len(files)} files",
                 )
 
     def check_secret_exposure(self):
@@ -345,7 +398,9 @@ class BrutalRepoAudit:
         print(f"   TOTAL:    {len(self.issues)}")
 
         # Calculate a real fucking score
-        total_weight = len(critical_issues) * 10 + len(high_issues) * 5 + len(medium_issues) * 2
+        total_weight = (
+            len(critical_issues) * 10 + len(high_issues) * 5 + len(medium_issues) * 2
+        )
         max_possible = 100  # Assume 10 critical issues would be 100% fucked
 
         fucked_percentage = min(100, (total_weight / max_possible) * 100)

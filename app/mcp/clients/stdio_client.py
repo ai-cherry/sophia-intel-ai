@@ -15,14 +15,18 @@ class StdioMCPClient:
     Expects the stdio server to output exactly one JSON line per request.
     """
 
-    def __init__(self, repo_root: Path | None = None, cmd_path: Path | None = None) -> None:
+    def __init__(
+        self, repo_root: Path | None = None, cmd_path: Path | None = None
+    ) -> None:
         self.repo_root = repo_root or Path.cwd()
         default_cmd = self.repo_root / "bin/mcp-fs-memory"
         self.cmd_path = cmd_path or default_cmd
         if not self.cmd_path.exists():
             raise FileNotFoundError(f"MCP stdio server not found at {self.cmd_path}")
 
-    def _call(self, method: str, params: dict[str, Any] | None = None, req_id: str = "1") -> Any:
+    def _call(
+        self, method: str, params: dict[str, Any] | None = None, req_id: str = "1"
+    ) -> Any:
         req = {"id": req_id, "method": method, "params": params or {}}
         p = subprocess.run(
             [str(self.cmd_path)],
@@ -60,7 +64,9 @@ class StdioMCPClient:
         return self._call("fs.write", {"path": path, "content": content})
 
     def fs_search(self, query: str, root: str = ".", max_results: int = 200) -> Any:
-        return self._call("fs.search", {"query": query, "root": root, "max_results": max_results})
+        return self._call(
+            "fs.search", {"query": query, "root": root, "max_results": max_results}
+        )
 
     def memory_add(
         self,
@@ -85,7 +91,9 @@ class StdioMCPClient:
         return self._call("memory.search", {"query": query, "limit": limit})
 
     def repo_index(self, root: str = ".", max_bytes_per_file: int = 200_000) -> Any:
-        return self._call("repo.index", {"root": root, "max_bytes_per_file": max_bytes_per_file})
+        return self._call(
+            "repo.index", {"root": root, "max_bytes_per_file": max_bytes_per_file}
+        )
 
     def git_status(self) -> Any:
         return self._call("git.status", {})

@@ -58,7 +58,10 @@ async def create_stream(request: StreamRequest):
             success=True,
             stream_id=stream_id,
             message="Stream created successfully",
-            data={"user_id": request.user_id, "created_at": datetime.utcnow().isoformat()},
+            data={
+                "user_id": request.user_id,
+                "created_at": datetime.utcnow().isoformat(),
+            },
         )
 
     except Exception as e:

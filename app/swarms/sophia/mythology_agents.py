@@ -443,7 +443,11 @@ class SophiaMythologySwarmFactory:
             name="Sophia Strategic Planning Swarm",
             domain=MemoryDomain.SOPHIA,
             coordination_pattern=CoordinationPattern.DEBATE,
-            agents=[AthenaAgent.get_profile(), OdinAgent.get_profile(), MinervaAgent.get_profile()],
+            agents=[
+                AthenaAgent.get_profile(),
+                OdinAgent.get_profile(),
+                MinervaAgent.get_profile(),
+            ],
             max_iterations=4,
             consensus_threshold=0.88,
             timeout_seconds=240,
@@ -520,7 +524,9 @@ class SophiaMythologySwarmFactory:
                 selected_agents.append(agent_map[agent_name.lower()])
 
         if not selected_agents:
-            raise ValueError(f"No valid agents specified. Available: {list(agent_map.keys())}")
+            raise ValueError(
+                f"No valid agents specified. Available: {list(agent_map.keys())}"
+            )
 
         config = SwarmConfig(
             name=f"Sophia Custom Swarm ({', '.join(agents)})",

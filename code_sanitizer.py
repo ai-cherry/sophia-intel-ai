@@ -10,7 +10,9 @@ import re
 from pathlib import Path
 from typing import List
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 SAFE_FORBIDDEN_PATTERNS = [
@@ -35,7 +37,11 @@ def get_text_files(root: Path) -> List[Path]:
     exts = {".py", ".js", ".ts", ".yaml", ".yml", ".json", ".md", ".txt", ".sh", ".env"}
     files: List[Path] = []
     for p in root.rglob("*"):
-        if p.is_file() and p.suffix in exts and not any(d in p.parts for d in EXCLUDE_DIRS):
+        if (
+            p.is_file()
+            and p.suffix in exts
+            and not any(d in p.parts for d in EXCLUDE_DIRS)
+        ):
             files.append(p)
     return files
 

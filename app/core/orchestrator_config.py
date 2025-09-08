@@ -113,7 +113,9 @@ class OrchestratorConfigManager:
                 },
             }
 
-    def get_config(self, orchestrator_type: OrchestratorType) -> OrchestratorModelConfig:
+    def get_config(
+        self, orchestrator_type: OrchestratorType
+    ) -> OrchestratorModelConfig:
         """Get configuration for specific orchestrator"""
         return self.configs.get(orchestrator_type, OrchestratorModelConfig())
 
@@ -176,10 +178,15 @@ You can escalate to:
 Maintain system harmony and optimize for overall performance.""",
         }
 
-        return prompts.get(orchestrator_type, "You are an orchestrator powered by GPT-5.")
+        return prompts.get(
+            orchestrator_type, "You are an orchestrator powered by GPT-5."
+        )
 
     def execute_with_orchestrator(
-        self, orchestrator_type: OrchestratorType, messages: list, task_type: Optional[str] = None
+        self,
+        orchestrator_type: OrchestratorType,
+        messages: list,
+        task_type: Optional[str] = None,
     ) -> Any:
         """Execute task with orchestrator configuration"""
         config = self.get_config(orchestrator_type)

@@ -81,10 +81,15 @@ class HealthChecker:
 
             async with httpx.AsyncClient() as client:
                 # Check readiness
-                response = await client.get(f"{weaviate_url}/v1/.well-known/ready", timeout=10.0)
+                response = await client.get(
+                    f"{weaviate_url}/v1/.well-known/ready", timeout=10.0
+                )
 
                 if response.status_code != 200:
-                    return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
+                    return {
+                        "status": "unhealthy",
+                        "error": f"HTTP {response.status_code}",
+                    }
 
                 # Get meta information
                 meta_response = await client.get(f"{weaviate_url}/v1/meta", timeout=5.0)
@@ -143,10 +148,15 @@ class HealthChecker:
 
             async with httpx.AsyncClient() as client:
                 # Check readiness
-                response = await client.get(f"{weaviate_url}/v1/.well-known/ready", timeout=10.0)
+                response = await client.get(
+                    f"{weaviate_url}/v1/.well-known/ready", timeout=10.0
+                )
 
                 if response.status_code != 200:
-                    return {"status": "unhealthy", "error": f"HTTP {response.status_code}"}
+                    return {
+                        "status": "unhealthy",
+                        "error": f"HTTP {response.status_code}",
+                    }
 
                 # Get meta information
                 meta_response = await client.get(f"{weaviate_url}/v1/meta", timeout=5.0)
@@ -207,10 +217,15 @@ class HealthChecker:
             try:
                 results[name] = await task
             except Exception as e:
-                results[name] = {"status": "unhealthy", "error": f"Check failed: {str(e)}"}
+                results[name] = {
+                    "status": "unhealthy",
+                    "error": f"Check failed: {str(e)}",
+                }
 
         # Calculate overall health
-        healthy_systems = sum(1 for result in results.values() if result.get("status") == "healthy")
+        healthy_systems = sum(
+            1 for result in results.values() if result.get("status") == "healthy"
+        )
         total_systems = len(results)
 
         overall_status = (

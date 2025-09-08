@@ -22,7 +22,9 @@ from pathlib import Path
 from typing import Dict, List
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -76,15 +78,30 @@ class BrandAuditConfig:
                 "critical",
                 "Should be project-specific branding",
             ),
-            (r"payready", "payready_lowercase", "critical", "Should be project-specific branding"),
-            (r"PayReady", "payready_camelcase", "critical", "Should be project-specific branding"),
+            (
+                r"payready",
+                "payready_lowercase",
+                "critical",
+                "Should be project-specific branding",
+            ),
+            (
+                r"PayReady",
+                "payready_camelcase",
+                "critical",
+                "Should be project-specific branding",
+            ),
             (
                 r"pay[\s\-_]*com",
                 "pay_com_variation",
                 "critical",
                 "Should be project-specific branding",
             ),
-            (r"Pay\.com", "pay_dot_com", "critical", "Should be project-specific branding"),
+            (
+                r"Pay\.com",
+                "pay_dot_com",
+                "critical",
+                "Should be project-specific branding",
+            ),
             # Generic business name inconsistencies
             (
                 r"sophia[\s\-_]+intel[\s\-_]+ai",
@@ -111,13 +128,38 @@ class BrandAuditConfig:
                 'Consider "Sophia Intel AI" for display text',
             ),
             # Case sensitivity issues
-            (r"SOPHIA(?!\s+INTEL\s+AI)", "sophia_all_caps", "medium", 'Use proper case: "Sophia"'),
-            (r"artemis(?![\s\-_])", "artemis_lowercase", "medium", 'Use proper case: "Artemis"'),
+            (
+                r"SOPHIA(?!\s+INTEL\s+AI)",
+                "sophia_all_caps",
+                "medium",
+                'Use proper case: "Sophia"',
+            ),
+            (
+                r"artemis(?![\s\-_])",
+                "artemis_lowercase",
+                "medium",
+                'Use proper case: "Artemis"',
+            ),
             (r"ARTEMIS", "artemis_all_caps", "medium", 'Use proper case: "Artemis"'),
             # Legacy or placeholder names
-            (r"YourCompany", "generic_company", "high", 'Replace with "Sophia Intel AI"'),
-            (r"CompanyName", "generic_company_name", "high", 'Replace with "Sophia Intel AI"'),
-            (r"Your Business", "generic_business", "high", 'Replace with "Sophia Intel AI"'),
+            (
+                r"YourCompany",
+                "generic_company",
+                "high",
+                'Replace with "Sophia Intel AI"',
+            ),
+            (
+                r"CompanyName",
+                "generic_company_name",
+                "high",
+                'Replace with "Sophia Intel AI"',
+            ),
+            (
+                r"Your Business",
+                "generic_business",
+                "high",
+                'Replace with "Sophia Intel AI"',
+            ),
             (r"Example Corp", "example_corp", "high", 'Replace with "Sophia Intel AI"'),
             (r"Acme Corp", "acme_corp", "high", 'Replace with "Sophia Intel AI"'),
             # Common typos
@@ -288,7 +330,12 @@ class BrandConsistencyAuditor:
         """Scan a single line for brand consistency issues"""
         issues = []
 
-        for pattern, issue_type, severity, description in self.config.incorrect_patterns:
+        for (
+            pattern,
+            issue_type,
+            severity,
+            description,
+        ) in self.config.incorrect_patterns:
             for match in re.finditer(pattern, line, re.IGNORECASE):
                 # Skip if in context exception
                 if self.has_context_exception(line, match.start()):
@@ -314,7 +361,9 @@ class BrandConsistencyAuditor:
 
         return issues
 
-    def calculate_confidence(self, line: str, match: re.Match, issue_type: str) -> float:
+    def calculate_confidence(
+        self, line: str, match: re.Match, issue_type: str
+    ) -> float:
         """Calculate confidence score for a potential issue"""
         confidence = 1.0
 
@@ -419,7 +468,9 @@ class BrandConsistencyAuditor:
         print(f"📁 Files Scanned: {self.stats['files_scanned']}")
         print(f"⚠️  Issues Found: {self.stats['total_issues']}")
         print(f"🔴 Files with Issues: {self.stats['files_with_issues']}")
-        print(f"✅ Clean Files: {self.stats['files_scanned'] - self.stats['files_with_issues']}")
+        print(
+            f"✅ Clean Files: {self.stats['files_scanned'] - self.stats['files_with_issues']}"
+        )
 
         if self.issues:
             print("\n📊 ISSUES BY SEVERITY:")
@@ -429,15 +480,24 @@ class BrandConsistencyAuditor:
 
             for severity in ["critical", "high", "medium", "low"]:
                 if severity_counts[severity] > 0:
-                    emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
-                    print(f"  {emoji[severity]} {severity.title()}: {severity_counts[severity]}")
+                    emoji = {
+                        "critical": "🔴",
+                        "high": "🟠",
+                        "medium": "🟡",
+                        "low": "🟢",
+                    }
+                    print(
+                        f"  {emoji[severity]} {severity.title()}: {severity_counts[severity]}"
+                    )
 
             print("\n📋 TOP ISSUE TYPES:")
             issue_type_counts = defaultdict(int)
             for issue in self.issues:
                 issue_type_counts[issue.issue_type] += 1
 
-            sorted_types = sorted(issue_type_counts.items(), key=lambda x: x[1], reverse=True)
+            sorted_types = sorted(
+                issue_type_counts.items(), key=lambda x: x[1], reverse=True
+            )
             for issue_type, count in sorted_types[:5]:
                 print(f"  • {issue_type}: {count}")
 
@@ -472,7 +532,10 @@ Examples:
     )
 
     parser.add_argument(
-        "--path", "-p", default=os.getcwd(), help="Path to scan (default: current directory)"
+        "--path",
+        "-p",
+        default=os.getcwd(),
+        help="Path to scan (default: current directory)",
     )
 
     parser.add_argument("--output", "-o", help="Output file for detailed report")
@@ -486,7 +549,9 @@ Examples:
     )
 
     parser.add_argument(
-        "--ci", action="store_true", help="CI/CD mode - exit with status 1 if issues found"
+        "--ci",
+        action="store_true",
+        help="CI/CD mode - exit with status 1 if issues found",
     )
 
     parser.add_argument(
@@ -516,7 +581,9 @@ Examples:
     severity_levels = {"low": 0, "medium": 1, "high": 2, "critical": 3}
     threshold = severity_levels[args.severity_threshold]
 
-    filtered_issues = [issue for issue in issues if severity_levels[issue.severity] >= threshold]
+    filtered_issues = [
+        issue for issue in issues if severity_levels[issue.severity] >= threshold
+    ]
     auditor.issues = filtered_issues
 
     # Generate report
@@ -543,7 +610,9 @@ Examples:
 
     # Exit with appropriate status for CI/CD
     if args.ci and filtered_issues:
-        print(f"\n❌ CI/CD mode: Exiting with status 1 ({len(filtered_issues)} issues found)")
+        print(
+            f"\n❌ CI/CD mode: Exiting with status 1 ({len(filtered_issues)} issues found)"
+        )
         exit(1)
 
     print(f"\n✅ Brand audit completed in {report.execution_time:.2f} seconds")

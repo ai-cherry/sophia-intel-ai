@@ -111,9 +111,12 @@ class VectorDatabaseManager:
             ),
             VectorDBType.WEAVIATE: VectorDBConfig(
                 url=os.getenv(
-                    "WEAVIATE_URL", "https://w6bigpoxsrwvq7wlgmmdva.c0.us-west3.gcp.weaviate.cloud"
+                    "WEAVIATE_URL",
+                    "https://w6bigpoxsrwvq7wlgmmdva.c0.us-west3.gcp.weaviate.cloud",
                 ),
-                api_key=os.getenv("WEAVIATE_API_KEY", "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"),
+                api_key=os.getenv(
+                    "WEAVIATE_API_KEY", "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"
+                ),
                 collection_name="SophiaVectors",
                 additional_config={
                     "grpc_url": os.getenv(
@@ -125,21 +128,28 @@ class VectorDatabaseManager:
             VectorDBType.REDIS: VectorDBConfig(
                 url=f"{os.getenv('REDIS_HOST', 'redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com')}:{os.getenv('REDIS_PORT', '15014')}",
                 api_key=os.getenv(
-                    "REDIS_USER_KEY", "S666q3cr9wmzpetc6iud02iqv26774azveodh2pfadrd7pgq8l7"
+                    "REDIS_USER_KEY",
+                    "S666q3cr9wmzpetc6iud02iqv26774azveodh2pfadrd7pgq8l7",
                 ),
                 additional_config={
                     "account_key": os.getenv(
-                        "REDIS_ACCOUNT_KEY", "A4mmxx43yms087hucu51sxbau5mi9hmnz6u33k43mpauhof6rz2"
+                        "REDIS_ACCOUNT_KEY",
+                        "A4mmxx43yms087hucu51sxbau5mi9hmnz6u33k43mpauhof6rz2",
                     )
                 },
             ),
             VectorDBType.MEM0: VectorDBConfig(
                 url="https://api.mem0.ai",
-                api_key=os.getenv("MEM0_API_KEY", "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"),
-                collection_name=os.getenv("MEM0_ACCOUNT_NAME", "scoobyjava-default-org"),
+                api_key=os.getenv(
+                    "MEM0_API_KEY", "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"
+                ),
+                collection_name=os.getenv(
+                    "MEM0_ACCOUNT_NAME", "scoobyjava-default-org"
+                ),
                 additional_config={
                     "account_id": os.getenv(
-                        "MEM0_ACCOUNT_ID", "org_gHuEO2H7ymIIgivcWeKI2psRFHUnbZ54RQNYVb4T"
+                        "MEM0_ACCOUNT_ID",
+                        "org_gHuEO2H7ymIIgivcWeKI2psRFHUnbZ54RQNYVb4T",
                     )
                 },
             ),
@@ -219,7 +229,9 @@ class VectorDatabaseManager:
         """Get a specific vector database client"""
         return self.clients.get(db_type)
 
-    def create_collection(self, db_type: VectorDBType, collection_name: Optional[str] = None):
+    def create_collection(
+        self, db_type: VectorDBType, collection_name: Optional[str] = None
+    ):
         """Create a collection in the specified vector database"""
         config = self.configs[db_type]
         collection = collection_name or config.collection_name
@@ -248,7 +260,10 @@ class VectorDatabaseManager:
                         "class": collection,
                         "vectorizer": "text2vec-openai",
                         "moduleConfig": {
-                            "text2vec-openai": {"model": "text-embedding-ada-002", "type": "text"}
+                            "text2vec-openai": {
+                                "model": "text-embedding-ada-002",
+                                "type": "text",
+                            }
                         },
                     }
                     client.schema.create_class(class_obj)
@@ -279,7 +294,9 @@ class VectorDatabaseManager:
 
                     from qdrant_client.models import PointStruct
 
-                    point = PointStruct(id=str(uuid.uuid4()), vector=vector, payload=metadata)
+                    point = PointStruct(
+                        id=str(uuid.uuid4()), vector=vector, payload=metadata
+                    )
 
                     client.upsert(collection_name=collection, points=[point])
                     logger.info(f"✓ Stored vector in Qdrant collection: {collection}")
@@ -342,7 +359,9 @@ class VectorDatabaseManager:
             if client:
                 try:
                     results = client.search(
-                        collection_name=collection, query_vector=query_vector, limit=top_k
+                        collection_name=collection,
+                        query_vector=query_vector,
+                        limit=top_k,
                     )
                     logger.info(f"✓ Searched Qdrant collection: {collection}")
                     return results
@@ -372,7 +391,8 @@ class VectorDatabaseManager:
                 try:
                     # Mem0 uses text queries, not vectors
                     results = client.search(
-                        query=query_vector if isinstance(query_vector, str) else "", limit=top_k
+                        query=query_vector if isinstance(query_vector, str) else "",
+                        limit=top_k,
                     )
                     logger.info("✓ Searched Mem0 memories")
                     return results

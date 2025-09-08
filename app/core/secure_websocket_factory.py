@@ -61,7 +61,9 @@ class SecureWebSocketFactory:
         # Configure authentication settings
         if manager.authenticator:
             manager.authenticator.token_expiry_minutes = config.token_expiry_minutes
-            manager.authenticator.session_timeout_minutes = config.session_timeout_minutes
+            manager.authenticator.session_timeout_minutes = (
+                config.session_timeout_minutes
+            )
 
         # Configure rate limiting settings
         if manager.rate_limiter:
@@ -70,9 +72,15 @@ class SecureWebSocketFactory:
 
         # Configure security middleware settings
         if manager.security_middleware:
-            manager.security_middleware.enable_threat_detection = config.enable_threat_detection
-            manager.security_middleware.audit_retention_days = config.audit_retention_days
-            manager.security_middleware.max_events_per_hour = config.max_security_events_per_hour
+            manager.security_middleware.enable_threat_detection = (
+                config.enable_threat_detection
+            )
+            manager.security_middleware.audit_retention_days = (
+                config.audit_retention_days
+            )
+            manager.security_middleware.max_events_per_hour = (
+                config.max_security_events_per_hour
+            )
 
         # Set manager-specific settings
         manager.require_authentication = config.require_authentication

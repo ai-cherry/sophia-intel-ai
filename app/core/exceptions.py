@@ -141,7 +141,9 @@ class ConfigurationError(SophiaBaseException):
     """Configuration-related errors"""
 
     def __init__(self, message: str, **kwargs):
-        super().__init__(message=message, category=ErrorCategory.CONFIGURATION, **kwargs)
+        super().__init__(
+            message=message, category=ErrorCategory.CONFIGURATION, **kwargs
+        )
 
 
 class InvalidConfigError(ConfigurationError):
@@ -208,7 +210,9 @@ class ToolNotFoundError(ToolExecutionError):
 
     def __init__(self, tool_name: str, **kwargs):
         super().__init__(
-            tool_name=tool_name, message=f"Tool '{tool_name}' not found in registry", **kwargs
+            tool_name=tool_name,
+            message=f"Tool '{tool_name}' not found in registry",
+            **kwargs,
         )
 
 
@@ -217,7 +221,9 @@ class ToolValidationError(ToolExecutionError):
 
     def __init__(self, tool_name: str, validation_error: str, **kwargs):
         super().__init__(
-            tool_name=tool_name, message=f"Validation failed: {validation_error}", **kwargs
+            tool_name=tool_name,
+            message=f"Validation failed: {validation_error}",
+            **kwargs,
         )
 
 
@@ -248,7 +254,9 @@ class ModelUnavailableError(ModelError):
 
     def __init__(self, model_name: str, **kwargs):
         super().__init__(
-            message=f"Model '{model_name}' is unavailable", severity=ErrorSeverity.HIGH, **kwargs
+            message=f"Model '{model_name}' is unavailable",
+            severity=ErrorSeverity.HIGH,
+            **kwargs,
         )
 
 
@@ -445,15 +453,21 @@ class ErrorHandler:
         # Count by category
         for error in self.error_history:
             category = error.category
-            stats["errors_by_category"][category] = stats["errors_by_category"].get(category, 0) + 1
+            stats["errors_by_category"][category] = (
+                stats["errors_by_category"].get(category, 0) + 1
+            )
 
             severity = error.severity
-            stats["errors_by_severity"][severity] = stats["errors_by_severity"].get(severity, 0) + 1
+            stats["errors_by_severity"][severity] = (
+                stats["errors_by_severity"].get(severity, 0) + 1
+            )
 
         # Count violations
         for violation in self.guardrail_violations:
             vtype = violation.violation_type
-            stats["violations_by_type"][vtype] = stats["violations_by_type"].get(vtype, 0) + 1
+            stats["violations_by_type"][vtype] = (
+                stats["violations_by_type"].get(vtype, 0) + 1
+            )
 
         return stats
 
@@ -481,7 +495,8 @@ def handle_errors(
                 return await func(*args, **kwargs)
             except Exception as e:
                 context = ErrorContext(
-                    operation=func.__name__, metadata={"args": str(args), "kwargs": str(kwargs)}
+                    operation=func.__name__,
+                    metadata={"args": str(args), "kwargs": str(kwargs)},
                 )
                 error = global_error_handler.handle_error(e, context)
                 if reraise:
@@ -493,7 +508,8 @@ def handle_errors(
                 return func(*args, **kwargs)
             except Exception as e:
                 context = ErrorContext(
-                    operation=func.__name__, metadata={"args": str(args), "kwargs": str(kwargs)}
+                    operation=func.__name__,
+                    metadata={"args": str(args), "kwargs": str(kwargs)},
                 )
                 error = global_error_handler.handle_error(e, context)
                 if reraise:

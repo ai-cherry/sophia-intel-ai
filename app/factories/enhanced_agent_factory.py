@@ -68,7 +68,12 @@ class EnhancedAgentFactory:
                 provider_type=LLMProviderType.AIMLAPI,
                 temperature=0.3,
                 max_tokens=65536,
-                capabilities=["reasoning", "problem_solving", "analysis", "chain_of_thought"],
+                capabilities=[
+                    "reasoning",
+                    "problem_solving",
+                    "analysis",
+                    "chain_of_thought",
+                ],
             ),
             SpecializedAgentType.ANALYZER: AgentModelConfig(
                 primary_model="llama-4-maverick",
@@ -184,7 +189,9 @@ class EnhancedAgentFactory:
             },
         }
 
-        logger.info(f"Created {agent_type.value} agent '{name}' using {config.primary_model}")
+        logger.info(
+            f"Created {agent_type.value} agent '{name}' using {config.primary_model}"
+        )
         return agent
 
     def _build_system_prompt(
@@ -313,7 +320,9 @@ You leverage full thinking capabilities for profound insights.""",
         # Score each agent type based on capability match
         scores = {}
         for agent_type, config in self.agent_model_configs.items():
-            score = sum(1 for cap in required_capabilities if cap in config.capabilities)
+            score = sum(
+                1 for cap in required_capabilities if cap in config.capabilities
+            )
             scores[agent_type] = score
 
         # Return agent type with highest score
@@ -323,13 +332,18 @@ You leverage full thinking capabilities for profound insights.""",
         # Default to analyzer for general tasks
         return SpecializedAgentType.ANALYZER
 
-    def execute_with_agent(self, agent: dict[str, Any], messages: list[dict[str, str]]) -> Any:
+    def execute_with_agent(
+        self, agent: dict[str, Any], messages: list[dict[str, str]]
+    ) -> Any:
         """Execute a task using a specific agent"""
 
         model_config = agent["model_config"]
 
         # Add system prompt to messages
-        full_messages = [{"role": "system", "content": agent["system_prompt"]}, *messages]
+        full_messages = [
+            {"role": "system", "content": agent["system_prompt"]},
+            *messages,
+        ]
 
         try:
             # Use primary model

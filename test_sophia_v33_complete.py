@@ -14,7 +14,9 @@ from pathlib import Path
 from typing import Dict, List
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger("sophia_v33_test")
 
 
@@ -280,7 +282,9 @@ class SophiaV33TestSuite:
                 }
             )
 
-        return self._calculate_category_score("Pulumi ESC Integration", category_results)
+        return self._calculate_category_score(
+            "Pulumi ESC Integration", category_results
+        )
 
     def test_syntax_validation(self) -> Dict[str, any]:
         """Test syntax validation system"""
@@ -342,7 +346,9 @@ class SophiaV33TestSuite:
 
         # Test 2: GitHub Actions workflow
         try:
-            workflow_path = self.project_root / ".github" / "workflows" / "syntax-validation.yml"
+            workflow_path = (
+                self.project_root / ".github" / "workflows" / "syntax-validation.yml"
+            )
             if workflow_path.exists():
                 category_results.append(
                     {
@@ -495,7 +501,9 @@ class SophiaV33TestSuite:
                 }
             )
 
-        return self._calculate_category_score("Environment Management", category_results)
+        return self._calculate_category_score(
+            "Environment Management", category_results
+        )
 
     def test_ai_router_integration(self) -> Dict[str, any]:
         """Test AI router integration"""
@@ -507,7 +515,11 @@ class SophiaV33TestSuite:
             ai_router_path = self.project_root / "ai_router.py"
             if ai_router_path.exists():
                 category_results.append(
-                    {"test": "AI Router Exists", "status": "PASS", "message": "AI router found"}
+                    {
+                        "test": "AI Router Exists",
+                        "status": "PASS",
+                        "message": "AI router found",
+                    }
                 )
 
                 # Check for key features
@@ -532,7 +544,11 @@ class SophiaV33TestSuite:
                     )
             else:
                 category_results.append(
-                    {"test": "AI Router Exists", "status": "FAIL", "message": "AI router not found"}
+                    {
+                        "test": "AI Router Exists",
+                        "status": "FAIL",
+                        "message": "AI router not found",
+                    }
                 )
         except Exception as e:
             category_results.append(
@@ -553,7 +569,10 @@ class SophiaV33TestSuite:
         # Test 1: Lambda Labs integration exists
         try:
             lambda_integration_path = (
-                self.project_root / "infrastructure" / "lambda_labs" / "lambda_labs_integration.py"
+                self.project_root
+                / "infrastructure"
+                / "lambda_labs"
+                / "lambda_labs_integration.py"
             )
             if lambda_integration_path.exists():
                 category_results.append(
@@ -601,7 +620,9 @@ class SophiaV33TestSuite:
                 }
             )
 
-        return self._calculate_category_score("Lambda Labs Integration", category_results)
+        return self._calculate_category_score(
+            "Lambda Labs Integration", category_results
+        )
 
     def test_unified_management(self) -> Dict[str, any]:
         """Test unified management system"""
@@ -640,7 +661,10 @@ class SophiaV33TestSuite:
 
                 # Test help command
                 result = subprocess.run(
-                    [str(sophia_script), "--help"], capture_output=True, text=True, timeout=10
+                    [str(sophia_script), "--help"],
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
                 )
 
                 if result.returncode == 0 or "usage" in result.stdout.lower():
@@ -881,7 +905,9 @@ class SophiaV33TestSuite:
 
         return self._calculate_category_score("Production Readiness", category_results)
 
-    def _calculate_category_score(self, category: str, results: List[Dict]) -> Dict[str, any]:
+    def _calculate_category_score(
+        self, category: str, results: List[Dict]
+    ) -> Dict[str, any]:
         """Calculate score for a test category"""
         total_tests = len(results)
         passed_tests = len([r for r in results if r["status"] == "PASS"])
@@ -1024,7 +1050,9 @@ class SophiaV33TestSuite:
                     test_icon = {"PASS": "✅", "FAIL": "❌", "ERROR": "⚠️"}.get(
                         test_result["status"], "❓"
                     )
-                    f.write(f"- {test_icon} **{test_result['test']}:** {test_result['message']}\n")
+                    f.write(
+                        f"- {test_icon} **{test_result['test']}:** {test_result['message']}\n"
+                    )
                 f.write("\n")
 
         print("\n📄 Detailed reports saved:")

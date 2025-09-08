@@ -46,12 +46,18 @@ class ModelTester:
                 "id": "anthropic/claude-sonnet-4",
                 "description": "Most powerful reasoning",
             },
-            "gemini-2.5-flash": {"id": "google/gemini-2.5-flash", "description": "Fast generation"},
+            "gemini-2.5-flash": {
+                "id": "google/gemini-2.5-flash",
+                "description": "Fast generation",
+            },
             "deepseek-v3-0324": {
                 "id": "deepseek/deepseek-v3-0324",
                 "description": "Cost-effective",
             },
-            "qwen3-coder": {"id": "qwen/qwen3-coder", "description": "Specialized for coding"},
+            "qwen3-coder": {
+                "id": "qwen/qwen3-coder",
+                "description": "Specialized for coding",
+            },
         }
 
     def test_model(self, model_name: str, prompt: str) -> Dict[str, Any]:
@@ -75,7 +81,9 @@ class ModelTester:
                 "response_time": end_time - start_time,
                 "response_length": len(response_text),
                 "response_preview": (
-                    response_text[:100] + "..." if len(response_text) > 100 else response_text
+                    response_text[:100] + "..."
+                    if len(response_text) > 100
+                    else response_text
                 ),
             }
 
@@ -116,7 +124,9 @@ class ModelTester:
             print(f"\n--- Task: {task_name} ---\n")
 
             # Sort by response time (fastest first)
-            sorted_results = sorted(results, key=lambda x: x.get("response_time", float("inf")))
+            sorted_results = sorted(
+                results, key=lambda x: x.get("response_time", float("inf"))
+            )
 
             for result in sorted_results:
                 model = result["model"]
@@ -143,13 +153,19 @@ class ModelTester:
                 continue
 
             # Find fastest model
-            fastest = min(successful_results, key=lambda x: x.get("response_time", float("inf")))
+            fastest = min(
+                successful_results, key=lambda x: x.get("response_time", float("inf"))
+            )
 
             # Find most detailed response (by length)
-            most_detailed = max(successful_results, key=lambda x: x.get("response_length", 0))
+            most_detailed = max(
+                successful_results, key=lambda x: x.get("response_length", 0)
+            )
 
             print(f"Task: {task_name}")
-            print(f"  Fastest: {fastest['model']} ({int(fastest['response_time'] * 1000)}ms)")
+            print(
+                f"  Fastest: {fastest['model']} ({int(fastest['response_time'] * 1000)}ms)"
+            )
             print(
                 f"  Most detailed: {most_detailed['model']} ({most_detailed['response_length']} chars)"
             )

@@ -96,7 +96,9 @@ class DomainRequest:
     operation_type: OperationType
     resource_path: Optional[str] = None
     metadata: dict[str, Any] = field(default_factory=dict)
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(
+        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+    )
 
 
 @dataclass
@@ -210,9 +212,13 @@ class DomainEnforcer:
             "violations_detected": 0,
         }
 
-        logger.info("🛡️ Domain Boundary Enforcer initialized with strict separation rules")
+        logger.info(
+            "🛡️ Domain Boundary Enforcer initialized with strict separation rules"
+        )
 
-    def _initialize_access_matrix(self) -> dict[tuple[UserRole, MemoryDomain], AccessLevel]:
+    def _initialize_access_matrix(
+        self,
+    ) -> dict[tuple[UserRole, MemoryDomain], AccessLevel]:
         """Initialize the access control matrix"""
         matrix = {}
 
@@ -262,10 +268,10 @@ class DomainEnforcer:
         result = ValidationResult(request_id=request.id, allowed=False)
 
         # Check if operation belongs to target domain
-        if not self._is_valid_domain_operation(request.operation_type, request.target_domain):
-            result.reason = (
-                f"Operation {request.operation_type} not allowed in {request.target_domain} domain"
-            )
+        if not self._is_valid_domain_operation(
+            request.operation_type, request.target_domain
+        ):
+            result.reason = f"Operation {request.operation_type} not allowed in {request.target_domain} domain"
             result.suggested_domain = self._get_correct_domain(request.operation_type)
             self.validation_stats["denied_requests"] += 1
             self.validation_stats["violations_detected"] += 1
@@ -278,9 +284,7 @@ class DomainEnforcer:
         access_level = self._get_user_access(request.user_role, request.target_domain)
 
         if access_level == AccessLevel.NONE:
-            result.reason = (
-                f"User role {request.user_role} has no access to {request.target_domain} domain"
-            )
+            result.reason = f"User role {request.user_role} has no access to {request.target_domain} domain"
             self.validation_stats["denied_requests"] += 1
             self._log_audit(request, result)
             return result
@@ -289,9 +293,7 @@ class DomainEnforcer:
         required_level = self._get_required_access_level(request.operation_type)
 
         if not self._has_sufficient_access(access_level, required_level):
-            result.reason = (
-                f"Insufficient access level. Required: {required_level}, Have: {access_level}"
-            )
+            result.reason = f"Insufficient access level. Required: {required_level}, Have: {access_level}"
             result.access_level = access_level
             self.validation_stats["denied_requests"] += 1
             self._log_audit(request, result)
@@ -318,7 +320,9 @@ class DomainEnforcer:
 
         return result
 
-    def _is_valid_domain_operation(self, operation: OperationType, domain: MemoryDomain) -> bool:
+    def _is_valid_domain_operation(
+        self, operation: OperationType, domain: MemoryDomain
+    ) -> bool:
         """Check if operation is valid for the domain"""
         if operation in self.shared_operations:
             return True
@@ -338,7 +342,9 @@ class DomainEnforcer:
             return MemoryDomain.SOPHIA
         return None
 
-    def _get_user_access(self, user_role: UserRole, domain: MemoryDomain) -> AccessLevel:
+    def _get_user_access(
+        self, user_role: UserRole, domain: MemoryDomain
+    ) -> AccessLevel:
         """Get user's access level for a domain"""
         return self.access_matrix.get((user_role, domain), AccessLevel.NONE)
 
@@ -368,7 +374,9 @@ class DomainEnforcer:
         else:
             return AccessLevel.READ
 
-    def _has_sufficient_access(self, user_level: AccessLevel, required_level: AccessLevel) -> bool:
+    def _has_sufficient_access(
+        self, user_level: AccessLevel, required_level: AccessLevel
+    ) -> bool:
         """Check if user has sufficient access level"""
         access_hierarchy = {
             AccessLevel.NONE: 0,
@@ -378,7 +386,9 @@ class DomainEnforcer:
             AccessLevel.FULL: 4,
         }
 
-        return access_hierarchy.get(user_level, 0) >= access_hierarchy.get(required_level, 0)
+        return access_hierarchy.get(user_level, 0) >= access_hierarchy.get(
+            required_level, 0
+        )
 
     def _check_resource_restrictions(self, request: DomainRequest) -> list[str]:
         """Check for resource-specific restrictions"""
@@ -390,7 +400,9 @@ class DomainEnforcer:
             if request.target_domain == MemoryDomain.ARTEMIS:
                 if "production" in request.resource_path.lower():
                     if request.user_role not in [UserRole.ADMIN, UserRole.DEVOPS]:
-                        restrictions.append("Production resources require DevOps or Admin role")
+                        restrictions.append(
+                            "Production resources require DevOps or Admin role"
+                        )
 
                 if "secrets" in request.resource_path.lower():
                     if request.user_role != UserRole.ADMIN:
@@ -400,7 +412,9 @@ class DomainEnforcer:
             elif request.target_domain == MemoryDomain.SOPHIA:
                 if "financial" in request.resource_path.lower():
                     if request.user_role not in [UserRole.ADMIN, UserRole.EXECUTIVE]:
-                        restrictions.append("Financial data requires Executive or Admin role")
+                        restrictions.append(
+                            "Financial data requires Executive or Admin role"
+                        )
 
                 if "customer_data" in request.resource_path.lower():
                     if request.user_role not in [
@@ -413,7 +427,9 @@ class DomainEnforcer:
         # Time-based restrictions
         if request.metadata.get("after_hours"):
             if request.user_role not in [UserRole.ADMIN, UserRole.DEVOPS]:
-                restrictions.append("After-hours operations require Admin or DevOps role")
+                restrictions.append(
+                    "After-hours operations require Admin or DevOps role"
+                )
 
         return restrictions
 
@@ -467,7 +483,8 @@ class DomainEnforcer:
         self.validation_stats["cross_domain_requests"] += 1
 
         logger.info(
-            f"Cross-domain request created: {request.id} " f"({source_domain} -> {target_domain})"
+            f"Cross-domain request created: {request.id} "
+            f"({source_domain} -> {target_domain})"
         )
 
         return request
@@ -533,7 +550,9 @@ class DomainEnforcer:
             timestamp=datetime.now(timezone.utc).isoformat(),
             details={
                 "reason": result.reason,
-                "access_level": result.access_level.value if result.access_level else None,
+                "access_level": (
+                    result.access_level.value if result.access_level else None
+                ),
                 "restrictions": result.restrictions,
                 "resource_path": request.resource_path,
             },
@@ -608,7 +627,8 @@ class DomainEnforcer:
                 "allowed_roles": [
                     role.value
                     for role in UserRole
-                    if self._get_user_access(role, MemoryDomain.ARTEMIS) != AccessLevel.NONE
+                    if self._get_user_access(role, MemoryDomain.ARTEMIS)
+                    != AccessLevel.NONE
                 ],
             },
             "sophia_domain": {
@@ -617,7 +637,8 @@ class DomainEnforcer:
                 "allowed_roles": [
                     role.value
                     for role in UserRole
-                    if self._get_user_access(role, MemoryDomain.SOPHIA) != AccessLevel.NONE
+                    if self._get_user_access(role, MemoryDomain.SOPHIA)
+                    != AccessLevel.NONE
                 ],
             },
             "shared_operations": list(self.shared_operations),
@@ -652,7 +673,9 @@ class DomainEnforcer:
         ]
 
         removed_count = original_count - len(self.audit_logs)
-        logger.info(f"Cleared {removed_count} audit logs older than {older_than_days} days")
+        logger.info(
+            f"Cleared {removed_count} audit logs older than {older_than_days} days"
+        )
 
         return removed_count
 
@@ -771,6 +794,8 @@ def get_domain_access_summary(user_role: UserRole) -> dict[str, Any]:
 
     # Add shared operations if any access
     if artemis_access != AccessLevel.NONE or sophia_access != AccessLevel.NONE:
-        summary["allowed_operations"].extend([op.value for op in domain_enforcer.shared_operations])
+        summary["allowed_operations"].extend(
+            [op.value for op in domain_enforcer.shared_operations]
+        )
 
     return summary

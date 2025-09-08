@@ -12,14 +12,22 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.swarms.core.natural_language_interface import get_natural_language_interface
-from app.swarms.core.scheduler import Priority, ScheduledTask, ScheduleType, get_scheduler
+from app.swarms.core.scheduler import (
+    Priority,
+    ScheduledTask,
+    ScheduleType,
+    get_scheduler,
+)
 from app.swarms.core.slack_delivery import (
     DeliveryConfig,
     DeliveryFormat,
     DeliveryPriority,
     get_delivery_engine,
 )
-from app.swarms.core.swarm_integration import get_artemis_orchestrator, get_sophia_orchestrator
+from app.swarms.core.swarm_integration import (
+    get_artemis_orchestrator,
+    get_sophia_orchestrator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +73,16 @@ class ScheduleTaskRequest(BaseModel):
     domain: str = Field("sophia", description="Domain: sophia or artemis")
     swarm_type: str = Field("business_intelligence", description="Swarm type")
     schedule_type: str = Field("recurring", description="Schedule type")
-    interval_hours: Optional[int] = Field(24, description="Interval in hours for recurring tasks")
+    interval_hours: Optional[int] = Field(
+        24, description="Interval in hours for recurring tasks"
+    )
     cron_expression: Optional[str] = Field(None, description="Cron expression")
     priority: str = Field("normal", description="Priority: low, normal, high, critical")
     max_cost_usd: float = Field(2.0, description="Maximum cost per execution")
     timeout_minutes: int = Field(15, description="Timeout in minutes")
-    business_hours_only: bool = Field(False, description="Execute only during business hours")
+    business_hours_only: bool = Field(
+        False, description="Execute only during business hours"
+    )
     weekdays_only: bool = Field(False, description="Execute only on weekdays")
 
 
@@ -150,7 +162,9 @@ async def execute_swarm(request: SwarmExecutionRequest):
 
         # Execute swarm
         result = await orchestrator.execute_swarm(
-            content=request.content, swarm_type=request.swarm_type, context=request.context or {}
+            content=request.content,
+            swarm_type=request.swarm_type,
+            context=request.context or {},
         )
 
         return {
@@ -193,7 +207,9 @@ async def schedule_task(request: ScheduleTaskRequest):
             swarm_type=f"{request.domain}.{request.swarm_type}",
             task_content=request.content,
             schedule_type=ScheduleType(request.schedule_type),
-            interval_minutes=request.interval_hours * 60 if request.interval_hours else None,
+            interval_minutes=(
+                request.interval_hours * 60 if request.interval_hours else None
+            ),
             cron_expression=request.cron_expression,
             priority=Priority[request.priority.upper()],
             max_cost_usd=request.max_cost_usd,
@@ -210,7 +226,9 @@ async def schedule_task(request: ScheduleTaskRequest):
             "success": True,
             "task_id": task_id,
             "message": f"Successfully scheduled recurring {request.swarm_type} analysis",
-            "next_execution": task.next_execution.isoformat() if task.next_execution else None,
+            "next_execution": (
+                task.next_execution.isoformat() if task.next_execution else None
+            ),
             "schedule_details": {
                 "type": request.schedule_type,
                 "interval_hours": request.interval_hours,
@@ -235,7 +253,8 @@ async def get_task_status(task_id: str):
 
         if not status:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Task {task_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Task {task_id} not found",
             )
 
         return {"success": True, "task_status": status}
@@ -258,7 +277,8 @@ async def cancel_task(task_id: str):
 
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Task {task_id} not found"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Task {task_id} not found",
             )
 
         return {"success": True, "message": f"Task {task_id} has been cancelled"}
@@ -274,7 +294,9 @@ async def cancel_task(task_id: str):
 
 
 @router.post("/deliver-to-slack", summary="Deliver Results to Slack")
-async def deliver_to_slack(execution_result: dict[str, Any], delivery_config: SlackDeliveryRequest):
+async def deliver_to_slack(
+    execution_result: dict[str, Any], delivery_config: SlackDeliveryRequest
+):
     """
     Deliver swarm results to Slack with rich formatting
 
@@ -313,7 +335,9 @@ async def deliver_to_slack(execution_result: dict[str, Any], delivery_config: Sl
             config=config,
             context={
                 "swarm_name": execution_result.get("swarm_type", "Micro-Swarm"),
-                "task_description": execution_result.get("task_description", "Analysis"),
+                "task_description": execution_result.get(
+                    "task_description", "Analysis"
+                ),
             },
         )
 
@@ -490,7 +514,11 @@ async def list_swarm_types():
             },
             "architecture_review": {
                 "description": "System architecture and design evaluation",
-                "agents": ["Technical Architect", "Quality Engineer", "Security Engineer"],
+                "agents": [
+                    "Technical Architect",
+                    "Quality Engineer",
+                    "Security Engineer",
+                ],
                 "coordination": "sequential",
                 "typical_use_cases": [
                     "Architecture design review",
@@ -512,7 +540,11 @@ async def list_swarm_types():
             },
             "technical_strategy": {
                 "description": "Technical strategy and roadmap planning",
-                "agents": ["Technical Architect", "DevOps Engineer", "Quality Engineer"],
+                "agents": [
+                    "Technical Architect",
+                    "DevOps Engineer",
+                    "Quality Engineer",
+                ],
                 "coordination": "debate",
                 "typical_use_cases": [
                     "Technology roadmap",

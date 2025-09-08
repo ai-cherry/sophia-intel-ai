@@ -154,7 +154,9 @@ def run_agent(agent: Dict[str, Any], offline_mode: bool = False) -> bool:
 
     # Skip internet-requiring agents in offline mode
     if offline_mode and agent.get("requires_internet", False):
-        logger.info(f"Agent {agent['name']} requires internet but running in offline mode")
+        logger.info(
+            f"Agent {agent['name']} requires internet but running in offline mode"
+        )
         return False
 
     # Check if agent is already running
@@ -199,7 +201,9 @@ def run_agent(agent: Dict[str, Any], offline_mode: bool = False) -> bool:
         status_dir = os.path.join("status", "agents")
         os.makedirs(status_dir, exist_ok=True)
 
-        with open(os.path.join(status_dir, f"{agent['name']}.json"), "w") as status_file:
+        with open(
+            os.path.join(status_dir, f"{agent['name']}.json"), "w"
+        ) as status_file:
             json.dump(
                 {
                     "name": agent["name"],
@@ -276,7 +280,9 @@ def check_agent_output(agent: Dict[str, Any]) -> None:
     """
     Check output from a finished agent
     """
-    if agent["process"] is not None and agent["process"].poll() is not None:  # Process has finished
+    if (
+        agent["process"] is not None and agent["process"].poll() is not None
+    ):  # Process has finished
 
         returncode = agent["process"].poll()
 
@@ -295,7 +301,9 @@ def check_agent_output(agent: Dict[str, Any]) -> None:
                 }
 
             status_data["status"] = "completed" if returncode == 0 else "failed"
-            status_data["completed_at"] = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            status_data["completed_at"] = datetime.datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
             status_data["exit_code"] = returncode
 
             with open(status_file_path, "w") as status_file:
@@ -304,7 +312,9 @@ def check_agent_output(agent: Dict[str, Any]) -> None:
             logger.error(f"Error updating status file for agent {agent['name']}: {e}")
 
         if returncode != 0:
-            logger.warning(f"Agent {agent['name']} exited with non-zero status {returncode}")
+            logger.warning(
+                f"Agent {agent['name']} exited with non-zero status {returncode}"
+            )
 
             # Read the log file for errors
             agent_log_path = os.path.join("logs", "agents", f"{agent['name']}.log")
@@ -315,9 +325,13 @@ def check_agent_output(agent: Dict[str, Any]) -> None:
                         lines = log_file.readlines()
                         last_lines = lines[-20:] if len(lines) >= 20 else lines
                         error_output = "".join(last_lines)
-                        logger.warning(f"Last output from {agent['name']}:\n{error_output}")
+                        logger.warning(
+                            f"Last output from {agent['name']}:\n{error_output}"
+                        )
                 except Exception as e:
-                    logger.error(f"Error reading log file for agent {agent['name']}: {e}")
+                    logger.error(
+                        f"Error reading log file for agent {agent['name']}: {e}"
+                    )
         else:
             logger.info(f"Agent {agent['name']} completed successfully")
 
@@ -351,7 +365,11 @@ def save_agent_status() -> None:
         status.append(agent_status)
 
     with open(status_dir / "agent_status.json", "w") as f:
-        json.dump({"timestamp": datetime.datetime.now().isoformat(), "agents": status}, f, indent=2)
+        json.dump(
+            {"timestamp": datetime.datetime.now().isoformat(), "agents": status},
+            f,
+            indent=2,
+        )
 
 
 def run_scheduler(interval: int = 60, offline_mode: bool = False) -> None:
@@ -437,11 +455,16 @@ def main() -> None:
         description="Background Agent Manager for AI Development Toolkit (Aug 2025)"
     )
     parser.add_argument(
-        "--interval", type=int, default=60, help="Scheduler check interval in seconds (default: 60)"
+        "--interval",
+        type=int,
+        default=60,
+        help="Scheduler check interval in seconds (default: 60)",
     )
     parser.add_argument("--run", type=str, help="Run a specific agent immediately")
     parser.add_argument("--stop", type=str, help="Stop a specific agent")
-    parser.add_argument("--status", action="store_true", help="Show status of all agents")
+    parser.add_argument(
+        "--status", action="store_true", help="Show status of all agents"
+    )
     parser.add_argument("--enable", type=str, help="Enable a specific agent")
     parser.add_argument("--disable", type=str, help="Disable a specific agent")
     parser.add_argument(
@@ -454,7 +477,9 @@ def main() -> None:
         action="store_true",
         help="Enable auto-updating of agent scripts from repository",
     )
-    parser.add_argument("--list-logs", action="store_true", help="List all agent log files")
+    parser.add_argument(
+        "--list-logs", action="store_true", help="List all agent log files"
+    )
     args = parser.parse_args()
 
     # Create necessary directories
@@ -514,7 +539,9 @@ def main() -> None:
                     log_path = os.path.join(log_dir, log)
                     size = os.path.getsize(log_path)
                     mtime = os.path.getmtime(log_path)
-                    mtime_str = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    mtime_str = datetime.datetime.fromtimestamp(mtime).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
                     print(f"  {log:<20} {size/1024:.1f} KB  {mtime_str}")
             else:
                 print(f"No log files found in {log_dir}")
@@ -535,7 +562,9 @@ def main() -> None:
             )
             pid = agent["pid"] if agent["pid"] else "N/A"
             last_run = (
-                agent["last_run"].strftime("%Y-%m-%d %H:%M:%S") if agent["last_run"] else "Never"
+                agent["last_run"].strftime("%Y-%m-%d %H:%M:%S")
+                if agent["last_run"]
+                else "Never"
             )
             requires_net = "Yes" if agent.get("requires_internet", False) else "No"
             print(
@@ -549,7 +578,9 @@ def main() -> None:
     offline_mode = args.offline_mode or env_offline
 
     if offline_mode:
-        logger.info("Running in OFFLINE MODE - internet-requiring agents will be skipped")
+        logger.info(
+            "Running in OFFLINE MODE - internet-requiring agents will be skipped"
+        )
 
     # Run scheduler
     run_scheduler(args.interval, offline_mode=offline_mode)

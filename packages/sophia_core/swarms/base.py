@@ -99,7 +99,10 @@ class SwarmMember(BaseModel):
 
     def can_accept_task(self) -> bool:
         """Check if member can accept additional tasks."""
-        return self.status == "active" and self.current_task_count < self.max_concurrent_tasks
+        return (
+            self.status == "active"
+            and self.current_task_count < self.max_concurrent_tasks
+        )
 
     def assign_task(self) -> None:
         """Record task assignment."""
@@ -378,7 +381,9 @@ class BaseSwarm(ABC):
     Abstract base class for AI agent swarms.
     """
 
-    def __init__(self, config: SwarmConfig, memory_manager: Optional[MemoryManager] = None):
+    def __init__(
+        self, config: SwarmConfig, memory_manager: Optional[MemoryManager] = None
+    ):
         """
         Initialize swarm with configuration.
 
@@ -529,7 +534,9 @@ class BaseSwarm(ABC):
         member = SwarmMember(
             agent_id=agent_id,
             role=role,
-            capabilities=list(agent.config.available_tools),  # Use tools as capabilities
+            capabilities=list(
+                agent.config.available_tools
+            ),  # Use tools as capabilities
         )
 
         self.members[agent_id] = member
@@ -632,7 +639,9 @@ class BaseSwarm(ABC):
                 await self.send_message(recipient_message)
 
     def get_available_members(
-        self, required_capabilities: List[str] = None, preferred_roles: List[SwarmRole] = None
+        self,
+        required_capabilities: List[str] = None,
+        preferred_roles: List[SwarmRole] = None,
     ) -> List[SwarmMember]:
         """
         Get available members matching criteria.
@@ -729,7 +738,9 @@ class BaseSwarm(ABC):
             # Could implement timeout handling here
 
         # Update uptime metric
-        self.metrics["uptime_seconds"] = (current_time - self._start_time).total_seconds()
+        self.metrics["uptime_seconds"] = (
+            current_time - self._start_time
+        ).total_seconds()
 
     async def _deliver_message(self, message: SwarmMessage) -> None:
         """Deliver message to recipient(s)."""
@@ -877,7 +888,10 @@ class SwarmCoordinator(BaseSwarm):
 
     async def _process_task_queue(self) -> None:
         """Process queued tasks."""
-        while self.task_queue and len(self.active_tasks) < self.config.max_concurrent_tasks:
+        while (
+            self.task_queue
+            and len(self.active_tasks) < self.config.max_concurrent_tasks
+        ):
             task = self.task_queue.pop(0)
 
             success = await self.distribute_task(task)
@@ -891,7 +905,11 @@ class SwarmCoordinator(BaseSwarm):
         completed_tasks = []
 
         for task_id, task in self.active_tasks.items():
-            if task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED, TaskStatus.CANCELLED]:
+            if task.status in [
+                TaskStatus.COMPLETED,
+                TaskStatus.FAILED,
+                TaskStatus.CANCELLED,
+            ]:
                 completed_tasks.append(task_id)
 
                 # Update member statistics
@@ -919,11 +937,15 @@ class SwarmCoordinator(BaseSwarm):
 
         # Simple load balancing: reassign tasks from overloaded members
         overloaded_members = [
-            m for m in self.members.values() if m.current_task_count > m.max_concurrent_tasks
+            m
+            for m in self.members.values()
+            if m.current_task_count > m.max_concurrent_tasks
         ]
 
         underloaded_members = [
-            m for m in self.members.values() if m.can_accept_task() and m.current_task_count == 0
+            m
+            for m in self.members.values()
+            if m.can_accept_task() and m.current_task_count == 0
         ]
 
         if overloaded_members and underloaded_members:
@@ -974,7 +996,8 @@ class SwarmExecutor(BaseSwarm):
         """Distribute tasks with minimal processing."""
         distributed = 0
         max_to_distribute = min(
-            len(self.task_queue), self.config.max_concurrent_tasks - len(self.active_tasks)
+            len(self.task_queue),
+            self.config.max_concurrent_tasks - len(self.active_tasks),
         )
 
         while distributed < max_to_distribute and self.task_queue:
@@ -1007,7 +1030,9 @@ class HierarchicalSwarm(SwarmCoordinator):
         super().__init__(**kwargs)
         self.hierarchy_levels: Dict[int, List[str]] = {}  # level -> agent_ids
 
-    async def add_member(self, agent: BaseAgent, role: SwarmRole, level: int = 0) -> bool:
+    async def add_member(
+        self, agent: BaseAgent, role: SwarmRole, level: int = 0
+    ) -> bool:
         """Add member with hierarchy level."""
         success = await super().add_member(agent, role)
 
@@ -1082,7 +1107,9 @@ class PeerToPeerSwarm(BaseSwarm):
         """Distribute task assignment across peers."""
         # Each active member can claim tasks
         active_members = [
-            m for m in self.members.values() if m.status == "active" and m.can_accept_task()
+            m
+            for m in self.members.values()
+            if m.status == "active" and m.can_accept_task()
         ]
 
         for i, task in enumerate(list(self.task_queue)):
@@ -1197,6 +1224,7 @@ class SwarmRegistry:
             "swarms_by_state": swarms_by_state,
             "swarms_by_topology": swarms_by_topology,
             "swarm_details": {
-                swarm_id: swarm.get_swarm_status() for swarm_id, swarm in self._swarms.items()
+                swarm_id: swarm.get_swarm_status()
+                for swarm_id, swarm in self._swarms.items()
             },
         }

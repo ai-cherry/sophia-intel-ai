@@ -33,17 +33,25 @@ class GongWebhookRequest(BaseModel):
     eventType: str = Field(..., description="Gong event type")
     callId: str = Field(..., description="Gong call identifier")
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
-    signatureValid: bool = Field(default=False, description="RSA signature validation status")
+    signatureValid: bool = Field(
+        default=False, description="RSA signature validation status"
+    )
 
     # Optional fields based on event type
     participants: Optional[list] = Field(None, description="Call participants")
     duration: Optional[int] = Field(None, description="Call duration in seconds")
-    transcriptUrl: Optional[str] = Field(None, description="Transcript URL if available")
+    transcriptUrl: Optional[str] = Field(
+        None, description="Transcript URL if available"
+    )
     dealId: Optional[str] = Field(None, description="Associated deal ID")
-    riskScore: Optional[float] = Field(None, description="Risk score for deal at risk events")
+    riskScore: Optional[float] = Field(
+        None, description="Risk score for deal at risk events"
+    )
 
     # Raw data from Gong
-    raw_data: Optional[dict[str, Any]] = Field(None, description="Complete Gong webhook payload")
+    raw_data: Optional[dict[str, Any]] = Field(
+        None, description="Complete Gong webhook payload"
+    )
 
     class Config:
         schema_extra = {
@@ -110,7 +118,9 @@ async def process_gong_webhook(
         # Prepare webhook data for service processing
         webhook_data = webhook_request.dict()
         if not webhook_data.get("raw_data"):
-            webhook_data["raw_data"] = webhook_data  # Use the request itself as raw data
+            webhook_data["raw_data"] = (
+                webhook_data  # Use the request itself as raw data
+            )
 
         # Process through Sophia intelligence service
         processing_result = await gong_sophia_service.process_gong_webhook(webhook_data)
@@ -128,8 +138,12 @@ async def process_gong_webhook(
         response = GongWebhookResponse(
             status=processing_result.get("status", "unknown"),
             processing_time=processing_time,
-            sophia_intelligence=processing_result.get("result", {}).get("sophia_intelligence"),
-            context_continuity=processing_result.get("result", {}).get("context_thread"),
+            sophia_intelligence=processing_result.get("result", {}).get(
+                "sophia_intelligence"
+            ),
+            context_continuity=processing_result.get("result", {}).get(
+                "context_thread"
+            ),
             memory_storage=processing_result.get("result", {}).get("memory_storage"),
             execution_metadata={
                 "user_id": _current_user.get("id"),
@@ -235,7 +249,9 @@ async def get_event_context(
         )
 
         if not context_data:
-            raise HTTPException(status_code=404, detail=f"No context found for call {call_id}")
+            raise HTTPException(
+                status_code=404, detail=f"No context found for call {call_id}"
+            )
 
         return {
             "call_id": call_id,
@@ -249,7 +265,9 @@ async def get_event_context(
         raise
     except Exception as e:
         logger.error(f"❌ Context retrieval failed for {call_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve context: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve context: {str(e)}"
+        ) from e
 
 
 @router.post(
@@ -257,7 +275,9 @@ async def get_event_context(
     summary="Test Gong Integration",
     description="Test endpoint for validating Gong integration functionality",
 )
-async def test_integration(test_event: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+async def test_integration(
+    test_event: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     """
     Test endpoint for Gong integration
     """

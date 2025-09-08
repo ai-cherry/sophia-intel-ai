@@ -229,7 +229,9 @@ class WebResearchSwarm:
                 return await self._execute_news_monitoring(agent, task)
             elif agent.specialization == "Company research and competitive analysis":
                 return await self._execute_competitive_research(agent, task)
-            elif agent.specialization == "Social media monitoring and sentiment analysis":
+            elif (
+                agent.specialization == "Social media monitoring and sentiment analysis"
+            ):
                 return await self._execute_social_listening(agent, task)
             elif agent.specialization == "Multi-source data integration and analysis":
                 return await self._execute_data_synthesis(agent, task)
@@ -338,7 +340,9 @@ class WebResearchSwarm:
         """Synthesize findings from multiple research agents"""
 
         successful_results = [
-            r for r in agent_results if isinstance(r, dict) and r.get("status") == "completed"
+            r
+            for r in agent_results
+            if isinstance(r, dict) and r.get("status") == "completed"
         ]
 
         all_sources = []
@@ -393,14 +397,18 @@ class WebResearchSwarm:
             ]
         }
 
-    async def _fetch_news_data(self, query: str, freshness_hours: int) -> list[dict[str, Any]]:
+    async def _fetch_news_data(
+        self, query: str, freshness_hours: int
+    ) -> list[dict[str, Any]]:
         """Fetch recent news data"""
 
         return [
             {
                 "headline": f"Breaking: {query} Market Sees Major Developments",
                 "source": "Industry News Daily",
-                "published": (datetime.now() - timedelta(hours=freshness_hours - i)).isoformat(),
+                "published": (
+                    datetime.now() - timedelta(hours=freshness_hours - i)
+                ).isoformat(),
                 "sentiment": "positive",
                 "relevance": 0.88,
             }
@@ -429,7 +437,11 @@ class WebResearchSwarm:
 
         return {
             "mention_count": 342,
-            "trends": [f"{query} automation", f"{query} AI integration", f"{query} scaling"],
+            "trends": [
+                f"{query} automation",
+                f"{query} AI integration",
+                f"{query} scaling",
+            ],
             "influencers": ["@industry_expert", "@tech_analyst", "@market_researcher"],
             "sentiment": 0.72,
         }

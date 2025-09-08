@@ -56,7 +56,9 @@ def test_openai():
             messages=[{"role": "user", "content": "Say 'OpenAI OK'"}],
             max_tokens=10,
         )
-        print(f"{Colors.GREEN}✅ OpenAI: {response.choices[0].message.content}{Colors.ENDC}")
+        print(
+            f"{Colors.GREEN}✅ OpenAI: {response.choices[0].message.content}{Colors.ENDC}"
+        )
         return True
     except Exception as e:
         print(f"{Colors.RED}❌ OpenAI: {str(e)[:100]}{Colors.ENDC}")
@@ -69,13 +71,17 @@ def test_xai_grok():
     try:
         from openai import OpenAI
 
-        client = OpenAI(api_key=os.environ["XAI_API_KEY"], base_url="https://api.x.ai/v1")
+        client = OpenAI(
+            api_key=os.environ["XAI_API_KEY"], base_url="https://api.x.ai/v1"
+        )
         response = client.chat.completions.create(
             model="grok-beta",
             messages=[{"role": "user", "content": "Say 'Grok OK'"}],
             max_tokens=10,
         )
-        print(f"{Colors.GREEN}✅ X.AI Grok: {response.choices[0].message.content}{Colors.ENDC}")
+        print(
+            f"{Colors.GREEN}✅ X.AI Grok: {response.choices[0].message.content}{Colors.ENDC}"
+        )
         return True
     except Exception as e:
         print(f"{Colors.RED}❌ X.AI Grok: {str(e)[:100]}{Colors.ENDC}")
@@ -100,7 +106,10 @@ def test_openrouter():
             "max_tokens": 10,
         }
         response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data, timeout=10
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=10,
         )
         if response.status_code == 200:
             result = response.json()
@@ -109,7 +118,9 @@ def test_openrouter():
             )
             return True
         else:
-            print(f"{Colors.RED}❌ OpenRouter: HTTP {response.status_code}{Colors.ENDC}")
+            print(
+                f"{Colors.RED}❌ OpenRouter: HTTP {response.status_code}{Colors.ENDC}"
+            )
             return False
     except Exception as e:
         print(f"{Colors.RED}❌ OpenRouter: {str(e)[:100]}{Colors.ENDC}")
@@ -123,14 +134,17 @@ def test_perplexity():
         from openai import OpenAI
 
         client = OpenAI(
-            api_key=os.environ["PERPLEXITY_API_KEY"], base_url="https://api.perplexity.ai"
+            api_key=os.environ["PERPLEXITY_API_KEY"],
+            base_url="https://api.perplexity.ai",
         )
         response = client.chat.completions.create(
             model="llama-3.1-sonar-small-128k-chat",
             messages=[{"role": "user", "content": "Say 'Perplexity OK'"}],
             max_tokens=10,
         )
-        print(f"{Colors.GREEN}✅ Perplexity: {response.choices[0].message.content}{Colors.ENDC}")
+        print(
+            f"{Colors.GREEN}✅ Perplexity: {response.choices[0].message.content}{Colors.ENDC}"
+        )
         return True
     except Exception as e:
         print(f"{Colors.RED}❌ Perplexity: {str(e)[:100]}{Colors.ENDC}")
@@ -160,7 +174,9 @@ def test_huggingface():
             print(f"{Colors.GREEN}✅ HuggingFace: Connected (GPT-2){Colors.ENDC}")
             return True
         else:
-            print(f"{Colors.RED}❌ HuggingFace: HTTP {response.status_code}{Colors.ENDC}")
+            print(
+                f"{Colors.RED}❌ HuggingFace: HTTP {response.status_code}{Colors.ENDC}"
+            )
             return False
     except Exception as e:
         print(f"{Colors.RED}❌ HuggingFace: {str(e)[:100]}{Colors.ENDC}")
@@ -179,7 +195,10 @@ def test_mem0():
             "Content-Type": "application/json",
         }
         # Test with a simple memory operation
-        data = {"messages": [{"role": "user", "content": "Test memory"}], "user_id": "test_user"}
+        data = {
+            "messages": [{"role": "user", "content": "Test memory"}],
+            "user_id": "test_user",
+        }
         response = requests.post(
             "https://api.mem0.ai/v1/memories", headers=headers, json=data, timeout=10
         )
@@ -269,7 +288,9 @@ def test_portkey_virtual_keys():
                 max_tokens=10,
                 temperature=0,
             )
-            print(f"{Colors.GREEN}✅ {name}: {response.choices[0].message.content}{Colors.ENDC}")
+            print(
+                f"{Colors.GREEN}✅ {name}: {response.choices[0].message.content}{Colors.ENDC}"
+            )
             results.append((name, True))
         except Exception as e:
             print(f"{Colors.RED}❌ {name}: {str(e)[:100]}{Colors.ENDC}")
@@ -315,7 +336,11 @@ def main():
     direct_working = sum(1 for _, status in direct_results if status)
     direct_total = len(direct_results)
     for name, status in direct_results:
-        icon = f"{Colors.GREEN}✅{Colors.ENDC}" if status else f"{Colors.RED}❌{Colors.ENDC}"
+        icon = (
+            f"{Colors.GREEN}✅{Colors.ENDC}"
+            if status
+            else f"{Colors.RED}❌{Colors.ENDC}"
+        )
         print(f"  {icon} {name}")
     print(
         f"\n  Success Rate: {direct_working}/{direct_total} ({direct_working*100//direct_total}%)"
@@ -326,7 +351,11 @@ def main():
     portkey_working = sum(1 for _, status in portkey_results if status)
     portkey_total = len(portkey_results)
     for name, status in portkey_results:
-        icon = f"{Colors.GREEN}✅{Colors.ENDC}" if status else f"{Colors.RED}❌{Colors.ENDC}"
+        icon = (
+            f"{Colors.GREEN}✅{Colors.ENDC}"
+            if status
+            else f"{Colors.RED}❌{Colors.ENDC}"
+        )
         print(f"  {icon} {name}")
     print(
         f"\n  Success Rate: {portkey_working}/{portkey_total} ({portkey_working*100//portkey_total if portkey_total else 0}%)"
@@ -353,7 +382,9 @@ def main():
     # Save detailed report
     report = {
         "timestamp": datetime.now().isoformat(),
-        "direct_apis": {name: "working" if status else "failed" for name, status in direct_results},
+        "direct_apis": {
+            name: "working" if status else "failed" for name, status in direct_results
+        },
         "portkey_virtual_keys": {
             name: "working" if status else "failed" for name, status in portkey_results
         },

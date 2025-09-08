@@ -12,7 +12,10 @@ from typing import Any, Optional
 
 from app.core.portkey_manager import get_portkey_manager
 from app.memory.unified_memory_router import MemoryDomain
-from app.swarms.core.swarm_integration import get_artemis_orchestrator, get_sophia_orchestrator
+from app.swarms.core.swarm_integration import (
+    get_artemis_orchestrator,
+    get_sophia_orchestrator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -464,7 +467,9 @@ class NaturalLanguageInterface:
 
         try:
             # Get or create conversation context
-            context = self._get_conversation_context(conversation_id, user_id, channel_id)
+            context = self._get_conversation_context(
+                conversation_id, user_id, channel_id
+            )
 
             # Parse the request
             parsed_request = await self._parse_request(text, context)
@@ -509,9 +514,15 @@ class NaturalLanguageInterface:
 
         except Exception as e:
             logger.error(f"Failed to process request: {e}")
-            return {"success": False, "error": str(e), "conversation_id": conversation_id}
+            return {
+                "success": False,
+                "error": str(e),
+                "conversation_id": conversation_id,
+            }
 
-    async def _parse_request(self, text: str, context: ConversationContext) -> ParsedRequest:
+    async def _parse_request(
+        self, text: str, context: ConversationContext
+    ) -> ParsedRequest:
         """Parse natural language request into structured format"""
 
         # Basic cleaning
@@ -530,7 +541,9 @@ class NaturalLanguageInterface:
         keywords = self._extract_keywords(text_clean)
 
         # Determine swarm configuration
-        swarm_config = await self._determine_swarm_config(intent, domain, text_clean, context)
+        swarm_config = await self._determine_swarm_config(
+            intent, domain, text_clean, context
+        )
 
         # Calculate overall confidence
         overall_confidence = (intent_confidence + domain_confidence) / 2
@@ -574,7 +587,9 @@ class NaturalLanguageInterface:
             # Default intent
             return IntentType.ANALYZE, 0.3
 
-    def _detect_domain(self, text: str, context: ConversationContext) -> tuple[DomainType, float]:
+    def _detect_domain(
+        self, text: str, context: ConversationContext
+    ) -> tuple[DomainType, float]:
         """Detect business domain from text and context"""
 
         domain_scores = {}
@@ -617,7 +632,9 @@ class NaturalLanguageInterface:
         for entity_type, pattern in self.entity_patterns.items():
             matches = re.findall(pattern, text, re.IGNORECASE)
             for match in matches:
-                entities.append({"type": entity_type, "value": match, "position": text.find(match)})
+                entities.append(
+                    {"type": entity_type, "value": match, "position": text.find(match)}
+                )
 
         return entities
 
@@ -684,18 +701,31 @@ class NaturalLanguageInterface:
         return [word for word, count in word_counts.most_common(10)]
 
     async def _determine_swarm_config(
-        self, intent: IntentType, domain: DomainType, text: str, context: ConversationContext
+        self,
+        intent: IntentType,
+        domain: DomainType,
+        text: str,
+        context: ConversationContext,
     ) -> dict[str, Any]:
         """Determine appropriate swarm configuration"""
 
         # Map intent/domain combination to swarm type
 
         # Check for specific mappings
-        if intent in [IntentType.ANALYZE, IntentType.EVALUATE] and domain == DomainType.BUSINESS:
+        if (
+            intent in [IntentType.ANALYZE, IntentType.EVALUATE]
+            and domain == DomainType.BUSINESS
+        ):
             return self.swarm_mappings["business_analysis"]
-        elif intent in [IntentType.RECOMMEND, IntentType.PREDICT] and domain == DomainType.BUSINESS:
+        elif (
+            intent in [IntentType.RECOMMEND, IntentType.PREDICT]
+            and domain == DomainType.BUSINESS
+        ):
             return self.swarm_mappings["strategic_planning"]
-        elif intent in [IntentType.ANALYZE, IntentType.VALIDATE] and domain == DomainType.TECHNICAL:
+        elif (
+            intent in [IntentType.ANALYZE, IntentType.VALIDATE]
+            and domain == DomainType.TECHNICAL
+        ):
             return self.swarm_mappings["technical_analysis"]
         elif intent == IntentType.OPTIMIZE and domain == DomainType.TECHNICAL:
             return self.swarm_mappings["architecture_review"]
@@ -750,7 +780,9 @@ class NaturalLanguageInterface:
 
         return "normal"
 
-    def _determine_complexity(self, text: str, intent: IntentType, domain: DomainType) -> str:
+    def _determine_complexity(
+        self, text: str, intent: IntentType, domain: DomainType
+    ) -> str:
         """Determine request complexity"""
 
         complex_indicators = [
@@ -766,7 +798,15 @@ class NaturalLanguageInterface:
             "end-to-end",
         ]
 
-        simple_indicators = ["quick", "brief", "simple", "basic", "summary", "overview", "just"]
+        simple_indicators = [
+            "quick",
+            "brief",
+            "simple",
+            "basic",
+            "summary",
+            "overview",
+            "just",
+        ]
 
         for indicator in complex_indicators:
             if indicator in text:
@@ -857,7 +897,10 @@ class NaturalLanguageInterface:
         return self.conversations[conversation_id]
 
     def _update_conversation_state(
-        self, context: ConversationContext, parsed_request: ParsedRequest, result: dict[str, Any]
+        self,
+        context: ConversationContext,
+        parsed_request: ParsedRequest,
+        result: dict[str, Any],
     ):
         """Update conversation state based on interaction"""
 
@@ -874,7 +917,9 @@ class NaturalLanguageInterface:
                 context.domain_preferences[key] *= 0.95
 
         # Update current state
-        context.current_topic = parsed_request.keywords[0] if parsed_request.keywords else None
+        context.current_topic = (
+            parsed_request.keywords[0] if parsed_request.keywords else None
+        )
         context.last_domain = domain_key
         context.last_intent = parsed_request.intent.value
         context.updated_at = datetime.now()
@@ -896,7 +941,9 @@ class NaturalLanguageInterface:
     ) -> str:
         """Simple chat interface that returns formatted response"""
 
-        result = await self.process_request(message, conversation_id, user_id, channel_id)
+        result = await self.process_request(
+            message, conversation_id, user_id, channel_id
+        )
 
         if result["success"]:
             execution_result = result["execution_result"]
@@ -908,11 +955,15 @@ class NaturalLanguageInterface:
 
 *Processed by {execution_result.get("orchestrator_used", "Unknown orchestrator")} in {execution_result.get("execution_time_ms", 0) / 1000:.1f}s*"""
         else:
-            response = f"Sorry, I encountered an error: {result.get('error', 'Unknown error')}"
+            response = (
+                f"Sorry, I encountered an error: {result.get('error', 'Unknown error')}"
+            )
 
         return response
 
-    def get_conversation_summary(self, conversation_id: str) -> Optional[dict[str, Any]]:
+    def get_conversation_summary(
+        self, conversation_id: str
+    ) -> Optional[dict[str, Any]]:
         """Get summary of conversation"""
 
         if conversation_id not in self.conversations:
@@ -991,7 +1042,9 @@ class NaturalLanguageInterface:
         intent_counts = {}
         for context in self.conversations.values():
             if context.last_intent:
-                intent_counts[context.last_intent] = intent_counts.get(context.last_intent, 0) + 1
+                intent_counts[context.last_intent] = (
+                    intent_counts.get(context.last_intent, 0) + 1
+                )
 
         return {
             "total_conversations": total_conversations,
@@ -1026,13 +1079,17 @@ def get_natural_language_interface() -> NaturalLanguageInterface:
 # Convenience functions for different interfaces
 
 
-async def process_natural_language_request(message: str, user_id: str = "default") -> str:
+async def process_natural_language_request(
+    message: str, user_id: str = "default"
+) -> str:
     """Process natural language request and return formatted response"""
     interface = get_natural_language_interface()
     return await interface.chat(message, f"user_{user_id}", user_id)
 
 
-async def schedule_natural_language_task(message: str, interval_hours: int = 24) -> dict[str, Any]:
+async def schedule_natural_language_task(
+    message: str, interval_hours: int = 24
+) -> dict[str, Any]:
     """Schedule recurring task from natural language description"""
     interface = get_natural_language_interface()
     return await interface.schedule_recurring_analysis(message, interval_hours)

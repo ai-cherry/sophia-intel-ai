@@ -96,7 +96,9 @@ class UnifiedMemoryStore:
             results.append(
                 {
                     "id": mem_id.decode() if isinstance(mem_id, bytes) else mem_id,
-                    "content": content.decode() if isinstance(content, bytes) else content,
+                    "content": (
+                        content.decode() if isinstance(content, bytes) else content
+                    ),
                     "metadata": (
                         {k.decode(): v.decode() for k, v in meta.items()}
                         if isinstance(meta, dict)
@@ -108,7 +110,9 @@ class UnifiedMemoryStore:
         logger.debug(f"🔍 Returned {len(results)} matches for query '{query}'")
         return results
 
-    async def update_memory(self, memory_id: str, content: str, metadata: dict[str, Any]):
+    async def update_memory(
+        self, memory_id: str, content: str, metadata: dict[str, Any]
+    ):
         """Update existing memory entry"""
         if not self.redis:
             await self.initialize()
@@ -168,7 +172,11 @@ def get_memory_store():
     if _memory_store is None:
         # Initialize with default config
         _memory_store = UnifiedMemoryStore(
-            {"redis_url": "redis://localhost:6379", "min_pool_size": 5, "max_pool_size": 20}
+            {
+                "redis_url": "redis://localhost:6379",
+                "min_pool_size": 5,
+                "max_pool_size": 20,
+            }
         )
         # Async initialize
         asyncio.create_task(_memory_store.initialize())

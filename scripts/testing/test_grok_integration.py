@@ -31,7 +31,11 @@ async def run(task: str, provider: str | None):
     prov = provider
     model = "x-ai/grok-code-fast-1"
     if not prov:
-        prov = "xai" if os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY") else "openrouter"
+        prov = (
+            "xai"
+            if os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY")
+            else "openrouter"
+        )
     print(f"Provider: {prov}\nModel: {model}")
     messages = [
         {"role": "system", "content": "You are a helpful coding assistant."},

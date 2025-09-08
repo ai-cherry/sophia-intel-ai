@@ -134,7 +134,9 @@ class UnifiedMemoryAdapter:
         """
         try:
             results = []
-            sessions_to_search = [session_id] if session_id else self.memory_store.keys()
+            sessions_to_search = (
+                [session_id] if session_id else self.memory_store.keys()
+            )
 
             for sid in sessions_to_search:
                 if sid in self.memory_store:
@@ -208,7 +210,11 @@ class UnifiedMemoryAdapter:
         """
         try:
             if session_id not in self.memory_store:
-                return {"success": False, "error": "Session not found", "session_id": session_id}
+                return {
+                    "success": False,
+                    "error": "Session not found",
+                    "session_id": session_id,
+                }
 
             export_data = {
                 "session_id": session_id,
@@ -231,14 +237,17 @@ class UnifiedMemoryAdapter:
             Dictionary with statistics
         """
         try:
-            total_messages = sum(len(messages) for messages in self.memory_store.values())
+            total_messages = sum(
+                len(messages) for messages in self.memory_store.values()
+            )
 
             return {
                 "success": True,
                 "statistics": {
                     "total_sessions": len(self.memory_store),
                     "total_messages": total_messages,
-                    "average_messages_per_session": total_messages / max(len(self.memory_store), 1),
+                    "average_messages_per_session": total_messages
+                    / max(len(self.memory_store), 1),
                     "sessions_with_metadata": len(self.metadata_store),
                     "cached_contexts": len(self.context_cache),
                 },

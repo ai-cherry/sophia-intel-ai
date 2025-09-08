@@ -193,7 +193,11 @@ async def health_check():
                 services[f"{name}_dashboard"] = "unhealthy"
 
     return HealthStatus(
-        status="healthy" if all(v == "healthy" for v in components.values()) else "degraded",
+        status=(
+            "healthy"
+            if all(v == "healthy" for v in components.values())
+            else "degraded"
+        ),
         timestamp=datetime.now().isoformat(),
         components=components,
         services=services,
@@ -284,13 +288,19 @@ async def get_component_metrics(component: str):
         cache_entry = dashboard_data_cache[cache_key]
         return cache_entry["data"]
 
-    raise HTTPException(status_code=404, detail=f"No metrics found for component '{component}'")
+    raise HTTPException(
+        status_code=404, detail=f"No metrics found for component '{component}'"
+    )
 
 
 def main():
     """Run the dashboard integration service"""
-    parser = argparse.ArgumentParser(description="Sophia AI Dashboard Integration Service")
-    parser.add_argument("--host", type=str, default="${BIND_IP}", help="Host to bind to")
+    parser = argparse.ArgumentParser(
+        description="Sophia AI Dashboard Integration Service"
+    )
+    parser.add_argument(
+        "--host", type=str, default="${BIND_IP}", help="Host to bind to"
+    )
     parser.add_argument("--port", type=int, default=8505, help="Port to bind to")
     args = parser.parse_args()
 

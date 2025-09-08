@@ -44,13 +44,37 @@ class PortkeySystemMonitor:
         self.critical_models = [
             {"name": "GPT-4o", "id": "openai/gpt-4o", "type": "chat"},
             {"name": "GPT-4o Mini", "id": "openai/gpt-4o-mini", "type": "chat"},
-            {"name": "Claude 3.5 Sonnet", "id": "anthropic/claude-3.5-sonnet", "type": "chat"},
-            {"name": "Claude 3 Haiku", "id": "anthropic/claude-3-haiku-20240307", "type": "chat"},
-            {"name": "Qwen 2.5 Coder", "id": "qwen/qwen-2.5-coder-32b-instruct", "type": "chat"},
-            {"name": "DeepSeek Coder", "id": "deepseek/deepseek-coder-v2", "type": "chat"},
-            {"name": "Llama 3.2", "id": "meta-llama/llama-3.2-3b-instruct", "type": "chat"},
+            {
+                "name": "Claude 3.5 Sonnet",
+                "id": "anthropic/claude-3.5-sonnet",
+                "type": "chat",
+            },
+            {
+                "name": "Claude 3 Haiku",
+                "id": "anthropic/claude-3-haiku-20240307",
+                "type": "chat",
+            },
+            {
+                "name": "Qwen 2.5 Coder",
+                "id": "qwen/qwen-2.5-coder-32b-instruct",
+                "type": "chat",
+            },
+            {
+                "name": "DeepSeek Coder",
+                "id": "deepseek/deepseek-coder-v2",
+                "type": "chat",
+            },
+            {
+                "name": "Llama 3.2",
+                "id": "meta-llama/llama-3.2-3b-instruct",
+                "type": "chat",
+            },
             {"name": "GLM-4.5", "id": "z-ai/glm-4.5", "type": "chat"},
-            {"name": "Groq Llama", "id": "groq/llama-3.1-70b-versatile", "type": "chat"},
+            {
+                "name": "Groq Llama",
+                "id": "groq/llama-3.1-70b-versatile",
+                "type": "chat",
+            },
             {
                 "name": "M2-BERT",
                 "id": "togethercomputer/m2-bert-80M-8k-retrieval",
@@ -148,7 +172,9 @@ class PortkeySystemMonitor:
                         },
                         json={
                             "model": model["id"],
-                            "messages": [{"role": "user", "content": "Say 'OK' in one word"}],
+                            "messages": [
+                                {"role": "user", "content": "Say 'OK' in one word"}
+                            ],
                             "max_tokens": 5,
                             "temperature": 0.1,
                         },
@@ -208,7 +234,9 @@ class PortkeySystemMonitor:
                         if any(m["id"] == model_id for m in self.critical_models):
                             pricing[model_id] = {
                                 "prompt": model.get("pricing", {}).get("prompt"),
-                                "completion": model.get("pricing", {}).get("completion"),
+                                "completion": model.get("pricing", {}).get(
+                                    "completion"
+                                ),
                                 "context": model.get("context_length", 0),
                             }
 
@@ -303,27 +331,36 @@ class PortkeySystemMonitor:
                 if "✅" not in self.status["together"]:
                     issues.append("• Together AI connection issue")
 
-                failed_models = [k for k, v in self.status["models"].items() if "✅" not in v]
+                failed_models = [
+                    k for k, v in self.status["models"].items() if "✅" not in v
+                ]
                 if failed_models:
                     issues.append(f"• {len(failed_models)} models unavailable")
 
                 console.print(
                     Panel.fit(
-                        "[bold yellow]⚠️ Issues Detected[/bold yellow]\n" + "\n".join(issues),
+                        "[bold yellow]⚠️ Issues Detected[/bold yellow]\n"
+                        + "\n".join(issues),
                         border_style="yellow",
                     )
                 )
 
             # Wait for next check
-            console.logger.info(f"\nNext check in {interval} seconds... (Press Ctrl+C to exit)")
+            console.logger.info(
+                f"\nNext check in {interval} seconds... (Press Ctrl+C to exit)"
+            )
             await asyncio.sleep(interval)
 
     async def quick_test(self):
         """Run a quick test of all components."""
-        console.print(Panel.fit("[bold cyan]Quick System Test[/bold cyan]", border_style="cyan"))
+        console.print(
+            Panel.fit("[bold cyan]Quick System Test[/bold cyan]", border_style="cyan")
+        )
 
         with Progress(
-            SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
         ) as progress:
             # Test Portkey
             task = progress.add_task("Testing Portkey Gateway...", total=1)
@@ -341,7 +378,9 @@ class PortkeySystemMonitor:
             progress.update(task, completed=1)
 
             # Test Models
-            task = progress.add_task("Testing Models...", total=len(self.critical_models))
+            task = progress.add_task(
+                "Testing Models...", total=len(self.critical_models)
+            )
             for model in self.critical_models:
                 await self.test_model(model)
                 progress.advance(task)
@@ -365,7 +404,8 @@ class PortkeySystemMonitor:
 
             for model_id, info in pricing.items():
                 model_name = next(
-                    (m["name"] for m in self.critical_models if m["id"] == model_id), model_id
+                    (m["name"] for m in self.critical_models if m["id"] == model_id),
+                    model_id,
                 )
                 # Handle pricing which might be string or float
                 prompt_val = info.get("prompt")
@@ -446,7 +486,9 @@ async def main():
         # Quick test mode
         await monitor.quick_test()
 
-        console.logger.info("\n[dim]Tip: Run with --monitor for continuous monitoring[/dim]")
+        console.logger.info(
+            "\n[dim]Tip: Run with --monitor for continuous monitoring[/dim]"
+        )
         console.logger.info(
             "[dim]Example: python3 scripts/monitor_portkey_system.py --monitor --interval 60[/dim]"
         )

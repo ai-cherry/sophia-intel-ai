@@ -38,7 +38,9 @@ class OrchestratorConfig:
 
     # Service endpoints
     NEURAL_ENGINE_URL = os.getenv("NEURAL_ENGINE_URL", "http://neural-engine:8001")
-    ENHANCED_SEARCH_URL = os.getenv("ENHANCED_SEARCH_URL", "http://enhanced-search:8004")
+    ENHANCED_SEARCH_URL = os.getenv(
+        "ENHANCED_SEARCH_URL", "http://enhanced-search:8004"
+    )
     CHAT_SERVICE_URL = os.getenv("CHAT_SERVICE_URL", "http://chat-service:8003")
 
     # Performance settings
@@ -102,7 +104,9 @@ async def lifespan(app: FastAPI):
 
     # Health check all services
     await perform_startup_health_checks()
-    app.state.http_client = httpx.AsyncClient(timeout=OrchestratorConfig.DEFAULT_TIMEOUT)
+    app.state.http_client = httpx.AsyncClient(
+        timeout=OrchestratorConfig.DEFAULT_TIMEOUT
+    )
     orchestrator.http_client = app.state.http_client
 
     try:
@@ -164,7 +168,9 @@ class SophiaOrchestrator:
 
             # Cache successful results
             if result.success:
-                await cache_manager.set(cache_key, result.data, ttl=OrchestratorConfig.CACHE_TTL)
+                await cache_manager.set(
+                    cache_key, result.data, ttl=OrchestratorConfig.CACHE_TTL
+                )
 
             # Record access pattern for prefetching
             prefetcher.record_access(cache_key, request.task_type)
@@ -200,7 +206,9 @@ class SophiaOrchestrator:
             error=f"Unknown task type: {request.task_type}", service_name="orchestrator"
         )
 
-    async def _handle_search_task(self, request: OrchestrationRequest) -> ServiceResponse:
+    async def _handle_search_task(
+        self, request: OrchestrationRequest
+    ) -> ServiceResponse:
         """Handle search tasks with hedged requests"""
 
         # Primary search function
@@ -219,7 +227,9 @@ class SophiaOrchestrator:
         # Use hedged requests for better latency
         try:
             result = await hedged_manager.hedged_request(
-                primary_search, [backup_search], hedge_delay_ms=100  # Start backup after 100ms
+                primary_search,
+                [backup_search],
+                hedge_delay_ms=100,  # Start backup after 100ms
             )
             return result
         except Exception as e:
@@ -227,7 +237,9 @@ class SophiaOrchestrator:
                 error=f"All search attempts failed: {e!s}", service_name="orchestrator"
             )
 
-    async def _handle_inference_task(self, request: OrchestrationRequest) -> ServiceResponse:
+    async def _handle_inference_task(
+        self, request: OrchestrationRequest
+    ) -> ServiceResponse:
         """Handle neural inference tasks with bulkhead isolation"""
 
         # Use bulkhead to prevent inference overload
@@ -242,10 +254,14 @@ class SophiaOrchestrator:
         """Handle chat tasks with real-time optimization"""
 
         return await self._call_service_with_circuit_breaker(
-            "chat-service", f"{OrchestratorConfig.CHAT_SERVICE_URL}/chat", request.payload
+            "chat-service",
+            f"{OrchestratorConfig.CHAT_SERVICE_URL}/chat",
+            request.payload,
         )
 
-    async def _handle_swarm_coordination(self, request: OrchestrationRequest) -> ServiceResponse:
+    async def _handle_swarm_coordination(
+        self, request: OrchestrationRequest
+    ) -> ServiceResponse:
         """Handle swarm coordination with parallel execution"""
 
         workflow = request.payload.get("workflow", {})
@@ -285,7 +301,11 @@ class SophiaOrchestrator:
         if successful_results:
             confidence = len(successful_results) / len(agents)
             return ServiceResponse.success_response(
-                data={"results": successful_results, "errors": errors, "success_rate": confidence},
+                data={
+                    "results": successful_results,
+                    "errors": errors,
+                    "success_rate": confidence,
+                },
                 service_name="orchestrator",
                 confidence=confidence,
             )
@@ -310,7 +330,8 @@ class SophiaOrchestrator:
                     context["previous_result"] = result.data
                 else:
                     return ServiceResponse.error_response(
-                        error=f"Agent {agent} failed: {result.error}", service_name="orchestrator"
+                        error=f"Agent {agent} failed: {result.error}",
+                        service_name="orchestrator",
                     )
             except Exception as e:
                 return ServiceResponse.error_response(
@@ -323,17 +344,23 @@ class SophiaOrchestrator:
             confidence=1.0,
         )
 
-    async def _execute_agent(self, agent: str, context: dict[str, Any]) -> ServiceResponse:
+    async def _execute_agent(
+        self, agent: str, context: dict[str, Any]
+    ) -> ServiceResponse:
         """Execute individual agent with context"""
 
         # Route to appropriate service based on agent type
         if agent == "search":
             return await self._call_service_with_circuit_breaker(
-                "enhanced-search", f"{OrchestratorConfig.ENHANCED_SEARCH_URL}/search", context
+                "enhanced-search",
+                f"{OrchestratorConfig.ENHANCED_SEARCH_URL}/search",
+                context,
             )
         if agent == "neural":
             return await self._call_service_with_circuit_breaker(
-                "neural-engine", f"{OrchestratorConfig.NEURAL_ENGINE_URL}/api/v1/inference", context
+                "neural-engine",
+                f"{OrchestratorConfig.NEURAL_ENGINE_URL}/api/v1/inference",
+                context,
             )
         if agent == "chat":
             return await self._call_service_with_circuit_breaker(
@@ -367,7 +394,8 @@ class SophiaOrchestrator:
             )
         except Exception as e:
             return ServiceResponse.error_response(
-                error=f"Service {service_name} failed: {e!s}", service_name="orchestrator"
+                error=f"Service {service_name} failed: {e!s}",
+                service_name="orchestrator",
             )
 
     async def _fallback_search(self, query: str) -> ServiceResponse:
@@ -410,7 +438,9 @@ async def orchestrate_endpoint(request: OrchestrationRequest) -> dict[str, Any]:
 
 @app.post("/swarm", response_model=dict[str, Any])
 @instrument_service("orchestrator")
-async def swarm_coordination_endpoint(request: SwarmCoordinationRequest) -> dict[str, Any]:
+async def swarm_coordination_endpoint(
+    request: SwarmCoordinationRequest,
+) -> dict[str, Any]:
     """Coordinate swarm requests."""
     orchestration_request = OrchestrationRequest(
         task_type="swarm_coordination",
@@ -446,7 +476,9 @@ async def metrics_endpoint():
     """Return monitoring metrics."""
     return {
         "active_tasks": len(orchestrator.active_tasks),
-        "circuit_breaker_states": {name: cb.state.value for name, cb in circuit_breakers.items()},
+        "circuit_breaker_states": {
+            name: cb.state.value for name, cb in circuit_breakers.items()
+        },
         "cache_stats": await cache_manager.get_stats(),
         "performance_metrics": orchestrator.performance_metrics,
     }

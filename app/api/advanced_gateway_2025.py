@@ -195,12 +195,16 @@ class AdvancedAIGateway2025:
             )
 
             response = await client.post(
-                "https://api.portkey.ai/v1/chat/completions", headers=headers, json=payload
+                "https://api.portkey.ai/v1/chat/completions",
+                headers=headers,
+                json=payload,
             )
 
             if response.status_code != 200:
                 error_details = response.text
-                logger.error(f"Portkey API failed: {response.status_code} - {error_details}")
+                logger.error(
+                    f"Portkey API failed: {response.status_code} - {error_details}"
+                )
                 raise httpx.HTTPStatusError(
                     f"Portkey returned {response.status_code}: {error_details}",
                     request=response.request,
@@ -217,7 +221,9 @@ class AdvancedAIGateway2025:
                 if result["metadata"]["cache_hit"]:
                     self.cache_metrics["hits"] += 1
                     # Estimate cost savings (rough approximation)
-                    self.cache_metrics["cost_saved"] += 0.001  # $0.001 per cached request
+                    self.cache_metrics[
+                        "cost_saved"
+                    ] += 0.001  # $0.001 per cached request
                     logger.info("Cache hit - cost saved")
                 else:
                     self.cache_metrics["misses"] += 1
@@ -227,7 +233,9 @@ class AdvancedAIGateway2025:
 
     @with_circuit_breaker("external_api")
     async def generate_embeddings(
-        self, texts: list[str], model: str = "togethercomputer/m2-bert-80M-32k-retrieval"
+        self,
+        texts: list[str],
+        model: str = "togethercomputer/m2-bert-80M-32k-retrieval",
     ) -> dict[str, Any]:
         """Generate embeddings using Together AI via Portkey virtual keys."""
 
@@ -262,7 +270,10 @@ class AdvancedAIGateway2025:
             return result
 
     async def smart_chat(
-        self, messages: list[dict[str, str]], task_type: TaskType = TaskType.GENERAL, **kwargs
+        self,
+        messages: list[dict[str, str]],
+        task_type: TaskType = TaskType.GENERAL,
+        **kwargs,
     ) -> dict[str, Any]:
         """Smart model routing based on task type with latest 2025 models."""
 
@@ -301,7 +312,9 @@ class AdvancedAIGateway2025:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
-                    headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"},
+                    headers={
+                        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"
+                    },
                     timeout=10.0,
                 )
 
@@ -312,13 +325,17 @@ class AdvancedAIGateway2025:
                     # Filter latest 2025 models
                     latest_models = {
                         "gpt_5_models": [m["id"] for m in models if "gpt-5" in m["id"]],
-                        "gemini_25_models": [m["id"] for m in models if "gemini-2.5" in m["id"]],
+                        "gemini_25_models": [
+                            m["id"] for m in models if "gemini-2.5" in m["id"]
+                        ],
                         "claude_4_models": [
                             m["id"]
                             for m in models
                             if "claude-4" in m["id"] or "claude-sonnet-4" in m["id"]
                         ],
-                        "llama_4_models": [m["id"] for m in models if "llama-4" in m["id"]],
+                        "llama_4_models": [
+                            m["id"] for m in models if "llama-4" in m["id"]
+                        ],
                         "all_models": [m["id"] for m in models],
                     }
 
@@ -353,7 +370,8 @@ class AdvancedAIGateway2025:
                 else:
                     # Test chat completions
                     result = await self.chat_completion(
-                        messages=[{"role": "user", "content": "Hi"}], task_type=task_type
+                        messages=[{"role": "user", "content": "Hi"}],
+                        task_type=task_type,
                     )
                     health_status[task_type.value] = {
                         "status": "healthy",
@@ -371,7 +389,9 @@ class AdvancedAIGateway2025:
                 }
 
         # Overall health
-        healthy_count = sum(1 for status in health_status.values() if status["status"] == "healthy")
+        healthy_count = sum(
+            1 for status in health_status.values() if status["status"] == "healthy"
+        )
         total_count = len(health_status)
 
         return {
@@ -402,13 +422,15 @@ class AdvancedAIGateway2025:
             "cost_savings_percentage": round(cost_savings_percentage, 2),
             "cache_config": {
                 "llm_cache_ttl": self.portkey_configs["llm_config"]["cache"]["ttl"],
-                "embedding_cache_ttl": self.portkey_configs["embedding_config"]["cache"]["ttl"],
+                "embedding_cache_ttl": self.portkey_configs["embedding_config"][
+                    "cache"
+                ]["ttl"],
                 "similarity_threshold_llm": self.portkey_configs["llm_config"]["cache"][
                     "similarity_threshold"
                 ],
-                "similarity_threshold_embeddings": self.portkey_configs["embedding_config"][
-                    "cache"
-                ]["similarity_threshold"],
+                "similarity_threshold_embeddings": self.portkey_configs[
+                    "embedding_config"
+                ]["cache"]["similarity_threshold"],
             },
         }
 
@@ -432,7 +454,9 @@ class AdvancedAIGateway2025:
 
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
-                    "https://api.portkey.ai/v1/cache/invalidate", headers=headers, json=payload
+                    "https://api.portkey.ai/v1/cache/invalidate",
+                    headers=headers,
+                    json=payload,
                 )
 
                 if response.status_code == 200:
@@ -455,7 +479,12 @@ class AdvancedAIGateway2025:
 
         except Exception as e:
             logger.error(f"Cache invalidation error: {e}")
-            return {"success": False, "error": str(e), "pattern": pattern, "model": model}
+            return {
+                "success": False,
+                "error": str(e),
+                "pattern": pattern,
+                "model": model,
+            }
 
     async def clear_all_cache(self) -> dict[str, Any]:
         """Clear all cached entries across all models."""
@@ -500,14 +529,18 @@ async def chat_with_gpt5(messages: list[dict[str, str]], **kwargs) -> dict[str, 
 
 
 @with_circuit_breaker("external_api")
-async def chat_with_gemini25_pro(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
+async def chat_with_gemini25_pro(
+    messages: list[dict[str, str]], **kwargs
+) -> dict[str, Any]:
     """Chat with Gemini 2.5 Pro (1M context) via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CREATIVE, **kwargs)
 
 
 @with_circuit_breaker("external_api")
-async def chat_with_claude_sonnet4(messages: list[dict[str, str]], **kwargs) -> dict[str, Any]:
+async def chat_with_claude_sonnet4(
+    messages: list[dict[str, str]], **kwargs
+) -> dict[str, Any]:
     """Chat with Claude Sonnet 4 via OpenRouter virtual key."""
     gateway = get_advanced_gateway()
     return await gateway.smart_chat(messages, TaskType.CODING, **kwargs)
@@ -530,7 +563,14 @@ async def smart_route_chat(
     task_keywords = {
         TaskType.REASONING: ["analyze", "reason", "logic", "math", "problem", "think"],
         TaskType.CREATIVE: ["write", "story", "creative", "imagine", "art", "design"],
-        TaskType.CODING: ["code", "program", "debug", "function", "algorithm", "python"],
+        TaskType.CODING: [
+            "code",
+            "program",
+            "debug",
+            "function",
+            "algorithm",
+            "python",
+        ],
         TaskType.FAST: ["quick", "simple", "fast", "brief", "short"],
     }
 
@@ -540,7 +580,9 @@ async def smart_route_chat(
 
     detected_task = TaskType.GENERAL
     for task_type, keywords in task_keywords.items():
-        if any(keyword in content or keyword in task_hint_lower for keyword in keywords):
+        if any(
+            keyword in content or keyword in task_hint_lower for keyword in keywords
+        ):
             detected_task = task_type
             break
 

@@ -69,7 +69,9 @@ class OptimizedEmbeddingService:
         self.model = "text-embedding-3-small"  # Fastest model with good quality
         self.batch_size = 100  # Optimized batch size for throughput
 
-    async def embed_text_evolved(self, text: str, use_cache: bool = True) -> List[float]:
+    async def embed_text_evolved(
+        self, text: str, use_cache: bool = True
+    ) -> List[float]:
         """Generate embedding with 11% performance improvement"""
 
         start_time = time.perf_counter_ns()
@@ -148,12 +150,17 @@ class OptimizedEmbeddingService:
 
             # Batch Redis cache lookups
             if cache_tasks:
-                cache_results = await asyncio.gather(*cache_tasks, return_exceptions=True)
+                cache_results = await asyncio.gather(
+                    *cache_tasks, return_exceptions=True
+                )
 
                 task_index = 0
                 for i, (orig_i, cache_key) in enumerate(cache_keys):
                     if orig_i not in cached_embeddings:
-                        if task_index < len(cache_results) and cache_results[task_index]:
+                        if (
+                            task_index < len(cache_results)
+                            and cache_results[task_index]
+                        ):
                             cached_embeddings[orig_i] = cache_results[task_index]
                             # Store in L1 cache
                             self.memory_cache[cache_key] = cache_results[task_index]
@@ -184,7 +191,9 @@ class OptimizedEmbeddingService:
                         # Store in L1 cache immediately
                         self.memory_cache[cache_key] = embedding
                         # Queue L2 cache storage
-                        cache_tasks.append(self._cache_compressed_embedding(cache_key, embedding))
+                        cache_tasks.append(
+                            self._cache_compressed_embedding(cache_key, embedding)
+                        )
 
                 # Parallel cache storage
                 if cache_tasks:
@@ -216,7 +225,8 @@ class OptimizedEmbeddingService:
         payload = {"model": self.model, "input": text, "encoding_format": "float"}
 
         response = await self.client.post(
-            "/embeddings", content=orjson.dumps(payload)  # 40% faster JSON serialization
+            "/embeddings",
+            content=orjson.dumps(payload),  # 40% faster JSON serialization
         )
         response.raise_for_status()
 
@@ -234,7 +244,9 @@ class OptimizedEmbeddingService:
 
             payload = {"model": self.model, "input": batch, "encoding_format": "float"}
 
-            response = await self.client.post("/embeddings", content=orjson.dumps(payload))
+            response = await self.client.post(
+                "/embeddings", content=orjson.dumps(payload)
+            )
             response.raise_for_status()
 
             result = orjson.loads(response.content)
@@ -255,7 +267,9 @@ class OptimizedEmbeddingService:
 
         return f"emb_v2:{self.model}:{text_hash}"
 
-    async def _get_compressed_cached_embedding(self, cache_key: str) -> Optional[List[float]]:
+    async def _get_compressed_cached_embedding(
+        self, cache_key: str
+    ) -> Optional[List[float]]:
         """Retrieve cached embedding with LZ4 decompression"""
         try:
             compressed_data = await self.redis.get(cache_key)
@@ -302,7 +316,9 @@ class OptimizedEmbeddingService:
         # Redis cache stats
         try:
             redis_keys = await self.redis.keys("emb_v2:*")
-            redis_memory = await self.redis.memory_usage("emb_v2:*") if redis_keys else 0
+            redis_memory = (
+                await self.redis.memory_usage("emb_v2:*") if redis_keys else 0
+            )
         except:
             redis_keys = []
             redis_memory = 0

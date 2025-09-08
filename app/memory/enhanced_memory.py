@@ -45,7 +45,10 @@ class SharedContext:
         self.updated_at = datetime.now()
 
         # Check if within budget
-        return self.cost_spent <= self.cost_budget and self.tokens_used <= self.token_budget
+        return (
+            self.cost_spent <= self.cost_budget
+            and self.tokens_used <= self.token_budget
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for persistence."""
@@ -94,7 +97,9 @@ class EnhancedMemorySystem:
         # Pattern storage
         self.patterns: dict[str, dict[str, Any]] = {}
         self.pattern_instances: list[PatternInstance] = []
-        self.pattern_index: dict[str, list[str]] = defaultdict(list)  # task_type -> pattern_ids
+        self.pattern_index: dict[str, list[str]] = defaultdict(
+            list
+        )  # task_type -> pattern_ids
 
         # Shared context storage
         self.active_contexts: dict[str, SharedContext] = {}
@@ -182,7 +187,9 @@ class EnhancedMemorySystem:
         ) / pattern["usage_count"]
 
         # Update success rate
-        self.success_rates[pattern_id] = pattern["success_count"] / pattern["usage_count"]
+        self.success_rates[pattern_id] = (
+            pattern["success_count"] / pattern["usage_count"]
+        )
 
         logger.info(f"Recorded pattern usage: {pattern_id} (success={success})")
 
@@ -218,7 +225,9 @@ class EnhancedMemorySystem:
 
             # Calculate score (weighted by success rate and usage)
             success_rate = self.success_rates.get(pattern_id, 0)
-            usage_normalized = min(pattern["usage_count"] / 100, 1.0)  # Normalize to 0-1
+            usage_normalized = min(
+                pattern["usage_count"] / 100, 1.0
+            )  # Normalize to 0-1
             score = (success_rate * 0.7) + (usage_normalized * 0.3)
 
             if score > best_score:
@@ -257,7 +266,9 @@ class EnhancedMemorySystem:
         """Get shared context for a session."""
         return self.active_contexts.get(session_id)
 
-    async def update_shared_context(self, session_id: str, updates: dict[str, Any]) -> bool:
+    async def update_shared_context(
+        self, session_id: str, updates: dict[str, Any]
+    ) -> bool:
         """Update shared context with new information."""
         context = self.active_contexts.get(session_id)
         if not context:
@@ -348,7 +359,10 @@ class EnhancedMemorySystem:
                 continue
 
             # Simple text matching
-            if query.lower() in key.lower() or query.lower() in str(entry["value"]).lower():
+            if (
+                query.lower() in key.lower()
+                or query.lower() in str(entry["value"]).lower()
+            ):
                 results.append((key, entry["value"]))
 
         # Sort by access count and limit
@@ -356,7 +370,9 @@ class EnhancedMemorySystem:
 
         return results[:limit]
 
-    async def get_related_patterns(self, pattern_id: str, limit: int = 5) -> list[dict[str, Any]]:
+    async def get_related_patterns(
+        self, pattern_id: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Get patterns related to a given pattern."""
         pattern = self.patterns.get(pattern_id)
         if not pattern:
@@ -387,7 +403,9 @@ class EnhancedMemorySystem:
         return {
             "patterns": {
                 "total": len(self.patterns),
-                "by_type": {ptype: len(pids) for ptype, pids in self.pattern_index.items()},
+                "by_type": {
+                    ptype: len(pids) for ptype, pids in self.pattern_index.items()
+                },
                 "total_usage": sum(p["usage_count"] for p in self.patterns.values()),
                 "avg_success_rate": (
                     sum(self.success_rates.values()) / len(self.success_rates)
@@ -399,7 +417,9 @@ class EnhancedMemorySystem:
                 "active": len(self.active_contexts),
                 "historical": len(self.context_history),
                 "total_cost": sum(c.cost_spent for c in self.active_contexts.values()),
-                "total_tokens": sum(c.tokens_used for c in self.active_contexts.values()),
+                "total_tokens": sum(
+                    c.tokens_used for c in self.active_contexts.values()
+                ),
             },
             "knowledge": {
                 "entries": len(self.knowledge_base),
@@ -428,7 +448,9 @@ class EnhancedMemorySystem:
             ],
             "pattern_index": dict(self.pattern_index),
             "contexts": {
-                "active": {sid: ctx.to_dict() for sid, ctx in self.active_contexts.items()},
+                "active": {
+                    sid: ctx.to_dict() for sid, ctx in self.active_contexts.items()
+                },
                 "history": [ctx.to_dict() for ctx in self.context_history],
             },
             "knowledge_base": self.knowledge_base,
@@ -463,7 +485,9 @@ class EnhancedMemorySystem:
         # Recalculate success rates
         for pattern_id, pattern in self.patterns.items():
             if pattern["usage_count"] > 0:
-                self.success_rates[pattern_id] = pattern["success_count"] / pattern["usage_count"]
+                self.success_rates[pattern_id] = (
+                    pattern["success_count"] / pattern["usage_count"]
+                )
 
         logger.info(
             f"Imported memory with {len(self.patterns)} patterns and {len(self.knowledge_base)} knowledge entries"

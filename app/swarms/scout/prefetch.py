@@ -26,7 +26,9 @@ async def prefetch_and_index(
     except Exception:
         pass
     try:
-        max_bytes_per_file = int(os.getenv("SCOUT_PREFETCH_MAX_BYTES", str(max_bytes_per_file)))
+        max_bytes_per_file = int(
+            os.getenv("SCOUT_PREFETCH_MAX_BYTES", str(max_bytes_per_file))
+        )
     except Exception:
         pass
 
@@ -53,7 +55,9 @@ async def prefetch_and_index(
     chunks: List[DocChunk] = []
     for p in files:
         try:
-            fr = await asyncio.to_thread(client.fs_read, p, max_bytes=max_bytes_per_file)
+            fr = await asyncio.to_thread(
+                client.fs_read, p, max_bytes=max_bytes_per_file
+            )
             content = fr.get("content", "") if isinstance(fr, dict) else str(fr)
             if not content:
                 continue

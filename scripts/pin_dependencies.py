@@ -47,7 +47,9 @@ class DependencyManager:
                 unpinned.append(dep)
 
         # Check optional dependencies
-        for group, deps in pyproject.get("project", {}).get("optional-dependencies", {}).items():
+        for group, deps in (
+            pyproject.get("project", {}).get("optional-dependencies", {}).items()
+        ):
             for dep in deps:
                 if not self._is_pinned(dep):
                     unpinned.append(f"{group}: {dep}")
@@ -74,7 +76,9 @@ class DependencyManager:
         """Generate lock files using pip-compile"""
         try:
             # Check if pip-tools is installed
-            result = subprocess.run(["pip-compile", "--version"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["pip-compile", "--version"], capture_output=True, text=True
+            )
             if result.returncode != 0:
                 return False, "pip-tools not installed. Run: pip install pip-tools"
 
@@ -127,7 +131,9 @@ class DependencyManager:
 
         try:
             # Run safety check
-            result = subprocess.run(["safety", "check", "--json"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["safety", "check", "--json"], capture_output=True, text=True
+            )
 
             if result.stdout:
                 data = json.loads(result.stdout)
@@ -142,7 +148,9 @@ class DependencyManager:
                         }
                     )
         except subprocess.CalledProcessError:
-            print(f"{YELLOW}Warning: safety not installed. Run: pip install safety{RESET}")
+            print(
+                f"{YELLOW}Warning: safety not installed. Run: pip install safety{RESET}"
+            )
         except json.JSONDecodeError:
             print(f"{YELLOW}Warning: Could not parse safety output{RESET}")
 
@@ -154,7 +162,9 @@ class DependencyManager:
 
         try:
             result = subprocess.run(
-                ["pip", "list", "--outdated", "--format=json"], capture_output=True, text=True
+                ["pip", "list", "--outdated", "--format=json"],
+                capture_output=True,
+                text=True,
             )
 
             if result.stdout:
@@ -195,7 +205,9 @@ class DependencyManager:
         found_venvs = []
         for pattern in venv_patterns:
             for path in self.project_root.glob(f"**/{pattern}"):
-                if path.is_dir() and not str(path).startswith(str(self.project_root / ".git")):
+                if path.is_dir() and not str(path).startswith(
+                    str(self.project_root / ".git")
+                ):
                     found_venvs.append(path)
 
         return found_venvs
@@ -291,7 +303,9 @@ class DependencyManager:
         if vulns:
             report.append(f"## {RED}Security Vulnerabilities{RESET}")
             for vuln in vulns:
-                report.append(f"  - {vuln['package']} {vuln['installed']}: {vuln['vulnerability']}")
+                report.append(
+                    f"  - {vuln['package']} {vuln['installed']}: {vuln['vulnerability']}"
+                )
             report.append("")
         else:
             report.append(f"## {GREEN}No Security Vulnerabilities ✓{RESET}")
@@ -346,7 +360,9 @@ def main():
                 print(f"{YELLOW}Found {len(unpinned)} unpinned dependencies{RESET}")
                 for dep in unpinned:
                     print(f"  - {dep}")
-                print(f"\n{RED}Please update pyproject.toml to pin all dependencies{RESET}")
+                print(
+                    f"\n{RED}Please update pyproject.toml to pin all dependencies{RESET}"
+                )
                 sys.exit(1)
             else:
                 print(f"{GREEN}All dependencies are pinned ✓{RESET}")
@@ -366,7 +382,9 @@ def main():
             if vulns:
                 print(f"{RED}Found {len(vulns)} security vulnerabilities:{RESET}")
                 for vuln in vulns:
-                    print(f"  - {vuln['package']} {vuln['installed']}: {vuln['vulnerability']}")
+                    print(
+                        f"  - {vuln['package']} {vuln['installed']}: {vuln['vulnerability']}"
+                    )
                 sys.exit(1)
             else:
                 print(f"{GREEN}No security vulnerabilities found ✓{RESET}")
@@ -375,10 +393,14 @@ def main():
             # Clean virtualenvs
             venvs = manager.verify_no_virtualenv()
             if venvs:
-                print(f"{YELLOW}Found {len(venvs)} virtual environment directories{RESET}")
+                print(
+                    f"{YELLOW}Found {len(venvs)} virtual environment directories{RESET}"
+                )
                 for venv in venvs:
                     print(f"  - {venv.relative_to(manager.project_root)}")
-                print(f"\n{RED}Please remove these directories from the repository{RESET}")
+                print(
+                    f"\n{RED}Please remove these directories from the repository{RESET}"
+                )
                 sys.exit(1)
             else:
                 print(f"{GREEN}No virtual environments in repository ✓{RESET}")

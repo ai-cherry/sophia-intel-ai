@@ -129,18 +129,26 @@ class EventBroadcaster:
     async def remove_connection(self, websocket: WebSocket):
         """Remove a WebSocket connection."""
         self.connections.discard(websocket)
-        logger.info(f"WebSocket disconnected. Total connections: {len(self.connections)}")
+        logger.info(
+            f"WebSocket disconnected. Total connections: {len(self.connections)}"
+        )
 
     async def publish(self, event_type: str, data: dict[str, Any]):
         """Publish an event to all connected clients."""
-        event = {"type": event_type, "data": data, "timestamp": datetime.utcnow().isoformat()}
+        event = {
+            "type": event_type,
+            "data": data,
+            "timestamp": datetime.utcnow().isoformat(),
+        }
 
         # Add to queue for broadcasting
         await self.event_queue.put(event)
 
         # Also publish to Redis for persistence
         if self.redis_client:
-            await self.redis_client.publish(f"orchestrator:{event_type}", json.dumps(event))
+            await self.redis_client.publish(
+                f"orchestrator:{event_type}", json.dumps(event)
+            )
 
     async def _broadcast_loop(self):
         """Continuously broadcast events from the queue."""
@@ -242,7 +250,9 @@ class FactoryAwareOrchestrator:
         self.execution_patterns: list[dict[str, Any]] = []
         self.optimization_suggestions: list[dict[str, Any]] = []
 
-        logger.info("FactoryAwareOrchestrator initialized with full factory integration")
+        logger.info(
+            "FactoryAwareOrchestrator initialized with full factory integration"
+        )
 
     async def initialize(self):
         """Initialize the orchestrator and its components."""
@@ -352,7 +362,9 @@ class FactoryAwareOrchestrator:
             agent_id = await self.sophia_factory.create_business_agent(
                 template_ids[i], custom_config={"request_context": request.context}
             )
-            agents.append({"id": agent_id, "template": template_ids[i], "factory": "sophia"})
+            agents.append(
+                {"id": agent_id, "template": template_ids[i], "factory": "sophia"}
+            )
 
         return agents
 
@@ -378,7 +390,9 @@ class FactoryAwareOrchestrator:
             agent_id = await self.artemis_factory.create_technical_agent(
                 template_names[i], custom_config={"request_context": request.context}
             )
-            agents.append({"id": agent_id, "template": template_names[i], "factory": "artemis"})
+            agents.append(
+                {"id": agent_id, "template": template_names[i], "factory": "artemis"}
+            )
 
         return agents
 
@@ -440,7 +454,11 @@ class FactoryAwareOrchestrator:
                 # Broadcast completion
                 await self.event_broadcaster.publish(
                     "agent_complete",
-                    {"agent_id": agent["id"], "execution_id": execution_id, "success": True},
+                    {
+                        "agent_id": agent["id"],
+                        "execution_id": execution_id,
+                        "success": True,
+                    },
                 )
 
             # Synthesize results
@@ -476,7 +494,9 @@ class FactoryAwareOrchestrator:
             self.active_executions[execution_id]["error"] = str(e)
             raise
 
-    def _estimate_cost(self, agents: list[dict[str, Any]], complexity: dict[str, Any]) -> float:
+    def _estimate_cost(
+        self, agents: list[dict[str, Any]], complexity: dict[str, Any]
+    ) -> float:
         """Estimate the cost of execution."""
         # Simple cost estimation model
         base_cost_per_agent = 0.01  # $0.01 per agent
@@ -488,7 +508,10 @@ class FactoryAwareOrchestrator:
         return num_agents * base_cost_per_agent * multiplier
 
     async def _store_execution(
-        self, request: OrchestratorRequest, agents: list[dict[str, Any]], result: dict[str, Any]
+        self,
+        request: OrchestratorRequest,
+        agents: list[dict[str, Any]],
+        result: dict[str, Any],
     ):
         """Store execution for learning and analysis."""
         execution_data = {

@@ -92,8 +92,12 @@ class NLProcessRequest(BaseModel):
     context: Optional[dict[str, Any]] = Field(
         default={}, description="Optional context for processing"
     )
-    session_id: Optional[str] = Field(default=None, description="Session ID for tracking")
-    api_key: Optional[str] = Field(default=None, description="API key for authentication")
+    session_id: Optional[str] = Field(
+        default=None, description="Session ID for tracking"
+    )
+    api_key: Optional[str] = Field(
+        default=None, description="API key for authentication"
+    )
 
 
 class StandardResponse(BaseModel):
@@ -114,7 +118,9 @@ class StandardResponse(BaseModel):
     user_id: Optional[str] = None
     timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
     execution_time_ms: Optional[float] = None
-    rate_limited: bool = Field(False, description="Whether this request was rate limited")
+    rate_limited: bool = Field(
+        False, description="Whether this request was rate limited"
+    )
     error: Optional[str] = None
 
     def __init__(self, **data):
@@ -122,7 +128,9 @@ class StandardResponse(BaseModel):
         # Ensure message is set if not provided
         if not self.message and self.response:
             self.message = (
-                self.response[:100] + "..." if len(self.response) > 100 else self.response
+                self.response[:100] + "..."
+                if len(self.response) > 100
+                else self.response
             )
 
 
@@ -186,9 +194,13 @@ async def process_natural_language(
     user_agent = req.headers.get("user-agent", "unknown")
 
     logger.info(f"🔄 NL REQUEST - Session: {session_id[:8]}, IP: {client_ip}")
-    logger.info(f"📝 Input: '{request.text[:100]}{'...' if len(request.text) > 100 else ''}'")
+    logger.info(
+        f"📝 Input: '{request.text[:100]}{'...' if len(request.text) > 100 else ''}'"
+    )
     logger.debug(f"🌐 User-Agent: {user_agent}")
-    logger.debug(f"📋 Context size: {len(request.context)} | API Key: {bool(request.api_key)}")
+    logger.debug(
+        f"📋 Context size: {len(request.context)} | API Key: {bool(request.api_key)}"
+    )
 
     # Use SmartCommandDispatcher if available
     if smart_dispatcher:
@@ -200,7 +212,9 @@ async def process_natural_language(
 
             # Extract response data
             response_data = (
-                execution_result.response if isinstance(execution_result.response, dict) else {}
+                execution_result.response
+                if isinstance(execution_result.response, dict)
+                else {}
             )
 
             return NLProcessResponse(
@@ -216,13 +230,17 @@ async def process_natural_language(
                 workflow_id=response_data.get("workflow_id"),
                 session_id=session_id,
                 entities=response_data.get("entities", {}),
-                confidence=response_data.get("confidence", execution_result.quality_score),
+                confidence=response_data.get(
+                    "confidence", execution_result.quality_score
+                ),
                 execution_time_ms=execution_result.execution_time * 1000,
                 error=execution_result.error,
             )
 
         except Exception as e:
-            logger.error(f"SmartDispatcher failed, falling back to simple processing: {e}")
+            logger.error(
+                f"SmartDispatcher failed, falling back to simple processing: {e}"
+            )
             # Fall through to simple processing
 
     # Fallback to simple processing if SmartDispatcher not available
@@ -281,7 +299,9 @@ async def process_natural_language(
         elif parsed_command.intent == CommandIntent.RUN_AGENT:
             agent_name = parsed_command.entities.get("agent_name", "default")
             logger.info(f"Starting agent execution: {agent_name}")
-            background_tasks.add_task(execute_agent_async, session_id, request.text, agent_name)
+            background_tasks.add_task(
+                execute_agent_async, session_id, request.text, agent_name
+            )
             response_text = f"Starting agent '{agent_name}'..."
 
         execution_time = (time.time() - start_time) * 1000
@@ -351,7 +371,9 @@ async def trigger_workflow(
 
         if request.async_execution:
             # Execute in background
-            background_tasks.add_task(trigger_workflow_async, request.workflow_id, request.payload)
+            background_tasks.add_task(
+                trigger_workflow_async, request.workflow_id, request.payload
+            )
 
             return {
                 "success": True,
@@ -432,7 +454,9 @@ async def execute_agent(
 
         # Execute agent workflow
         if background_tasks:
-            background_tasks.add_task(execute_agent_workflow, session_id, task, [agent_role])
+            background_tasks.add_task(
+                execute_agent_workflow, session_id, task, [agent_role]
+            )
 
             return {
                 "success": True,
@@ -520,19 +544,29 @@ async def get_system_status() -> dict[str, Any]:
     Get system status including all services
     """
     try:
-        status = {"timestamp": datetime.now().isoformat(), "services": {}, "health": "healthy"}
+        status = {
+            "timestamp": datetime.now().isoformat(),
+            "services": {},
+            "health": "healthy",
+        }
 
         # Check Ollama
         try:
             response = await http_get("http://localhost:11434/api/tags", timeout=2)
-            status["services"]["ollama"] = "running" if response.status_code == 200 else "error"
+            status["services"]["ollama"] = (
+                "running" if response.status_code == 200 else "error"
+            )
         except:
             status["services"]["ollama"] = "offline"
 
         # Check Weaviate
         try:
-            response = await http_get("http://localhost:8080/v1/.well-known/ready", timeout=2)
-            status["services"]["weaviate"] = "running" if response.status_code == 200 else "error"
+            response = await http_get(
+                "http://localhost:8080/v1/.well-known/ready", timeout=2
+            )
+            status["services"]["weaviate"] = (
+                "running" if response.status_code == 200 else "error"
+            )
         except:
             status["services"]["weaviate"] = "offline"
 
@@ -547,7 +581,9 @@ async def get_system_status() -> dict[str, Any]:
         # Check n8n
         try:
             response = await http_get("http://localhost:5678/healthz", timeout=2)
-            status["services"]["n8n"] = "running" if response.status_code == 200 else "error"
+            status["services"]["n8n"] = (
+                "running" if response.status_code == 200 else "error"
+            )
         except:
             status["services"]["n8n"] = "offline"
 
@@ -601,7 +637,9 @@ async def workflow_callback(
         # Update memory if available
         if memory_connector and session_id:
             # Retrieve the original interaction and update it
-            history = await memory_connector.retrieve_session_history(session_id, limit=1)
+            history = await memory_connector.retrieve_session_history(
+                session_id, limit=1
+            )
             if history:
                 interaction = history[0]
                 interaction["execution_result"] = callback_data
@@ -630,7 +668,9 @@ async def workflow_callback(
 
 
 @with_circuit_breaker("external_api")
-async def trigger_workflow_async(workflow_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+async def trigger_workflow_async(
+    workflow_id: str, payload: dict[str, Any]
+) -> dict[str, Any]:
     """
     Trigger n8n workflow asynchronously
     """
@@ -680,7 +720,9 @@ async def execute_agent_async(session_id: str, task: str, agent_name: str):
             agents_chain=[agent_role],
         )
 
-        logger.info(f"Agent {agent_name} execution completed for session {session_id[:8]}")
+        logger.info(
+            f"Agent {agent_name} execution completed for session {session_id[:8]}"
+        )
         return result
 
     except Exception as e:
@@ -688,7 +730,9 @@ async def execute_agent_async(session_id: str, task: str, agent_name: str):
         raise
 
 
-async def execute_agent_workflow(session_id: str, task: str, agents_chain: list[AgentRole]):
+async def execute_agent_workflow(
+    session_id: str, task: str, agents_chain: list[AgentRole]
+):
     """
     Execute agent workflow
     """
@@ -757,7 +801,9 @@ async def optimize_swarm_mode(
         raise HTTPException(status_code=400, detail="Invalid optimization goal")
 
     try:
-        result = await smart_dispatcher.optimize_for_session(session_id, optimization_goal)
+        result = await smart_dispatcher.optimize_for_session(
+            session_id, optimization_goal
+        )
         return {"success": True, **result}
     except Exception as e:
         logger.error(f"Error optimizing swarm mode: {e}")
@@ -788,7 +834,13 @@ async def get_execution_modes() -> dict[str, Any]:
                 "name": "Quality Mode",
                 "description": "High-quality execution for complex tasks",
                 "complexity_threshold": 1.0,
-                "patterns": ["memory_enrichment", "swarm", "debate", "quality_gates", "consensus"],
+                "patterns": [
+                    "memory_enrichment",
+                    "swarm",
+                    "debate",
+                    "quality_gates",
+                    "consensus",
+                ],
             },
         },
     }

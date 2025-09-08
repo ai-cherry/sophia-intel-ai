@@ -79,7 +79,9 @@ class PerformanceOptimizer:
 
             logger = logging.getLogger(f"mcp.{self.server_name}.performance")
             for warning in warnings:
-                logger.warning(f"⚠️ Performance Warning [{metrics.operation}]: {warning}")
+                logger.warning(
+                    f"⚠️ Performance Warning [{metrics.operation}]: {warning}"
+                )
 
     def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary statistics"""
@@ -201,7 +203,9 @@ class CacheManager:
     def cleanup_expired(self) -> int:
         """Remove expired entries and return count of removed items"""
         current_time = time.time()
-        expired_keys = [key for key, entry in self.cache.items() if current_time > entry["expires"]]
+        expired_keys = [
+            key for key, entry in self.cache.items() if current_time > entry["expires"]
+        ]
         for key in expired_keys:
             del self.cache[key]
         return len(expired_keys)
@@ -210,7 +214,9 @@ class CacheManager:
         """Get cache statistics"""
         total_entries = len(self.cache)
         current_time = time.time()
-        expired_entries = sum(1 for entry in self.cache.values() if current_time > entry["expires"])
+        expired_entries = sum(
+            1 for entry in self.cache.values() if current_time > entry["expires"]
+        )
         return {
             "total_entries": total_entries,
             "active_entries": total_entries - expired_entries,
@@ -231,7 +237,9 @@ class RateLimiter:
         """Check if a call is allowed under rate limit"""
         current_time = time.time()
         self.calls = [
-            call_time for call_time in self.calls if current_time - call_time < self.time_window
+            call_time
+            for call_time in self.calls
+            if current_time - call_time < self.time_window
         ]
         if len(self.calls) < self.max_calls:
             self.calls.append(current_time)

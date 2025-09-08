@@ -149,16 +149,31 @@ class Debugger:
         """Load fix strategies for common bugs"""
         return {
             "TypeError": [
-                {"check": "type conversion", "fix": "Add type conversion or validation"},
-                {"check": "null check", "fix": "Add null/undefined check before operation"},
+                {
+                    "check": "type conversion",
+                    "fix": "Add type conversion or validation",
+                },
+                {
+                    "check": "null check",
+                    "fix": "Add null/undefined check before operation",
+                },
             ],
             "AttributeError": [
-                {"check": "hasattr", "fix": "Use hasattr() to check attribute existence"},
-                {"check": "null check", "fix": "Check if object is None before accessing"},
+                {
+                    "check": "hasattr",
+                    "fix": "Use hasattr() to check attribute existence",
+                },
+                {
+                    "check": "null check",
+                    "fix": "Check if object is None before accessing",
+                },
             ],
             "KeyError": [
                 {"check": "get method", "fix": "Use dict.get() with default value"},
-                {"check": "in operator", "fix": "Check key existence with 'in' operator"},
+                {
+                    "check": "in operator",
+                    "fix": "Check key existence with 'in' operator",
+                },
             ],
         }
 
@@ -202,7 +217,9 @@ class Debugger:
             confidence=confidence,
         )
 
-    def debug_code(self, file_path: str, error: Optional[str] = None) -> List[BugReport]:
+    def debug_code(
+        self, file_path: str, error: Optional[str] = None
+    ) -> List[BugReport]:
         """
         Debug code and identify issues.
 
@@ -271,7 +288,9 @@ class Debugger:
 
         return fix
 
-    def start_debug_session(self, file_path: str, breakpoints: List[int] = None) -> DebugSession:
+    def start_debug_session(
+        self, file_path: str, breakpoints: List[int] = None
+    ) -> DebugSession:
         """
         Start an interactive debug session.
 
@@ -317,7 +336,9 @@ class Debugger:
         # Simulate stepping through code
         state = {
             "line": session.step_count,
-            "variables": self._get_variables_at_line(session.target_file, session.step_count),
+            "variables": self._get_variables_at_line(
+                session.target_file, session.step_count
+            ),
             "stack": self._get_call_stack(session),
         }
 
@@ -348,7 +369,9 @@ class Debugger:
 
         if "syntax" in error_lower or "indent" in error_lower:
             return BugType.SYNTAX
-        elif "type" in error_lower or "attribute" in error_lower or "key" in error_lower:
+        elif (
+            "type" in error_lower or "attribute" in error_lower or "key" in error_lower
+        ):
             return BugType.RUNTIME
         elif "memory" in error_lower or "overflow" in error_lower:
             return BugType.MEMORY
@@ -613,7 +636,9 @@ class Debugger:
 
         return line
 
-    def _fix_runtime_error(self, line: str, error_description: str, file_path: str) -> str:
+    def _fix_runtime_error(
+        self, line: str, error_description: str, file_path: str
+    ) -> str:
         """Fix runtime errors"""
         if "TypeError" in error_description:
             # Add type checking
@@ -656,7 +681,9 @@ class Debugger:
 
         return line
 
-    def _get_variables_at_line(self, file_path: str, line_number: int) -> Dict[str, Any]:
+    def _get_variables_at_line(
+        self, file_path: str, line_number: int
+    ) -> Dict[str, Any]:
         """Get variable values at a specific line (simulation)"""
         # This would integrate with actual debugger
         return {"local_vars": {}, "global_vars": {}}

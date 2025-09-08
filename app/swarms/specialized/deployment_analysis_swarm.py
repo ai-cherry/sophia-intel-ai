@@ -293,7 +293,9 @@ class DeploymentAnalysisSwarm:
 
     def _load_current_infrastructure(self):
         """Load current infrastructure configuration"""
-        config_path = Path("/Users/lynnmusil/sophia-intel-ai/fly-deployment-results.json")
+        config_path = Path(
+            "/Users/lynnmusil/sophia-intel-ai/fly-deployment-results.json"
+        )
         if config_path.exists():
             with open(config_path) as f:
                 self.current_infrastructure = json.load(f)
@@ -361,7 +363,9 @@ class DeploymentAnalysisSwarm:
                 analysis_tasks.append(self._analyze_observability_enhancement())
 
             # Execute analyses
-            domain_results = await asyncio.gather(*analysis_tasks, return_exceptions=True)
+            domain_results = await asyncio.gather(
+                *analysis_tasks, return_exceptions=True
+            )
 
             # Process results
 
@@ -372,12 +376,16 @@ class DeploymentAnalysisSwarm:
 
             # Synthesize cross-domain optimization recommendations
             analysis_result["optimization_recommendations"] = (
-                await self._synthesize_recommendations(analysis_result["domain_analyses"])
+                await self._synthesize_recommendations(
+                    analysis_result["domain_analyses"]
+                )
             )
 
             # Generate implementation roadmap
-            analysis_result["implementation_roadmap"] = await self._generate_implementation_roadmap(
-                analysis_result["optimization_recommendations"]
+            analysis_result["implementation_roadmap"] = (
+                await self._generate_implementation_roadmap(
+                    analysis_result["optimization_recommendations"]
+                )
             )
 
             # Calculate cost impact
@@ -386,8 +394,10 @@ class DeploymentAnalysisSwarm:
             )
 
             # Assess implementation risks
-            analysis_result["risk_assessment"] = await self._assess_implementation_risks(
-                analysis_result["optimization_recommendations"]
+            analysis_result["risk_assessment"] = (
+                await self._assess_implementation_risks(
+                    analysis_result["optimization_recommendations"]
+                )
             )
 
             # Define success criteria
@@ -396,7 +406,9 @@ class DeploymentAnalysisSwarm:
             )
 
             analysis_result["completed_at"] = datetime.now().isoformat()
-            analysis_result["analysis_duration"] = self._calculate_duration(analysis_result)
+            analysis_result["analysis_duration"] = self._calculate_duration(
+                analysis_result
+            )
 
             # Store analysis results
             self.analysis_history[analysis_id] = analysis_result
@@ -414,7 +426,9 @@ class DeploymentAnalysisSwarm:
 
         # Current infrastructure analysis
         services = self.current_infrastructure.get("services", {})
-        infrastructure_specs = self.current_infrastructure.get("infrastructure_specs", {})
+        infrastructure_specs = self.current_infrastructure.get(
+            "infrastructure_specs", {}
+        )
 
         analysis = {
             "agent": agent.name,
@@ -422,10 +436,12 @@ class DeploymentAnalysisSwarm:
             "current_deployment": {
                 "total_services": len(services),
                 "total_max_instances": sum(
-                    spec.get("max_instances", 0) for spec in infrastructure_specs.values()
+                    spec.get("max_instances", 0)
+                    for spec in infrastructure_specs.values()
                 ),
                 "total_storage_gb": sum(
-                    spec.get("volume_size_gb", 0) for spec in infrastructure_specs.values()
+                    spec.get("volume_size_gb", 0)
+                    for spec in infrastructure_specs.values()
                 ),
                 "primary_region": "sjc",  # San Jose
                 "secondary_regions": ["iad"],  # Currently limited
@@ -490,7 +506,9 @@ class DeploymentAnalysisSwarm:
         agent = self._get_agent("cost_optimization_analyst_01")
 
         # Calculate current costs based on infrastructure specs
-        infrastructure_specs = self.current_infrastructure.get("infrastructure_specs", {})
+        infrastructure_specs = self.current_infrastructure.get(
+            "infrastructure_specs", {}
+        )
 
         estimated_monthly_costs = {}
         total_monthly_cost = 0
@@ -503,11 +521,18 @@ class DeploymentAnalysisSwarm:
         }
 
         for service_name, spec in infrastructure_specs.items():
-            cpu_cost = spec.get("cpu_cores", 0) * fly_pricing["cpu_core_per_hour"] * 24 * 30
-            memory_cost = (
-                (spec.get("memory_mb", 0) / 1024) * fly_pricing["memory_gb_per_hour"] * 24 * 30
+            cpu_cost = (
+                spec.get("cpu_cores", 0) * fly_pricing["cpu_core_per_hour"] * 24 * 30
             )
-            storage_cost = spec.get("volume_size_gb", 0) * fly_pricing["volume_gb_per_month"]
+            memory_cost = (
+                (spec.get("memory_mb", 0) / 1024)
+                * fly_pricing["memory_gb_per_hour"]
+                * 24
+                * 30
+            )
+            storage_cost = (
+                spec.get("volume_size_gb", 0) * fly_pricing["volume_gb_per_month"]
+            )
 
             service_cost = cpu_cost + memory_cost + storage_cost
             estimated_monthly_costs[service_name] = {
@@ -601,12 +626,16 @@ class DeploymentAnalysisSwarm:
         for service_name, _service_info in services.items():
             # Simulate performance metrics
             performance_metrics[service_name] = {
-                "response_time_p95": 250 + hash(service_name) % 200,  # Simulated 250-450ms
-                "throughput_rps": 100 + hash(service_name) % 300,  # Simulated 100-400 RPS
+                "response_time_p95": 250
+                + hash(service_name) % 200,  # Simulated 250-450ms
+                "throughput_rps": 100
+                + hash(service_name) % 300,  # Simulated 100-400 RPS
                 "cpu_utilization": 60 + hash(service_name) % 30,  # Simulated 60-90%
                 "memory_utilization": 70 + hash(service_name) % 25,  # Simulated 70-95%
-                "error_rate": 0.1 + (hash(service_name) % 10) / 100,  # Simulated 0.1-0.19%
-                "availability": 99.5 + (hash(service_name) % 50) / 100,  # Simulated 99.5-99.99%
+                "error_rate": 0.1
+                + (hash(service_name) % 10) / 100,  # Simulated 0.1-0.19%
+                "availability": 99.5
+                + (hash(service_name) % 50) / 100,  # Simulated 99.5-99.99%
             }
 
         analysis = {
@@ -785,7 +814,12 @@ class DeploymentAnalysisSwarm:
                 "type": "region_expansion",
                 "priority": OptimizationLevel.HIGH.value,
                 "recommendation": "Deploy to multiple regions for improved availability",
-                "proposed_regions": ["sjc", "iad", "fra", "nrt"],  # US West, US East, Europe, Asia
+                "proposed_regions": [
+                    "sjc",
+                    "iad",
+                    "fra",
+                    "nrt",
+                ],  # US West, US East, Europe, Asia
                 "implementation_steps": [
                     "Set up primary/secondary region architecture",
                     "Implement cross-region data replication",
@@ -996,7 +1030,9 @@ class DeploymentAnalysisSwarm:
                 optimization_rec = OptimizationRecommendation(
                     recommendation_id=f"opt_{recommendation_id:03d}",
                     domain=AnalysisDomain(domain),
-                    priority=OptimizationLevel(rec.get("priority", OptimizationLevel.MEDIUM.value)),
+                    priority=OptimizationLevel(
+                        rec.get("priority", OptimizationLevel.MEDIUM.value)
+                    ),
                     title=rec.get("recommendation", rec.get("type", "Optimization")),
                     description=rec.get("recommendation", ""),
                     current_state=rec.get("issue", "Current state"),
@@ -1019,7 +1055,9 @@ class DeploymentAnalysisSwarm:
         """Generate implementation roadmap based on priorities and dependencies"""
 
         # Group by priority
-        critical = [r for r in recommendations if r.priority == OptimizationLevel.CRITICAL]
+        critical = [
+            r for r in recommendations if r.priority == OptimizationLevel.CRITICAL
+        ]
         high = [r for r in recommendations if r.priority == OptimizationLevel.HIGH]
         medium = [r for r in recommendations if r.priority == OptimizationLevel.MEDIUM]
         low = [r for r in recommendations if r.priority == OptimizationLevel.LOW]
@@ -1069,7 +1107,9 @@ class DeploymentAnalysisSwarm:
 
         for rec in recommendations:
             if rec.domain == AnalysisDomain.COST_OPTIMIZATION:
-                cost_breakdown["infrastructure_savings"] += 500  # Estimated monthly savings
+                cost_breakdown[
+                    "infrastructure_savings"
+                ] += 500  # Estimated monthly savings
             elif rec.domain == AnalysisDomain.AUTOMATION:
                 cost_breakdown["operational_savings"] += 200  # Developer time savings
             elif rec.domain == AnalysisDomain.PERFORMANCE_MONITORING:
@@ -1232,7 +1272,9 @@ class DeploymentAnalysisSwarm:
         return f"{duration.total_seconds():.0f} seconds"
 
     # Additional analysis method stubs (would be implemented with real data)
-    async def _identify_performance_bottlenecks(self, metrics: dict[str, Any]) -> dict[str, Any]:
+    async def _identify_performance_bottlenecks(
+        self, metrics: dict[str, Any]
+    ) -> dict[str, Any]:
         return {
             "identified_bottlenecks": [
                 "database_queries",
@@ -1243,12 +1285,20 @@ class DeploymentAnalysisSwarm:
 
     async def _analyze_latency_optimization(self) -> dict[str, Any]:
         return {
-            "optimization_opportunities": ["caching", "connection_pooling", "query_optimization"]
+            "optimization_opportunities": [
+                "caching",
+                "connection_pooling",
+                "query_optimization",
+            ]
         }
 
     async def _analyze_throughput_enhancement(self) -> dict[str, Any]:
         return {
-            "enhancement_strategies": ["horizontal_scaling", "load_balancing", "async_processing"]
+            "enhancement_strategies": [
+                "horizontal_scaling",
+                "load_balancing",
+                "async_processing",
+            ]
         }
 
     async def _analyze_resource_contention(self) -> dict[str, Any]:
@@ -1264,7 +1314,13 @@ class DeploymentAnalysisSwarm:
         return {"caching_layers": ["application_cache", "database_cache", "cdn_cache"]}
 
     async def _analyze_database_performance(self) -> dict[str, Any]:
-        return {"optimization_areas": ["index_optimization", "query_tuning", "connection_pooling"]}
+        return {
+            "optimization_areas": [
+                "index_optimization",
+                "query_tuning",
+                "connection_pooling",
+            ]
+        }
 
     async def _analyze_ai_workloads(self) -> dict[str, Any]:
         return {
@@ -1291,7 +1347,10 @@ class DeploymentAnalysisSwarm:
         }
 
     async def _design_gpu_integration_architecture(self) -> dict[str, Any]:
-        return {"architecture": "hybrid_cloud", "components": ["router", "queue", "monitor"]}
+        return {
+            "architecture": "hybrid_cloud",
+            "components": ["router", "queue", "monitor"],
+        }
 
     async def _analyze_optimal_regions(self) -> dict[str, Any]:
         return {
@@ -1312,11 +1371,17 @@ class DeploymentAnalysisSwarm:
         return {"replication_strategy": "async_multi_master", "consistency": "eventual"}
 
     async def _analyze_edge_deployment(self) -> dict[str, Any]:
-        return {"edge_opportunities": ["static_assets", "api_caching", "compute_at_edge"]}
+        return {
+            "edge_opportunities": ["static_assets", "api_caching", "compute_at_edge"]
+        }
 
     async def _analyze_pipeline_optimization(self) -> dict[str, Any]:
         return {
-            "optimization_areas": ["test_parallelization", "build_caching", "deployment_automation"]
+            "optimization_areas": [
+                "test_parallelization",
+                "build_caching",
+                "deployment_automation",
+            ]
         }
 
     async def _analyze_testing_gaps(self) -> dict[str, Any]:
@@ -1329,7 +1394,13 @@ class DeploymentAnalysisSwarm:
         return {"strategies": ["blue_green", "canary", "rolling"], "current": "basic"}
 
     async def _analyze_monitoring_automation(self) -> dict[str, Any]:
-        return {"automation_opportunities": ["alert_tuning", "auto_scaling", "incident_response"]}
+        return {
+            "automation_opportunities": [
+                "alert_tuning",
+                "auto_scaling",
+                "incident_response",
+            ]
+        }
 
     async def _analyze_metrics_strategy(self) -> dict[str, Any]:
         return {"metrics_gaps": ["business_metrics", "custom_metrics", "sla_metrics"]}

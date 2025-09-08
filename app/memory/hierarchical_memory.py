@@ -125,7 +125,9 @@ class MemoryTierAdapter:
         """Store entry"""
         raise NotImplementedError
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
+    async def search(
+        self, query: str, context: QueryContext, limit: int = 10
+    ) -> list[MemoryEntry]:
         """Search entries"""
         raise NotImplementedError
 
@@ -200,13 +202,17 @@ class L1RedisAdapter(MemoryTierAdapter):
             }
             ttl = ttl_map.get(entry.access_pattern, 900)
 
-            await self.redis_client.setex(prefixed_key, ttl, json.dumps(asdict(entry), default=str))
+            await self.redis_client.setex(
+                prefixed_key, ttl, json.dumps(asdict(entry), default=str)
+            )
             return True
         except Exception as e:
             logger.error(f"L1 Redis set error: {e}")
             return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
+    async def search(
+        self, query: str, context: QueryContext, limit: int = 10
+    ) -> list[MemoryEntry]:
         """Limited search via key patterns"""
         if not self.redis_client:
             await self.connect()
@@ -307,7 +313,9 @@ class L2VectorAdapter(MemoryTierAdapter):
                 "created_at": entry.created_at.isoformat(),
                 "last_accessed": entry.last_accessed.isoformat(),
                 "access_count": entry.access_count,
-                "meta_tags": json.dumps([asdict(tag) for tag in entry.meta_tags], default=str),
+                "meta_tags": json.dumps(
+                    [asdict(tag) for tag in entry.meta_tags], default=str
+                ),
             }
 
             vector = None
@@ -323,7 +331,9 @@ class L2VectorAdapter(MemoryTierAdapter):
             logger.error(f"L2 Weaviate set error: {e}")
             return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
+    async def search(
+        self, query: str, context: QueryContext, limit: int = 10
+    ) -> list[MemoryEntry]:
         """Semantic search in Weaviate"""
         if not self.client:
             await self.connect()
@@ -344,7 +354,11 @@ class L2VectorAdapter(MemoryTierAdapter):
                 result = (
                     self.client.query.get(class_name)
                     .with_where(
-                        {"path": ["content"], "operator": "Like", "valueText": f"*{query}*"}
+                        {
+                            "path": ["content"],
+                            "operator": "Like",
+                            "valueText": f"*{query}*",
+                        }
                     )
                     .with_limit(limit)
                     .do()
@@ -545,7 +559,9 @@ class L3StructuredAdapter(MemoryTierAdapter):
                 logger.error(f"L3 Neon set error: {e}")
                 return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
+    async def search(
+        self, query: str, context: QueryContext, limit: int = 10
+    ) -> list[MemoryEntry]:
         """Complex search in PostgreSQL"""
         if not self.pool:
             await self.connect()
@@ -675,7 +691,9 @@ class L4ColdStorageAdapter(MemoryTierAdapter):
                 Body=json.dumps(asdict(entry), default=str),
                 Metadata=metadata,
                 StorageClass=(
-                    "STANDARD_IA" if entry.access_pattern == AccessPattern.COLD else "STANDARD"
+                    "STANDARD_IA"
+                    if entry.access_pattern == AccessPattern.COLD
+                    else "STANDARD"
                 ),
             )
 
@@ -684,13 +702,17 @@ class L4ColdStorageAdapter(MemoryTierAdapter):
             logger.error(f"L4 S3 set error: {e}")
             return False
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> list[MemoryEntry]:
+    async def search(
+        self, query: str, context: QueryContext, limit: int = 10
+    ) -> list[MemoryEntry]:
         """Limited search in S3 via listing and filtering"""
         try:
             prefix = f"{context.persona_domain.value}/"
 
             response = self.s3_client.list_objects_v2(
-                Bucket=self.bucket_name, Prefix=prefix, MaxKeys=limit * 2  # Get more to filter
+                Bucket=self.bucket_name,
+                Prefix=prefix,
+                MaxKeys=limit * 2,  # Get more to filter
             )
 
             entries = []
@@ -748,9 +770,15 @@ class QueryRouter:
             # Exact key lookups → L1 Redis
             QueryType.EXACT_MATCH: [MemoryTier.L1_HOT_CACHE],
             # Semantic searches → L2 Vector first, then L3
-            QueryType.SEMANTIC_SEARCH: [MemoryTier.L2_VECTOR_SEARCH, MemoryTier.L3_STRUCTURED],
+            QueryType.SEMANTIC_SEARCH: [
+                MemoryTier.L2_VECTOR_SEARCH,
+                MemoryTier.L3_STRUCTURED,
+            ],
             # Complex analytics → L3 Structured, fallback to L4
-            QueryType.ANALYTICAL: [MemoryTier.L3_STRUCTURED, MemoryTier.L4_COLD_STORAGE],
+            QueryType.ANALYTICAL: [
+                MemoryTier.L3_STRUCTURED,
+                MemoryTier.L4_COLD_STORAGE,
+            ],
             # Bulk data → L4 Cold Storage
             QueryType.BULK_RETRIEVAL: [MemoryTier.L4_COLD_STORAGE],
         }
@@ -789,7 +817,10 @@ class QueryRouter:
         if len(query.split()) <= 2 and not any(c in query for c in [" ", "?", "*"]):
             return QueryType.EXACT_MATCH
 
-        if any(keyword in query.lower() for keyword in ["similar", "like", "find", "search"]):
+        if any(
+            keyword in query.lower()
+            for keyword in ["similar", "like", "find", "search"]
+        ):
             return QueryType.SEMANTIC_SEARCH
 
         if any(
@@ -798,7 +829,10 @@ class QueryRouter:
         ):
             return QueryType.ANALYTICAL
 
-        if any(keyword in query.lower() for keyword in ["all", "bulk", "export", "download"]):
+        if any(
+            keyword in query.lower()
+            for keyword in ["all", "bulk", "export", "download"]
+        ):
             return QueryType.BULK_RETRIEVAL
 
         # Default to semantic search
@@ -885,7 +919,9 @@ class HierarchicalMemorySystem:
 
         return success
 
-    async def search(self, query: str, context: QueryContext, limit: int = 10) -> QueryResult:
+    async def search(
+        self, query: str, context: QueryContext, limit: int = 10
+    ) -> QueryResult:
         """Comprehensive search across tiers"""
         start_time = time.time()
         self.metrics["queries"] += 1
@@ -964,7 +1000,9 @@ class HierarchicalMemorySystem:
         health_status["status"] = "healthy" if all_healthy else "degraded"
         return health_status
 
-    def _select_storage_tier(self, entry: MemoryEntry, context: QueryContext) -> MemoryTier:
+    def _select_storage_tier(
+        self, entry: MemoryEntry, context: QueryContext
+    ) -> MemoryTier:
         """Select optimal storage tier for new entry"""
         # High-priority or hot access → L1/L2
         if context.priority <= 3 or entry.access_pattern == AccessPattern.HOT:
@@ -999,7 +1037,9 @@ class HierarchicalMemorySystem:
             adapter = self.adapters[target_tier]
             await adapter.set(key, entry, context)
 
-            logger.info(f"Promoted entry {key} from {entry.tier.value} to {target_tier.value}")
+            logger.info(
+                f"Promoted entry {key} from {entry.tier.value} to {target_tier.value}"
+            )
 
 
 # Factory function for easy instantiation
@@ -1035,13 +1075,18 @@ async def main():
 
     # Create query context
     context = QueryContext(
-        query_type=QueryType.SEMANTIC_SEARCH, persona_domain=PersonaType.SOPHIA, priority=5
+        query_type=QueryType.SEMANTIC_SEARCH,
+        persona_domain=PersonaType.SOPHIA,
+        priority=5,
     )
 
     # Store entry
     entry = MemoryEntry(
         id="test_123",
-        content={"message": "Hello from Sophia", "analysis": "Business Intelligence Query"},
+        content={
+            "message": "Hello from Sophia",
+            "analysis": "Business Intelligence Query",
+        },
         tier=MemoryTier.L2_VECTOR_SEARCH,
         persona_domain=PersonaType.SOPHIA,
         access_pattern=AccessPattern.HOT,

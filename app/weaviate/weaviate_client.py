@@ -28,7 +28,9 @@ class WeaviateClient:
     Part of 2025 ultra-performance architecture
     """
 
-    def __init__(self, url: str = "http://localhost:8080", api_key: Optional[str] = None):
+    def __init__(
+        self, url: str = "http://localhost:8080", api_key: Optional[str] = None
+    ):
         self.url = url
         self.api_key = api_key
         self.is_connected = False
@@ -48,7 +50,10 @@ class WeaviateClient:
             return False
 
     async def create_collection(
-        self, name: str, properties: list[dict[str, Any]], vectorizer: str = "text2vec-openai"
+        self,
+        name: str,
+        properties: list[dict[str, Any]],
+        vectorizer: str = "text2vec-openai",
     ) -> bool:
         """Create a new collection with schema"""
         try:
@@ -60,7 +65,10 @@ class WeaviateClient:
             return False
 
     async def add_object(
-        self, collection: str, data: dict[str, Any], vector: Optional[list[float]] = None
+        self,
+        collection: str,
+        data: dict[str, Any],
+        vector: Optional[list[float]] = None,
     ) -> str:
         """Add object to collection with optional vector"""
         try:
@@ -109,7 +117,10 @@ class WeaviateClient:
                     VectorSearchResult(
                         id=f"vector_{i}",
                         content=f"Vector search result {i}",
-                        metadata={"collection": collection, "similarity": 0.95 - (i * 0.1)},
+                        metadata={
+                            "collection": collection,
+                            "similarity": 0.95 - (i * 0.1),
+                        },
                         score=0.95 - (i * 0.1),
                         vector=vector[:10] if len(vector) > 10 else vector,
                     )
@@ -128,7 +139,9 @@ class WeaviateClient:
             logger.error(f"Failed to delete object: {e}")
             return False
 
-    async def update_object(self, collection: str, object_id: str, data: dict[str, Any]) -> bool:
+    async def update_object(
+        self, collection: str, object_id: str, data: dict[str, Any]
+    ) -> bool:
         """Update existing object"""
         try:
             logger.debug(f"Updated object {object_id} in {collection}")

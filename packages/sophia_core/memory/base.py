@@ -78,7 +78,9 @@ class MemoryEntry(BaseModel):
         self.accessed_at = datetime.utcnow()
         self.access_count += 1
 
-    def calculate_current_relevance(self, decay_factor: Optional[float] = None) -> float:
+    def calculate_current_relevance(
+        self, decay_factor: Optional[float] = None
+    ) -> float:
         """
         Calculate current relevance based on time decay.
 
@@ -215,7 +217,9 @@ class BaseMemory(ABC):
         self._stats = MemoryStats()
         self._config = kwargs
 
-        logger.info(f"Initialized {memory_type.value} memory with max_entries={max_entries}")
+        logger.info(
+            f"Initialized {memory_type.value} memory with max_entries={max_entries}"
+        )
 
     @abstractmethod
     async def store(self, entry: MemoryEntry) -> bool:
@@ -348,7 +352,9 @@ class BaseMemory(ABC):
             for i in range(excess_count):
                 entry_to_remove = entries_by_access[i]
                 del self._entries[entry_to_remove.id]
-                logger.debug(f"Removed entry {entry_to_remove.id} due to capacity limit")
+                logger.debug(
+                    f"Removed entry {entry_to_remove.id} due to capacity limit"
+                )
 
 
 class EpisodicMemory(BaseMemory):
@@ -428,7 +434,11 @@ class EpisodicMemory(BaseMemory):
                 continue
 
             results.append(
-                MemoryResult(entry=entry, relevance_score=relevance, match_reason="temporal_order")
+                MemoryResult(
+                    entry=entry,
+                    relevance_score=relevance,
+                    match_reason="temporal_order",
+                )
             )
 
         return results
@@ -449,7 +459,9 @@ class EpisodicMemory(BaseMemory):
             # Simple text matching if query text provided
             similarity = 0.0
             if query.query_text:
-                similarity = self._calculate_text_similarity(query.query_text, entry.content)
+                similarity = self._calculate_text_similarity(
+                    query.query_text, entry.content
+                )
                 if similarity < query.min_similarity:
                     continue
 
@@ -551,12 +563,16 @@ class SemanticMemory(BaseMemory):
 
             # Calculate semantic similarity
             tag_overlap = len(query.tags.intersection(entry.tags)) if query.tags else 0
-            semantic_score = tag_overlap / max(len(query.tags), 1) if query.tags else 0.0
+            semantic_score = (
+                tag_overlap / max(len(query.tags), 1) if query.tags else 0.0
+            )
 
             # Text similarity if query provided
             text_similarity = 0.0
             if query.query_text:
-                text_similarity = self._calculate_text_similarity(query.query_text, entry.content)
+                text_similarity = self._calculate_text_similarity(
+                    query.query_text, entry.content
+                )
 
             combined_similarity = max(semantic_score, text_similarity)
             if combined_similarity < query.min_similarity:
@@ -585,7 +601,9 @@ class SemanticMemory(BaseMemory):
 
         # Expand results with related entries
         related_entry_ids = set()
-        for result in results[: query.limit // 2]:  # Use half the limit for initial results
+        for result in results[
+            : query.limit // 2
+        ]:  # Use half the limit for initial results
             related_entry_ids.update(result.entry.related_entries)
 
         # Add related entries
@@ -660,7 +678,9 @@ class WorkingMemory(BaseMemory):
             # Calculate similarity if query provided
             similarity = 0.0
             if query.query_text:
-                similarity = self._calculate_text_similarity(query.query_text, entry.content)
+                similarity = self._calculate_text_similarity(
+                    query.query_text, entry.content
+                )
                 if similarity < query.min_similarity:
                     continue
 
@@ -691,7 +711,9 @@ class WorkingMemory(BaseMemory):
     async def activate(self, entry_id: str, boost: float = 0.2) -> None:
         """Boost activation level of an entry."""
         if entry_id in self._activation_levels:
-            self._activation_levels[entry_id] = min(1.0, self._activation_levels[entry_id] + boost)
+            self._activation_levels[entry_id] = min(
+                1.0, self._activation_levels[entry_id] + boost
+            )
             logger.debug(f"Boosted activation for entry {entry_id}")
 
     async def _decay_activations(self) -> None:
@@ -758,11 +780,15 @@ class MemoryManager:
 
         for memory_type in memory_types:
             if memory_type in self.memories:
-                entry = MemoryEntry(content=content, memory_type=memory_type, metadata=metadata)
+                entry = MemoryEntry(
+                    content=content, memory_type=memory_type, metadata=metadata
+                )
 
                 if await self.memories[memory_type].store(entry):
                     entry_ids.append(entry.id)
-                    logger.debug(f"Stored entry {entry.id} in {memory_type.value} memory")
+                    logger.debug(
+                        f"Stored entry {entry.id} in {memory_type.value} memory"
+                    )
 
         return entry_ids
 
@@ -790,7 +816,9 @@ class MemoryManager:
                     results = await self.memories[memory_type].retrieve(query)
                     all_results.extend(results)
                 except Exception as e:
-                    logger.error(f"Error retrieving from {memory_type.value} memory: {e}")
+                    logger.error(
+                        f"Error retrieving from {memory_type.value} memory: {e}"
+                    )
 
         # Remove duplicates and sort by combined score
         unique_results = {}
@@ -799,7 +827,10 @@ class MemoryManager:
                 unique_results[result.entry.id] = result
             else:
                 # Keep result with higher score
-                if result.combined_score > unique_results[result.entry.id].combined_score:
+                if (
+                    result.combined_score
+                    > unique_results[result.entry.id].combined_score
+                ):
                     unique_results[result.entry.id] = result
 
         final_results = list(unique_results.values())
@@ -832,5 +863,6 @@ class MemoryManager:
     def get_all_stats(self) -> Dict[str, MemoryStats]:
         """Get statistics from all memory systems."""
         return {
-            memory_type.value: memory.get_stats() for memory_type, memory in self.memories.items()
+            memory_type.value: memory.get_stats()
+            for memory_type, memory in self.memories.items()
         }

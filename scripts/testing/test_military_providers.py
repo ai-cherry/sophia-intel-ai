@@ -67,7 +67,9 @@ def test_providers():
                 models = response.json().get("data", [])
                 grok_models = [m for m in models if "grok" in m.get("id", "").lower()]
                 if grok_models:
-                    print(f"✅ OpenRouter connected. Found {len(grok_models)} Grok models")
+                    print(
+                        f"✅ OpenRouter connected. Found {len(grok_models)} Grok models"
+                    )
                     for model in grok_models[:3]:
                         print(f"   - {model.get('id')}")
                 else:

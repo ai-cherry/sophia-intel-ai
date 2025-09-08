@@ -145,7 +145,10 @@ def generate_slack_app_manifest() -> dict[str, any]:
         "settings": {
             "event_subscriptions": {
                 "request_url": "https://your-domain.com/api/slack/webhook",
-                "bot_events": ["app_mention", "message.im"],  # @sophia mentions  # Direct messages
+                "bot_events": [
+                    "app_mention",
+                    "message.im",
+                ],  # @sophia mentions  # Direct messages
             },
             "interactivity": {
                 "is_enabled": True,

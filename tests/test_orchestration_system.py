@@ -124,7 +124,10 @@ class TestFactoryAwareOrchestrator:
         """Test cost estimation calculation."""
         orchestrator = FactoryAwareOrchestrator()
 
-        agents = [{"id": "agent1", "template": "test1"}, {"id": "agent2", "template": "test2"}]
+        agents = [
+            {"id": "agent1", "template": "test1"},
+            {"id": "agent2", "template": "test2"},
+        ]
         complexity = {"category": "medium"}
 
         cost = orchestrator._estimate_cost(agents, complexity)
@@ -150,9 +153,13 @@ class TestFactoryAwareOrchestrator:
         )
 
         # Mock the factory methods
-        with patch.object(orchestrator, "_spawn_sophia_agents", return_value=[{"id": "agent1"}]):
+        with patch.object(
+            orchestrator, "_spawn_sophia_agents", return_value=[{"id": "agent1"}]
+        ):
             with patch.object(
-                orchestrator, "_execute_with_streaming", return_value={"result": "success"}
+                orchestrator,
+                "_execute_with_streaming",
+                return_value={"result": "success"},
             ):
                 with patch.object(orchestrator, "_store_execution", return_value=None):
                     result = await orchestrator.process_request(request)
@@ -290,7 +297,9 @@ class TestConfidenceBasedRouter:
         router = ConfidenceBasedRouter()
 
         # Mock to return high confidence
-        with patch.object(router, "_execute_tier", return_value={"confidence": 0.9, "cost": 0.01}):
+        with patch.object(
+            router, "_execute_tier", return_value={"confidence": 0.9, "cost": 0.01}
+        ):
             result = await router.route_request("Simple query")
 
         assert result["escalated"] is False
@@ -344,7 +353,10 @@ class TestMicroSwarmExecutor:
         with patch.object(
             executor,
             "execute",
-            side_effect=[{"cost": 0.01, "execution_time": 5}, {"cost": 0.02, "execution_time": 3}],
+            side_effect=[
+                {"cost": 0.01, "execution_time": 5},
+                {"cost": 0.02, "execution_time": 3},
+            ],
         ):
             result = await executor.compare_configs(
                 ["quick_analysis", "deep_analysis"], "Test request"

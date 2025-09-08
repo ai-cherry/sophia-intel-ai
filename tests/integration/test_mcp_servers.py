@@ -100,7 +100,9 @@ class TestMCPServersIntegration:
         """Test GitHub Integration MCP server"""
         try:
             # Test server health
-            response = await client.get(f"{mcp_base_url}/servers/github-integration/health")
+            response = await client.get(
+                f"{mcp_base_url}/servers/github-integration/health"
+            )
             assert response.status_code == 200
 
             # Test repository listing (if GitHub token is available)
@@ -149,7 +151,9 @@ class TestMCPServersIntegration:
         """Test HubSpot Integration MCP server"""
         try:
             # Test server health
-            response = await client.get(f"{mcp_base_url}/servers/hubspot-integration/health")
+            response = await client.get(
+                f"{mcp_base_url}/servers/hubspot-integration/health"
+            )
             assert response.status_code == 200
 
             # Test HubSpot connection (if API key is available)
@@ -199,7 +203,9 @@ class TestMCPServersIntegration:
             assert response.status_code == 200
 
             # Test metrics endpoint
-            metrics_response = await client.get(f"{mcp_base_url}/servers/monitoring/metrics")
+            metrics_response = await client.get(
+                f"{mcp_base_url}/servers/monitoring/metrics"
+            )
             assert metrics_response.status_code == 200
             metrics_data = metrics_response.json()
             assert "system" in metrics_data
@@ -221,7 +227,11 @@ class TestMCPServersIntegration:
             # Test memory storage
             store_response = await client.post(
                 f"{mcp_base_url}/servers/super-memory/store",
-                json={"key": "test_memory", "value": "integration test data", "ttl": 300},
+                json={
+                    "key": "test_memory",
+                    "value": "integration test data",
+                    "ttl": 300,
+                },
             )
             assert store_response.status_code == 200
 
@@ -243,11 +253,15 @@ class TestMCPServersIntegration:
         """Test Enterprise Tools MCP server"""
         try:
             # Test server health
-            response = await client.get(f"{mcp_base_url}/servers/enterprise-tools/health")
+            response = await client.get(
+                f"{mcp_base_url}/servers/enterprise-tools/health"
+            )
             assert response.status_code == 200
 
             # Test tools listing
-            tools_response = await client.get(f"{mcp_base_url}/servers/enterprise-tools/tools")
+            tools_response = await client.get(
+                f"{mcp_base_url}/servers/enterprise-tools/tools"
+            )
             assert tools_response.status_code == 200
             tools_data = tools_response.json()
             assert isinstance(tools_data, list)
@@ -288,7 +302,9 @@ class TestMCPServersIntegration:
 
             # Check that most servers responded successfully
             successful_responses = [
-                r for r in responses if not isinstance(r, Exception) and r.status_code == 200
+                r
+                for r in responses
+                if not isinstance(r, Exception) and r.status_code == 200
             ]
             success_rate = len(successful_responses) / len(servers)
 
@@ -297,11 +313,15 @@ class TestMCPServersIntegration:
             print(
                 f"   Success rate: {success_rate:.1%} ({len(successful_responses)}/{len(servers)})"
             )
-            print(f"   Average response time: {total_time/len(servers):.3f}s per server")
+            print(
+                f"   Average response time: {total_time/len(servers):.3f}s per server"
+            )
 
             # Assert reasonable performance
             assert total_time < 10.0, f"MCP servers too slow: {total_time}s"
-            assert success_rate >= 0.75, f"Too many MCP server failures: {success_rate:.1%}"
+            assert (
+                success_rate >= 0.75
+            ), f"Too many MCP server failures: {success_rate:.1%}"
 
         except Exception as e:
             pytest.fail(f"MCP servers performance test failed: {e}")

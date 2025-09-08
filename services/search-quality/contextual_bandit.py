@@ -119,7 +119,10 @@ class ProductionContextualBandit:
     """
 
     def __init__(
-        self, providers: List[str], redis_client: redis.Redis, config: Optional[BanditConfig] = None
+        self,
+        providers: List[str],
+        redis_client: redis.Redis,
+        config: Optional[BanditConfig] = None,
     ):
         self.providers = providers
         self.redis = redis_client
@@ -142,7 +145,9 @@ class ProductionContextualBandit:
 
         # Context clustering for similar queries
         self.context_scaler = StandardScaler()
-        self.context_clusterer = KMeans(n_clusters=self.config.cluster_count, random_state=42)
+        self.context_clusterer = KMeans(
+            n_clusters=self.config.cluster_count, random_state=42
+        )
         self._context_history: List[np.ndarray] = []
         self._clustering_fitted = False
 
@@ -185,7 +190,8 @@ class ProductionContextualBandit:
         should_explore = (
             force_exploration
             or np.random.random() < exploration_rate
-            or self.total_decisions < len(self.providers) * 2  # Ensure all providers tried
+            or self.total_decisions
+            < len(self.providers) * 2  # Ensure all providers tried
         )
 
         if should_explore:
@@ -280,7 +286,9 @@ class ProductionContextualBandit:
             )
 
         success_value = 1.0 if success else 0.0
-        metrics.ewma_success_rate = alpha * success_value + (1 - alpha) * metrics.ewma_success_rate
+        metrics.ewma_success_rate = (
+            alpha * success_value + (1 - alpha) * metrics.ewma_success_rate
+        )
 
         metrics.ewma_cost = (
             alpha * cost_cents + (1 - alpha) * metrics.ewma_cost
@@ -297,7 +305,9 @@ class ProductionContextualBandit:
         try:
             # MABWiser expects context as list of features
             self.bandit.partial_fit(
-                decisions=[provider], rewards=[reward], contexts=[feature_vector.tolist()]
+                decisions=[provider],
+                rewards=[reward],
+                contexts=[feature_vector.tolist()],
             )
         except Exception as e:
             logger.warning(f"Failed to update bandit: {e}")
@@ -363,7 +373,9 @@ class ProductionContextualBandit:
             prediction = self.bandit.predict([feature_vector.tolist()])
             return prediction[0]
         except Exception as e:
-            logger.warning(f"Bandit prediction failed: {e}, falling back to best provider")
+            logger.warning(
+                f"Bandit prediction failed: {e}, falling back to best provider"
+            )
 
             # Fallback: Select provider with best recent performance
             best_provider = self.providers[0]
@@ -402,7 +414,9 @@ class ProductionContextualBandit:
         metrics = self.provider_metrics[provider]
 
         # Base confidence on number of samples and recent performance
-        sample_confidence = min(1.0, metrics.total_requests / 100)  # Max confidence at 100 samples
+        sample_confidence = min(
+            1.0, metrics.total_requests / 100
+        )  # Max confidence at 100 samples
         performance_confidence = metrics.ewma_success_rate
 
         # Adjust for context similarity
@@ -410,7 +424,9 @@ class ProductionContextualBandit:
 
         # Composite confidence
         confidence = (
-            sample_confidence * 0.4 + performance_confidence * 0.4 + context_confidence * 0.2
+            sample_confidence * 0.4
+            + performance_confidence * 0.4
+            + context_confidence * 0.2
         )
 
         return confidence
@@ -457,7 +473,9 @@ class ProductionContextualBandit:
         ):
             try:
                 # Fit scaler and clusterer
-                context_matrix = np.array(self._context_history[-1000:])  # Use last 1000 samples
+                context_matrix = np.array(
+                    self._context_history[-1000:]
+                )  # Use last 1000 samples
                 scaled_contexts = self.context_scaler.fit_transform(context_matrix)
                 self.context_clusterer.fit(scaled_contexts)
                 self._clustering_fitted = True
@@ -514,19 +532,26 @@ class ProductionContextualBandit:
         try:
             # Persist provider metrics
             metrics_data = {
-                provider: asdict(metrics) for provider, metrics in self.provider_metrics.items()
+                provider: asdict(metrics)
+                for provider, metrics in self.provider_metrics.items()
             }
 
             await self.redis.set(
-                "bandit:provider_metrics", json.dumps(metrics_data), ex=86400  # 24 hour expiry
+                "bandit:provider_metrics",
+                json.dumps(metrics_data),
+                ex=86400,  # 24 hour expiry
             )
 
             # Persist decision history (last 1000 decisions)
             recent_decisions = self.decision_history[-1000:]
-            await self.redis.set("bandit:decision_history", json.dumps(recent_decisions), ex=86400)
+            await self.redis.set(
+                "bandit:decision_history", json.dumps(recent_decisions), ex=86400
+            )
 
             # Persist bandit configuration
-            await self.redis.set("bandit:config", json.dumps(asdict(self.config)), ex=86400)
+            await self.redis.set(
+                "bandit:config", json.dumps(asdict(self.config)), ex=86400
+            )
 
         except Exception as e:
             logger.warning(f"Failed to persist bandit state: {e}")
@@ -584,7 +609,9 @@ class ProductionContextualBandit:
 
         # Calculate aggregate statistics
         total_requests = sum(m.total_requests for m in self.provider_metrics.values())
-        total_successes = sum(m.successful_requests for m in self.provider_metrics.values())
+        total_successes = sum(
+            m.successful_requests for m in self.provider_metrics.values()
+        )
         total_errors = sum(m.error_count for m in self.provider_metrics.values())
 
         provider_stats = {}
@@ -639,7 +666,8 @@ def create_contextual_bandit(
     """Factory function to create configured contextual bandit"""
 
     config = BanditConfig(
-        exploration_decay_rate=exploration_decay_rate, reward_weights=reward_weights or {}
+        exploration_decay_rate=exploration_decay_rate,
+        reward_weights=reward_weights or {},
     )
 
     return ProductionContextualBandit(providers, redis_client, config)

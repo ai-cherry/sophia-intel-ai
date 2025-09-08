@@ -237,13 +237,21 @@ class SupportSystem:
 
         # Add initial message
         ticket.messages.append(
-            {"sender": "customer", "message": description, "timestamp": datetime.now().isoformat()}
+            {
+                "sender": "customer",
+                "message": description,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         # Add auto response
         auto_response = self.auto_responses["greeting"]
         ticket.messages.append(
-            {"sender": "system", "message": auto_response, "timestamp": datetime.now().isoformat()}
+            {
+                "sender": "system",
+                "message": auto_response,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         self.tickets[ticket_id] = ticket
@@ -255,7 +263,11 @@ class SupportSystem:
         return ticket
 
     def respond_to_ticket(
-        self, ticket_id: str, message: str, sender: str = "agent", internal_note: bool = False
+        self,
+        ticket_id: str,
+        message: str,
+        sender: str = "agent",
+        internal_note: bool = False,
     ) -> bool:
         """
         Add a response to a ticket.
@@ -324,10 +336,14 @@ class SupportSystem:
         # Update ticket
         ticket.status = TicketStatus.RESOLVED
         ticket.resolved_at = datetime.now()
-        ticket.resolution_time = (ticket.resolved_at - ticket.created_at).total_seconds() / 3600
+        ticket.resolution_time = (
+            ticket.resolved_at - ticket.created_at
+        ).total_seconds() / 3600
 
         # Send auto response
-        self.respond_to_ticket(ticket_id, self.auto_responses["resolved"], sender="system")
+        self.respond_to_ticket(
+            ticket_id, self.auto_responses["resolved"], sender="system"
+        )
 
         return True
 
@@ -357,15 +373,22 @@ class SupportSystem:
 
         # Add escalation note
         self.respond_to_ticket(
-            ticket_id, f"Ticket escalated: {reason}", sender="system", internal_note=True
+            ticket_id,
+            f"Ticket escalated: {reason}",
+            sender="system",
+            internal_note=True,
         )
 
         # Send customer notification
-        self.respond_to_ticket(ticket_id, self.auto_responses["escalated"], sender="system")
+        self.respond_to_ticket(
+            ticket_id, self.auto_responses["escalated"], sender="system"
+        )
 
         return True
 
-    def search_knowledge_base(self, query: str, limit: int = 5) -> List[KnowledgeArticle]:
+    def search_knowledge_base(
+        self, query: str, limit: int = 5
+    ) -> List[KnowledgeArticle]:
         """
         Search knowledge base for relevant articles.
 
@@ -415,7 +438,9 @@ class SupportSystem:
         ticket = self.tickets[ticket_id]
 
         # Search knowledge base
-        relevant_articles = self.search_knowledge_base(f"{ticket.subject} {ticket.description}")
+        relevant_articles = self.search_knowledge_base(
+            f"{ticket.subject} {ticket.description}"
+        )
 
         if relevant_articles:
             # Format suggestion from top article
@@ -452,17 +477,23 @@ This resolution has helped {top_article.helpful_votes} other customers."""
 
         # Get all customer tickets
         customer_tickets = [
-            ticket for ticket in self.tickets.values() if ticket.customer_id == customer_id
+            ticket
+            for ticket in self.tickets.values()
+            if ticket.customer_id == customer_id
         ]
 
         # Calculate statistics
         total_tickets = len(customer_tickets)
-        resolved_tickets = sum(1 for t in customer_tickets if t.status == TicketStatus.RESOLVED)
+        resolved_tickets = sum(
+            1 for t in customer_tickets if t.status == TicketStatus.RESOLVED
+        )
         avg_resolution_time = 0
 
         if resolved_tickets > 0:
             total_time = sum(
-                t.resolution_time for t in customer_tickets if t.resolution_time is not None
+                t.resolution_time
+                for t in customer_tickets
+                if t.resolution_time is not None
             )
             avg_resolution_time = total_time / resolved_tickets
 
@@ -477,7 +508,9 @@ This resolution has helped {top_article.helpful_votes} other customers."""
 
         avg_sentiment = 3
         if customer_tickets:
-            total_sentiment = sum(sentiment_scores[t.sentiment] for t in customer_tickets)
+            total_sentiment = sum(
+                sentiment_scores[t.sentiment] for t in customer_tickets
+            )
             avg_sentiment = total_sentiment / len(customer_tickets)
 
         return {
@@ -506,7 +539,9 @@ This resolution has helped {top_article.helpful_votes} other customers."""
 
         # Filter tickets in period
         period_tickets = [
-            ticket for ticket in self.tickets.values() if ticket.created_at >= cutoff_date
+            ticket
+            for ticket in self.tickets.values()
+            if ticket.created_at >= cutoff_date
         ]
 
         if not period_tickets:
@@ -514,19 +549,27 @@ This resolution has helped {top_article.helpful_votes} other customers."""
 
         # Calculate metrics
         total_tickets = len(period_tickets)
-        resolved_tickets = sum(1 for t in period_tickets if t.status == TicketStatus.RESOLVED)
+        resolved_tickets = sum(
+            1 for t in period_tickets if t.status == TicketStatus.RESOLVED
+        )
 
         # Response time metrics
         response_times = [
-            t.first_response_time for t in period_tickets if t.first_response_time is not None
+            t.first_response_time
+            for t in period_tickets
+            if t.first_response_time is not None
         ]
-        avg_first_response = sum(response_times) / len(response_times) if response_times else 0
+        avg_first_response = (
+            sum(response_times) / len(response_times) if response_times else 0
+        )
 
         # Resolution time metrics
         resolution_times = [
             t.resolution_time for t in period_tickets if t.resolution_time is not None
         ]
-        avg_resolution = sum(resolution_times) / len(resolution_times) if resolution_times else 0
+        avg_resolution = (
+            sum(resolution_times) / len(resolution_times) if resolution_times else 0
+        )
 
         # Category breakdown
         category_counts = {}
@@ -569,7 +612,12 @@ This resolution has helped {top_article.helpful_votes} other customers."""
         }
 
     def create_knowledge_article(
-        self, title: str, content: str, category: str, author: str, tags: List[str] = None
+        self,
+        title: str,
+        content: str,
+        category: str,
+        author: str,
+        tags: List[str] = None,
     ) -> KnowledgeArticle:
         """
         Create a new knowledge base article.
@@ -612,7 +660,9 @@ This resolution has helped {top_article.helpful_votes} other customers."""
         # Create new customer
         customer_id = str(uuid.uuid4())
         customer = Customer(
-            id=customer_id, name=email.split("@")[0], email=email  # Use email prefix as name
+            id=customer_id,
+            name=email.split("@")[0],
+            email=email,  # Use email prefix as name
         )
 
         self.customers[customer_id] = customer
@@ -623,7 +673,14 @@ This resolution has helped {top_article.helpful_votes} other customers."""
         content = (subject + " " + description).lower()
 
         # Critical keywords
-        critical_keywords = ["urgent", "emergency", "critical", "down", "broken", "crashed"]
+        critical_keywords = [
+            "urgent",
+            "emergency",
+            "critical",
+            "down",
+            "broken",
+            "crashed",
+        ]
         if any(keyword in content for keyword in critical_keywords):
             return TicketPriority.CRITICAL
 
@@ -686,7 +743,9 @@ This resolution has helped {top_article.helpful_votes} other customers."""
         """Auto-assign ticket to appropriate agent"""
         # Simple round-robin assignment (would be more sophisticated in production)
         available_agents = [
-            agent_id for agent_id, agent in self.agents.items() if agent.get("available", False)
+            agent_id
+            for agent_id, agent in self.agents.items()
+            if agent.get("available", False)
         ]
 
         if available_agents:

@@ -130,7 +130,9 @@ class ArtemisParallelSwarm:
                     },
                     json={
                         "model": model,
-                        "messages": [{"role": "user", "content": self.repository_scan_prompt}],
+                        "messages": [
+                            {"role": "user", "content": self.repository_scan_prompt}
+                        ],
                         "max_tokens": 2048,
                         "temperature": 0.7,
                     },
@@ -138,7 +140,11 @@ class ArtemisParallelSwarm:
 
                 if response.status_code == 200:
                     data = response.json()
-                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     tokens = data.get("usage", {}).get("total_tokens", 0)
 
                     return AgentResult(
@@ -200,7 +206,9 @@ class ArtemisParallelSwarm:
                     },
                     json={
                         "model": model,
-                        "messages": [{"role": "user", "content": self.repository_scan_prompt}],
+                        "messages": [
+                            {"role": "user", "content": self.repository_scan_prompt}
+                        ],
                         "max_tokens": 2048,
                         "temperature": 0.7,
                     },
@@ -208,7 +216,11 @@ class ArtemisParallelSwarm:
 
                 if response.status_code == 200:
                     data = response.json()
-                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     tokens = data.get("usage", {}).get("total_tokens", 0)
 
                     return AgentResult(
@@ -265,7 +277,9 @@ class ArtemisParallelSwarm:
                     },
                     json={
                         "model": model,
-                        "messages": [{"role": "user", "content": self.repository_scan_prompt}],
+                        "messages": [
+                            {"role": "user", "content": self.repository_scan_prompt}
+                        ],
                         "max_completion_tokens": 2048,
                         "temperature": 0.7,
                     },
@@ -273,7 +287,11 @@ class ArtemisParallelSwarm:
 
                 if response.status_code in [200, 201]:
                     data = response.json()
-                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     tokens = data.get("usage", {}).get("total_tokens", 0)
 
                     return AgentResult(
@@ -330,7 +348,9 @@ class ArtemisParallelSwarm:
                     },
                     json={
                         "model": model,
-                        "messages": [{"role": "user", "content": self.repository_scan_prompt}],
+                        "messages": [
+                            {"role": "user", "content": self.repository_scan_prompt}
+                        ],
                         "max_tokens": 2048,
                         "temperature": 0.7,
                     },
@@ -338,7 +358,11 @@ class ArtemisParallelSwarm:
 
                 if response.status_code in [200, 201]:
                     data = response.json()
-                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     tokens = data.get("usage", {}).get("total_tokens", 0)
 
                     return AgentResult(
@@ -423,9 +447,14 @@ class ArtemisParallelSwarm:
                 quality += 15
             if "code quality" in response_lower:
                 quality += 15
-            if any(path in response_lower for path in ["/app/", "/scripts/", ".py", ".tsx"]):
+            if any(
+                path in response_lower for path in ["/app/", "/scripts/", ".py", ".tsx"]
+            ):
                 quality += 20
-            if any(word in response_lower for word in ["critical", "vulnerability", "issue"]):
+            if any(
+                word in response_lower
+                for word in ["critical", "vulnerability", "issue"]
+            ):
                 quality += 20
             scores["scores"]["quality"] = min(quality, 100)
 
@@ -457,7 +486,9 @@ class ArtemisParallelSwarm:
             scores["scores"]["accuracy"] = min(accuracy, 100)
 
             # Thoroughness Score (0-100)
-            thoroughness = min(100, (len(result.response) / 100))  # 1 point per 100 chars, max 100
+            thoroughness = min(
+                100, (len(result.response) / 100)
+            )  # 1 point per 100 chars, max 100
             if result.response.count("\n") > 20:
                 thoroughness = min(100, thoroughness + 20)
             if result.response.count("-") > 10:
@@ -466,9 +497,14 @@ class ArtemisParallelSwarm:
 
             # Prioritization Score (0-100)
             prioritization = 0
-            if any(word in response_lower for word in ["top", "critical", "priority", "urgent"]):
+            if any(
+                word in response_lower
+                for word in ["top", "critical", "priority", "urgent"]
+            ):
                 prioritization += 40
-            if any(word in response_lower for word in ["1.", "2.", "3.", "first", "second"]):
+            if any(
+                word in response_lower for word in ["1.", "2.", "3.", "first", "second"]
+            ):
                 prioritization += 30
             if "immediate" in response_lower or "asap" in response_lower:
                 prioritization += 30
@@ -478,7 +514,9 @@ class ArtemisParallelSwarm:
             communication = 50  # Base score
             if result.response.count("\n") > 5:
                 communication += 20  # Good formatting
-            if any(word in response_lower for word in ["recommend", "suggest", "should"]):
+            if any(
+                word in response_lower for word in ["recommend", "suggest", "should"]
+            ):
                 communication += 15
             if len(result.response) > 500 and len(result.response) < 5000:
                 communication += 15  # Good length
@@ -494,7 +532,9 @@ class ArtemisParallelSwarm:
                 "communication": 0.10,
             }
 
-            overall = sum(scores["scores"][metric] * weight for metric, weight in weights.items())
+            overall = sum(
+                scores["scores"][metric] * weight for metric, weight in weights.items()
+            )
             scores["scores"]["overall"] = round(overall, 1)
         else:
             # Failed agent gets 0 scores
@@ -524,7 +564,9 @@ class ArtemisParallelSwarm:
         # Summary stats
         successful = sum(1 for r in scored_results if r["success"])
         total_tokens = sum(r["tokens_used"] for r in scored_results)
-        avg_time = sum(r["execution_time"] for r in scored_results) / len(scored_results)
+        avg_time = sum(r["execution_time"] for r in scored_results) / len(
+            scored_results
+        )
 
         report.append("\n📈 EXECUTION SUMMARY:")
         report.append(f"  ✓ Success Rate: {successful}/{len(results)} agents")
@@ -540,7 +582,9 @@ class ArtemisParallelSwarm:
         report.append("=" * 70)
 
         for i, score in enumerate(scored_results, 1):
-            report.append(f"\n{'🟢' if score['success'] else '🔴'} AGENT {i}: {score['agent']}")
+            report.append(
+                f"\n{'🟢' if score['success'] else '🔴'} AGENT {i}: {score['agent']}"
+            )
             report.append(f"  Model: {score['model']}")
             report.append(f"  Provider: {score['provider']}")
             report.append(
@@ -564,13 +608,21 @@ class ArtemisParallelSwarm:
 
         successful_agents = [s for s in scored_results if s["success"]]
         if successful_agents:
-            ranked = sorted(successful_agents, key=lambda x: x["scores"]["overall"], reverse=True)
+            ranked = sorted(
+                successful_agents, key=lambda x: x["scores"]["overall"], reverse=True
+            )
             for rank, agent in enumerate(ranked, 1):
-                medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else "🏅"
+                medal = (
+                    "🥇"
+                    if rank == 1
+                    else "🥈" if rank == 2 else "🥉" if rank == 3 else "🏅"
+                )
                 report.append(
                     f"{medal} Rank {rank}: {agent['agent']} - Score: {agent['scores']['overall']}/100"
                 )
-                report.append(f"   Model: {agent['model']} | Time: {agent['execution_time']}s")
+                report.append(
+                    f"   Model: {agent['model']} | Time: {agent['execution_time']}s"
+                )
 
         # Save detailed results
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -587,7 +639,10 @@ class ArtemisParallelSwarm:
                     },
                     "agents": scored_results,
                     "raw_responses": [
-                        {"agent": r.agent_name, "response": r.response if r.success else r.error}
+                        {
+                            "agent": r.agent_name,
+                            "response": r.response if r.success else r.error,
+                        }
                         for r in results
                     ],
                 },

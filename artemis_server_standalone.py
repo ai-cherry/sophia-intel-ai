@@ -137,18 +137,23 @@ async def health_check():
 async def artemis_universal_chat(request: ChatRequest):
     """Universal chat interface for all technical operations"""
     if not orchestrator_initialized:
-        raise HTTPException(status_code=503, detail="Artemis orchestrator not initialized")
+        raise HTTPException(
+            status_code=503, detail="Artemis orchestrator not initialized"
+        )
 
     try:
         # Create technical context
         context = TechnicalContext(
             user_id=request.user_id,
-            session_id=request.session_id or f"tech_session_{hash(request.message) % 10000}",
+            session_id=request.session_id
+            or f"tech_session_{hash(request.message) % 10000}",
             include_voice=request.include_voice,
         )
 
         # Process through universal orchestrator
-        response = await artemis_orchestrator.process_technical_request(request.message, context)
+        response = await artemis_orchestrator.process_technical_request(
+            request.message, context
+        )
 
         return {
             "success": response.success,
@@ -182,13 +187,16 @@ async def artemis_universal_chat(request: ChatRequest):
 async def artemis_technical_operation(request: TechnicalRequest):
     """Dedicated technical operation endpoint with full context"""
     if not orchestrator_initialized:
-        raise HTTPException(status_code=503, detail="Artemis orchestrator not initialized")
+        raise HTTPException(
+            status_code=503, detail="Artemis orchestrator not initialized"
+        )
 
     try:
         # Create comprehensive technical context
         context = TechnicalContext(
             user_id=request.user_id,
-            session_id=request.session_id or f"tech_ops_{hash(request.message) % 10000}",
+            session_id=request.session_id
+            or f"tech_ops_{hash(request.message) % 10000}",
             repository_context=request.repository_context,
             system_context=request.system_context,
             include_voice=request.include_voice,
@@ -197,7 +205,9 @@ async def artemis_technical_operation(request: TechnicalRequest):
         )
 
         # Process through universal orchestrator
-        response = await artemis_orchestrator.process_technical_request(request.message, context)
+        response = await artemis_orchestrator.process_technical_request(
+            request.message, context
+        )
 
         return {
             "success": response.success,
@@ -242,7 +252,9 @@ async def artemis_status():
 async def artemis_technical_insights():
     """Get consolidated technical insights summary"""
     if not orchestrator_initialized:
-        raise HTTPException(status_code=503, detail="Artemis orchestrator not initialized")
+        raise HTTPException(
+            status_code=503, detail="Artemis orchestrator not initialized"
+        )
 
     return await artemis_orchestrator.get_technical_insights_summary()
 
@@ -282,7 +294,9 @@ async def get_tactical_team():
             }
         ],
         "total": 1,
-        "command_status": "fully_operational" if orchestrator_initialized else "initializing",
+        "command_status": (
+            "fully_operational" if orchestrator_initialized else "initializing"
+        ),
     }
 
 
@@ -304,7 +318,9 @@ async def tactical_chat_legacy_endpoint(agent_id: str, request: dict):
                 session_id=f"legacy_tech_session_{agent_id}_{hash(message) % 1000}"
             )
 
-            response = await artemis_orchestrator.process_technical_request(message, context)
+            response = await artemis_orchestrator.process_technical_request(
+                message, context
+            )
 
             return {
                 "success": response.success,
@@ -316,7 +332,9 @@ async def tactical_chat_legacy_endpoint(agent_id: str, request: dict):
                 "findings": (
                     response.findings[:3] if response.findings else []
                 ),  # Limit for legacy compatibility
-                "recommendations": response.recommendations[:3] if response.recommendations else [],
+                "recommendations": (
+                    response.recommendations[:3] if response.recommendations else []
+                ),
             }
         except Exception as e:
             logger.error(f"Legacy tactical chat routing error: {str(e)}")
@@ -329,7 +347,10 @@ async def tactical_chat_legacy_endpoint(agent_id: str, request: dict):
                 "error": str(e),
             }
 
-    return {"success": False, "error": "Agent not available or orchestrator not initialized"}
+    return {
+        "success": False,
+        "error": "Agent not available or orchestrator not initialized",
+    }
 
 
 @app.get("/api/tactical/status")

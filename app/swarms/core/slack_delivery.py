@@ -78,7 +78,9 @@ class DeliveryRule:
     confidence_threshold: float = 0.0
     cost_threshold: float = 0.0
     keywords: list[str] = field(default_factory=list)
-    time_ranges: list[dict[str, Any]] = field(default_factory=list)  # Business hours, etc.
+    time_ranges: list[dict[str, Any]] = field(
+        default_factory=list
+    )  # Business hours, etc.
 
     # Delivery configuration
     delivery_config: DeliveryConfig = field(
@@ -252,7 +254,9 @@ class SlackDeliveryEngine:
                 )
 
             # Format message
-            formatted_message = await self._format_message(swarm_result, config, context)
+            formatted_message = await self._format_message(
+                swarm_result, config, context
+            )
 
             # Add mentions
             formatted_message = self._add_mentions(formatted_message, config)
@@ -323,13 +327,17 @@ class SlackDeliveryEngine:
 
         # Format-specific content
         if config.format == DeliveryFormat.SUMMARY:
-            format_context.update({"summary": self._create_summary(swarm_result, max_length=500)})
+            format_context.update(
+                {"summary": self._create_summary(swarm_result, max_length=500)}
+            )
 
         elif config.format == DeliveryFormat.DETAILED:
             format_context.update(
                 {
                     "detailed_results": self._format_detailed_results(swarm_result),
-                    "agent_contributions": self._format_agent_contributions(swarm_result),
+                    "agent_contributions": self._format_agent_contributions(
+                        swarm_result
+                    ),
                 }
             )
 
@@ -346,8 +354,12 @@ class SlackDeliveryEngine:
         elif config.format == DeliveryFormat.TECHNICAL:
             format_context.update(
                 {
-                    "technical_findings": self._extract_technical_findings(swarm_result),
-                    "architecture_insights": self._extract_architecture_insights(swarm_result),
+                    "technical_findings": self._extract_technical_findings(
+                        swarm_result
+                    ),
+                    "architecture_insights": self._extract_architecture_insights(
+                        swarm_result
+                    ),
                     "quality_metrics": self._format_quality_metrics(swarm_result),
                     "model_info": self._format_model_info(swarm_result),
                     "memory_usage": context.get("memory_usage", "N/A"),
@@ -360,17 +372,18 @@ class SlackDeliveryEngine:
         except KeyError as e:
             logger.warning(f"Template formatting error: {e}")
             # Fallback to simple format
-            formatted_message = (
-                f"**{format_context['swarm_name']}** - {swarm_result.final_output[:500]}..."
-            )
+            formatted_message = f"**{format_context['swarm_name']}** - {swarm_result.final_output[:500]}..."
 
         # Truncate if too long
         if len(formatted_message) > config.max_length:
             if config.auto_summarize_long_content:
-                formatted_message = self._auto_summarize(formatted_message, config.max_length)
+                formatted_message = self._auto_summarize(
+                    formatted_message, config.max_length
+                )
             else:
                 formatted_message = (
-                    formatted_message[: config.max_length - 50] + "\n\n*[Content truncated]*"
+                    formatted_message[: config.max_length - 50]
+                    + "\n\n*[Content truncated]*"
                 )
 
         return formatted_message
@@ -420,7 +433,11 @@ class SlackDeliveryEngine:
         # If no clear structure, format as bullets
         if not sections:
             lines = content.split("\n")
-            key_lines = [line.strip() for line in lines if line.strip() and len(line.strip()) > 20]
+            key_lines = [
+                line.strip()
+                for line in lines
+                if line.strip() and len(line.strip()) > 20
+            ]
             return "\n".join(f"• {line}" for line in key_lines[:5])
 
         return content[:1000] + ("..." if len(content) > 1000 else "")
@@ -451,7 +468,11 @@ class SlackDeliveryEngine:
 
                 contributions.append(contribution_text)
 
-        return "\n".join(contributions) if contributions else "No agent contribution data available"
+        return (
+            "\n".join(contributions)
+            if contributions
+            else "No agent contribution data available"
+        )
 
     def _extract_business_impact(self, swarm_result: SwarmResult) -> str:
         """Extract business impact information"""
@@ -566,10 +587,17 @@ class SlackDeliveryEngine:
         action_lines = []
 
         for line in lines:
-            if any(marker in line.lower() for marker in action_markers) and len(line.strip()) > 10:
+            if (
+                any(marker in line.lower() for marker in action_markers)
+                and len(line.strip()) > 10
+            ):
                 action_lines.append(f"1. {line.strip()}")
 
-        return "\n".join(action_lines[:3]) if action_lines else "No explicit next steps provided."
+        return (
+            "\n".join(action_lines[:3])
+            if action_lines
+            else "No explicit next steps provided."
+        )
 
     def _extract_technical_findings(self, swarm_result: SwarmResult) -> str:
         """Extract technical findings"""
@@ -625,7 +653,10 @@ class SlackDeliveryEngine:
         arch_lines = []
 
         for line in lines:
-            if any(keyword in line.lower() for keyword in arch_keywords) and len(line.strip()) > 15:
+            if (
+                any(keyword in line.lower() for keyword in arch_keywords)
+                and len(line.strip()) > 15
+            ):
                 arch_lines.append(f"• {line.strip()}")
 
         return (
@@ -753,7 +784,10 @@ class SlackDeliveryEngine:
 
         try:
             await self.slack.send_message(
-                channel=channel, message="Choose an action:", blocks=blocks, thread_ts=message_ts
+                channel=channel,
+                message="Choose an action:",
+                blocks=blocks,
+                thread_ts=message_ts,
             )
         except Exception as e:
             logger.error(f"Failed to send interactive elements: {e}")
@@ -765,7 +799,9 @@ class SlackDeliveryEngine:
 
         # Check if we've delivered to this channel recently
         last_delivery = self.last_delivery_times.get(channel)
-        if last_delivery and (now - last_delivery).total_seconds() < 60:  # 1 minute minimum
+        if (
+            last_delivery and (now - last_delivery).total_seconds() < 60
+        ):  # 1 minute minimum
             return False
 
         # Check daily delivery count
@@ -812,7 +848,9 @@ class SlackDeliveryEngine:
             # Check if result matches rule criteria
             if self._matches_delivery_rule(swarm_result, context, rule):
                 delivery_result = await self.deliver_result(
-                    swarm_result=swarm_result, config=rule.delivery_config, context=context
+                    swarm_result=swarm_result,
+                    config=rule.delivery_config,
+                    context=context,
                 )
                 results.append(delivery_result)
 
@@ -869,7 +907,9 @@ class SlackDeliveryEngine:
         # Channel distribution
         channel_counts = {}
         for delivery in self.delivery_history:
-            channel_counts[delivery.channel] = channel_counts.get(delivery.channel, 0) + 1
+            channel_counts[delivery.channel] = (
+                channel_counts.get(delivery.channel, 0) + 1
+            )
 
         # Format distribution
         format_counts = {}
@@ -880,7 +920,9 @@ class SlackDeliveryEngine:
         return {
             "total_deliveries": total_deliveries,
             "successful_deliveries": successful_deliveries,
-            "success_rate": successful_deliveries / total_deliveries if total_deliveries > 0 else 0,
+            "success_rate": (
+                successful_deliveries / total_deliveries if total_deliveries > 0 else 0
+            ),
             "channel_distribution": channel_counts,
             "format_distribution": format_counts,
             "active_rules": len([r for r in self.delivery_rules.values() if r.enabled]),

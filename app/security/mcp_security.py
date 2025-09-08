@@ -179,8 +179,12 @@ class MCPSecurityFramework:
         }
 
         # Generate tokens
-        access_token = jwt.encode(access_payload, self.jwt_secret, algorithm=self.jwt_algorithm)
-        refresh_token = jwt.encode(refresh_payload, self.jwt_secret, algorithm=self.jwt_algorithm)
+        access_token = jwt.encode(
+            access_payload, self.jwt_secret, algorithm=self.jwt_algorithm
+        )
+        refresh_token = jwt.encode(
+            refresh_payload, self.jwt_secret, algorithm=self.jwt_algorithm
+        )
 
         # Store session in Redis
         session_data = {
@@ -191,7 +195,9 @@ class MCPSecurityFramework:
             "active": True,
         }
 
-        await self.redis.setex(f"session:{session_id}", self.token_ttl, json.dumps(session_data))
+        await self.redis.setex(
+            f"session:{session_id}", self.token_ttl, json.dumps(session_data)
+        )
 
         # Audit log
         await self._audit_log(
@@ -219,7 +225,9 @@ class MCPSecurityFramework:
 
         try:
             # Decode JWT
-            payload = jwt.decode(token, self.jwt_secret, algorithms=[self.jwt_algorithm])
+            payload = jwt.decode(
+                token, self.jwt_secret, algorithms=[self.jwt_algorithm]
+            )
 
             # Check token type
             if payload.get("type") != "access":
@@ -255,7 +263,9 @@ class MCPSecurityFramework:
 
         try:
             # Decode refresh token
-            payload = jwt.decode(refresh_token, self.jwt_secret, algorithms=[self.jwt_algorithm])
+            payload = jwt.decode(
+                refresh_token, self.jwt_secret, algorithms=[self.jwt_algorithm]
+            )
 
             # Check token type
             if payload.get("type") != "refresh":
@@ -273,12 +283,19 @@ class MCPSecurityFramework:
             logger.error(f"Token refresh failed: {e}")
             raise AuthenticationError(f"Token refresh failed: {e}")
 
-    async def check_permission(self, token_payload: dict, required_permission: Permission) -> bool:
+    async def check_permission(
+        self, token_payload: dict, required_permission: Permission
+    ) -> bool:
         """Check if token has required permission"""
         permissions = token_payload.get("permissions", [])
-        return required_permission.value in permissions or Permission.ADMIN.value in permissions
+        return (
+            required_permission.value in permissions
+            or Permission.ADMIN.value in permissions
+        )
 
-    async def check_rate_limit(self, assistant_id: str, operation: str = "default") -> bool:
+    async def check_rate_limit(
+        self, assistant_id: str, operation: str = "default"
+    ) -> bool:
         """Check if request is within rate limits"""
         if not self.redis:
             await self.initialize()
@@ -324,7 +341,9 @@ class MCPSecurityFramework:
 
     def sign_data(self, data: str) -> str:
         """Sign data with HMAC"""
-        signature = hmac.new(self.signing_key, data.encode(), hashlib.sha256).hexdigest()
+        signature = hmac.new(
+            self.signing_key, data.encode(), hashlib.sha256
+        ).hexdigest()
         return signature
 
     def verify_signature(self, data: str, signature: str) -> bool:
@@ -340,7 +359,11 @@ class MCPSecurityFramework:
         if not self.redis:
             await self.initialize()
 
-        audit_entry = {"timestamp": datetime.utcnow().isoformat(), "event": event, "data": data}
+        audit_entry = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "event": event,
+            "data": data,
+        }
 
         # Store in Redis list (keep last 10000 entries)
         await self.redis.lpush("audit_log", json.dumps(audit_entry))
@@ -361,13 +384,17 @@ class MCPSecurityFramework:
             session = json.loads(session_data)
             session["active"] = False
             await self.redis.setex(
-                f"session:{session_id}", 300, json.dumps(session)  # Keep for 5 minutes for audit
+                f"session:{session_id}",
+                300,
+                json.dumps(session),  # Keep for 5 minutes for audit
             )
 
         await self._audit_log("session_revoked", {"session_id": session_id})
 
     @with_circuit_breaker("redis")
-    async def get_active_sessions(self, assistant_id: Optional[str] = None) -> list[dict]:
+    async def get_active_sessions(
+        self, assistant_id: Optional[str] = None
+    ) -> list[dict]:
         """Get list of active sessions"""
         if not self.redis:
             await self.initialize()
@@ -399,7 +426,8 @@ class SecurityMiddleware:
         auth_header = request.headers.get("Authorization", "")
         if not auth_header.startswith("Bearer "):
             return JSONResponse(
-                status_code=401, content={"error": "Missing or invalid authorization header"}
+                status_code=401,
+                content={"error": "Missing or invalid authorization header"},
             )
 
         token = auth_header.replace("Bearer ", "")
@@ -437,9 +465,13 @@ class SecurityMiddleware:
         except TokenExpiredError:
             return JSONResponse(status_code=401, content={"error": "Token expired"})
         except RateLimitError:
-            return JSONResponse(status_code=429, content={"error": "Rate limit exceeded"})
+            return JSONResponse(
+                status_code=429, content={"error": "Rate limit exceeded"}
+            )
         except AuthenticationError as e:
             return JSONResponse(status_code=401, content={"error": str(e)})
         except Exception as e:
             logger.error(f"Security middleware error: {e}")
-            return JSONResponse(status_code=500, content={"error": "Internal security error"})
+            return JSONResponse(
+                status_code=500, content={"error": "Internal security error"}
+            )

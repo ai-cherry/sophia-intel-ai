@@ -86,7 +86,9 @@ class GongConnector(BaseConnector):
                     transcript_tasks.append(self.get_transcript(call_id))
 
             if transcript_tasks:
-                transcripts = await asyncio.gather(*transcript_tasks, return_exceptions=True)
+                transcripts = await asyncio.gather(
+                    *transcript_tasks, return_exceptions=True
+                )
                 for call, transcript in zip(calls[:10], transcripts):
                     if not isinstance(transcript, Exception):
                         data["transcripts"][call["id"]] = transcript
@@ -120,7 +122,9 @@ class GongConnector(BaseConnector):
                 "limit": params.get("limit", 100),
             }
 
-            response = await self.make_request(method="GET", endpoint="calls", params=query_params)
+            response = await self.make_request(
+                method="GET", endpoint="calls", params=query_params
+            )
 
             return response.get("calls", [])
 
@@ -139,7 +143,9 @@ class GongConnector(BaseConnector):
             Transcript data
         """
         try:
-            response = await self.make_request(method="GET", endpoint=f"calls/{call_id}/transcript")
+            response = await self.make_request(
+                method="GET", endpoint=f"calls/{call_id}/transcript"
+            )
 
             return {
                 "call_id": call_id,
@@ -169,7 +175,8 @@ class GongConnector(BaseConnector):
                 endpoint="stats/users",
                 params={
                     "fromDateTime": params.get(
-                        "modified_since", (datetime.now() - timedelta(days=30)).isoformat()
+                        "modified_since",
+                        (datetime.now() - timedelta(days=30)).isoformat(),
                     ),
                     "toDateTime": params.get("to_date", datetime.now().isoformat()),
                 },
@@ -213,7 +220,9 @@ class GongConnector(BaseConnector):
             coaching_response = await self.make_request(
                 method="GET", endpoint="coaching/opportunities", params={"limit": 50}
             )
-            insights["coaching_opportunities"] = coaching_response.get("opportunities", [])
+            insights["coaching_opportunities"] = coaching_response.get(
+                "opportunities", []
+            )
 
         except Exception as e:
             logger.error(f"Failed to fetch Gong insights: {e}")
@@ -222,7 +231,12 @@ class GongConnector(BaseConnector):
 
     def _analyze_call_patterns(self, stats_data: dict[str, Any]) -> dict[str, Any]:
         """Analyze patterns in call data"""
-        patterns = {"peak_hours": [], "average_duration": 0, "talk_ratio": 0, "question_rate": 0}
+        patterns = {
+            "peak_hours": [],
+            "average_duration": 0,
+            "talk_ratio": 0,
+            "question_rate": 0,
+        }
 
         # Analysis logic would go here
 
@@ -331,7 +345,9 @@ class GongConnector(BaseConnector):
             call_id = payload.get("callId")
             if call_id:
                 transcript = await self.get_transcript(call_id)
-                chunks = await self._transform_to_chunks({"transcripts": {call_id: transcript}})
+                chunks = await self._transform_to_chunks(
+                    {"transcripts": {call_id: transcript}}
+                )
                 if chunks:
                     await self.memory.upsert_chunks(chunks, MemoryDomain.SOPHIA)
 
@@ -358,13 +374,17 @@ class GongConnector(BaseConnector):
         if participants:
             params["participants"] = ",".join(participants)
 
-        response = await self.make_request(method="GET", endpoint="calls/search", params=params)
+        response = await self.make_request(
+            method="GET", endpoint="calls/search", params=params
+        )
 
         return response.get("calls", [])
 
     async def get_deal_activity(self, deal_id: str) -> dict[str, Any]:
         """Get activity for a specific deal"""
-        response = await self.make_request(method="GET", endpoint=f"deals/{deal_id}/activity")
+        response = await self.make_request(
+            method="GET", endpoint=f"deals/{deal_id}/activity"
+        )
 
         return {
             "deal_id": deal_id,

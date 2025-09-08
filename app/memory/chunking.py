@@ -72,7 +72,11 @@ def chunk_code(
 
 
 def chunk_document(
-    content: str, title: str, source: str, max_chunk_size: int = 2000, overlap_size: int = 200
+    content: str,
+    title: str,
+    source: str,
+    max_chunk_size: int = 2000,
+    overlap_size: int = 200,
 ) -> list[dict[str, Any]]:
     """
     Chunk document into overlapping segments.
@@ -279,7 +283,17 @@ def _infer_priority(filepath: str, language: str) -> str:
         Priority level (high/medium/low)
     """
     # High priority patterns
-    high_priority = ["main", "index", "app", "core", "api", "schema", "model", "config", "settings"]
+    high_priority = [
+        "main",
+        "index",
+        "app",
+        "core",
+        "api",
+        "schema",
+        "model",
+        "config",
+        "settings",
+    ]
 
     # Low priority patterns
     low_priority = [

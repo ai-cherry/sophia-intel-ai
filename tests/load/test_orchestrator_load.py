@@ -36,13 +36,19 @@ class TestOrchestratorLoad:
         # Mock mission execution
         async def execute_mission_mock(mission):
             await asyncio.sleep(0.1)  # Simulate work
-            return {"mission_id": mission["mission_id"], "status": "completed", "duration": 0.1}
+            return {
+                "mission_id": mission["mission_id"],
+                "status": "completed",
+                "duration": 0.1,
+            }
 
         artemis_orchestrator.execute_mission.side_effect = execute_mission_mock
 
         # Act
         with benchmark_timer:
-            tasks = [artemis_orchestrator.execute_mission(mission) for mission in missions]
+            tasks = [
+                artemis_orchestrator.execute_mission(mission) for mission in missions
+            ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Assert
@@ -58,7 +64,9 @@ class TestOrchestratorLoad:
         print(f"  Successful: {len(successful)}")
         print(f"  Failed: {len(failed)}")
         print(f"  Duration: {benchmark_timer.elapsed:.2f}s")
-        print(f"  Throughput: {len(successful)/benchmark_timer.elapsed:.2f} missions/sec")
+        print(
+            f"  Throughput: {len(successful)/benchmark_timer.elapsed:.2f} missions/sec"
+        )
 
     async def test_sophia_orchestrator_concurrent_strategies(
         self, sophia_orchestrator, sophia_test_agents, benchmark_timer
@@ -91,7 +99,10 @@ class TestOrchestratorLoad:
 
         # Act
         with benchmark_timer:
-            tasks = [sophia_orchestrator.execute_strategy(strategy) for strategy in strategies]
+            tasks = [
+                sophia_orchestrator.execute_strategy(strategy)
+                for strategy in strategies
+            ]
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Assert
@@ -107,7 +118,9 @@ class TestOrchestratorLoad:
         print(f"  Successful: {len(successful)}")
         print(f"  Failed: {len(failed)}")
         print(f"  Duration: {benchmark_timer.elapsed:.2f}s")
-        print(f"  Throughput: {len(successful)/benchmark_timer.elapsed:.2f} strategies/sec")
+        print(
+            f"  Throughput: {len(successful)/benchmark_timer.elapsed:.2f} strategies/sec"
+        )
 
     async def test_concurrent_limit_enforcement_under_load(
         self, artemis_orchestrator, benchmark_timer
@@ -158,7 +171,11 @@ class TestOrchestratorLoad:
         print(f"  Duration: {benchmark_timer.elapsed:.2f}s")
 
     async def test_mixed_domain_load(
-        self, artemis_orchestrator, sophia_orchestrator, domain_enforcer, benchmark_timer
+        self,
+        artemis_orchestrator,
+        sophia_orchestrator,
+        domain_enforcer,
+        benchmark_timer,
     ):
         """Test both orchestrators operating simultaneously under load"""
         # Arrange
@@ -166,11 +183,13 @@ class TestOrchestratorLoad:
 
         # Create mixed operations
         artemis_ops = [
-            {"type": "mission", "id": f"A-{i}", "domain": "artemis"} for i in range(num_operations)
+            {"type": "mission", "id": f"A-{i}", "domain": "artemis"}
+            for i in range(num_operations)
         ]
 
         sophia_ops = [
-            {"type": "strategy", "id": f"S-{i}", "domain": "sophia"} for i in range(num_operations)
+            {"type": "strategy", "id": f"S-{i}", "domain": "sophia"}
+            for i in range(num_operations)
         ]
 
         # Mock executions
@@ -189,9 +208,13 @@ class TestOrchestratorLoad:
 
         # Act
         with benchmark_timer:
-            artemis_tasks = [artemis_orchestrator.execute_mission(op) for op in artemis_ops]
+            artemis_tasks = [
+                artemis_orchestrator.execute_mission(op) for op in artemis_ops
+            ]
 
-            sophia_tasks = [sophia_orchestrator.execute_strategy(op) for op in sophia_ops]
+            sophia_tasks = [
+                sophia_orchestrator.execute_strategy(op) for op in sophia_ops
+            ]
 
             all_tasks = artemis_tasks + sophia_tasks
             results = await asyncio.gather(*all_tasks, return_exceptions=True)
@@ -221,7 +244,9 @@ class TestOrchestratorLoad:
         print(f"  Artemis successful: {len(artemis_results)}")
         print(f"  Sophia successful: {len(sophia_results)}")
         print(f"  Duration: {benchmark_timer.elapsed:.2f}s")
-        print(f"  Combined throughput: {len(successful)/benchmark_timer.elapsed:.2f} ops/sec")
+        print(
+            f"  Combined throughput: {len(successful)/benchmark_timer.elapsed:.2f} ops/sec"
+        )
 
 
 @pytest.mark.load
@@ -270,7 +295,9 @@ class TestOrchestratorStress:
 
             # Log level results
             print(f"  Success rate: {results_by_level[level]['success_rate']:.2%}")
-            print(f"  Throughput: {results_by_level[level]['throughput']:.2f} tasks/sec")
+            print(
+                f"  Throughput: {results_by_level[level]['throughput']:.2f} tasks/sec"
+            )
             print(f"  Duration: {duration:.2f}s")
 
             # Stop if success rate drops below 50%
@@ -324,9 +351,13 @@ class TestOrchestratorStress:
         for i in range(total_tasks):
             # Alternate between orchestrators
             if i % 2 == 0:
-                task = artemis_orchestrator.execute_mission(artemis_orchestrator, f"sustained-{i}")
+                task = artemis_orchestrator.execute_mission(
+                    artemis_orchestrator, f"sustained-{i}"
+                )
             else:
-                task = sophia_orchestrator.execute_strategy(sophia_orchestrator, f"sustained-{i}")
+                task = sophia_orchestrator.execute_strategy(
+                    sophia_orchestrator, f"sustained-{i}"
+                )
 
             tasks.append(task)
 
@@ -361,7 +392,9 @@ class TestOrchestratorStress:
         print(f"  Actual throughput: {actual_throughput:.2f} tasks/sec")
         print(f"  Errors: {len(errors)}")
 
-    async def test_memory_leak_detection(self, artemis_orchestrator, sophia_orchestrator):
+    async def test_memory_leak_detection(
+        self, artemis_orchestrator, sophia_orchestrator
+    ):
         """Test for memory leaks during extended operation"""
         import gc
 
@@ -427,7 +460,9 @@ class TestOrchestratorStress:
         second_half_avg = sum(memory_usage[5:]) / 5
 
         growth_rate = (
-            (second_half_avg - first_half_avg) / first_half_avg if first_half_avg > 0 else 0
+            (second_half_avg - first_half_avg) / first_half_avg
+            if first_half_avg > 0
+            else 0
         )
 
         print("\nMemory Test Results:")

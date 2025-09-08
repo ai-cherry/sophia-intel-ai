@@ -436,7 +436,9 @@ class BaseAgent(ABC):
         logger.info(f"Initialized agent {config.name} ({config.agent_id})")
 
     @abstractmethod
-    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
+    async def process_message(
+        self, message: AgentMessage, context: AgentContext
+    ) -> AgentResponse:
         """
         Process an incoming message and generate response.
 
@@ -624,7 +626,9 @@ class BaseAgent(ABC):
         )
 
         # Execute tool
-        result = await self.tool_registry.execute_tool(tool_name, tool_params, exec_context)
+        result = await self.tool_registry.execute_tool(
+            tool_name, tool_params, exec_context
+        )
 
         return result
 
@@ -684,7 +688,9 @@ class BaseAgent(ABC):
             Dict[str, Any]: Agent status information
         """
         avg_response_time = (
-            self._total_response_time / self._message_count if self._message_count > 0 else 0.0
+            self._total_response_time / self._message_count
+            if self._message_count > 0
+            else 0.0
         )
 
         return {
@@ -694,15 +700,27 @@ class BaseAgent(ABC):
             "capabilities": self.config.capabilities.dict(),
             "goals": {
                 "total": len(self._goals),
-                "active": len([g for g in self._goals.values() if g.status == "active"]),
-                "completed": len([g for g in self._goals.values() if g.status == "completed"]),
+                "active": len(
+                    [g for g in self._goals.values() if g.status == "active"]
+                ),
+                "completed": len(
+                    [g for g in self._goals.values() if g.status == "completed"]
+                ),
             },
             "tasks": {
                 "total": len(self._tasks),
-                "pending": len([t for t in self._tasks.values() if t.status == TaskStatus.PENDING]),
-                "running": len([t for t in self._tasks.values() if t.status == TaskStatus.RUNNING]),
+                "pending": len(
+                    [t for t in self._tasks.values() if t.status == TaskStatus.PENDING]
+                ),
+                "running": len(
+                    [t for t in self._tasks.values() if t.status == TaskStatus.RUNNING]
+                ),
                 "completed": len(
-                    [t for t in self._tasks.values() if t.status == TaskStatus.COMPLETED]
+                    [
+                        t
+                        for t in self._tasks.values()
+                        if t.status == TaskStatus.COMPLETED
+                    ]
                 ),
             },
             "performance": {
@@ -722,7 +740,9 @@ class ConversationalAgent(BaseAgent):
         super().__init__(**kwargs)
         self._conversation_history = ConversationHistory()
 
-    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
+    async def process_message(
+        self, message: AgentMessage, context: AgentContext
+    ) -> AgentResponse:
         """Process conversational message."""
         start_time = datetime.utcnow()
         self.state = AgentState.COMMUNICATING
@@ -736,7 +756,9 @@ class ConversationalAgent(BaseAgent):
             from ..models.base import Message, MessageRole
 
             user_message = Message(
-                role=MessageRole.USER, content=message.content, metadata={"message_id": message.id}
+                role=MessageRole.USER,
+                content=message.content,
+                metadata={"message_id": message.id},
             )
             self._conversation_history.add_message(user_message)
 
@@ -788,7 +810,9 @@ class ReactiveTool(BaseAgent):
     Agent that reacts to messages by using tools.
     """
 
-    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
+    async def process_message(
+        self, message: AgentMessage, context: AgentContext
+    ) -> AgentResponse:
         """Process message by determining and using appropriate tools."""
         start_time = datetime.utcnow()
         self.state = AgentState.ACTING
@@ -804,13 +828,17 @@ class ReactiveTool(BaseAgent):
                         agent_id=self.config.agent_id, session_id=context.session_id
                     )
 
-                    result = await self.tool_registry.execute_tool(tool_name, params, exec_context)
+                    result = await self.tool_registry.execute_tool(
+                        tool_name, params, exec_context
+                    )
                     results.append(
                         f"{tool_name}: {result.result if result.success else result.error}"
                     )
 
             response_content = (
-                "Tool results:\n" + "\n".join(results) if results else "No tools were used."
+                "Tool results:\n" + "\n".join(results)
+                if results
+                else "No tools were used."
             )
 
             response_time = (datetime.utcnow() - start_time).total_seconds()
@@ -821,7 +849,9 @@ class ReactiveTool(BaseAgent):
                 response_to=message.id,
                 content=response_content,
                 response_time=response_time,
-                tool_calls=[{"tool": tool, "params": params} for tool, params in tools_to_use],
+                tool_calls=[
+                    {"tool": tool, "params": params} for tool, params in tools_to_use
+                ],
             )
 
         except Exception as e:
@@ -874,7 +904,9 @@ class ProactiveAgent(BaseAgent):
         self._planning_interval = 60  # seconds
         self._last_planning = None
 
-    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
+    async def process_message(
+        self, message: AgentMessage, context: AgentContext
+    ) -> AgentResponse:
         """Process message and potentially trigger proactive planning."""
         # First handle the immediate message
         response = await self._handle_immediate_response(message, context)
@@ -902,7 +934,8 @@ class ProactiveAgent(BaseAgent):
         # Check if it's time for planning
         if (
             self._last_planning is None
-            or (current_time - self._last_planning).total_seconds() > self._planning_interval
+            or (current_time - self._last_planning).total_seconds()
+            > self._planning_interval
         ):
 
             await self._proactive_planning(context)
@@ -931,7 +964,8 @@ class ProactiveAgent(BaseAgent):
     def _has_active_tasks_for_goal(self, goal_id: str) -> bool:
         """Check if goal has active tasks."""
         return any(
-            t.parent_goal_id == goal_id and t.status in [TaskStatus.PENDING, TaskStatus.RUNNING]
+            t.parent_goal_id == goal_id
+            and t.status in [TaskStatus.PENDING, TaskStatus.RUNNING]
             for t in self._tasks.values()
         )
 
@@ -1024,7 +1058,9 @@ class AgentRegistry:
 
         return capable_agents
 
-    async def broadcast_message(self, message: AgentMessage) -> Dict[str, AgentResponse]:
+    async def broadcast_message(
+        self, message: AgentMessage
+    ) -> Dict[str, AgentResponse]:
         """
         Broadcast message to all agents.
 

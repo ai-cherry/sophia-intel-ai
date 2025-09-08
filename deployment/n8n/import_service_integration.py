@@ -37,7 +37,10 @@ def import_service_integration_workflow():
 
     try:
         response = requests.post(
-            f"{N8N_INSTANCE_URL}/api/v1/workflows", headers=headers, json=workflow_data, timeout=30
+            f"{N8N_INSTANCE_URL}/api/v1/workflows",
+            headers=headers,
+            json=workflow_data,
+            timeout=30,
         )
 
         if response.status_code in [200, 201]:
@@ -142,7 +145,9 @@ def test_service_integration(webhook_url):
 
             if response.status_code == 200:
                 print(f"✅ Test {i} successful - Sophia service integration working")
-                print(f"   Response: {response.json().get('message', 'Workflow started')}")
+                print(
+                    f"   Response: {response.json().get('message', 'Workflow started')}"
+                )
             else:
                 print(f"⚠️ Test {i} returned status: {response.status_code}")
 

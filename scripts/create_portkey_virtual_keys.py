@@ -47,7 +47,10 @@ class PortkeyVirtualKeyCreator:
             "description": description,
             "config": {
                 "base_url": "https://openrouter.ai/api/v1",
-                "headers": {"HTTP-Referer": "http://localhost:3000", "X-Title": "Sophia Intel AI"},
+                "headers": {
+                    "HTTP-Referer": "http://localhost:3000",
+                    "X-Title": "Sophia Intel AI",
+                },
             },
         }
 
@@ -158,7 +161,9 @@ class PortkeyVirtualKeyCreator:
         elif successful == 0:
             logger.info("\n❌ No virtual keys were created")
             logger.info("\nPossible issues:")
-            logger.info("  • Portkey API might not support programmatic virtual key creation")
+            logger.info(
+                "  • Portkey API might not support programmatic virtual key creation"
+            )
             logger.info("  • API key might not have admin permissions")
             logger.info("  • You may need to create them manually in the dashboard")
 
@@ -280,7 +285,9 @@ PORTKEY_VK_GROQ=<id>
                     },
                     json={
                         "model": "meta-llama/llama-3.2-3b-instruct",
-                        "messages": [{"role": "user", "content": "Say 'working' in one word"}],
+                        "messages": [
+                            {"role": "user", "content": "Say 'working' in one word"}
+                        ],
                         "max_tokens": 5,
                     },
                 )
@@ -309,7 +316,9 @@ async def main():
 
     except ValueError as e:
         logger.info(f"\n❌ Configuration Error: {e}")
-        logger.info("Make sure PORTKEY_API_KEY and OPENROUTER_API_KEY are set in .env.local")
+        logger.info(
+            "Make sure PORTKEY_API_KEY and OPENROUTER_API_KEY are set in .env.local"
+        )
     except Exception as e:
         logger.info(f"\n❌ Unexpected Error: {e}")
 

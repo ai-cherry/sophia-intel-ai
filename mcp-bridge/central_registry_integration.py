@@ -129,19 +129,29 @@ class BridgeRegistrationManager:
                     max_connections=server_config.get("connection_config", {}).get(
                         "max_connections", 5
                     ),
-                    timeout_seconds=server_config.get("connection_config", {}).get("timeout", 60),
+                    timeout_seconds=server_config.get("connection_config", {}).get(
+                        "timeout", 60
+                    ),
                     description=f"Claude Desktop bridge server for {server_id}",
-                    tags={"bridge", "claude_desktop", ide_config.get("priority", "medium")},
+                    tags={
+                        "bridge",
+                        "claude_desktop",
+                        ide_config.get("priority", "medium"),
+                    },
                 )
 
                 # Register with central registry
                 success = await self.registry.register_server(registration)
                 if success:
                     self.registered_servers[registration.server_id] = registration
-                    logger.info(f"✅ Registered Claude Desktop server: {registration.server_id}")
+                    logger.info(
+                        f"✅ Registered Claude Desktop server: {registration.server_id}"
+                    )
 
             except Exception as e:
-                logger.error(f"Failed to register Claude Desktop server {server_id}: {e}")
+                logger.error(
+                    f"Failed to register Claude Desktop server {server_id}: {e}"
+                )
 
     # Note: Roo/Cursor and Cline server registration methods removed
     # Use unified MCP servers via central registry instead
@@ -206,12 +216,23 @@ class BridgeHealthMonitor:
                 await asyncio.sleep(self.health_check_interval)
 
                 # Check health of all registered bridge servers
-                for server_id, registration in self.registration_manager.registered_servers.items():
+                for (
+                    server_id,
+                    registration,
+                ) in self.registration_manager.registered_servers.items():
                     try:
-                        is_healthy = await self._check_server_health(server_id, registration)
-                        status = ServerStatus.HEALTHY if is_healthy else ServerStatus.DEGRADED
+                        is_healthy = await self._check_server_health(
+                            server_id, registration
+                        )
+                        status = (
+                            ServerStatus.HEALTHY
+                            if is_healthy
+                            else ServerStatus.DEGRADED
+                        )
 
-                        await self.registration_manager.update_server_status(server_id, status)
+                        await self.registration_manager.update_server_status(
+                            server_id, status
+                        )
 
                     except Exception as e:
                         logger.error(f"Health check failed for {server_id}: {e}")

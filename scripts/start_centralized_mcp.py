@@ -52,10 +52,14 @@ class CentralizedMCPController(MCPMasterController):
             self.log(f"❌ Failed to initialize Central Registry: {e}", "ERROR")
             return False
 
-    async def register_servers_with_central_registry(self, server_results: Dict[str, bool]):
+    async def register_servers_with_central_registry(
+        self, server_results: Dict[str, bool]
+    ):
         """Register all running servers with the central registry"""
         if not self.central_registry:
-            self.log("❌ Central Registry not available for server registration", "ERROR")
+            self.log(
+                "❌ Central Registry not available for server registration", "ERROR"
+            )
             return
 
         self.log("\n📝 Registering servers with Central Registry...")
@@ -68,7 +72,9 @@ class CentralizedMCPController(MCPMasterController):
                 config = self.mcp_configs[server_id]
 
                 # Map server to domain and capabilities
-                domain, capabilities = self._map_server_to_registry_config(server_id, config)
+                domain, capabilities = self._map_server_to_registry_config(
+                    server_id, config
+                )
 
                 # Create registration
                 registration = MCPServerRegistration(
@@ -119,8 +125,13 @@ class CentralizedMCPController(MCPMasterController):
             "git": [MCPCapabilityType.GIT],
             "memory": [MCPCapabilityType.MEMORY],
             "embeddings": [MCPCapabilityType.EMBEDDINGS],
-            "unified_api": [MCPCapabilityType.BUSINESS_ANALYTICS, MCPCapabilityType.CODE_ANALYSIS],
-            "websocket": [MCPCapabilityType.WEB_SEARCH],  # Using as general communication
+            "unified_api": [
+                MCPCapabilityType.BUSINESS_ANALYTICS,
+                MCPCapabilityType.CODE_ANALYSIS,
+            ],
+            "websocket": [
+                MCPCapabilityType.WEB_SEARCH
+            ],  # Using as general communication
             "redis": [MCPCapabilityType.DATABASE],
         }
 
@@ -167,11 +178,19 @@ class CentralizedMCPController(MCPMasterController):
                         is_healthy = await self.check_server_health(original_id, config)
 
                         # Update registry status
-                        status = ServerStatus.HEALTHY if is_healthy else ServerStatus.UNHEALTHY
-                        await self.central_registry.update_server_status(server_id, status)
+                        status = (
+                            ServerStatus.HEALTHY
+                            if is_healthy
+                            else ServerStatus.UNHEALTHY
+                        )
+                        await self.central_registry.update_server_status(
+                            server_id, status
+                        )
 
                         if not is_healthy:
-                            self.log(f"⚠️ Health check failed for {config['name']}", "WARNING")
+                            self.log(
+                                f"⚠️ Health check failed for {config['name']}", "WARNING"
+                            )
 
             except Exception as e:
                 self.log(f"Health monitoring error: {e}", "ERROR")
@@ -191,7 +210,9 @@ class CentralizedMCPController(MCPMasterController):
             try:
                 registry_status = await self.central_registry.get_registry_status()
 
-                self.log(f"Total registered servers: {registry_status['total_servers']}")
+                self.log(
+                    f"Total registered servers: {registry_status['total_servers']}"
+                )
                 self.log(
                     f"Registry health: {'✅ Healthy' if registry_status['redis_connected'] else '❌ Unhealthy'}"
                 )
@@ -205,7 +226,9 @@ class CentralizedMCPController(MCPMasterController):
                 # Show capability distribution
                 capability_dist = registry_status.get("capability_distribution", {})
                 self.log("\nCapabilities available:")
-                active_capabilities = [cap for cap, count in capability_dist.items() if count > 0]
+                active_capabilities = [
+                    cap for cap, count in capability_dist.items() if count > 0
+                ]
                 for cap in active_capabilities[:5]:  # Show first 5
                     self.log(f"  • {cap}")
                 if len(active_capabilities) > 5:
@@ -220,8 +243,12 @@ class CentralizedMCPController(MCPMasterController):
         self.log("=" * 70)
 
         self.log("\n📡 Central Registry API:")
-        self.log("  • Registry Status: GET http://localhost:8000/api/mcp/registry/status")
-        self.log("  • Discover Servers: GET http://localhost:8000/api/mcp/registry/servers")
+        self.log(
+            "  • Registry Status: GET http://localhost:8000/api/mcp/registry/status"
+        )
+        self.log(
+            "  • Discover Servers: GET http://localhost:8000/api/mcp/registry/servers"
+        )
         self.log(
             "  • Server Details: GET http://localhost:8000/api/mcp/registry/servers/{server_id}"
         )
@@ -256,7 +283,9 @@ class CentralizedMCPController(MCPMasterController):
             if registry_success:
                 bridge_success = await self.initialize_bridge_integration()
                 if not bridge_success:
-                    self.log("⚠️ Bridge integration failed, continuing without it", "WARNING")
+                    self.log(
+                        "⚠️ Bridge integration failed, continuing without it", "WARNING"
+                    )
 
             # Create configurations (from parent class)
             self.create_claude_config()

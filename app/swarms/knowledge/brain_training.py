@@ -96,7 +96,9 @@ class BrainTrainingPipeline:
         self.current_session: Optional[TrainingSession] = None
         self.learning_objectives: dict[str, LearningObjective] = {}
         self.training_history: list[TrainingSession] = []
-        self.MAX_TRAINING_HISTORY = 100  # Limit training history to prevent memory growth
+        self.MAX_TRAINING_HISTORY = (
+            100  # Limit training history to prevent memory growth
+        )
 
         # Content processors
         self.content_processors = {}
@@ -126,7 +128,9 @@ class BrainTrainingPipeline:
         self.reinforcement_learning_enabled = True
         self.adaptive_learning_rate = True
 
-        logger.info("Brain Training Pipeline initialized - ready for knowledge absorption")
+        logger.info(
+            "Brain Training Pipeline initialized - ready for knowledge absorption"
+        )
 
     async def initialize(self) -> bool:
         """Initialize the training pipeline"""
@@ -147,7 +151,9 @@ class BrainTrainingPipeline:
             logger.error(f"Failed to initialize Brain Training Pipeline: {e}")
             return False
 
-    async def ingest_content(self, source: Union[str, dict[str, Any]]) -> ContentIngestionResult:
+    async def ingest_content(
+        self, source: Union[str, dict[str, Any]]
+    ) -> ContentIngestionResult:
         """
         Ingest content from any source with intelligent processing
         """
@@ -161,7 +167,9 @@ class BrainTrainingPipeline:
             # Process content based on type
             processor = self.content_processors.get(source_type)
             if not processor:
-                raise ValueError(f"No processor available for source type: {source_type}")
+                raise ValueError(
+                    f"No processor available for source type: {source_type}"
+                )
 
             # Extract content
             extracted_content = await processor(source)
@@ -215,7 +223,9 @@ class BrainTrainingPipeline:
                 processing_time=processing_time,
                 metadata={
                     "source_type": source_type,
-                    "original_content_length": len(extracted_content.get("content", "")),
+                    "original_content_length": len(
+                        extracted_content.get("content", "")
+                    ),
                     "extraction_method": extracted_content.get("method", "unknown"),
                 },
                 success=True,
@@ -279,7 +289,9 @@ class BrainTrainingPipeline:
                     result = await self.ingest_content(source)
                     if result.success:
                         self.current_session.sources_processed.append(source)
-                        self.current_session.content_ingested += result.fragments_created
+                        self.current_session.content_ingested += (
+                            result.fragments_created
+                        )
                 except Exception as e:
                     logger.warning(f"Failed to process source {source}: {e}")
 
@@ -316,7 +328,9 @@ class BrainTrainingPipeline:
             "content_ingested": self.current_session.content_ingested,
             "improvements_made": self.current_session.improvements_made,
             "performance_metrics": session_metrics,
-            "learning_effectiveness": session_metrics.get("learning_effectiveness", 0.0),
+            "learning_effectiveness": session_metrics.get(
+                "learning_effectiveness", 0.0
+            ),
         }
 
         logger.info(f"Training session completed: {summary}")
@@ -326,7 +340,9 @@ class BrainTrainingPipeline:
 
         return summary
 
-    async def incorporate_feedback(self, feedback_record: dict[str, Any]) -> dict[str, Any]:
+    async def incorporate_feedback(
+        self, feedback_record: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Incorporate user feedback into the learning process
         """
@@ -354,13 +370,17 @@ class BrainTrainingPipeline:
             # Generate improvement suggestions
             improvements = await self._generate_feedback_improvements(learning_signals)
 
-            logger.info(f"Feedback incorporated: {len(improvements)} improvements identified")
+            logger.info(
+                f"Feedback incorporated: {len(improvements)} improvements identified"
+            )
 
             return {
                 "feedback_processed": True,
                 "learning_signals": learning_signals,
                 "improvements": improvements,
-                "parameter_adjustments": feedback_analysis.get("parameter_adjustments", []),
+                "parameter_adjustments": feedback_analysis.get(
+                    "parameter_adjustments", []
+                ),
             }
 
         except Exception as e:
@@ -421,7 +441,9 @@ class BrainTrainingPipeline:
                 ),
             }
 
-            logger.info(f"Custom response trained: {query[:50]}... -> {len(patterns)} patterns")
+            logger.info(
+                f"Custom response trained: {query[:50]}... -> {len(patterns)} patterns"
+            )
             return training_result
 
         except Exception as e:
@@ -444,7 +466,9 @@ class BrainTrainingPipeline:
             learning_patterns = await self._analyze_learning_patterns()
 
             # Optimize content processing
-            processing_optimization = await self._optimize_content_processing(learning_patterns)
+            processing_optimization = await self._optimize_content_processing(
+                learning_patterns
+            )
             if processing_optimization:
                 optimization_results["optimizations_applied"] += 1
 
@@ -455,7 +479,9 @@ class BrainTrainingPipeline:
                 optimization_results["optimizations_applied"] += 1
 
             # Adjust learning parameters
-            parameter_adjustments = await self._optimize_learning_parameters(learning_patterns)
+            parameter_adjustments = await self._optimize_learning_parameters(
+                learning_patterns
+            )
             optimization_results["optimizations_applied"] += len(parameter_adjustments)
 
             # Calculate performance improvement
@@ -463,7 +489,9 @@ class BrainTrainingPipeline:
             await self._recalculate_learning_efficiency()
             new_efficiency = self.learning_metrics["learning_efficiency"]
 
-            optimization_results["learning_efficiency_gain"] = new_efficiency - old_efficiency
+            optimization_results["learning_efficiency_gain"] = (
+                new_efficiency - old_efficiency
+            )
             optimization_results["performance_improvement"] = (
                 optimization_results["optimizations_applied"] * 0.1
             )
@@ -482,7 +510,9 @@ class BrainTrainingPipeline:
 
         return {
             **self.learning_metrics,
-            "active_session": self.current_session.session_id if self.current_session else None,
+            "active_session": (
+                self.current_session.session_id if self.current_session else None
+            ),
             "learning_objectives_progress": {
                 obj_id: obj.progress for obj_id, obj in self.learning_objectives.items()
             },
@@ -791,13 +821,18 @@ class BrainTrainingPipeline:
                 continue
 
             # Check if adding this paragraph exceeds chunk size
-            if len(current_fragment) + len(paragraph) > max_chunk_size and current_fragment:
+            if (
+                len(current_fragment) + len(paragraph) > max_chunk_size
+                and current_fragment
+            ):
                 # Create fragment
                 fragment = {
                     "index": fragment_index,
                     "content": current_fragment.strip(),
                     "word_count": len(current_fragment.split()),
-                    "importance_score": self._calculate_fragment_importance(current_fragment),
+                    "importance_score": self._calculate_fragment_importance(
+                        current_fragment
+                    ),
                     "concepts": self._extract_fragment_concepts(current_fragment),
                     "source_type": source_type,
                 }
@@ -815,7 +850,9 @@ class BrainTrainingPipeline:
                 "index": fragment_index,
                 "content": current_fragment.strip(),
                 "word_count": len(current_fragment.split()),
-                "importance_score": self._calculate_fragment_importance(current_fragment),
+                "importance_score": self._calculate_fragment_importance(
+                    current_fragment
+                ),
                 "concepts": self._extract_fragment_concepts(current_fragment),
                 "source_type": source_type,
             }
@@ -868,12 +905,24 @@ class BrainTrainingPipeline:
             concepts.extend(matches)
 
         # Remove common words and duplicates
-        common_words = {"The", "This", "That", "With", "From", "Where", "When", "What", "How"}
+        common_words = {
+            "The",
+            "This",
+            "That",
+            "With",
+            "From",
+            "Where",
+            "When",
+            "What",
+            "How",
+        }
         concepts = [c for c in set(concepts) if c not in common_words and len(c) > 2]
 
         return concepts[:10]  # Limit to top 10 concepts
 
-    async def _extract_concepts(self, fragments: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _extract_concepts(
+        self, fragments: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
         """Extract concepts from all fragments"""
         all_concepts = []
         concept_freq = defaultdict(int)
@@ -889,7 +938,9 @@ class BrainTrainingPipeline:
                 # Find context for concept
                 context_fragments = []
                 for fragment in fragments:
-                    if any(c.lower() == concept_name for c in fragment.get("concepts", [])):
+                    if any(
+                        c.lower() == concept_name for c in fragment.get("concepts", [])
+                    ):
                         context_fragments.append(fragment["content"][:100] + "...")
 
                 concept_obj = {
@@ -1002,7 +1053,9 @@ class BrainTrainingPipeline:
 
     # Feedback and learning methods
 
-    async def _analyze_feedback(self, feedback_record: dict[str, Any]) -> dict[str, Any]:
+    async def _analyze_feedback(
+        self, feedback_record: dict[str, Any]
+    ) -> dict[str, Any]:
         """Analyze user feedback for learning opportunities"""
         feedback = feedback_record.get("feedback", {})
 
@@ -1034,7 +1087,9 @@ class BrainTrainingPipeline:
 
         return analysis
 
-    async def _extract_learning_signals(self, feedback_analysis: dict[str, Any]) -> list[str]:
+    async def _extract_learning_signals(
+        self, feedback_analysis: dict[str, Any]
+    ) -> list[str]:
         """Extract actionable learning signals from feedback analysis"""
         signals = feedback_analysis.get("learning_signals", [])
 
@@ -1072,7 +1127,9 @@ class BrainTrainingPipeline:
                 # Optimize for faster responses
                 logger.info("Optimizing learning parameters for response speed")
 
-    async def _generate_feedback_improvements(self, learning_signals: list[str]) -> list[str]:
+    async def _generate_feedback_improvements(
+        self, learning_signals: list[str]
+    ) -> list[str]:
         """Generate specific improvements based on learning signals"""
         improvements = []
 
@@ -1105,7 +1162,8 @@ class BrainTrainingPipeline:
                     "query_pattern": q_pattern,
                     "response_pattern": r_pattern,
                     "confidence": min(
-                        q_pattern.get("confidence", 0.5), r_pattern.get("confidence", 0.5)
+                        q_pattern.get("confidence", 0.5),
+                        r_pattern.get("confidence", 0.5),
                     ),
                     "description": f"When query contains '{q_pattern['pattern']}', respond with '{r_pattern['pattern']}'",
                 }
@@ -1118,7 +1176,9 @@ class BrainTrainingPipeline:
         patterns = []
 
         # Question word patterns
-        question_words = re.findall(r"\b(what|how|why|when|where|who|which)\b", query.lower())
+        question_words = re.findall(
+            r"\b(what|how|why|when|where|who|which)\b", query.lower()
+        )
         for word in question_words:
             patterns.append(
                 {
@@ -1132,7 +1192,11 @@ class BrainTrainingPipeline:
         nouns = re.findall(r"\b[a-z]+(?:ing|tion|ness|ment)\b", query.lower())
         for noun in nouns:
             patterns.append(
-                {"pattern": f"topic_{noun}", "confidence": 0.6, "type": "topic_identification"}
+                {
+                    "pattern": f"topic_{noun}",
+                    "confidence": 0.6,
+                    "type": "topic_identification",
+                }
             )
 
         return patterns
@@ -1151,20 +1215,35 @@ class BrainTrainingPipeline:
                 }
             )
 
-        if any(word in response.lower() for word in ["because", "therefore", "thus", "hence"]):
+        if any(
+            word in response.lower()
+            for word in ["because", "therefore", "thus", "hence"]
+        ):
             patterns.append(
-                {"pattern": "causal_explanation", "confidence": 0.8, "type": "logical_structure"}
+                {
+                    "pattern": "causal_explanation",
+                    "confidence": 0.8,
+                    "type": "logical_structure",
+                }
             )
 
         # Length pattern
         word_count = len(response.split())
         if word_count > 100:
             patterns.append(
-                {"pattern": "detailed_response", "confidence": 0.6, "type": "response_length"}
+                {
+                    "pattern": "detailed_response",
+                    "confidence": 0.6,
+                    "type": "response_length",
+                }
             )
         elif word_count < 30:
             patterns.append(
-                {"pattern": "concise_response", "confidence": 0.6, "type": "response_length"}
+                {
+                    "pattern": "concise_response",
+                    "confidence": 0.6,
+                    "type": "response_length",
+                }
             )
 
         return patterns
@@ -1188,7 +1267,9 @@ class BrainTrainingPipeline:
 
         return 0.1  # Default
 
-    def _assess_generalization_potential(self, query: str, desired_response: str) -> float:
+    def _assess_generalization_potential(
+        self, query: str, desired_response: str
+    ) -> float:
         """Assess how well this training example might generalize"""
         score = 0.5  # Base score
 
@@ -1205,7 +1286,8 @@ class BrainTrainingPipeline:
 
         # Domain indicators
         if any(
-            domain in query.lower() for domain in ["technology", "science", "business", "education"]
+            domain in query.lower()
+            for domain in ["technology", "science", "business", "education"]
         ):
             score += 0.1  # Domain-specific knowledge
 
@@ -1213,7 +1295,9 @@ class BrainTrainingPipeline:
 
     # Performance and optimization methods
 
-    async def _calculate_session_metrics(self, session: TrainingSession) -> dict[str, float]:
+    async def _calculate_session_metrics(
+        self, session: TrainingSession
+    ) -> dict[str, float]:
         """Calculate performance metrics for a training session"""
         duration = self._calculate_session_duration(session)
 
@@ -1268,14 +1352,18 @@ class BrainTrainingPipeline:
 
         return patterns
 
-    async def _optimize_content_processing(self, learning_patterns: dict[str, Any]) -> bool:
+    async def _optimize_content_processing(
+        self, learning_patterns: dict[str, Any]
+    ) -> bool:
         """Optimize content processing based on learning patterns"""
         speed_trends = learning_patterns.get("processing_speed_trends", [])
 
         if speed_trends and len(speed_trends) > 5:
             # Check if processing speed is declining
             recent_speeds = speed_trends[-5:]
-            older_speeds = speed_trends[-10:-5] if len(speed_trends) > 10 else speed_trends[:-5]
+            older_speeds = (
+                speed_trends[-10:-5] if len(speed_trends) > 10 else speed_trends[:-5]
+            )
 
             if recent_speeds and older_speeds:
                 recent_avg = np.mean(recent_speeds)
@@ -1288,7 +1376,9 @@ class BrainTrainingPipeline:
 
         return False
 
-    async def _optimize_learning_parameters(self, learning_patterns: dict[str, Any]) -> list[str]:
+    async def _optimize_learning_parameters(
+        self, learning_patterns: dict[str, Any]
+    ) -> list[str]:
         """Optimize learning parameters based on patterns"""
         adjustments = []
 
@@ -1313,7 +1403,9 @@ class BrainTrainingPipeline:
             content_rate = self.learning_metrics["total_content_processed"] / max(
                 1, avg_processing_time
             )
-            concept_rate = self.learning_metrics["concepts_learned"] / max(1, avg_processing_time)
+            concept_rate = self.learning_metrics["concepts_learned"] / max(
+                1, avg_processing_time
+            )
 
             # Combined efficiency metric
             self.learning_metrics["learning_efficiency"] = min(
@@ -1329,7 +1421,9 @@ class BrainTrainingPipeline:
 
             # Estimate retention based on memory growth vs input
             if self.learning_metrics["total_content_processed"] > 0:
-                retention_ratio = total_memories / self.learning_metrics["total_content_processed"]
+                retention_ratio = (
+                    total_memories / self.learning_metrics["total_content_processed"]
+                )
                 self.learning_metrics["knowledge_retention"] = min(1.0, retention_ratio)
 
         # Calculate adaptation rate based on recent improvements

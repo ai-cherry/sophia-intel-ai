@@ -57,7 +57,10 @@ class LiveFusionSystemsTester:
 
         try:
             # Import and test the Redis optimization system
-            from mem0_agno_self_pruning import MemoryOptimizationSwarm, RedisPruningAgent
+            from mem0_agno_self_pruning import (
+                MemoryOptimizationSwarm,
+                RedisPruningAgent,
+            )
 
             # Create swarm instance
             swarm = MemoryOptimizationSwarm()
@@ -83,7 +86,9 @@ class LiveFusionSystemsTester:
 
             # Test cost calculation
             cost_savings = await swarm.calculate_cost_savings()
-            assert isinstance(cost_savings, (int, float)), "Cost savings should be numeric"
+            assert isinstance(
+                cost_savings, (int, float)
+            ), "Cost savings should be numeric"
             assert cost_savings >= 0, "Cost savings should be non-negative"
 
             self.test_results["passed_tests"] += 1
@@ -159,7 +164,10 @@ class LiveFusionSystemsTester:
 
         except Exception as e:
             self.test_results["failed_tests"] += 1
-            self.test_results["fusion_systems"]["Edge RAG"] = {"status": "FAIL", "error": str(e)}
+            self.test_results["fusion_systems"]["Edge RAG"] = {
+                "status": "FAIL",
+                "error": str(e),
+            }
             self.test_results["errors"].append(f"Edge RAG: {str(e)}")
             print(f"  ❌ FAIL Edge RAG - {str(e)}")
 
@@ -193,9 +201,13 @@ class LiveFusionSystemsTester:
             }
 
             routing_decision = await router.route_request(test_request)
-            assert isinstance(routing_decision, dict), "Routing decision should be a dict"
+            assert isinstance(
+                routing_decision, dict
+            ), "Routing decision should be a dict"
             assert "provider" in routing_decision, "Routing decision missing provider"
-            assert "cost_estimate" in routing_decision, "Routing decision missing cost estimate"
+            assert (
+                "cost_estimate" in routing_decision
+            ), "Routing decision missing cost estimate"
 
             # Test cost optimization
             cost_optimization = await router.calculate_cost_optimization()
@@ -206,7 +218,9 @@ class LiveFusionSystemsTester:
 
             # Test performance metrics
             performance_metrics = await router.get_performance_metrics()
-            assert isinstance(performance_metrics, dict), "Performance metrics should be a dict"
+            assert isinstance(
+                performance_metrics, dict
+            ), "Performance metrics should be a dict"
 
             self.test_results["passed_tests"] += 1
             self.test_results["fusion_systems"]["Hybrid Routing"] = {
@@ -405,10 +419,14 @@ class LiveFusionSystemsTester:
 
         # Final verdict
         if success_rate >= 80:
-            print(f"\n🎉 LIVE FUSION SYSTEMS TESTING PASSED! ({success_rate:.1f}% success rate)")
+            print(
+                f"\n🎉 LIVE FUSION SYSTEMS TESTING PASSED! ({success_rate:.1f}% success rate)"
+            )
             print("✅ All fusion systems are functional with live data!")
         else:
-            print(f"\n💥 LIVE FUSION SYSTEMS TESTING FAILED! ({success_rate:.1f}% success rate)")
+            print(
+                f"\n💥 LIVE FUSION SYSTEMS TESTING FAILED! ({success_rate:.1f}% success rate)"
+            )
             print("❌ Some fusion systems need attention.")
 
 

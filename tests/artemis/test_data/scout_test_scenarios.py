@@ -65,11 +65,20 @@ def get_all_users():
 
 # Expected scout output structure for validation
 SCOUT_OUTPUT_TEMPLATE = {
-    "FINDINGS": ["Pattern: {pattern_type}", "Location: {file}:{line}", "Severity: {severity}"],
+    "FINDINGS": [
+        "Pattern: {pattern_type}",
+        "Location: {file}:{line}",
+        "Severity: {severity}",
+    ],
     "INTEGRATIONS": ["Service: {name}", "Type: {type}", "Risk: {risk_level}"],
     "RISKS": ["Category: {category}", "Impact: {impact}", "Mitigation: {mitigation}"],
     "RECOMMENDATIONS": ["Priority: {priority}", "Action: {action}", "Effort: {effort}"],
-    "METRICS": {"files_analyzed": 0, "patterns_found": 0, "execution_time": 0.0, "confidence": 0.0},
+    "METRICS": {
+        "files_analyzed": 0,
+        "patterns_found": 0,
+        "execution_time": 0.0,
+        "confidence": 0.0,
+    },
 }
 
 # Validation test cases

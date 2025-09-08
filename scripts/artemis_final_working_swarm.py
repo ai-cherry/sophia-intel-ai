@@ -288,7 +288,9 @@ async def main():
     # Display detailed results
     for agent_result in results["agents"]:
         print(f"\n{'='*70}")
-        print(f" AGENT {agent_result['agent_number']}: {agent_result.get('agent_name', 'Unknown')}")
+        print(
+            f" AGENT {agent_result['agent_number']}: {agent_result.get('agent_name', 'Unknown')}"
+        )
         if "model" in agent_result:
             print(f" Model: {agent_result['model']}")
             print(f" Provider: {agent_result.get('provider', 'Unknown')}")

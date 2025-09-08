@@ -175,7 +175,9 @@ class SupermemoryStore:
 
             conn.commit()
 
-    async def add_to_memory(self, entry: MemoryEntry, deduplicate: bool = True) -> dict[str, Any]:
+    async def add_to_memory(
+        self, entry: MemoryEntry, deduplicate: bool = True
+    ) -> dict[str, Any]:
         """
         Add entry to memory with deduplication.
 
@@ -192,7 +194,8 @@ class SupermemoryStore:
             # Check for duplicate if enabled
             if deduplicate:
                 existing = conn.execute(
-                    "SELECT hash_id FROM memory_entries WHERE hash_id = ?", (entry.hash_id,)
+                    "SELECT hash_id FROM memory_entries WHERE hash_id = ?",
+                    (entry.hash_id,),
                 ).fetchone()
 
                 if existing:
@@ -269,7 +272,9 @@ class SupermemoryStore:
             # Build query
             if use_fts and query:
                 # Use FTS5 for text search (sanitize query for FTS5)
-                sanitized_query = query.replace('"', "").replace("'", "").replace(".", " ")
+                sanitized_query = (
+                    query.replace('"', "").replace("'", "").replace(".", " ")
+                )
                 base_query = """
                     SELECT DISTINCT m.*
                     FROM memory_entries m
@@ -381,7 +386,9 @@ class SupermemoryStore:
             return {
                 "total_entries": total,
                 "by_type": by_type,
-                "most_accessed": [{"topic": row[0], "count": row[1]} for row in most_accessed],
+                "most_accessed": [
+                    {"topic": row[0], "count": row[1]} for row in most_accessed
+                ],
             }
 
 
@@ -397,7 +404,10 @@ class MemoryPatterns:
 
     @staticmethod
     def create_decision_memory(
-        decision: str, rationale: list[str], source: str, alternatives: Optional[list[str]] = None
+        decision: str,
+        rationale: list[str],
+        source: str,
+        alternatives: Optional[list[str]] = None,
     ) -> MemoryEntry:
         """Create memory entry for architectural decisions."""
         content = f"Decision: {decision}\n"
@@ -585,7 +595,9 @@ async def main():
     store = SupermemoryStore()
 
     if args.add and args.topic:
-        entry = MemoryEntry(topic=args.topic, content=args.add, source=args.source, tags=["cli"])
+        entry = MemoryEntry(
+            topic=args.topic, content=args.add, source=args.source, tags=["cli"]
+        )
         result = await store.add_to_memory(entry)
         logger.info(f"✅ Memory added: {result}")
 

@@ -22,7 +22,10 @@ from opentelemetry.instrumentation.redis import RedisInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import ConsoleMetricExporter, PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics.export import (
+    ConsoleMetricExporter,
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
@@ -49,13 +52,19 @@ class SophiaAITelemetryConfig:
 
         # Tracing configuration
         self.enable_tracing = os.getenv("OTEL_ENABLE_TRACING", "true").lower() == "true"
-        self.jaeger_endpoint = os.getenv("JAEGER_ENDPOINT", "http://localhost:14268/api/traces")
-        self.otlp_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
+        self.jaeger_endpoint = os.getenv(
+            "JAEGER_ENDPOINT", "http://localhost:14268/api/traces"
+        )
+        self.otlp_endpoint = os.getenv(
+            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"
+        )
 
         # Metrics configuration
         self.enable_metrics = os.getenv("OTEL_ENABLE_METRICS", "true").lower() == "true"
         self.prometheus_port = int(os.getenv("PROMETHEUS_PORT", "8000"))
-        self.metrics_export_interval = int(os.getenv("OTEL_METRICS_EXPORT_INTERVAL", "30"))
+        self.metrics_export_interval = int(
+            os.getenv("OTEL_METRICS_EXPORT_INTERVAL", "30")
+        )
 
         # Sampling configuration
         self.trace_sample_rate = float(os.getenv("OTEL_TRACE_SAMPLE_RATE", "1.0"))
@@ -250,26 +259,33 @@ class SophiaAITelemetry:
                 ),
                 # AI and ML metrics
                 "sophia_ai_agent_executions": meter.create_counter(
-                    "sophia_ai_agent_executions_total", description="Total AI agent executions"
+                    "sophia_ai_agent_executions_total",
+                    description="Total AI agent executions",
                 ),
                 "sophia_ai_agent_latency": meter.create_histogram(
-                    "sophia_ai_agent_latency_seconds", description="AI agent execution latency"
+                    "sophia_ai_agent_latency_seconds",
+                    description="AI agent execution latency",
                 ),
                 "sophia_rag_queries": meter.create_counter(
-                    "sophia_rag_queries_total", description="Total RAG queries processed"
+                    "sophia_rag_queries_total",
+                    description="Total RAG queries processed",
                 ),
                 "sophia_multimodal_operations": meter.create_counter(
-                    "sophia_multimodal_operations_total", description="Total multimodal operations"
+                    "sophia_multimodal_operations_total",
+                    description="Total multimodal operations",
                 ),
                 # System metrics
                 "sophia_mcp_server_calls": meter.create_counter(
-                    "sophia_mcp_server_calls_total", description="Total MCP server calls"
+                    "sophia_mcp_server_calls_total",
+                    description="Total MCP server calls",
                 ),
                 "sophia_workflow_executions": meter.create_counter(
-                    "sophia_workflow_executions_total", description="Total workflow executions"
+                    "sophia_workflow_executions_total",
+                    description="Total workflow executions",
                 ),
                 "sophia_cache_operations": meter.create_counter(
-                    "sophia_cache_operations_total", description="Total cache operations"
+                    "sophia_cache_operations_total",
+                    description="Total cache operations",
                 ),
                 # Integration metrics
                 "sophia_linear_sync_operations": meter.create_counter(
@@ -298,7 +314,10 @@ class SophiaAITelemetry:
         return metrics.get_meter(name)
 
     def record_business_metric(
-        self, metric_name: str, value: float, attributes: Optional[Dict[str, Any]] = None
+        self,
+        metric_name: str,
+        value: float,
+        attributes: Optional[Dict[str, Any]] = None,
     ):
         """Record a business metric"""
 
@@ -312,7 +331,9 @@ class SophiaAITelemetry:
             logger.warning(f"Unknown metric: {metric_name}")
 
     @contextmanager
-    def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None):
+    def trace_operation(
+        self, operation_name: str, attributes: Optional[Dict[str, Any]] = None
+    ):
         """Context manager for tracing operations"""
 
         tracer = self.get_tracer(__name__)
@@ -349,7 +370,9 @@ class SophiaAITelemetry:
 _telemetry_instance: Optional[SophiaAITelemetry] = None
 
 
-def initialize_telemetry(config: Optional[SophiaAITelemetryConfig] = None) -> SophiaAITelemetry:
+def initialize_telemetry(
+    config: Optional[SophiaAITelemetryConfig] = None,
+) -> SophiaAITelemetry:
     """Initialize global telemetry instance"""
 
     global _telemetry_instance
@@ -377,7 +400,9 @@ def shutdown_telemetry():
 
 
 # Convenience functions
-def trace_sophia_operation(operation_name: str, attributes: Optional[Dict[str, Any]] = None):
+def trace_sophia_operation(
+    operation_name: str, attributes: Optional[Dict[str, Any]] = None
+):
     """Decorator for tracing Sophia AI operations"""
 
     def decorator(func):
@@ -415,7 +440,9 @@ if __name__ == "__main__":
         print("Performing traced operation")
 
     # Example metrics
-    record_sophia_metric("sophia_rpe_optimization_score", 85.5, {"department": "engineering"})
+    record_sophia_metric(
+        "sophia_rpe_optimization_score", 85.5, {"department": "engineering"}
+    )
 
     # Shutdown
     shutdown_telemetry()

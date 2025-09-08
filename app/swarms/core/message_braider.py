@@ -142,10 +142,14 @@ class MessageBraider:
             message_analysis = await self._analyze_message(message)
 
             # Find relevant threads
-            relevant_threads = await self._find_relevant_threads(message, message_analysis)
+            relevant_threads = await self._find_relevant_threads(
+                message, message_analysis
+            )
 
             # Determine braiding pattern
-            braiding_pattern = await self._determine_braiding_pattern(message, relevant_threads)
+            braiding_pattern = await self._determine_braiding_pattern(
+                message, relevant_threads
+            )
 
             # Create connections
             new_connections = await self._create_connections(
@@ -153,7 +157,9 @@ class MessageBraider:
             )
 
             # Update or create threads
-            thread_updates = await self._update_threads(message, relevant_threads, new_connections)
+            thread_updates = await self._update_threads(
+                message, relevant_threads, new_connections
+            )
 
             # Calculate braiding confidence
             confidence = self._calculate_braiding_confidence(
@@ -161,7 +167,9 @@ class MessageBraider:
             )
 
             # Generate suggested responses
-            suggested_responses = await self._generate_response_suggestions(message, thread_updates)
+            suggested_responses = await self._generate_response_suggestions(
+                message, thread_updates
+            )
 
             processing_time = (datetime.now() - start_time).total_seconds() * 1000
 
@@ -224,20 +232,25 @@ class MessageBraider:
                     for word in ["combining", "together", "overall", "in summary"]
                 ),
                 "is_conclusion": any(
-                    word in content_lower for word in ["therefore", "conclude", "final", "decision"]
+                    word in content_lower
+                    for word in ["therefore", "conclude", "final", "decision"]
                 ),
                 "has_data": any(
-                    word in content_lower for word in ["data", "metrics", "statistics", "numbers"]
+                    word in content_lower
+                    for word in ["data", "metrics", "statistics", "numbers"]
                 ),
                 "has_recommendations": any(
-                    word in content_lower for word in ["recommend", "suggest", "propose", "should"]
+                    word in content_lower
+                    for word in ["recommend", "suggest", "propose", "should"]
                 ),
             }
         )
 
         # Semantic embedding (simplified - in production would use actual embedding model)
         if self.context.enable_semantic_linking:
-            analysis["content_embedding"] = await self._get_content_embedding(message.content)
+            analysis["content_embedding"] = await self._get_content_embedding(
+                message.content
+            )
 
         return analysis
 
@@ -249,7 +262,9 @@ class MessageBraider:
         relevant_threads = []
 
         for _thread_id, thread in self.active_threads.items():
-            relevance_score = await self._calculate_thread_relevance(message, thread, analysis)
+            relevance_score = await self._calculate_thread_relevance(
+                message, thread, analysis
+            )
 
             if relevance_score > 0.3:  # Minimum relevance threshold
                 relevant_threads.append((thread, relevance_score))
@@ -297,7 +312,9 @@ class MessageBraider:
         # Message type relevance
         if thread.messages:
             last_message = thread.messages[-1]
-            if self._message_types_related(message.message_type, last_message.message_type):
+            if self._message_types_related(
+                message.message_type, last_message.message_type
+            ):
                 relevance_factors.append(0.2)
 
         # Thread ID matching
@@ -333,7 +350,10 @@ class MessageBraider:
             return BraidType.SEQUENTIAL
 
     async def _create_connections(
-        self, message: SwarmMessage, relevant_threads: list[BraidThread], pattern: BraidType
+        self,
+        message: SwarmMessage,
+        relevant_threads: list[BraidThread],
+        pattern: BraidType,
     ) -> list[BraidConnection]:
         """Create connections between messages based on braiding pattern"""
 
@@ -347,7 +367,9 @@ class MessageBraider:
             target_message = thread.messages[-1]
 
             # Calculate connection strength
-            strength = await self._calculate_connection_strength(message, target_message, pattern)
+            strength = await self._calculate_connection_strength(
+                message, target_message, pattern
+            )
 
             if strength > 0.2:  # Minimum strength threshold
                 connection = BraidConnection(
@@ -358,8 +380,12 @@ class MessageBraider:
                     semantic_similarity=await self._get_semantic_similarity(
                         message, target_message
                     ),
-                    temporal_proximity=self._calculate_temporal_proximity(message, target_message),
-                    logical_dependency=self._calculate_logical_dependency(message, target_message),
+                    temporal_proximity=self._calculate_temporal_proximity(
+                        message, target_message
+                    ),
+                    logical_dependency=self._calculate_logical_dependency(
+                        message, target_message
+                    ),
                     metadata={
                         "thread_id": thread.thread_id,
                         "pattern": pattern.value,
@@ -397,7 +423,9 @@ class MessageBraider:
             )
 
             if self.context.enable_semantic_linking:
-                new_thread.topic_embedding = await self._get_content_embedding(message.content)
+                new_thread.topic_embedding = await self._get_content_embedding(
+                    message.content
+                )
 
             updated_threads.append(new_thread)
         else:
@@ -424,7 +452,9 @@ class MessageBraider:
 
                 # Update topic embedding (weighted average)
                 if self.context.enable_semantic_linking and thread.topic_embedding:
-                    message_embedding = await self._get_content_embedding(message.content)
+                    message_embedding = await self._get_content_embedding(
+                        message.content
+                    )
                     thread.topic_embedding = self._blend_embeddings(
                         thread.topic_embedding, message_embedding, 0.3
                     )
@@ -476,13 +506,19 @@ class MessageBraider:
             ):
                 factors.append(0.2)
         elif pattern == BraidType.CONSENSUS:
-            if "agree" in message1.content.lower() or "agree" in message2.content.lower():
+            if (
+                "agree" in message1.content.lower()
+                or "agree" in message2.content.lower()
+            ):
                 factors.append(0.2)
 
         return min(1.0, sum(factors))
 
     def _calculate_braiding_confidence(
-        self, message: SwarmMessage, connections: list[BraidConnection], threads: list[BraidThread]
+        self,
+        message: SwarmMessage,
+        connections: list[BraidConnection],
+        threads: list[BraidThread],
     ) -> float:
         """Calculate confidence in the braiding decisions"""
 
@@ -490,14 +526,18 @@ class MessageBraider:
 
         # Connection quality
         if connections:
-            avg_connection_strength = sum(conn.strength for conn in connections) / len(connections)
+            avg_connection_strength = sum(conn.strength for conn in connections) / len(
+                connections
+            )
             confidence_factors.append(0.4 * avg_connection_strength)
         else:
             confidence_factors.append(0.2)  # Lower confidence for isolated messages
 
         # Thread coherence
         if threads:
-            avg_coherence = sum(thread.coherence_score for thread in threads) / len(threads)
+            avg_coherence = sum(thread.coherence_score for thread in threads) / len(
+                threads
+            )
             confidence_factors.append(0.3 * avg_coherence)
 
         # Message quality indicators
@@ -557,7 +597,9 @@ class MessageBraider:
         import hashlib
 
         content_hash = hashlib.md5(content.encode()).hexdigest()
-        return [float(int(content_hash[i : i + 2], 16)) / 255.0 for i in range(0, 32, 2)]
+        return [
+            float(int(content_hash[i : i + 2], 16)) / 255.0 for i in range(0, 32, 2)
+        ]
 
     async def _calculate_semantic_similarity(
         self, embedding1: list[float], embedding2: list[float]
@@ -622,7 +664,8 @@ class MessageBraider:
 
         # Content references
         if message1.id in message2.content or any(
-            word in message2.content.lower() for word in ["previous", "above", "earlier"]
+            word in message2.content.lower()
+            for word in ["previous", "above", "earlier"]
         ):
             dependency += 0.3
 
@@ -687,7 +730,11 @@ class MessageBraider:
         if len(thread.messages) > 1:
             coherence_factors.append(logical_flow / (len(thread.messages) - 1))
 
-        return sum(coherence_factors) / len(coherence_factors) if coherence_factors else 0.5
+        return (
+            sum(coherence_factors) / len(coherence_factors)
+            if coherence_factors
+            else 0.5
+        )
 
     def get_thread_summary(self, thread_id: str) -> Optional[dict[str, Any]]:
         """Get summary of a specific thread"""
@@ -703,7 +750,8 @@ class MessageBraider:
             "participants": [role.value for role in thread.participants],
             "coherence_score": thread.coherence_score,
             "completion_status": thread.completion_status,
-            "duration_minutes": (thread.updated_at - thread.created_at).total_seconds() / 60,
+            "duration_minutes": (thread.updated_at - thread.created_at).total_seconds()
+            / 60,
             "connections_count": len(thread.connections),
             "created_at": thread.created_at.isoformat(),
             "updated_at": thread.updated_at.isoformat(),
@@ -743,8 +791,12 @@ class MessageBraider:
 
         # Average coherence
         if self.active_threads:
-            total_coherence = sum(thread.coherence_score for thread in self.active_threads.values())
-            stats["average_thread_coherence"] = total_coherence / len(self.active_threads)
+            total_coherence = sum(
+                thread.coherence_score for thread in self.active_threads.values()
+            )
+            stats["average_thread_coherence"] = total_coherence / len(
+                self.active_threads
+            )
 
         # Connection strength distribution
         for connections in self.connection_graph.values():

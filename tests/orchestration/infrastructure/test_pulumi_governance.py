@@ -78,7 +78,9 @@ class TestPulumiGovernance(unittest.TestCase):
 
         # Verify the registration
         self.assertEqual(result, "registered-component")
-        self.assertEqual(manager.registered_components["test-component"], "registered-component")
+        self.assertEqual(
+            manager.registered_components["test-component"], "registered-component"
+        )
         mock_register.assert_called_once_with("test-component", test_component, None)
 
 
@@ -95,7 +97,9 @@ class TestPulumiPolicies(unittest.TestCase):
         # Create a mock validation context for a Lambda function
         resource_args = MagicMock()
         resource_args.resource_type = "aws:lambda/function:Function"
-        resource_args.props = {"environment": {"variables": {"ALLOW_WEB_ACCESS": "true"}}}
+        resource_args.props = {
+            "environment": {"variables": {"ALLOW_WEB_ACCESS": "true"}}
+        }
 
         report_violation = MagicMock()
 
@@ -161,7 +165,10 @@ class TestIntegrationWithSwarm(unittest.TestCase):
         from orchestration.infrastructure.hybrid_cloud import HybridCloudManager
 
         # Create governance manager
-        governance_config = {"policy_name": "swarm-governance", "environment": "production"}
+        governance_config = {
+            "policy_name": "swarm-governance",
+            "environment": "production",
+        }
         governance = GovernanceManager(governance_config)
         governance.initialize()
 
@@ -187,7 +194,10 @@ class TestIntegrationWithSwarm(unittest.TestCase):
         secure_lambda_factory = governance.register_component(
             "secure-lambda",
             create_secure_lambda,
-            {"version": "1.0.0", "description": "Secure Lambda function with guardrails"},
+            {
+                "version": "1.0.0",
+                "description": "Secure Lambda function with guardrails",
+            },
         )
 
         # Verify component registration

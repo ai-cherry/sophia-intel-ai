@@ -14,7 +14,12 @@ from typing import Any, Optional
 import redis.asyncio as aioredis
 from redis.exceptions import ConnectionError, TimeoutError
 
-from app.core.redis_config import PAY_READY_REDIS_CONFIG, RedisConfig, RedisNamespaces, redis_config
+from app.core.redis_config import (
+    PAY_READY_REDIS_CONFIG,
+    RedisConfig,
+    RedisNamespaces,
+    redis_config,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -130,18 +135,30 @@ class RedisHealthMonitor:
                 # Alert on high memory usage
                 config = self.redis_manager.config.memory
                 if memory_usage_percent >= config.critical_threshold:
-                    logger.error(f"Redis memory usage critical: {memory_usage_percent:.2%}")
+                    logger.error(
+                        f"Redis memory usage critical: {memory_usage_percent:.2%}"
+                    )
                 elif memory_usage_percent >= config.warning_threshold:
-                    logger.warning(f"Redis memory usage high: {memory_usage_percent:.2%}")
+                    logger.warning(
+                        f"Redis memory usage high: {memory_usage_percent:.2%}"
+                    )
 
             response_time = time.time() - start_time
             self._record_response_time(response_time)
 
-            return {"healthy": True, "response_time": response_time, "metrics": self.metrics}
+            return {
+                "healthy": True,
+                "response_time": response_time,
+                "metrics": self.metrics,
+            }
 
         except Exception as e:
             logger.error(f"Redis health check failed: {e}")
-            return {"healthy": False, "error": str(e), "response_time": time.time() - start_time}
+            return {
+                "healthy": False,
+                "error": str(e),
+                "response_time": time.time() - start_time,
+            }
 
     def _record_response_time(self, response_time: float):
         """Record response time for averaging"""
@@ -151,7 +168,9 @@ class RedisHealthMonitor:
         if len(self._response_times) > 100:
             self._response_times = self._response_times[-100:]
 
-        self.metrics["avg_response_time"] = sum(self._response_times) / len(self._response_times)
+        self.metrics["avg_response_time"] = sum(self._response_times) / len(
+            self._response_times
+        )
 
         # Track slow operations
         if response_time > self.redis_manager.config.monitoring.slow_query_threshold:
@@ -300,11 +319,19 @@ class RedisManager:
 
         async with self.get_connection() as redis:
             return await self.circuit_breaker.call(
-                redis.xadd, stream, fields, id=message_id, maxlen=maxlen, approximate=approximate
+                redis.xadd,
+                stream,
+                fields,
+                id=message_id,
+                maxlen=maxlen,
+                approximate=approximate,
             )
 
     async def stream_read(
-        self, streams: dict[str, str], count: Optional[int] = None, block: Optional[int] = None
+        self,
+        streams: dict[str, str],
+        count: Optional[int] = None,
+        block: Optional[int] = None,
     ) -> list[Any]:
         """Read from streams with configurable blocking"""
 
@@ -365,9 +392,13 @@ class RedisManager:
     async def stream_ack(self, stream: str, group: str, message_ids: list[str]) -> int:
         """Acknowledge processed messages"""
         async with self.get_connection() as redis:
-            return await self.circuit_breaker.call(redis.xack, stream, group, *message_ids)
+            return await self.circuit_breaker.call(
+                redis.xack, stream, group, *message_ids
+            )
 
-    async def stream_trim(self, stream: str, maxlen: int, approximate: bool = True) -> int:
+    async def stream_trim(
+        self, stream: str, maxlen: int, approximate: bool = True
+    ) -> int:
         """Trim stream to specified length"""
         async with self.get_connection() as redis:
             return await self.circuit_breaker.call(
@@ -385,14 +416,18 @@ class RedisManager:
         if self._is_month_end_period():
             ttl *= PAY_READY_REDIS_CONFIG["month_end_multiplier"]
 
-        return await self.set_with_ttl(key, data, ttl, namespace=RedisNamespaces.PAY_READY)
+        return await self.set_with_ttl(
+            key, data, ttl, namespace=RedisNamespaces.PAY_READY
+        )
 
     async def pay_ready_bulk_cache(self, accounts: dict[str, dict[str, Any]]) -> int:
         """Bulk cache Pay Ready accounts for efficiency"""
         async with self.get_connection() as redis, redis.pipeline() as pipe:
             count = 0
             for account_id, data in accounts.items():
-                key = RedisNamespaces.format_key(RedisNamespaces.PAY_READY, f"account:{account_id}")
+                key = RedisNamespaces.format_key(
+                    RedisNamespaces.PAY_READY, f"account:{account_id}"
+                )
                 ttl = self.config.ttl.pay_ready_snapshot
 
                 if self._is_month_end_period():
@@ -423,11 +458,15 @@ class RedisManager:
 
     async def websocket_state_get(self, client_id: str) -> Optional[dict[str, Any]]:
         """Get WebSocket client state"""
-        return await self.get(f"client:{client_id}", namespace=RedisNamespaces.WEBSOCKET)
+        return await self.get(
+            f"client:{client_id}", namespace=RedisNamespaces.WEBSOCKET
+        )
 
     # Memory management
 
-    async def cleanup_expired_keys(self, pattern: str = "*", scan_count: int = 100) -> int:
+    async def cleanup_expired_keys(
+        self, pattern: str = "*", scan_count: int = 100
+    ) -> int:
         """Clean up expired keys matching pattern"""
         count = 0
         async with self.get_connection() as redis:
@@ -455,7 +494,9 @@ class RedisManager:
                 "used_memory_peak": info.get("used_memory_peak", 0),
                 "maxmemory": info.get("maxmemory", 0),
                 "keyspace_info": keyspace,
-                "memory_usage_percent": self.health_monitor.metrics.get("memory_usage_percent", 0),
+                "memory_usage_percent": self.health_monitor.metrics.get(
+                    "memory_usage_percent", 0
+                ),
             }
 
     # Pipeline operations for bulk processing
@@ -488,7 +529,10 @@ async def get_cached(key: str, namespace: str = RedisNamespaces.CACHE) -> Any:
 
 
 async def set_cached(
-    key: str, value: Any, ttl: Optional[int] = None, namespace: str = RedisNamespaces.CACHE
+    key: str,
+    value: Any,
+    ttl: Optional[int] = None,
+    namespace: str = RedisNamespaces.CACHE,
 ) -> bool:
     """Set cached value with TTL"""
     return await redis_manager.set_with_ttl(key, value, ttl, namespace=namespace)

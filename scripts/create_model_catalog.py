@@ -74,8 +74,12 @@ class ModelCatalogCreator:
 
                 if response.status_code == 200:
                     models = response.json()
-                    embedding_models = [m for m in models if m.get("type") == "embedding"]
-                    logger.info(f"✅ Found {len(embedding_models)} embedding models in Together AI")
+                    embedding_models = [
+                        m for m in models if m.get("type") == "embedding"
+                    ]
+                    logger.info(
+                        f"✅ Found {len(embedding_models)} embedding models in Together AI"
+                    )
                     return embedding_models
                 else:
                     logger.info(f"❌ Failed to fetch models: {response.status_code}")
@@ -85,7 +89,9 @@ class ModelCatalogCreator:
             logger.info(f"❌ Error fetching models: {e}")
             return []
 
-    async def test_model_availability(self, model_id: str, provider: str = "openrouter") -> bool:
+    async def test_model_availability(
+        self, model_id: str, provider: str = "openrouter"
+    ) -> bool:
         """Test if a specific model is actually available."""
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -187,7 +193,9 @@ class ModelCatalogCreator:
             f.write("# 🤖 Complete Model Catalog\n\n")
             f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
             f.write("## 📊 Summary\n\n")
-            f.write(f"- **Total Models Available**: {self.catalog['metadata']['total_models']}\n")
+            f.write(
+                f"- **Total Models Available**: {self.catalog['metadata']['total_models']}\n"
+            )
             f.write(f"- **Providers**: {len(self.catalog['metadata']['providers'])}\n")
             f.write("- **Access Method**: Portkey → OpenRouter/Together AI\n\n")
 
@@ -224,8 +232,12 @@ class ModelCatalogCreator:
             for provider, models in self.catalog["chat_models"].items():
                 if models:
                     f.write(f"### {provider} ({len(models)} models)\n\n")
-                    f.write("| Model ID | Name | Context | Input $/1M | Output $/1M | Status |\n")
-                    f.write("|----------|------|---------|------------|-------------|--------|\n")
+                    f.write(
+                        "| Model ID | Name | Context | Input $/1M | Output $/1M | Status |\n"
+                    )
+                    f.write(
+                        "|----------|------|---------|------------|-------------|--------|\n"
+                    )
 
                     for model in models[:10]:  # Show top 10 models per provider
                         model_id = model.get("id", "")
@@ -248,7 +260,9 @@ class ModelCatalogCreator:
                         )
 
                     if len(models) > 10:
-                        f.write(f"\n*... and {len(models) - 10} more {provider} models*\n\n")
+                        f.write(
+                            f"\n*... and {len(models) - 10} more {provider} models*\n\n"
+                        )
                     else:
                         f.write("\n")
 
@@ -264,15 +278,21 @@ class ModelCatalogCreator:
                     provider = model.get("provider", "Together AI")
                     status = "✅" if model.get("available", False) else "⚠️"
 
-                    f.write(f"| `{model_id}` | {name} | {dimension} | {provider} | {status} |\n")
+                    f.write(
+                        f"| `{model_id}` | {name} | {dimension} | {provider} | {status} |\n"
+                    )
 
             f.write("\n## 🎯 Recommended Models\n\n")
             f.write("### For Code Generation\n")
             f.write(
                 "- **Primary**: `qwen/qwen-2.5-coder-32b-instruct` - Excellent code generation\n"
             )
-            f.write("- **Alternative**: `deepseek/deepseek-coder-v2` - Strong reasoning\n")
-            f.write("- **Fast**: `codellama/codellama-34b-instruct` - Quick responses\n\n")
+            f.write(
+                "- **Alternative**: `deepseek/deepseek-coder-v2` - Strong reasoning\n"
+            )
+            f.write(
+                "- **Fast**: `codellama/codellama-34b-instruct` - Quick responses\n\n"
+            )
 
             f.write("### For General Chat\n")
             f.write("- **Best**: `anthropic/claude-3.5-sonnet` - Top performance\n")
@@ -282,15 +302,25 @@ class ModelCatalogCreator:
 
             f.write("### For Vision\n")
             f.write("- **Best**: `openai/gpt-4o` - Excellent vision capabilities\n")
-            f.write("- **Alternative**: `anthropic/claude-3.5-sonnet` - Strong vision\n")
-            f.write("- **Open**: `meta-llama/llama-3.2-90b-vision-instruct` - Open source\n\n")
+            f.write(
+                "- **Alternative**: `anthropic/claude-3.5-sonnet` - Strong vision\n"
+            )
+            f.write(
+                "- **Open**: `meta-llama/llama-3.2-90b-vision-instruct` - Open source\n\n"
+            )
 
             f.write("### For Speed\n")
-            f.write("- **Fastest**: `groq/llama-3.1-70b-versatile` - Via Groq hardware\n")
-            f.write("- **Small**: `meta-llama/llama-3.2-3b-instruct` - Tiny and fast\n\n")
+            f.write(
+                "- **Fastest**: `groq/llama-3.1-70b-versatile` - Via Groq hardware\n"
+            )
+            f.write(
+                "- **Small**: `meta-llama/llama-3.2-3b-instruct` - Tiny and fast\n\n"
+            )
 
             f.write("### For Embeddings\n")
-            f.write("- **Default**: `togethercomputer/m2-bert-80M-8k-retrieval` - Good balance\n")
+            f.write(
+                "- **Default**: `togethercomputer/m2-bert-80M-8k-retrieval` - Good balance\n"
+            )
             f.write("- **Quality**: `BAAI/bge-large-en-v1.5` - High quality\n\n")
 
         logger.info(f"✅ Created {filename}")
@@ -360,7 +390,9 @@ class ModelCatalogCreator:
         # Create JSON catalog for programmatic use
         with open("model_catalog.json", "w") as f:
             # Convert set to list for JSON serialization
-            self.catalog["metadata"]["providers"] = list(self.catalog["metadata"]["providers"])
+            self.catalog["metadata"]["providers"] = list(
+                self.catalog["metadata"]["providers"]
+            )
             json.dump(self.catalog, f, indent=2)
             logger.info("✅ Created model_catalog.json")
 
@@ -370,7 +402,9 @@ class ModelCatalogCreator:
         logger.info("\nFiles created:")
         logger.info("  • MODEL_CATALOG.md - Human-readable catalog")
         logger.info("  • model_catalog.json - Machine-readable catalog")
-        logger.info(f"\nTotal models available: {self.catalog['metadata']['total_models']}")
+        logger.info(
+            f"\nTotal models available: {self.catalog['metadata']['total_models']}"
+        )
         logger.info("\nKey models tested and working:")
         logger.info("  • GPT-4o and GPT-4o Mini")
         logger.info("  • Claude 3.5 Sonnet")

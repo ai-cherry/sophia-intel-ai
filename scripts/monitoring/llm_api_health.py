@@ -13,7 +13,8 @@ async def check_openai(client: httpx.AsyncClient) -> Dict[str, Any]:
         return {"provider": "openai", "skipped": True, "reason": "no key"}
     try:
         r = await client.get(
-            "https://api.openai.com/v1/models", headers={"Authorization": f"Bearer {key}"}
+            "https://api.openai.com/v1/models",
+            headers={"Authorization": f"Bearer {key}"},
         )
         ok = r.status_code < 400
         return {"provider": "openai", "ok": ok, "status": r.status_code}
@@ -46,7 +47,8 @@ async def check_openrouter(client: httpx.AsyncClient) -> Dict[str, Any]:
         return {"provider": "openrouter", "skipped": True, "reason": "no key"}
     try:
         r = await client.get(
-            "https://openrouter.ai/api/v1/models", headers={"Authorization": f"Bearer {key}"}
+            "https://openrouter.ai/api/v1/models",
+            headers={"Authorization": f"Bearer {key}"},
         )
         ok = r.status_code < 400
         return {"provider": "openrouter", "ok": ok, "status": r.status_code}
@@ -60,7 +62,8 @@ async def check_groq(client: httpx.AsyncClient) -> Dict[str, Any]:
         return {"provider": "groq", "skipped": True, "reason": "no key"}
     try:
         r = await client.get(
-            "https://api.groq.com/openai/v1/models", headers={"Authorization": f"Bearer {key}"}
+            "https://api.groq.com/openai/v1/models",
+            headers={"Authorization": f"Bearer {key}"},
         )
         ok = r.status_code < 400
         return {"provider": "groq", "ok": ok, "status": r.status_code}
@@ -74,7 +77,8 @@ async def check_perplexity(client: httpx.AsyncClient) -> Dict[str, Any]:
         return {"provider": "perplexity", "skipped": True, "reason": "no key"}
     try:
         r = await client.get(
-            "https://api.perplexity.ai/models", headers={"Authorization": f"Bearer {key}"}
+            "https://api.perplexity.ai/models",
+            headers={"Authorization": f"Bearer {key}"},
         )
         ok = r.status_code < 400
         return {"provider": "perplexity", "ok": ok, "status": r.status_code}
@@ -88,7 +92,8 @@ async def check_together(client: httpx.AsyncClient) -> Dict[str, Any]:
         return {"provider": "together", "skipped": True, "reason": "no key"}
     try:
         r = await client.get(
-            "https://api.together.xyz/v1/models", headers={"Authorization": f"Bearer {key}"}
+            "https://api.together.xyz/v1/models",
+            headers={"Authorization": f"Bearer {key}"},
         )
         ok = r.status_code < 400
         return {"provider": "together", "ok": ok, "status": r.status_code}
@@ -102,7 +107,8 @@ async def check_deepseek(client: httpx.AsyncClient) -> Dict[str, Any]:
         return {"provider": "deepseek", "skipped": True, "reason": "no key"}
     try:
         r = await client.get(
-            "https://api.deepseek.com/models", headers={"Authorization": f"Bearer {key}"}
+            "https://api.deepseek.com/models",
+            headers={"Authorization": f"Bearer {key}"},
         )
         ok = r.status_code < 400
         return {"provider": "deepseek", "ok": ok, "status": r.status_code}
@@ -116,7 +122,8 @@ async def check_huggingface(client: httpx.AsyncClient) -> Dict[str, Any]:
         return {"provider": "huggingface", "skipped": True, "reason": "no token"}
     try:
         r = await client.get(
-            "https://huggingface.co/api/whoami-v2", headers={"Authorization": f"Bearer {key}"}
+            "https://huggingface.co/api/whoami-v2",
+            headers={"Authorization": f"Bearer {key}"},
         )
         ok = r.status_code < 400
         return {"provider": "huggingface", "ok": ok, "status": r.status_code}
@@ -129,7 +136,9 @@ async def check_gemini(client: httpx.AsyncClient) -> Dict[str, Any]:
     if not key:
         return {"provider": "gemini", "skipped": True, "reason": "no key"}
     try:
-        r = await client.get(f"https://generativelanguage.googleapis.com/v1/models?key={key}")
+        r = await client.get(
+            f"https://generativelanguage.googleapis.com/v1/models?key={key}"
+        )
         ok = r.status_code < 400
         return {"provider": "gemini", "ok": ok, "status": r.status_code}
     except Exception as e:
@@ -171,7 +180,11 @@ async def main() -> None:
             try:
                 res = await fn(client)
             except Exception as e:
-                res = {"provider": getattr(fn, "__name__", "unknown"), "ok": False, "error": str(e)}
+                res = {
+                    "provider": getattr(fn, "__name__", "unknown"),
+                    "ok": False,
+                    "error": str(e),
+                }
             results.append(res)
 
     # Print as JSON lines for easy parsing

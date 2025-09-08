@@ -273,7 +273,9 @@ data:
         assert "resolve_timeout: 5m" in cm.data["alertmanager.yml"]
 
         # Update config
-        updated_config = initial_config.replace("resolve_timeout: 5m", "resolve_timeout: 10m")
+        updated_config = initial_config.replace(
+            "resolve_timeout: 5m", "resolve_timeout: 10m"
+        )
         updated_config = updated_config.replace("default-receiver", "updated-receiver")
 
         await self._simulate_git_update(updated_config)
@@ -390,14 +392,18 @@ data:
         # Check AlertManager status - should be degraded
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.get(f"{self.alertmanager_url}/api/v1/status") as resp:
+                async with session.get(
+                    f"{self.alertmanager_url}/api/v1/status"
+                ) as resp:
                     if resp.status != 200:
                         logger.info("AlertManager is degraded as expected")
             except:
                 logger.info("AlertManager is unreachable - config error detected")
 
         # Perform rollback
-        await self._rollback_argocd_application("alertmanager-test-app", initial_revision)
+        await self._rollback_argocd_application(
+            "alertmanager-test-app", initial_revision
+        )
         await asyncio.sleep(30)
 
         # Verify rollback
@@ -538,7 +544,9 @@ data:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"{self.alertmanager_url}/api/v1/silences") as resp:
                 silences = await resp.json()
-                active_silences = [s for s in silences["data"] if s["status"]["state"] == "active"]
+                active_silences = [
+                    s for s in silences["data"] if s["status"]["state"] == "active"
+                ]
 
                 assert len(active_silences) > 0
                 assert any(s["id"] == silence_id for s in active_silences)
@@ -637,7 +645,9 @@ data:
                             name=name, namespace=namespace, body=doc
                         )
                     elif kind == "secret":
-                        self.v1.patch_namespaced_secret(name=name, namespace=namespace, body=doc)
+                        self.v1.patch_namespaced_secret(
+                            name=name, namespace=namespace, body=doc
+                        )
                     elif kind == "prometheusrule":
                         self.custom_api.patch_namespaced_custom_object(
                             group="monitoring.coreos.com",

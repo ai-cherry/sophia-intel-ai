@@ -32,7 +32,10 @@ async def store_memory(entry: MemoryEntry):
 
     # Placeholder implementation
     return MemoryResponse(
-        key=entry.key, value=entry.value, metadata=entry.metadata, timestamp=datetime.utcnow()
+        key=entry.key,
+        value=entry.value,
+        metadata=entry.metadata,
+        timestamp=datetime.utcnow(),
     )
 
 
@@ -45,4 +48,8 @@ async def retrieve_memory(key: str):
 @router.delete("/clear/{key}")
 async def clear_memory(key: str):
     """Clear a memory entry"""
-    return {"key": key, "status": "cleared", "message": "Memory entry cleared (placeholder)"}
+    return {
+        "key": key,
+        "status": "cleared",
+        "message": "Memory entry cleared (placeholder)",
+    }

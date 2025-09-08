@@ -42,7 +42,9 @@ meter = metrics.get_meter(__name__)
 memory_operations = meter.create_counter(
     "sophia_memory_operations_total", description="Total memory operations by type"
 )
-cache_hits = meter.create_counter("sophia_cache_hits_total", description="Cache hits by tier")
+cache_hits = meter.create_counter(
+    "sophia_cache_hits_total", description="Cache hits by tier"
+)
 memory_latency = meter.create_histogram(
     "sophia_memory_latency_seconds", description="Memory operation latency"
 )
@@ -100,7 +102,9 @@ class MemoryCube:
     def enhance(self, feedback: Dict[str, Any]) -> None:
         """Self-refining enhancement based on feedback (LLM OS Jun '25)"""
         if feedback.get("relevance_score"):
-            self.importance_score = (self.importance_score + feedback["relevance_score"]) / 2
+            self.importance_score = (
+                self.importance_score + feedback["relevance_score"]
+            ) / 2
         if feedback.get("usage_pattern"):
             self.metadata["usage_pattern"] = feedback["usage_pattern"]
         self.lifecycle_stage = "enhanced"
@@ -196,7 +200,10 @@ class UnifiedMemoryBus:
     """
 
     def __init__(
-        self, pg_pool: asyncpg.Pool, redis_client: aioredis.Redis, qdrant_client: AsyncQdrantClient
+        self,
+        pg_pool: asyncpg.Pool,
+        redis_client: aioredis.Redis,
+        qdrant_client: AsyncQdrantClient,
     ):
         # Core storage engines
         self.pg_wrapper = NeonPGWrapper(pg_pool)
@@ -228,7 +235,10 @@ class UnifiedMemoryBus:
 
     @tracer.start_as_current_span("memory_get")
     async def get_cube(
-        self, key: str, tenant_id: str = "default", vector_query: Optional[List[float]] = None
+        self,
+        key: str,
+        tenant_id: str = "default",
+        vector_query: Optional[List[float]] = None,
     ) -> Optional[MemoryCube]:
         """
         Get memory cube with 5-tier cache optimization
@@ -291,7 +301,11 @@ class UnifiedMemoryBus:
 
     @tracer.start_as_current_span("memory_set")
     async def set_cube(
-        self, key: str, cube: MemoryCube, tenant_id: str = "default", ttl: Optional[int] = None
+        self,
+        key: str,
+        cube: MemoryCube,
+        tenant_id: str = "default",
+        ttl: Optional[int] = None,
     ) -> None:
         """
         Set memory cube across all appropriate tiers
@@ -316,14 +330,20 @@ class UnifiedMemoryBus:
         memory_operations.add(1, {"operation": MemoryOperation.SET.value})
         logger.debug(f"Stored cube {key} across all tiers")
 
-    async def swarm_handoff(self, from_agent: str, to_agent: str, state: SwarmState) -> str:
+    async def swarm_handoff(
+        self, from_agent: str, to_agent: str, state: SwarmState
+    ) -> str:
         """
         LangGraph-based swarm handoff for ASIP coordination
         Eliminates fragmented agent coordination patterns
         """
         with tracer.start_as_current_span("swarm_handoff") as span:
             span.set_attributes(
-                {"from_agent": from_agent, "to_agent": to_agent, "task_id": state.task_id}
+                {
+                    "from_agent": from_agent,
+                    "to_agent": to_agent,
+                    "task_id": state.task_id,
+                }
             )
 
             # Store state in Redis Streams for real-time coordination
@@ -345,11 +365,15 @@ class UnifiedMemoryBus:
             )
 
             memory_operations.add(1, {"operation": MemoryOperation.HANDOFF.value})
-            logger.info(f"Swarm handoff: {from_agent} -> {to_agent}, message: {message_id}")
+            logger.info(
+                f"Swarm handoff: {from_agent} -> {to_agent}, message: {message_id}"
+            )
 
             return message_id
 
-    async def get_swarm_messages(self, agent_id: str, count: int = 10) -> List[Dict[str, Any]]:
+    async def get_swarm_messages(
+        self, agent_id: str, count: int = 10
+    ) -> List[Dict[str, Any]]:
         """Get pending swarm messages for agent"""
         stream_key = f"swarm:handoffs:{agent_id}"
         messages = await self.redis.xread({stream_key: "$"}, count=count, block=1000)
@@ -509,7 +533,9 @@ class UnifiedMemoryBus:
         # In production, this would interface with SSD-backed cache
         return await self._get_from_redis(f"ssd:{key}")
 
-    async def _get_from_neon_cold(self, key: str, tenant_id: str) -> Optional[MemoryCube]:
+    async def _get_from_neon_cold(
+        self, key: str, tenant_id: str
+    ) -> Optional[MemoryCube]:
         """Get from Neon PostgreSQL cold storage with RLS"""
         try:
             result = await self.pg_wrapper.execute_with_rls(
@@ -525,7 +551,9 @@ class UnifiedMemoryBus:
             logger.warning(f"Neon cold get failed: {e}")
         return None
 
-    async def _set_in_redis(self, key: str, cube: MemoryCube, ttl: Optional[int] = None) -> None:
+    async def _set_in_redis(
+        self, key: str, cube: MemoryCube, ttl: Optional[int] = None
+    ) -> None:
         """Set in Redis with optional compression"""
         try:
             data = orjson.dumps(cube.__dict__)
@@ -544,7 +572,9 @@ class UnifiedMemoryBus:
         except Exception as e:
             logger.error(f"Redis set failed: {e}")
 
-    async def _set_in_neon_cold(self, key: str, cube: MemoryCube, tenant_id: str) -> None:
+    async def _set_in_neon_cold(
+        self, key: str, cube: MemoryCube, tenant_id: str
+    ) -> None:
         """Set in Neon PostgreSQL with RLS"""
         try:
             async with self.pg_wrapper.pool.acquire() as conn:
@@ -645,12 +675,16 @@ class UnifiedMemoryBus:
         # Clear local cache
         self.l0_cache.clear()
 
-        logger.info("✅ Unified Memory Bus shutdown complete - Zero tech debt remaining")
+        logger.info(
+            "✅ Unified Memory Bus shutdown complete - Zero tech debt remaining"
+        )
 
 
 # Factory function for dependency injection
 async def create_memory_bus(
-    pg_pool: asyncpg.Pool, redis_client: aioredis.Redis, qdrant_client: AsyncQdrantClient
+    pg_pool: asyncpg.Pool,
+    redis_client: aioredis.Redis,
+    qdrant_client: AsyncQdrantClient,
 ) -> UnifiedMemoryBus:
     """
     Create and initialize unified memory bus

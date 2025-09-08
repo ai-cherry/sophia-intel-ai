@@ -10,7 +10,13 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, BackgroundTasks, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    HTTPException,
+    WebSocket,
+    WebSocketDisconnect,
+)
 from pydantic import BaseModel, Field
 
 from app.swarms.templates.swarm_generator import swarm_code_generator
@@ -144,7 +150,9 @@ async def list_templates(
         # Get filtered templates
         if pay_ready_only:
             templates = [
-                t for t in swarm_template_catalog.list_templates() if t.pay_ready_optimized
+                t
+                for t in swarm_template_catalog.list_templates()
+                if t.pay_ready_optimized
             ]
         else:
             templates = swarm_template_catalog.list_templates(
@@ -179,7 +187,9 @@ async def list_templates(
         return response_templates
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid filter parameter: {str(e)}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid filter parameter: {str(e)}"
+        )
     except Exception as e:
         logger.error(f"Failed to list templates: {e}")
         raise HTTPException(status_code=500, detail="Failed to list templates")
@@ -191,7 +201,9 @@ async def get_template(template_id: str):
     try:
         template = swarm_template_catalog.get_template(template_id)
         if not template:
-            raise HTTPException(status_code=404, detail=f"Template '{template_id}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Template '{template_id}' not found"
+            )
 
         return {
             "template": TemplateResponse(
@@ -275,12 +287,18 @@ async def generate_swarm_code(request: CodeGenerationRequest):
                 errors.append(f"Failed to save code: {str(e)}")
 
         return CodeGenerationResponse(
-            success=True, code=code, metadata=metadata, file_path=file_path, errors=errors
+            success=True,
+            code=code,
+            metadata=metadata,
+            file_path=file_path,
+            errors=errors,
         )
 
     except Exception as e:
         logger.error(f"Code generation failed: {e}")
-        return CodeGenerationResponse(success=False, errors=[f"Code generation failed: {str(e)}"])
+        return CodeGenerationResponse(
+            success=False, errors=[f"Code generation failed: {str(e)}"]
+        )
 
 
 @router.post("/validate", response_model=dict[str, Any])
@@ -348,7 +366,9 @@ async def validate_template_configuration(request: TemplateValidationRequest):
 
 
 @router.post("/deploy", response_model=DeploymentResponse)
-async def deploy_swarm(request: SwarmDeploymentRequest, background_tasks: BackgroundTasks):
+async def deploy_swarm(
+    request: SwarmDeploymentRequest, background_tasks: BackgroundTasks
+):
     """Deploy a swarm from template configuration"""
     try:
         # Generate unique deployment ID
@@ -477,7 +497,9 @@ async def get_deployment_status(deployment_id: str):
     """Get status of a swarm deployment"""
     try:
         if deployment_id not in active_deployments:
-            raise HTTPException(status_code=404, detail=f"Deployment '{deployment_id}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Deployment '{deployment_id}' not found"
+            )
 
         deployment = active_deployments[deployment_id]
 
@@ -540,7 +562,11 @@ async def deployment_websocket(websocket: WebSocket):
         initial_status = {
             "type": "deployment_list",
             "deployments": [
-                {"deployment_id": dep_id, "status": dep["status"], "swarm_name": dep["swarm_name"]}
+                {
+                    "deployment_id": dep_id,
+                    "status": dep["status"],
+                    "swarm_name": dep["swarm_name"],
+                }
                 for dep_id, dep in active_deployments.items()
             ],
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -552,7 +578,10 @@ async def deployment_websocket(websocket: WebSocket):
             await websocket.receive_text()
             # Echo back for keepalive
             await websocket.send_json(
-                {"type": "keepalive", "timestamp": datetime.now(timezone.utc).isoformat()}
+                {
+                    "type": "keepalive",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
             )
 
     except WebSocketDisconnect:
@@ -614,7 +643,9 @@ async def cancel_deployment(deployment_id: str):
     """Cancel an active deployment"""
     try:
         if deployment_id not in active_deployments:
-            raise HTTPException(status_code=404, detail=f"Deployment '{deployment_id}' not found")
+            raise HTTPException(
+                status_code=404, detail=f"Deployment '{deployment_id}' not found"
+            )
 
         deployment = active_deployments[deployment_id]
 
@@ -626,7 +657,9 @@ async def cancel_deployment(deployment_id: str):
 
         # Update status
         active_deployments[deployment_id]["status"] = "cancelled"
-        active_deployments[deployment_id]["cancelled_at"] = datetime.now(timezone.utc).isoformat()
+        active_deployments[deployment_id]["cancelled_at"] = datetime.now(
+            timezone.utc
+        ).isoformat()
 
         await broadcast_deployment_update(deployment_id, "cancelled")
 

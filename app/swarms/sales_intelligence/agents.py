@@ -105,7 +105,9 @@ class BaseSalesAgent(ABC):
         self.is_active = True
         while self.is_active:
             try:
-                context = await asyncio.wait_for(self.processing_queue.get(), timeout=1.0)
+                context = await asyncio.wait_for(
+                    self.processing_queue.get(), timeout=1.0
+                )
                 output = await self.process(context)
                 await self.emit_output(output)
             except asyncio.TimeoutError:
@@ -180,7 +182,9 @@ class TranscriptionAgent(BaseSalesAgent):
                 changes += 1
         return changes
 
-    def _analyze_speaking_pace(self, segments: list[TranscriptSegment]) -> dict[str, float]:
+    def _analyze_speaking_pace(
+        self, segments: list[TranscriptSegment]
+    ) -> dict[str, float]:
         """Analyze speaking pace for each participant"""
         pace_analysis = {}
 
@@ -251,7 +255,9 @@ class SentimentAgent(BaseSalesAgent):
             "engagement_level": self._calculate_engagement_level(recent_transcripts),
             "stress_indicators": self._detect_stress_indicators(recent_transcripts),
             "rapport_score": self._calculate_rapport_score(recent_transcripts),
-            "emotional_trajectory": self._track_emotional_trajectory(recent_transcripts),
+            "emotional_trajectory": self._track_emotional_trajectory(
+                recent_transcripts
+            ),
         }
 
         # Determine priority based on negative sentiment or stress
@@ -260,7 +266,11 @@ class SentimentAgent(BaseSalesAgent):
             priority = AgentPriority.HIGH
 
         # High confidence for established patterns, lower for single data points
-        confidence = ConfidenceLevel.HIGH if len(recent_transcripts) > 5 else ConfidenceLevel.MEDIUM
+        confidence = (
+            ConfidenceLevel.HIGH
+            if len(recent_transcripts) > 5
+            else ConfidenceLevel.MEDIUM
+        )
 
         return AgentOutput(
             agent_id=self.agent_id,
@@ -330,7 +340,9 @@ class SentimentAgent(BaseSalesAgent):
         # Normalize by number of segments
         return max(-1.0, min(1.0, total_score / len(segments)))
 
-    def _analyze_speaker_emotions(self, segments: list[TranscriptSegment]) -> dict[str, dict]:
+    def _analyze_speaker_emotions(
+        self, segments: list[TranscriptSegment]
+    ) -> dict[str, dict]:
         """Analyze emotions for each speaker"""
         speaker_emotions = {}
 
@@ -349,7 +361,9 @@ class SentimentAgent(BaseSalesAgent):
             if any(word in text for word in ["excited", "thrilled", "love", "amazing"]):
                 speaker_emotions[segment.speaker_id]["excitement"] += 0.1
 
-            if any(word in text for word in ["concerned", "worried", "issue", "problem"]):
+            if any(
+                word in text for word in ["concerned", "worried", "issue", "problem"]
+            ):
                 speaker_emotions[segment.speaker_id]["concern"] += 0.1
 
             if any(word in text for word in ["definitely", "absolutely", "certainly"]):
@@ -361,7 +375,9 @@ class SentimentAgent(BaseSalesAgent):
         # Normalize scores
         for speaker in speaker_emotions:
             for emotion in speaker_emotions[speaker]:
-                speaker_emotions[speaker][emotion] = min(1.0, speaker_emotions[speaker][emotion])
+                speaker_emotions[speaker][emotion] = min(
+                    1.0, speaker_emotions[speaker][emotion]
+                )
 
         return speaker_emotions
 
@@ -440,7 +456,9 @@ class SentimentAgent(BaseSalesAgent):
 
         return rapport_indicators / total_interactions
 
-    def _track_emotional_trajectory(self, segments: list[TranscriptSegment]) -> list[dict]:
+    def _track_emotional_trajectory(
+        self, segments: list[TranscriptSegment]
+    ) -> list[dict]:
         """Track how emotions change over time"""
         trajectory = []
         window_size = 5  # Analyze in windows of 5 segments
@@ -499,8 +517,12 @@ class CompetitiveAgent(BaseSalesAgent):
 
         analysis = {
             "competitor_mentions": self._detect_competitor_mentions(recent_transcripts),
-            "comparison_statements": self._find_comparison_statements(recent_transcripts),
-            "feature_discussions": self._analyze_feature_discussions(recent_transcripts),
+            "comparison_statements": self._find_comparison_statements(
+                recent_transcripts
+            ),
+            "feature_discussions": self._analyze_feature_discussions(
+                recent_transcripts
+            ),
             "pricing_mentions": self._detect_pricing_discussions(recent_transcripts),
             "competitive_positioning": self._analyze_positioning(recent_transcripts),
             "threat_level": self._assess_competitive_threat(recent_transcripts),
@@ -529,7 +551,9 @@ class CompetitiveAgent(BaseSalesAgent):
         cutoff = time.time() - seconds
         return [seg for seg in transcripts if seg.start_time > cutoff]
 
-    def _detect_competitor_mentions(self, segments: list[TranscriptSegment]) -> list[dict]:
+    def _detect_competitor_mentions(
+        self, segments: list[TranscriptSegment]
+    ) -> list[dict]:
         """Detect explicit competitor mentions"""
         mentions = []
 
@@ -549,7 +573,9 @@ class CompetitiveAgent(BaseSalesAgent):
                                 "context": segment.text,
                                 "speaker": segment.speaker_name,
                                 "timestamp": segment.start_time,
-                                "confidence": self._calculate_mention_confidence(text, term),
+                                "confidence": self._calculate_mention_confidence(
+                                    text, term
+                                ),
                             }
                         )
 
@@ -561,7 +587,13 @@ class CompetitiveAgent(BaseSalesAgent):
         confidence = 0.7  # Base confidence
 
         # Higher confidence if mentioned with specific context
-        competitive_context = ["versus", "compared to", "better than", "instead of", "alternative"]
+        competitive_context = [
+            "versus",
+            "compared to",
+            "better than",
+            "instead of",
+            "alternative",
+        ]
         if any(ctx in text.lower() for ctx in competitive_context):
             confidence += 0.2
 
@@ -572,7 +604,9 @@ class CompetitiveAgent(BaseSalesAgent):
 
         return max(0.1, min(1.0, confidence))
 
-    def _find_comparison_statements(self, segments: list[TranscriptSegment]) -> list[dict]:
+    def _find_comparison_statements(
+        self, segments: list[TranscriptSegment]
+    ) -> list[dict]:
         """Find statements that compare products or features"""
         comparison_patterns = [
             r"(better than|worse than|compared to|versus|vs\.?)\s+(\w+)",
@@ -599,7 +633,9 @@ class CompetitiveAgent(BaseSalesAgent):
 
         return comparisons
 
-    def _analyze_feature_discussions(self, segments: list[TranscriptSegment]) -> dict[str, list]:
+    def _analyze_feature_discussions(
+        self, segments: list[TranscriptSegment]
+    ) -> dict[str, list]:
         """Analyze discussions about specific features"""
         feature_keywords = {
             "integration": ["api", "integration", "connect", "sync"],
@@ -626,9 +662,19 @@ class CompetitiveAgent(BaseSalesAgent):
 
         return feature_discussions
 
-    def _detect_pricing_discussions(self, segments: list[TranscriptSegment]) -> list[dict]:
+    def _detect_pricing_discussions(
+        self, segments: list[TranscriptSegment]
+    ) -> list[dict]:
         """Detect discussions about pricing and costs"""
-        pricing_keywords = ["price", "cost", "expensive", "cheap", "budget", "$", "dollar"]
+        pricing_keywords = [
+            "price",
+            "cost",
+            "expensive",
+            "cheap",
+            "budget",
+            "$",
+            "dollar",
+        ]
         pricing_discussions = []
 
         for segment in segments:
@@ -694,18 +740,25 @@ class CompetitiveAgent(BaseSalesAgent):
 
             # High threat indicators
             if any(
-                phrase in text for phrase in ["already using", "current vendor", "satisfied with"]
+                phrase in text
+                for phrase in ["already using", "current vendor", "satisfied with"]
             ):
                 threat_level += 0.3
 
             # Medium threat indicators
-            if any(phrase in text for phrase in ["looking at", "considering", "evaluating"]):
+            if any(
+                phrase in text for phrase in ["looking at", "considering", "evaluating"]
+            ):
                 threat_level += 0.2
 
             # Positive indicators (reduce threat)
             if any(
                 phrase in text
-                for phrase in ["not satisfied", "problems with", "looking for alternative"]
+                for phrase in [
+                    "not satisfied",
+                    "problems with",
+                    "looking for alternative",
+                ]
             ):
                 threat_level -= 0.1
 
@@ -715,7 +768,9 @@ class CompetitiveAgent(BaseSalesAgent):
 class RiskAssessmentAgent(BaseSalesAgent):
     """Predictive deal outcome and risk scoring"""
 
-    def __init__(self, agent_id: str = "risk_assessment", config: dict[str, Any] = None):
+    def __init__(
+        self, agent_id: str = "risk_assessment", config: dict[str, Any] = None
+    ):
         super().__init__(agent_id, config)
         self.risk_indicators = self._load_risk_indicators()
         self.historical_patterns: dict[str, float] = {}
@@ -727,7 +782,14 @@ class RiskAssessmentAgent(BaseSalesAgent):
         """Load risk assessment indicators and patterns"""
         return {
             "positive_signals": {
-                "keywords": ["interested", "excited", "perfect", "exactly", "love", "need"],
+                "keywords": [
+                    "interested",
+                    "excited",
+                    "perfect",
+                    "exactly",
+                    "love",
+                    "need",
+                ],
                 "weight": 0.8,
             },
             "negative_signals": {
@@ -735,7 +797,13 @@ class RiskAssessmentAgent(BaseSalesAgent):
                 "weight": -0.6,
             },
             "buying_signals": {
-                "keywords": ["when can", "how soon", "next steps", "contract", "timeline"],
+                "keywords": [
+                    "when can",
+                    "how soon",
+                    "next steps",
+                    "contract",
+                    "timeline",
+                ],
                 "weight": 1.0,
             },
             "stall_signals": {
@@ -757,8 +825,12 @@ class RiskAssessmentAgent(BaseSalesAgent):
             "decision_maker_involvement": self._assess_decision_maker_involvement(
                 recent_transcripts, context
             ),
-            "timeline_indicators": self._analyze_timeline_indicators(recent_transcripts),
-            "probability_score": self._calculate_win_probability(recent_transcripts, context),
+            "timeline_indicators": self._analyze_timeline_indicators(
+                recent_transcripts
+            ),
+            "probability_score": self._calculate_win_probability(
+                recent_transcripts, context
+            ),
         }
 
         # High priority for high-risk situations
@@ -843,7 +915,9 @@ class RiskAssessmentAgent(BaseSalesAgent):
     def _assess_signal_strength(self, text: str, pattern: str) -> float:
         """Assess the strength of a buying signal"""
         # Strong signals
-        if any(phrase in text for phrase in ["definitely", "absolutely", "immediately"]):
+        if any(
+            phrase in text for phrase in ["definitely", "absolutely", "immediately"]
+        ):
             return 1.0
 
         # Medium signals
@@ -930,7 +1004,9 @@ class RiskAssessmentAgent(BaseSalesAgent):
         """Determine if speaker is internal team member"""
         # Simple heuristic - in real implementation, use participant data
         internal_indicators = ["sales", "account", "manager", "@company.com"]
-        return any(indicator in speaker_name.lower() for indicator in internal_indicators)
+        return any(
+            indicator in speaker_name.lower() for indicator in internal_indicators
+        )
 
     def _assess_decision_maker_involvement(
         self, segments: list[TranscriptSegment], context: AgentContext
@@ -944,7 +1020,13 @@ class RiskAssessmentAgent(BaseSalesAgent):
             "involvement_quality": 0.5,
         }
 
-        authority_signals = ["my decision", "I decide", "I choose", "my budget", "I approve"]
+        authority_signals = [
+            "my decision",
+            "I decide",
+            "I choose",
+            "my budget",
+            "I approve",
+        ]
 
         for segment in segments:
             text = segment.text.lower()
@@ -952,12 +1034,18 @@ class RiskAssessmentAgent(BaseSalesAgent):
             for signal in authority_signals:
                 if signal in text:
                     decision_maker_analysis["decision_authority_signals"].append(
-                        {"signal": signal, "speaker": segment.speaker_name, "context": segment.text}
+                        {
+                            "signal": signal,
+                            "speaker": segment.speaker_name,
+                            "context": segment.text,
+                        }
                     )
 
         return decision_maker_analysis
 
-    def _analyze_timeline_indicators(self, segments: list[TranscriptSegment]) -> dict[str, Any]:
+    def _analyze_timeline_indicators(
+        self, segments: list[TranscriptSegment]
+    ) -> dict[str, Any]:
         """Analyze timeline and urgency indicators"""
         timeline_patterns = {
             "urgent": ["asap", "immediately", "urgent", "right away"],
@@ -988,7 +1076,12 @@ class RiskAssessmentAgent(BaseSalesAgent):
                         )
 
         # Calculate urgency level based on mentions
-        urgency_weights = {"urgent": 1.0, "short_term": 0.8, "medium_term": 0.5, "long_term": 0.2}
+        urgency_weights = {
+            "urgent": 1.0,
+            "short_term": 0.8,
+            "medium_term": 0.5,
+            "long_term": 0.2,
+        }
         total_urgency = sum(
             urgency_weights.get(mention["type"], 0.5)
             for mention in timeline_analysis["timeline_mentions"]
@@ -1010,7 +1103,8 @@ class RiskAssessmentAgent(BaseSalesAgent):
             "buying_signals": len(self._detect_buying_signals(segments)) * 0.05,
             "red_flags": -len(self._identify_red_flags(segments)) * 0.1,
             "sentiment": 0.5,  # Would integrate with sentiment agent
-            "timeline": self._analyze_timeline_indicators(segments)["urgency_level"] * 0.2,
+            "timeline": self._analyze_timeline_indicators(segments)["urgency_level"]
+            * 0.2,
         }
 
         total_score = sum(factors.values()) + 0.5  # Base probability
@@ -1033,13 +1127,21 @@ class CoachingAgent(BaseSalesAgent):
         return {
             "questioning_techniques": {
                 "open_questions": ["what", "how", "why", "when", "where", "which"],
-                "discovery_questions": ["tell me about", "help me understand", "walk me through"],
+                "discovery_questions": [
+                    "tell me about",
+                    "help me understand",
+                    "walk me through",
+                ],
                 "pain_questions": ["what challenges", "biggest problem", "frustration"],
                 "impact_questions": ["what happens if", "cost of", "impact on"],
             },
             "active_listening": {
                 "acknowledgments": ["I understand", "that makes sense", "I see"],
-                "clarifications": ["let me make sure", "so what I'm hearing", "confirm"],
+                "clarifications": [
+                    "let me make sure",
+                    "so what I'm hearing",
+                    "confirm",
+                ],
                 "summaries": ["so to summarize", "what I understand", "key points"],
             },
             "objection_handling": {
@@ -1048,7 +1150,11 @@ class CoachingAgent(BaseSalesAgent):
                 "respond": ["what if", "consider this", "many clients"],
             },
             "closing_techniques": {
-                "trial_close": ["how does that sound", "what do you think", "make sense"],
+                "trial_close": [
+                    "how does that sound",
+                    "what do you think",
+                    "make sense",
+                ],
                 "assumption": ["when we", "after we", "once you"],
                 "direct": ["are you ready", "shall we", "let's move forward"],
             },
@@ -1060,18 +1166,27 @@ class CoachingAgent(BaseSalesAgent):
         recent_transcripts = self._get_recent_transcripts(call_data.transcripts)
 
         analysis = {
-            "questioning_analysis": self._analyze_questioning_techniques(recent_transcripts),
+            "questioning_analysis": self._analyze_questioning_techniques(
+                recent_transcripts
+            ),
             "listening_score": self._assess_active_listening(recent_transcripts),
             "talk_time_balance": self._analyze_talk_time(recent_transcripts),
             "objection_handling": self._evaluate_objection_handling(recent_transcripts),
-            "closing_opportunities": self._identify_closing_opportunities(recent_transcripts),
-            "coaching_recommendations": self._generate_coaching_recommendations(recent_transcripts),
+            "closing_opportunities": self._identify_closing_opportunities(
+                recent_transcripts
+            ),
+            "coaching_recommendations": self._generate_coaching_recommendations(
+                recent_transcripts
+            ),
             "performance_score": self._calculate_performance_score(recent_transcripts),
         }
 
         # High priority for coaching opportunities or performance issues
         priority = AgentPriority.MEDIUM
-        if analysis["performance_score"] < 0.6 or len(analysis["coaching_recommendations"]) > 2:
+        if (
+            analysis["performance_score"] < 0.6
+            or len(analysis["coaching_recommendations"]) > 2
+        ):
             priority = AgentPriority.HIGH
 
         return AgentOutput(
@@ -1092,7 +1207,9 @@ class CoachingAgent(BaseSalesAgent):
         cutoff = time.time() - seconds
         return [seg for seg in transcripts if seg.start_time > cutoff]
 
-    def _analyze_questioning_techniques(self, segments: list[TranscriptSegment]) -> dict[str, Any]:
+    def _analyze_questioning_techniques(
+        self, segments: list[TranscriptSegment]
+    ) -> dict[str, Any]:
         """Analyze the quality and types of questions asked"""
         analysis = {
             "total_questions": 0,
@@ -1111,7 +1228,9 @@ class CoachingAgent(BaseSalesAgent):
                 # Classify question types
                 if any(
                     word in text
-                    for word in self.coaching_framework["questioning_techniques"]["open_questions"]
+                    for word in self.coaching_framework["questioning_techniques"][
+                        "open_questions"
+                    ]
                 ):
                     analysis["open_questions"] += 1
                 else:
@@ -1136,7 +1255,9 @@ class CoachingAgent(BaseSalesAgent):
         # Calculate question quality score
         if analysis["total_questions"] > 0:
             open_ratio = analysis["open_questions"] / analysis["total_questions"]
-            discovery_ratio = analysis["discovery_questions"] / analysis["total_questions"]
+            discovery_ratio = (
+                analysis["discovery_questions"] / analysis["total_questions"]
+            )
             analysis["question_quality"] = (open_ratio * 0.6) + (discovery_ratio * 0.4)
 
         return analysis
@@ -1159,7 +1280,9 @@ class CoachingAgent(BaseSalesAgent):
     def _assess_active_listening(self, segments: list[TranscriptSegment]) -> float:
         """Assess active listening techniques (0 to 1)"""
         listening_score = 0.0
-        internal_segments = [seg for seg in segments if self._is_internal_speaker(seg.speaker_name)]
+        internal_segments = [
+            seg for seg in segments if self._is_internal_speaker(seg.speaker_name)
+        ]
 
         if not internal_segments:
             return 0.5
@@ -1170,20 +1293,25 @@ class CoachingAgent(BaseSalesAgent):
             # Check for acknowledgments
             if any(
                 ack in text
-                for ack in self.coaching_framework["active_listening"]["acknowledgments"]
+                for ack in self.coaching_framework["active_listening"][
+                    "acknowledgments"
+                ]
             ):
                 listening_score += 0.2
 
             # Check for clarifications
             if any(
                 clar in text
-                for clar in self.coaching_framework["active_listening"]["clarifications"]
+                for clar in self.coaching_framework["active_listening"][
+                    "clarifications"
+                ]
             ):
                 listening_score += 0.3
 
             # Check for summaries
             if any(
-                summ in text for summ in self.coaching_framework["active_listening"]["summaries"]
+                summ in text
+                for summ in self.coaching_framework["active_listening"]["summaries"]
             ):
                 listening_score += 0.4
 
@@ -1220,9 +1348,18 @@ class CoachingAgent(BaseSalesAgent):
             "balance_score": max(0.0, balance_score),
         }
 
-    def _evaluate_objection_handling(self, segments: list[TranscriptSegment]) -> dict[str, Any]:
+    def _evaluate_objection_handling(
+        self, segments: list[TranscriptSegment]
+    ) -> dict[str, Any]:
         """Evaluate objection handling techniques"""
-        objection_indicators = ["but", "however", "concerned", "worried", "expensive", "difficult"]
+        objection_indicators = [
+            "but",
+            "however",
+            "concerned",
+            "worried",
+            "expensive",
+            "difficult",
+        ]
         objection_analysis = {
             "objections_detected": [],
             "handling_quality": 0.0,
@@ -1252,11 +1389,17 @@ class CoachingAgent(BaseSalesAgent):
                             framework = self.coaching_framework["objection_handling"]
                             response_score = 0.0
 
-                            if any(ack in response_text for ack in framework["acknowledge"]):
+                            if any(
+                                ack in response_text for ack in framework["acknowledge"]
+                            ):
                                 response_score += 0.3
-                            if any(clar in response_text for clar in framework["clarify"]):
+                            if any(
+                                clar in response_text for clar in framework["clarify"]
+                            ):
                                 response_score += 0.4
-                            if any(resp in response_text for resp in framework["respond"]):
+                            if any(
+                                resp in response_text for resp in framework["respond"]
+                            ):
                                 response_score += 0.3
 
                             objection["response_quality"] = response_score
@@ -1267,7 +1410,8 @@ class CoachingAgent(BaseSalesAgent):
         # Calculate overall handling quality
         if objection_analysis["objections_detected"]:
             total_quality = sum(
-                obj["response_quality"] for obj in objection_analysis["objections_detected"]
+                obj["response_quality"]
+                for obj in objection_analysis["objections_detected"]
             )
             objection_analysis["handling_quality"] = total_quality / len(
                 objection_analysis["objections_detected"]
@@ -1275,7 +1419,9 @@ class CoachingAgent(BaseSalesAgent):
 
         return objection_analysis
 
-    def _identify_closing_opportunities(self, segments: list[TranscriptSegment]) -> list[dict]:
+    def _identify_closing_opportunities(
+        self, segments: list[TranscriptSegment]
+    ) -> list[dict]:
         """Identify missed or potential closing opportunities"""
         buying_signals = ["interested", "sounds good", "how much", "when", "next steps"]
         closing_opportunities = []
@@ -1295,9 +1441,17 @@ class CoachingAgent(BaseSalesAgent):
                             framework = self.coaching_framework["closing_techniques"]
 
                             if (
-                                any(trial in response for trial in framework["trial_close"])
-                                or any(assume in response for assume in framework["assumption"])
-                                or any(direct in response for direct in framework["direct"])
+                                any(
+                                    trial in response
+                                    for trial in framework["trial_close"]
+                                )
+                                or any(
+                                    assume in response
+                                    for assume in framework["assumption"]
+                                )
+                                or any(
+                                    direct in response for direct in framework["direct"]
+                                )
                             ):
                                 closing_attempted = True
                                 break
@@ -1307,7 +1461,9 @@ class CoachingAgent(BaseSalesAgent):
                             "signal": segment.text,
                             "timestamp": segment.start_time,
                             "closing_attempted": closing_attempted,
-                            "opportunity_strength": self._assess_opportunity_strength(text),
+                            "opportunity_strength": self._assess_opportunity_strength(
+                                text
+                            ),
                         }
                     )
 
@@ -1328,7 +1484,9 @@ class CoachingAgent(BaseSalesAgent):
         else:
             return 0.5
 
-    def _generate_coaching_recommendations(self, segments: list[TranscriptSegment]) -> list[dict]:
+    def _generate_coaching_recommendations(
+        self, segments: list[TranscriptSegment]
+    ) -> list[dict]:
         """Generate specific coaching recommendations"""
         recommendations = []
 
@@ -1375,11 +1533,15 @@ class CoachingAgent(BaseSalesAgent):
     def _calculate_performance_score(self, segments: list[TranscriptSegment]) -> float:
         """Calculate overall performance score (0 to 1)"""
         talk_time_score = self._analyze_talk_time(segments)["balance_score"]
-        questioning_score = self._analyze_questioning_techniques(segments)["question_quality"]
+        questioning_score = self._analyze_questioning_techniques(segments)[
+            "question_quality"
+        ]
         listening_score = self._assess_active_listening(segments)
 
         # Weighted average
-        performance_score = talk_time_score * 0.3 + questioning_score * 0.4 + listening_score * 0.3
+        performance_score = (
+            talk_time_score * 0.3 + questioning_score * 0.4 + listening_score * 0.3
+        )
 
         return performance_score
 
@@ -1387,7 +1549,9 @@ class CoachingAgent(BaseSalesAgent):
         """Determine if speaker is internal team member"""
         # Simple heuristic - in real implementation, use participant data
         internal_indicators = ["sales", "account", "manager", "@company.com"]
-        return any(indicator in speaker_name.lower() for indicator in internal_indicators)
+        return any(
+            indicator in speaker_name.lower() for indicator in internal_indicators
+        )
 
 
 class SummaryAgent(BaseSalesAgent):
@@ -1422,7 +1586,10 @@ class SummaryAgent(BaseSalesAgent):
                 timestamp=datetime.now(),
                 priority=AgentPriority.LOW,
                 confidence=ConfidenceLevel.LOW,
-                data={"status": "call_in_progress", "summary": "Call still in progress"},
+                data={
+                    "status": "call_in_progress",
+                    "summary": "Call still in progress",
+                },
             )
 
         analysis = {
@@ -1431,7 +1598,9 @@ class SummaryAgent(BaseSalesAgent):
             "action_items": self._generate_action_items(call_data.transcripts),
             "next_steps": self._identify_next_steps(call_data.transcripts),
             "call_outcome": self._determine_call_outcome(call_data.transcripts),
-            "follow_up_recommendations": self._generate_follow_up_recommendations(call_data),
+            "follow_up_recommendations": self._generate_follow_up_recommendations(
+                call_data
+            ),
         }
 
         return AgentOutput(
@@ -1535,7 +1704,9 @@ class SummaryAgent(BaseSalesAgent):
             "about the",
         ]
 
-        return any(indicator in segment.text.lower() for indicator in topic_change_indicators)
+        return any(
+            indicator in segment.text.lower() for indicator in topic_change_indicators
+        )
 
     def _infer_topic(self, segment: TranscriptSegment) -> str:
         """Infer topic from segment content"""
@@ -1552,7 +1723,9 @@ class SummaryAgent(BaseSalesAgent):
         else:
             return "General Discussion"
 
-    def _generate_action_items(self, transcripts: list[TranscriptSegment]) -> list[dict]:
+    def _generate_action_items(
+        self, transcripts: list[TranscriptSegment]
+    ) -> list[dict]:
         """Generate action items from call discussion"""
         action_patterns = [
             r"i will (.*?)(?:\.|$)",
@@ -1639,15 +1812,29 @@ class SummaryAgent(BaseSalesAgent):
 
     def _determine_call_outcome(self, transcripts: list[TranscriptSegment]) -> str:
         """Determine the overall outcome of the call"""
-        positive_outcomes = ["interested", "move forward", "next steps", "schedule", "contract"]
+        positive_outcomes = [
+            "interested",
+            "move forward",
+            "next steps",
+            "schedule",
+            "contract",
+        ]
         negative_outcomes = ["not interested", "not ready", "concerns", "issues"]
         neutral_outcomes = ["think about", "discuss", "consider", "review"]
 
-        text_content = " ".join(seg.text.lower() for seg in transcripts[-10:])  # Last 10 segments
+        text_content = " ".join(
+            seg.text.lower() for seg in transcripts[-10:]
+        )  # Last 10 segments
 
-        positive_score = sum(1 for outcome in positive_outcomes if outcome in text_content)
-        negative_score = sum(1 for outcome in negative_outcomes if outcome in text_content)
-        neutral_score = sum(1 for outcome in neutral_outcomes if outcome in text_content)
+        positive_score = sum(
+            1 for outcome in positive_outcomes if outcome in text_content
+        )
+        negative_score = sum(
+            1 for outcome in negative_outcomes if outcome in text_content
+        )
+        neutral_score = sum(
+            1 for outcome in neutral_outcomes if outcome in text_content
+        )
 
         if positive_score > negative_score and positive_score > neutral_score:
             return "Positive - Prospect interested in moving forward"
@@ -1658,7 +1845,9 @@ class SummaryAgent(BaseSalesAgent):
         else:
             return "Unclear - Follow-up needed for clarity"
 
-    def _generate_follow_up_recommendations(self, call_data: RealtimeCallData) -> list[dict]:
+    def _generate_follow_up_recommendations(
+        self, call_data: RealtimeCallData
+    ) -> list[dict]:
         """Generate specific follow-up recommendations"""
         recommendations = []
         transcripts = call_data.transcripts
@@ -1685,7 +1874,8 @@ class SummaryAgent(BaseSalesAgent):
 
         # Check for scheduling needs
         if any(
-            "schedule" in seg.text.lower() or "meeting" in seg.text.lower() for seg in transcripts
+            "schedule" in seg.text.lower() or "meeting" in seg.text.lower()
+            for seg in transcripts
         ):
             recommendations.append(
                 {
@@ -1741,7 +1931,9 @@ class SalesAgentOrchestrator:
         for agent in self.agents.values():
             await agent.stop()
 
-    async def process_call_data(self, call_data: RealtimeCallData, context: dict[str, Any] = None):
+    async def process_call_data(
+        self, call_data: RealtimeCallData, context: dict[str, Any] = None
+    ):
         """Process call data through all agents"""
         agent_context = AgentContext(
             call_data=call_data,

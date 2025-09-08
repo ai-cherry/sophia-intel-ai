@@ -29,7 +29,9 @@ class RedactionPatterns:
     EMAIL = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
 
     # Phone numbers (US format)
-    PHONE_US = re.compile(r"\b(?:\+?1[-.]?)?\(?([0-9]{3})\)?[-.]?([0-9]{3})[-.]?([0-9]{4})\b")
+    PHONE_US = re.compile(
+        r"\b(?:\+?1[-.]?)?\(?([0-9]{3})\)?[-.]?([0-9]{3})[-.]?([0-9]{4})\b"
+    )
 
     # Credit cards
     CREDIT_CARD = re.compile(r"\b(?:\d[ -]*?){13,16}\b")
@@ -111,7 +113,9 @@ class Redactor:
                 # Handle patterns with groups
                 if pattern.groups > 0:
                     redacted = pattern.sub(
-                        lambda m: m.group(0).replace(m.group(pattern.groups), self.replacement),
+                        lambda m: m.group(0).replace(
+                            m.group(pattern.groups), self.replacement
+                        ),
                         redacted,
                     )
                 else:
@@ -169,7 +173,9 @@ class Redactor:
 
         return redacted
 
-    def redact_list(self, data: List[Any], sensitive_keys: Optional[List[str]] = None) -> List[Any]:
+    def redact_list(
+        self, data: List[Any], sensitive_keys: Optional[List[str]] = None
+    ) -> List[Any]:
         """Redact sensitive information from list.
 
         Args:

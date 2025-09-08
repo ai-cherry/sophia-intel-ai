@@ -104,7 +104,10 @@ This is a REAL repository scan, not a simulation.
                     headers={"Content-Type": "application/json"},
                     json={
                         "contents": [{"parts": [{"text": self.scout_prompt}]}],
-                        "generationConfig": {"temperature": 0.3, "maxOutputTokens": 4000},
+                        "generationConfig": {
+                            "temperature": 0.3,
+                            "maxOutputTokens": 4000,
+                        },
                     },
                 )
 
@@ -184,7 +187,13 @@ This is a REAL repository scan, not a simulation.
 
         # Completeness (covers objectives)
         completeness = 0
-        objectives = ["security", "architecture", "performance", "code quality", "recommendation"]
+        objectives = [
+            "security",
+            "architecture",
+            "performance",
+            "code quality",
+            "recommendation",
+        ]
         for obj in objectives:
             if obj in response_lower:
                 completeness += 20
@@ -228,7 +237,9 @@ This is a REAL repository scan, not a simulation.
             "Speed": 0.10,
         }
 
-        overall = sum(scores.get(metric, 0) * weight for metric, weight in weights.items())
+        overall = sum(
+            scores.get(metric, 0) * weight for metric, weight in weights.items()
+        )
         scores["Overall"] = round(overall, 1)
 
         return scores
@@ -257,11 +268,15 @@ async def main():
         }
 
         # Sort by score
-        sorted_models = sorted(all_results.items(), key=lambda x: x[1]["score"], reverse=True)
+        sorted_models = sorted(
+            all_results.items(), key=lambda x: x[1]["score"], reverse=True
+        )
 
         for i, (model, stats) in enumerate(sorted_models, 1):
             medal = (
-                "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else "🏅" if i == 4 else "🎖️"
+                "🥇"
+                if i == 1
+                else "🥈" if i == 2 else "🥉" if i == 3 else "🏅" if i == 4 else "🎖️"
             )
             print(f"\n{medal} RANK {i}: {model}")
             print(f"   Score: {stats['score']}/100")
@@ -270,7 +285,9 @@ async def main():
 
         # Save complete comparison
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        with open(f"complete_5_model_comparison_with_gemini_{timestamp}.json", "w") as f:
+        with open(
+            f"complete_5_model_comparison_with_gemini_{timestamp}.json", "w"
+        ) as f:
             json.dump(
                 {
                     "timestamp": datetime.now().isoformat(),

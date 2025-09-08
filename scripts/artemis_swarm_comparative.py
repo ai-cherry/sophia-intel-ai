@@ -112,14 +112,19 @@ Be thorough, specific, and provide actionable recommendations.""",
 
         try:
             response = aimlapi_manager.chat_completion(
-                model="grok-code-fast-1", messages=messages, temperature=0.3, max_tokens=32768
+                model="grok-code-fast-1",
+                messages=messages,
+                temperature=0.3,
+                max_tokens=32768,
             )
 
             elapsed = time.time() - start_time
             print(f"✅ [T+{elapsed:.1f}s] Agent 1 COMPLETED: {agent_name}")
 
             content = (
-                response.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+                response.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "No response")
             )
 
             return {
@@ -168,7 +173,10 @@ Be thorough, specific, and provide actionable recommendations.""",
             except:
                 # Fallback to GLM-4.5-Air
                 response = aimlapi_manager.chat_completion(
-                    model="glm-4.5-air", messages=messages, temperature=0.3, max_tokens=16384
+                    model="glm-4.5-air",
+                    messages=messages,
+                    temperature=0.3,
+                    max_tokens=16384,
                 )
                 actual_model = "glm-4.5-air (fallback)"
                 agent_name = "GLM-4.5 Air (Gemini fallback)"
@@ -218,14 +226,19 @@ Be thorough, specific, and provide actionable recommendations.""",
 
         try:
             response = aimlapi_manager.chat_completion(
-                model="llama-4-scout", messages=messages, temperature=0.3, max_tokens=16384
+                model="llama-4-scout",
+                messages=messages,
+                temperature=0.3,
+                max_tokens=16384,
             )
 
             elapsed = time.time() - start_time
             print(f"✅ [T+{elapsed:.1f}s] Agent 3 COMPLETED: {agent_name}")
 
             content = (
-                response.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+                response.get("choices", [{}])[0]
+                .get("message", {})
+                .get("content", "No response")
             )
 
             return {
@@ -292,7 +305,9 @@ Be thorough, specific, and provide actionable recommendations.""",
         }
 
         # Save results
-        output_file = f"artemis_comparative_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        output_file = (
+            f"artemis_comparative_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
 
@@ -303,7 +318,11 @@ Be thorough, specific, and provide actionable recommendations.""",
 
     def analyze_comparative_results(self, results: Dict[str, Any]) -> Dict[str, Any]:
         """Analyze and compare agent performance"""
-        analysis = {"performance_metrics": {}, "content_analysis": {}, "recommendations": []}
+        analysis = {
+            "performance_metrics": {},
+            "content_analysis": {},
+            "recommendations": [],
+        }
 
         for agent in results["agents"]:
             if "error" not in agent:
@@ -326,7 +345,9 @@ Be thorough, specific, and provide actionable recommendations.""",
         valid_agents = [a for a in results["agents"] if "error" not in a]
         if valid_agents:
             fastest = min(valid_agents, key=lambda x: x["execution_time"])
-            most_comprehensive = max(valid_agents, key=lambda x: len(x.get("findings", "")))
+            most_comprehensive = max(
+                valid_agents, key=lambda x: len(x.get("findings", ""))
+            )
 
             analysis["recommendations"].append(
                 f"Fastest: {fastest['agent_name']} ({fastest['execution_time']:.1f}s)"
@@ -353,7 +374,9 @@ async def main():
     # Display individual results
     for agent_result in results["agents"]:
         print(f"\n{'='*70}")
-        print(f" AGENT {agent_result['agent_number']}: {agent_result.get('agent_name', 'Unknown')}")
+        print(
+            f" AGENT {agent_result['agent_number']}: {agent_result.get('agent_name', 'Unknown')}"
+        )
         print(f" Model: {agent_result.get('model', 'Unknown')}")
         print(f" Specs: {agent_result.get('specs', 'N/A')}")
         print(f" Execution Time: {agent_result.get('execution_time', 0):.1f}s")

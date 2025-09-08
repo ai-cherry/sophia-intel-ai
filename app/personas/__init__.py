@@ -132,7 +132,9 @@ __all__ = [
 ]
 
 
-async def initialize_persona_system(storage_path: Optional[Path] = None) -> dict[str, Any]:
+async def initialize_persona_system(
+    storage_path: Optional[Path] = None,
+) -> dict[str, Any]:
     """
     Initialize the complete persona management system.
 
@@ -194,7 +196,9 @@ async def initialize_persona_system(storage_path: Optional[Path] = None) -> dict
             "version": __version__,
         }
 
-        logger.info(f"Persona system initialized successfully. Status: {initialization_status}")
+        logger.info(
+            f"Persona system initialized successfully. Status: {initialization_status}"
+        )
         return initialization_status
 
     except Exception as e:
@@ -232,7 +236,9 @@ def get_persona_system_info() -> dict[str, Any]:
                     "Testing strategies and implementation",
                     "Technical documentation",
                 ],
-                "variants": list(ArtemisPersonaFactory.get_all_artemis_variants().keys()),
+                "variants": list(
+                    ArtemisPersonaFactory.get_all_artemis_variants().keys()
+                ),
             },
         },
         "features": {
@@ -324,7 +330,9 @@ async def run_persona_benchmark(
                 task_domain = TaskDomain(task.get("domain", "general"))
                 context = task.get("context", {})
 
-                await template_manager.generate_dynamic_prompt(persona, task_domain, context)
+                await template_manager.generate_dynamic_prompt(
+                    persona, task_domain, context
+                )
 
                 # Simulate task performance (in real implementation, this would call the LLM)
                 # For now, we'll estimate based on persona's expertise in the domain
@@ -365,7 +373,9 @@ async def run_persona_benchmark(
 
     # Comparative analysis
     if results["persona_results"]:
-        all_scores = [result["avg_score"] for result in results["persona_results"].values()]
+        all_scores = [
+            result["avg_score"] for result in results["persona_results"].values()
+        ]
 
         if all_scores:
             results["comparative_analysis"] = {
@@ -400,11 +410,16 @@ async def integrate_with_portkey(portkey_manager) -> bool:
             return False
 
         # Add persona-aware model selection to Portkey manager
-        def persona_model_selector(persona_type: PersonaType, task_domain: TaskDomain) -> str:
+        def persona_model_selector(
+            persona_type: PersonaType, task_domain: TaskDomain
+        ) -> str:
             """Select optimal model based on persona type and task domain."""
             if persona_type == PersonaType.SOPHIA:
                 # Business intelligence tasks benefit from analytical models
-                if task_domain in [TaskDomain.BUSINESS_ANALYSIS, TaskDomain.STRATEGIC_PLANNING]:
+                if task_domain in [
+                    TaskDomain.BUSINESS_ANALYSIS,
+                    TaskDomain.STRATEGIC_PLANNING,
+                ]:
                     return "claude-3-opus-20240229"  # High reasoning capability
                 else:
                     return "claude-3-sonnet-20240229"  # Balanced performance

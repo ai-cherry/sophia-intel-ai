@@ -145,7 +145,9 @@ class CodeAnalyzer:
                     "docstring": ast.get_docstring(node) or "",
                     "methods": [],
                     "attributes": [],
-                    "inheritance": [base.id for base in node.bases if isinstance(base, ast.Name)],
+                    "inheritance": [
+                        base.id for base in node.bases if isinstance(base, ast.Name)
+                    ],
                 }
 
                 # Extract methods
@@ -156,7 +158,8 @@ class CodeAnalyzer:
                             "docstring": ast.get_docstring(item) or "",
                             "args": [arg.arg for arg in item.args.args],
                             "decorators": [
-                                self._get_decorator_name(dec) for dec in item.decorator_list
+                                self._get_decorator_name(dec)
+                                for dec in item.decorator_list
                             ],
                             "is_private": item.name.startswith("_"),
                             "is_async": isinstance(item, ast.AsyncFunctionDef),
@@ -178,7 +181,9 @@ class CodeAnalyzer:
                     "docstring": ast.get_docstring(node) or "",
                     "args": [arg.arg for arg in node.args.args],
                     "defaults": len(node.args.defaults),
-                    "decorators": [self._get_decorator_name(dec) for dec in node.decorator_list],
+                    "decorators": [
+                        self._get_decorator_name(dec) for dec in node.decorator_list
+                    ],
                     "is_private": node.name.startswith("_"),
                     "is_async": isinstance(node, ast.AsyncFunctionDef),
                     "return_annotation": (
@@ -294,7 +299,15 @@ class APIDocumentationParser:
             processed["paths"][path] = {}
 
             for method, method_data in path_data.items():
-                if method in ["get", "post", "put", "delete", "patch", "options", "head"]:
+                if method in [
+                    "get",
+                    "post",
+                    "put",
+                    "delete",
+                    "patch",
+                    "options",
+                    "head",
+                ]:
                     endpoint = APIEndpoint(
                         path=path,
                         method=method.upper(),
@@ -363,12 +376,16 @@ class MarkdownGenerator:
 
         # Title and table of contents
         markdown.append("# API Documentation\n")
-        markdown.append("Generated on: {}\n".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        markdown.append(
+            "Generated on: {}\n".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        )
 
         # Table of contents
         markdown.append("## Table of Contents\n")
         for module in module_docs:
-            markdown.append(f"- [{module.name}](#{module.name.lower().replace('_', '-')})")
+            markdown.append(
+                f"- [{module.name}](#{module.name.lower().replace('_', '-')})"
+            )
         markdown.append("")
 
         # Module documentation
@@ -405,10 +422,14 @@ class MarkdownGenerator:
                             async_prefix = "async " if method["is_async"] else ""
                             args_str = ", ".join(method["args"])
                             decorators = (
-                                ", ".join(method["decorators"]) if method["decorators"] else ""
+                                ", ".join(method["decorators"])
+                                if method["decorators"]
+                                else ""
                             )
 
-                            markdown.append(f"**`{async_prefix}{method['name']}({args_str})`**")
+                            markdown.append(
+                                f"**`{async_prefix}{method['name']}({args_str})`**"
+                            )
 
                             if decorators:
                                 markdown.append(f"*Decorators: {decorators}*")
@@ -428,9 +449,13 @@ class MarkdownGenerator:
 
                     async_prefix = "async " if func["is_async"] else ""
                     args_str = ", ".join(func["args"])
-                    decorators = ", ".join(func["decorators"]) if func["decorators"] else ""
+                    decorators = (
+                        ", ".join(func["decorators"]) if func["decorators"] else ""
+                    )
 
-                    markdown.append(f"#### `{async_prefix}{func['name']}({args_str})`\n")
+                    markdown.append(
+                        f"#### `{async_prefix}{func['name']}({args_str})`\n"
+                    )
 
                     if decorators:
                         markdown.append(f"*Decorators: {decorators}*\n")
@@ -446,7 +471,9 @@ class MarkdownGenerator:
                 markdown.append("### Constants\n")
 
                 for const in module.constants:
-                    markdown.append(f"- **`{const['name']}`**: {const['value']} _{const['type']}_")
+                    markdown.append(
+                        f"- **`{const['name']}`**: {const['value']} _{const['type']}_"
+                    )
 
                 markdown.append("")
 
@@ -459,7 +486,9 @@ class MarkdownGenerator:
         markdown = []
 
         markdown.append("# API Reference\n")
-        markdown.append("Generated on: {}\n".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        markdown.append(
+            "Generated on: {}\n".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        )
 
         for spec_name, spec_data in api_specs.items():
             info = spec_data.get("info", {})
@@ -498,7 +527,9 @@ class MarkdownGenerator:
                             for tag in tags:
                                 if tag not in endpoints_by_tag:
                                     endpoints_by_tag[tag] = []
-                                endpoints_by_tag[tag].append((path, method, endpoint_data))
+                                endpoints_by_tag[tag].append(
+                                    (path, method, endpoint_data)
+                                )
                         else:
                             untagged_endpoints.append((path, method, endpoint_data))
 
@@ -507,14 +538,18 @@ class MarkdownGenerator:
                     markdown.append(f"#### {tag}\n")
 
                     for path, method, endpoint_data in endpoints:
-                        self._generate_endpoint_docs(markdown, path, method, endpoint_data)
+                        self._generate_endpoint_docs(
+                            markdown, path, method, endpoint_data
+                        )
 
                 # Untagged endpoints
                 if untagged_endpoints:
                     markdown.append("#### Other Endpoints\n")
 
                     for path, method, endpoint_data in untagged_endpoints:
-                        self._generate_endpoint_docs(markdown, path, method, endpoint_data)
+                        self._generate_endpoint_docs(
+                            markdown, path, method, endpoint_data
+                        )
 
             markdown.append("---\n")
 
@@ -591,7 +626,9 @@ class MarkdownGenerator:
                 example_value = example.get("value", {})
 
                 markdown.append(f"*{example_name} ({example_type}):*\n")
-                markdown.append(f"```json\n{json.dumps(example_value, indent=2)}\n```\n")
+                markdown.append(
+                    f"```json\n{json.dumps(example_value, indent=2)}\n```\n"
+                )
 
         markdown.append("")
 
@@ -609,7 +646,9 @@ class HTMLGenerator:
             import markdown
 
             # Convert Markdown to HTML
-            md = markdown.Markdown(extensions=["codehilite", "toc", "tables", "fenced_code"])
+            md = markdown.Markdown(
+                extensions=["codehilite", "toc", "tables", "fenced_code"]
+            )
             html_content = md.convert(content)
 
             # Create full HTML document
@@ -623,7 +662,9 @@ class HTMLGenerator:
             )
 
         except ImportError:
-            self.logger.warning("Markdown library not available, generating simple HTML")
+            self.logger.warning(
+                "Markdown library not available, generating simple HTML"
+            )
             return self._generate_simple_html(content, title)
 
     def _get_html_template(self) -> str:
@@ -715,9 +756,15 @@ class HTMLGenerator:
         """Generate simple HTML without Markdown processing"""
         # Basic Markdown to HTML conversion
         html_content = content.replace("\n", "<br>\n")
-        html_content = re.sub(r"^# (.+)$", r"<h1>\1</h1>", html_content, flags=re.MULTILINE)
-        html_content = re.sub(r"^## (.+)$", r"<h2>\1</h2>", html_content, flags=re.MULTILINE)
-        html_content = re.sub(r"^### (.+)$", r"<h3>\1</h3>", html_content, flags=re.MULTILINE)
+        html_content = re.sub(
+            r"^# (.+)$", r"<h1>\1</h1>", html_content, flags=re.MULTILINE
+        )
+        html_content = re.sub(
+            r"^## (.+)$", r"<h2>\1</h2>", html_content, flags=re.MULTILINE
+        )
+        html_content = re.sub(
+            r"^### (.+)$", r"<h3>\1</h3>", html_content, flags=re.MULTILINE
+        )
         html_content = re.sub(r"`([^`]+)`", r"<code>\1</code>", html_content)
 
         template = self._get_html_template()
@@ -747,7 +794,9 @@ class DocumentationGenerator:
 
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 
@@ -826,7 +875,9 @@ class DocumentationGenerator:
 
         # Analyze modules in parallel
         with ThreadPoolExecutor(max_workers=4) as executor:
-            module_docs = list(executor.map(self.code_analyzer.analyze_module, python_files))
+            module_docs = list(
+                executor.map(self.code_analyzer.analyze_module, python_files)
+            )
 
         # Generate documentation in requested formats
         if module_docs:
@@ -834,7 +885,9 @@ class DocumentationGenerator:
 
             for format_type in self.config.formats:
                 if format_type == "markdown":
-                    output_path = os.path.join(self.config.output_dir, "code_documentation.md")
+                    output_path = os.path.join(
+                        self.config.output_dir, "code_documentation.md"
+                    )
                     with open(output_path, "w", encoding="utf-8") as f:
                         f.write(markdown_content)
                     results["code_md"] = output_path
@@ -843,7 +896,9 @@ class DocumentationGenerator:
                     html_content = self.html_generator.generate_html_docs(
                         markdown_content, "Code Documentation"
                     )
-                    output_path = os.path.join(self.config.output_dir, "code_documentation.html")
+                    output_path = os.path.join(
+                        self.config.output_dir, "code_documentation.html"
+                    )
                     with open(output_path, "w", encoding="utf-8") as f:
                         f.write(html_content)
                     results["code_html"] = output_path
@@ -871,7 +926,9 @@ class DocumentationGenerator:
 
             for format_type in self.config.formats:
                 if format_type == "markdown":
-                    output_path = os.path.join(self.config.output_dir, "api_documentation.md")
+                    output_path = os.path.join(
+                        self.config.output_dir, "api_documentation.md"
+                    )
                     with open(output_path, "w", encoding="utf-8") as f:
                         f.write(markdown_content)
                     results["api_md"] = output_path
@@ -880,7 +937,9 @@ class DocumentationGenerator:
                     html_content = self.html_generator.generate_html_docs(
                         markdown_content, "API Documentation"
                     )
-                    output_path = os.path.join(self.config.output_dir, "api_documentation.html")
+                    output_path = os.path.join(
+                        self.config.output_dir, "api_documentation.html"
+                    )
                     with open(output_path, "w", encoding="utf-8") as f:
                         f.write(html_content)
                     results["api_html"] = output_path
@@ -892,25 +951,35 @@ class DocumentationGenerator:
         index_content = []
 
         index_content.append("# Documentation Index\n")
-        index_content.append(f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        index_content.append(
+            f"Generated on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        )
         index_content.append("## Available Documentation\n")
 
         # Code documentation links
         if "code_md" in results or "code_html" in results:
             index_content.append("### Code Documentation")
             if "code_md" in results:
-                index_content.append("- [Code Documentation (Markdown)](code_documentation.md)")
+                index_content.append(
+                    "- [Code Documentation (Markdown)](code_documentation.md)"
+                )
             if "code_html" in results:
-                index_content.append("- [Code Documentation (HTML)](code_documentation.html)")
+                index_content.append(
+                    "- [Code Documentation (HTML)](code_documentation.html)"
+                )
             index_content.append("")
 
         # API documentation links
         if "api_md" in results or "api_html" in results:
             index_content.append("### API Documentation")
             if "api_md" in results:
-                index_content.append("- [API Documentation (Markdown)](api_documentation.md)")
+                index_content.append(
+                    "- [API Documentation (Markdown)](api_documentation.md)"
+                )
             if "api_html" in results:
-                index_content.append("- [API Documentation (HTML)](api_documentation.html)")
+                index_content.append(
+                    "- [API Documentation (HTML)](api_documentation.html)"
+                )
             index_content.append("")
 
         # Generation statistics
@@ -918,7 +987,9 @@ class DocumentationGenerator:
         index_content.append(f"- Source directories: {len(self.config.source_dirs)}")
         index_content.append(f"- API specifications: {len(self.config.api_spec_paths)}")
         index_content.append(f"- Output formats: {', '.join(self.config.formats)}")
-        index_content.append(f"- Include private members: {self.config.include_private}")
+        index_content.append(
+            f"- Include private members: {self.config.include_private}"
+        )
         index_content.append(f"- Include tests: {self.config.include_tests}")
 
         return "\n".join(index_content)
@@ -928,7 +999,11 @@ async def main():
     """Main function for CLI usage"""
     parser = argparse.ArgumentParser(description="Generate comprehensive documentation")
     parser.add_argument(
-        "--config", "-c", type=str, help="Configuration file path", default="docs_config.yaml"
+        "--config",
+        "-c",
+        type=str,
+        help="Configuration file path",
+        default="docs_config.yaml",
     )
     parser.add_argument(
         "--output", "-o", type=str, help="Output directory", default="docs/generated"
@@ -944,15 +1019,25 @@ async def main():
         "--source", "-s", type=str, action="append", help="Source directory to analyze"
     )
     parser.add_argument(
-        "--api-spec", "-a", type=str, action="append", help="API specification file path"
+        "--api-spec",
+        "-a",
+        type=str,
+        action="append",
+        help="API specification file path",
     )
     parser.add_argument(
-        "--include-private", action="store_true", help="Include private members in documentation"
+        "--include-private",
+        action="store_true",
+        help="Include private members in documentation",
     )
     parser.add_argument(
-        "--include-tests", action="store_true", help="Include test files in documentation"
+        "--include-tests",
+        action="store_true",
+        help="Include test files in documentation",
     )
-    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose logging")
+    parser.add_argument(
+        "--verbose", "-v", action="store_true", help="Enable verbose logging"
+    )
 
     args = parser.parse_args()
 

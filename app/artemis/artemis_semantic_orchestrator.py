@@ -126,7 +126,11 @@ class CodeSemanticEngine:
         return {
             CodePattern.SINGLETON: {
                 "description": "Ensures a class has only one instance",
-                "use_cases": ["database connections", "configuration managers", "loggers"],
+                "use_cases": [
+                    "database connections",
+                    "configuration managers",
+                    "loggers",
+                ],
                 "template": """class Singleton:
     _instance = None
 
@@ -215,7 +219,9 @@ class CodeSemanticEngine:
                                 confidence=0.85,
                                 location=f"class {node.name}",
                                 suggestion="Consider dependency injection for better testability",
-                                example=self.pattern_library[CodePattern.SINGLETON]["template"],
+                                example=self.pattern_library[CodePattern.SINGLETON][
+                                    "template"
+                                ],
                             )
                         )
 
@@ -227,7 +233,9 @@ class CodeSemanticEngine:
                                 confidence=0.8,
                                 location=f"class {node.name}",
                                 suggestion="Good use of factory pattern",
-                                example=self.pattern_library[CodePattern.FACTORY]["template"],
+                                example=self.pattern_library[CodePattern.FACTORY][
+                                    "template"
+                                ],
                             )
                         )
 
@@ -272,7 +280,9 @@ class CodeSemanticEngine:
 
         # Based on AI hints
         if metadata.ai_hints.modification_risk > 0.7:
-            suggestions.append("High-risk code: Ensure comprehensive testing before modifications")
+            suggestions.append(
+                "High-risk code: Ensure comprehensive testing before modifications"
+            )
 
         if metadata.ai_hints.optimization_potential > 0.5:
             suggestions.extend(metadata.ai_hints.refactoring_suggestions)
@@ -447,7 +457,9 @@ class CodeQualityAssurance:
         try:
             tree = ast.parse(code)
             items = sum(
-                1 for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.ClassDef))
+                1
+                for node in ast.walk(tree)
+                if isinstance(node, (ast.FunctionDef, ast.ClassDef))
             )
 
             if items > 0:
@@ -465,7 +477,9 @@ class CodeQualityAssurance:
 
         return score
 
-    def generate_quality_report(self, scores: dict[CodeQualityMetric, float]) -> dict[str, Any]:
+    def generate_quality_report(
+        self, scores: dict[CodeQualityMetric, float]
+    ) -> dict[str, Any]:
         """Generate quality assessment report"""
         overall_score = sum(scores.values()) / len(scores) if scores else 0
 
@@ -580,7 +594,9 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
             domain=self._determine_domain(request),
             task_type=request.strategy.value,
             user_expertise=(
-                context.get("user_expertise", "intermediate") if context else "intermediate"
+                context.get("user_expertise", "intermediate")
+                if context
+                else "intermediate"
             ),
             constraints=request.constraints,
         )
@@ -593,7 +609,9 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
                 path = Path(file_path)
                 if path.exists():
                     content = path.read_text()
-                    metadata = await self.semantic_engine.analyze_code(content, str(path))
+                    metadata = await self.semantic_engine.analyze_code(
+                        content, str(path)
+                    )
                     if metadata:
                         context_metadata.append(metadata)
 
@@ -665,7 +683,9 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         code_structure = self._design_code_structure(request, patterns)
 
         # Generate implementation
-        implementation = await self._generate_implementation(code_structure, request, context)
+        implementation = await self._generate_implementation(
+            code_structure, request, context
+        )
 
         # Generate tests
         tests = await self._generate_test_suite(implementation, request)
@@ -703,12 +723,16 @@ class ArtemisSemanticOrchestrator(BaseOrchestrator):
         # Implementation would refactor based on patterns and best practices
         return await self._generate_new_code(request, context)  # Placeholder
 
-    async def _extend_code(self, request: CodeRequest, context: list[CodeMetadata]) -> CodeArtifact:
+    async def _extend_code(
+        self, request: CodeRequest, context: list[CodeMetadata]
+    ) -> CodeArtifact:
         """Extend existing functionality"""
         # Implementation would extend based on existing patterns
         return await self._generate_new_code(request, context)  # Placeholder
 
-    async def _fix_code(self, request: CodeRequest, context: list[CodeMetadata]) -> CodeArtifact:
+    async def _fix_code(
+        self, request: CodeRequest, context: list[CodeMetadata]
+    ) -> CodeArtifact:
         """Fix bugs in code"""
         # Implementation would analyze and fix bugs
         return await self._generate_new_code(request, context)  # Placeholder
@@ -922,4 +946,6 @@ Generated documentation for functions and classes
             metadata={"quality": artifact.quality_scores},
         )
 
-        await self.embedding_system.generator.generate_embedding(chunk, EmbeddingType.CODE)
+        await self.embedding_system.generator.generate_embedding(
+            chunk, EmbeddingType.CODE
+        )

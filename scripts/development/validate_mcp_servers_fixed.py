@@ -16,7 +16,11 @@ def find_mcp_servers():
             server_file = item / "server.py"
             if server_file.exists():
                 servers.append(
-                    {"name": item.name, "path": str(item), "server_file": str(server_file)}
+                    {
+                        "name": item.name,
+                        "path": str(item),
+                        "server_file": str(server_file),
+                    }
                 )
 
     # Also check for loose server files

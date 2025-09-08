@@ -74,7 +74,9 @@ class UltraFastAgent:
         base_size = 48  # Object overhead
         name_size = len(self.name.encode("utf-8"))
         model_size = len(self.model.encode("utf-8"))
-        tools_size = sum(len(t.encode("utf-8")) for t in self.tools) if self.tools else 0
+        tools_size = (
+            sum(len(t.encode("utf-8")) for t in self.tools) if self.tools else 0
+        )
         return base_size + name_size + model_size + tools_size + 24  # Fields
 
     def has_capability(self, capability: AgentCapability) -> bool:
@@ -104,7 +106,9 @@ class AgnoTeamPool:
         """Pre-allocate agent pool"""
         async with self._lock:
             for i in range(self.pool_size):
-                agent = UltraFastAgent(name=f"pooled_agent_{i}", model="gpt-4o", _capabilities=0)
+                agent = UltraFastAgent(
+                    name=f"pooled_agent_{i}", model="gpt-4o", _capabilities=0
+                )
                 self.available_agents.append(agent)
 
     @asynccontextmanager
@@ -133,7 +137,9 @@ class AgnoTeamPool:
 
         acquisition_time = (time.perf_counter() - start) * 1_000_000
         if acquisition_time > 2:
-            logger.info(f"⚠️ Agent acquisition took {acquisition_time:.2f}μs (target: <2μs)")
+            logger.info(
+                f"⚠️ Agent acquisition took {acquisition_time:.2f}μs (target: <2μs)"
+            )
 
         try:
             yield agent
@@ -171,7 +177,10 @@ class UltraFastAgnoTeam:
         )
 
     async def spawn_agent(
-        self, name: str, model: str = "gpt-4o", capabilities: list[AgentCapability] = None
+        self,
+        name: str,
+        model: str = "gpt-4o",
+        capabilities: list[AgentCapability] = None,
     ) -> UltraFastAgent:
         """
         Spawn new agent in <2μs
@@ -205,11 +214,15 @@ class UltraFastAgnoTeam:
         )
 
         if instantiation_time > 2:
-            logger.info(f"⚠️ Agent {name} instantiation: {instantiation_time:.2f}μs (target: <2μs)")
+            logger.info(
+                f"⚠️ Agent {name} instantiation: {instantiation_time:.2f}μs (target: <2μs)"
+            )
 
         return agent
 
-    async def execute_parallel(self, task: str, agent_names: list[str] = None) -> dict[str, str]:
+    async def execute_parallel(
+        self, task: str, agent_names: list[str] = None
+    ) -> dict[str, str]:
         """
         Execute task across multiple agents in parallel
         Supports 10,000+ concurrent operations
@@ -260,7 +273,9 @@ class AgnoOrchestrator:
             "avg_task_latency_ms": 0.0,
         }
 
-    async def create_team(self, name: str, roles: dict[str, str] = None) -> UltraFastAgnoTeam:
+    async def create_team(
+        self, name: str, roles: dict[str, str] = None
+    ) -> UltraFastAgnoTeam:
         """
         Create new AGNO team with predefined roles
         """
@@ -301,7 +316,8 @@ class AgnoOrchestrator:
         latency = (time.perf_counter() - start) * 1000
         self.global_metrics["total_tasks"] += 1
         self.global_metrics["avg_task_latency_ms"] = (
-            self.global_metrics["avg_task_latency_ms"] * (self.global_metrics["total_tasks"] - 1)
+            self.global_metrics["avg_task_latency_ms"]
+            * (self.global_metrics["total_tasks"] - 1)
             + latency
         ) / self.global_metrics["total_tasks"]
 
@@ -344,7 +360,10 @@ async def benchmark_agent_instantiation(count: int = 10000):
                 team.spawn_agent(
                     f"agent_{i}",
                     model="gpt-4o",
-                    capabilities=[AgentCapability.REASONING, AgentCapability.COLLABORATION],
+                    capabilities=[
+                        AgentCapability.REASONING,
+                        AgentCapability.COLLABORATION,
+                    ],
                 )
             )
         await asyncio.gather(*tasks)
@@ -372,7 +391,9 @@ async def benchmark_agent_instantiation(count: int = 10000):
         )
         success = False
     else:
-        logger.info(f"  ✅ Instantiation target met: {report['avg_instantiation_us']:.2f}μs < 2μs")
+        logger.info(
+            f"  ✅ Instantiation target met: {report['avg_instantiation_us']:.2f}μs < 2μs"
+        )
 
     avg_memory = report["total_memory_kb"] * 1024 / report["total_agents_created"]
     if avg_memory > 3750:

@@ -198,7 +198,9 @@ class UnifiedOrchestratorFacade:
         except Exception as e:
             logger.warning(f"Failed to inject memory context: {e}")
             # Apply degradation strategy
-            strategy = self.optimizer.degradation_manager.get_degradation_strategy("memory")
+            strategy = self.optimizer.degradation_manager.get_degradation_strategy(
+                "memory"
+            )
             if strategy["fallback_mode"] == "skip":
                 return {}
             raise
@@ -354,7 +356,9 @@ class UnifiedOrchestratorFacade:
 
             # Execute
             result = await cb.call(
-                self.improved_swarm.solve_with_improvements, problem=request.task, context=context
+                self.improved_swarm.solve_with_improvements,
+                problem=request.task,
+                context=context,
             )
 
             return result
@@ -448,7 +452,11 @@ class UnifiedOrchestratorFacade:
         else:
             # General task
             plan["steps"].append(
-                {"assistant": "claude", "task": f"Initial analysis of: {task}", "role": "analysis"}
+                {
+                    "assistant": "claude",
+                    "task": f"Initial analysis of: {task}",
+                    "role": "analysis",
+                }
             )
             if mode != "lite":
                 plan["steps"].append(

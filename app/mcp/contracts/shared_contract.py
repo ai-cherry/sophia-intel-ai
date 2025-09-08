@@ -67,7 +67,11 @@ class SharedServiceContract(BaseMCPServerContract):
             description="Vector embeddings generation and semantic operations",
             requirements=["text_input"],
             configuration={
-                "supported_models": ["text-embedding-ada-002", "sentence-transformers", "custom"],
+                "supported_models": [
+                    "text-embedding-ada-002",
+                    "sentence-transformers",
+                    "custom",
+                ],
                 "vector_dimensions": [512, 768, 1024, 1536],
                 "similarity_metrics": ["cosine", "euclidean", "dot_product"],
                 "batch_sizes": [1, 10, 50, 100],
@@ -116,7 +120,13 @@ class SharedServiceContract(BaseMCPServerContract):
             description="Unified database operations across multiple backends",
             requirements=["query"],
             configuration={
-                "supported_databases": ["postgresql", "mysql", "sqlite", "redis", "mongodb"],
+                "supported_databases": [
+                    "postgresql",
+                    "mysql",
+                    "sqlite",
+                    "redis",
+                    "mongodb",
+                ],
                 "connection_pooling": True,
                 "transaction_support": True,
                 "max_connections": 100,
@@ -182,7 +192,9 @@ class SharedServiceContract(BaseMCPServerContract):
         pass
 
     @abstractmethod
-    async def perform_semantic_search(self, request: SearchRequest) -> list[dict[str, Any]]:
+    async def perform_semantic_search(
+        self, request: SearchRequest
+    ) -> list[dict[str, Any]]:
         """Perform semantic search across domains"""
         pass
 
@@ -224,7 +236,9 @@ class SharedServiceContract(BaseMCPServerContract):
                 magnitude_b = math.sqrt(sum(b * b for b in test_vector_b))
                 cosine_sim = dot_product / (magnitude_a * magnitude_b)
 
-                health_details["vector_operations"] = f"operational (cosine_sim: {cosine_sim:.3f})"
+                health_details["vector_operations"] = (
+                    f"operational (cosine_sim: {cosine_sim:.3f})"
+                )
                 capabilities_status["embeddings"] = CapabilityStatus.AVAILABLE
 
             except Exception as e:
@@ -256,25 +270,36 @@ class SharedServiceContract(BaseMCPServerContract):
 
             except Exception as e:
                 health_details["database_connectivity"] = f"error: {str(e)}"
-                capabilities_status["database_operations"] = CapabilityStatus.UNAVAILABLE
+                capabilities_status["database_operations"] = (
+                    CapabilityStatus.UNAVAILABLE
+                )
 
             # Check cross-domain communication
             try:
                 # Test message routing capabilities
                 test_domains = ["artemis", "sophia", "shared"]
-                health_details["domain_routing"] = f"operational (domains: {len(test_domains)})"
-                capabilities_status["cross_domain_communication"] = CapabilityStatus.AVAILABLE
+                health_details["domain_routing"] = (
+                    f"operational (domains: {len(test_domains)})"
+                )
+                capabilities_status["cross_domain_communication"] = (
+                    CapabilityStatus.AVAILABLE
+                )
 
             except Exception as e:
                 health_details["domain_routing"] = f"error: {str(e)}"
-                capabilities_status["cross_domain_communication"] = CapabilityStatus.DEGRADED
+                capabilities_status["cross_domain_communication"] = (
+                    CapabilityStatus.DEGRADED
+                )
 
             # Check cache management
             try:
                 import json
 
                 # Test cache operations
-                test_cache_data = {"health_check": True, "timestamp": datetime.now().isoformat()}
+                test_cache_data = {
+                    "health_check": True,
+                    "timestamp": datetime.now().isoformat(),
+                }
                 serialized = json.dumps(test_cache_data)
                 json.loads(serialized)
 
@@ -315,7 +340,9 @@ class SharedServiceContract(BaseMCPServerContract):
                 if status == CapabilityStatus.UNAVAILABLE
             )
             degraded_count = sum(
-                1 for status in capabilities_status.values() if status == CapabilityStatus.DEGRADED
+                1
+                for status in capabilities_status.values()
+                if status == CapabilityStatus.DEGRADED
             )
 
             total_capabilities = len(capabilities_status)
@@ -400,7 +427,10 @@ class SharedServiceContract(BaseMCPServerContract):
                 self.active_connections[request.client_id].error_count += 1
 
             return await self.create_error_response(
-                request, f"Internal server error: {str(e)}", "INTERNAL_ERROR", execution_time
+                request,
+                f"Internal server error: {str(e)}",
+                "INTERNAL_ERROR",
+                execution_time,
             )
 
     # Capability-specific handlers (to be implemented by concrete servers)
@@ -420,7 +450,9 @@ class SharedServiceContract(BaseMCPServerContract):
         # Default implementation - to be overridden
         return {"message": "Database operations capability not implemented"}
 
-    async def _handle_cross_domain_communication(self, request: MCPRequest) -> dict[str, Any]:
+    async def _handle_cross_domain_communication(
+        self, request: MCPRequest
+    ) -> dict[str, Any]:
         """Handle cross-domain communication requests"""
         # Default implementation - to be overridden
         return {"message": "Cross-domain communication capability not implemented"}
@@ -479,7 +511,9 @@ class SharedServiceContract(BaseMCPServerContract):
         except Exception as e:
             raise Exception(f"Vector normalization failed: {str(e)}")
 
-    async def batch_process_items(self, items: list[Any], batch_size: int, processor) -> list[Any]:
+    async def batch_process_items(
+        self, items: list[Any], batch_size: int, processor
+    ) -> list[Any]:
         """Process items in batches for efficiency"""
         results = []
 

@@ -31,7 +31,9 @@ class RealIssueIdentifier:
 
         # Count secret exposures by file type
         secret_issues = [
-            issue for issue in audit_data["all_issues"] if issue["category"] == "EXPOSED_SECRETS"
+            issue
+            for issue in audit_data["all_issues"]
+            if issue["category"] == "EXPOSED_SECRETS"
         ]
 
         file_types = defaultdict(int)
@@ -80,7 +82,10 @@ class RealIssueIdentifier:
         secret_files = []
         for root, dirs, files in os.walk(self.repo_path):
             for file in files:
-                if any(keyword in file.lower() for keyword in ["secret", "env", "auth", "key"]):
+                if any(
+                    keyword in file.lower()
+                    for keyword in ["secret", "env", "auth", "key"]
+                ):
                     if file.endswith(".py"):
                         secret_files.append(os.path.join(root, file))
 
@@ -101,7 +106,10 @@ class RealIssueIdentifier:
         deploy_files = []
         for root, dirs, files in os.walk(self.repo_path):
             for file in files:
-                if any(keyword in file.lower() for keyword in ["deploy", "setup", "install"]):
+                if any(
+                    keyword in file.lower()
+                    for keyword in ["deploy", "setup", "install"]
+                ):
                     if file.endswith((".sh", ".py")):
                         deploy_files.append(os.path.join(root, file))
 

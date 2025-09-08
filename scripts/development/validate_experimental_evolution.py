@@ -120,7 +120,9 @@ async def main():
         # 6. Test population initialization
         logger.info("\n🧪 6. Testing Population Initialization")
         success = await experimental_engine.initialize_experimental_population(
-            swarm_type="validation_swarm", base_chromosome=base_chromosome, population_size=3
+            swarm_type="validation_swarm",
+            base_chromosome=base_chromosome,
+            population_size=3,
         )
         assert success
         assert len(experimental_engine.populations["validation_swarm"]) == 3
@@ -207,7 +209,9 @@ async def main():
 
         # Engine status
         engine_status = experimental_engine.get_experimental_status()
-        logger.info(f"   Engine Global Status: {engine_status['global_experimental_status']}")
+        logger.info(
+            f"   Engine Global Status: {engine_status['global_experimental_status']}"
+        )
 
         # Adapter status
         adapter_status = adapter.get_evolution_status()

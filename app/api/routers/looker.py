@@ -24,7 +24,9 @@ def get_client() -> LookerClient:
         return get_looker_client()
     except Exception as e:
         logger.error(f"Failed to get Looker client: {str(e)}")
-        raise HTTPException(status_code=503, detail=f"Looker service unavailable: {str(e)}")
+        raise HTTPException(
+            status_code=503, detail=f"Looker service unavailable: {str(e)}"
+        )
 
 
 @router.get("/health", summary="Check Looker connection health")
@@ -63,7 +65,9 @@ async def get_system_info(client: LookerClient = Depends(get_client)) -> dict[st
 
 @router.get("/dashboards", summary="List Looker dashboards")
 async def get_dashboards(
-    limit: int = Query(50, ge=1, le=500, description="Maximum number of dashboards to return"),
+    limit: int = Query(
+        50, ge=1, le=500, description="Maximum number of dashboards to return"
+    ),
     client: LookerClient = Depends(get_client),
 ) -> dict[str, Any]:
     """
@@ -122,7 +126,9 @@ async def get_dashboard_data(
 
 @router.get("/looks", summary="List Looker looks")
 async def get_looks(
-    limit: int = Query(50, ge=1, le=500, description="Maximum number of looks to return"),
+    limit: int = Query(
+        50, ge=1, le=500, description="Maximum number of looks to return"
+    ),
     client: LookerClient = Depends(get_client),
 ) -> dict[str, Any]:
     """
@@ -162,7 +168,9 @@ async def get_looks(
 @router.get("/looks/{look_id}", summary="Get look data")
 async def get_look_data(
     look_id: str,
-    limit: int = Query(1000, ge=1, le=10000, description="Maximum number of rows to return"),
+    limit: int = Query(
+        1000, ge=1, le=10000, description="Maximum number of rows to return"
+    ),
     client: LookerClient = Depends(get_client),
 ) -> dict[str, Any]:
     """
@@ -193,7 +201,11 @@ async def get_models(client: LookerClient = Depends(get_client)) -> dict[str, An
     try:
         models = client.get_models()
 
-        return {"models": models, "count": len(models), "retrieved_at": datetime.now().isoformat()}
+        return {
+            "models": models,
+            "count": len(models),
+            "retrieved_at": datetime.now().isoformat(),
+        }
     except Exception as e:
         logger.error(f"Failed to get models: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -222,7 +234,9 @@ async def explore_data(
         required_fields = ["model", "explore", "dimensions", "measures"]
         for field in required_fields:
             if field not in request:
-                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+                raise HTTPException(
+                    status_code=400, detail=f"Missing required field: {field}"
+                )
 
         # Extract parameters
         model = request["model"]
@@ -234,7 +248,9 @@ async def explore_data(
 
         # Validate limit
         if not isinstance(limit, int) or limit < 1 or limit > 10000:
-            raise HTTPException(status_code=400, detail="Limit must be between 1 and 10000")
+            raise HTTPException(
+                status_code=400, detail="Limit must be between 1 and 10000"
+            )
 
         return client.explore_data(
             model=model,
@@ -256,9 +272,12 @@ async def explore_data(
 async def search_content(
     q: str = Query(..., description="Search query"),
     types: Optional[str] = Query(
-        None, description="Content types to search (comma-separated: dashboard,look,query)"
+        None,
+        description="Content types to search (comma-separated: dashboard,look,query)",
     ),
-    limit: int = Query(50, ge=1, le=500, description="Maximum number of results to return"),
+    limit: int = Query(
+        50, ge=1, le=500, description="Maximum number of results to return"
+    ),
     client: LookerClient = Depends(get_client),
 ) -> dict[str, Any]:
     """
@@ -288,7 +307,9 @@ async def search_content(
 @router.get("/queries/{query_id}/run", summary="Run Looker query")
 async def run_query(
     query_id: str,
-    limit: int = Query(1000, ge=1, le=10000, description="Maximum number of rows to return"),
+    limit: int = Query(
+        1000, ge=1, le=10000, description="Maximum number of rows to return"
+    ),
     format_type: str = Query("json", description="Result format (json, csv, etc.)"),
     client: LookerClient = Depends(get_client),
 ) -> Union[list[dict[str, Any]], str]:

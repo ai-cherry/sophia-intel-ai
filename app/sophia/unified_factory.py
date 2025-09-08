@@ -464,7 +464,11 @@ class SophiaUnifiedFactory:
                 accumulated across millennia with comprehensive analysis of all strategic
                 variables."""
             },
-            wisdom_traits={"wisdom": "divine", "strategy": "infallible", "justice": "righteous"},
+            wisdom_traits={
+                "wisdom": "divine",
+                "strategy": "infallible",
+                "justice": "righteous",
+            },
         )
 
         # Odin - Visionary Leadership
@@ -492,7 +496,11 @@ class SophiaUnifiedFactory:
                 be sacrificed to achieve greatness and make decisions based on ultimate
                 outcomes."""
             },
-            wisdom_traits={"vision": "all-seeing", "sacrifice": "willing", "knowledge": "infinite"},
+            wisdom_traits={
+                "vision": "all-seeing",
+                "sacrifice": "willing",
+                "knowledge": "infinite",
+            },
         )
 
         # Minerva - Systematic Analysis
@@ -580,7 +588,11 @@ class SophiaUnifiedFactory:
             strategy="debate",
             consensus_threshold=0.88,
             enable_debate=True,
-            okr_focus=["strategic_alignment", "long_term_vision", "wisdom_based_decisions"],
+            okr_focus=[
+                "strategic_alignment",
+                "long_term_vision",
+                "wisdom_based_decisions",
+            ],
         )
 
         # Business Intelligence Swarm
@@ -597,7 +609,11 @@ class SophiaUnifiedFactory:
             team_type=SwarmType.BUSINESS_TEAM,
             agents=bi_agents,
             strategy="sequential",
-            okr_focus=["business_intelligence", "market_insights", "strategic_recommendations"],
+            okr_focus=[
+                "business_intelligence",
+                "market_insights",
+                "strategic_recommendations",
+            ],
         )
 
     # ==============================================================================
@@ -662,7 +678,11 @@ class SophiaUnifiedFactory:
         """Create a business agent from template"""
         if not await self._acquire_task_slot():
             return await self.queue_task(
-                {"type": "create_agent", "template": template_name, "config": custom_config}
+                {
+                    "type": "create_agent",
+                    "template": template_name,
+                    "config": custom_config,
+                }
             )
 
         try:
@@ -737,7 +757,9 @@ class SophiaUnifiedFactory:
             await self._release_task_slot()
 
     async def create_mythology_agent(
-        self, archetype: MythologyArchetype, custom_config: Optional[dict[str, Any]] = None
+        self,
+        archetype: MythologyArchetype,
+        custom_config: Optional[dict[str, Any]] = None,
     ) -> str:
         """Create a mythology-based wisdom agent"""
         return await self.create_business_agent(archetype.value, custom_config)
@@ -748,7 +770,11 @@ class SophiaUnifiedFactory:
         """Create a business team from template"""
         if not await self._acquire_task_slot():
             return await self.queue_task(
-                {"type": "create_team", "template": team_template, "config": custom_config}
+                {
+                    "type": "create_team",
+                    "template": team_template,
+                    "config": custom_config,
+                }
             )
 
         try:
@@ -816,7 +842,11 @@ class SophiaUnifiedFactory:
         """Create an analytical swarm for business intelligence"""
         if not await self._acquire_task_slot():
             return await self.queue_task(
-                {"type": "create_swarm", "swarm_type": swarm_type, "config": swarm_config}
+                {
+                    "type": "create_swarm",
+                    "swarm_type": swarm_type,
+                    "config": swarm_config,
+                }
             )
 
         try:
@@ -841,7 +871,10 @@ class SophiaUnifiedFactory:
 
             elif swarm_type == SwarmType.MARKET_RESEARCH:
                 # Create market research swarm
-                for template in ["market_research_specialist", "competitive_intelligence"]:
+                for template in [
+                    "market_research_specialist",
+                    "competitive_intelligence",
+                ]:
                     agent_id = await self.create_business_agent(template)
                     swarm_instance["agents"].append(agent_id)
 
@@ -945,7 +978,9 @@ class SophiaUnifiedFactory:
                 "success": False,
                 "error": str(e),
                 "executor": agent_or_team_id,
-                "execution_time": (datetime.now(timezone.utc) - start_time).total_seconds(),
+                "execution_time": (
+                    datetime.now(timezone.utc) - start_time
+                ).total_seconds(),
             }
 
         finally:
@@ -958,8 +993,12 @@ class SophiaUnifiedFactory:
         try:
             if financial_data:
                 # Update OKR tracker with new financial data
-                self.okr_tracker.total_revenue = financial_data.get("total_revenue", 0.0)
-                self.okr_tracker.employee_count = financial_data.get("employee_count", 1)
+                self.okr_tracker.total_revenue = financial_data.get(
+                    "total_revenue", 0.0
+                )
+                self.okr_tracker.employee_count = financial_data.get(
+                    "employee_count", 1
+                )
                 self.okr_tracker.revenue_per_employee = (
                     self.okr_tracker.total_revenue / self.okr_tracker.employee_count
                     if self.okr_tracker.employee_count > 0
@@ -995,7 +1034,9 @@ class SophiaUnifiedFactory:
                 },
                 "analysis_summary": {
                     "total_analyses": self.business_metrics["analyses_completed"],
-                    "mythology_consultations": self.business_metrics["mythology_consultations"],
+                    "mythology_consultations": self.business_metrics[
+                        "mythology_consultations"
+                    ],
                     "strategic_plans": self.business_metrics["strategic_plans"],
                 },
                 "last_updated": self.okr_tracker.last_updated,
@@ -1033,12 +1074,16 @@ class SophiaUnifiedFactory:
     async def add_websocket_connection(self, websocket: WebSocket):
         """Add WebSocket connection for real-time updates"""
         self.websocket_connections.add(websocket)
-        logger.info(f"WebSocket connection added. Total: {len(self.websocket_connections)}")
+        logger.info(
+            f"WebSocket connection added. Total: {len(self.websocket_connections)}"
+        )
 
     async def remove_websocket_connection(self, websocket: WebSocket):
         """Remove WebSocket connection"""
         self.websocket_connections.discard(websocket)
-        logger.info(f"WebSocket connection removed. Total: {len(self.websocket_connections)}")
+        logger.info(
+            f"WebSocket connection removed. Total: {len(self.websocket_connections)}"
+        )
 
     # ==============================================================================
     # QUERY AND STATUS METHODS
@@ -1102,7 +1147,8 @@ class SophiaUnifiedFactory:
                 "active_tasks": self._concurrent_tasks,
                 "max_concurrent": self.config.max_concurrent_tasks,
                 "queued_tasks": len(self._task_queue),
-                "capacity_available": self._concurrent_tasks < self.config.max_concurrent_tasks,
+                "capacity_available": self._concurrent_tasks
+                < self.config.max_concurrent_tasks,
             },
             "total_operations": sum(self.business_metrics.values()),
             "domain": self.config.domain.value,
@@ -1149,7 +1195,8 @@ class SophiaUnifiedFactory:
         total_agents = len(self.active_agents)
         total_teams = len(self.active_teams)
         total_tasks = sum(
-            metrics.get("tasks_completed", 0) for metrics in self.performance_metrics.values()
+            metrics.get("tasks_completed", 0)
+            for metrics in self.performance_metrics.values()
         )
 
         avg_response_time = 0.0
@@ -1194,7 +1241,11 @@ class SophiaUnifiedFactory:
         domain_counts = {}
         for agent in self.active_agents.values():
             if agent.domain:
-                domain_key = agent.domain.value if isinstance(agent.domain, Enum) else agent.domain
+                domain_key = (
+                    agent.domain.value
+                    if isinstance(agent.domain, Enum)
+                    else agent.domain
+                )
                 domain_counts[domain_key] = domain_counts.get(domain_key, 0) + 1
         return domain_counts
 
@@ -1225,7 +1276,12 @@ async def create_agent(request: dict[str, Any]):
 
         agent_id = await sophia_unified_factory.create_business_agent(template, config)
 
-        return {"success": True, "agent_id": agent_id, "template": template, "status": "deployed"}
+        return {
+            "success": True,
+            "agent_id": agent_id,
+            "template": template,
+            "status": "deployed",
+        }
     except Exception as e:
         logger.error(f"Agent creation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1243,7 +1299,12 @@ async def create_team(request: dict[str, Any]):
 
         team_id = await sophia_unified_factory.create_business_team(template, config)
 
-        return {"success": True, "team_id": team_id, "template": template, "status": "operational"}
+        return {
+            "success": True,
+            "team_id": team_id,
+            "template": template,
+            "status": "operational",
+        }
     except Exception as e:
         logger.error(f"Team creation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -1260,7 +1321,9 @@ async def execute_task(request: dict[str, Any]):
         if not executor or not task:
             raise HTTPException(status_code=400, detail="Executor and task required")
 
-        result = await sophia_unified_factory.execute_business_task(executor, task, context)
+        result = await sophia_unified_factory.execute_business_task(
+            executor, task, context
+        )
 
         return result
     except Exception as e:

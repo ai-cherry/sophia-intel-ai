@@ -16,7 +16,10 @@ from agno.team import Team
 from portkey_ai import Portkey
 
 from app.core.circuit_breaker import with_circuit_breaker
-from app.swarms.enhanced_memory_integration import EnhancedSwarmMemoryClient, auto_tag_and_store
+from app.swarms.enhanced_memory_integration import (
+    EnhancedSwarmMemoryClient,
+    auto_tag_and_store,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -88,10 +91,26 @@ class SophiaAGNOTeam:
             "model": "gpt-4o-mini",
             "virtual_key": "openai-vk-190a60",
         },
-        "critic": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
-        "judge": {"provider": "openai", "model": "gpt-4o", "virtual_key": "openai-vk-190a60"},
-        "lead": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
-        "runner": {"provider": "openai", "model": "gpt-4o-mini", "virtual_key": "openai-vk-190a60"},
+        "critic": {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "virtual_key": "openai-vk-190a60",
+        },
+        "judge": {
+            "provider": "openai",
+            "model": "gpt-4o",
+            "virtual_key": "openai-vk-190a60",
+        },
+        "lead": {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "virtual_key": "openai-vk-190a60",
+        },
+        "runner": {
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "virtual_key": "openai-vk-190a60",
+        },
         "architect": {
             "provider": "deepseek",
             "model": "deepseek-chat",
@@ -102,7 +121,11 @@ class SophiaAGNOTeam:
             "model": "claude-3-5-sonnet-20241022",
             "virtual_key": "anthropic-vk-b42804",
         },
-        "performance": {"provider": "openai", "model": "gpt-4o", "virtual_key": "openai-vk-190a60"},
+        "performance": {
+            "provider": "openai",
+            "model": "gpt-4o",
+            "virtual_key": "openai-vk-190a60",
+        },
         "testing": {
             "provider": "openai",
             "model": "gpt-4o-mini",
@@ -176,11 +199,16 @@ class SophiaAGNOTeam:
         }
         return strategy_mapping.get(self.config.strategy, RoutingStrategy.BALANCED)
 
-    async def _get_optimal_model_for_role(self, role: str, task_complexity: float = 0.5) -> dict:
+    async def _get_optimal_model_for_role(
+        self, role: str, task_complexity: float = 0.5
+    ) -> dict:
         """Get optimal model config for role using unified routing"""
         try:
             # Import locally to avoid circular dependency
-            from app.api.portkey_unified_router import get_optimal_model_for_role, unified_router
+            from app.api.portkey_unified_router import (
+                get_optimal_model_for_role,
+                unified_router,
+            )
 
             # Check if we're in an event loop context
             try:
@@ -202,12 +230,18 @@ class SophiaAGNOTeam:
                             return model_config
                 else:
                     # No event loop running, fall back to default
-                    logger.debug(f"No event loop available for model optimization for {role}")
-                    return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
+                    logger.debug(
+                        f"No event loop available for model optimization for {role}"
+                    )
+                    return self.APPROVED_MODELS.get(
+                        role, self.APPROVED_MODELS["generator"]
+                    )
 
             except RuntimeError:
                 # No event loop available
-                logger.debug(f"No event loop available for model optimization for {role}")
+                logger.debug(
+                    f"No event loop available for model optimization for {role}"
+                )
                 return self.APPROVED_MODELS.get(role, self.APPROVED_MODELS["generator"])
 
             # Fallback to approved model config
@@ -331,7 +365,9 @@ class SophiaAGNOTeam:
 
             result = {
                 "success": True,
-                "result": response.content if hasattr(response, "content") else str(response),
+                "result": (
+                    response.content if hasattr(response, "content") else str(response)
+                ),
                 "execution_time": asyncio.get_event_loop().time() - start_time,
                 "strategy": self.config.strategy.value,
                 "agents_used": [agent.name for agent in self.agents],
@@ -370,7 +406,9 @@ class SophiaAGNOTeam:
 
         return result
 
-    async def _create_specialized_agent(self, role: str, config: dict[str, Any]) -> Agent:
+    async def _create_specialized_agent(
+        self, role: str, config: dict[str, Any]
+    ) -> Agent:
         """Create specialized agent with base configuration - override in subclasses for personality"""
 
         agent = Agent(
@@ -388,7 +426,9 @@ class SophiaAGNOTeam:
                 "personality_type": "base",
                 "temperature": config.get("temperature", 0.5),
                 "created_at": (
-                    asyncio.get_event_loop().time() if hasattr(asyncio, "get_event_loop") else 0
+                    asyncio.get_event_loop().time()
+                    if hasattr(asyncio, "get_event_loop")
+                    else 0
                 ),
             },
         )

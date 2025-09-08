@@ -67,7 +67,10 @@ class APIValidator:
                         "SUCCESS",
                     )
                     self.passed_tests += 1
-                    self.results["openai"] = {"status": "success", "models": model_count}
+                    self.results["openai"] = {
+                        "status": "success",
+                        "models": model_count,
+                    }
                     return True
                 else:
                     self.log(
@@ -153,7 +156,10 @@ class APIValidator:
         if not api_key:
             self.log("❌ OpenRouter API key not found", "ERROR")
             self.failed_tests += 1
-            self.results["openrouter"] = {"status": "failed", "error": "Missing API key"}
+            self.results["openrouter"] = {
+                "status": "failed",
+                "error": "Missing API key",
+            }
             return False
 
         try:
@@ -172,7 +178,10 @@ class APIValidator:
                         "SUCCESS",
                     )
                     self.passed_tests += 1
-                    self.results["openrouter"] = {"status": "success", "models": model_count}
+                    self.results["openrouter"] = {
+                        "status": "success",
+                        "models": model_count,
+                    }
                     return True
                 else:
                     self.log(
@@ -202,16 +211,22 @@ class APIValidator:
         try:
             async with httpx.AsyncClient() as client:
                 # Test Weaviate readiness endpoint
-                response = await client.get(f"{weaviate_url}/v1/.well-known/ready", timeout=10.0)
+                response = await client.get(
+                    f"{weaviate_url}/v1/.well-known/ready", timeout=10.0
+                )
 
                 if response.status_code == 200:
                     # Get meta information
-                    meta_response = await client.get(f"{weaviate_url}/v1/meta", timeout=5.0)
+                    meta_response = await client.get(
+                        f"{weaviate_url}/v1/meta", timeout=5.0
+                    )
 
                     if meta_response.status_code == 200:
                         meta_data = meta_response.json()
                         version = meta_data.get("version", "unknown")
-                        self.log(f"✅ Weaviate v{version} connected successfully", "SUCCESS")
+                        self.log(
+                            f"✅ Weaviate v{version} connected successfully", "SUCCESS"
+                        )
                         self.passed_tests += 1
                         self.results["weaviate"] = {
                             "status": "success",
@@ -222,7 +237,10 @@ class APIValidator:
                     else:
                         self.log("✅ Weaviate ready but meta unavailable", "SUCCESS")
                         self.passed_tests += 1
-                        self.results["weaviate"] = {"status": "success", "version": "1.32+"}
+                        self.results["weaviate"] = {
+                            "status": "success",
+                            "version": "1.32+",
+                        }
                         return True
                 else:
                     self.log(
@@ -264,7 +282,9 @@ class APIValidator:
             if result:
                 info = client.info()
                 version = info.get("redis_version", "unknown")
-                self.log(f"✅ Redis connected successfully - version {version}", "SUCCESS")
+                self.log(
+                    f"✅ Redis connected successfully - version {version}", "SUCCESS"
+                )
                 self.passed_tests += 1
                 self.results["redis"] = {"status": "success", "version": version}
                 client.close()
@@ -292,11 +312,16 @@ class APIValidator:
         if not portkey_api_key:
             self.log("❌ Portkey API key not found", "ERROR")
             self.failed_tests += 1
-            self.results["portkey"] = {"status": "failed", "error": "Missing Portkey API key"}
+            self.results["portkey"] = {
+                "status": "failed",
+                "error": "Missing Portkey API key",
+            }
             return False
 
         if not openai_api_key:
-            self.log("❌ OpenAI API key not found (required for Portkey proxy)", "ERROR")
+            self.log(
+                "❌ OpenAI API key not found (required for Portkey proxy)", "ERROR"
+            )
             self.failed_tests += 1
             self.results["portkey"] = {
                 "status": "failed",
@@ -320,7 +345,9 @@ class APIValidator:
                     },
                     json={
                         "model": "anthropic/claude-3-haiku",  # Use OpenRouter model
-                        "messages": [{"role": "user", "content": "test portkey virtual keys"}],
+                        "messages": [
+                            {"role": "user", "content": "test portkey virtual keys"}
+                        ],
                         "max_tokens": 10,
                     },
                     timeout=15.0,
@@ -329,7 +356,8 @@ class APIValidator:
                 if response.status_code == 200:
                     response.json()
                     self.log(
-                        "✅ Portkey Gateway connected successfully with virtual keys", "SUCCESS"
+                        "✅ Portkey Gateway connected successfully with virtual keys",
+                        "SUCCESS",
                     )
                     self.passed_tests += 1
                     self.results["portkey"] = {
@@ -380,11 +408,15 @@ class APIValidator:
         self.log(f"✅ Passed: {self.passed_tests}", "SUCCESS")
         self.log(f"❌ Failed: {self.failed_tests}", "ERROR")
 
-        success_rate = (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
+        success_rate = (
+            (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
+        )
         self.log(f"📈 Success Rate: {success_rate:.1f}%")
 
         if self.failed_tests > 0:
-            self.log("❌ DEPLOYMENT NOT READY - Fix failed APIs before proceeding", "ERROR")
+            self.log(
+                "❌ DEPLOYMENT NOT READY - Fix failed APIs before proceeding", "ERROR"
+            )
             return False
         else:
             self.log("✅ ALL APIS VALIDATED - Ready for local deployment!", "SUCCESS")
@@ -399,7 +431,9 @@ class APIValidator:
                 "passed_tests": self.passed_tests,
                 "failed_tests": self.failed_tests,
                 "success_rate": (
-                    (self.passed_tests / self.total_tests * 100) if self.total_tests > 0 else 0
+                    (self.passed_tests / self.total_tests * 100)
+                    if self.total_tests > 0
+                    else 0
                 ),
             },
             "results": self.results,

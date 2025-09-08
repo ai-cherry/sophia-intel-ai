@@ -27,7 +27,9 @@ def setup_error_handling(app: FastAPI):
         )
 
     @app.exception_handler(ServiceUnavailable)
-    async def service_unavailable_exception_handler(request: Request, exc: ServiceUnavailable):
+    async def service_unavailable_exception_handler(
+        request: Request, exc: ServiceUnavailable
+    ):
         return JSONResponse(
             status_code=exc.status_code,
             content={"error": exc.error_code, "message": exc.message},

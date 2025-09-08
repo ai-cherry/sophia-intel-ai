@@ -197,7 +197,9 @@ class MicroSwarmScheduler:
         # Store task
         self.scheduled_tasks[task.task_id] = task
 
-        logger.info(f"Scheduled task '{task.name}' (ID: {task.task_id}) for {task.next_execution}")
+        logger.info(
+            f"Scheduled task '{task.name}' (ID: {task.task_id}) for {task.next_execution}"
+        )
 
         return task.task_id
 
@@ -288,12 +290,19 @@ class MicroSwarmScheduler:
                     continue
 
                 # Check weekdays constraint
-                if task.weekdays_only and now.weekday() >= 5:  # Saturday = 5, Sunday = 6
+                if (
+                    task.weekdays_only and now.weekday() >= 5
+                ):  # Saturday = 5, Sunday = 6
                     continue
 
                 # Check daily cost limit
-                if self.daily_cost_tracker + task.max_cost_usd > self.config.max_daily_cost:
-                    logger.warning(f"Skipping task {task.task_id} due to daily cost limit")
+                if (
+                    self.daily_cost_tracker + task.max_cost_usd
+                    > self.config.max_daily_cost
+                ):
+                    logger.warning(
+                        f"Skipping task {task.task_id} due to daily cost limit"
+                    )
                     continue
 
                 ready_tasks.append(task)
@@ -352,7 +361,9 @@ class MicroSwarmScheduler:
 
             # Update task state
             task.status = (
-                ScheduleStatus.COMPLETED if swarm_result.success else ScheduleStatus.FAILED
+                ScheduleStatus.COMPLETED
+                if swarm_result.success
+                else ScheduleStatus.FAILED
             )
             task.last_result = swarm_result
             task.total_cost += swarm_result.total_cost
@@ -433,7 +444,9 @@ class MicroSwarmScheduler:
 
             return result
 
-    async def _create_swarm_coordinator(self, task: ScheduledTask) -> MicroSwarmCoordinator:
+    async def _create_swarm_coordinator(
+        self, task: ScheduledTask
+    ) -> MicroSwarmCoordinator:
         """Create appropriate swarm coordinator for task"""
 
         swarm_parts = task.swarm_type.split(".")
@@ -498,13 +511,19 @@ class MicroSwarmScheduler:
 
                 # Calculate next execution
                 if task.last_execution:
-                    next_time = task.last_execution + timedelta(minutes=task.interval_minutes)
+                    next_time = task.last_execution + timedelta(
+                        minutes=task.interval_minutes
+                    )
 
                     # Respect minimum gap
-                    min_next_time = datetime.now() + timedelta(minutes=task.min_gap_minutes)
+                    min_next_time = datetime.now() + timedelta(
+                        minutes=task.min_gap_minutes
+                    )
                     task.next_execution = max(next_time, min_next_time)
                 else:
-                    task.next_execution = datetime.now() + timedelta(minutes=task.interval_minutes)
+                    task.next_execution = datetime.now() + timedelta(
+                        minutes=task.interval_minutes
+                    )
 
                 task.status = ScheduleStatus.PENDING
 
@@ -516,15 +535,18 @@ class MicroSwarmScheduler:
             if len(task.execution_history) >= 3:
                 # Analyze success patterns
                 recent_executions = task.execution_history[-5:]
-                success_rate = sum(1 for ex in recent_executions if ex["success"]) / len(
-                    recent_executions
-                )
-                avg_duration = sum(ex["duration_minutes"] for ex in recent_executions) / len(
-                    recent_executions
-                )
+                success_rate = sum(
+                    1 for ex in recent_executions if ex["success"]
+                ) / len(recent_executions)
+                avg_duration = sum(
+                    ex["duration_minutes"] for ex in recent_executions
+                ) / len(recent_executions)
 
                 # Adjust interval based on success rate and performance
-                if task.schedule_type == ScheduleType.RECURRING and task.interval_minutes:
+                if (
+                    task.schedule_type == ScheduleType.RECURRING
+                    and task.interval_minutes
+                ):
                     if success_rate < 0.5:  # Low success rate
                         # Increase interval to reduce failure frequency
                         task.interval_minutes = min(
@@ -533,7 +555,9 @@ class MicroSwarmScheduler:
                         logger.info(
                             f"Increased interval for task {task.task_id} due to low success rate"
                         )
-                    elif success_rate > 0.9 and avg_duration < task.timeout_minutes * 0.5:
+                    elif (
+                        success_rate > 0.9 and avg_duration < task.timeout_minutes * 0.5
+                    ):
                         # High success rate and fast execution - could run more frequently
                         task.interval_minutes = max(
                             task.interval_minutes * 0.8, task.min_gap_minutes
@@ -583,17 +607,22 @@ class MicroSwarmScheduler:
         # Base interval from configuration or history
         if task.execution_history:
             # Analyze historical patterns
-            recent_successes = [ex for ex in task.execution_history[-10:] if ex["success"]]
+            recent_successes = [
+                ex for ex in task.execution_history[-10:] if ex["success"]
+            ]
 
             if recent_successes:
                 # Find optimal time patterns
                 success_hours = [
-                    datetime.fromisoformat(ex["timestamp"]).hour for ex in recent_successes
+                    datetime.fromisoformat(ex["timestamp"]).hour
+                    for ex in recent_successes
                 ]
                 optimal_hour = max(set(success_hours), key=success_hours.count)
 
                 # Schedule for optimal hour tomorrow if too late today
-                target_time = now.replace(hour=optimal_hour, minute=0, second=0, microsecond=0)
+                target_time = now.replace(
+                    hour=optimal_hour, minute=0, second=0, microsecond=0
+                )
                 if target_time <= now:
                     target_time += timedelta(days=1)
 
@@ -603,7 +632,10 @@ class MicroSwarmScheduler:
         next_business_hour = now.replace(
             hour=self.config.business_hours_start, minute=0, second=0, microsecond=0
         )
-        if next_business_hour <= now or next_business_hour.hour >= self.config.business_hours_end:
+        if (
+            next_business_hour <= now
+            or next_business_hour.hour >= self.config.business_hours_end
+        ):
             next_business_hour = next_business_hour.replace(
                 hour=self.config.business_hours_start
             ) + timedelta(days=1)
@@ -641,7 +673,9 @@ class MicroSwarmScheduler:
         """Check if datetime is within business hours"""
         return (
             dt.weekday() < 5  # Monday = 0, Friday = 4
-            and self.config.business_hours_start <= dt.hour < self.config.business_hours_end
+            and self.config.business_hours_start
+            <= dt.hour
+            < self.config.business_hours_end
         )
 
     def _reset_daily_cost_if_needed(self):
@@ -652,7 +686,9 @@ class MicroSwarmScheduler:
             self.last_reset_date = today
             logger.info("Reset daily cost tracker for new day")
 
-    async def _store_execution_result(self, task: ScheduledTask, result: ExecutionResult):
+    async def _store_execution_result(
+        self, task: ScheduledTask, result: ExecutionResult
+    ):
         """Store execution result in memory"""
         try:
             # Create memory entry
@@ -668,7 +704,9 @@ class MicroSwarmScheduler:
             }
 
             if result.swarm_result:
-                memory_content["swarm_output"] = result.swarm_result.final_output[:1000]  # Truncate
+                memory_content["swarm_output"] = result.swarm_result.final_output[
+                    :1000
+                ]  # Truncate
                 memory_content["confidence"] = result.swarm_result.confidence
 
             # Store in structured memory
@@ -692,7 +730,9 @@ class MicroSwarmScheduler:
         """Send notification that task execution started"""
         return
 
-    async def _notify_execution_completed(self, task: ScheduledTask, result: ExecutionResult):
+    async def _notify_execution_completed(
+        self, task: ScheduledTask, result: ExecutionResult
+    ):
         """Send notification that task execution completed"""
         return
 
@@ -710,13 +750,25 @@ class MicroSwarmScheduler:
             "daily_cost_limit": self.config.max_daily_cost,
             "concurrency_limit": self.config.max_concurrent_tasks,
             "pending_tasks": len(
-                [t for t in self.scheduled_tasks.values() if t.status == ScheduleStatus.PENDING]
+                [
+                    t
+                    for t in self.scheduled_tasks.values()
+                    if t.status == ScheduleStatus.PENDING
+                ]
             ),
             "failed_tasks": len(
-                [t for t in self.scheduled_tasks.values() if t.status == ScheduleStatus.FAILED]
+                [
+                    t
+                    for t in self.scheduled_tasks.values()
+                    if t.status == ScheduleStatus.FAILED
+                ]
             ),
             "paused_tasks": len(
-                [t for t in self.scheduled_tasks.values() if t.status == ScheduleStatus.PAUSED]
+                [
+                    t
+                    for t in self.scheduled_tasks.values()
+                    if t.status == ScheduleStatus.PAUSED
+                ]
             ),
         }
 
@@ -730,13 +782,19 @@ class MicroSwarmScheduler:
             "task_id": task.task_id,
             "name": task.name,
             "status": task.status.value,
-            "next_execution": task.next_execution.isoformat() if task.next_execution else None,
-            "last_execution": task.last_execution.isoformat() if task.last_execution else None,
+            "next_execution": (
+                task.next_execution.isoformat() if task.next_execution else None
+            ),
+            "last_execution": (
+                task.last_execution.isoformat() if task.last_execution else None
+            ),
             "execution_count": task.execution_count,
             "failure_count": task.failure_count,
             "total_cost": task.total_cost,
             "last_success": task.last_result.success if task.last_result else None,
-            "last_confidence": task.last_result.confidence if task.last_result else None,
+            "last_confidence": (
+                task.last_result.confidence if task.last_result else None
+            ),
         }
 
 

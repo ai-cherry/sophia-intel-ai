@@ -134,7 +134,11 @@ class AirtableSync:
                 since = await self._get_last_sync_time()
 
             # Sync modified records
-            tables = ["Strategic Knowledge", "Strategic Initiatives", "Executive Decisions"]
+            tables = [
+                "Strategic Knowledge",
+                "Strategic Initiatives",
+                "Executive Decisions",
+            ]
 
             for table_name in tables:
                 table = self.base.table(table_name)
@@ -147,7 +151,9 @@ class AirtableSync:
                     # Check if modified since last sync
                     modified_time = record["fields"].get("Last Modified")
                     if modified_time and since:
-                        record_time = datetime.fromisoformat(modified_time.replace("Z", "+00:00"))
+                        record_time = datetime.fromisoformat(
+                            modified_time.replace("Z", "+00:00")
+                        )
                         if record_time <= since:
                             continue
 
@@ -269,7 +275,9 @@ class AirtableSync:
             metadata={
                 "airtable_id": record["id"],
                 "created_time": record.get("createdTime"),
-                "last_modified": fields.get("Last Modified", fields.get("Last Reviewed")),
+                "last_modified": fields.get(
+                    "Last Modified", fields.get("Last Reviewed")
+                ),
             },
             source="airtable",
             source_id=record["id"],
@@ -298,7 +306,9 @@ class AirtableSync:
             "Last Updated": datetime.utcnow().isoformat(),
         }
 
-    def _get_table_for_classification(self, classification: KnowledgeClassification) -> str:
+    def _get_table_for_classification(
+        self, classification: KnowledgeClassification
+    ) -> str:
         """
         Determine Airtable table based on classification
         """

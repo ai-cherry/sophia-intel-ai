@@ -80,7 +80,9 @@ class SwarmPattern(ABC):
         return None  # Explicit return for proper async/await behavior
 
     @abstractmethod
-    async def execute(self, context: dict[str, Any], agents: list[Any]) -> PatternResult:
+    async def execute(
+        self, context: dict[str, Any], agents: list[Any]
+    ) -> PatternResult:
         """
         Execute the pattern with given context and agents.
 
@@ -107,7 +109,11 @@ class SwarmPattern(ABC):
 
         successful = sum(1 for r in self.execution_history if r.success)
         total = len(self.execution_history)
-        avg_time = sum(r.execution_time for r in self.execution_history) / total if total > 0 else 0
+        avg_time = (
+            sum(r.execution_time for r in self.execution_history) / total
+            if total > 0
+            else 0
+        )
 
         return {
             "total_executions": total,

@@ -42,7 +42,9 @@ class CoordinationPattern(Enum):
     ARTEMIS_LEADS = "artemis_leads"  # Artemis requests business context from Sophia
     COLLABORATIVE = "collaborative"  # Both work together as peers
     SEQUENTIAL = "sequential"  # One after the other
-    PARALLEL_WITH_SYNC = "parallel_with_sync"  # Parallel work with synchronization points
+    PARALLEL_WITH_SYNC = (
+        "parallel_with_sync"  # Parallel work with synchronization points
+    )
 
 
 @dataclass
@@ -149,7 +151,9 @@ class SophiaArtemisCoordinationBridge:
         start_time = datetime.now()
 
         try:
-            logger.info(f"Starting business analysis coordination: {context.session_id}")
+            logger.info(
+                f"Starting business analysis coordination: {context.session_id}"
+            )
 
             # Phase 1: Sophia initial analysis
             sophia_result = await self._invoke_sophia(
@@ -162,7 +166,9 @@ class SophiaArtemisCoordinationBridge:
             needs_technical = self._analyze_technical_needs(sophia_result, query)
 
             if needs_technical:
-                logger.info("Business analysis requires technical insights - delegating to Artemis")
+                logger.info(
+                    "Business analysis requires technical insights - delegating to Artemis"
+                )
 
                 # Delegate technical analysis to Artemis
                 technical_request = DelegationRequest(
@@ -175,7 +181,9 @@ class SophiaArtemisCoordinationBridge:
                 )
 
                 artemis_result = await self._delegate_to_artemis(technical_request)
-                context.add_technical_insight("technical_analysis", artemis_result.result)
+                context.add_technical_insight(
+                    "technical_analysis", artemis_result.result
+                )
 
                 # Phase 3: Sophia synthesis with technical insights
                 final_result = await self._invoke_sophia(
@@ -250,7 +258,8 @@ class SophiaArtemisCoordinationBridge:
         Flow: Artemis leads, requests business context from Sophia as needed
         """
         context = CoordinationContext(
-            original_query=requirements, coordination_pattern=CoordinationPattern.ARTEMIS_LEADS
+            original_query=requirements,
+            coordination_pattern=CoordinationPattern.ARTEMIS_LEADS,
         )
 
         if business_context:
@@ -260,7 +269,9 @@ class SophiaArtemisCoordinationBridge:
         start_time = datetime.now()
 
         try:
-            logger.info(f"Starting technical implementation coordination: {context.session_id}")
+            logger.info(
+                f"Starting technical implementation coordination: {context.session_id}"
+            )
 
             # Phase 1: Artemis technical analysis and planning
             artemis_plan = await self._invoke_artemis(
@@ -280,7 +291,9 @@ class SophiaArtemisCoordinationBridge:
             )
 
             sophia_validation = await self._delegate_to_sophia(business_request)
-            context.add_business_insight("business_validation", sophia_validation.result)
+            context.add_business_insight(
+                "business_validation", sophia_validation.result
+            )
 
             # Phase 3: Artemis implementation with business constraints
             final_implementation = await self._invoke_artemis(
@@ -328,7 +341,8 @@ class SophiaArtemisCoordinationBridge:
         Flow: Parallel execution with synchronization
         """
         context = CoordinationContext(
-            original_query=query, coordination_pattern=CoordinationPattern.PARALLEL_WITH_SYNC
+            original_query=query,
+            coordination_pattern=CoordinationPattern.PARALLEL_WITH_SYNC,
         )
 
         self.active_sessions[context.session_id] = context
@@ -403,7 +417,9 @@ class SophiaArtemisCoordinationBridge:
             if context.session_id in self.active_sessions:
                 del self.active_sessions[context.session_id]
 
-    async def _delegate_to_artemis(self, request: DelegationRequest) -> DelegationResponse:
+    async def _delegate_to_artemis(
+        self, request: DelegationRequest
+    ) -> DelegationResponse:
         """Delegate task to Artemis orchestrator"""
         logger.info(f"Delegating to Artemis: {request.task_type.value}")
 
@@ -437,7 +453,9 @@ class SophiaArtemisCoordinationBridge:
                 execution_time_seconds=execution_time,
             )
 
-    async def _delegate_to_sophia(self, request: DelegationRequest) -> DelegationResponse:
+    async def _delegate_to_sophia(
+        self, request: DelegationRequest
+    ) -> DelegationResponse:
         """Delegate task to Sophia orchestrator"""
         logger.info(f"Delegating to Sophia: {request.task_type.value}")
 
@@ -539,7 +557,11 @@ class SophiaArtemisCoordinationBridge:
             "quality_metrics": {
                 "test_coverage_target": "90%",
                 "performance_requirements": "< 200ms response time",
-                "security_considerations": ["Input validation", "Authentication", "Rate limiting"],
+                "security_considerations": [
+                    "Input validation",
+                    "Authentication",
+                    "Rate limiting",
+                ],
             },
             "resource_requirements": {"developers": 2, "devops": 1, "qa_engineers": 1},
             "context_integration": {
@@ -551,7 +573,9 @@ class SophiaArtemisCoordinationBridge:
         logger.info(f"Artemis analysis ({task_type}) completed")
         return technical_response
 
-    def _analyze_technical_needs(self, sophia_result: dict[str, Any], original_query: str) -> bool:
+    def _analyze_technical_needs(
+        self, sophia_result: dict[str, Any], original_query: str
+    ) -> bool:
         """Analyze if business result needs technical implementation insights"""
 
         # Check for technical keywords or requirements in the analysis
@@ -594,11 +618,15 @@ class SophiaArtemisCoordinationBridge:
         # Extract from business insights
         insights = sophia_result.get("business_insights", [])
         for insight in insights:
-            if any(word in insight.lower() for word in ["technical", "system", "platform"]):
+            if any(
+                word in insight.lower() for word in ["technical", "system", "platform"]
+            ):
                 requirements.append(insight)
 
         if not requirements:
-            requirements.append("Implement technical solution based on business requirements")
+            requirements.append(
+                "Implement technical solution based on business requirements"
+            )
 
         return "; ".join(requirements)
 
@@ -649,7 +677,9 @@ def get_coordination_bridge() -> SophiaArtemisCoordinationBridge:
 # Convenience functions for common coordination patterns
 
 
-async def analyze_with_business_lead(query: str, context: dict[str, Any] = None) -> dict[str, Any]:
+async def analyze_with_business_lead(
+    query: str, context: dict[str, Any] = None
+) -> dict[str, Any]:
     """Sophia-led analysis with potential technical delegation"""
     bridge = get_coordination_bridge()
     return await bridge.coordinate_business_analysis(query, context)
@@ -660,10 +690,14 @@ async def implement_with_business_validation(
 ) -> dict[str, Any]:
     """Artemis-led implementation with business validation"""
     bridge = get_coordination_bridge()
-    return await bridge.coordinate_technical_implementation(requirements, business_context)
+    return await bridge.coordinate_technical_implementation(
+        requirements, business_context
+    )
 
 
-async def hybrid_perspective_analysis(query: str, require_both: bool = True) -> dict[str, Any]:
+async def hybrid_perspective_analysis(
+    query: str, require_both: bool = True
+) -> dict[str, Any]:
     """Combined business and technical analysis"""
     bridge = get_coordination_bridge()
     return await bridge.coordinate_hybrid_analysis(query, require_both)

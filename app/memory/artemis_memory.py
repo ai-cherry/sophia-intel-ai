@@ -96,7 +96,9 @@ class ArtemisMemoryService(BaseMemoryService):
 
                 weaviate_results = weaviate_query.do()
 
-                if self.collection_name in weaviate_results.get("data", {}).get("Get", {}):
+                if self.collection_name in weaviate_results.get("data", {}).get(
+                    "Get", {}
+                ):
                     results = weaviate_results["data"]["Get"][self.collection_name]
             except Exception as e:
                 print(f"Weaviate search error: {e}")
@@ -177,7 +179,9 @@ class ArtemisMemoryService(BaseMemoryService):
 
                 # Index by language for filtering
                 if "language" in document:
-                    self.redis_client.sadd(f"{self.domain}:lang:{document['language']}", doc_id)
+                    self.redis_client.sadd(
+                        f"{self.domain}:lang:{document['language']}", doc_id
+                    )
 
                 # Index by file type
                 if "filepath" in document:
@@ -206,7 +210,9 @@ class ArtemisMemoryService(BaseMemoryService):
                     if "metadata" in weaviate_doc:
                         weaviate_doc["metadata"] = json.dumps(weaviate_doc["metadata"])
 
-                    self.weaviate_client.data_object.create(weaviate_doc, self.collection_name)
+                    self.weaviate_client.data_object.create(
+                        weaviate_doc, self.collection_name
+                    )
                 except Exception as e:
                     print(f"Weaviate indexing error: {e}")
 
@@ -216,7 +222,9 @@ class ArtemisMemoryService(BaseMemoryService):
             print(f"Indexing error: {e}")
             return False
 
-    async def enrich_with_context(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def enrich_with_context(
+        self, results: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """
         Add code-specific context to results
         Includes language info, complexity metrics, and related files
@@ -274,16 +282,24 @@ if __name__ == "__main__":
         metadata = {
             "lines": len(code.splitlines()),
             "characters": len(code),
-            "has_classes": any(pattern in code for pattern in self.code_patterns["classes"]),
-            "has_functions": any(pattern in code for pattern in self.code_patterns["functions"]),
-            "has_tests": any(pattern in code for pattern in self.code_patterns["tests"]),
+            "has_classes": any(
+                pattern in code for pattern in self.code_patterns["classes"]
+            ),
+            "has_functions": any(
+                pattern in code for pattern in self.code_patterns["functions"]
+            ),
+            "has_tests": any(
+                pattern in code for pattern in self.code_patterns["tests"]
+            ),
             "imports": [],
             "functions": [],
             "classes": [],
         }
 
         # Try to parse Python code for detailed metadata
-        if document.get("language") == "python" or ".py" in document.get("filepath", ""):
+        if document.get("language") == "python" or ".py" in document.get(
+            "filepath", ""
+        ):
             try:
                 tree = ast.parse(code)
                 for node in ast.walk(tree):
@@ -413,7 +429,11 @@ if __name__ == "__main__":
 
         if "language" in filters:
             where["operands"].append(
-                {"path": ["language"], "operator": "Equal", "valueString": filters["language"]}
+                {
+                    "path": ["language"],
+                    "operator": "Equal",
+                    "valueString": filters["language"],
+                }
             )
 
         return where if where["operands"] else None
@@ -487,7 +507,9 @@ if __name__ == "__main__":
         # Design patterns
         if "singleton" in code_lower or "@singleton" in code:
             patterns.append("singleton")
-        if "factory" in code_lower and ("create" in code_lower or "build" in code_lower):
+        if "factory" in code_lower and (
+            "create" in code_lower or "build" in code_lower
+        ):
             patterns.append("factory")
         if "observer" in code_lower or "subscribe" in code_lower:
             patterns.append("observer")

@@ -208,7 +208,9 @@ class AdvancedPerformanceOptimizer:
 
         # Limit history size
         if len(self.metrics_history) > self.config["max_history_size"]:
-            self.metrics_history = self.metrics_history[-self.config["max_history_size"] :]
+            self.metrics_history = self.metrics_history[
+                -self.config["max_history_size"] :
+            ]
 
         self.logger.info(f"Collected {len(metrics)} performance metrics")
         return metrics
@@ -333,7 +335,9 @@ class AdvancedPerformanceOptimizer:
 
         return trends
 
-    def _calculate_trend(self, values: list[float], timestamps: list[float]) -> dict[str, Any]:
+    def _calculate_trend(
+        self, values: list[float], timestamps: list[float]
+    ) -> dict[str, Any]:
         """Calculate trend analysis for a metric"""
         try:
             # Linear regression for trend
@@ -463,7 +467,9 @@ class AdvancedPerformanceOptimizer:
         # Sort by impact estimate (highest first)
         recommendations.sort(key=lambda x: x.impact_estimate, reverse=True)
 
-        self.logger.info(f"Generated {len(recommendations)} optimization recommendations")
+        self.logger.info(
+            f"Generated {len(recommendations)} optimization recommendations"
+        )
         return recommendations
 
     def _generate_recommendation_description(
@@ -522,21 +528,28 @@ class AdvancedPerformanceOptimizer:
 
         for rec in recommendations:
             # Only implement low-complexity, high-confidence recommendations
-            if rec.implementation_complexity == "low" and rec.confidence > self.config.get(
-                "confidence_threshold", 0.7
+            if (
+                rec.implementation_complexity == "low"
+                and rec.confidence > self.config.get("confidence_threshold", 0.7)
             ):
 
                 try:
                     success = await self._apply_optimization(rec)
                     if success:
                         implemented.append(rec)
-                        self.logger.info(f"Applied optimization for {rec.component}.{rec.metric}")
+                        self.logger.info(
+                            f"Applied optimization for {rec.component}.{rec.metric}"
+                        )
                     else:
-                        skipped.append({"recommendation": rec, "reason": "implementation_failed"})
+                        skipped.append(
+                            {"recommendation": rec, "reason": "implementation_failed"}
+                        )
                 except Exception as e:
                     skipped.append({"recommendation": rec, "reason": f"error: {e}"})
             else:
-                skipped.append({"recommendation": rec, "reason": "complexity_or_confidence"})
+                skipped.append(
+                    {"recommendation": rec, "reason": "complexity_or_confidence"}
+                )
 
         return {
             "implemented": [asdict(rec) for rec in implemented],
@@ -546,7 +559,9 @@ class AdvancedPerformanceOptimizer:
             ),
         }
 
-    async def _apply_optimization(self, recommendation: OptimizationRecommendation) -> bool:
+    async def _apply_optimization(
+        self, recommendation: OptimizationRecommendation
+    ) -> bool:
         """Apply a specific optimization recommendation"""
         try:
             # This is a simulation - in production, this would apply real optimizations
@@ -627,17 +642,23 @@ if __name__ == "__main__":
                 print(
                     f"      Current: {rec.current_value:.4f} → Recommended: {rec.recommended_value:.4f}"
                 )
-                print(f"      Impact: {rec.impact_estimate:.1%}, Confidence: {rec.confidence:.1%}")
+                print(
+                    f"      Impact: {rec.impact_estimate:.1%}, Confidence: {rec.confidence:.1%}"
+                )
                 print(f"      Complexity: {rec.implementation_complexity}")
                 print(f"      Description: {rec.description}")
                 print()
 
         # Implement automatic optimizations
         print("🔧 Implementing automatic optimizations...")
-        implementation_results = await optimizer.implement_automatic_optimizations(recommendations)
+        implementation_results = await optimizer.implement_automatic_optimizations(
+            recommendations
+        )
         print(f"   - Implemented: {len(implementation_results['implemented'])}")
         print(f"   - Skipped: {len(implementation_results['skipped'])}")
-        print(f"   - Implementation Rate: {implementation_results['implementation_rate']:.1%}")
+        print(
+            f"   - Implementation Rate: {implementation_results['implementation_rate']:.1%}"
+        )
 
         # Save results
         results_file = await optimizer.save_optimization_results(
@@ -650,6 +671,8 @@ if __name__ == "__main__":
         print(f"   - Metrics collected: {len(metrics)}")
         print(f"   - Trends analyzed: {len(trends)}")
         print(f"   - Recommendations generated: {len(recommendations)}")
-        print(f"   - Optimizations implemented: {len(implementation_results['implemented'])}")
+        print(
+            f"   - Optimizations implemented: {len(implementation_results['implemented'])}"
+        )
 
     asyncio.run(main())

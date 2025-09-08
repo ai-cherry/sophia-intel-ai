@@ -98,18 +98,22 @@ class ArchitectureChecker:
                     component_counts["ui_components"] += 1
 
         # Count Docker files
-        component_counts["docker_files"] = len(list(Path(".").glob("Dockerfile*"))) + len(
-            list(Path(".").rglob("docker-compose*.y*ml"))
-        )
+        component_counts["docker_files"] = len(
+            list(Path(".").glob("Dockerfile*"))
+        ) + len(list(Path(".").rglob("docker-compose*.y*ml")))
 
         # Check against limits
         max_components = self.config.get("max_components", {})
         for component_type, count in component_counts.items():
             limit = max_components.get(component_type, float("inf"))
             if count > limit:
-                self.violations.append(f"❌ Too many {component_type}: {count} (limit: {limit})")
+                self.violations.append(
+                    f"❌ Too many {component_type}: {count} (limit: {limit})"
+                )
             elif count > limit * 0.8:  # Warning at 80% of limit
-                self.warnings.append(f"⚠️  Approaching limit for {component_type}: {count}/{limit}")
+                self.warnings.append(
+                    f"⚠️  Approaching limit for {component_type}: {count}/{limit}"
+                )
 
     def check_naming_conventions(self):
         """Check if naming follows conventions"""
@@ -140,7 +144,9 @@ class ArchitectureChecker:
                             )
 
                     elif isinstance(node, ast.FunctionDef):
-                        if not node.name.startswith("_") and not self._is_snake_case(node.name):
+                        if not node.name.startswith("_") and not self._is_snake_case(
+                            node.name
+                        ):
                             self.warnings.append(
                                 f"⚠️  Function '{node.name}' in {py_file} should be snake_case"
                             )
@@ -149,7 +155,10 @@ class ArchitectureChecker:
                         for target in node.targets:
                             if isinstance(target, ast.Name):
                                 # Check if it's a constant (all caps)
-                                if target.id.isupper() and not self._is_upper_snake_case(target.id):
+                                if (
+                                    target.id.isupper()
+                                    and not self._is_upper_snake_case(target.id)
+                                ):
                                     self.warnings.append(
                                         f"⚠️  Constant '{target.id}' in {py_file} should be UPPER_SNAKE_CASE"
                                     )
@@ -231,8 +240,12 @@ class ArchitectureChecker:
                 # Parse and check complexity
                 tree = ast.parse("".join(lines))
 
-                class_count = sum(1 for node in ast.walk(tree) if isinstance(node, ast.ClassDef))
-                func_count = sum(1 for node in ast.walk(tree) if isinstance(node, ast.FunctionDef))
+                class_count = sum(
+                    1 for node in ast.walk(tree) if isinstance(node, ast.ClassDef)
+                )
+                func_count = sum(
+                    1 for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+                )
 
                 max_classes = rules.get("max_classes_per_file", 5)
                 max_functions = rules.get("max_functions_per_file", 20)
@@ -290,7 +303,9 @@ class ArchitectureChecker:
                     if isinstance(imp, ast.ImportFrom):
                         for alias in imp.names:
                             if alias.name == "*":
-                                self.violations.append(f"❌ Wildcard import found in {py_file}")
+                                self.violations.append(
+                                    f"❌ Wildcard import found in {py_file}"
+                                )
 
             except Exception:
                 pass

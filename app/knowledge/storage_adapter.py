@@ -113,7 +113,11 @@ class StorageAdapter:
             entity.classification.value,
             entity.priority.value,
             json.dumps(entity.content),
-            json.dumps(entity.pay_ready_context.dict()) if entity.pay_ready_context else None,
+            (
+                json.dumps(entity.pay_ready_context.dict())
+                if entity.pay_ready_context
+                else None
+            ),
             json.dumps(entity.metadata),
             entity.source,
             entity.source_id,
@@ -154,7 +158,11 @@ class StorageAdapter:
             entity.classification.value,
             entity.priority.value,
             json.dumps(entity.content),
-            json.dumps(entity.pay_ready_context.dict()) if entity.pay_ready_context else None,
+            (
+                json.dumps(entity.pay_ready_context.dict())
+                if entity.pay_ready_context
+                else None
+            ),
             json.dumps(entity.metadata),
             entity.is_active,
             entity.updated_at.isoformat(),
@@ -271,7 +279,9 @@ class StorageAdapter:
 
         return versions
 
-    async def get_version(self, knowledge_id: str, version_number: int) -> KnowledgeVersion | None:
+    async def get_version(
+        self, knowledge_id: str, version_number: int
+    ) -> KnowledgeVersion | None:
         """Get specific version"""
         query = """
             SELECT * FROM knowledge_versions
@@ -343,7 +353,11 @@ class StorageAdapter:
 
     def _row_to_entity(self, row: dict[str, Any]) -> KnowledgeEntity:
         """Convert database row to KnowledgeEntity"""
-        from app.knowledge.models import KnowledgeClassification, KnowledgePriority, PayReadyContext
+        from app.knowledge.models import (
+            KnowledgeClassification,
+            KnowledgePriority,
+            PayReadyContext,
+        )
 
         pay_ready_context = None
         if row.get("pay_ready_context"):
@@ -364,7 +378,9 @@ class StorageAdapter:
             is_active=row["is_active"],
             created_at=datetime.fromisoformat(row["created_at"]),
             updated_at=datetime.fromisoformat(row["updated_at"]),
-            synced_at=datetime.fromisoformat(row["synced_at"]) if row["synced_at"] else None,
+            synced_at=(
+                datetime.fromisoformat(row["synced_at"]) if row["synced_at"] else None
+            ),
         )
 
     def close(self):

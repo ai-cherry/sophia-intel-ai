@@ -67,7 +67,9 @@ class SophiaV7Auditor:
                         with open(file_path) as f:
                             data = json.load(f)
                             rbac_status[f"{file_path}_rules"] = (
-                                len(data) if isinstance(data, list) else len(data.keys())
+                                len(data)
+                                if isinstance(data, list)
+                                else len(data.keys())
                             )
                     except Exception as e:
                         rbac_status[f"{file_path}_error"] = str(e)
@@ -83,8 +85,12 @@ class SophiaV7Auditor:
             "readiness_score": self.calculate_rbac_readiness(rbac_status),
         }
 
-        print(f"  ✅ RBAC files found: {len([k for k, v in rbac_status.items() if v == 'exists'])}")
-        print(f"  📊 RBAC readiness score: {self.audit_results['rbac']['readiness_score']:.1f}/10")
+        print(
+            f"  ✅ RBAC files found: {len([k for k, v in rbac_status.items() if v == 'exists'])}"
+        )
+        print(
+            f"  📊 RBAC readiness score: {self.audit_results['rbac']['readiness_score']:.1f}/10"
+        )
 
     def create_sample_cerbos_policy(self):
         """Create sample Cerbos policy for Sophia domains"""
@@ -131,7 +137,12 @@ class SophiaV7Auditor:
 
         # Test policy evaluation
         sophia_cases = [
-            {"principal": "admin", "resource": "sophia:gong", "action": "read", "expected": True},
+            {
+                "principal": "admin",
+                "resource": "sophia:gong",
+                "action": "read",
+                "expected": True,
+            },
             {
                 "principal": "sales_manager",
                 "resource": "sophia:hubspot",
@@ -159,13 +170,19 @@ class SophiaV7Auditor:
                 {"test": test, "result": result, "passed": result == test["expected"]}
             )
 
-        success_rate = sum(1 for r in policy_results if r["passed"]) / len(policy_results) * 100
+        success_rate = (
+            sum(1 for r in policy_results if r["passed"]) / len(policy_results) * 100
+        )
 
         print(
             f"  🧪 Policy evaluation tests: {len(policy_results)} tests, {success_rate:.0f}% success rate"
         )
 
-        return {"policy": policy, "sophia_results": policy_results, "success_rate": success_rate}
+        return {
+            "policy": policy,
+            "sophia_results": policy_results,
+            "success_rate": success_rate,
+        }
 
     def evaluate_policy_rule(self, sophia_case, rules):
         """Simple policy rule evaluation"""
@@ -260,7 +277,9 @@ class SophiaV7Auditor:
             "current_deps": current_deps,
             "required_deps": required_deps,
             "missing_deps": missing_deps,
-            "readiness_score": (len(required_deps) - len(missing_deps)) / len(required_deps) * 10,
+            "readiness_score": (len(required_deps) - len(missing_deps))
+            / len(required_deps)
+            * 10,
         }
 
         print(f"  📋 Dependency files found: {', '.join(found_files)}")
@@ -347,11 +366,21 @@ class SophiaV7Auditor:
             avg_commits_per_day = daily_commits.mean()
 
             # Migration readiness indicators
-            migration_keywords = ["agno", "langgraph", "agent", "swarm", "memory", "qdrant"]
+            migration_keywords = [
+                "agno",
+                "langgraph",
+                "agent",
+                "swarm",
+                "memory",
+                "qdrant",
+            ]
             migration_commits = sum(
                 1
                 for _, commit in df.iterrows()
-                if any(keyword in commit["message"].lower() for keyword in migration_keywords)
+                if any(
+                    keyword in commit["message"].lower()
+                    for keyword in migration_keywords
+                )
             )
             migration_readiness = (migration_commits / len(df)) * 10
 
@@ -366,7 +395,9 @@ class SophiaV7Auditor:
             }
 
             print(f"  📊 Analyzed {len(df)} commits")
-            print(f"  👥 Top author: {author_counts.index[0]} ({author_counts.iloc[0]} commits)")
+            print(
+                f"  👥 Top author: {author_counts.index[0]} ({author_counts.iloc[0]} commits)"
+            )
             print(
                 f"  🤖 Migration-related commits: {migration_commits} ({migration_commits/len(df)*100:.1f}%)"
             )
@@ -406,9 +437,13 @@ class SophiaV7Auditor:
 
         # Architecture readiness score
         existing_dirs = sum(1 for status in dir_status.values() if status["exists"])
-        total_python_files = sum(status["python_files"] for status in dir_status.values())
+        total_python_files = sum(
+            status["python_files"] for status in dir_status.values()
+        )
 
-        arch_readiness = (existing_dirs / len(key_dirs)) * 5 + min(total_python_files / 50, 5)
+        arch_readiness = (existing_dirs / len(key_dirs)) * 5 + min(
+            total_python_files / 50, 5
+        )
 
         self.audit_results["architecture"] = {
             "directory_status": dir_status,
@@ -459,14 +494,22 @@ class SophiaV7Auditor:
 
         # Calculate Agno readiness
         async_score = min(len(async_files) / 10, 3)  # Up to 3 points for async
-        agent_score = min(agent_patterns["class Agent"] / 5, 2)  # Up to 2 points for agents
-        team_score = min(agent_patterns["class Team"] / 3, 2)  # Up to 2 points for teams
+        agent_score = min(
+            agent_patterns["class Agent"] / 5, 2
+        )  # Up to 2 points for agents
+        team_score = min(
+            agent_patterns["class Team"] / 3, 2
+        )  # Up to 2 points for teams
         langgraph_score = min(
             agent_patterns["from langgraph"] / 2, 2
         )  # Up to 2 points for langgraph
-        agno_score = 1 if agent_patterns["from agno"] > 0 else 0  # 1 point if agno already used
+        agno_score = (
+            1 if agent_patterns["from agno"] > 0 else 0
+        )  # 1 point if agno already used
 
-        total_agno_readiness = async_score + agent_score + team_score + langgraph_score + agno_score
+        total_agno_readiness = (
+            async_score + agent_score + team_score + langgraph_score + agno_score
+        )
 
         self.audit_results["agno_readiness"] = {
             "async_files": len(async_files),
@@ -557,7 +600,9 @@ class SophiaV7Auditor:
             )
 
         # Dependency recommendations
-        missing_deps = self.audit_results.get("dependencies", {}).get("missing_deps", [])
+        missing_deps = self.audit_results.get("dependencies", {}).get(
+            "missing_deps", []
+        )
         if missing_deps:
             recommendations.append(
                 {
@@ -569,7 +614,9 @@ class SophiaV7Auditor:
             )
 
         # Architecture recommendations
-        arch_score = self.audit_results.get("architecture", {}).get("readiness_score", 0)
+        arch_score = self.audit_results.get("architecture", {}).get(
+            "readiness_score", 0
+        )
         if arch_score < 6:
             recommendations.append(
                 {
@@ -581,7 +628,9 @@ class SophiaV7Auditor:
             )
 
         # Agno recommendations
-        agno_score = self.audit_results.get("agno_readiness", {}).get("total_readiness", 0)
+        agno_score = self.audit_results.get("agno_readiness", {}).get(
+            "total_readiness", 0
+        )
         if agno_score < 5:
             recommendations.append(
                 {

@@ -21,9 +21,17 @@ class AlertManagerLoadTest:
         self.base_url = f"{alertmanager_url}/api/{api_version}"
         self.alerts_url = f"{self.base_url}/alerts"
         self.headers = {"Content-Type": "application/json"}
-        self.metrics = {"sent": 0, "successful": 0, "failed": 0, "latencies": [], "errors": []}
+        self.metrics = {
+            "sent": 0,
+            "successful": 0,
+            "failed": 0,
+            "latencies": [],
+            "errors": [],
+        }
 
-    async def send_alert(self, session: aiohttp.ClientSession, alert_data: List[Dict]) -> Dict:
+    async def send_alert(
+        self, session: aiohttp.ClientSession, alert_data: List[Dict]
+    ) -> Dict:
         """Send alert batch to AlertManager"""
         start_time = time.time()
         try:
@@ -49,7 +57,11 @@ class AlertManagerLoadTest:
                             "timestamp": datetime.utcnow().isoformat(),
                         }
                     )
-                    return {"status": "failed", "code": response.status, "latency": latency}
+                    return {
+                        "status": "failed",
+                        "code": response.status,
+                        "latency": latency,
+                    }
         except Exception as e:
             latency = time.time() - start_time
             self.metrics["failed"] += len(alert_data)
@@ -62,8 +74,20 @@ class AlertManagerLoadTest:
         """Generate test alert with realistic data"""
         domains = ["artemis", "sophia", "infrastructure"]
         severities = ["CRITICAL", "WARNING", "INFO"]
-        namespaces = ["artemis-system", "sophia-system", "monitoring", "default", "kube-system"]
-        services = ["api-gateway", "model-serving", "inference-pipeline", "data-processor", "cache"]
+        namespaces = [
+            "artemis-system",
+            "sophia-system",
+            "monitoring",
+            "default",
+            "kube-system",
+        ]
+        services = [
+            "api-gateway",
+            "model-serving",
+            "inference-pipeline",
+            "data-processor",
+            "cache",
+        ]
 
         alert_type = index % 10
         domain = domains[index % 3]
@@ -108,7 +132,9 @@ class AlertManagerLoadTest:
         self, alerts_per_second: int, duration_seconds: int, batch_size: int = 10
     ):
         """Generate specified load on AlertManager"""
-        print(f"Starting load test: {alerts_per_second} alerts/sec for {duration_seconds} seconds")
+        print(
+            f"Starting load test: {alerts_per_second} alerts/sec for {duration_seconds} seconds"
+        )
         print(f"Total alerts to send: {alerts_per_second * duration_seconds}")
         print(f"Batch size: {batch_size}")
         print("-" * 60)
@@ -217,12 +243,20 @@ async def main():
     parser.add_argument(
         "--url", default="http://alertmanager.monitoring:9093", help="AlertManager URL"
     )
-    parser.add_argument("--rate", type=int, default=100, help="Alerts per second (default: 100)")
     parser.add_argument(
-        "--duration", type=int, default=60, help="Test duration in seconds (default: 60)"
+        "--rate", type=int, default=100, help="Alerts per second (default: 100)"
     )
     parser.add_argument(
-        "--batch-size", type=int, default=10, help="Batch size for sending alerts (default: 10)"
+        "--duration",
+        type=int,
+        default=60,
+        help="Test duration in seconds (default: 60)",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=10,
+        help="Batch size for sending alerts (default: 10)",
     )
     parser.add_argument(
         "--scenario",
@@ -245,7 +279,9 @@ async def main():
         scenario_config = scenarios[args.scenario]
         rate = scenario_config["rate"]
         duration = scenario_config["duration"]
-        print(f"Running {args.scenario} scenario: {rate} alerts/sec for {duration} seconds")
+        print(
+            f"Running {args.scenario} scenario: {rate} alerts/sec for {duration} seconds"
+        )
     else:
         rate = args.rate
         duration = args.duration

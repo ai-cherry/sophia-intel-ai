@@ -127,7 +127,16 @@ class CodeAnalyzer:
         complexity = 1
 
         # Count decision points
-        decision_keywords = ["if", "elif", "else", "for", "while", "try", "except", "with"]
+        decision_keywords = [
+            "if",
+            "elif",
+            "else",
+            "for",
+            "while",
+            "try",
+            "except",
+            "with",
+        ]
         for keyword in decision_keywords:
             complexity += content.count(f" {keyword} ")
             complexity += content.count(f"\n{keyword} ")
@@ -154,7 +163,9 @@ class CodeAnalyzer:
 
         return list(set(dependencies))
 
-    def find_duplicate_code(self, file1_path: str, file2_path: str) -> List[DuplicateCode]:
+    def find_duplicate_code(
+        self, file1_path: str, file2_path: str
+    ) -> List[DuplicateCode]:
         """Find duplicate code between two files"""
         try:
             with open(file1_path, encoding="utf-8") as f:
@@ -166,7 +177,9 @@ class CodeAnalyzer:
 
             # Find duplicate functions
             duplicates.extend(
-                self._find_duplicate_functions(file1_path, file2_path, content1, content2)
+                self._find_duplicate_functions(
+                    file1_path, file2_path, content1, content2
+                )
             )
 
             # Find duplicate class methods
@@ -182,7 +195,9 @@ class CodeAnalyzer:
             return duplicates
 
         except Exception as e:
-            print(f"Error finding duplicates between {file1_path} and {file2_path}: {e}")
+            print(
+                f"Error finding duplicates between {file1_path} and {file2_path}: {e}"
+            )
             return []
 
     def _find_duplicate_functions(
@@ -223,7 +238,9 @@ class CodeAnalyzer:
 
         for (class1, method1), body1 in methods1.items():
             for (class2, method2), body2 in methods2.items():
-                if method1 == method2 and class1 != class2:  # Same method name, different classes
+                if (
+                    method1 == method2 and class1 != class2
+                ):  # Same method name, different classes
                     similarity = self._calculate_similarity(body1, body2)
 
                     if similarity > self.similarity_threshold:
@@ -254,7 +271,9 @@ class CodeAnalyzer:
         for i in range(len(lines1) - self.min_duplicate_lines):
             block1 = lines1[i : i + self.min_duplicate_lines]
             block1_clean = [
-                line.strip() for line in block1 if line.strip() and not line.strip().startswith("#")
+                line.strip()
+                for line in block1
+                if line.strip() and not line.strip().startswith("#")
             ]
 
             if len(block1_clean) < self.min_duplicate_lines:
@@ -300,7 +319,11 @@ class CodeAnalyzer:
                 if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
                     # Get function source
                     start_line = node.lineno
-                    end_line = node.end_lineno if hasattr(node, "end_lineno") else start_line + 10
+                    end_line = (
+                        node.end_lineno
+                        if hasattr(node, "end_lineno")
+                        else start_line + 10
+                    )
 
                     lines = content.split("\n")
                     func_body = "\n".join(lines[start_line - 1 : end_line])
@@ -323,11 +346,15 @@ class CodeAnalyzer:
                     class_name = node.name
 
                     for item in node.body:
-                        if isinstance(item, ast.FunctionDef) and not item.name.startswith("_"):
+                        if isinstance(
+                            item, ast.FunctionDef
+                        ) and not item.name.startswith("_"):
                             method_name = item.name
                             start_line = item.lineno
                             end_line = (
-                                item.end_lineno if hasattr(item, "end_lineno") else start_line + 10
+                                item.end_lineno
+                                if hasattr(item, "end_lineno")
+                                else start_line + 10
                             )
 
                             lines = content.split("\n")
@@ -429,7 +456,9 @@ class ImportUpdater:
                 pattern = rf"\b{old_class}\("
                 if re.search(pattern, content):
                     content = re.sub(pattern, f"{new_class}(", content)
-                    updates.append(f"Updated class instantiation: {old_class}() -> {new_class}()")
+                    updates.append(
+                        f"Updated class instantiation: {old_class}() -> {new_class}()"
+                    )
 
                 # Update type hints and inheritance
                 pattern = rf":\s*{old_class}\b"
@@ -497,7 +526,9 @@ class MigrationOrchestrator:
 
         # Generate consolidation recommendations
         print("💡 Generating recommendations...")
-        recommendations = self._generate_recommendations(orchestrator_info, duplicate_code)
+        recommendations = self._generate_recommendations(
+            orchestrator_info, duplicate_code
+        )
 
         # Find import updates needed
         print("📦 Analyzing import dependencies...")
@@ -515,7 +546,9 @@ class MigrationOrchestrator:
         risk_assessment = self._assess_risks(orchestrator_info, duplicate_code)
 
         # Migration steps
-        migration_steps = self._generate_migration_steps(orchestrator_info, duplicate_code)
+        migration_steps = self._generate_migration_steps(
+            orchestrator_info, duplicate_code
+        )
 
         report = MigrationReport(
             total_files_analyzed=len(orchestrator_files),
@@ -561,7 +594,9 @@ class MigrationOrchestrator:
         return duplicates
 
     def _generate_recommendations(
-        self, orchestrator_info: List[OrchrestratorInfo], duplicates: List[DuplicateCode]
+        self,
+        orchestrator_info: List[OrchrestratorInfo],
+        duplicates: List[DuplicateCode],
     ) -> List[str]:
         """Generate consolidation recommendations"""
         recommendations = []
@@ -581,7 +616,9 @@ class MigrationOrchestrator:
             )
 
         # Analyze complexity
-        high_complexity_files = [info for info in orchestrator_info if info.complexity_score > 15]
+        high_complexity_files = [
+            info for info in orchestrator_info if info.complexity_score > 15
+        ]
         if high_complexity_files:
             recommendations.append(
                 f"⚡ {len(high_complexity_files)} files have high complexity - candidate for refactoring"
@@ -622,7 +659,9 @@ class MigrationOrchestrator:
         return total_reduction
 
     def _assess_risks(
-        self, orchestrator_info: List[OrchrestratorInfo], duplicates: List[DuplicateCode]
+        self,
+        orchestrator_info: List[OrchrestratorInfo],
+        duplicates: List[DuplicateCode],
     ) -> Dict[str, str]:
         """Assess migration risks"""
         risks = {}
@@ -642,7 +681,9 @@ class MigrationOrchestrator:
             unique_deps.update(info.dependencies)
 
         if len(unique_deps) > 15:
-            risks["dependencies"] = "Medium - Many dependencies may cause integration issues"
+            risks["dependencies"] = (
+                "Medium - Many dependencies may cause integration issues"
+            )
         else:
             risks["dependencies"] = "Low - Reasonable number of dependencies"
 
@@ -662,7 +703,9 @@ class MigrationOrchestrator:
         return risks
 
     def _generate_migration_steps(
-        self, orchestrator_info: List[OrchrestratorInfo], duplicates: List[DuplicateCode]
+        self,
+        orchestrator_info: List[OrchrestratorInfo],
+        duplicates: List[DuplicateCode],
     ) -> List[str]:
         """Generate migration steps"""
         steps = [
@@ -773,7 +816,9 @@ class MigrationOrchestrator:
 
         return test_results
 
-    def generate_report(self, report: MigrationReport, output_file: Optional[str] = None) -> str:
+    def generate_report(
+        self, report: MigrationReport, output_file: Optional[str] = None
+    ) -> str:
         """Generate detailed migration report"""
         if not output_file:
             output_file = str(self.project_root / "orchestrator_migration_report.md")
@@ -820,7 +865,9 @@ This report analyzes the current orchestrator architecture and provides recommen
 
         # Show top 10 duplicates by similarity
         top_duplicates = sorted(
-            report.duplicate_code_instances, key=lambda x: x.similarity_score, reverse=True
+            report.duplicate_code_instances,
+            key=lambda x: x.similarity_score,
+            reverse=True,
         )[:10]
 
         for i, dup in enumerate(top_duplicates, 1):
@@ -865,7 +912,9 @@ This report analyzes the current orchestrator architecture and provides recommen
 The following files need import updates to use the new unified orchestrators:
 
 """
-        for file_path, updates in list(report.import_updates.items())[:10]:  # Show first 10
+        for file_path, updates in list(report.import_updates.items())[
+            :10
+        ]:  # Show first 10
             file_name = Path(file_path).name
             report_content += f"### {file_name}\n"
             for update in updates[:3]:  # Show first 3 updates per file
@@ -873,7 +922,9 @@ The following files need import updates to use the new unified orchestrators:
             report_content += "\n"
 
         if len(report.import_updates) > 10:
-            report_content += f"... and {len(report.import_updates) - 10} more files\n\n"
+            report_content += (
+                f"... and {len(report.import_updates) - 10} more files\n\n"
+            )
 
         report_content += f"""
 ## Benefits of Unified Architecture

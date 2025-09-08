@@ -133,7 +133,9 @@ class PromptBranch:
         # Handle datetime conversion
         for field in ["created_at", "merged_at"]:
             if field in data and isinstance(data[field], str):
-                data[field] = datetime.fromisoformat(data[field]) if data[field] else None
+                data[field] = (
+                    datetime.fromisoformat(data[field]) if data[field] else None
+                )
         return cls(**data)
 
 
@@ -220,14 +222,18 @@ class PromptLibrary:
                 with open(prompts_file) as f:
                     data = json.load(f)
                     for prompt_id, versions in data.items():
-                        self.prompts[prompt_id] = [PromptVersion.from_dict(v) for v in versions]
+                        self.prompts[prompt_id] = [
+                            PromptVersion.from_dict(v) for v in versions
+                        ]
 
             branches_file = self.storage_path / "branches.json"
             if branches_file.exists():
                 with open(branches_file) as f:
                     data = json.load(f)
                     for prompt_id, branches in data.items():
-                        self.branches[prompt_id] = [PromptBranch.from_dict(b) for b in branches]
+                        self.branches[prompt_id] = [
+                            PromptBranch.from_dict(b) for b in branches
+                        ]
 
             ab_tests_file = self.storage_path / "ab_tests.json"
             if ab_tests_file.exists():
@@ -278,7 +284,9 @@ class PromptLibrary:
 
         version_id = self._generate_version_id(content, metadata)
         version_str = (
-            "1.0.0" if prompt_id not in self.prompts else self._get_next_version(prompt_id, branch)
+            "1.0.0"
+            if prompt_id not in self.prompts
+            else self._get_next_version(prompt_id, branch)
         )
 
         # Get parent version if this isn't the first version
@@ -321,7 +329,9 @@ class PromptLibrary:
         patch = int(version_parts[2]) + 1
         return f"{version_parts[0]}.{version_parts[1]}.{patch}"
 
-    def _get_latest_version(self, prompt_id: str, branch: str = "main") -> Optional[PromptVersion]:
+    def _get_latest_version(
+        self, prompt_id: str, branch: str = "main"
+    ) -> Optional[PromptVersion]:
         """Get the latest version of a prompt on a specific branch"""
         if prompt_id not in self.prompts:
             return None
@@ -376,7 +386,9 @@ class PromptLibrary:
         # Get the head version of the source branch
         source_version = self._get_latest_version(prompt_id, from_branch)
         if not source_version:
-            raise ValueError(f"Branch {from_branch} does not exist for prompt {prompt_id}")
+            raise ValueError(
+                f"Branch {from_branch} does not exist for prompt {prompt_id}"
+            )
 
         # Check if branch already exists
         if prompt_id in self.branches:
@@ -424,14 +436,17 @@ class PromptLibrary:
         if strategy == MergeStrategy.FAST_FORWARD:
             # Create new version on target branch with content from source branch
             merge_version = PromptVersion(
-                id=self._generate_version_id(from_version.content, from_version.metadata),
+                id=self._generate_version_id(
+                    from_version.content, from_version.metadata
+                ),
                 prompt_id=prompt_id,
                 branch=to_branch,
                 version=self._get_next_version(prompt_id, to_branch),
                 content=from_version.content,
                 metadata=deepcopy(from_version.metadata),
                 parent_version=to_version.id if to_version else None,
-                commit_message=commit_message or f"Merge {from_branch} into {to_branch}",
+                commit_message=commit_message
+                or f"Merge {from_branch} into {to_branch}",
                 status=PromptStatus.ACTIVE,
             )
 
@@ -446,10 +461,14 @@ class PromptLibrary:
                     break
 
         self._save_to_storage()
-        logger.info(f"Merged branch {from_branch} into {to_branch} for prompt {prompt_id}")
+        logger.info(
+            f"Merged branch {from_branch} into {to_branch} for prompt {prompt_id}"
+        )
         return merge_version
 
-    def diff_versions(self, prompt_id: str, from_version: str, to_version: str) -> PromptDiff:
+    def diff_versions(
+        self, prompt_id: str, from_version: str, to_version: str
+    ) -> PromptDiff:
         """Generate diff between two versions"""
 
         if prompt_id not in self.prompts:
@@ -487,7 +506,10 @@ class PromptLibrary:
 
         for key in set(from_meta.keys()) | set(to_meta.keys()):
             if from_meta.get(key) != to_meta.get(key):
-                metadata_diff[key] = {"from": from_meta.get(key), "to": to_meta.get(key)}
+                metadata_diff[key] = {
+                    "from": from_meta.get(key),
+                    "to": to_meta.get(key),
+                }
 
         # Generate change summary
         if similarity > 0.9:
@@ -552,9 +574,7 @@ class PromptLibrary:
 
                 # Text search
                 if query:
-                    searchable_text = (
-                        f"{version.content} {version.metadata.domain} {version.metadata.agent_name}"
-                    )
+                    searchable_text = f"{version.content} {version.metadata.domain} {version.metadata.agent_name}"
                     if query.lower() not in searchable_text.lower():
                         continue
 
@@ -622,7 +642,9 @@ class PromptLibrary:
         # Calculate results for each version (simplified implementation)
         for version_id in [config.control_version] + config.test_versions:
             version_results = [
-                r for r in self.ab_results.get(test_id, []) if r["version_id"] == version_id
+                r
+                for r in self.ab_results.get(test_id, [])
+                if r["version_id"] == version_id
             ]
 
             if version_results:
@@ -631,7 +653,10 @@ class PromptLibrary:
                 success_rate = success_count / sample_size if sample_size > 0 else 0.0
 
                 # Simplified confidence interval calculation
-                confidence_interval = (max(0, success_rate - 0.1), min(1, success_rate + 0.1))
+                confidence_interval = (
+                    max(0, success_rate - 0.1),
+                    min(1, success_rate + 0.1),
+                )
 
                 results[version_id] = ABTestResult(
                     test_id=test_id,
@@ -660,7 +685,10 @@ class PromptLibrary:
         raise ValueError(f"Version {version_id} not found")
 
     def get_performance_leaderboard(
-        self, domain: Optional[str] = None, metric: str = "success_rate", limit: int = 10
+        self,
+        domain: Optional[str] = None,
+        metric: str = "success_rate",
+        limit: int = 10,
     ) -> list[tuple[PromptVersion, float]]:
         """Get top performing prompts by metric"""
 
@@ -669,7 +697,10 @@ class PromptLibrary:
             for version in versions:
                 if domain and version.metadata.domain != domain:
                     continue
-                if version.performance_metrics and metric in version.performance_metrics:
+                if (
+                    version.performance_metrics
+                    and metric in version.performance_metrics
+                ):
                     candidates.append((version, version.performance_metrics[metric]))
 
         candidates.sort(key=lambda x: x[1], reverse=True)
@@ -689,9 +720,13 @@ class PromptLibrary:
 
         for prompt_id in prompts_to_export:
             if prompt_id in self.prompts:
-                export_data["prompts"][prompt_id] = [v.to_dict() for v in self.prompts[prompt_id]]
+                export_data["prompts"][prompt_id] = [
+                    v.to_dict() for v in self.prompts[prompt_id]
+                ]
             if prompt_id in self.branches:
-                export_data["branches"][prompt_id] = [b.to_dict() for b in self.branches[prompt_id]]
+                export_data["branches"][prompt_id] = [
+                    b.to_dict() for b in self.branches[prompt_id]
+                ]
 
         return export_data
 
@@ -703,13 +738,17 @@ class PromptLibrary:
                 logger.warning(f"Prompt {prompt_id} already exists, skipping")
                 continue
 
-            self.prompts[prompt_id] = [PromptVersion.from_dict(v) for v in versions_data]
+            self.prompts[prompt_id] = [
+                PromptVersion.from_dict(v) for v in versions_data
+            ]
 
         for prompt_id, branches_data in import_data.get("branches", {}).items():
             if prompt_id in self.branches and not overwrite:
                 continue
 
-            self.branches[prompt_id] = [PromptBranch.from_dict(b) for b in branches_data]
+            self.branches[prompt_id] = [
+                PromptBranch.from_dict(b) for b in branches_data
+            ]
 
         self._save_to_storage()
         logger.info(f"Imported {len(import_data.get('prompts', {}))} prompts")

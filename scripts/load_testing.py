@@ -130,7 +130,9 @@ class LoadTester:
         if self.config.api_key:
             headers["X-API-Key"] = self.config.api_key
 
-        self.session = aiohttp.ClientSession(connector=connector, timeout=timeout, headers=headers)
+        self.session = aiohttp.ClientSession(
+            connector=connector, timeout=timeout, headers=headers
+        )
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -178,7 +180,9 @@ class LoadTester:
 
         for i in range(self.config.requests_per_user):
             # Distribute requests across endpoints
-            endpoint = self.config.endpoints_to_test[i % len(self.config.endpoints_to_test)]
+            endpoint = self.config.endpoints_to_test[
+                i % len(self.config.endpoints_to_test)
+            ]
 
             # Create appropriate request data
             data = self.get_request_data(endpoint)
@@ -362,7 +366,8 @@ class LoadTester:
             chaos_users = random.randint(1, self.config.concurrent_users * 3)
             chaos_requests = random.randint(10, 100)
             chaos_endpoints = random.sample(
-                self.config.endpoints_to_test, random.randint(1, len(self.config.endpoints_to_test))
+                self.config.endpoints_to_test,
+                random.randint(1, len(self.config.endpoints_to_test)),
             )
 
             chaos_config = LoadTestConfig(
@@ -395,7 +400,9 @@ def print_results(results: LoadTestResults):
     print("LOAD TEST RESULTS")
     print("=" * 60)
 
-    print(f"Test Duration: {(results.end_time - results.start_time).total_seconds():.2f} seconds")
+    print(
+        f"Test Duration: {(results.end_time - results.start_time).total_seconds():.2f} seconds"
+    )
     print(f"Total Requests: {results.total_requests}")
     print(f"Successful Requests: {results.successful_requests}")
     print(f"Failed Requests: {results.failed_requests}")
@@ -446,7 +453,9 @@ def print_results(results: LoadTestResults):
 async def main():
     """Main load testing function"""
     parser = argparse.ArgumentParser(description="Sophia Intel AI Load Testing")
-    parser.add_argument("--url", default="http://localhost:8000", help="Base URL to test")
+    parser.add_argument(
+        "--url", default="http://localhost:8000", help="Base URL to test"
+    )
     parser.add_argument("--users", type=int, default=10, help="Concurrent users")
     parser.add_argument("--requests", type=int, default=100, help="Requests per user")
     parser.add_argument("--api-key", help="API key for authentication")
@@ -466,7 +475,10 @@ async def main():
         "--max-users", type=int, default=100, help="Maximum users for scalability test"
     )
     parser.add_argument(
-        "--step-size", type=int, default=10, help="User increment step for scalability test"
+        "--step-size",
+        type=int,
+        default=10,
+        help="User increment step for scalability test",
     )
     parser.add_argument("--output", help="Output file for results (JSON format)")
 
@@ -512,7 +524,9 @@ def print_scalability_results(results_list: List[LoadTestResults]):
     print("SCALABILITY TEST RESULTS")
     print("=" * 60)
 
-    print(f"{'Users':<8} {'RPS':<8} {'Avg(ms)':<10} {'P95(ms)':<10} {'Success%':<10} {'Errors':<8}")
+    print(
+        f"{'Users':<8} {'RPS':<8} {'Avg(ms)':<10} {'P95(ms)':<10} {'Success%':<10} {'Errors':<8}"
+    )
     print("-" * 60)
 
     for result in results_list:

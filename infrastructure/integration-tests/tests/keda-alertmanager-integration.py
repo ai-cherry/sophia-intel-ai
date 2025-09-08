@@ -43,7 +43,9 @@ class KEDAAlertManagerIntegration:
 
         # Create test namespace
         try:
-            namespace = client.V1Namespace(metadata=client.V1ObjectMeta(name=self.test_namespace))
+            namespace = client.V1Namespace(
+                metadata=client.V1ObjectMeta(name=self.test_namespace)
+            )
             self.v1.create_namespace(namespace)
         except client.exceptions.ApiException as e:
             if e.status != 409:  # Ignore if already exists
@@ -51,7 +53,9 @@ class KEDAAlertManagerIntegration:
 
         # Deploy test workload
         deployment = client.V1Deployment(
-            metadata=client.V1ObjectMeta(name="test-workload", namespace=self.test_namespace),
+            metadata=client.V1ObjectMeta(
+                name="test-workload", namespace=self.test_namespace
+            ),
             spec=client.V1DeploymentSpec(
                 replicas=1,
                 selector=client.V1LabelSelector(match_labels={"app": "test-workload"}),
@@ -163,7 +167,10 @@ class KEDAAlertManagerIntegration:
         invalid_scaled_object = {
             "apiVersion": "keda.sh/v1alpha1",
             "kind": "ScaledObject",
-            "metadata": {"name": "invalid-scaledobject", "namespace": self.test_namespace},
+            "metadata": {
+                "name": "invalid-scaledobject",
+                "namespace": self.test_namespace,
+            },
             "spec": {
                 "scaleTargetRef": {"name": "non-existent-deployment"},
                 "triggers": [
@@ -200,7 +207,8 @@ class KEDAAlertManagerIntegration:
         failure_alerts = [
             alert
             for alert in alerts
-            if alert.get("labels", {}).get("alertname") in ["KEDAScalerFailed", "KEDAScalingError"]
+            if alert.get("labels", {}).get("alertname")
+            in ["KEDAScalerFailed", "KEDAScalingError"]
         ]
 
         assert len(failure_alerts) > 0, "No KEDA failure alerts found"
@@ -248,11 +256,17 @@ class KEDAAlertManagerIntegration:
             scaled_object = {
                 "apiVersion": "keda.sh/v1alpha1",
                 "kind": "ScaledObject",
-                "metadata": {"name": f"test-scaledobject-{i}", "namespace": self.test_namespace},
+                "metadata": {
+                    "name": f"test-scaledobject-{i}",
+                    "namespace": self.test_namespace,
+                },
                 "spec": {
                     "scaleTargetRef": {"name": "test-workload"},
                     "triggers": [
-                        {"type": "cpu", "metadata": {"type": "Utilization", "value": "50"}}
+                        {
+                            "type": "cpu",
+                            "metadata": {"type": "Utilization", "value": "50"},
+                        }
                     ],
                 },
             }
@@ -274,7 +288,9 @@ class KEDAAlertManagerIntegration:
 
         # Check alert groups
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"{self.alertmanager_url}/api/v1/alerts/groups") as resp:
+            async with session.get(
+                f"{self.alertmanager_url}/api/v1/alerts/groups"
+            ) as resp:
                 groups = await resp.json()
 
         # Find KEDA alert group
@@ -317,7 +333,9 @@ class KEDAAlertManagerIntegration:
             [a for a in alerts if "KEDA" in a.get("labels", {}).get("alertname", "")]
         )
 
-        logger.info(f"Active scalers: {active_scalers}, Scaling alerts: {scaling_alerts}")
+        logger.info(
+            f"Active scalers: {active_scalers}, Scaling alerts: {scaling_alerts}"
+        )
 
         # Verify correlation
         if active_scalers > 0:

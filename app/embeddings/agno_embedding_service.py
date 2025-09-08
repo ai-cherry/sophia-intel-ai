@@ -41,8 +41,12 @@ class EmbeddingModel(str, Enum):
     # Together AI Models - Best on Platform
     BGE_LARGE_EN = "BAAI/bge-large-en-v1.5"  # MTEB 64.23, English, 1024D, max 512
     BGE_BASE_EN = "BAAI/bge-base-en-v1.5"  # MTEB ~63, English, 768D, max 512
-    GTE_MODERNBERT_BASE = "Alibaba-NLP/gte-modernbert-base"  # MTEB 64.38, 768D, max 8192
-    E5_LARGE_INSTRUCT = "intfloat/multilingual-e5-large-instruct"  # MMTEB 68.32, 1024D, multi-lang
+    GTE_MODERNBERT_BASE = (
+        "Alibaba-NLP/gte-modernbert-base"  # MTEB 64.38, 768D, max 8192
+    )
+    E5_LARGE_INSTRUCT = (
+        "intfloat/multilingual-e5-large-instruct"  # MMTEB 68.32, 1024D, multi-lang
+    )
     M2_BERT_8K = "togethercomputer/m2-bert-80M-8k-retrieval"  # 768D, max 8192
     M2_BERT_32K = "togethercomputer/m2-bert-80M-32k-retrieval"  # 768D, max 32768
 
@@ -225,7 +229,9 @@ class AgnoEmbeddingService:
             from openai import AsyncOpenAI
 
             self._client = AsyncOpenAI(
-                api_key=self.get_config_manager().get_integration_config("portkey").get("api_key"),
+                api_key=self.get_config_manager()
+                .get_integration_config("portkey")
+                .get("api_key"),
                 base_url=self.get_config_manager()
                 .get_integration_config("portkey")
                 .get("base_url"),
@@ -263,7 +269,8 @@ class AgnoEmbeddingService:
             request.model = self._model_selector.select_model(
                 use_case=request.use_case,
                 language=request.language,
-                max_length=request.max_length or self._estimate_max_length(request.texts),
+                max_length=request.max_length
+                or self._estimate_max_length(request.texts),
             )
 
         # Get model spec
@@ -364,7 +371,9 @@ class AgnoEmbeddingService:
             # Mock implementation for testing
             return self._generate_mock_embeddings(texts, model_spec.dimensions)
 
-    def _generate_mock_embeddings(self, texts: list[str], dimensions: int) -> list[list[float]]:
+    def _generate_mock_embeddings(
+        self, texts: list[str], dimensions: int
+    ) -> list[list[float]]:
         """Generate mock embeddings for testing"""
         embeddings = []
         for text in texts:
@@ -391,7 +400,9 @@ class AgnoEmbeddingService:
 
     def _get_cache_key(self, request: EmbeddingRequest) -> str:
         """Generate cache key for request"""
-        text_hash = hashlib.sha256(json.dumps(request.texts, sort_keys=True).encode()).hexdigest()
+        text_hash = hashlib.sha256(
+            json.dumps(request.texts, sort_keys=True).encode()
+        ).hexdigest()
 
         components = [
             text_hash,
@@ -411,7 +422,11 @@ class AgnoEmbeddingService:
         request = AgnoEmbeddingRequest(
             texts=[context],
             use_case="rag" if memory_type == "semantic" else "search",
-            metadata={"agent_id": agent_id, "memory_type": memory_type, "timestamp": time.time()},
+            metadata={
+                "agent_id": agent_id,
+                "memory_type": memory_type,
+                "timestamp": time.time(),
+            },
         )
         return await self.embed(request)
 
@@ -508,7 +523,9 @@ class AgnoEmbeddingService:
 class ModelSelector:
     """Intelligent model selection based on use case and content"""
 
-    def select_model(self, use_case: str, language: str, max_length: int) -> EmbeddingModel:
+    def select_model(
+        self, use_case: str, language: str, max_length: int
+    ) -> EmbeddingModel:
         """Select optimal model based on parameters"""
 
         # Multi-language content
@@ -551,7 +568,9 @@ class AgnoEmbeddingAgent:
         self.name = "embedding_agent"
         self.description = "Generates embeddings for text using optimal models"
 
-    async def embed_for_agent(self, agent, text: str, purpose: str = "memory") -> dict[str, Any]:
+    async def embed_for_agent(
+        self, agent, text: str, purpose: str = "memory"
+    ) -> dict[str, Any]:
         """
         Generate embeddings for an agent's use
         Compatible with Agno agent.tools interface
@@ -595,7 +614,9 @@ async def main():
     parser.add_argument("--text", help="Text to embed")
     parser.add_argument("--model", help="Model to use")
     parser.add_argument("--use-case", default="general", help="Use case")
-    parser.add_argument("--recommendations", action="store_true", help="Get model recommendations")
+    parser.add_argument(
+        "--recommendations", action="store_true", help="Get model recommendations"
+    )
 
     args = parser.parse_args()
 
@@ -603,7 +624,8 @@ async def main():
 
     if args.recommendations:
         recs = service.get_model_recommendations(
-            use_case=args.use_case, requirements={"max_tokens": 1000, "high_quality": True}
+            use_case=args.use_case,
+            requirements={"max_tokens": 1000, "high_quality": True},
         )
         logger.info("\n📊 Model Recommendations:")
         for model, spec in recs:

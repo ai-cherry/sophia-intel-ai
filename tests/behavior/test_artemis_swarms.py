@@ -28,7 +28,9 @@ class TestArtemisSwarmBehavior:
     @pytest.fixture
     async def recon_squad(self, factory):
         """Create a reconnaissance squad"""
-        with patch.object(factory, "_execute_mission_phase", new_callable=AsyncMock) as mock_phase:
+        with patch.object(
+            factory, "_execute_mission_phase", new_callable=AsyncMock
+        ) as mock_phase:
             mock_phase.return_value = {"success": True, "data": "recon_data"}
             squad_id = await factory.create_military_squad("recon_battalion")
             return squad_id, factory.active_swarms[squad_id]
@@ -67,7 +69,9 @@ class TestArtemisSwarmBehavior:
     @pytest.mark.asyncio
     async def test_coordinated_mission_execution(self, factory):
         """Test coordinated execution across multiple squads"""
-        with patch.object(factory, "_execute_mission_phase", new_callable=AsyncMock) as mock_phase:
+        with patch.object(
+            factory, "_execute_mission_phase", new_callable=AsyncMock
+        ) as mock_phase:
             mock_phase.return_value = {
                 "success": True,
                 "deliverables": ["scan_complete", "analysis_done"],
@@ -75,7 +79,9 @@ class TestArtemisSwarmBehavior:
 
             # Execute full mission
             result = await factory.execute_mission(
-                "operation_clean_sweep", target="/critical/system", parameters={"priority": "HIGH"}
+                "operation_clean_sweep",
+                target="/critical/system",
+                parameters={"priority": "HIGH"},
             )
 
             assert result["success"] is True
@@ -192,7 +198,9 @@ class TestArtemisSwarmBehavior:
             phase_decisions.append(decision)
             return {"success": True, "decision": decision["decision"]}
 
-        with patch.object(factory, "_execute_mission_phase", side_effect=mock_phase_execution):
+        with patch.object(
+            factory, "_execute_mission_phase", side_effect=mock_phase_execution
+        ):
             result = await factory.execute_mission("operation_clean_sweep")
 
         # Verify decision flow
@@ -205,7 +213,11 @@ class TestArtemisSwarmBehavior:
     async def test_adaptive_tactical_response(self, factory):
         """Test adaptive response based on mission conditions"""
         # Simulate mission with changing conditions
-        conditions = {"threat_level": "low", "complexity": "medium", "time_constraint": "normal"}
+        conditions = {
+            "threat_level": "low",
+            "complexity": "medium",
+            "time_constraint": "normal",
+        }
 
         squad_id = await factory.create_military_squad(
             "recon_battalion", mission_parameters=conditions
@@ -245,13 +257,18 @@ class TestArtemisSwarmBehavior:
                 return {"success": True, "validation": validation}
             return {"success": True}
 
-        with patch.object(factory, "_execute_mission_phase", side_effect=mock_qc_validation):
+        with patch.object(
+            factory, "_execute_mission_phase", side_effect=mock_qc_validation
+        ):
             result = await factory.execute_mission("operation_clean_sweep")
 
         # QC should have validated
         assert len(validation_results) > 0
         assert validation_results[0]["quality_score"] == 0.95
-        assert validation_results[0]["issues_resolved"] == validation_results[0]["issues_found"]
+        assert (
+            validation_results[0]["issues_resolved"]
+            == validation_results[0]["issues_found"]
+        )
 
     # ==============================================================================
     # SWARM COORDINATION TESTS
@@ -266,7 +283,9 @@ class TestArtemisSwarmBehavior:
             "preserve_functionality": True,
         }
 
-        with patch.object(factory, "create_technical_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_technical_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda t: f"agent_{t}_{uuid4().hex[:4]}"
 
             swarm_id = await factory.create_specialized_swarm(
@@ -293,10 +312,14 @@ class TestArtemisSwarmBehavior:
             "compliance_standards": ["OWASP", "PCI-DSS"],
         }
 
-        with patch.object(factory, "create_technical_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_technical_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda t: f"agent_{t}_{uuid4().hex[:4]}"
 
-            swarm_id = await factory.create_specialized_swarm(SwarmType.DOMAIN_TEAM, domain_config)
+            swarm_id = await factory.create_specialized_swarm(
+                SwarmType.DOMAIN_TEAM, domain_config
+            )
 
         swarm = factory.specialized_swarms[swarm_id]
 
@@ -414,10 +437,16 @@ class TestArtemisSwarmBehavior:
         assert template.success_criteria["quality_score"] == ">95%"
 
         # Simulate mission with results
-        with patch.object(factory, "_execute_mission_phase", new_callable=AsyncMock) as mock_phase:
+        with patch.object(
+            factory, "_execute_mission_phase", new_callable=AsyncMock
+        ) as mock_phase:
             mock_phase.return_value = {
                 "success": True,
-                "metrics": {"issues_resolved": 0.92, "test_coverage": 0.87, "quality_score": 0.96},
+                "metrics": {
+                    "issues_resolved": 0.92,
+                    "test_coverage": 0.87,
+                    "quality_score": 0.96,
+                },
             }
 
             result = await factory.execute_mission("operation_clean_sweep")

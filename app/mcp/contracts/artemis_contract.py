@@ -78,7 +78,14 @@ class ArtemisServerContract(BaseMCPServerContract):
             requirements=["file_path"],
             dependencies=["filesystem"],
             configuration={
-                "supported_languages": ["python", "javascript", "typescript", "go", "rust", "java"],
+                "supported_languages": [
+                    "python",
+                    "javascript",
+                    "typescript",
+                    "go",
+                    "rust",
+                    "java",
+                ],
                 "analysis_depth": ["shallow", "medium", "deep"],
                 "output_formats": ["json", "markdown", "html"],
             },
@@ -182,17 +189,23 @@ class ArtemisServerContract(BaseMCPServerContract):
     # Artemis-specific abstract methods
 
     @abstractmethod
-    async def analyze_codebase(self, request: CodeAnalysisRequest) -> CodeAnalysisResult:
+    async def analyze_codebase(
+        self, request: CodeAnalysisRequest
+    ) -> CodeAnalysisResult:
         """Analyze codebase with Artemis intelligence"""
         pass
 
     @abstractmethod
-    async def perform_filesystem_operation(self, request: FilesystemRequest) -> dict[str, Any]:
+    async def perform_filesystem_operation(
+        self, request: FilesystemRequest
+    ) -> dict[str, Any]:
         """Perform filesystem operation with security and validation"""
         pass
 
     @abstractmethod
-    async def generate_code_suggestions(self, context: dict[str, Any]) -> list[dict[str, Any]]:
+    async def generate_code_suggestions(
+        self, context: dict[str, Any]
+    ) -> list[dict[str, Any]]:
         """Generate intelligent code suggestions"""
         pass
 
@@ -352,7 +365,10 @@ class ArtemisServerContract(BaseMCPServerContract):
                 self.active_connections[request.client_id].error_count += 1
 
             return await self.create_error_response(
-                request, f"Internal server error: {str(e)}", "INTERNAL_ERROR", execution_time
+                request,
+                f"Internal server error: {str(e)}",
+                "INTERNAL_ERROR",
+                execution_time,
             )
 
     # Capability-specific handlers (to be implemented by concrete servers)

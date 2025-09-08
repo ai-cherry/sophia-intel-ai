@@ -13,7 +13,9 @@ from pathlib import Path
 from typing import Any
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -36,7 +38,11 @@ class ConfigurationUnifier:
                 "dev_mcp_unified/.env.local",
                 "dev_mcp_unified/.env.template",
             ],
-            "port_configs": ["port_config.json", "port_config_export.json", "test_config.json"],
+            "port_configs": [
+                "port_config.json",
+                "port_config_export.json",
+                "test_config.json",
+            ],
             "portkey_configs": [
                 "app/get_config_manager().get_integration_config('portkey').get('py')",
                 "app/elite_get_config_manager().get_integration_config('portkey').get('py')",
@@ -103,7 +109,9 @@ class ConfigurationUnifier:
         # Phase 8: Validation
         await self._validate_unification()
 
-        logger.info("✅ Configuration Unification Complete - ZERO TECHNICAL DEBT ACHIEVED")
+        logger.info(
+            "✅ Configuration Unification Complete - ZERO TECHNICAL DEBT ACHIEVED"
+        )
 
         return self._generate_config_report()
 
@@ -133,14 +141,21 @@ class ConfigurationUnifier:
                         shutil.copy2(source, dest)
                     backed_up += 1
 
-        logger.info(f"✅ Backed up {backed_up} configuration files to {self.backup_path}")
+        logger.info(
+            f"✅ Backed up {backed_up} configuration files to {self.backup_path}"
+        )
 
     async def _audit_configurations(self):
         """Audit all existing configurations"""
 
         logger.info("🔍 Auditing configuration files...")
 
-        audit = {"files_found": {}, "conflicts": [], "duplicates": [], "secrets_detected": []}
+        audit = {
+            "files_found": {},
+            "conflicts": [],
+            "duplicates": [],
+            "secrets_detected": [],
+        }
 
         for category, configs in self.scattered_configs.items():
             audit["files_found"][category] = []
@@ -150,12 +165,20 @@ class ConfigurationUnifier:
                 if config_path.exists():
                     audit_info = {
                         "path": str(config),
-                        "size": config_path.stat().st_size if config_path.is_file() else 0,
-                        "modified": datetime.fromtimestamp(config_path.stat().st_mtime).isoformat(),
+                        "size": (
+                            config_path.stat().st_size if config_path.is_file() else 0
+                        ),
+                        "modified": datetime.fromtimestamp(
+                            config_path.stat().st_mtime
+                        ).isoformat(),
                     }
 
                     # Check for secrets
-                    if config_path.is_file() and config_path.suffix in [".env", ".json", ".py"]:
+                    if config_path.is_file() and config_path.suffix in [
+                        ".env",
+                        ".json",
+                        ".py",
+                    ]:
                         try:
                             content = config_path.read_text()
                             if self._contains_secrets(content):
@@ -169,7 +192,9 @@ class ConfigurationUnifier:
         audit_file = self.root_path / "config_audit_results.json"
         audit_file.write_text(json.dumps(audit, indent=2))
 
-        logger.info(f"📊 Audited configurations across {len(self.scattered_configs)} categories")
+        logger.info(
+            f"📊 Audited configurations across {len(self.scattered_configs)} categories"
+        )
 
     async def _create_unified_structure(self):
         """Create unified configuration directory structure"""
@@ -278,8 +303,17 @@ class ConfigurationUnifier:
                 "artemis_domain": "technical_operations",
             },
             "defaults": {
-                "ports": {"sophia": 9000, "artemis": 8000, "mcp": 3333, "unified_api": 8006},
-                "timeouts": {"request_timeout": 30, "connection_timeout": 10, "read_timeout": 60},
+                "ports": {
+                    "sophia": 9000,
+                    "artemis": 8000,
+                    "mcp": 3333,
+                    "unified_api": 8006,
+                },
+                "timeouts": {
+                    "request_timeout": 30,
+                    "connection_timeout": 10,
+                    "read_timeout": 60,
+                },
                 "logging": {
                     "level": "INFO",
                     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -298,25 +332,41 @@ class ConfigurationUnifier:
                 "debug": True,
                 "log_level": "DEBUG",
                 "database": {"path": "tmp/dev_database.db", "pool_size": 5},
-                "features": {"hot_reload": True, "debug_ui": True, "mock_integrations": False},
+                "features": {
+                    "hot_reload": True,
+                    "debug_ui": True,
+                    "mock_integrations": False,
+                },
             },
             "testing": {
                 "debug": True,
                 "log_level": "INFO",
                 "database": {"path": ":memory:", "pool_size": 1},
-                "features": {"hot_reload": False, "debug_ui": False, "mock_integrations": True},
+                "features": {
+                    "hot_reload": False,
+                    "debug_ui": False,
+                    "mock_integrations": True,
+                },
             },
             "staging": {
                 "debug": False,
                 "log_level": "INFO",
                 "database": {"path": "data/staging_database.db", "pool_size": 10},
-                "features": {"hot_reload": False, "debug_ui": False, "mock_integrations": False},
+                "features": {
+                    "hot_reload": False,
+                    "debug_ui": False,
+                    "mock_integrations": False,
+                },
             },
             "production": {
                 "debug": False,
                 "log_level": "WARNING",
                 "database": {"path": "data/production_database.db", "pool_size": 20},
-                "features": {"hot_reload": False, "debug_ui": False, "mock_integrations": False},
+                "features": {
+                    "hot_reload": False,
+                    "debug_ui": False,
+                    "mock_integrations": False,
+                },
             },
         }
 
@@ -362,7 +412,12 @@ class ConfigurationUnifier:
             },
             "mcp": {
                 "primary_system": "dev_mcp_unified",
-                "features": ["secure_server", "enhanced_memory", "swarm_bridge", "app_integration"],
+                "features": [
+                    "secure_server",
+                    "enhanced_memory",
+                    "swarm_bridge",
+                    "app_integration",
+                ],
                 "rbac_enabled": True,
                 "audit_enabled": True,
             },
@@ -378,7 +433,9 @@ class ConfigurationUnifier:
         }
 
         for service_name, service_config in services.items():
-            service_path = self.root_path / self.unified_structure["services"][service_name]
+            service_path = (
+                self.root_path / self.unified_structure["services"][service_name]
+            )
             service_path.write_text(json.dumps(service_config, indent=2))
 
     async def _generate_integration_configs(self):
@@ -413,7 +470,8 @@ class ConfigurationUnifier:
 
         for integration_name, integration_config in integrations.items():
             integration_path = (
-                self.root_path / self.unified_structure["integrations"][integration_name]
+                self.root_path
+                / self.unified_structure["integrations"][integration_name]
             )
             integration_path.write_text(json.dumps(integration_config, indent=2))
 

@@ -145,10 +145,14 @@ async def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="Sophia AI Service Orchestrator")
-    parser.add_argument("--config", default="startup-config.yml", help="Path to config file")
+    parser.add_argument(
+        "--config", default="startup-config.yml", help="Path to config file"
+    )
     parser.add_argument("--start", action="store_true", help="Start all services")
     parser.add_argument("--stop", action="store_true", help="Stop all services")
-    parser.add_argument("--status", action="store_true", help="Show status and system info")
+    parser.add_argument(
+        "--status", action="store_true", help="Show status and system info"
+    )
     args = parser.parse_args()
 
     orchestrator = ServiceOrchestrator(args.config)

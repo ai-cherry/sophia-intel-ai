@@ -181,7 +181,11 @@ class PortkeyManager:
                 ModelProvider.OPENAI,
                 ModelProvider.GEMINI,
             ],
-            AgentRole.TACTICAL: [ModelProvider.GROQ, ModelProvider.MISTRAL, ModelProvider.TOGETHER],
+            AgentRole.TACTICAL: [
+                ModelProvider.GROQ,
+                ModelProvider.MISTRAL,
+                ModelProvider.TOGETHER,
+            ],
             AgentRole.EMPATHETIC: [
                 ModelProvider.ANTHROPIC,
                 ModelProvider.OPENAI,
@@ -240,7 +244,11 @@ class PortkeyManager:
                 fallback_configs.append(
                     {
                         "virtual_key": fallback_config.virtual_key,
-                        "model": fallback_config.models[0] if fallback_config.models else "auto",
+                        "model": (
+                            fallback_config.models[0]
+                            if fallback_config.models
+                            else "auto"
+                        ),
                     }
                 )
 
@@ -253,9 +261,15 @@ class PortkeyManager:
                 "max_tokens": kwargs.get("max_tokens", config.max_tokens),
                 "temperature": kwargs.get("temperature", config.temperature),
                 "fallbacks": fallback_configs,
-                "retry": {"attempts": config.retry_count, "on_status_codes": [429, 500, 502, 503]},
+                "retry": {
+                    "attempts": config.retry_count,
+                    "on_status_codes": [429, 500, 502, 503],
+                },
                 "cache": {"mode": "semantic", "max_age": 3600},
-                "metadata": {"role": role.value, "primary_provider": primary_provider.value},
+                "metadata": {
+                    "role": role.value,
+                    "primary_provider": primary_provider.value,
+                },
             },
         )
 
@@ -271,7 +285,11 @@ class PortkeyManager:
                 fallback_configs.append(
                     {
                         "virtual_key": fallback_config.virtual_key,
-                        "model": fallback_config.models[0] if fallback_config.models else "auto",
+                        "model": (
+                            fallback_config.models[0]
+                            if fallback_config.models
+                            else "auto"
+                        ),
                     }
                 )
 
@@ -279,11 +297,16 @@ class PortkeyManager:
             api_key=self.api_key,
             virtual_key=config.virtual_key,
             config={
-                "model": kwargs.get("model", config.models[0] if config.models else "auto"),
+                "model": kwargs.get(
+                    "model", config.models[0] if config.models else "auto"
+                ),
                 "max_tokens": kwargs.get("max_tokens", config.max_tokens),
                 "temperature": kwargs.get("temperature", config.temperature),
                 "fallbacks": fallback_configs,
-                "retry": {"attempts": config.retry_count, "on_status_codes": [429, 500, 502, 503]},
+                "retry": {
+                    "attempts": config.retry_count,
+                    "on_status_codes": [429, 500, 502, 503],
+                },
                 "metadata": {"provider": provider.value},
             },
         )
@@ -313,7 +336,8 @@ class PortkeyManager:
         status = {}
         for provider, config in self.providers.items():
             status[provider.value] = {
-                "virtual_key": config.virtual_key[:10] + "...",  # Partial key for security
+                "virtual_key": config.virtual_key[:10]
+                + "...",  # Partial key for security
                 "models": config.models,
                 "fallback_providers": [p.value for p in config.fallback_providers],
                 "configured": bool(config.virtual_key),

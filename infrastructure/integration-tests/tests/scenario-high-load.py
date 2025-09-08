@@ -129,7 +129,10 @@ class HighLoadScenario:
                 template=client.V1PodTemplateSpec(
                     metadata=client.V1ObjectMeta(
                         labels={"app": "artemis"},
-                        annotations={"prometheus.io/scrape": "true", "prometheus.io/port": "8080"},
+                        annotations={
+                            "prometheus.io/scrape": "true",
+                            "prometheus.io/port": "8080",
+                        },
                     ),
                     spec=client.V1PodSpec(
                         containers=[
@@ -142,7 +145,9 @@ class HighLoadScenario:
                                     limits={"cpu": "2000m", "memory": "4Gi"},
                                 ),
                                 env=[
-                                    client.V1EnvVar(name="WORKLOAD_TYPE", value="AI_INFERENCE"),
+                                    client.V1EnvVar(
+                                        name="WORKLOAD_TYPE", value="AI_INFERENCE"
+                                    ),
                                     client.V1EnvVar(name="MODEL_SIZE", value="LARGE"),
                                 ],
                             )
@@ -165,7 +170,10 @@ class HighLoadScenario:
                 template=client.V1PodTemplateSpec(
                     metadata=client.V1ObjectMeta(
                         labels={"app": "sophia"},
-                        annotations={"prometheus.io/scrape": "true", "prometheus.io/port": "8080"},
+                        annotations={
+                            "prometheus.io/scrape": "true",
+                            "prometheus.io/port": "8080",
+                        },
                     ),
                     spec=client.V1PodSpec(
                         containers=[
@@ -178,7 +186,9 @@ class HighLoadScenario:
                                     limits={"cpu": "4000m", "memory": "8Gi"},
                                 ),
                                 env=[
-                                    client.V1EnvVar(name="WORKLOAD_TYPE", value="AI_TRAINING"),
+                                    client.V1EnvVar(
+                                        name="WORKLOAD_TYPE", value="AI_TRAINING"
+                                    ),
                                     client.V1EnvVar(name="BATCH_SIZE", value="64"),
                                 ],
                             )
@@ -249,7 +259,10 @@ class HighLoadScenario:
                             "query": f'sum(ai_training_batch_pending{{namespace="{self.test_namespace}",app="sophia"}})',
                         },
                     },
-                    {"type": "memory", "metadata": {"type": "Utilization", "value": "80"}},
+                    {
+                        "type": "memory",
+                        "metadata": {"type": "Utilization", "value": "80"},
+                    },
                 ],
             },
         }
@@ -279,7 +292,10 @@ class HighLoadScenario:
         alert_rules = {
             "apiVersion": "monitoring.coreos.com/v1",
             "kind": "PrometheusRule",
-            "metadata": {"name": "high-load-alerts", "namespace": self.alertmanager_namespace},
+            "metadata": {
+                "name": "high-load-alerts",
+                "namespace": self.alertmanager_namespace,
+            },
             "spec": {
                 "groups": [
                     {
@@ -290,7 +306,10 @@ class HighLoadScenario:
                                 "alert": "AIWorkloadHighQueue",
                                 "expr": f'sum(ai_inference_queue_depth{{namespace="{self.test_namespace}"}}) > 50',
                                 "for": "30s",
-                                "labels": {"severity": "warning", "component": "ai-workload"},
+                                "labels": {
+                                    "severity": "warning",
+                                    "component": "ai-workload",
+                                },
                                 "annotations": {
                                     "summary": "High AI inference queue depth",
                                     "description": "AI inference queue depth is {{ $value }}",
@@ -300,7 +319,10 @@ class HighLoadScenario:
                                 "alert": "AIWorkloadCriticalLoad",
                                 "expr": f'sum(rate(ai_requests_total{{namespace="{self.test_namespace}"}}[1m])) > 1000',
                                 "for": "1m",
-                                "labels": {"severity": "critical", "component": "ai-workload"},
+                                "labels": {
+                                    "severity": "critical",
+                                    "component": "ai-workload",
+                                },
                                 "annotations": {
                                     "summary": "Critical AI workload detected",
                                     "description": "Request rate is {{ $value }} req/s",
@@ -310,7 +332,10 @@ class HighLoadScenario:
                                 "alert": "KEDAScalingMaxed",
                                 "expr": f'keda_scaler_active{{namespace="{self.test_namespace}"}} == keda_scaler_max_replicas{{namespace="{self.test_namespace}"}}',
                                 "for": "2m",
-                                "labels": {"severity": "critical", "component": "autoscaling"},
+                                "labels": {
+                                    "severity": "critical",
+                                    "component": "autoscaling",
+                                },
                                 "annotations": {
                                     "summary": "KEDA scaling at maximum",
                                     "description": "ScaledObject {{ $labels.scaledObject }} at max replicas",
@@ -350,7 +375,9 @@ class HighLoadScenario:
 
         # Check no critical alerts
         alerts = await self._get_active_alerts()
-        critical_alerts = [a for a in alerts if a.get("labels", {}).get("severity") == "critical"]
+        critical_alerts = [
+            a for a in alerts if a.get("labels", {}).get("severity") == "critical"
+        ]
 
         assert len(critical_alerts) == 0, "Critical alerts present in normal operation"
 
@@ -461,7 +488,9 @@ ai_requests_total{{namespace="{self.test_namespace}"}} {i * 100}
             await asyncio.sleep(0.5)
 
         # Verify alerts fired within target time
-        assert metrics["queue_alert"] or metrics["load_alert"], "No expected alerts fired"
+        assert (
+            metrics["queue_alert"] or metrics["load_alert"]
+        ), "No expected alerts fired"
         assert (
             metrics["alert_time"] < self.alert_time_target
         ), f"Alert took {metrics['alert_time']:.1f}s (target: {self.alert_time_target}s)"
@@ -594,7 +623,9 @@ ai_requests_total{{namespace="{self.test_namespace}"}} {i * 50}
         # Check alerts cleared
         alerts = await self._get_active_alerts()
         high_load_alerts = [
-            a for a in alerts if "load" in a.get("labels", {}).get("alertname", "").lower()
+            a
+            for a in alerts
+            if "load" in a.get("labels", {}).get("alertname", "").lower()
         ]
 
         metrics["alerts_cleared"] = len(high_load_alerts) == 0
@@ -661,7 +692,9 @@ ai_requests_total{{namespace="{self.test_namespace}"}} {i * 50}
         logger.info("\n⚖️ Scaling Results:")
         logger.info(f"  Artemis: 1 → {scaling_metrics['artemis_replicas']} replicas")
         logger.info(f"  Sophia: 1 → {scaling_metrics['sophia_replicas']} replicas")
-        logger.info(f"  Max Replicas Reached: {stability_metrics['max_replicas_reached']}")
+        logger.info(
+            f"  Max Replicas Reached: {stability_metrics['max_replicas_reached']}"
+        )
 
         logger.info("\n🚨 Alert Analysis:")
         logger.info(f"  Total Alerts: {alert_metrics['total_alerts']}")
@@ -692,7 +725,9 @@ ai_requests_total{{namespace="{self.test_namespace}"}} {i * 50}
         """Get active alerts from AlertManager"""
         async with aiohttp.ClientSession() as session:
             try:
-                async with session.get(f"{self.alertmanager_url}/api/v1/alerts") as resp:
+                async with session.get(
+                    f"{self.alertmanager_url}/api/v1/alerts"
+                ) as resp:
                     data = await resp.json()
                     return data.get("data", [])
             except:

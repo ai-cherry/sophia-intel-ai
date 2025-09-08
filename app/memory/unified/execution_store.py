@@ -189,7 +189,9 @@ class ExecutionStore:
 
         # Update content in unified memory
         updated_content = self._format_execution_content_from_dict(current_execution)
-        success = await self.memory_interface.update(execution_id, content=updated_content)
+        success = await self.memory_interface.update(
+            execution_id, content=updated_content
+        )
 
         if success:
             logger.debug(f"Updated execution status: {execution_id} -> {status.value}")
@@ -237,7 +239,9 @@ class ExecutionStore:
         # Enhance results with structured data and apply date filtering
         enhanced_results = []
         for result in results:
-            structured_data = await self._retrieve_structured_execution(result.memory_id)
+            structured_data = await self._retrieve_structured_execution(
+                result.memory_id
+            )
 
             # Apply date range filter
             if date_range and structured_data:
@@ -343,9 +347,9 @@ class ExecutionStore:
 
         # Calculate performance metrics
         if durations:
-            analytics["performance_metrics"]["avg_duration_seconds"] = sum(durations) / len(
+            analytics["performance_metrics"]["avg_duration_seconds"] = sum(
                 durations
-            )
+            ) / len(durations)
 
         analytics["performance_metrics"]["total_api_calls"] = total_api_calls
         analytics["performance_metrics"]["total_tokens"] = total_tokens
@@ -426,7 +430,9 @@ class ExecutionStore:
         content_parts.append("")
 
         if execution.input_parameters:
-            content_parts.extend(["INPUT PARAMETERS:", str(execution.input_parameters), ""])
+            content_parts.extend(
+                ["INPUT PARAMETERS:", str(execution.input_parameters), ""]
+            )
 
         if execution.output_results:
             content_parts.extend(["OUTPUT RESULTS:", str(execution.output_results), ""])
@@ -455,7 +461,9 @@ class ExecutionStore:
 
         return "\n".join(content_parts)
 
-    def _format_execution_content_from_dict(self, execution_dict: dict[str, Any]) -> str:
+    def _format_execution_content_from_dict(
+        self, execution_dict: dict[str, Any]
+    ) -> str:
         """Format execution dictionary into content (for updates)"""
 
         content_parts = [
@@ -480,7 +488,10 @@ class ExecutionStore:
     def _determine_priority(self, execution: ExecutionContext) -> MemoryPriority:
         """Determine memory priority based on execution characteristics"""
 
-        if execution.priority >= 8 or execution.execution_type == ExecutionType.SYSTEM_OPERATION:
+        if (
+            execution.priority >= 8
+            or execution.execution_type == ExecutionType.SYSTEM_OPERATION
+        ):
             return MemoryPriority.HIGH
         elif execution.priority >= 6:
             return MemoryPriority.STANDARD
@@ -518,7 +529,9 @@ class ExecutionStore:
                 "execution_type": execution.execution_type.value,
                 "status": execution.status.value,
                 "start_time": execution.start_time.isoformat(),
-                "end_time": execution.end_time.isoformat() if execution.end_time else None,
+                "end_time": (
+                    execution.end_time.isoformat() if execution.end_time else None
+                ),
                 "duration_seconds": execution.duration_seconds,
                 "agent_id": execution.agent_id,
                 "swarm_id": execution.swarm_id,
@@ -548,7 +561,9 @@ class ExecutionStore:
             key, structured_data, ttl=86400 * 7, namespace="execution"  # 7 days
         )
 
-    async def _retrieve_structured_execution(self, execution_id: str) -> Optional[dict[str, Any]]:
+    async def _retrieve_structured_execution(
+        self, execution_id: str
+    ) -> Optional[dict[str, Any]]:
         """Retrieve structured execution data"""
 
         if not self.memory_interface.redis_manager:
@@ -556,7 +571,9 @@ class ExecutionStore:
 
         try:
             key = f"execution_structured:{execution_id}"
-            data = await self.memory_interface.redis_manager.get(key, namespace="execution")
+            data = await self.memory_interface.redis_manager.get(
+                key, namespace="execution"
+            )
 
             if data:
                 import json
@@ -564,7 +581,9 @@ class ExecutionStore:
                 return json.loads(data.decode() if isinstance(data, bytes) else data)
 
         except Exception as e:
-            logger.warning(f"Failed to retrieve structured execution {execution_id}: {e}")
+            logger.warning(
+                f"Failed to retrieve structured execution {execution_id}: {e}"
+            )
 
         return None
 
@@ -575,7 +594,9 @@ class ExecutionStore:
             return
 
         # Update parent's child list
-        parent_data = await self._retrieve_structured_execution(execution.parent_execution_id)
+        parent_data = await self._retrieve_structured_execution(
+            execution.parent_execution_id
+        )
         if parent_data:
             child_ids = parent_data.get("child_execution_ids", [])
             if execution.execution_id not in child_ids:

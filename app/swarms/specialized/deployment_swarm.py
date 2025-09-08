@@ -105,7 +105,12 @@ class DeploymentSwarm:
             "Environment and dependency validation",
             "claude-3-5-sonnet-20241022",
             "anthropic",
-            ["dependency_check", "environment_validation", "config_validation", "security_scan"],
+            [
+                "dependency_check",
+                "environment_validation",
+                "config_validation",
+                "security_scan",
+            ],
             0.08,
             1,
             2,
@@ -117,7 +122,12 @@ class DeploymentSwarm:
             "Docker container orchestration and deployment",
             "gpt-4-turbo",
             "openai",
-            ["docker_operations", "registry_management", "orchestration", "service_mesh"],
+            [
+                "docker_operations",
+                "registry_management",
+                "orchestration",
+                "service_mesh",
+            ],
             0.10,
             2,
             3,
@@ -141,7 +151,12 @@ class DeploymentSwarm:
             "Comprehensive testing orchestration",
             "deepseek-coder",
             "deepseek",
-            ["unit_testing", "integration_testing", "e2e_testing", "performance_testing"],
+            [
+                "unit_testing",
+                "integration_testing",
+                "e2e_testing",
+                "performance_testing",
+            ],
             0.06,
             3,
             2,
@@ -153,7 +168,12 @@ class DeploymentSwarm:
             "Quality assurance and compliance validation",
             "gpt-4",
             "openai",
-            ["quality_gates", "compliance_check", "security_audit", "performance_validation"],
+            [
+                "quality_gates",
+                "compliance_check",
+                "security_audit",
+                "performance_validation",
+            ],
             0.09,
             1,
             3,
@@ -165,7 +185,12 @@ class DeploymentSwarm:
             "Real-time performance tracking and alerting",
             "claude-3-haiku",
             "anthropic",
-            ["metrics_collection", "alerting_setup", "dashboard_creation", "anomaly_detection"],
+            [
+                "metrics_collection",
+                "alerting_setup",
+                "dashboard_creation",
+                "anomaly_detection",
+            ],
             0.05,
             2,
             2,
@@ -177,7 +202,12 @@ class DeploymentSwarm:
             "Automated rollback and disaster recovery",
             "gpt-4-turbo",
             "openai",
-            ["rollback_orchestration", "backup_management", "traffic_routing", "state_recovery"],
+            [
+                "rollback_orchestration",
+                "backup_management",
+                "traffic_routing",
+                "state_recovery",
+            ],
             0.11,
             1,
             1,
@@ -189,7 +219,12 @@ class DeploymentSwarm:
             "Automated documentation and reporting",
             "claude-3-sonnet",
             "anthropic",
-            ["report_generation", "documentation", "metrics_analysis", "stakeholder_updates"],
+            [
+                "report_generation",
+                "documentation",
+                "metrics_analysis",
+                "stakeholder_updates",
+            ],
             0.04,
             2,
             2,
@@ -251,37 +286,54 @@ class DeploymentSwarm:
 
             if not deployment_phase_result.get("success", False):
                 await self._trigger_rollback(deployment_id, task)
-                deployment_result["overall_status"] = DeploymentStatus.ROLLBACK_REQUIRED.value
+                deployment_result["overall_status"] = (
+                    DeploymentStatus.ROLLBACK_REQUIRED.value
+                )
                 return deployment_result
 
             # Phase 3: Comprehensive Testing
-            testing_result = await self._execute_testing_phase(task, deployment_phase_result)
+            testing_result = await self._execute_testing_phase(
+                task, deployment_phase_result
+            )
             deployment_result["phases"]["testing"] = testing_result
 
             if not testing_result.get("success", False):
                 await self._trigger_rollback(deployment_id, task)
-                deployment_result["overall_status"] = DeploymentStatus.ROLLBACK_REQUIRED.value
+                deployment_result["overall_status"] = (
+                    DeploymentStatus.ROLLBACK_REQUIRED.value
+                )
                 return deployment_result
 
             # Phase 4: Quality Control Integration
-            quality_result = await self._execute_quality_control_phase(task, testing_result)
+            quality_result = await self._execute_quality_control_phase(
+                task, testing_result
+            )
             deployment_result["phases"]["quality_control"] = quality_result
 
             if not quality_result.get("success", False):
                 await self._trigger_rollback(deployment_id, task)
-                deployment_result["overall_status"] = DeploymentStatus.ROLLBACK_REQUIRED.value
+                deployment_result["overall_status"] = (
+                    DeploymentStatus.ROLLBACK_REQUIRED.value
+                )
                 return deployment_result
 
             # Phase 5: Performance Monitoring Setup
-            monitoring_result = await self._execute_monitoring_phase(task, deployment_phase_result)
+            monitoring_result = await self._execute_monitoring_phase(
+                task, deployment_phase_result
+            )
             deployment_result["phases"]["monitoring"] = monitoring_result
 
             # Phase 6: Documentation Generation
-            documentation_result = await self._execute_documentation_phase(task, deployment_result)
+            documentation_result = await self._execute_documentation_phase(
+                task, deployment_result
+            )
             deployment_result["phases"]["documentation"] = documentation_result
 
             # Final success validation
-            if all(phase.get("success", False) for phase in deployment_result["phases"].values()):
+            if all(
+                phase.get("success", False)
+                for phase in deployment_result["phases"].values()
+            ):
                 deployment_result["overall_status"] = DeploymentStatus.SUCCESS.value
                 deployment_result["completed_at"] = datetime.now().isoformat()
                 deployment_result["deployment_duration"] = self._calculate_duration(
@@ -323,9 +375,13 @@ class DeploymentSwarm:
             "phase": "validation",
             "checks_performed": validation_checks,
             "success": all_checks_passed,
-            "validation_score": sum(validation_checks.values()) / len(validation_checks) * 100,
+            "validation_score": sum(validation_checks.values())
+            / len(validation_checks)
+            * 100,
             "critical_issues": [k for k, v in validation_checks.items() if not v],
-            "recommendations": await self._generate_validation_recommendations(validation_checks),
+            "recommendations": await self._generate_validation_recommendations(
+                validation_checks
+            ),
             "duration_seconds": 45,
         }
 
@@ -377,17 +433,23 @@ class DeploymentSwarm:
 
         test_results = {
             "unit_tests": await self._run_unit_tests(task),
-            "integration_tests": await self._run_integration_tests(task, deployment_result),
+            "integration_tests": await self._run_integration_tests(
+                task, deployment_result
+            ),
             "ui_tests": await self._run_ui_tests(task, deployment_result),
             "api_tests": await self._run_api_tests(task, deployment_result),
-            "performance_tests": await self._run_performance_tests(task, deployment_result),
+            "performance_tests": await self._run_performance_tests(
+                task, deployment_result
+            ),
             "security_tests": await self._run_security_tests(task, deployment_result),
         }
 
-        overall_success = all(test.get("passed", False) for test in test_results.values())
-        test_coverage = sum(test.get("coverage", 0) for test in test_results.values()) / len(
-            test_results
+        overall_success = all(
+            test.get("passed", False) for test in test_results.values()
         )
+        test_coverage = sum(
+            test.get("coverage", 0) for test in test_results.values()
+        ) / len(test_results)
 
         return {
             "agent": test_agent.name,
@@ -395,8 +457,12 @@ class DeploymentSwarm:
             "test_results": test_results,
             "overall_success": overall_success,
             "test_coverage": test_coverage,
-            "failed_tests": [k for k, v in test_results.items() if not v.get("passed", False)],
-            "performance_metrics": test_results.get("performance_tests", {}).get("metrics", {}),
+            "failed_tests": [
+                k for k, v in test_results.items() if not v.get("passed", False)
+            ],
+            "performance_metrics": test_results.get("performance_tests", {}).get(
+                "metrics", {}
+            ),
             "duration_seconds": 300,
         }
 
@@ -430,20 +496,28 @@ class DeploymentSwarm:
                 priority=1,
             )
 
-            qa_results = await quality_control_swarm.execute_quality_audit(quality_audit)
+            qa_results = await quality_control_swarm.execute_quality_audit(
+                quality_audit
+            )
 
             # Define quality gates
             quality_gates = {
                 "quality_score_threshold": qa_results.get("quality_score", 0) >= 85,
                 "critical_issues_threshold": len(
-                    [i for i in qa_results.get("issues", []) if i.get("severity") == "critical"]
+                    [
+                        i
+                        for i in qa_results.get("issues", [])
+                        if i.get("severity") == "critical"
+                    ]
                 )
                 == 0,
-                "security_compliance": qa_results.get("compliance_status", {}).get("GDPR", "")
-                == "Compliant",
-                "performance_threshold": testing_result.get("performance_metrics", {}).get(
-                    "response_time_ms", 1000
+                "security_compliance": qa_results.get("compliance_status", {}).get(
+                    "GDPR", ""
                 )
+                == "Compliant",
+                "performance_threshold": testing_result.get(
+                    "performance_metrics", {}
+                ).get("response_time_ms", 1000)
                 < 500,
             }
 
@@ -489,7 +563,9 @@ class DeploymentSwarm:
         monitor_agent = self._get_agent("performance_monitor_01")
 
         monitoring_setup = {
-            "metrics_collection": await self._setup_metrics_collection(task, deployment_result),
+            "metrics_collection": await self._setup_metrics_collection(
+                task, deployment_result
+            ),
             "alerting_rules": await self._configure_alerting(task),
             "dashboards": await self._create_monitoring_dashboards(task),
             "log_aggregation": await self._setup_log_aggregation(task),
@@ -519,9 +595,13 @@ class DeploymentSwarm:
         doc_agent = self._get_agent("documentation_generator_01")
 
         documentation = {
-            "deployment_report": await self._generate_deployment_report(task, deployment_result),
+            "deployment_report": await self._generate_deployment_report(
+                task, deployment_result
+            ),
             "architecture_diagram": await self._generate_architecture_diagram(task),
-            "runbook": await self._generate_operational_runbook(task, deployment_result),
+            "runbook": await self._generate_operational_runbook(
+                task, deployment_result
+            ),
             "rollback_procedures": await self._generate_rollback_documentation(task),
             "monitoring_guide": await self._generate_monitoring_guide(task),
         }
@@ -553,7 +633,9 @@ class DeploymentSwarm:
 
         self.rollback_snapshots[deployment_id] = snapshot
 
-    async def _trigger_rollback(self, deployment_id: str, task: DeploymentTask) -> dict[str, Any]:
+    async def _trigger_rollback(
+        self, deployment_id: str, task: DeploymentTask
+    ) -> dict[str, Any]:
         """Trigger automated rollback"""
 
         self._get_agent("rollback_coordinator_01")
@@ -580,7 +662,9 @@ class DeploymentSwarm:
             ]
 
             rollback_result["rollback_steps"] = steps
-            rollback_result["success"] = all(step.get("success", False) for step in steps)
+            rollback_result["success"] = all(
+                step.get("success", False) for step in steps
+            )
 
             if rollback_result["success"]:
                 # Update deployment status
@@ -623,7 +707,10 @@ class DeploymentSwarm:
 
     async def _deploy_infrastructure(self, task: DeploymentTask) -> dict[str, Any]:
         """Deploy infrastructure components"""
-        return {"success": True, "resources_created": ["load_balancer", "database", "cache"]}
+        return {
+            "success": True,
+            "resources_created": ["load_balancer", "database", "cache"],
+        }
 
     async def _deploy_containers(
         self, task: DeploymentTask, infra_result: dict[str, Any]
@@ -631,7 +718,8 @@ class DeploymentSwarm:
         """Deploy application containers"""
         return {
             "success": True,
-            "containers_deployed": task.target.ui_components + task.target.api_endpoints,
+            "containers_deployed": task.target.ui_components
+            + task.target.api_endpoints,
         }
 
     async def _configure_networking(
@@ -705,7 +793,9 @@ class DeploymentSwarm:
         duration = end_time - start_time
         return f"{duration.total_seconds():.0f} seconds"
 
-    async def _generate_validation_recommendations(self, checks: dict[str, bool]) -> list[str]:
+    async def _generate_validation_recommendations(
+        self, checks: dict[str, bool]
+    ) -> list[str]:
         """Generate validation recommendations"""
         recommendations = []
         for check, passed in checks.items():

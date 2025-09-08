@@ -142,13 +142,22 @@ class DeploymentEngine:
     def _init_deployers(self) -> Dict[DeploymentTarget, Dict]:
         """Initialize deployers for different targets"""
         return {
-            DeploymentTarget.LOCAL: {"deploy": self._deploy_local, "verify": self._verify_local},
-            DeploymentTarget.DOCKER: {"deploy": self._deploy_docker, "verify": self._verify_docker},
+            DeploymentTarget.LOCAL: {
+                "deploy": self._deploy_local,
+                "verify": self._verify_local,
+            },
+            DeploymentTarget.DOCKER: {
+                "deploy": self._deploy_docker,
+                "verify": self._verify_docker,
+            },
             DeploymentTarget.KUBERNETES: {
                 "deploy": self._deploy_kubernetes,
                 "verify": self._verify_kubernetes,
             },
-            DeploymentTarget.AWS: {"deploy": self._deploy_aws, "verify": self._verify_aws},
+            DeploymentTarget.AWS: {
+                "deploy": self._deploy_aws,
+                "verify": self._verify_aws,
+            },
         }
 
     def build(self, config: BuildConfig) -> Tuple[bool, str]:
@@ -326,8 +335,16 @@ class DeploymentEngine:
         return {
             "id": deployment_id,
             "status": deployment.get("status", DeploymentStatus.PENDING),
-            "target": deployment.get("config", {}).target if deployment.get("config") else None,
-            "version": deployment.get("config", {}).version if deployment.get("config") else None,
+            "target": (
+                deployment.get("config", {}).target
+                if deployment.get("config")
+                else None
+            ),
+            "version": (
+                deployment.get("config", {}).version
+                if deployment.get("config")
+                else None
+            ),
             "start_time": deployment.get("start_time"),
             "end_time": deployment.get("end_time"),
         }
@@ -382,7 +399,9 @@ CMD ["app"]
 """,
         }
 
-        return dockerfiles.get(config.language, "FROM ubuntu:latest\nWORKDIR /app\nCOPY . .")
+        return dockerfiles.get(
+            config.language, "FROM ubuntu:latest\nWORKDIR /app\nCOPY . ."
+        )
 
     def create_kubernetes_manifest(self, config: DeploymentConfig) -> str:
         """
@@ -399,7 +418,10 @@ CMD ["app"]
             "kind": "Deployment",
             "metadata": {
                 "name": f"{config.build_config.project_path}-deployment",
-                "labels": {"app": config.build_config.project_path, "version": config.version},
+                "labels": {
+                    "app": config.build_config.project_path,
+                    "version": config.version,
+                },
             },
             "spec": {
                 "replicas": config.replicas,
@@ -490,7 +512,13 @@ jobs:
         """Execute shell command"""
         try:
             result = subprocess.run(
-                command, shell=True, cwd=cwd, env=env, capture_output=True, text=True, timeout=300
+                command,
+                shell=True,
+                cwd=cwd,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
             return result.returncode == 0, result.stdout + result.stderr
         except subprocess.TimeoutExpired:
@@ -519,7 +547,9 @@ jobs:
 
         return success, str(build_dir)
 
-    def _update_deployment_status(self, deployment_id: str, status: DeploymentStatus) -> None:
+    def _update_deployment_status(
+        self, deployment_id: str, status: DeploymentStatus
+    ) -> None:
         """Update deployment status"""
         if deployment_id in self.active_deployments:
             self.active_deployments[deployment_id]["status"] = status
@@ -528,7 +558,9 @@ jobs:
                 DeploymentStatus.FAILED,
                 DeploymentStatus.ROLLED_BACK,
             ]:
-                self.active_deployments[deployment_id]["end_time"] = self._get_timestamp()
+                self.active_deployments[deployment_id][
+                    "end_time"
+                ] = self._get_timestamp()
                 # Move to history
                 self.deployment_history.append(self.active_deployments[deployment_id])
 
@@ -587,15 +619,17 @@ jobs:
             raise Exception("Docker build failed")
 
         # Run container
-        run_command = (
-            f"docker run -d -p 8080:8080 --name {config.build_config.project_path} {image_name}"
-        )
+        run_command = f"docker run -d -p 8080:8080 --name {config.build_config.project_path} {image_name}"
         success, output = self._execute_command(run_command)
 
         if not success:
             raise Exception("Docker run failed")
 
-        return {"url": "http://localhost:8080", "type": "docker", "container_id": output.strip()}
+        return {
+            "url": "http://localhost:8080",
+            "type": "docker",
+            "container_id": output.strip(),
+        }
 
     def _verify_docker(self, result: Dict[str, Any]) -> bool:
         """Verify Docker deployment"""
@@ -604,7 +638,9 @@ jobs:
         success, output = self._execute_command(check_command)
         return success and output.strip() != ""
 
-    def _deploy_kubernetes(self, config: DeploymentConfig, artifact: str) -> Dict[str, Any]:
+    def _deploy_kubernetes(
+        self, config: DeploymentConfig, artifact: str
+    ) -> Dict[str, Any]:
         """Deploy to Kubernetes"""
         # Generate manifest
         manifest_yaml = self.create_kubernetes_manifest(config)
@@ -633,14 +669,19 @@ jobs:
     def _verify_kubernetes(self, result: Dict[str, Any]) -> bool:
         """Verify Kubernetes deployment"""
         # Check deployment status
-        check_command = f"kubectl rollout status deployment/{result.get('deployment', '')}"
+        check_command = (
+            f"kubectl rollout status deployment/{result.get('deployment', '')}"
+        )
         success, _ = self._execute_command(check_command)
         return success
 
     def _deploy_aws(self, config: DeploymentConfig, artifact: str) -> Dict[str, Any]:
         """Deploy to AWS (placeholder)"""
         # This would integrate with AWS services like ECS, Lambda, or EC2
-        return {"url": f"https://{config.build_config.project_path}.amazonaws.com", "type": "aws"}
+        return {
+            "url": f"https://{config.build_config.project_path}.amazonaws.com",
+            "type": "aws",
+        }
 
     def _verify_aws(self, result: Dict[str, Any]) -> bool:
         """Verify AWS deployment (placeholder)"""

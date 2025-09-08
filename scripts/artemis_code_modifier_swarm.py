@@ -49,7 +49,8 @@ class CodeModifierAgent:
             # Check for hardcoded secrets
             for i, line in enumerate(lines, 1):
                 if any(
-                    key in line.lower() for key in ["api_key=", "secret=", "password=", "token="]
+                    key in line.lower()
+                    for key in ["api_key=", "secret=", "password=", "token="]
                 ):
                     if not line.strip().startswith("#") and '"' in line:
                         issues.append(
@@ -138,7 +139,11 @@ class CodeModifierAgent:
 
                 if write_result.get("success"):
                     self.modifications_made.append(
-                        {"file": file_path, "issue": issue, "timestamp": datetime.now().isoformat()}
+                        {
+                            "file": file_path,
+                            "issue": issue,
+                            "timestamp": datetime.now().isoformat(),
+                        }
                     )
                     self.files_modified.append(file_path)
                     return True
@@ -173,7 +178,9 @@ class ArtemisCodeModifierSwarm:
 
         # Get current git status
         git_result = git_status()
-        print(f"\n📊 Git Status: {len(git_result.get('files', []))} uncommitted changes")
+        print(
+            f"\n📊 Git Status: {len(git_result.get('files', []))} uncommitted changes"
+        )
 
         all_issues = []
         all_fixes = []
@@ -194,7 +201,9 @@ class ArtemisCodeModifierSwarm:
                     analysis = agent.read_and_analyze(full_path)
 
                     if "issues" in analysis and analysis["issues"]:
-                        print(f"  Found {len(analysis['issues'])} issues in {file_path}")
+                        print(
+                            f"  Found {len(analysis['issues'])} issues in {file_path}"
+                        )
                         all_issues.extend(analysis["issues"])
 
                         if not dry_run:
@@ -202,7 +211,11 @@ class ArtemisCodeModifierSwarm:
                             for issue in analysis["issues"]:
                                 if agent.fix_issue(full_path, issue):
                                     all_fixes.append(
-                                        {"agent": agent.name, "file": file_path, "issue": issue}
+                                        {
+                                            "agent": agent.name,
+                                            "file": file_path,
+                                            "issue": issue,
+                                        }
                                     )
                                     print(
                                         f"    ✅ Fixed: {issue['type']} at line {issue.get('line', 'N/A')}"
@@ -215,7 +228,9 @@ class ArtemisCodeModifierSwarm:
             "repository": self.repo_path,
             "issues_found": len(all_issues),
             "fixes_applied": len(all_fixes),
-            "files_modified": list(set(f["file"] for f in all_fixes)) if all_fixes else [],
+            "files_modified": (
+                list(set(f["file"] for f in all_fixes)) if all_fixes else []
+            ),
             "agents": [
                 {
                     "name": agent.name,
@@ -229,7 +244,9 @@ class ArtemisCodeModifierSwarm:
         }
 
         # Save report
-        report_file = f"code_modifier_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_file = (
+            f"code_modifier_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(report_file, "w") as f:
             json.dump(report, f, indent=2)
 
@@ -265,7 +282,9 @@ async def main():
     if report["issues_found"] > 0:
         print("\n🎯 TOP ISSUES FOUND:")
         for issue in report["all_issues"][:5]:
-            print(f"  • {issue.get('type', 'unknown')}: {issue.get('severity', 'unknown')}")
+            print(
+                f"  • {issue.get('type', 'unknown')}: {issue.get('severity', 'unknown')}"
+            )
             if "fix" in issue:
                 print(f"    Fix: {issue['fix']}")
 

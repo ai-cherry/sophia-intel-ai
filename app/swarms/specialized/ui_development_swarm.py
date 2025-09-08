@@ -184,7 +184,9 @@ class UIdevelopmentSwarm:
         project_results["deliverables"]["design"] = design_result
 
         # Phase 3: Component Development
-        development_result = await self._execute_component_development(task, design_result)
+        development_result = await self._execute_component_development(
+            task, design_result
+        )
         project_results["deliverables"]["components"] = development_result
 
         # Phase 4: Styling & Responsiveness
@@ -200,7 +202,9 @@ class UIdevelopmentSwarm:
         project_results["deliverables"]["testing"] = testing_result
 
         # Phase 7: Performance Optimization
-        performance_result = await self._execute_performance_optimization(task, testing_result)
+        performance_result = await self._execute_performance_optimization(
+            task, testing_result
+        )
         project_results["deliverables"]["performance"] = performance_result
 
         project_results.update(
@@ -233,7 +237,9 @@ class UIdevelopmentSwarm:
                 "local_state": ["isLoading", "isVisible", "selectedItem"],
                 "global_state": ["user", "theme", "preferences"],
                 "state_pattern": (
-                    "useState" if task.framework == UIFramework.REACT else "composition_api"
+                    "useState"
+                    if task.framework == UIFramework.REACT
+                    else "composition_api"
                 ),
             },
             "data_flow": {
@@ -308,7 +314,10 @@ class UIdevelopmentSwarm:
                     "2xl": "1.5rem",
                 },
             },
-            "spacing": {"scale": "4px base", "values": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64]},
+            "spacing": {
+                "scale": "4px base",
+                "values": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64],
+            },
         }
 
         return {
@@ -348,7 +357,9 @@ class UIdevelopmentSwarm:
             ),
         }
 
-    async def _execute_styling(self, task: UITask, components: dict[str, Any]) -> dict[str, Any]:
+    async def _execute_styling(
+        self, task: UITask, components: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute styling implementation"""
 
         css_agent = self._get_agent("css_specialist_01")
@@ -381,7 +392,9 @@ class UIdevelopmentSwarm:
             "css_files": styling_implementation,
         }
 
-    async def _execute_accessibility(self, task: UITask, styling: dict[str, Any]) -> dict[str, Any]:
+    async def _execute_accessibility(
+        self, task: UITask, styling: dict[str, Any]
+    ) -> dict[str, Any]:
         """Execute accessibility implementation"""
 
         a11y_agent = self._get_agent("accessibility_expert_01")
@@ -391,7 +404,9 @@ class UIdevelopmentSwarm:
             "aria_labels": True,
             "keyboard_navigation": True,
             "screen_reader_support": True,
-            "color_contrast_ratio": "4.5:1" if task.accessibility_level == "AA" else "7:1",
+            "color_contrast_ratio": (
+                "4.5:1" if task.accessibility_level == "AA" else "7:1"
+            ),
             "focus_management": True,
             "semantic_html": True,
             "skip_links": True,
@@ -498,7 +513,9 @@ class UIdevelopmentSwarm:
                 return agent
         return self.agent_pool[0]  # Fallback
 
-    def _generate_react_component(self, task: UITask, design: dict[str, Any]) -> dict[str, str]:
+    def _generate_react_component(
+        self, task: UITask, design: dict[str, Any]
+    ) -> dict[str, str]:
         """Generate React component code"""
 
         component_template = f"""
@@ -563,13 +580,21 @@ export default {task.component_name};
             f"{task.component_name}.test.tsx": f"// Tests for {task.component_name}",
         }
 
-    def _generate_vue_component(self, task: UITask, design: dict[str, Any]) -> dict[str, str]:
+    def _generate_vue_component(
+        self, task: UITask, design: dict[str, Any]
+    ) -> dict[str, str]:
         """Generate Vue component code"""
-        return {f"{task.component_name}.vue": f"<!-- Vue component for {task.component_name} -->"}
+        return {
+            f"{task.component_name}.vue": f"<!-- Vue component for {task.component_name} -->"
+        }
 
-    def _generate_generic_component(self, task: UITask, design: dict[str, Any]) -> dict[str, str]:
+    def _generate_generic_component(
+        self, task: UITask, design: dict[str, Any]
+    ) -> dict[str, str]:
         """Generate generic component code"""
-        return {f"{task.component_name}.js": f"// Generic component for {task.component_name}"}
+        return {
+            f"{task.component_name}.js": f"// Generic component for {task.component_name}"
+        }
 
     def _calculate_quality_score(self, results: dict[str, Any]) -> int:
         """Calculate overall quality score"""
@@ -587,7 +612,9 @@ export default {task.component_name};
 
         # Accessibility score (15%)
         if "accessibility" in results["deliverables"]:
-            scores.append(results["deliverables"]["accessibility"].get("audit_score", 85))
+            scores.append(
+                results["deliverables"]["accessibility"].get("audit_score", 85)
+            )
 
         # Testing coverage (15%)
         if "testing" in results["deliverables"]:

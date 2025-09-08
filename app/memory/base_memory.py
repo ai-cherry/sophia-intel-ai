@@ -104,7 +104,9 @@ class BaseMemoryService(ABC):
         )
 
         # Security setup (optional)
-        self.security = HTTPBearer(auto_error=False) if self.config.enable_auth else None
+        self.security = (
+            HTTPBearer(auto_error=False) if self.config.enable_auth else None
+        )
 
         # Simple Redis-backed rate limiter (optional)
         async def rate_limit_dep(request=None):
@@ -123,7 +125,9 @@ class BaseMemoryService(ABC):
                     try:
                         ttl = self.redis_client.ttl(key)
                         retry_after = (
-                            max(int(ttl), 1) if ttl and ttl > 0 else self.config.rate_limit_period
+                            max(int(ttl), 1)
+                            if ttl and ttl > 0
+                            else self.config.rate_limit_period
                         )
                     except Exception:
                         retry_after = self.config.rate_limit_period
@@ -346,7 +350,9 @@ class BaseMemoryService(ABC):
                 if request.limit > self.config.max_search_limit:
                     request.limit = self.config.max_search_limit
 
-                results = await self.search(request.query, request.limit, request.filters)
+                results = await self.search(
+                    request.query, request.limit, request.filters
+                )
 
                 if request.include_context:
                     results = await self.enrich_with_context(results)
@@ -364,7 +370,9 @@ class BaseMemoryService(ABC):
                 self.logger.error(f"Query error: {e}")
                 raise HTTPException(status_code=500, detail="Internal server error")
 
-        @self.app.post("/index", dependencies=[Depends(auth_dep), Depends(self._rate_limit_dep)])
+        @self.app.post(
+            "/index", dependencies=[Depends(auth_dep), Depends(self._rate_limit_dep)]
+        )
         async def index_document(request: IndexRequest):
             """Index a document into memory"""
             try:
@@ -418,7 +426,9 @@ class BaseMemoryService(ABC):
             try:
                 if self.redis_available:
                     pattern = f"{self.domain}:*"
-                    total_keys = len(list(self.redis_client.scan_iter(match=pattern, count=1000)))
+                    total_keys = len(
+                        list(self.redis_client.scan_iter(match=pattern, count=1000))
+                    )
                     memory_info = self.redis_client.memory_stats()
 
                     return {
@@ -427,7 +437,9 @@ class BaseMemoryService(ABC):
                         "memory_used_mb": round(
                             memory_info.get("total.allocated", 0) / 1024 / 1024, 2
                         ),
-                        "backend": "redis+weaviate" if self.weaviate_client else "redis",
+                        "backend": (
+                            "redis+weaviate" if self.weaviate_client else "redis"
+                        ),
                     }
                 else:
                     return {
@@ -536,15 +548,25 @@ class BaseMemoryService(ABC):
                 "error": {
                     "code": exc.status_code,
                     "type": err_type,
-                    "message": exc.detail if isinstance(exc.detail, str) else str(exc.detail),
+                    "message": (
+                        exc.detail if isinstance(exc.detail, str) else str(exc.detail)
+                    ),
                 }
             }
             headers = getattr(exc, "headers", None) or {}
-            return JSONResponse(status_code=exc.status_code, content=payload, headers=headers)
+            return JSONResponse(
+                status_code=exc.status_code, content=payload, headers=headers
+            )
 
         @self.app.exception_handler(Exception)
         async def unhandled_exception_handler(request: Request, exc: Exception):
-            payload = {"error": {"code": 500, "type": "server", "message": "Internal server error"}}
+            payload = {
+                "error": {
+                    "code": 500,
+                    "type": "server",
+                    "message": "Internal server error",
+                }
+            }
             return JSONResponse(status_code=500, content=payload)
 
     def _setup_openapi_security(self):
@@ -592,7 +614,9 @@ class BaseMemoryService(ABC):
         pass
 
     @abstractmethod
-    async def enrich_with_context(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def enrich_with_context(
+        self, results: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
         """Add domain-specific context to results"""
         pass
 

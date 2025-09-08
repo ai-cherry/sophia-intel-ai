@@ -152,7 +152,9 @@ class SwarmIntelligence:
 
         # Extract successful patterns
         successful = [
-            p for p in performance_data if p.get("result_quality", 0) > self.selection_pressure
+            p
+            for p in performance_data
+            if p.get("result_quality", 0) > self.selection_pressure
         ]
 
         if not successful:
@@ -212,7 +214,9 @@ class SwarmIntelligence:
 
         # Reward faster response times
         if "avg_response_time" in mutation:
-            time_score = max(0, 1 - (mutation["avg_response_time"] / 5000))  # 5s baseline
+            time_score = max(
+                0, 1 - (mutation["avg_response_time"] / 5000)
+            )  # 5s baseline
             base_score += time_score * 0.3
 
         # Reward higher success rates
@@ -337,7 +341,9 @@ class FactoryMCPSwarm:
                     cache_key = self._generate_cache_key(call)
 
                     # Check cache first
-                    cached_result = await self.cache.get(cache_key) if self.cache else None
+                    cached_result = (
+                        await self.cache.get(cache_key) if self.cache else None
+                    )
                     if cached_result:
                         span.set_attribute("cache.hit", True)
                         execution_time = (time.time() - start_time) * 1000
@@ -362,7 +368,9 @@ class FactoryMCPSwarm:
                         await self.cache.set(cache_key, result, ttl)
 
                     # Background evolution (SDP loop)
-                    background.add_task(self._evolve_droid, call, result, execution_time)
+                    background.add_task(
+                        self._evolve_droid, call, result, execution_time
+                    )
 
                     # Record performance
                     self._record_performance("success", call.tool, execution_time)
@@ -427,7 +435,9 @@ class FactoryMCPSwarm:
     def _generate_cache_key(self, call: ToolCall) -> str:
         """Generate personalized cache key"""
         user_id = (
-            call.user_context.get("user_id", "anonymous") if call.user_context else "anonymous"
+            call.user_context.get("user_id", "anonymous")
+            if call.user_context
+            else "anonymous"
         )
         params_hash = hash(json.dumps(call.params, sort_keys=True))
         return f"mcp:{call.tool}:{user_id}:{params_hash}"
@@ -492,7 +502,10 @@ class FactoryMCPSwarm:
         evolution = self.evolution_loops.get(
             droid_id,
             DroidEvolution(
-                id=droid_id, performance_history=[], query_patterns={}, evolution_score=0.0
+                id=droid_id,
+                performance_history=[],
+                query_patterns={},
+                evolution_score=0.0,
             ),
         )
 
@@ -704,7 +717,9 @@ class FactoryMCPSwarm:
         if not self.evolution_loops:
             return 0.0
 
-        individual_scores = [droid.evolution_score for droid in self.evolution_loops.values()]
+        individual_scores = [
+            droid.evolution_score for droid in self.evolution_loops.values()
+        ]
         individual_sum = sum(individual_scores)
 
         # Emergence = synergy between droids
@@ -714,9 +729,9 @@ class FactoryMCPSwarm:
         if individual_sum == 0:
             return 0.0
 
-        emergence = (collective_performance - (individual_sum / len(individual_scores))) / max(
-            collective_performance, 0.1
-        )
+        emergence = (
+            collective_performance - (individual_sum / len(individual_scores))
+        ) / max(collective_performance, 0.1)
         return min(max(emergence, 0), 1)
 
     async def _evolve_droid(self, call: ToolCall, result: Dict, execution_time: float):
@@ -728,7 +743,9 @@ class FactoryMCPSwarm:
             "result_quality": self._assess_quality(result),
             "execution_time": execution_time,
             "user_satisfaction": (
-                call.user_context.get("feedback_score", 0.7) if call.user_context else 0.7
+                call.user_context.get("feedback_score", 0.7)
+                if call.user_context
+                else 0.7
             ),
             "timestamp": datetime.now().isoformat(),
         }
@@ -768,7 +785,9 @@ class FactoryMCPSwarm:
 
             # Evolve strategies for each tool
             for tool, performance_data in tool_performance.items():
-                evolved_strategy = await self.swarm.evolve_strategy(tool, performance_data)
+                evolved_strategy = await self.swarm.evolve_strategy(
+                    tool, performance_data
+                )
                 if evolved_strategy:
                     logger.info(
                         f"Evolved strategy for {tool}: fitness={evolved_strategy.get('fitness', 0):.3f}"
@@ -795,7 +814,9 @@ class FactoryMCPSwarm:
             logger.info(f"Droid {droid_id} ready for migration - high performance")
             # Implement actual migration logic here
         else:
-            logger.info(f"Droid {droid_id} not ready for migration - continuing evolution")
+            logger.info(
+                f"Droid {droid_id} not ready for migration - continuing evolution"
+            )
 
     async def _proxy_fallback(self, params: Dict, context: Dict) -> Dict:
         """Fallback proxy to Factory AI"""
@@ -819,7 +840,10 @@ class FactoryMCPSwarm:
     async def _generate_with_context(self, params: Dict, context: Dict) -> Dict:
         """Generate code with user context"""
         # Placeholder for contextual code generation
-        return {"generated_code": "# Contextual code generation not implemented", "success": True}
+        return {
+            "generated_code": "# Contextual code generation not implemented",
+            "success": True,
+        }
 
     async def _distributed_query(self, params: Dict, context: Dict) -> Dict:
         """Distributed query across swarm"""
@@ -834,4 +858,6 @@ app = factory_swarm.app
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("swarm_wrapper:app", host="${BIND_IP}", port=8001, reload=True, log_level="info")
+    uvicorn.run(
+        "swarm_wrapper:app", host="${BIND_IP}", port=8001, reload=True, log_level="info"
+    )

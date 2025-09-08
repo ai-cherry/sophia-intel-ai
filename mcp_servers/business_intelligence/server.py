@@ -18,7 +18,13 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import Response
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+from prometheus_client import (
+    CONTENT_TYPE_LATEST,
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+)
 from pydantic import BaseModel, Field
 
 # Configure advanced structured logging
@@ -42,9 +48,13 @@ REQUEST_COUNT = Counter(
     "business_intelligence_requests_total", "Total requests", ["integration", "status"]
 )
 REQUEST_DURATION = Histogram(
-    "business_intelligence_request_duration_seconds", "Request duration", ["integration"]
+    "business_intelligence_request_duration_seconds",
+    "Request duration",
+    ["integration"],
 )
-ACTIVE_INTEGRATIONS = Gauge("business_intelligence_active_integrations", "Active integrations")
+ACTIVE_INTEGRATIONS = Gauge(
+    "business_intelligence_active_integrations", "Active integrations"
+)
 ERROR_RATE = Counter(
     "business_intelligence_errors_total", "Total errors", ["integration", "error_type"]
 )
@@ -86,7 +96,12 @@ class ApolloHandler:
     def __init__(self):
         self.api_key = os.getenv("APOLLO_API_KEY")
         self.base_url = "https://api.apollo.io/v1"
-        self.features = ["contact_search", "email_finder", "company_search", "technographics"]
+        self.features = [
+            "contact_search",
+            "email_finder",
+            "company_search",
+            "technographics",
+        ]
         self.cache = TTLCache(maxsize=1000, ttl=300)
         self.rate_limiter = AsyncLimiter(100, 60)  # 100 requests per minute
         self.client = httpx.AsyncClient(timeout=30.0)
@@ -117,7 +132,9 @@ class ApolloHandler:
                 else:
                     endpoint = f"{self.base_url}/people/search"
 
-                response = await self.client.post(endpoint, json=request_data, headers=headers)
+                response = await self.client.post(
+                    endpoint, json=request_data, headers=headers
+                )
                 response.raise_for_status()
 
                 result = {
@@ -133,8 +150,12 @@ class ApolloHandler:
                 return result
 
             except Exception as e:
-                logger.error("Apollo integration failed", error=str(e), request=request_data)
-                raise HTTPException(status_code=500, detail=f"Apollo integration error: {str(e)}")
+                logger.error(
+                    "Apollo integration failed", error=str(e), request=request_data
+                )
+                raise HTTPException(
+                    status_code=500, detail=f"Apollo integration error: {str(e)}"
+                )
 
 
 class UserGemsHandler:
@@ -143,7 +164,11 @@ class UserGemsHandler:
     def __init__(self):
         self.api_key = os.getenv("USERGEMS_API_KEY")
         self.base_url = "https://api.usergems.com/v1"
-        self.features = ["job_change_tracking", "intent_signals", "relationship_mapping"]
+        self.features = [
+            "job_change_tracking",
+            "intent_signals",
+            "relationship_mapping",
+        ]
         self.cache = TTLCache(maxsize=1000, ttl=300)
         self.rate_limiter = AsyncLimiter(100, 60)
         self.client = httpx.AsyncClient(timeout=30.0)
@@ -163,7 +188,9 @@ class UserGemsHandler:
                 }
 
                 endpoint = f"{self.base_url}/job_changes"
-                response = await self.client.post(endpoint, json=request_data, headers=headers)
+                response = await self.client.post(
+                    endpoint, json=request_data, headers=headers
+                )
                 response.raise_for_status()
 
                 result = {
@@ -178,8 +205,12 @@ class UserGemsHandler:
                 return result
 
             except Exception as e:
-                logger.error("UserGems integration failed", error=str(e), request=request_data)
-                raise HTTPException(status_code=500, detail=f"UserGems integration error: {str(e)}")
+                logger.error(
+                    "UserGems integration failed", error=str(e), request=request_data
+                )
+                raise HTTPException(
+                    status_code=500, detail=f"UserGems integration error: {str(e)}"
+                )
 
 
 class GongHandler:
@@ -188,7 +219,11 @@ class GongHandler:
     def __init__(self):
         self.api_key = os.getenv("GONG_API_KEY")
         self.base_url = "https://api.gong.io/v2"
-        self.features = ["conversation_intelligence", "deal_insights", "coaching_insights"]
+        self.features = [
+            "conversation_intelligence",
+            "deal_insights",
+            "coaching_insights",
+        ]
         self.cache = TTLCache(maxsize=1000, ttl=300)
         self.rate_limiter = AsyncLimiter(100, 60)
         self.client = httpx.AsyncClient(timeout=30.0)
@@ -208,7 +243,9 @@ class GongHandler:
                 }
 
                 endpoint = f"{self.base_url}/calls"
-                response = await self.client.post(endpoint, json=request_data, headers=headers)
+                response = await self.client.post(
+                    endpoint, json=request_data, headers=headers
+                )
                 response.raise_for_status()
 
                 result = {
@@ -223,8 +260,12 @@ class GongHandler:
                 return result
 
             except Exception as e:
-                logger.error("Gong integration failed", error=str(e), request=request_data)
-                raise HTTPException(status_code=500, detail=f"Gong integration error: {str(e)}")
+                logger.error(
+                    "Gong integration failed", error=str(e), request=request_data
+                )
+                raise HTTPException(
+                    status_code=500, detail=f"Gong integration error: {str(e)}"
+                )
 
 
 class IntercomHandler:
@@ -233,7 +274,11 @@ class IntercomHandler:
     def __init__(self):
         self.access_token = os.getenv("INTERCOM_ACCESS_TOKEN")
         self.base_url = "https://api.intercom.io"
-        self.features = ["customer_engagement", "support_automation", "lead_qualification"]
+        self.features = [
+            "customer_engagement",
+            "support_automation",
+            "lead_qualification",
+        ]
         self.cache = TTLCache(maxsize=1000, ttl=300)
         self.rate_limiter = AsyncLimiter(100, 60)
         self.client = httpx.AsyncClient(timeout=30.0)
@@ -269,8 +314,12 @@ class IntercomHandler:
                 return result
 
             except Exception as e:
-                logger.error("Intercom integration failed", error=str(e), request=request_data)
-                raise HTTPException(status_code=500, detail=f"Intercom integration error: {str(e)}")
+                logger.error(
+                    "Intercom integration failed", error=str(e), request=request_data
+                )
+                raise HTTPException(
+                    status_code=500, detail=f"Intercom integration error: {str(e)}"
+                )
 
 
 class HubSpotHandler:
@@ -315,8 +364,12 @@ class HubSpotHandler:
                 return result
 
             except Exception as e:
-                logger.error("HubSpot integration failed", error=str(e), request=request_data)
-                raise HTTPException(status_code=500, detail=f"HubSpot integration error: {str(e)}")
+                logger.error(
+                    "HubSpot integration failed", error=str(e), request=request_data
+                )
+                raise HTTPException(
+                    status_code=500, detail=f"HubSpot integration error: {str(e)}"
+                )
 
 
 class BusinessIntelligenceServer:
@@ -386,7 +439,9 @@ class BusinessIntelligenceServer:
                 )
                 REQUEST_DURATION.labels(integration=integration).observe(duration)
                 REQUEST_COUNT.labels(integration=integration, status="error").inc()
-                ERROR_RATE.labels(integration=integration, error_type=type(e).__name__).inc()
+                ERROR_RATE.labels(
+                    integration=integration, error_type=type(e).__name__
+                ).inc()
                 raise
 
     def _setup_sophisticated_routes(self):
@@ -519,7 +574,9 @@ class BusinessIntelligenceServer:
 
         @asynccontextmanager
         async def lifespan(app: FastAPI):
-            logger.info("Starting Business Intelligence server with advanced capabilities")
+            logger.info(
+                "Starting Business Intelligence server with advanced capabilities"
+            )
             yield
             logger.info("Shutting down Business Intelligence server")
 

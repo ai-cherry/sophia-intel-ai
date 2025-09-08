@@ -143,7 +143,9 @@ async def get_predictive_analytics(risk_threshold: float = 0.7) -> Dict:
                 "customer_name": "Global Logistics",
                 "current_age_days": 2,
                 "risk_score": 0.85,
-                "predicted_stuck_date": (datetime.now() + timedelta(days=3)).isoformat(),
+                "predicted_stuck_date": (
+                    datetime.now() + timedelta(days=3)
+                ).isoformat(),
                 "confidence": 0.78,
                 "risk_factors": {"age": 0.6, "amount": 0.8, "activity": 0.9},
                 "prevention_actions": [
@@ -157,7 +159,9 @@ async def get_predictive_analytics(risk_threshold: float = 0.7) -> Dict:
                 "customer_name": "Metro Properties",
                 "current_age_days": 1,
                 "risk_score": 0.72,
-                "predicted_stuck_date": (datetime.now() + timedelta(days=5)).isoformat(),
+                "predicted_stuck_date": (
+                    datetime.now() + timedelta(days=5)
+                ).isoformat(),
                 "confidence": 0.65,
                 "risk_factors": {"age": 0.3, "amount": 0.9, "activity": 0.7},
                 "prevention_actions": [

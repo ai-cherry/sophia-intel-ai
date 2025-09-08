@@ -173,11 +173,15 @@ class UnifiedMemoryInterface:
                 # Initialize vector databases for L2 semantic storage
                 if self.vector_manager:
                     # Test primary vector DB
-                    primary_db = self.tier_config[MemoryTier.L2_SEMANTIC]["preferred_vector_db"]
+                    primary_db = self.tier_config[MemoryTier.L2_SEMANTIC][
+                        "preferred_vector_db"
+                    ]
                     if self.vector_manager.test_connection(primary_db):
                         logger.info(f"✓ L2 Semantic ({primary_db.value}) initialized")
                     else:
-                        logger.warning(f"✗ Primary vector DB ({primary_db.value}) unavailable")
+                        logger.warning(
+                            f"✗ Primary vector DB ({primary_db.value}) unavailable"
+                        )
                 else:
                     logger.warning("✗ Vector manager not available")
 
@@ -324,15 +328,17 @@ class UnifiedMemoryInterface:
 
             # Deduplicate and rank by relevance
             unique_results = self._deduplicate_results(results)
-            ranked_results = sorted(unique_results, key=lambda x: x.relevance_score, reverse=True)[
-                : request.max_results
-            ]
+            ranked_results = sorted(
+                unique_results, key=lambda x: x.relevance_score, reverse=True
+            )[: request.max_results]
 
             # Update metrics
             response_time = (time.time() - start_time) * 1000
             self._update_response_time_metric(response_time)
 
-            logger.debug(f"Search returned {len(ranked_results)} results in {response_time:.2f}ms")
+            logger.debug(
+                f"Search returned {len(ranked_results)} results in {response_time:.2f}ms"
+            )
             return ranked_results
 
         except Exception as e:
@@ -372,7 +378,9 @@ class UnifiedMemoryInterface:
             results = await asyncio.gather(*update_tasks, return_exceptions=True)
             success_count = sum(1 for r in results if r is True)
 
-            logger.debug(f"Updated memory {memory_id} in {success_count}/{len(update_tasks)} tiers")
+            logger.debug(
+                f"Updated memory {memory_id} in {success_count}/{len(update_tasks)} tiers"
+            )
             return success_count > 0
 
         except Exception as e:
@@ -447,11 +455,21 @@ class UnifiedMemoryInterface:
     def _get_tier_access_order(self, priority: MemoryPriority) -> list[MemoryTier]:
         """Get tier access order based on priority"""
         if priority == MemoryPriority.CRITICAL or priority == MemoryPriority.HIGH:
-            return [MemoryTier.L1_CACHE, MemoryTier.L2_SEMANTIC, MemoryTier.L3_PERSISTENT]
+            return [
+                MemoryTier.L1_CACHE,
+                MemoryTier.L2_SEMANTIC,
+                MemoryTier.L3_PERSISTENT,
+            ]
         else:
-            return [MemoryTier.L1_CACHE, MemoryTier.L3_PERSISTENT, MemoryTier.L2_SEMANTIC]
+            return [
+                MemoryTier.L1_CACHE,
+                MemoryTier.L3_PERSISTENT,
+                MemoryTier.L2_SEMANTIC,
+            ]
 
-    async def _store_in_tier(self, tier: MemoryTier, entry: MemoryEntry) -> Optional[str]:
+    async def _store_in_tier(
+        self, tier: MemoryTier, entry: MemoryEntry
+    ) -> Optional[str]:
         """Store entry in specific tier"""
         try:
             if tier == MemoryTier.L1_CACHE:
@@ -467,7 +485,9 @@ class UnifiedMemoryInterface:
             logger.error(f"Failed to store in tier {tier}: {e}")
             return None
 
-    async def _retrieve_from_tier(self, tier: MemoryTier, memory_id: str) -> Optional[MemoryEntry]:
+    async def _retrieve_from_tier(
+        self, tier: MemoryTier, memory_id: str
+    ) -> Optional[MemoryEntry]:
         """Retrieve entry from specific tier"""
         try:
             if tier == MemoryTier.L1_CACHE:
@@ -508,7 +528,9 @@ class UnifiedMemoryInterface:
         }
 
         # Determine TTL
-        ttl = self.tier_config[MemoryTier.L1_CACHE]["ttl_by_priority"][entry.metadata.priority]
+        ttl = self.tier_config[MemoryTier.L1_CACHE]["ttl_by_priority"][
+            entry.metadata.priority
+        ]
         if entry.metadata.ttl_seconds:
             ttl = min(ttl, entry.metadata.ttl_seconds)
 
@@ -527,7 +549,9 @@ class UnifiedMemoryInterface:
 
         try:
             key = f"unified_memory:{memory_id}"
-            cached_data = await self.redis_manager.get(key, namespace=RedisNamespaces.MEMORY)
+            cached_data = await self.redis_manager.get(
+                key, namespace=RedisNamespaces.MEMORY
+            )
 
             if not cached_data:
                 return None
@@ -633,7 +657,9 @@ class UnifiedMemoryInterface:
         # Mem0 retrieval would go here
         return None
 
-    async def _search_l1_cache(self, request: MemorySearchRequest) -> list[MemorySearchResult]:
+    async def _search_l1_cache(
+        self, request: MemorySearchRequest
+    ) -> list[MemorySearchResult]:
         """Search L1 cache with text matching"""
         results = []
 
@@ -645,7 +671,9 @@ class UnifiedMemoryInterface:
             pattern = f"{RedisNamespaces.MEMORY}:unified_memory:*"
 
             # Use the Redis manager's scan functionality
-            async for key in self.redis_manager.redis.scan_iter(match=pattern, count=100):
+            async for key in self.redis_manager.redis.scan_iter(
+                match=pattern, count=100
+            ):
                 cached_data = await self.redis_manager.redis.get(key)
                 if cached_data:
                     try:
@@ -674,7 +702,9 @@ class UnifiedMemoryInterface:
 
         return results[: request.max_results]
 
-    async def _search_l2_semantic(self, request: MemorySearchRequest) -> list[MemorySearchResult]:
+    async def _search_l2_semantic(
+        self, request: MemorySearchRequest
+    ) -> list[MemorySearchResult]:
         """Search L2 vector database with semantic similarity"""
         results = []
 
@@ -704,7 +734,9 @@ class UnifiedMemoryInterface:
                         content=metadata.get("content", ""),
                         metadata=self._dict_to_metadata(metadata),
                         relevance_score=(
-                            vector_result.score if hasattr(vector_result, "score") else 0.7
+                            vector_result.score
+                            if hasattr(vector_result, "score")
+                            else 0.7
                         ),
                         access_time_ms=50.0,  # Vector search time
                         source_tier=MemoryTier.L2_SEMANTIC,
@@ -716,7 +748,9 @@ class UnifiedMemoryInterface:
 
         return results
 
-    async def _search_l3_persistent(self, request: MemorySearchRequest) -> list[MemorySearchResult]:
+    async def _search_l3_persistent(
+        self, request: MemorySearchRequest
+    ) -> list[MemorySearchResult]:
         """Search L3 persistent storage"""
         results = []
 
@@ -752,7 +786,9 @@ class UnifiedMemoryInterface:
             return False
 
         # User filter
-        return not (request.user_filter and metadata.get("user_id") != request.user_filter)
+        return not (
+            request.user_filter and metadata.get("user_id") != request.user_filter
+        )
 
     def _dict_to_metadata(self, metadata_dict: dict[str, Any]) -> MemoryMetadata:
         """Convert dictionary to MemoryMetadata object"""
@@ -775,7 +811,9 @@ class UnifiedMemoryInterface:
             confidence_score=metadata_dict.get("confidence_score", 1.0),
         )
 
-    def _deduplicate_results(self, results: list[MemorySearchResult]) -> list[MemorySearchResult]:
+    def _deduplicate_results(
+        self, results: list[MemorySearchResult]
+    ) -> list[MemorySearchResult]:
         """Remove duplicate results and merge scores"""
         seen_ids = set()
         unique_results = []
@@ -829,7 +867,10 @@ class UnifiedMemoryInterface:
         elif tier == MemoryTier.L3_PERSISTENT:
             if self.mem0_manager:
                 connected = self.mem0_manager.test_connection()
-                return {"available": connected, "status": "healthy" if connected else "unhealthy"}
+                return {
+                    "available": connected,
+                    "status": "healthy" if connected else "unhealthy",
+                }
             else:
                 return {"available": False, "status": "unavailable"}
 
@@ -862,7 +903,9 @@ class UnifiedMemoryInterface:
             if tier == MemoryTier.L1_CACHE:
                 if self.redis_manager:
                     key = f"unified_memory:{memory_id}"
-                    result = await self.redis_manager.delete(key, namespace=RedisNamespaces.MEMORY)
+                    result = await self.redis_manager.delete(
+                        key, namespace=RedisNamespaces.MEMORY
+                    )
                     return result > 0
                 return False
 
@@ -897,7 +940,11 @@ async def store_memory(
 ) -> str:
     """Store memory with simplified interface"""
     metadata = MemoryMetadata(
-        context=context, priority=priority, tags=tags or set(), user_id=user_id, domain=domain
+        context=context,
+        priority=priority,
+        tags=tags or set(),
+        user_id=user_id,
+        domain=domain,
     )
     return await unified_memory.store(content, metadata)
 

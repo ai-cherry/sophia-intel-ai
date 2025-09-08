@@ -118,7 +118,9 @@ class SQLitePool(ConnectionPool):
         # SQLite doesn't benefit from connection pooling in the same way
         # Use a single connection with thread safety
         self._connection = sqlite3.connect(
-            self.db_path, check_same_thread=False, isolation_level=None  # Autocommit mode
+            self.db_path,
+            check_same_thread=False,
+            isolation_level=None,  # Autocommit mode
         )
         self._connection.row_factory = sqlite3.Row
 
@@ -146,7 +148,9 @@ class SQLAlchemyPool(ConnectionPool):
 
     def __init__(self, **kwargs):
         if not SQLALCHEMY_AVAILABLE:
-            raise ImportError("SQLAlchemy required. Install with: pip install sqlalchemy")
+            raise ImportError(
+                "SQLAlchemy required. Install with: pip install sqlalchemy"
+            )
 
         # Build connection URL
         db_type = kwargs.get("db_type", os.getenv("DB_TYPE", "sqlite"))
@@ -280,7 +284,9 @@ class PooledStorageAdapter:
                             }
                         )
                         # Keep only last 100 slow queries
-                        self._query_stats["slow_queries"] = self._query_stats["slow_queries"][-100:]
+                        self._query_stats["slow_queries"] = self._query_stats[
+                            "slow_queries"
+                        ][-100:]
 
                     return cursor
 

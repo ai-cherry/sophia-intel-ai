@@ -111,7 +111,9 @@ class TokenCounter:
         ]
 
         indicator_count = sum(1 for indicator in code_indicators if indicator in text)
-        return indicator_count >= 2 or text.strip().startswith(("def ", "class ", "import "))
+        return indicator_count >= 2 or text.strip().startswith(
+            ("def ", "class ", "import ")
+        )
 
 
 class BaseChunker(ABC):
@@ -192,7 +194,9 @@ class BaseChunker(ABC):
                 current_words = chunk.content.split()
 
                 # Calculate overlap
-                overlap_tokens = min(self.overlap_size, len(prev_words), len(current_words))
+                overlap_tokens = min(
+                    self.overlap_size, len(prev_words), len(current_words)
+                )
 
                 if overlap_tokens > 0:
                     # Add overlap from previous chunk to beginning of current
@@ -202,9 +206,13 @@ class BaseChunker(ABC):
                     # Update metadata
                     new_metadata = chunk.metadata
                     new_metadata.overlap_with.append(prev_chunk.metadata.chunk_id)
-                    new_metadata.token_count = TokenCounter.estimate_tokens(overlapped_content)
+                    new_metadata.token_count = TokenCounter.estimate_tokens(
+                        overlapped_content
+                    )
 
-                    overlapped_chunk = Chunk(content=overlapped_content, metadata=new_metadata)
+                    overlapped_chunk = Chunk(
+                        content=overlapped_content, metadata=new_metadata
+                    )
                     overlapped_chunks.append(overlapped_chunk)
                 else:
                     overlapped_chunks.append(chunk)
@@ -241,7 +249,9 @@ class CodeChunker(BaseChunker):
     def _get_class_patterns(self) -> dict[str, re.Pattern]:
         """Get class detection patterns for different languages"""
         patterns = {
-            "python": re.compile(r"^(\s*)class\s+(\w+)(?:\([^)]*\))?\s*:", re.MULTILINE),
+            "python": re.compile(
+                r"^(\s*)class\s+(\w+)(?:\([^)]*\))?\s*:", re.MULTILINE
+            ),
             "javascript": re.compile(r"^(\s*)class\s+(\w+)", re.MULTILINE),
             "java": re.compile(
                 r"^(\s*)(?:public|private|protected)?\s*class\s+(\w+)", re.MULTILINE
@@ -267,9 +277,14 @@ class CodeChunker(BaseChunker):
 
             # Extract top-level definitions
             for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                if isinstance(
+                    node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
+                ):
                     chunk_content = self._extract_node_content(content, node)
-                    if chunk_content and len(chunk_content.strip()) >= self.min_chunk_size:
+                    if (
+                        chunk_content
+                        and len(chunk_content.strip()) >= self.min_chunk_size
+                    ):
                         chunk = self._create_chunk(
                             chunk_content,
                             content_id,
@@ -279,7 +294,9 @@ class CodeChunker(BaseChunker):
                             ChunkingStrategy.HIERARCHICAL,
                             hierarchy_level=(
                                 "function"
-                                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+                                if isinstance(
+                                    node, (ast.FunctionDef, ast.AsyncFunctionDef)
+                                )
                                 else "class"
                             ),
                             extra_metadata={
@@ -295,7 +312,9 @@ class CodeChunker(BaseChunker):
                 chunks = self._chunk_by_lines(content, content_id)
 
         except SyntaxError:
-            logger.warning(f"Syntax error in {content_id}, falling back to line-based chunking")
+            logger.warning(
+                f"Syntax error in {content_id}, falling back to line-based chunking"
+            )
             chunks = self._chunk_by_lines(content, content_id)
 
         return self._add_overlap(chunks)
@@ -320,14 +339,22 @@ class CodeChunker(BaseChunker):
         for match in self.function_patterns.finditer(content):
             line_num = content[: match.start()].count("\n")
             boundaries.append(
-                ("function", line_num, match.group(2) if match.lastindex >= 2 else "unknown")
+                (
+                    "function",
+                    line_num,
+                    match.group(2) if match.lastindex >= 2 else "unknown",
+                )
             )
 
         # Find classes
         for match in self.class_patterns.finditer(content):
             line_num = content[: match.start()].count("\n")
             boundaries.append(
-                ("class", line_num, match.group(2) if match.lastindex >= 2 else "unknown")
+                (
+                    "class",
+                    line_num,
+                    match.group(2) if match.lastindex >= 2 else "unknown",
+                )
             )
 
         boundaries.sort(key=lambda x: x[1])  # Sort by line number
@@ -350,7 +377,11 @@ class CodeChunker(BaseChunker):
                     ContentType.CODE,
                     ChunkingStrategy.HIERARCHICAL,
                     hierarchy_level=boundary_type,
-                    extra_metadata={"name": name, "type": boundary_type, "language": self.language},
+                    extra_metadata={
+                        "name": name,
+                        "type": boundary_type,
+                        "language": self.language,
+                    },
                 )
                 chunks.append(chunk)
 
@@ -372,7 +403,10 @@ class CodeChunker(BaseChunker):
         for i, line in enumerate(lines):
             line_tokens = TokenCounter.estimate_tokens(line)
 
-            if current_tokens + line_tokens > self.max_chunk_size and current_chunk_lines:
+            if (
+                current_tokens + line_tokens > self.max_chunk_size
+                and current_chunk_lines
+            ):
                 # Create chunk
                 chunk_content = "\n".join(current_chunk_lines)
                 chunk = self._create_chunk(
@@ -410,7 +444,9 @@ class CodeChunker(BaseChunker):
 
         return chunks
 
-    def create_hierarchical_chunks(self, content: str, content_id: str) -> dict[str, list[Chunk]]:
+    def create_hierarchical_chunks(
+        self, content: str, content_id: str
+    ) -> dict[str, list[Chunk]]:
         """Create chunks at multiple hierarchy levels"""
         hierarchical_chunks = {}
 
@@ -529,9 +565,14 @@ class CodeChunker(BaseChunker):
                 ]
             )
 
-            if is_block_start or (current_block and indent <= current_indent and current_block):
+            if is_block_start or (
+                current_block and indent <= current_indent and current_block
+            ):
                 # End current block
-                if current_block and len("\n".join(current_block).strip()) >= self.min_chunk_size:
+                if (
+                    current_block
+                    and len("\n".join(current_block).strip()) >= self.min_chunk_size
+                ):
                     block_content = "\n".join(current_block)
                     block = self._create_chunk(
                         block_content,
@@ -554,7 +595,10 @@ class CodeChunker(BaseChunker):
                 current_block.append(line)
 
         # Add final block
-        if current_block and len("\n".join(current_block).strip()) >= self.min_chunk_size:
+        if (
+            current_block
+            and len("\n".join(current_block).strip()) >= self.min_chunk_size
+        ):
             block_content = "\n".join(current_block)
             block = self._create_chunk(
                 block_content,
@@ -597,7 +641,9 @@ class DocumentationChunker(BaseChunker):
             r"\[.*\]\(.*\)",  # Links
         ]
 
-        return any(re.search(pattern, content, re.MULTILINE) for pattern in markdown_indicators)
+        return any(
+            re.search(pattern, content, re.MULTILINE) for pattern in markdown_indicators
+        )
 
     def _chunk_markdown(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk markdown content by headers and sections"""
@@ -675,7 +721,10 @@ class DocumentationChunker(BaseChunker):
 
             para_tokens = TokenCounter.estimate_tokens(paragraph)
 
-            if current_tokens + para_tokens > self.max_chunk_size and current_chunk_parts:
+            if (
+                current_tokens + para_tokens > self.max_chunk_size
+                and current_chunk_parts
+            ):
                 # Create chunk from current parts
                 chunk_content = "\n\n".join(current_chunk_parts)
                 chunk = self._create_chunk(
@@ -725,7 +774,10 @@ class DocumentationChunker(BaseChunker):
         for sentence in sentences:
             sentence_tokens = TokenCounter.estimate_tokens(sentence)
 
-            if current_tokens + sentence_tokens > self.max_chunk_size and current_chunk_sentences:
+            if (
+                current_tokens + sentence_tokens > self.max_chunk_size
+                and current_chunk_sentences
+            ):
                 # Create chunk
                 chunk_content = " ".join(current_chunk_sentences)
                 chunk = self._create_chunk(
@@ -789,7 +841,10 @@ class DocumentationChunker(BaseChunker):
 
             para_tokens = TokenCounter.estimate_tokens(paragraph)
 
-            if current_tokens + para_tokens > self.max_chunk_size and current_chunk_parts:
+            if (
+                current_tokens + para_tokens > self.max_chunk_size
+                and current_chunk_parts
+            ):
                 chunk_content = "\n\n".join(current_chunk_parts)
                 chunk = self._create_chunk(
                     chunk_content,
@@ -834,7 +889,9 @@ class ConversationChunker(BaseChunker):
         self.message_pattern = re.compile(
             r"^(User|Assistant|System|Human|AI):\s*(.*)$", re.MULTILINE | re.IGNORECASE
         )
-        self.turn_boundary = re.compile(r"\n(?=(?:User|Assistant|System|Human|AI):)", re.IGNORECASE)
+        self.turn_boundary = re.compile(
+            r"\n(?=(?:User|Assistant|System|Human|AI):)", re.IGNORECASE
+        )
 
     def chunk_content(self, content: str, content_id: str) -> list[Chunk]:
         """Chunk conversation content by message exchanges"""
@@ -844,7 +901,9 @@ class ConversationChunker(BaseChunker):
         else:
             return self._chunk_unstructured_conversation(content, content_id)
 
-    def _chunk_structured_conversation(self, content: str, content_id: str) -> list[Chunk]:
+    def _chunk_structured_conversation(
+        self, content: str, content_id: str
+    ) -> list[Chunk]:
         """Chunk structured conversation (User: ... Assistant: ...)"""
         chunks = []
 
@@ -902,13 +961,18 @@ class ConversationChunker(BaseChunker):
                 ChunkingStrategy.SEMANTIC,
                 hierarchy_level="exchange",
                 semantic_boundary=True,
-                extra_metadata={"exchange_id": exchange_count, "turn_count": len(current_exchange)},
+                extra_metadata={
+                    "exchange_id": exchange_count,
+                    "turn_count": len(current_exchange),
+                },
             )
             chunks.append(chunk)
 
         return chunks
 
-    def _chunk_unstructured_conversation(self, content: str, content_id: str) -> list[Chunk]:
+    def _chunk_unstructured_conversation(
+        self, content: str, content_id: str
+    ) -> list[Chunk]:
         """Chunk unstructured conversation content"""
         # Fall back to paragraph-based chunking with conversation awareness
         paragraphs = re.split(r"\n\s*\n", content)
@@ -924,7 +988,10 @@ class ConversationChunker(BaseChunker):
 
             para_tokens = TokenCounter.estimate_tokens(paragraph)
 
-            if current_tokens + para_tokens > self.max_chunk_size and current_chunk_parts:
+            if (
+                current_tokens + para_tokens > self.max_chunk_size
+                and current_chunk_parts
+            ):
                 chunk_content = "\n\n".join(current_chunk_parts)
                 chunk = self._create_chunk(
                     chunk_content,
@@ -968,7 +1035,9 @@ class AdaptiveChunker:
         self.overlap_size = overlap_size
 
         # Initialize specialized chunkers
-        self.code_chunker = CodeChunker(max_chunk_size=max_chunk_size, overlap_size=overlap_size)
+        self.code_chunker = CodeChunker(
+            max_chunk_size=max_chunk_size, overlap_size=overlap_size
+        )
         self.doc_chunker = DocumentationChunker(
             max_chunk_size=max_chunk_size, overlap_size=overlap_size
         )
@@ -1039,7 +1108,9 @@ class AdaptiveChunker:
         ]
 
         markdown_score = sum(
-            1 for pattern in markdown_patterns if re.search(pattern, content, re.MULTILINE)
+            1
+            for pattern in markdown_patterns
+            if re.search(pattern, content, re.MULTILINE)
         )
 
         # Determine content type based on scores
@@ -1056,8 +1127,17 @@ class AdaptiveChunker:
         """Detect programming language from content"""
         language_indicators = {
             "python": [r"\bdef\s+\w+", r"\bimport\s+\w+", r"\bclass\s+\w+:", r"#\s*.*"],
-            "javascript": [r"\bfunction\s+\w+", r"\bvar\s+\w+", r"\bconst\s+\w+", r"//.*"],
-            "java": [r"\bpublic\s+class", r"\bpublic\s+static\s+void", r"import\s+\w+\.\*;"],
+            "javascript": [
+                r"\bfunction\s+\w+",
+                r"\bvar\s+\w+",
+                r"\bconst\s+\w+",
+                r"//.*",
+            ],
+            "java": [
+                r"\bpublic\s+class",
+                r"\bpublic\s+static\s+void",
+                r"import\s+\w+\.\*;",
+            ],
             "cpp": [r"#include\s*<", r"\bint\s+main\s*\(", r"std::"],
             "go": [r"\bfunc\s+\w+", r"\bpackage\s+\w+", r'\bimport\s+"'],
         }
@@ -1107,6 +1187,8 @@ class AdaptiveChunker:
             "content_types": content_types,
             "strategies": strategies,
             "hierarchy_levels": hierarchy_levels,
-            "semantic_boundaries": sum(1 for c in chunks if c.metadata.semantic_boundary),
+            "semantic_boundaries": sum(
+                1 for c in chunks if c.metadata.semantic_boundary
+            ),
             "overlapped_chunks": sum(1 for c in chunks if c.metadata.overlap_with),
         }

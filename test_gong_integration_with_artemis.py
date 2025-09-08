@@ -36,7 +36,11 @@ class ArtemisIntegrationTester:
                 "name": "Artemis Webhook Testing Specialist",
                 "personality": "tactical_precise",
                 "mission": "Test n8n webhook endpoints and validate processing",
-                "capabilities": ["webhook_testing", "api_validation", "json_processing"],
+                "capabilities": [
+                    "webhook_testing",
+                    "api_validation",
+                    "json_processing",
+                ],
             },
             "integration_analyst": {
                 "name": "Artemis Integration Flow Analyst",
@@ -48,7 +52,11 @@ class ArtemisIntegrationTester:
                 "name": "Artemis Security Audit Specialist",
                 "personality": "security_paranoid",
                 "mission": "Validate security aspects of the integration pipeline",
-                "capabilities": ["security_validation", "credential_testing", "threat_assessment"],
+                "capabilities": [
+                    "security_validation",
+                    "credential_testing",
+                    "threat_assessment",
+                ],
             },
             "performance_optimizer": {
                 "name": "Artemis Performance Assessment Agent",
@@ -62,7 +70,9 @@ class ArtemisIntegrationTester:
             },
         }
 
-    def _record_test(self, name: str, success: bool, details: str = "", agent: str = None):
+    def _record_test(
+        self, name: str, success: bool, details: str = "", agent: str = None
+    ):
         """Record test result with agent attribution"""
         self.test_results["tests"].append(
             {
@@ -142,7 +152,9 @@ class ArtemisIntegrationTester:
             for test in test_payloads:
                 logger.info(f"\n   Testing: {test['name']}")
                 try:
-                    response = await client.post(self.n8n_webhook_url, json=test["payload"])
+                    response = await client.post(
+                        self.n8n_webhook_url, json=test["payload"]
+                    )
 
                     if response.status_code in [200, 201, 202]:
                         logger.info(
@@ -168,7 +180,9 @@ class ArtemisIntegrationTester:
 
                 except Exception as e:
                     logger.error(f"   ❌ {test['name']}: Error - {e}")
-                    self._record_test(f"n8n_webhook_{test['name']}", False, str(e), agent["name"])
+                    self._record_test(
+                        f"n8n_webhook_{test['name']}", False, str(e), agent["name"]
+                    )
 
                 # Brief pause between tests
                 await asyncio.sleep(1)
@@ -197,7 +211,9 @@ class ArtemisIntegrationTester:
                         agent["name"],
                     )
                 else:
-                    logger.info(f"   ❌ Sophia health check failed: {response.status_code}")
+                    logger.info(
+                        f"   ❌ Sophia health check failed: {response.status_code}"
+                    )
                     self._record_test(
                         "sophia_health_check",
                         False,
@@ -221,11 +237,16 @@ class ArtemisIntegrationTester:
                     "memory_type": "semantic",
                 }
 
-                response = await client.post(f"{self.base_url}/memory/add", json=test_memory)
+                response = await client.post(
+                    f"{self.base_url}/memory/add", json=test_memory
+                )
                 if response.status_code == 200:
                     logger.info("   ✅ Memory system integration working")
                     self._record_test(
-                        "memory_integration", True, "Memory stored successfully", agent["name"]
+                        "memory_integration",
+                        True,
+                        "Memory stored successfully",
+                        agent["name"],
                     )
                 else:
                     logger.info(f"   ❌ Memory system failed: {response.status_code}")
@@ -278,7 +299,10 @@ class ArtemisIntegrationTester:
                 else:
                     logger.info(f"   ⚠️ {check['name']}: Security concerns detected")
                     self._record_test(
-                        check["name"], False, "Security validation failed", agent["name"]
+                        check["name"],
+                        False,
+                        "Security validation failed",
+                        agent["name"],
                     )
             except Exception as e:
                 logger.error(f"   ❌ {check['name']}: Security check error - {e}")
@@ -312,7 +336,9 @@ class ArtemisIntegrationTester:
 
     async def analyze_performance_metrics(self):
         """Analyze performance metrics with specialized Artemis performance agent"""
-        logger.info("\n⚡ ARTEMIS PERFORMANCE OPTIMIZER - TACTICAL PERFORMANCE ANALYSIS")
+        logger.info(
+            "\n⚡ ARTEMIS PERFORMANCE OPTIMIZER - TACTICAL PERFORMANCE ANALYSIS"
+        )
         logger.info("=" * 65)
 
         agent = self.agents["performance_optimizer"]
@@ -383,7 +409,9 @@ class ArtemisIntegrationTester:
         logger.info("\n🔄 ARTEMIS TACTICAL TEAM - END-TO-END FLOW VALIDATION")
         logger.info("=" * 55)
 
-        logger.info("All Artemis agents coordinating for comprehensive flow validation...")
+        logger.info(
+            "All Artemis agents coordinating for comprehensive flow validation..."
+        )
 
         # Simulate a complete Gong event flow
         test_scenarios = [
@@ -423,17 +451,23 @@ class ArtemisIntegrationTester:
             # Step 1: Send Gong webhook
             async with httpx.AsyncClient(timeout=30.0) as client:
                 try:
-                    response = await client.post(self.n8n_webhook_url, json=scenario["gong_event"])
+                    response = await client.post(
+                        self.n8n_webhook_url, json=scenario["gong_event"]
+                    )
 
                     if response.status_code in [200, 201, 202]:
-                        logger.info("   ✅ Step 1 - Gong webhook processed successfully")
+                        logger.info(
+                            "   ✅ Step 1 - Gong webhook processed successfully"
+                        )
 
                         # Step 2: Wait for processing
                         logger.info("   ⏳ Step 2 - Waiting for n8n processing...")
                         await asyncio.sleep(3)
 
                         # Step 3: Check if data reached Sophia (simulate)
-                        logger.info("   🧠 Step 3 - Validating Sophia intelligence integration...")
+                        logger.info(
+                            "   🧠 Step 3 - Validating Sophia intelligence integration..."
+                        )
 
                         # In a real test, we'd check if the data appeared in Sophia's memory/dashboard
                         # For now, we'll validate the local system can handle the flow
@@ -470,7 +504,10 @@ class ArtemisIntegrationTester:
                 except Exception as e:
                     logger.error(f"   ❌ E2E flow error: {e}")
                     self._record_test(
-                        f"e2e_flow_{scenario['name']}", False, str(e), "Artemis Tactical Team"
+                        f"e2e_flow_{scenario['name']}",
+                        False,
+                        str(e),
+                        "Artemis Tactical Team",
                     )
 
     async def generate_tactical_intelligence_report(self):
@@ -496,7 +533,9 @@ class ArtemisIntegrationTester:
         elif success_rate >= 60:
             tactical_status = "🟡 MISSION PARTIAL - Requires tactical adjustments"
         else:
-            tactical_status = "🔴 MISSION CRITICAL - Major issues require immediate attention"
+            tactical_status = (
+                "🔴 MISSION CRITICAL - Major issues require immediate attention"
+            )
 
         logger.info(f"\n⚔️ TACTICAL STATUS: {tactical_status}")
 
@@ -520,7 +559,9 @@ class ArtemisIntegrationTester:
 
         # Critical findings
         logger.info("\n🔍 CRITICAL FINDINGS:")
-        failed_tests = [test for test in self.test_results["tests"] if not test["success"]]
+        failed_tests = [
+            test for test in self.test_results["tests"] if not test["success"]
+        ]
         if failed_tests:
             for test in failed_tests[:5]:  # Show top 5 failures
                 logger.info(f"   ❌ {test['name']}: {test['details']}")
@@ -539,7 +580,9 @@ class ArtemisIntegrationTester:
             logger.info("   • Consider performance optimizations")
 
         # Save detailed report
-        report_file = f"artemis_tactical_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_file = (
+            f"artemis_tactical_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(report_file, "w") as f:
             json.dump(self.test_results, f, indent=2)
 
@@ -551,7 +594,9 @@ class ArtemisIntegrationTester:
         """Execute complete Artemis tactical mission"""
         logger.info("⛔️ ARTEMIS TACTICAL MISSION: GONG INTEGRATION VALIDATION")
         logger.info("=" * 70)
-        logger.info("Mission: Comprehensive testing of Gong → n8n → Sophia integration pipeline")
+        logger.info(
+            "Mission: Comprehensive testing of Gong → n8n → Sophia integration pipeline"
+        )
         logger.info("Agents: 4 specialized tactical intelligence units")
         logger.info("Objective: Validate system readiness for production deployment")
         logger.info("=" * 70)

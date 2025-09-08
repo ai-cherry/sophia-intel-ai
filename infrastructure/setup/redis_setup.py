@@ -55,7 +55,9 @@ class RedisSetup:
 
         if not logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - REDIS_SETUP - %(levelname)s - %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s - REDIS_SETUP - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             logger.addHandler(handler)
 
@@ -121,7 +123,9 @@ class RedisSetup:
         """Start Redis server"""
         try:
             # Check if Redis is installed
-            result = subprocess.run(["which", "redis-server"], capture_output=True, text=True)
+            result = subprocess.run(
+                ["which", "redis-server"], capture_output=True, text=True
+            )
 
             if result.returncode != 0:
                 self.logger.info("Installing Redis...")

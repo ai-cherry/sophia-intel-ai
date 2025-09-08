@@ -14,7 +14,10 @@ class CloudFlareDNSSetup:
         self.api_token = api_token
         self.zone_name = zone_name
         self.base_url = "https://api.cloudflare.com/client/v4"
-        self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
+        self.headers = {
+            "Authorization": f"Bearer {api_token}",
+            "Content-Type": "application/json",
+        }
         self.zone_id = None
 
     def get_zone_id(self):
@@ -46,7 +49,9 @@ class CloudFlareDNSSetup:
         }
 
         response = requests.post(
-            f"{self.base_url}/zones/{self.zone_id}/dns_records", headers=self.headers, json=data
+            f"{self.base_url}/zones/{self.zone_id}/dns_records",
+            headers=self.headers,
+            json=data,
         )
 
         if response.status_code == 200:

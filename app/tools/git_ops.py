@@ -14,7 +14,10 @@ class GitStatus(Tool):
         """Get git status."""
         try:
             result = subprocess.run(
-                ["git", "status", "--porcelain"], capture_output=True, text=True, check=True
+                ["git", "status", "--porcelain"],
+                capture_output=True,
+                text=True,
+                check=True,
             )
 
             if not result.stdout:
@@ -70,7 +73,9 @@ class GitCommit(Tool):
     description = "Create a git commit with the staged changes"
     parameters = {
         "type": "object",
-        "properties": {"message": {"type": "string", "description": "The commit message"}},
+        "properties": {
+            "message": {"type": "string", "description": "The commit message"}
+        },
         "required": ["message"],
     }
 
@@ -87,7 +92,10 @@ class GitCommit(Tool):
 
             # Create the commit
             result = subprocess.run(
-                ["git", "commit", "-m", message], capture_output=True, text=True, check=True
+                ["git", "commit", "-m", message],
+                capture_output=True,
+                text=True,
+                check=True,
             )
 
             return f"Commit created successfully:\n{result.stdout}"
@@ -117,7 +125,9 @@ class GitAdd(Tool):
     async def run(self, filepath: str = ".") -> str:
         """Stage files for commit."""
         try:
-            subprocess.run(["git", "add", filepath], capture_output=True, text=True, check=True)
+            subprocess.run(
+                ["git", "add", filepath], capture_output=True, text=True, check=True
+            )
 
             return f"Successfully staged: {filepath}"
         except subprocess.CalledProcessError as e:

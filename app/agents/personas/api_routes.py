@@ -496,7 +496,9 @@ async def websocket_chat(websocket: WebSocket, persona_id: str):
 
             # Get response
             if persona_manager.has_persona(persona_id):
-                response = await persona_manager.interact_with_persona(persona_id, message, context)
+                response = await persona_manager.interact_with_persona(
+                    persona_id, message, context
+                )
 
                 # Send response
                 await websocket.send_json(
@@ -533,11 +535,17 @@ async def submit_feedback(persona_id: str, request: dict[str, Any]):
     rating = request.get("rating", 5)  # 1-5 scale
     feedback_text = request.get("feedback", "")
 
-    success = persona_manager.process_feedback(persona_id, interaction_id, rating, feedback_text)
+    success = persona_manager.process_feedback(
+        persona_id, interaction_id, rating, feedback_text
+    )
 
     return {
         "success": success,
-        "message": "Feedback processed successfully" if success else "Failed to process feedback",
+        "message": (
+            "Feedback processed successfully"
+            if success
+            else "Failed to process feedback"
+        ),
         "persona_id": persona_id,
     }
 
@@ -590,17 +598,27 @@ async def get_system_stats():
     stats = {
         "total_personas": len(PERSONA_REGISTRY.list_personas()),
         "active_personas": len(
-            [p for p in PERSONA_REGISTRY.list_personas() if persona_manager.has_persona(p)]
+            [
+                p
+                for p in PERSONA_REGISTRY.list_personas()
+                if persona_manager.has_persona(p)
+            ]
         ),
         "total_interactions": sum(
             persona_manager.get_persona(p).conversation_count
             for p in PERSONA_REGISTRY.list_personas()
             if persona_manager.has_persona(p)
         ),
-        "websocket_connections": sum(len(conns) for conns in manager.active_connections.values()),
+        "websocket_connections": sum(
+            len(conns) for conns in manager.active_connections.values()
+        ),
     }
 
-    return {"success": True, "statistics": stats, "timestamp": datetime.now().isoformat()}
+    return {
+        "success": True,
+        "statistics": stats,
+        "timestamp": datetime.now().isoformat(),
+    }
 
 
 # Export router

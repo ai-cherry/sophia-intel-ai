@@ -58,7 +58,9 @@ class ArtemisSwarmLite:
 
         self.clients = {}
         self.results = []
-        logger.info(f"Initialized Artemis Swarm with {len(self.VIRTUAL_KEYS)} providers")
+        logger.info(
+            f"Initialized Artemis Swarm with {len(self.VIRTUAL_KEYS)} providers"
+        )
 
     def get_client(self, provider: str) -> Portkey:
         """Get or create Portkey client for a provider"""
@@ -112,7 +114,11 @@ class ArtemisSwarmLite:
             end_time = datetime.now()
 
             # Extract response
-            content = response.choices[0].message.content if response.choices else "No response"
+            content = (
+                response.choices[0].message.content
+                if response.choices
+                else "No response"
+            )
 
             result = {
                 "provider": provider,
@@ -130,7 +136,9 @@ class ArtemisSwarmLite:
                     "total": response.usage.total_tokens,
                 }
 
-            logger.info(f"✅ {provider} responded successfully in {result['latency_ms']}ms")
+            logger.info(
+                f"✅ {provider} responded successfully in {result['latency_ms']}ms"
+            )
             return result
 
         except asyncio.TimeoutError:
@@ -194,7 +202,9 @@ class ArtemisSwarmLite:
         total_tokens = sum(r.get("tokens", {}).get("total", 0) for r in successful)
 
         avg_latency = (
-            sum(r.get("latency_ms", 0) for r in successful) / len(successful) if successful else 0
+            sum(r.get("latency_ms", 0) for r in successful) / len(successful)
+            if successful
+            else 0
         )
 
         return {
@@ -230,10 +240,14 @@ class ArtemisSwarmLite:
         roles = {
             "architect": working_providers[0] if len(working_providers) > 0 else None,
             "developer": (
-                working_providers[1] if len(working_providers) > 1 else working_providers[0]
+                working_providers[1]
+                if len(working_providers) > 1
+                else working_providers[0]
             ),
             "reviewer": (
-                working_providers[2] if len(working_providers) > 2 else working_providers[0]
+                working_providers[2]
+                if len(working_providers) > 2
+                else working_providers[0]
             ),
         }
 
@@ -310,7 +324,10 @@ class ArtemisSwarmLite:
                     "role": "system",
                     "content": "You are a code reviewer. Review the implementation.",
                 },
-                {"role": "user", "content": f"Review this implementation:\n{impl_summary}"},
+                {
+                    "role": "user",
+                    "content": f"Review this implementation:\n{impl_summary}",
+                },
             ]
 
             try:
@@ -374,7 +391,9 @@ async def main():
             print(f"  • {provider}")
 
     # Save detailed results
-    output_file = Path(f"artemis_connectivity_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+    output_file = Path(
+        f"artemis_connectivity_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(output_file, "w") as f:
         json.dump(test_results, f, indent=2, default=str)
 
@@ -386,9 +405,7 @@ async def main():
         print("📋 Phase 2: Collaborative Task Execution")
         print("-" * 40)
 
-        test_task = (
-            "Create a Python function to validate email addresses with comprehensive error handling"
-        )
+        test_task = "Create a Python function to validate email addresses with comprehensive error handling"
 
         print(f"\nTask: {test_task}")
         print("\n⏳ Executing collaborative task...")

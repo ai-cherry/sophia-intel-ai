@@ -157,7 +157,12 @@ class AIAssistantsValidator:
             self.warnings.append("No .github/copilot directory found")
             return {"exists": False}
 
-        results = {"exists": True, "prompts_file": False, "custom_prompts": [], "issues": []}
+        results = {
+            "exists": True,
+            "prompts_file": False,
+            "custom_prompts": [],
+            "issues": [],
+        }
 
         # Check for prompts file
         prompts_file = copilot_dir / "prompts.json"
@@ -169,7 +174,9 @@ class AIAssistantsValidator:
                 results["custom_prompts"] = (
                     list(prompts.keys()) if isinstance(prompts, dict) else []
                 )
-                print(f"  ✅ Copilot prompts: {len(results['custom_prompts'])} custom prompts")
+                print(
+                    f"  ✅ Copilot prompts: {len(results['custom_prompts'])} custom prompts"
+                )
             except json.JSONDecodeError as e:
                 results["issues"].append(f"Invalid JSON in prompts.json: {e}")
                 print(f"  ❌ Invalid prompts.json: {e}")
@@ -255,7 +262,9 @@ class AIAssistantsValidator:
             with open(devcontainer_path) as f:
                 config = json.load(f)
 
-            extensions = config.get("customizations", {}).get("vscode", {}).get("extensions", [])
+            extensions = (
+                config.get("customizations", {}).get("vscode", {}).get("extensions", [])
+            )
 
             results = {
                 "devcontainer_exists": True,
@@ -398,10 +407,16 @@ if __name__ == "__main__":
         # Cline
         cline = self.results.get("cline", {})
         if cline.get("exists"):
-            status = "✅" if cline.get("valid_json") and not cline.get("missing_keys") else "⚠️"
+            status = (
+                "✅"
+                if cline.get("valid_json") and not cline.get("missing_keys")
+                else "⚠️"
+            )
             report += f"- {status} **Cline (.cline.json)**\\n"
             if cline.get("missing_keys"):
-                report += f"  - ❌ Missing API keys: {', '.join(cline['missing_keys'])}\\n"
+                report += (
+                    f"  - ❌ Missing API keys: {', '.join(cline['missing_keys'])}\\n"
+                )
             if cline.get("models"):
                 report += f"  - ✅ {len(cline['models'])} models configured\\n"
         else:
@@ -413,7 +428,9 @@ if __name__ == "__main__":
             status = "✅" if continue_config.get("valid_json") else "❌"
             report += f"- {status} **Continue (.continue/config.json)**\\n"
             if continue_config.get("models"):
-                report += f"  - ✅ {len(continue_config['models'])} models configured\\n"
+                report += (
+                    f"  - ✅ {len(continue_config['models'])} models configured\\n"
+                )
         else:
             report += "- ⚠️ **Continue**: Not configured\\n"
 

@@ -82,7 +82,9 @@ async def test_all_providers():
 
     # Performance stats
     if successful > 0:
-        avg_latency = sum(r["latency_ms"] for r in results if r.get("latency_ms")) / successful
+        avg_latency = (
+            sum(r["latency_ms"] for r in results if r.get("latency_ms")) / successful
+        )
         print(f"⚡ Average Latency: {avg_latency:.0f}ms")
 
     # Provider usage

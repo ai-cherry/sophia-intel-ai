@@ -19,10 +19,13 @@ class MemoryMetadata(BaseModel):
     source: str = Field(description="Origin of the record e.g., file path, URL, system")
     author: str | None = Field(default=None, description="Author or committer")
     timestamp: datetime = Field(
-        default_factory=datetime.utcnow, description="Creation or ingestion timestamp (UTC)"
+        default_factory=datetime.utcnow,
+        description="Creation or ingestion timestamp (UTC)",
     )
     version: str | None = Field(default=None, description="Version or commit hash")
-    tags: list[str] = Field(default_factory=list, description="Normalized tags/keywords")
+    tags: list[str] = Field(
+        default_factory=list, description="Normalized tags/keywords"
+    )
     project: str | None = Field(default=None, description="Project or subsystem")
     security_level: Literal["public", "internal", "restricted"] = Field(
         default="public", description="Access classification"

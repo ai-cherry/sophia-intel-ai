@@ -49,7 +49,9 @@ class Certificate:
     key_pem: str
     ca_cert_pem: Optional[str] = None
     valid_from: datetime = field(default_factory=datetime.now)
-    valid_until: datetime = field(default_factory=lambda: datetime.now() + timedelta(days=365))
+    valid_until: datetime = field(
+        default_factory=lambda: datetime.now() + timedelta(days=365)
+    )
     serial_number: str = field(default_factory=lambda: secrets.token_hex(16))
 
 
@@ -134,7 +136,9 @@ class SecurityManager:
         """Load CA certificate and key"""
         try:
             with open(self.ca_cert_path, "rb") as f:
-                self.ca_cert = x509.load_pem_x509_certificate(f.read(), default_backend())
+                self.ca_cert = x509.load_pem_x509_certificate(
+                    f.read(), default_backend()
+                )
 
             with open(self.ca_key_path, "rb") as f:
                 self.ca_key = serialization.load_pem_private_key(
@@ -231,10 +235,14 @@ class SecurityManager:
         if san_dns_names:
             san_list.extend([x509.DNSName(name) for name in san_dns_names])
         if san_ip_addresses:
-            san_list.extend([x509.IPAddress(ipaddress.ip_address(ip)) for ip in san_ip_addresses])
+            san_list.extend(
+                [x509.IPAddress(ipaddress.ip_address(ip)) for ip in san_ip_addresses]
+            )
 
         if san_list:
-            builder = builder.add_extension(x509.SubjectAlternativeName(san_list), critical=False)
+            builder = builder.add_extension(
+                x509.SubjectAlternativeName(san_list), critical=False
+            )
 
         # Add basic constraints
         builder = builder.add_extension(
@@ -321,7 +329,9 @@ class SecurityManager:
 
         logger.info(f"Certificate rotated: {cert_key}")
 
-    async def enable_mtls(self, namespace: str, mode: SecurityLevel = SecurityLevel.STRICT):
+    async def enable_mtls(
+        self, namespace: str, mode: SecurityLevel = SecurityLevel.STRICT
+    ):
         """
         Enable mTLS for a namespace
 
@@ -380,7 +390,9 @@ class SecurityManager:
             logger.error(f"Failed to enable mTLS: {e}")
             raise
 
-    async def create_authorization_policy(self, name: str, namespace: str, policy: SecurityPolicy):
+    async def create_authorization_policy(
+        self, name: str, namespace: str, policy: SecurityPolicy
+    ):
         """
         Create an authorization policy
 
@@ -408,10 +420,14 @@ class SecurityManager:
                 rule = {"from": []}
 
                 if policy.allowed_principals:
-                    rule["from"].append({"source": {"principals": policy.allowed_principals}})
+                    rule["from"].append(
+                        {"source": {"principals": policy.allowed_principals}}
+                    )
 
                 if policy.allowed_namespaces:
-                    rule["from"].append({"source": {"namespaces": policy.allowed_namespaces}})
+                    rule["from"].append(
+                        {"source": {"namespaces": policy.allowed_namespaces}}
+                    )
 
                 rules.append(rule)
 
@@ -500,12 +516,16 @@ class SecurityManager:
 
             # Add rules based on permissions
             for resource, verbs in rbac_policy.permissions.items():
-                rule = client.V1PolicyRule(api_groups=[""], resources=[resource], verbs=verbs)
+                rule = client.V1PolicyRule(
+                    api_groups=[""], resources=[resource], verbs=verbs
+                )
                 role.rules.append(rule)
 
             # Apply Role
             try:
-                existing_role = self.rbac_v1.read_namespaced_role(name=name, namespace=namespace)
+                existing_role = self.rbac_v1.read_namespaced_role(
+                    name=name, namespace=namespace
+                )
 
                 # Update existing
                 existing_role.rules = role.rules
@@ -524,7 +544,9 @@ class SecurityManager:
 
             # Create or update RoleBinding
             role_binding = client.V1RoleBinding(
-                metadata=client.V1ObjectMeta(name=f"{name}-binding", namespace=namespace),
+                metadata=client.V1ObjectMeta(
+                    name=f"{name}-binding", namespace=namespace
+                ),
                 subjects=[],
                 role_ref=client.V1RoleRef(
                     api_group="rbac.authorization.k8s.io", kind="Role", name=name
@@ -537,11 +559,15 @@ class SecurityManager:
                     # ServiceAccount format: namespace/name
                     ns, sa_name = subject.split("/")
                     role_binding.subjects.append(
-                        client.V1Subject(kind="ServiceAccount", name=sa_name, namespace=ns)
+                        client.V1Subject(
+                            kind="ServiceAccount", name=sa_name, namespace=ns
+                        )
                     )
                 else:
                     # User format
-                    role_binding.subjects.append(client.V1Subject(kind="User", name=subject))
+                    role_binding.subjects.append(
+                        client.V1Subject(kind="User", name=subject)
+                    )
 
             # Apply RoleBinding
             try:
@@ -589,7 +615,9 @@ class SecurityManager:
 
                         # Auto-rotate if less than 7 days
                         if days_until_expiry <= 7:
-                            await self.rotate_certificate(cert.common_name, cert.namespace)
+                            await self.rotate_certificate(
+                                cert.common_name, cert.namespace
+                            )
 
             except Exception as e:
                 logger.error(f"Error monitoring certificates: {e}")
@@ -626,7 +654,9 @@ class SecurityManager:
             )
 
             if cert.ca_cert_pem:
-                secret.data["ca.crt"] = base64.b64encode(cert.ca_cert_pem.encode()).decode()
+                secret.data["ca.crt"] = base64.b64encode(
+                    cert.ca_cert_pem.encode()
+                ).decode()
 
             self.v1.create_namespaced_secret(namespace=cert.namespace, body=secret)
 
@@ -643,7 +673,9 @@ class SecurityManager:
             secret_name = f"{cert.common_name}-tls"
 
             # Get existing secret
-            secret = self.v1.read_namespaced_secret(name=secret_name, namespace=cert.namespace)
+            secret = self.v1.read_namespaced_secret(
+                name=secret_name, namespace=cert.namespace
+            )
 
             # Update data
             secret.data = {
@@ -652,10 +684,14 @@ class SecurityManager:
             }
 
             if cert.ca_cert_pem:
-                secret.data["ca.crt"] = base64.b64encode(cert.ca_cert_pem.encode()).decode()
+                secret.data["ca.crt"] = base64.b64encode(
+                    cert.ca_cert_pem.encode()
+                ).decode()
 
             # Apply update
-            self.v1.patch_namespaced_secret(name=secret_name, namespace=cert.namespace, body=secret)
+            self.v1.patch_namespaced_secret(
+                name=secret_name, namespace=cert.namespace, body=secret
+            )
 
             logger.info(f"Updated TLS secret for {cert.common_name}")
 
@@ -663,7 +699,9 @@ class SecurityManager:
             logger.error(f"Failed to update TLS secret: {e}")
             raise
 
-    def create_security_policy(self, name: str, namespace: str, **kwargs) -> SecurityPolicy:
+    def create_security_policy(
+        self, name: str, namespace: str, **kwargs
+    ) -> SecurityPolicy:
         """
         Create a security policy
 
@@ -679,7 +717,9 @@ class SecurityManager:
             name=name,
             namespace=namespace,
             mtls_mode=kwargs.get("mtls_mode", SecurityLevel.STRICT),
-            authorization_mode=kwargs.get("authorization_mode", AuthorizationMode.ALLOW),
+            authorization_mode=kwargs.get(
+                "authorization_mode", AuthorizationMode.ALLOW
+            ),
             allowed_principals=kwargs.get("allowed_principals", []),
             allowed_namespaces=kwargs.get("allowed_namespaces", []),
             allowed_services=kwargs.get("allowed_services", []),
@@ -715,7 +755,11 @@ class SecurityManager:
             RBACPolicy object
         """
         rbac_policy = RBACPolicy(
-            name=name, namespace=namespace, role=role, subjects=subjects, permissions=permissions
+            name=name,
+            namespace=namespace,
+            role=role,
+            subjects=subjects,
+            permissions=permissions,
         )
 
         policy_key = f"{namespace}/{name}"

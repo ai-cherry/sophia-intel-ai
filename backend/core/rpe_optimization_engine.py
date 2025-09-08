@@ -44,7 +44,9 @@ class RPEOptimizationEngine:
     Integrates with Sophia's existing infrastructure
     """
 
-    def __init__(self, db_pool: asyncpg.Pool, redis_client: redis.Redis, sophia_context: Dict):
+    def __init__(
+        self, db_pool: asyncpg.Pool, redis_client: redis.Redis, sophia_context: Dict
+    ):
         self.db_pool = db_pool  # Neon PostgreSQL
         self.redis = redis_client  # Redis for caching
         self.graph = nx.DiGraph()  # For blockage detection
@@ -67,9 +69,7 @@ class RPEOptimizationEngine:
 
         try:
             # Check cache first
-            cache_key = (
-                f"rpe_eval:{activity_type}:{activity_data.get('id', 'unknown')}:{source_system}"
-            )
+            cache_key = f"rpe_eval:{activity_type}:{activity_data.get('id', 'unknown')}:{source_system}"
             cached_result = await self.redis.get(cache_key)
 
             if cached_result:
@@ -99,7 +99,9 @@ class RPEOptimizationEngine:
             # Core RPE calculation
             total_impact = (revenue_impact + efficiency_impact) * market_multiplier
             rpe_delta = (
-                total_impact / baseline["employee_count"] if baseline["employee_count"] > 0 else 0
+                total_impact / baseline["employee_count"]
+                if baseline["employee_count"] > 0
+                else 0
             )
 
             # Create RPE impact object
@@ -110,7 +112,9 @@ class RPEOptimizationEngine:
                     else 0
                 ),
                 projected_rpe_impact=rpe_delta,
-                confidence_score=await self._calculate_confidence(activity_data, source_system),
+                confidence_score=await self._calculate_confidence(
+                    activity_data, source_system
+                ),
                 time_to_impact=await self._estimate_time_to_impact(activity_data),
                 impact_type=await self._determine_impact_type(activity_data),
                 supporting_metrics=await self._calc_supporting_metrics(activity_data),
@@ -126,9 +130,13 @@ class RPEOptimizationEngine:
                 "supporting_metrics": rpe_impact.supporting_metrics,
             }
 
-            await self.redis.setex(cache_key, self.cache_ttl, json.dumps(cache_data, default=str))
+            await self.redis.setex(
+                cache_key, self.cache_ttl, json.dumps(cache_data, default=str)
+            )
 
-            logger.info(f"RPE evaluation completed for {activity_type}: ${rpe_delta:,.2f}")
+            logger.info(
+                f"RPE evaluation completed for {activity_type}: ${rpe_delta:,.2f}"
+            )
             return rpe_impact
 
         except Exception as e:
@@ -162,7 +170,9 @@ class RPEOptimizationEngine:
                 for i, comp1 in enumerate(components):
                     for comp2 in components[i + 1 :]:
                         # Check if components share semantic similarity
-                        similarity = await self._calculate_component_similarity(comp1, comp2)
+                        similarity = await self._calculate_component_similarity(
+                            comp1, comp2
+                        )
 
                         if similarity > 0.7:  # Should be connected but aren't
                             gap_impact = await self._calculate_gap_impact(comp1, comp2)
@@ -202,14 +212,18 @@ class RPEOptimizationEngine:
                     )
 
                 return sorted(
-                    gaps, key=lambda x: x.get("rpe_loss", x.get("rpe_opportunity", 0)), reverse=True
+                    gaps,
+                    key=lambda x: x.get("rpe_loss", x.get("rpe_opportunity", 0)),
+                    reverse=True,
                 )
 
         except Exception as e:
             logger.error(f"Error detecting collaboration gaps: {str(e)}")
             return []
 
-    async def auto_escalate_from_signals(self, signal_source: str = "all") -> List[Dict]:
+    async def auto_escalate_from_signals(
+        self, signal_source: str = "all"
+    ) -> List[Dict]:
         """
         Automatically adjust priorities based on market signals
         Integrates Gong transcripts, HubSpot deals, industry data
@@ -225,16 +239,23 @@ class RPEOptimizationEngine:
 
             if signal_source in ["hubspot", "all"]:
                 hubspot_signals = await self._process_hubspot_pipeline()
-                escalations.extend(await self._evaluate_deal_escalations(hubspot_signals))
+                escalations.extend(
+                    await self._evaluate_deal_escalations(hubspot_signals)
+                )
 
             if signal_source in ["industry", "all"]:
                 # Use web search for industry intel
                 industry_signals = await self._gather_industry_intelligence()
-                escalations.extend(await self._evaluate_competitive_escalations(industry_signals))
+                escalations.extend(
+                    await self._evaluate_competitive_escalations(industry_signals)
+                )
 
             # Apply escalations automatically
             for escalation in escalations:
-                if escalation.get("auto_apply", False) and escalation.get("confidence", 0) > 0.8:
+                if (
+                    escalation.get("auto_apply", False)
+                    and escalation.get("confidence", 0) > 0.8
+                ):
                     await self._apply_escalation(escalation)
 
                     # Log the auto-escalation
@@ -337,7 +358,9 @@ class RPEOptimizationEngine:
                 return activity_data.get("estimated_revenue_impact", 0)
             elif activity_type == "task":
                 # Revenue from task completion (part of larger project)
-                project_revenue = await self._get_project_revenue(activity_data.get("project_id"))
+                project_revenue = await self._get_project_revenue(
+                    activity_data.get("project_id")
+                )
                 task_weight = activity_data.get("weight", 0.1)
                 return project_revenue * task_weight
             elif activity_type == "okr":
@@ -348,7 +371,9 @@ class RPEOptimizationEngine:
             logger.error(f"Error calculating revenue impact: {str(e)}")
             return 0
 
-    async def _calculate_efficiency_impact(self, activity_type: str, activity_data: Dict) -> float:
+    async def _calculate_efficiency_impact(
+        self, activity_type: str, activity_data: Dict
+    ) -> float:
         """Calculate cost reduction/efficiency gains"""
         try:
             description = activity_data.get("description", "").lower()
@@ -376,16 +401,26 @@ class RPEOptimizationEngine:
             description = activity_data.get("description", "").lower()
             baseline = await self._get_current_baseline()
 
-            if any(keyword in description for keyword in ["onboarding", "implementation", "setup"]):
+            if any(
+                keyword in description
+                for keyword in ["onboarding", "implementation", "setup"]
+            ):
                 # Faster implementation = higher ARPU
-                speed_improvement = activity_data.get("speed_improvement_percent", 0) / 100
+                speed_improvement = (
+                    activity_data.get("speed_improvement_percent", 0) / 100
+                )
                 return baseline["current_arpu"] * speed_improvement * 0.3
-            elif any(keyword in description for keyword in ["cross-sell", "upsell", "expansion"]):
+            elif any(
+                keyword in description
+                for keyword in ["cross-sell", "upsell", "expansion"]
+            ):
                 # Direct ARPU expansion
                 return activity_data.get("expansion_revenue_estimate", 0)
             elif "retention" in description:
                 # Retention improvements
-                retention_improvement = activity_data.get("retention_improvement_percent", 0) / 100
+                retention_improvement = (
+                    activity_data.get("retention_improvement_percent", 0) / 100
+                )
                 return baseline["current_arpu"] * retention_improvement * 0.5
             return 0
         except Exception as e:
@@ -393,7 +428,9 @@ class RPEOptimizationEngine:
             return 0
 
     # Placeholder methods for complex integrations
-    async def _calculate_confidence(self, activity_data: Dict, source_system: str) -> float:
+    async def _calculate_confidence(
+        self, activity_data: Dict, source_system: str
+    ) -> float:
         """Calculate confidence score based on data quality and source reliability"""
         base_confidence = 0.7
 
@@ -421,17 +458,27 @@ class RPEOptimizationEngine:
         """Determine the type of RPE impact"""
         description = activity_data.get("description", "").lower()
 
-        if any(keyword in description for keyword in ["revenue", "sales", "customer acquisition"]):
+        if any(
+            keyword in description
+            for keyword in ["revenue", "sales", "customer acquisition"]
+        ):
             return RPEImpactType.DIRECT_REVENUE
         elif any(
-            keyword in description for keyword in ["automation", "efficiency", "cost reduction"]
+            keyword in description
+            for keyword in ["automation", "efficiency", "cost reduction"]
         ):
             return RPEImpactType.COST_REDUCTION
-        elif any(keyword in description for keyword in ["retention", "churn", "satisfaction"]):
+        elif any(
+            keyword in description for keyword in ["retention", "churn", "satisfaction"]
+        ):
             return RPEImpactType.RETENTION
-        elif any(keyword in description for keyword in ["training", "enablement", "tools"]):
+        elif any(
+            keyword in description for keyword in ["training", "enablement", "tools"]
+        ):
             return RPEImpactType.ENABLEMENT
-        elif any(keyword in description for keyword in ["market", "competitive", "expansion"]):
+        elif any(
+            keyword in description for keyword in ["market", "competitive", "expansion"]
+        ):
             return RPEImpactType.MARKET_CAPTURE
         else:
             return RPEImpactType.FOUNDATION

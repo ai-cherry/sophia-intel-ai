@@ -44,7 +44,11 @@ async def deploy_swarm() -> dict[str, Any]:
             return {
                 "status": "already_deployed",
                 "message": "Research swarm is already deployed",
-                "agents": list(research_swarm.research_agents.keys()) if research_swarm else [],
+                "agents": (
+                    list(research_swarm.research_agents.keys())
+                    if research_swarm
+                    else []
+                ),
             }
 
         logger.info("🚀 Deploying orchestrator research swarm...")
@@ -69,7 +73,9 @@ async def deploy_swarm() -> dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to deploy research swarm: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to deploy research swarm: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to deploy research swarm: {str(e)}"
+        )
 
 
 @router.post("/research/start")
@@ -81,7 +87,8 @@ async def start_research(background_tasks: BackgroundTasks) -> dict[str, Any]:
 
     if not research_swarm or not research_status["deployed"]:
         raise HTTPException(
-            status_code=400, detail="Research swarm not deployed. Deploy it first with /deploy"
+            status_code=400,
+            detail="Research swarm not deployed. Deploy it first with /deploy",
         )
 
     if research_status["researching"]:
@@ -133,7 +140,9 @@ async def run_research_task():
         research_status["findings_count"] = len(results.get("research_findings", []))
         research_status["research_completed"] = True
 
-        logger.info(f"✅ Research completed with {research_status['findings_count']} findings")
+        logger.info(
+            f"✅ Research completed with {research_status['findings_count']} findings"
+        )
 
     except Exception as e:
         logger.error(f"Research failed: {str(e)}")
@@ -178,7 +187,8 @@ async def get_research_results() -> dict[str, Any]:
 
     if not research_results:
         raise HTTPException(
-            status_code=404, detail="No research results available. Start research first."
+            status_code=404,
+            detail="No research results available. Start research first.",
         )
 
     return research_results
@@ -193,13 +203,17 @@ async def get_sophia_improvements() -> dict[str, Any]:
 
     if not research_results:
         raise HTTPException(
-            status_code=404, detail="No research results available. Start research first."
+            status_code=404,
+            detail="No research results available. Start research first.",
         )
 
     sophia_plan = research_results.get("improvement_plans", {}).get("sophia")
 
     if not sophia_plan:
-        return {"status": "no_plan", "message": "No improvement plan available for Sophia yet"}
+        return {
+            "status": "no_plan",
+            "message": "No improvement plan available for Sophia yet",
+        }
 
     return {
         "orchestrator": "sophia",
@@ -218,13 +232,17 @@ async def get_artemis_improvements() -> dict[str, Any]:
 
     if not research_results:
         raise HTTPException(
-            status_code=404, detail="No research results available. Start research first."
+            status_code=404,
+            detail="No research results available. Start research first.",
         )
 
     artemis_plan = research_results.get("improvement_plans", {}).get("artemis")
 
     if not artemis_plan:
-        return {"status": "no_plan", "message": "No improvement plan available for Artemis yet"}
+        return {
+            "status": "no_plan",
+            "message": "No improvement plan available for Artemis yet",
+        }
 
     return {
         "orchestrator": "artemis",
@@ -252,7 +270,8 @@ async def approve_implementation(
 
     if not research_results:
         raise HTTPException(
-            status_code=400, detail="No research results available. Complete research first."
+            status_code=400,
+            detail="No research results available. Complete research first.",
         )
 
     # In a real implementation, this would trigger actual code changes
@@ -322,7 +341,9 @@ async def get_factory_integration_status() -> dict[str, Any]:
     # Check if integrated with Artemis factory
     try:
         factory_swarms = await artemis_factory.list_swarms()
-        integrated = any(s.get("name") == "Orchestrator Research Swarm" for s in factory_swarms)
+        integrated = any(
+            s.get("name") == "Orchestrator Research Swarm" for s in factory_swarms
+        )
 
         return {
             "integrated": integrated,

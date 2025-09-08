@@ -131,7 +131,9 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
             """,
         )
 
-        logger.info("✅ Orchestrator Research Swarm initialized with 5 specialized agents")
+        logger.info(
+            "✅ Orchestrator Research Swarm initialized with 5 specialized agents"
+        )
 
     async def _create_web_research_agent(self) -> Agent:
         """Create agent for web research"""
@@ -188,7 +190,11 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
             """,
             metadata={
                 "role": "pattern_analyzer",
-                "capabilities": ["pattern_recognition", "system_analysis", "optimization"],
+                "capabilities": [
+                    "pattern_recognition",
+                    "system_analysis",
+                    "optimization",
+                ],
             },
         )
 
@@ -247,7 +253,11 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
             """,
             metadata={
                 "role": "implementation_planner",
-                "capabilities": ["code_planning", "risk_assessment", "testing_strategy"],
+                "capabilities": [
+                    "code_planning",
+                    "risk_assessment",
+                    "testing_strategy",
+                ],
             },
         )
 
@@ -463,7 +473,9 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
 
         return self._parse_analysis_result(result)
 
-    async def _design_sophia_improvements(self, analysis: dict[str, Any]) -> ImprovementPlan:
+    async def _design_sophia_improvements(
+        self, analysis: dict[str, Any]
+    ) -> ImprovementPlan:
         """Design improvements for Sophia orchestrator"""
         designer = self.research_agents["architecture_designer"]
 
@@ -491,7 +503,9 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
 
         return self._parse_improvement_plan("sophia", result)
 
-    async def _design_artemis_improvements(self, analysis: dict[str, Any]) -> ImprovementPlan:
+    async def _design_artemis_improvements(
+        self, analysis: dict[str, Any]
+    ) -> ImprovementPlan:
         """Design improvements for Artemis orchestrator"""
         designer = self.research_agents["architecture_designer"]
 
@@ -647,7 +661,9 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
             "strategic_improvements": [],
         }
 
-    def _parse_improvement_plan(self, orchestrator_type: str, result: Any) -> ImprovementPlan:
+    def _parse_improvement_plan(
+        self, orchestrator_type: str, result: Any
+    ) -> ImprovementPlan:
         """Parse improvement plan from result"""
         return ImprovementPlan(
             orchestrator_type=orchestrator_type,
@@ -679,7 +695,11 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
 
     def _assess_risks(self) -> dict[str, Any]:
         """Assess implementation risks"""
-        return {"technical_risks": [], "business_risks": [], "mitigation_strategies": []}
+        return {
+            "technical_risks": [],
+            "business_risks": [],
+            "mitigation_strategies": [],
+        }
 
     def _generate_executive_summary(self) -> str:
         """Generate executive summary"""

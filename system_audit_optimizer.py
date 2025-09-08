@@ -34,7 +34,9 @@ class SystemAuditOptimizer:
 
         # Instance information
         self.instances = (
-            self.environment_config.get("instances", {}) if self.environment_config else {}
+            self.environment_config.get("instances", {})
+            if self.environment_config
+            else {}
         )
         self.primary_ip = "104.171.202.103"  # sophia-production-instance
 
@@ -68,7 +70,12 @@ class SystemAuditOptimizer:
                 "returncode": result.returncode,
             }
         except subprocess.TimeoutExpired:
-            return {"success": False, "stdout": "", "stderr": "Command timed out", "returncode": -1}
+            return {
+                "success": False,
+                "stdout": "",
+                "stderr": "Command timed out",
+                "returncode": -1,
+            }
         except Exception as e:
             return {"success": False, "stdout": "", "stderr": str(e), "returncode": -1}
 
@@ -83,7 +90,12 @@ class SystemAuditOptimizer:
                 "headers": dict(response.headers),
             }
         except requests.exceptions.RequestException as e:
-            return {"available": False, "error": str(e), "status_code": None, "response_time": None}
+            return {
+                "available": False,
+                "error": str(e),
+                "status_code": None,
+                "response_time": None,
+            }
 
     def audit_system_health(self):
         """Audit overall system health"""
@@ -109,7 +121,9 @@ class SystemAuditOptimizer:
         self.audit_results["system_health"] = {
             "overall_score": health_score,
             "status": (
-                "healthy" if health_score >= 80 else "warning" if health_score >= 60 else "critical"
+                "healthy"
+                if health_score >= 80
+                else "warning" if health_score >= 60 else "critical"
             ),
             "checks": health_checks,
             "summary": f"{healthy_checks}/{total_checks} checks passed",
@@ -125,7 +139,9 @@ class SystemAuditOptimizer:
         if result["success"]:
             usage = int(result["stdout"])
             return {
-                "status": "healthy" if usage < 80 else "warning" if usage < 90 else "critical",
+                "status": (
+                    "healthy" if usage < 80 else "warning" if usage < 90 else "critical"
+                ),
                 "usage_percent": usage,
                 "message": f"Disk usage: {usage}%",
             }
@@ -133,11 +149,15 @@ class SystemAuditOptimizer:
 
     def check_memory_usage(self) -> Dict:
         """Check memory usage"""
-        result = self.run_command("free | grep Mem | awk '{printf \"%.1f\", $3/$2 * 100.0}'")
+        result = self.run_command(
+            "free | grep Mem | awk '{printf \"%.1f\", $3/$2 * 100.0}'"
+        )
         if result["success"]:
             usage = float(result["stdout"])
             return {
-                "status": "healthy" if usage < 80 else "warning" if usage < 90 else "critical",
+                "status": (
+                    "healthy" if usage < 80 else "warning" if usage < 90 else "critical"
+                ),
                 "usage_percent": usage,
                 "message": f"Memory usage: {usage:.1f}%",
             }
@@ -145,12 +165,18 @@ class SystemAuditOptimizer:
 
     def check_cpu_usage(self) -> Dict:
         """Check CPU usage"""
-        result = self.run_command("top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | sed 's/%us,//'")
+        result = self.run_command(
+            "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | sed 's/%us,//'"
+        )
         if result["success"]:
             try:
                 usage = float(result["stdout"])
                 return {
-                    "status": "healthy" if usage < 80 else "warning" if usage < 90 else "critical",
+                    "status": (
+                        "healthy"
+                        if usage < 80
+                        else "warning" if usage < 90 else "critical"
+                    ),
                     "usage_percent": usage,
                     "message": f"CPU usage: {usage:.1f}%",
                 }
@@ -229,7 +255,9 @@ class SystemAuditOptimizer:
             }
 
         # Check running containers
-        containers = self.run_command("docker ps --format 'table {{.Names}}\\t{{.Status}}'")
+        containers = self.run_command(
+            "docker ps --format 'table {{.Names}}\\t{{.Status}}'"
+        )
         container_count = 0
         if containers["success"]:
             lines = containers["stdout"].split("\\n")
@@ -260,8 +288,12 @@ class SystemAuditOptimizer:
 
         return {
             "status": "healthy" if installed_count == len(key_packages) else "warning",
-            "python_version": python_version["stdout"] if python_version["success"] else "unknown",
-            "pip_version": pip_version["stdout"] if pip_version["success"] else "unknown",
+            "python_version": (
+                python_version["stdout"] if python_version["success"] else "unknown"
+            ),
+            "pip_version": (
+                pip_version["stdout"] if pip_version["success"] else "unknown"
+            ),
             "packages": package_status,
             "message": f"Python environment: {installed_count}/{len(key_packages)} key packages installed",
         }
@@ -333,7 +365,12 @@ class SystemAuditOptimizer:
 
     def check_file_permissions(self) -> Dict:
         """Check file permissions for sensitive files"""
-        sensitive_files = ["~/.ssh/id_rsa", "~/.ssh/id_ed25519", "/opt/sophia/secrets/", ".env*"]
+        sensitive_files = [
+            "~/.ssh/id_rsa",
+            "~/.ssh/id_ed25519",
+            "/opt/sophia/secrets/",
+            ".env*",
+        ]
 
         issues = []
         for file_pattern in sensitive_files:
@@ -341,7 +378,9 @@ class SystemAuditOptimizer:
             if file_pattern.startswith("~/"):
                 file_pattern = os.path.expanduser(file_pattern)
 
-            result = self.run_command(f"find {file_pattern} -type f -perm /077 2>/dev/null")
+            result = self.run_command(
+                f"find {file_pattern} -type f -perm /077 2>/dev/null"
+            )
             if result["success"] and result["stdout"]:
                 issues.extend(result["stdout"].split("\\n"))
 
@@ -368,7 +407,13 @@ class SystemAuditOptimizer:
     def check_secret_exposure(self) -> Dict:
         """Check for exposed secrets in files"""
         # Look for potential secrets in common locations
-        secret_patterns = ["api[_-]?key", "secret[_-]?key", "password", "token", "pul-[a-f0-9]+"]
+        secret_patterns = [
+            "api[_-]?key",
+            "secret[_-]?key",
+            "password",
+            "token",
+            "pul-[a-f0-9]+",
+        ]
 
         exposed_files = []
         for pattern in secret_patterns:
@@ -444,12 +489,18 @@ class SystemAuditOptimizer:
         cpu_result = self.run_command(
             "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | sed 's/%us,//'"
         )
-        memory_result = self.run_command("free | grep Mem | awk '{printf \"%.1f\", $3/$2 * 100.0}'")
-        disk_result = self.run_command("df -h / | tail -1 | awk '{print $5}' | sed 's/%//'")
+        memory_result = self.run_command(
+            "free | grep Mem | awk '{printf \"%.1f\", $3/$2 * 100.0}'"
+        )
+        disk_result = self.run_command(
+            "df -h / | tail -1 | awk '{print $5}' | sed 's/%//'"
+        )
 
         return {
             "cpu_usage": float(cpu_result["stdout"]) if cpu_result["success"] else 0,
-            "memory_usage": float(memory_result["stdout"]) if memory_result["success"] else 0,
+            "memory_usage": (
+                float(memory_result["stdout"]) if memory_result["success"] else 0
+            ),
             "disk_usage": int(disk_result["stdout"]) if disk_result["success"] else 0,
             "timestamp": datetime.now().isoformat(),
         }
@@ -476,7 +527,9 @@ class SystemAuditOptimizer:
 
         results = {}
         for name, host in targets:
-            result = self.run_command(f"ping -c 3 {host} | tail -1 | awk -F '/' '{{print $5}}'")
+            result = self.run_command(
+                f"ping -c 3 {host} | tail -1 | awk -F '/' '{{print $5}}'"
+            )
             if result["success"] and result["stdout"]:
                 try:
                     latency = float(result["stdout"])
@@ -573,7 +626,9 @@ class SystemAuditOptimizer:
         self.log("🚀 Assessing deployment readiness...")
 
         readiness_checks = {
-            "system_health": self.audit_results.get("system_health", {}).get("overall_score", 0)
+            "system_health": self.audit_results.get("system_health", {}).get(
+                "overall_score", 0
+            )
             >= 80,
             "security_compliance": self.audit_results.get("security_audit", {}).get(
                 "overall_score", 0
@@ -650,7 +705,9 @@ class SystemAuditOptimizer:
             scores = [
                 self.audit_results.get("system_health", {}).get("overall_score", 0),
                 self.audit_results.get("security_audit", {}).get("overall_score", 0),
-                self.audit_results.get("deployment_readiness", {}).get("overall_score", 0),
+                self.audit_results.get("deployment_readiness", {}).get(
+                    "overall_score", 0
+                ),
             ]
             overall_score = sum(scores) / len(scores)
 
@@ -658,7 +715,11 @@ class SystemAuditOptimizer:
             self.audit_results["overall_status"] = (
                 "excellent"
                 if overall_score >= 90
-                else "good" if overall_score >= 80 else "fair" if overall_score >= 70 else "poor"
+                else (
+                    "good"
+                    if overall_score >= 80
+                    else "fair" if overall_score >= 70 else "poor"
+                )
             )
 
             # Save results

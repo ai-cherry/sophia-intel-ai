@@ -33,7 +33,14 @@ LOG_FILES = {
     "memory_prune": "logs/memory_prune.log",
     "system_monitor": "logs/system_monitor.log",
 }
-ERROR_PATTERNS = [r"ERROR", r"Error:", r"Exception", r"Failed", r"Traceback", r"ConnectionError"]
+ERROR_PATTERNS = [
+    r"ERROR",
+    r"Error:",
+    r"Exception",
+    r"Failed",
+    r"Traceback",
+    r"ConnectionError",
+]
 PERFORMANCE_PATTERNS = [
     r"latency=(\d+)",
     r"took (\d+)ms",
@@ -104,7 +111,10 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
             if token_match:
                 # Try to determine which model was used
                 model = "unknown"
-                model_patterns = [r"model=([a-zA-Z0-9-/]+)", r"using ([a-zA-Z0-9-/]+) model"]
+                model_patterns = [
+                    r"model=([a-zA-Z0-9-/]+)",
+                    r"using ([a-zA-Z0-9-/]+) model",
+                ]
                 for pattern in model_patterns:
                     model_match = re.search(pattern, line)
                     if model_match:
@@ -188,14 +198,17 @@ def analyze_all_logs() -> Dict[str, Any]:
             if model not in combined_token_usage:
                 combined_token_usage[model] = metrics.copy()
             else:
-                combined_token_usage[model]["total_tokens"] += metrics.get("total_tokens", 0)
+                combined_token_usage[model]["total_tokens"] += metrics.get(
+                    "total_tokens", 0
+                )
                 combined_token_usage[model]["calls"] += metrics.get("calls", 0)
                 combined_token_usage[model]["avg_tokens"] = (
                     combined_token_usage[model]["total_tokens"]
                     / combined_token_usage[model]["calls"]
                 )
                 combined_token_usage[model]["max_tokens"] = max(
-                    combined_token_usage[model]["max_tokens"], metrics.get("max_tokens", 0)
+                    combined_token_usage[model]["max_tokens"],
+                    metrics.get("max_tokens", 0),
                 )
 
     # Calculate cost estimates if we have token usage data
@@ -240,12 +253,18 @@ def generate_summary(analysis: Dict[str, Any]) -> str:
     combined_api_calls = analysis.get("combined_api_calls", {})
     total_api_calls = sum(combined_api_calls.values())
     token_usage = analysis.get("combined_token_usage", {})
-    total_tokens = sum(metrics.get("total_tokens", 0) for metrics in token_usage.values())
+    total_tokens = sum(
+        metrics.get("total_tokens", 0) for metrics in token_usage.values()
+    )
     cost_estimates = analysis.get("cost_estimates", {})
-    total_cost = sum(estimate.get("estimated_cost", 0) for estimate in cost_estimates.values())
+    total_cost = sum(
+        estimate.get("estimated_cost", 0) for estimate in cost_estimates.values()
+    )
 
     # Find the most used API endpoint
-    most_used_endpoint = max(combined_api_calls.items(), key=lambda x: x[1], default=("none", 0))
+    most_used_endpoint = max(
+        combined_api_calls.items(), key=lambda x: x[1], default=("none", 0)
+    )
 
     summary = f"""
 Log Analysis Summary ({datetime.datetime.now().strftime('%Y-%m-%d %H:%M')})
@@ -261,7 +280,9 @@ Top API Endpoints:
 """
 
     # Add top 5 API endpoints
-    sorted_endpoints = sorted(combined_api_calls.items(), key=lambda x: x[1], reverse=True)[:5]
+    sorted_endpoints = sorted(
+        combined_api_calls.items(), key=lambda x: x[1], reverse=True
+    )[:5]
     for endpoint, count in sorted_endpoints:
         percentage = (count / total_api_calls * 100) if total_api_calls > 0 else 0
         summary += f"  - {endpoint}: {count} calls ({percentage:.1f}%)\n"

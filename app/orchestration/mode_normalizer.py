@@ -81,7 +81,11 @@ class ModeNormalizer:
             timeout=120,
             max_agents=5,
             max_rounds=3,
-            enabled_patterns=["safety_boundaries", "dynamic_role_assignment", "quality_gates"],
+            enabled_patterns=[
+                "safety_boundaries",
+                "dynamic_role_assignment",
+                "quality_gates",
+            ],
             use_memory=True,
             use_critic=True,
             use_judge=False,
@@ -126,7 +130,9 @@ class ModeNormalizer:
                 unified_mode = self.normalize_mode(mode_name)
                 custom[unified_mode] = ModeConfig(
                     name=mode_name,
-                    timeout=config.get("timeout", self.DEFAULT_CONFIGS[unified_mode].timeout),
+                    timeout=config.get(
+                        "timeout", self.DEFAULT_CONFIGS[unified_mode].timeout
+                    ),
                     max_agents=config.get(
                         "max_agents", self.DEFAULT_CONFIGS[unified_mode].max_agents
                     ),
@@ -134,7 +140,8 @@ class ModeNormalizer:
                         "max_rounds", self.DEFAULT_CONFIGS[unified_mode].max_rounds
                     ),
                     enabled_patterns=config.get(
-                        "enabled_patterns", self.DEFAULT_CONFIGS[unified_mode].enabled_patterns
+                        "enabled_patterns",
+                        self.DEFAULT_CONFIGS[unified_mode].enabled_patterns,
                     ),
                     use_memory=config.get(
                         "use_memory", self.DEFAULT_CONFIGS[unified_mode].use_memory
@@ -142,9 +149,12 @@ class ModeNormalizer:
                     use_critic=config.get(
                         "use_critic", self.DEFAULT_CONFIGS[unified_mode].use_critic
                     ),
-                    use_judge=config.get("use_judge", self.DEFAULT_CONFIGS[unified_mode].use_judge),
+                    use_judge=config.get(
+                        "use_judge", self.DEFAULT_CONFIGS[unified_mode].use_judge
+                    ),
                     use_consensus=config.get(
-                        "use_consensus", self.DEFAULT_CONFIGS[unified_mode].use_consensus
+                        "use_consensus",
+                        self.DEFAULT_CONFIGS[unified_mode].use_consensus,
                     ),
                     circuit_breaker_threshold=config.get(
                         "circuit_breaker_threshold",
@@ -230,7 +240,11 @@ class ModeNormalizer:
 
         elif swarm_type == "simple":
             # Adapt for SimpleAgentOrchestrator
-            return {"mode": config.name, "timeout": config.timeout, "max_agents": config.max_agents}
+            return {
+                "mode": config.name,
+                "timeout": config.timeout,
+                "max_agents": config.max_agents,
+            }
 
         else:
             # Generic configuration
@@ -312,10 +326,18 @@ class ModeNormalizer:
         pattern_cost = len(config.enabled_patterns) / 8  # Normalized to max patterns
 
         # Weighted average
-        return timeout_cost * 0.3 + agent_cost * 0.3 + round_cost * 0.2 + pattern_cost * 0.2
+        return (
+            timeout_cost * 0.3
+            + agent_cost * 0.3
+            + round_cost * 0.2
+            + pattern_cost * 0.2
+        )
 
     def select_mode_for_task(
-        self, task_complexity: float, urgency: str = "normal", resource_availability: float = 1.0
+        self,
+        task_complexity: float,
+        urgency: str = "normal",
+        resource_availability: float = 1.0,
     ) -> UnifiedMode:
         """
         Select optimal mode based on task characteristics
@@ -337,7 +359,9 @@ class ModeNormalizer:
         # Low complexity + high urgency + low resources = Lite
 
         quality_score = (
-            task_complexity * 0.5 + (1 - urgency_score) * 0.3 + resource_availability * 0.2
+            task_complexity * 0.5
+            + (1 - urgency_score) * 0.3
+            + resource_availability * 0.2
         )
 
         if quality_score > 0.7:
@@ -361,7 +385,11 @@ class ModeNormalizer:
         merged = base_config.copy()
 
         for key, value in overrides.items():
-            if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            if (
+                key in merged
+                and isinstance(merged[key], dict)
+                and isinstance(value, dict)
+            ):
                 merged[key] = self.merge_configs(merged[key], value)
             else:
                 merged[key] = value

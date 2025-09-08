@@ -31,7 +31,11 @@ async def test_portkey_with_openrouter():
 
     # Test different models through Portkey → OpenRouter
     test_cases = [
-        {"name": "GPT-4 via OpenRouter", "model": "openai/gpt-4o-mini", "provider": "openrouter"},
+        {
+            "name": "GPT-4 via OpenRouter",
+            "model": "openai/gpt-4o-mini",
+            "provider": "openrouter",
+        },
         {
             "name": "Claude via OpenRouter",
             "model": "anthropic/claude-3-haiku-20240307",
@@ -68,7 +72,9 @@ async def test_portkey_with_openrouter():
                     },
                     json={
                         "model": test["model"],
-                        "messages": [{"role": "user", "content": "Say 'Hello' in one word"}],
+                        "messages": [
+                            {"role": "user", "content": "Say 'Hello' in one word"}
+                        ],
                         "max_tokens": 10,
                         "temperature": 0.1,
                     },
@@ -76,12 +82,18 @@ async def test_portkey_with_openrouter():
 
                 if response.status_code == 200:
                     result = response.json()
-                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        result.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     logger.info(f"   ✅ Success! Response: {content[:50]}")
                 else:
                     logger.info(f"   ❌ Failed: Status {response.status_code}")
                     if response.status_code == 401:
-                        logger.info("      → Need to configure virtual key in Portkey dashboard")
+                        logger.info(
+                            "      → Need to configure virtual key in Portkey dashboard"
+                        )
                     try:
                         error = response.json()
                         logger.info(
@@ -154,7 +166,9 @@ async def test_direct_openrouter():
 
         if response.status_code == 200:
             result = response.json()
-            content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            content = (
+                result.get("choices", [{}])[0].get("message", {}).get("content", "")
+            )
             logger.info(f"✅ OpenRouter Direct: Working! Response: {content}")
             return True
         else:

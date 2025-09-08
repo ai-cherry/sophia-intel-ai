@@ -11,7 +11,10 @@ from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.core.portkey_config import AgentRole
-from app.factories.enhanced_agent_factory import SpecializedAgentType, enhanced_agent_factory
+from app.factories.enhanced_agent_factory import (
+    SpecializedAgentType,
+    enhanced_agent_factory,
+)
 
 
 def print_header(title):
@@ -81,7 +84,9 @@ def test_model_execution():
     print("\n🔧 Testing Qwen3-Coder-480B (Coding Agent)...")
     try:
         coder = enhanced_agent_factory.create_agent(
-            agent_type=SpecializedAgentType.CODER, name="SuperCoder", role=AgentRole.CODING
+            agent_type=SpecializedAgentType.CODER,
+            name="SuperCoder",
+            role=AgentRole.CODING,
         )
 
         response = enhanced_agent_factory.execute_with_agent(
@@ -102,7 +107,9 @@ def test_model_execution():
     print("\n🧠 Testing GLM-4.5 (Reasoning Agent)...")
     try:
         reasoner = enhanced_agent_factory.create_agent(
-            agent_type=SpecializedAgentType.REASONER, name="DeepThinker", role=AgentRole.ANALYTICAL
+            agent_type=SpecializedAgentType.REASONER,
+            name="DeepThinker",
+            role=AgentRole.ANALYTICAL,
         )
 
         response = enhanced_agent_factory.execute_with_agent(
@@ -123,7 +130,9 @@ def test_model_execution():
     print("\n📊 Testing Llama-4-Maverick (Analysis Agent)...")
     try:
         analyzer = enhanced_agent_factory.create_agent(
-            agent_type=SpecializedAgentType.ANALYZER, name="PatternFinder", role=AgentRole.RESEARCH
+            agent_type=SpecializedAgentType.ANALYZER,
+            name="PatternFinder",
+            role=AgentRole.RESEARCH,
         )
 
         response = enhanced_agent_factory.execute_with_agent(
@@ -139,7 +148,9 @@ def test_model_execution():
     print("\n⚡ Testing GLM-4.5-Air (Rapid Response Agent)...")
     try:
         executor = enhanced_agent_factory.create_agent(
-            agent_type=SpecializedAgentType.RAPID_RESPONSE, name="QuickBot", role=AgentRole.REALTIME
+            agent_type=SpecializedAgentType.RAPID_RESPONSE,
+            name="QuickBot",
+            role=AgentRole.REALTIME,
         )
 
         response = enhanced_agent_factory.execute_with_agent(
@@ -162,7 +173,11 @@ def test_swarm_creation():
             "name": "StrategyLead",
             "role": AgentRole.STRATEGIC,
         },
-        {"agent_type": SpecializedAgentType.CODER, "name": "DevExpert", "role": AgentRole.CODING},
+        {
+            "agent_type": SpecializedAgentType.CODER,
+            "name": "DevExpert",
+            "role": AgentRole.CODING,
+        },
         {
             "agent_type": SpecializedAgentType.ANALYZER,
             "name": "DataAnalyst",
@@ -282,7 +297,12 @@ def main():
     results = {
         "timestamp": datetime.now().isoformat(),
         "agents_created": len(agents),
-        "models_integrated": ["qwen3-coder-480b", "llama-4-maverick", "glm-4.5", "glm-4.5-air"],
+        "models_integrated": [
+            "qwen3-coder-480b",
+            "llama-4-maverick",
+            "glm-4.5",
+            "glm-4.5-air",
+        ],
         "test_status": "completed",
     }
 

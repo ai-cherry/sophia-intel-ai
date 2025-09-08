@@ -109,7 +109,9 @@ def load_all_schemas(client: weaviate.Client, force: bool = False) -> bool:
         except Exception as e:
             print(f"❌ Error processing {schema_file}: {e}")
 
-    print(f"\n📊 Schema loading complete: {success_count}/{total_count} classes created")
+    print(
+        f"\n📊 Schema loading complete: {success_count}/{total_count} classes created"
+    )
     return success_count == total_count
 
 
@@ -120,7 +122,10 @@ def validate_hybrid_search(client: weaviate.Client) -> bool:
     try:
         # Test hybrid search on CodeFile class (should exist after loading)
         result = (
-            client.query.get("CodeFile").with_hybrid(query="test", alpha=0.5).with_limit(1).do()
+            client.query.get("CodeFile")
+            .with_hybrid(query="test", alpha=0.5)
+            .with_limit(1)
+            .do()
         )
 
         print("✅ Hybrid search validation successful")
@@ -135,8 +140,12 @@ def main():
     """Main execution"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Load Weaviate schemas for Sophia Intel AI")
-    parser.add_argument("--force", action="store_true", help="Force recreate existing classes")
+    parser = argparse.ArgumentParser(
+        description="Load Weaviate schemas for Sophia Intel AI"
+    )
+    parser.add_argument(
+        "--force", action="store_true", help="Force recreate existing classes"
+    )
     parser.add_argument(
         "--validate", action="store_true", help="Run validation tests after loading"
     )

@@ -550,7 +550,9 @@ Always think like a competitive strategist who understands market dynamics and s
 
         except Exception as e:
             logger.error(f"Failed to create business agent {template_id}: {e}")
-            raise HTTPException(status_code=500, detail=f"Agent creation failed: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Agent creation failed: {str(e)}"
+            )
 
     async def create_business_team(
         self, template_id: str, custom_config: Optional[dict[str, Any]] = None
@@ -567,7 +569,9 @@ Always think like a competitive strategist who understands market dynamics and s
             # Create agents for the team
             team_agents = []
             for agent_template in template.agents:
-                agent_id = await self.create_business_agent(agent_template.id, custom_config)
+                agent_id = await self.create_business_agent(
+                    agent_template.id, custom_config
+                )
                 team_agents.append(self.created_agents[agent_id])
 
             # Create AGNO Team
@@ -589,7 +593,9 @@ Always think like a competitive strategist who understands market dynamics and s
 
         except Exception as e:
             logger.error(f"Failed to create business team {template_id}: {e}")
-            raise HTTPException(status_code=500, detail=f"Team creation failed: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Team creation failed: {str(e)}"
+            )
 
     async def execute_business_task(
         self, agent_or_team_id: str, task: str, context: Optional[dict[str, Any]] = None
@@ -607,7 +613,11 @@ Always think like a competitive strategist who understands market dynamics and s
 
                 result = {
                     "success": True,
-                    "response": response.content if hasattr(response, "content") else str(response),
+                    "response": (
+                        response.content
+                        if hasattr(response, "content")
+                        else str(response)
+                    ),
                     "type": "agent",
                     "agent_id": agent_or_team_id,
                     "agent_name": agent.name,
@@ -622,7 +632,11 @@ Always think like a competitive strategist who understands market dynamics and s
 
                 result = {
                     "success": True,
-                    "response": response.content if hasattr(response, "content") else str(response),
+                    "response": (
+                        response.content
+                        if hasattr(response, "content")
+                        else str(response)
+                    ),
                     "type": "team",
                     "team_id": agent_or_team_id,
                     "team_name": team.name,
@@ -736,7 +750,8 @@ Always think like a competitive strategist who understands market dynamics and s
                     "name": team.name,
                     "description": team.description,
                     "members": [
-                        {"name": member.name, "role": member.role} for member in team.members
+                        {"name": member.name, "role": member.role}
+                        for member in team.members
                     ],
                     "member_count": len(team.members),
                     "status": "active",
@@ -751,7 +766,8 @@ Always think like a competitive strategist who understands market dynamics and s
         total_agents = len(self.created_agents)
         total_teams = len(self.created_teams)
         total_tasks = sum(
-            metrics.get("tasks_completed", 0) for metrics in self.performance_metrics.values()
+            metrics.get("tasks_completed", 0)
+            for metrics in self.performance_metrics.values()
         )
 
         avg_response_time = 0.0

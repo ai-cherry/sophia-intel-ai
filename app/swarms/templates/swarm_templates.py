@@ -141,12 +141,19 @@ class SwarmTemplateCatalog:
                     template_name="revenue_forecaster",
                     role="strategist",
                     factory_type="sophia",
-                    custom_config={"temperature": 0.3, "focus": "strategic_recommendations"},
+                    custom_config={
+                        "temperature": 0.3,
+                        "focus": "strategic_recommendations",
+                    },
                 ),
             ],
             coordination_config={
                 "strategy": "sequential_handoff",
-                "quality_gates": ["data_validation", "analysis_review", "recommendation_check"],
+                "quality_gates": [
+                    "data_validation",
+                    "analysis_review",
+                    "recommendation_check",
+                ],
                 "stage_timeouts": [10, 15, 10],  # minutes per stage
                 "handoff_validation": True,
             },
@@ -246,7 +253,10 @@ class SwarmTemplateCatalog:
                     weight=1.5,
                 ),
                 AgentTemplateConfig(
-                    template_name="odin", role="committee_member", factory_type="sophia", weight=1.5
+                    template_name="odin",
+                    role="committee_member",
+                    factory_type="sophia",
+                    weight=1.5,
                 ),
                 AgentTemplateConfig(
                     template_name="minerva",
@@ -322,7 +332,11 @@ class SwarmTemplateCatalog:
             ],
             coordination_config={
                 "strategy": "sequential_review",
-                "stage_gates": ["code_quality_check", "security_clearance", "performance_approval"],
+                "stage_gates": [
+                    "code_quality_check",
+                    "security_clearance",
+                    "performance_approval",
+                ],
                 "rollback_on_failure": True,
                 "escalation_enabled": True,
             },
@@ -473,7 +487,10 @@ class SwarmTemplateCatalog:
                     template_name="hermes",  # swift data gathering
                     role="data_collector",
                     factory_type="sophia",
-                    custom_config={"collection_speed": "maximum", "data_sources": "all"},
+                    custom_config={
+                        "collection_speed": "maximum",
+                        "data_sources": "all",
+                    },
                 ),
                 AgentTemplateConfig(
                     template_name="sales_pipeline_analyst",
@@ -565,7 +582,11 @@ class SwarmTemplateCatalog:
                 "actionable_recommendations": 5,
                 "competitive_awareness": 0.8,
             },
-            example_use_cases=["Executive briefings", "Revenue optimization", "Market positioning"],
+            example_use_cases=[
+                "Executive briefings",
+                "Revenue optimization",
+                "Market positioning",
+            ],
             estimated_duration="20-30 minutes",
             complexity_level=3,
             pay_ready_optimized=True,
@@ -666,9 +687,13 @@ class SwarmTemplateCatalog:
 
         return templates
 
-    def get_templates_by_complexity(self, max_complexity: int = 3) -> list[SwarmTemplate]:
+    def get_templates_by_complexity(
+        self, max_complexity: int = 3
+    ) -> list[SwarmTemplate]:
         """Get templates within complexity limit"""
-        return [t for t in self.templates.values() if t.complexity_level <= max_complexity]
+        return [
+            t for t in self.templates.values() if t.complexity_level <= max_complexity
+        ]
 
     def get_template_summary(self) -> dict[str, Any]:
         """Get summary of all templates"""
@@ -684,15 +709,21 @@ class SwarmTemplateCatalog:
         for template in self.templates.values():
             # Domain distribution
             domain_key = template.domain.value
-            summary["by_domain"][domain_key] = summary["by_domain"].get(domain_key, 0) + 1
+            summary["by_domain"][domain_key] = (
+                summary["by_domain"].get(domain_key, 0) + 1
+            )
 
             # Topology distribution
             topology_key = template.topology.value
-            summary["by_topology"][topology_key] = summary["by_topology"].get(topology_key, 0) + 1
+            summary["by_topology"][topology_key] = (
+                summary["by_topology"].get(topology_key, 0) + 1
+            )
 
             # Category distribution
             category_key = template.category.value
-            summary["by_category"][category_key] = summary["by_category"].get(category_key, 0) + 1
+            summary["by_category"][category_key] = (
+                summary["by_category"].get(category_key, 0) + 1
+            )
 
             # Complexity distribution
             complexity_key = f"level_{template.complexity_level}"
@@ -725,19 +756,28 @@ class SwarmTemplateCatalog:
 
         # Validate topology-specific requirements
         if template.topology == SwarmTopology.STAR:
-            coordinator_count = len([a for a in template.agents if a.role == "coordinator"])
+            coordinator_count = len(
+                [a for a in template.agents if a.role == "coordinator"]
+            )
             if coordinator_count != 1:
                 errors.append("Star topology requires exactly one coordinator")
 
         elif template.topology == SwarmTopology.COMMITTEE:
             arbiter_count = len([a for a in template.agents if a.role == "arbiter"])
-            if template.coordination_config.get("arbiter_required") and arbiter_count == 0:
-                errors.append("Committee topology with arbiter_required needs an arbiter agent")
+            if (
+                template.coordination_config.get("arbiter_required")
+                and arbiter_count == 0
+            ):
+                errors.append(
+                    "Committee topology with arbiter_required needs an arbiter agent"
+                )
 
         # Validate resource limits
         max_tasks = template.resource_limits.get("max_concurrent_tasks", 0)
         if max_tasks > 8:
-            errors.append(f"max_concurrent_tasks ({max_tasks}) exceeds system limit of 8")
+            errors.append(
+                f"max_concurrent_tasks ({max_tasks}) exceeds system limit of 8"
+            )
 
         return len(errors) == 0, errors
 

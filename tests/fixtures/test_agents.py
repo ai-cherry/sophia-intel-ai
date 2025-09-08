@@ -70,7 +70,11 @@ class MockAgent(Agent):
 
     async def execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
         """Execute a tool function"""
-        tool_call = {"tool": tool_name, "arguments": arguments, "timestamp": "2024-01-01T00:00:00Z"}
+        tool_call = {
+            "tool": tool_name,
+            "arguments": arguments,
+            "timestamp": "2024-01-01T00:00:00Z",
+        }
         self.tool_calls.append(tool_call)
 
         # Return mock tool result
@@ -109,7 +113,11 @@ def create_artemis_scout_agent() -> MockAgent:
         name="Scout-Test",
         domain="artemis",
         personality="tactical_observer",
-        capabilities=["repository_analysis", "vulnerability_scanning", "dependency_checking"],
+        capabilities=[
+            "repository_analysis",
+            "vulnerability_scanning",
+            "dependency_checking",
+        ],
         tools=[
             MagicMock(name="scan_repository"),
             MagicMock(name="analyze_code"),
@@ -133,7 +141,11 @@ def create_artemis_engineer_agent() -> MockAgent:
             MagicMock(name="optimize_performance"),
             MagicMock(name="write_tests"),
         ],
-        metadata={"squad": "engineering", "rank": "sergeant", "clearance": "confidential"},
+        metadata={
+            "squad": "engineering",
+            "rank": "sergeant",
+            "clearance": "confidential",
+        },
     )
     return MockAgent(config)
 
@@ -262,7 +274,11 @@ def create_sophia_apollo_agent() -> MockAgent:
             MagicMock(name="assess_risks"),
             MagicMock(name="identify_opportunities"),
         ],
-        metadata={"council": "prophecy", "aspect": "future_sight", "prediction_accuracy": 0.85},
+        metadata={
+            "council": "prophecy",
+            "aspect": "future_sight",
+            "prediction_accuracy": 0.85,
+        },
     )
     return MockAgent(config)
 
@@ -286,7 +302,11 @@ def create_sophia_demeter_agent() -> MockAgent:
             MagicMock(name="ensure_sustainability"),
             MagicMock(name="develop_ecosystem"),
         ],
-        metadata={"council": "growth", "aspect": "abundant_harvest", "growth_rate": 0.15},
+        metadata={
+            "council": "growth",
+            "aspect": "abundant_harvest",
+            "growth_rate": 0.15,
+        },
     )
     return MockAgent(config)
 
@@ -389,7 +409,9 @@ def create_test_agent_batch(
 
 def create_failing_agent() -> MockAgent:
     """Create an agent that always fails (for error testing)"""
-    agent = create_test_agent(name="FailingAgent", domain="test", personality="error_prone")
+    agent = create_test_agent(
+        name="FailingAgent", domain="test", personality="error_prone"
+    )
 
     # Override response generator to always fail
     agent.response_generator.side_effect = Exception("Simulated agent failure")
@@ -415,7 +437,9 @@ def create_slow_agent(delay_seconds: float = 5.0) -> MockAgent:
 
 def create_rate_limited_agent(max_requests: int = 5) -> MockAgent:
     """Create an agent with rate limiting (for rate limit testing)"""
-    agent = create_test_agent(name="RateLimitedAgent", domain="test", personality="restricted")
+    agent = create_test_agent(
+        name="RateLimitedAgent", domain="test", personality="restricted"
+    )
 
     request_count = 0
 

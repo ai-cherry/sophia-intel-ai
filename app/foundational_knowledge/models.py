@@ -107,7 +107,10 @@ class FoundationalKnowledge(BaseModel):
     @property
     def is_sensitive(self) -> bool:
         """Check if knowledge contains sensitive data"""
-        return self.sensitivity_level in [SensitivityLevel.HIGH, SensitivityLevel.CRITICAL]
+        return self.sensitivity_level in [
+            SensitivityLevel.HIGH,
+            SensitivityLevel.CRITICAL,
+        ]
 
     @property
     def requires_auth(self) -> bool:
@@ -123,7 +126,9 @@ class FoundationalKnowledge(BaseModel):
             AccessLevel.EXECUTIVE: 3,
             AccessLevel.OWNER: 4,
         }
-        return level_hierarchy.get(user_level, 0) >= level_hierarchy.get(self.access_level, 0)
+        return level_hierarchy.get(user_level, 0) >= level_hierarchy.get(
+            self.access_level, 0
+        )
 
 
 class KnowledgeVersion(BaseModel):

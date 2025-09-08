@@ -37,12 +37,20 @@ class TeamListResponse(BaseModel):
 class TeamRunRequest(BaseModel):
     """Request model for team execution with validation."""
 
-    team_id: str = Field(..., min_length=1, max_length=100, description="Team identifier")
-    message: str = Field(..., min_length=1, max_length=10000, description="Task message")
+    team_id: str = Field(
+        ..., min_length=1, max_length=100, description="Team identifier"
+    )
+    message: str = Field(
+        ..., min_length=1, max_length=10000, description="Task message"
+    )
     stream: bool = Field(default=True, description="Enable streaming response")
     use_memory: bool = Field(default=True, description="Use memory context")
-    context: Optional[dict[str, Any]] = Field(default=None, description="Additional context")
-    timeout: Optional[int] = Field(default=300, ge=1, le=3600, description="Timeout in seconds")
+    context: Optional[dict[str, Any]] = Field(
+        default=None, description="Additional context"
+    )
+    timeout: Optional[int] = Field(
+        default=300, ge=1, le=3600, description="Timeout in seconds"
+    )
 
     @validator("team_id")
     def validate_team_id(cls, v: str) -> str:
@@ -58,7 +66,9 @@ class TeamExecutionResponse(BaseModel):
     task_id: str = Field(..., description="Execution task ID")
     team_id: str = Field(..., description="Team that executed")
     status: str = Field(..., description="Execution status")
-    result: Optional[dict[str, Any]] = Field(default=None, description="Execution result")
+    result: Optional[dict[str, Any]] = Field(
+        default=None, description="Execution result"
+    )
     duration_ms: Optional[int] = Field(default=None, description="Execution time in ms")
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
@@ -69,7 +79,9 @@ class TeamExecutionResponse(BaseModel):
 
 
 @router.get("", response_model=TeamListResponse, summary="List available teams")
-async def list_teams(include_inactive: bool = False, state=Depends(get_state)) -> TeamListResponse:
+async def list_teams(
+    include_inactive: bool = False, state=Depends(get_state)
+) -> TeamListResponse:
     """
     List all available AI teams/swarms.
 
@@ -125,7 +137,9 @@ async def list_teams(include_inactive: bool = False, state=Depends(get_state)) -
 
     except Exception as e:
         logger.error(f"Failed to list teams: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve teams: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve teams: {str(e)}"
+        )
 
 
 @router.get("/{team_id}", response_model=TeamInfo, summary="Get team details")
@@ -156,7 +170,9 @@ async def get_team(team_id: str, state=Depends(get_state)) -> TeamInfo:
         raise
     except Exception as e:
         logger.error(f"Failed to get team {team_id}: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve team: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve team: {str(e)}"
+        )
 
 
 @router.post("/run", response_model=TeamExecutionResponse, summary="Execute team")
@@ -190,7 +206,9 @@ async def run_team(
         team = await get_team(request.team_id, state)
 
         if not team.active:
-            raise HTTPException(status_code=400, detail=f"Team '{request.team_id}' is not active")
+            raise HTTPException(
+                status_code=400, detail=f"Team '{request.team_id}' is not active"
+            )
 
         # Execute with streaming if requested
         if request.stream:
@@ -224,7 +242,9 @@ async def run_team(
 
         # Schedule cleanup in background
         background_tasks.add_task(
-            cleanup_execution_artifacts, team_id=request.team_id, task_id=result.get("task_id")
+            cleanup_execution_artifacts,
+            team_id=request.team_id,
+            task_id=result.get("task_id"),
         )
 
         return TeamExecutionResponse(
@@ -239,7 +259,8 @@ async def run_team(
         raise
     except TimeoutError:
         raise HTTPException(
-            status_code=504, detail=f"Team execution timed out after {request.timeout} seconds"
+            status_code=504,
+            detail=f"Team execution timed out after {request.timeout} seconds",
         )
     except Exception as e:
         logger.error(f"Team execution failed: {e}")
@@ -247,7 +268,9 @@ async def run_team(
 
 
 @router.post(
-    "/{team_id}/run", response_model=TeamExecutionResponse, summary="Execute specific team"
+    "/{team_id}/run",
+    response_model=TeamExecutionResponse,
+    summary="Execute specific team",
 )
 async def run_specific_team(
     team_id: str,
@@ -315,12 +338,20 @@ class TeamCreateRequest(ModelFieldsModel):
     """Request model for creating new teams."""
 
     id: str = Field(..., min_length=1, max_length=100, description="Team identifier")
-    name: str = Field(..., min_length=1, max_length=200, description="Team display name")
-    description: str = Field(..., min_length=1, max_length=1000, description="Team description")
+    name: str = Field(
+        ..., min_length=1, max_length=200, description="Team display name"
+    )
+    description: str = Field(
+        ..., min_length=1, max_length=1000, description="Team description"
+    )
     members: list[str] = Field(..., min_items=1, description="Team member roles")
-    model_pool: str = Field(default="balanced", description="Model pool (balanced, premium, basic)")
+    model_pool: str = Field(
+        default="balanced", description="Model pool (balanced, premium, basic)"
+    )
     active: bool = Field(default=True, description="Whether team is active")
-    configuration: Optional[dict[str, Any]] = Field(default=None, description="Team configuration")
+    configuration: Optional[dict[str, Any]] = Field(
+        default=None, description="Team configuration"
+    )
 
     @validator("id")
     def validate_id(cls, v: str) -> str:
@@ -333,12 +364,18 @@ class TeamCreateRequest(ModelFieldsModel):
 class TeamUpdateRequest(ModelFieldsModel):
     """Request model for updating team metadata."""
 
-    name: Optional[str] = Field(None, min_length=1, max_length=200, description="Team display name")
+    name: Optional[str] = Field(
+        None, min_length=1, max_length=200, description="Team display name"
+    )
     description: Optional[str] = Field(
         None, min_length=1, max_length=1000, description="Team description"
     )
-    members: Optional[list[str]] = Field(None, min_items=1, description="Team member roles")
-    model_pool: Optional[str] = Field(None, description="Model pool (balanced, premium, basic)")
+    members: Optional[list[str]] = Field(
+        None, min_items=1, description="Team member roles"
+    )
+    model_pool: Optional[str] = Field(
+        None, description="Model pool (balanced, premium, basic)"
+    )
     active: Optional[bool] = Field(None, description="Whether team is active")
 
 
@@ -348,12 +385,16 @@ class TeamConfigUpdate(BaseModel):
     model: Optional[str] = Field(None, description="LLM model to use")
     persona: Optional[str] = Field(None, description="Team persona/personality")
     instructions: Optional[str] = Field(None, description="Custom instructions")
-    temperature: Optional[float] = Field(None, ge=0.0, le=2.0, description="Model temperature")
+    temperature: Optional[float] = Field(
+        None, ge=0.0, le=2.0, description="Model temperature"
+    )
     max_tokens: Optional[int] = Field(None, ge=1, le=100000, description="Max tokens")
     members: Optional[list[str]] = Field(None, description="Team member roles")
 
 
-@router.patch("/{team_id}/config", response_model=TeamInfo, summary="Update team configuration")
+@router.patch(
+    "/{team_id}/config", response_model=TeamInfo, summary="Update team configuration"
+)
 async def update_team_config(
     team_id: str,
     config: TeamConfigUpdate,
@@ -403,7 +444,9 @@ async def update_team_config(
         raise
     except Exception as e:
         logger.error(f"Failed to update team config: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update configuration: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to update configuration: {str(e)}"
+        )
 
 
 @router.get("/{team_id}/config", summary="Get team configuration")
@@ -440,7 +483,9 @@ async def get_team_config(
         raise
     except Exception as e:
         logger.error(f"Failed to get team config: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve configuration: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to retrieve configuration: {str(e)}"
+        )
 
 
 # ============================================
@@ -450,7 +495,9 @@ async def get_team_config(
 
 @router.post("", response_model=TeamInfo, summary="Create new team")
 async def create_team(
-    request: TeamCreateRequest, orchestrator=Depends(get_orchestrator), state=Depends(get_state)
+    request: TeamCreateRequest,
+    orchestrator=Depends(get_orchestrator),
+    state=Depends(get_state),
 ) -> TeamInfo:
     """
     Create a new AI team/swarm.
@@ -469,7 +516,9 @@ async def create_team(
         try:
             existing_team = await get_team(request.id, state)
             if existing_team:
-                raise HTTPException(status_code=409, detail=f"Team '{request.id}' already exists")
+                raise HTTPException(
+                    status_code=409, detail=f"Team '{request.id}' already exists"
+                )
         except HTTPException as e:
             if e.status_code != 404:
                 raise
@@ -556,7 +605,9 @@ async def update_team(
             description=request.description or existing_team.description,
             members=request.members or existing_team.members,
             model_pool=request.model_pool or existing_team.model_pool,
-            active=request.active if request.active is not None else existing_team.active,
+            active=(
+                request.active if request.active is not None else existing_team.active
+            ),
         )
 
         logger.info(f"Updated team: {team_id}")
@@ -596,7 +647,8 @@ async def delete_team(
         # Check if team is active and force flag
         if team.active and not force:
             raise HTTPException(
-                status_code=400, detail=f"Team '{team_id}' is active. Use force=true to delete."
+                status_code=400,
+                detail=f"Team '{team_id}' is active. Use force=true to delete.",
             )
 
         # Delete via orchestrator
@@ -653,7 +705,9 @@ async def activate_team(
         raise
     except Exception as e:
         logger.error(f"Failed to activate team: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to activate team: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to activate team: {str(e)}"
+        )
 
 
 @router.post("/{team_id}/deactivate", summary="Deactivate team")
@@ -687,7 +741,9 @@ async def deactivate_team(
         raise
     except Exception as e:
         logger.error(f"Failed to deactivate team: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to deactivate team: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to deactivate team: {str(e)}"
+        )
 
 
 @router.get("/{team_id}/status", summary="Get team status")
@@ -722,12 +778,17 @@ async def get_team_status(
         raise
     except Exception as e:
         logger.error(f"Failed to get team status: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get team status: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get team status: {str(e)}"
+        )
 
 
 @router.get("/{team_id}/metrics", summary="Get team metrics")
 async def get_team_metrics(
-    team_id: str, days: int = 7, orchestrator=Depends(get_orchestrator), state=Depends(get_state)
+    team_id: str,
+    days: int = 7,
+    orchestrator=Depends(get_orchestrator),
+    state=Depends(get_state),
 ) -> dict[str, Any]:
     """
     Get performance metrics for a team.
@@ -757,12 +818,16 @@ async def get_team_metrics(
         raise
     except Exception as e:
         logger.error(f"Failed to get team metrics: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get team metrics: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get team metrics: {str(e)}"
+        )
 
 
 @router.post("/bulk/activate", summary="Bulk activate teams")
 async def bulk_activate_teams(
-    team_ids: list[str], orchestrator=Depends(get_orchestrator), state=Depends(get_state)
+    team_ids: list[str],
+    orchestrator=Depends(get_orchestrator),
+    state=Depends(get_state),
 ) -> dict[str, Any]:
     """
     Activate multiple teams at once.
@@ -822,4 +887,8 @@ async def teams_health(orchestrator=Depends(get_orchestrator)) -> dict[str, Any]
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
-        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.utcnow().isoformat()}
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.utcnow().isoformat(),
+        }

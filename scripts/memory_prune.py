@@ -51,7 +51,12 @@ async def prune_memories(
     Prune stale memories with relevance below threshold
     """
     if not HAS_MEM0:
-        return {"status": "error", "message": "Mem0 not installed", "pruned": 0, "total": 0}
+        return {
+            "status": "error",
+            "message": "Mem0 not installed",
+            "pruned": 0,
+            "total": 0,
+        }
 
     try:
         logger.info(f"Initializing memory system with config: {MEMORY_CONFIG}")
@@ -62,7 +67,12 @@ async def prune_memories(
         logger.info(f"Total memories: {total_count}")
 
         if total_count == 0:
-            return {"status": "success", "message": "No memories to prune", "pruned": 0, "total": 0}
+            return {
+                "status": "success",
+                "message": "No memories to prune",
+                "pruned": 0,
+                "total": 0,
+            }
 
         # Find stale memories
         stale_query = {"relevance": {"$lt": threshold}}
@@ -85,7 +95,9 @@ async def prune_memories(
         pruned = 0
         for i in range(0, prune_count, batch_size):
             batch_size_adjusted = min(batch_size, prune_count - i)
-            logger.debug(f"Processing batch {i//batch_size + 1}, size {batch_size_adjusted}")
+            logger.debug(
+                f"Processing batch {i//batch_size + 1}, size {batch_size_adjusted}"
+            )
 
             # Get batch of stale memories
             stale_memories = await mem.search(stale_query, limit=batch_size_adjusted)
@@ -106,7 +118,9 @@ async def prune_memories(
         # Get new count after pruning
         new_count = await mem.count()
 
-        logger.info(f"Pruning complete. Pruned {pruned} memories. New total: {new_count}")
+        logger.info(
+            f"Pruning complete. Pruned {pruned} memories. New total: {new_count}"
+        )
         return {
             "status": "success",
             "message": f"Pruned {pruned} memories",
@@ -120,7 +134,9 @@ async def prune_memories(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Prune stale memories with low relevance scores")
+    parser = argparse.ArgumentParser(
+        description="Prune stale memories with low relevance scores"
+    )
     parser.add_argument(
         "--threshold",
         type=float,
@@ -139,7 +155,9 @@ def main():
         default=MAX_PRUNE_COUNT,
         help=f"Maximum memories to prune (default: {MAX_PRUNE_COUNT})",
     )
-    parser.add_argument("--force", action="store_true", help="Force pruning even if recently run")
+    parser.add_argument(
+        "--force", action="store_true", help="Force pruning even if recently run"
+    )
     args = parser.parse_args()
 
     logger.info("Starting memory pruning process")
@@ -162,7 +180,9 @@ def main():
                 hours_since_prune = (current_time - last_prune) / 3600
 
                 if hours_since_prune < 24:  # Prune once per day by default
-                    logger.info(f"Skipping pruning, last run was {hours_since_prune:.1f} hours ago")
+                    logger.info(
+                        f"Skipping pruning, last run was {hours_since_prune:.1f} hours ago"
+                    )
                     return
             except Exception:
                 pass  # Continue with pruning if file is invalid
@@ -170,7 +190,9 @@ def main():
     # Run pruning
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(
-        prune_memories(threshold=args.threshold, batch_size=args.batch, max_count=args.max)
+        prune_memories(
+            threshold=args.threshold, batch_size=args.batch, max_count=args.max
+        )
     )
 
     if result["status"] == "success":

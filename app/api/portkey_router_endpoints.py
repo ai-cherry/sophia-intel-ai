@@ -9,7 +9,12 @@ from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app.api.portkey_unified_router import ModelTier, RouteConfig, RoutingStrategy, unified_router
+from app.api.portkey_unified_router import (
+    ModelTier,
+    RouteConfig,
+    RoutingStrategy,
+    unified_router,
+)
 from app.swarms.agno_teams import ExecutionStrategy
 
 router = APIRouter(prefix="/portkey-routing", tags=["portkey", "routing"])
@@ -74,7 +79,9 @@ async def get_router():
 
 
 @router.post("/select-model", response_model=RouteSelectionResponse)
-async def select_optimal_model(request: RouteSelectionRequest, router_instance=Depends(get_router)):
+async def select_optimal_model(
+    request: RouteSelectionRequest, router_instance=Depends(get_router)
+):
     """
     Select optimal model for given role and parameters
     """
@@ -84,7 +91,8 @@ async def select_optimal_model(request: RouteSelectionRequest, router_instance=D
             execution_strategy = ExecutionStrategy(request.execution_strategy.lower())
         except ValueError:
             raise HTTPException(
-                status_code=400, detail=f"Invalid execution strategy: {request.execution_strategy}"
+                status_code=400,
+                detail=f"Invalid execution strategy: {request.execution_strategy}",
             )
 
         # Parse routing strategy
@@ -94,7 +102,8 @@ async def select_optimal_model(request: RouteSelectionRequest, router_instance=D
                 routing_strategy = RoutingStrategy(request.routing_strategy.lower())
             except ValueError:
                 raise HTTPException(
-                    status_code=400, detail=f"Invalid routing strategy: {request.routing_strategy}"
+                    status_code=400,
+                    detail=f"Invalid routing strategy: {request.routing_strategy}",
                 )
 
         # Build route config
@@ -120,7 +129,9 @@ async def select_optimal_model(request: RouteSelectionRequest, router_instance=D
 
 
 @router.post("/completion", response_model=CompletionResponse)
-async def route_completion(request: CompletionRequest, router_instance=Depends(get_router)):
+async def route_completion(
+    request: CompletionRequest, router_instance=Depends(get_router)
+):
     """
     Route completion request through optimal model
     """
@@ -130,7 +141,8 @@ async def route_completion(request: CompletionRequest, router_instance=Depends(g
             execution_strategy = ExecutionStrategy(request.execution_strategy.lower())
         except ValueError:
             raise HTTPException(
-                status_code=400, detail=f"Invalid execution strategy: {request.execution_strategy}"
+                status_code=400,
+                detail=f"Invalid execution strategy: {request.execution_strategy}",
             )
 
         # Build route config from request
@@ -152,7 +164,9 @@ async def route_completion(request: CompletionRequest, router_instance=Depends(g
         return CompletionResponse(**result)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Completion routing failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Completion routing failed: {str(e)}"
+        )
 
 
 @router.get("/analytics", response_model=AnalyticsResponse)
@@ -165,7 +179,9 @@ async def get_routing_analytics(router_instance=Depends(get_router)):
         return AnalyticsResponse(**analytics)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analytics retrieval failed: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Analytics retrieval failed: {str(e)}"
+        )
 
 
 @router.get("/models")
@@ -218,7 +234,11 @@ async def health_check():
         }
 
     except Exception as e:
-        return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": datetime.now().isoformat(),
+        }
 
 
 @router.post("/cache/clear")

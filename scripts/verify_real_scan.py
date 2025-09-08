@@ -24,7 +24,9 @@ print(f"Python files: {len(py_files)}")
 print(f"TypeScript files: {len(ts_files)}")
 print(f"TSX files: {len(tsx_files)}")
 print(f"YAML files: {len(yaml_files)}")
-print(f"TOTAL CODE FILES: {len(py_files) + len(ts_files) + len(tsx_files) + len(yaml_files)}")
+print(
+    f"TOTAL CODE FILES: {len(py_files) + len(ts_files) + len(tsx_files) + len(yaml_files)}"
+)
 
 print("\nKEY DIRECTORIES:")
 for dir in ["app", "agent-ui", "scripts", "k8s", "tests"]:

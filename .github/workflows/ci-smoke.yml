@@ -38,3 +38,17 @@ jobs:
           docker build -f automation/docker/Dockerfile.mcp-git -t sophia-mcp-git .
           docker build -f automation/docker/Dockerfile.mcp-memory -t sophia-mcp-memory .
 
+      - name: Start minimal stack
+        run: |
+          docker compose -f docker-compose.multi-agent.yml up -d redis weaviate mcp-memory mcp-filesystem-sophia mcp-git swarm-orchestrator webui
+          echo "Waiting for services..."
+          for i in {1..60}; do curl -sf http://localhost:3001/health && break || sleep 2; done
+
+      - name: Run smoke tests
+        run: |
+          python3 scripts/ci_smoke_test.py
+
+      - name: Teardown
+        if: always()
+        run: |
+          docker compose -f docker-compose.multi-agent.yml down -v

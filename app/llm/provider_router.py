@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 import yaml
 
 from app.llm.multi_transport import MultiTransportLLM
+
 try:
     from prometheus_client import Counter, Histogram
 except Exception:  # optional metrics
@@ -32,13 +33,19 @@ class EnhancedProviderRouter:
         # metrics (optional)
         if Counter and Histogram:
             self._m_requests = Counter(
-                "router_requests_total", "Router requests", ["provider", "model", "task_type"]
+                "router_requests_total",
+                "Router requests",
+                ["provider", "model", "task_type"],
             )
             self._m_errors = Counter(
-                "router_errors_total", "Router errors", ["provider", "model", "task_type"]
+                "router_errors_total",
+                "Router errors",
+                ["provider", "model", "task_type"],
             )
             self._m_latency = Histogram(
-                "router_latency_seconds", "Router latency", ["provider", "model", "task_type"]
+                "router_latency_seconds",
+                "Router latency",
+                ["provider", "model", "task_type"],
             )
         else:
             self._m_requests = self._m_errors = self._m_latency = None
@@ -87,7 +94,9 @@ class EnhancedProviderRouter:
                     temperature=temperature,
                 )
                 if self._m_latency:
-                    self._m_latency.labels(provider, model, task_type).observe(time.perf_counter() - start)
+                    self._m_latency.labels(provider, model, task_type).observe(
+                        time.perf_counter() - start
+                    )
                 return resp.text
             except Exception:
                 if self._m_errors:

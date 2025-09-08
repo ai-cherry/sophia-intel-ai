@@ -111,9 +111,7 @@ Report findings with military precision. Include specific remediation steps.""",
                 model_gemini = genai.GenerativeModel("gemini-2.5-flash")
 
                 # Combine prompts for Gemini
-                full_prompt = (
-                    f"{self.universal_prompt['system']}\n\n{self.universal_prompt['user']}"
-                )
+                full_prompt = f"{self.universal_prompt['system']}\n\n{self.universal_prompt['user']}"
 
                 response = model_gemini.generate_content(
                     full_prompt,
@@ -125,7 +123,9 @@ Report findings with military precision. Include specific remediation steps.""",
                 elapsed = time.time() - start_time
                 content = response.text if response else "No response"
 
-                print(f"✅ [T+{elapsed:.1f}s] {agent_name}: Intel gathered via Google Direct")
+                print(
+                    f"✅ [T+{elapsed:.1f}s] {agent_name}: Intel gathered via Google Direct"
+                )
 
                 return {
                     "agent_number": 1,
@@ -394,7 +394,9 @@ Report findings with military precision. Include specific remediation steps.""",
         }
 
         # Save results
-        output_file = f"artemis_military_direct_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        output_file = (
+            f"artemis_military_direct_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
 
@@ -417,9 +419,13 @@ Report findings with military precision. Include specific remediation steps.""",
 
                 scores = {
                     "quality": min(10, len(findings) / 1000),  # Quality based on depth
-                    "speed": max(0, 10 - agent.get("execution_time", 0) / 3),  # Speed score
+                    "speed": max(
+                        0, 10 - agent.get("execution_time", 0) / 3
+                    ),  # Speed score
                     "accuracy": 5,  # Base accuracy (would need manual verification)
-                    "thoroughness": min(10, findings.count("\n") / 10),  # Based on structure
+                    "thoroughness": min(
+                        10, findings.count("\n") / 10
+                    ),  # Based on structure
                     "prioritization": (
                         5
                         if any(
@@ -428,7 +434,9 @@ Report findings with military precision. Include specific remediation steps.""",
                         )
                         else 3
                     ),
-                    "communication": 5 if any(char in findings for char in ["•", "-", "#"]) else 3,
+                    "communication": (
+                        5 if any(char in findings for char in ["•", "-", "#"]) else 3
+                    ),
                 }
 
                 total = sum(scores.values()) / len(scores)
@@ -492,7 +500,9 @@ async def main():
             print(f"   Intel: {agent['response_length']:,} chars")
         else:
             failed += 1
-            print(f"\n❌ {agent['agent_name']} ({agent.get('military_role', 'UNKNOWN')})")
+            print(
+                f"\n❌ {agent['agent_name']} ({agent.get('military_role', 'UNKNOWN')})"
+            )
             print(f"   Error: {agent['error'][:100]}")
 
     # Score agents
@@ -511,7 +521,9 @@ async def main():
             print(f"   Communication: {agent['scores']['communication']}/10")
 
     # Save scoring
-    scoring_file = f"artemis_scoring_direct_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    scoring_file = (
+        f"artemis_scoring_direct_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(scoring_file, "w") as f:
         json.dump(scoring, f, indent=2)
 

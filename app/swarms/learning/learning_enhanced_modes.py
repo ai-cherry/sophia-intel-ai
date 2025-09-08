@@ -69,7 +69,9 @@ class LearningEnhancedExecutionStrategy(ABC):
             solution={
                 "success": len([r for r in result if r.get("success", False)]) > 0,
                 "quality_score": (
-                    np.mean([r.get("quality_score", 0.0) for r in result]) if result else 0.0
+                    np.mean([r.get("quality_score", 0.0) for r in result])
+                    if result
+                    else 0.0
                 ),
                 "agent_results": result,
             },
@@ -86,7 +88,9 @@ class LearningEnhancedExecutionStrategy(ABC):
             "agent_count": len(swarm.agents),
         }
 
-        applicable_knowledge = await self.learning_system.get_applicable_knowledge(context, limit=3)
+        applicable_knowledge = await self.learning_system.get_applicable_knowledge(
+            context, limit=3
+        )
         modifications = {}
 
         for knowledge in applicable_knowledge:
@@ -107,12 +111,16 @@ class LearningEnhancedParallelExecution(LearningEnhancedExecutionStrategy):
         self, swarm: SwarmBase, problem: dict[str, Any], context: dict[str, Any]
     ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """Execute parallel swarm with learning coordination"""
-        with tracer.start_span("learning_parallel_execution", kind=SpanKind.INTERNAL) as span:
+        with tracer.start_span(
+            "learning_parallel_execution", kind=SpanKind.INTERNAL
+        ) as span:
             span.set_attribute("swarm.id", swarm.config.swarm_id)
             span.set_attribute("agent.count", len(swarm.agents))
 
             # Apply pre-execution learning
-            learning_enhancements = await self.apply_pre_execution_learning(swarm, problem)
+            learning_enhancements = await self.apply_pre_execution_learning(
+                swarm, problem
+            )
 
             # Enhanced parallel execution with knowledge sharing
             start_time = time.time()
@@ -121,7 +129,9 @@ class LearningEnhancedParallelExecution(LearningEnhancedExecutionStrategy):
             shared_context = {
                 **context,
                 "learning_enhancements": learning_enhancements,
-                "parallel_coordination": await self._get_coordination_knowledge(swarm, problem),
+                "parallel_coordination": await self._get_coordination_knowledge(
+                    swarm, problem
+                ),
             }
 
             # Execute agents with learning-enhanced coordination
@@ -130,7 +140,9 @@ class LearningEnhancedParallelExecution(LearningEnhancedExecutionStrategy):
                     **shared_context,
                     "agent_id": agent_id,
                     "peer_agents": [
-                        f"agent_{i}" for i in range(len(swarm.agents)) if f"agent_{i}" != agent_id
+                        f"agent_{i}"
+                        for i in range(len(swarm.agents))
+                        if f"agent_{i}" != agent_id
                     ],
                 }
 
@@ -140,11 +152,15 @@ class LearningEnhancedParallelExecution(LearningEnhancedExecutionStrategy):
                     agent_context["agent_knowledge"] = agent_knowledge
 
                 try:
-                    result = await swarm._execute_single_agent(agent, problem, agent_context)
+                    result = await swarm._execute_single_agent(
+                        agent, problem, agent_context
+                    )
 
                     # Enhance result with learning metadata
                     result["learning_metadata"] = {
-                        "knowledge_applied": len(agent_knowledge) if agent_knowledge else 0,
+                        "knowledge_applied": (
+                            len(agent_knowledge) if agent_knowledge else 0
+                        ),
                         "execution_mode": "learning_parallel",
                     }
 
@@ -155,7 +171,8 @@ class LearningEnhancedParallelExecution(LearningEnhancedExecutionStrategy):
 
             # Execute all agents with learning coordination
             tasks = [
-                execute_learning_agent(agent, f"agent_{i}") for i, agent in enumerate(swarm.agents)
+                execute_learning_agent(agent, f"agent_{i}")
+                for i, agent in enumerate(swarm.agents)
             ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -175,8 +192,12 @@ class LearningEnhancedParallelExecution(LearningEnhancedExecutionStrategy):
             execution_metadata = {
                 "execution_time": execution_time,
                 "coordination_effectiveness": coordination_analysis["effectiveness"],
-                "knowledge_sharing_success": coordination_analysis["knowledge_sharing_success"],
-                "agent_synchronization": coordination_analysis.get("synchronization_score", 0.0),
+                "knowledge_sharing_success": coordination_analysis[
+                    "knowledge_sharing_success"
+                ],
+                "agent_synchronization": coordination_analysis.get(
+                    "synchronization_score", 0.0
+                ),
             }
 
             await self.capture_execution_experience(
@@ -235,9 +256,13 @@ class LearningEnhancedParallelExecution(LearningEnhancedExecutionStrategy):
         success_rate = success_count / len(results)
 
         # Analyze result consistency (indicator of good coordination)
-        quality_scores = [r.get("quality_score", 0.0) for r in results if "quality_score" in r]
+        quality_scores = [
+            r.get("quality_score", 0.0) for r in results if "quality_score" in r
+        ]
         quality_variance = np.var(quality_scores) if quality_scores else 1.0
-        consistency_score = max(0.0, 1.0 - quality_variance)  # Lower variance = better coordination
+        consistency_score = max(
+            0.0, 1.0 - quality_variance
+        )  # Lower variance = better coordination
 
         # Knowledge sharing effectiveness (based on metadata)
         knowledge_applications = [
@@ -268,12 +293,16 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
         self, swarm: SwarmBase, problem: dict[str, Any], context: dict[str, Any]
     ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """Execute sequential swarm with progressive learning"""
-        with tracer.start_span("learning_sequential_execution", kind=SpanKind.INTERNAL) as span:
+        with tracer.start_span(
+            "learning_sequential_execution", kind=SpanKind.INTERNAL
+        ) as span:
             span.set_attribute("swarm.id", swarm.config.swarm_id)
             span.set_attribute("agent.count", len(swarm.agents))
 
             # Apply pre-execution learning
-            learning_enhancements = await self.apply_pre_execution_learning(swarm, problem)
+            learning_enhancements = await self.apply_pre_execution_learning(
+                swarm, problem
+            )
 
             results = []
             progressive_knowledge = {}
@@ -293,13 +322,17 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
                 }
 
                 # Apply sequential learning patterns
-                sequential_knowledge = await self._get_sequential_knowledge(i, results, problem)
+                sequential_knowledge = await self._get_sequential_knowledge(
+                    i, results, problem
+                )
                 if sequential_knowledge:
                     agent_context["sequential_patterns"] = sequential_knowledge
 
                 try:
                     # Execute agent with enhanced context
-                    result = await swarm._execute_single_agent(agent, problem, agent_context)
+                    result = await swarm._execute_single_agent(
+                        agent, problem, agent_context
+                    )
 
                     # Enhance result with sequential learning metadata
                     agent_execution_time = time.time() - agent_start_time
@@ -331,7 +364,9 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
 
             # Analyze sequential learning effectiveness
             execution_time = time.time() - start_time
-            sequential_analysis = await self._analyze_sequential_learning(results, execution_time)
+            sequential_analysis = await self._analyze_sequential_learning(
+                results, execution_time
+            )
 
             # Capture execution experience
             execution_metadata = {
@@ -341,7 +376,9 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
                 "improvement_trend": sequential_analysis.get("improvement_trend", 0.0),
             }
 
-            await self.capture_execution_experience(swarm, problem, results, execution_metadata)
+            await self.capture_execution_experience(
+                swarm, problem, results, execution_metadata
+            )
 
             span.set_attribute("execution.time", execution_time)
             span.set_attribute("results.count", len(results))
@@ -349,7 +386,10 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
             return results, execution_metadata
 
     async def _get_sequential_knowledge(
-        self, agent_position: int, previous_results: list[dict[str, Any]], problem: dict[str, Any]
+        self,
+        agent_position: int,
+        previous_results: list[dict[str, Any]],
+        problem: dict[str, Any],
     ) -> dict[str, Any]:
         """Get knowledge patterns for sequential execution"""
         context = {
@@ -358,7 +398,9 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
             "problem_type": problem.get("type", "general"),
         }
 
-        sequential_knowledge = await self.learning_system.get_applicable_knowledge(context, limit=2)
+        sequential_knowledge = await self.learning_system.get_applicable_knowledge(
+            context, limit=2
+        )
 
         patterns = {}
         for knowledge in sequential_knowledge:
@@ -404,7 +446,10 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
         }
 
     async def _update_progressive_knowledge(
-        self, current_knowledge: dict[str, Any], new_result: dict[str, Any], agent_position: int
+        self,
+        current_knowledge: dict[str, Any],
+        new_result: dict[str, Any],
+        agent_position: int,
     ) -> dict[str, Any]:
         """Update progressive knowledge with new result"""
         updated_knowledge = current_knowledge.copy()
@@ -429,7 +474,9 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
         # Update recommendations for next agent
         if agent_position > 0:
             updated_knowledge["next_agent_recommendations"] = (
-                await self._generate_next_agent_recommendations(updated_knowledge, new_result)
+                await self._generate_next_agent_recommendations(
+                    updated_knowledge, new_result
+                )
             )
 
         return updated_knowledge
@@ -478,14 +525,19 @@ class LearningEnhancedSequentialExecution(LearningEnhancedExecutionStrategy):
 
         # Calculate knowledge inheritance effectiveness
         knowledge_inheritance = [
-            r.get("learning_metadata", {}).get("knowledge_inherited", 0) for r in results
+            r.get("learning_metadata", {}).get("knowledge_inherited", 0)
+            for r in results
         ]
-        avg_inheritance = np.mean(knowledge_inheritance) if knowledge_inheritance else 0.0
+        avg_inheritance = (
+            np.mean(knowledge_inheritance) if knowledge_inheritance else 0.0
+        )
 
         # Overall effectiveness
         success_rate = sum(1 for r in results if r.get("success", False)) / len(results)
         effectiveness = (
-            success_rate * 0.4 + improvement_trend * 0.4 + min(avg_inheritance / 10.0, 1.0) * 0.2
+            success_rate * 0.4
+            + improvement_trend * 0.4
+            + min(avg_inheritance / 10.0, 1.0) * 0.2
         )
 
         return {
@@ -504,12 +556,16 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
         self, swarm: SwarmBase, problem: dict[str, Any], context: dict[str, Any]
     ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """Execute debate swarm with adversarial learning"""
-        with tracer.start_span("learning_debate_execution", kind=SpanKind.INTERNAL) as span:
+        with tracer.start_span(
+            "learning_debate_execution", kind=SpanKind.INTERNAL
+        ) as span:
             span.set_attribute("swarm.id", swarm.config.swarm_id)
             span.set_attribute("agent.count", len(swarm.agents))
 
             # Apply pre-execution learning for debate strategies
-            learning_enhancements = await self.apply_pre_execution_learning(swarm, problem)
+            learning_enhancements = await self.apply_pre_execution_learning(
+                swarm, problem
+            )
 
             start_time = time.time()
 
@@ -527,14 +583,18 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
             # Execute debate pattern with learning enhancement
             if "debate" in swarm.patterns:
                 try:
-                    debate_result = await swarm.patterns["debate"].apply(problem, debate_context)
+                    debate_result = await swarm.patterns["debate"].apply(
+                        problem, debate_context
+                    )
                     results = [debate_result] if debate_result else []
                 except Exception as e:
                     logger.error(f"Learning-enhanced debate execution failed: {e}")
                     results = [{"success": False, "error": str(e)}]
             else:
                 # Fallback to parallel with debate-like learning
-                results = await self._simulate_learning_debate(swarm, problem, debate_context)
+                results = await self._simulate_learning_debate(
+                    swarm, problem, debate_context
+                )
 
             execution_time = time.time() - start_time
 
@@ -548,10 +608,14 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
                 "execution_time": execution_time,
                 "debate_effectiveness": debate_analysis["effectiveness"],
                 "consensus_quality": debate_analysis["consensus_quality"],
-                "adversarial_learning_score": debate_analysis.get("adversarial_score", 0.0),
+                "adversarial_learning_score": debate_analysis.get(
+                    "adversarial_score", 0.0
+                ),
             }
 
-            await self.capture_execution_experience(swarm, problem, results, execution_metadata)
+            await self.capture_execution_experience(
+                swarm, problem, results, execution_metadata
+            )
 
             span.set_attribute("execution.time", execution_time)
             span.set_attribute("results.count", len(results))
@@ -568,9 +632,15 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
             "knowledge_type": KnowledgeType.CONSENSUS_MECHANISM,
         }
 
-        debate_knowledge = await self.learning_system.get_applicable_knowledge(context, limit=3)
+        debate_knowledge = await self.learning_system.get_applicable_knowledge(
+            context, limit=3
+        )
 
-        strategies = {"argument_strategies": [], "consensus_mechanisms": [], "quality_criteria": {}}
+        strategies = {
+            "argument_strategies": [],
+            "consensus_mechanisms": [],
+            "quality_criteria": {},
+        }
 
         for knowledge in debate_knowledge:
             pattern = knowledge.pattern
@@ -579,7 +649,9 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
                 strategies["argument_strategies"].extend(pattern["argument_strategies"])
 
             if "consensus_mechanisms" in pattern:
-                strategies["consensus_mechanisms"].extend(pattern["consensus_mechanisms"])
+                strategies["consensus_mechanisms"].extend(
+                    pattern["consensus_mechanisms"]
+                )
 
             if "quality_criteria" in pattern:
                 strategies["quality_criteria"].update(pattern["quality_criteria"])
@@ -592,7 +664,9 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
         """Simulate debate execution with learning when pattern not available"""
         # Split agents into debate roles
         total_agents = len(swarm.agents)
-        debaters = swarm.agents[: total_agents // 2] if total_agents > 1 else swarm.agents
+        debaters = (
+            swarm.agents[: total_agents // 2] if total_agents > 1 else swarm.agents
+        )
         moderators = swarm.agents[total_agents // 2 :] if total_agents > 2 else []
 
         debate_results = []
@@ -608,7 +682,9 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
             agent = debaters[round_num] if round_num < len(debaters) else moderators[0]
 
             try:
-                result = await swarm._execute_single_agent(agent, problem, round_context)
+                result = await swarm._execute_single_agent(
+                    agent, problem, round_context
+                )
                 result["debate_metadata"] = {
                     "round": round_num,
                     "role": round_context["debate_role"],
@@ -616,19 +692,26 @@ class LearningEnhancedDebateExecution(LearningEnhancedExecutionStrategy):
                 }
                 debate_results.append(result)
             except Exception as e:
-                debate_results.append({"success": False, "error": str(e), "round": round_num})
+                debate_results.append(
+                    {"success": False, "error": str(e), "round": round_num}
+                )
 
         return debate_results
 
     async def _analyze_debate_learning(
-        self, results: list[dict[str, Any]], execution_time: float, debate_knowledge: dict[str, Any]
+        self,
+        results: list[dict[str, Any]],
+        execution_time: float,
+        debate_knowledge: dict[str, Any],
     ) -> dict[str, Any]:
         """Analyze effectiveness of debate learning"""
         if not results:
             return {"effectiveness": 0.0, "consensus_quality": 0.0}
 
         # Calculate consensus quality
-        quality_scores = [r.get("quality_score", 0.0) for r in results if "quality_score" in r]
+        quality_scores = [
+            r.get("quality_score", 0.0) for r in results if "quality_score" in r
+        ]
         consensus_quality = np.mean(quality_scores) if quality_scores else 0.0
 
         # Calculate adversarial learning score
@@ -665,7 +748,9 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
         self, swarm: SwarmBase, problem: dict[str, Any], context: dict[str, Any]
     ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
         """Execute hierarchical swarm with knowledge distillation"""
-        with tracer.start_span("learning_hierarchical_execution", kind=SpanKind.INTERNAL) as span:
+        with tracer.start_span(
+            "learning_hierarchical_execution", kind=SpanKind.INTERNAL
+        ) as span:
             span.set_attribute("swarm.id", swarm.config.swarm_id)
             span.set_attribute("agent.count", len(swarm.agents))
 
@@ -673,7 +758,9 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
                 return [], {"execution_time": 0.0, "hierarchical_effectiveness": 0.0}
 
             # Apply pre-execution learning
-            learning_enhancements = await self.apply_pre_execution_learning(swarm, problem)
+            learning_enhancements = await self.apply_pre_execution_learning(
+                swarm, problem
+            )
 
             start_time = time.time()
 
@@ -702,7 +789,10 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
                 # Extract task assignments from coordinator
                 task_assignments = coordinator_result.get(
                     "task_assignments",
-                    [{"task": f"subtask_{i}", "context": problem} for i in range(len(workers))],
+                    [
+                        {"task": f"subtask_{i}", "context": problem}
+                        for i in range(len(workers))
+                    ],
                 )
 
                 # Execute workers with knowledge distillation
@@ -729,11 +819,17 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
             execution_metadata = {
                 "execution_time": execution_time,
                 "hierarchical_effectiveness": hierarchical_analysis["effectiveness"],
-                "knowledge_distillation_score": hierarchical_analysis["distillation_score"],
-                "coordination_quality": hierarchical_analysis.get("coordination_quality", 0.0),
+                "knowledge_distillation_score": hierarchical_analysis[
+                    "distillation_score"
+                ],
+                "coordination_quality": hierarchical_analysis.get(
+                    "coordination_quality", 0.0
+                ),
             }
 
-            await self.capture_execution_experience(swarm, problem, results, execution_metadata)
+            await self.capture_execution_experience(
+                swarm, problem, results, execution_metadata
+            )
 
             span.set_attribute("execution.time", execution_time)
             span.set_attribute("results.count", len(results))
@@ -754,16 +850,24 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
             context, limit=3
         )
 
-        knowledge = {"coordination_patterns": [], "delegation_strategies": {}, "knowledge_flow": {}}
+        knowledge = {
+            "coordination_patterns": [],
+            "delegation_strategies": {},
+            "knowledge_flow": {},
+        }
 
         for learned_knowledge in hierarchical_knowledge:
             pattern = learned_knowledge.pattern
 
             if "coordination_patterns" in pattern:
-                knowledge["coordination_patterns"].extend(pattern["coordination_patterns"])
+                knowledge["coordination_patterns"].extend(
+                    pattern["coordination_patterns"]
+                )
 
             if "delegation_strategies" in pattern:
-                knowledge["delegation_strategies"].update(pattern["delegation_strategies"])
+                knowledge["delegation_strategies"].update(
+                    pattern["delegation_strategies"]
+                )
 
             if "knowledge_flow" in pattern:
                 knowledge["knowledge_flow"].update(pattern["knowledge_flow"])
@@ -800,12 +904,16 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
             }
 
             try:
-                result = await swarm._execute_single_agent(worker, task_assignment, worker_context)
+                result = await swarm._execute_single_agent(
+                    worker, task_assignment, worker_context
+                )
 
                 # Add distillation metadata
                 result["distillation_metadata"] = {
                     "coordinator_knowledge_applied": True,
-                    "task_assignment_id": task_assignment.get("id", f"task_{worker_id}"),
+                    "task_assignment_id": task_assignment.get(
+                        "id", f"task_{worker_id}"
+                    ),
                     "distillation_effectiveness": await self._calculate_distillation_effectiveness(
                         result, coordinator_result
                     ),
@@ -822,7 +930,9 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
 
         # Execute workers in parallel with knowledge distillation
         worker_tasks = [
-            execute_worker_with_distillation(worker, i, task_assignments[i % len(task_assignments)])
+            execute_worker_with_distillation(
+                worker, i, task_assignments[i % len(task_assignments)]
+            )
             for i, worker in enumerate(workers)
         ]
 
@@ -862,29 +972,41 @@ class LearningEnhancedHierarchicalExecution(LearningEnhancedExecutionStrategy):
         # Separate coordinator and worker results
         coordinator_results = [r for r in results if r.get("role") == "coordinator"]
         worker_results = [
-            r for r in results if r.get("role") == "worker" or "distillation_metadata" in r
+            r
+            for r in results
+            if r.get("role") == "worker" or "distillation_metadata" in r
         ]
 
         # Calculate coordination quality
-        coordinator_success = len([r for r in coordinator_results if r.get("success", False)]) > 0
-        worker_success_rate = sum(1 for r in worker_results if r.get("success", False)) / max(
-            len(worker_results), 1
+        coordinator_success = (
+            len([r for r in coordinator_results if r.get("success", False)]) > 0
         )
+        worker_success_rate = sum(
+            1 for r in worker_results if r.get("success", False)
+        ) / max(len(worker_results), 1)
 
-        coordination_quality = (0.6 if coordinator_success else 0.0) + (worker_success_rate * 0.4)
+        coordination_quality = (0.6 if coordinator_success else 0.0) + (
+            worker_success_rate * 0.4
+        )
 
         # Calculate knowledge distillation score
         distillation_scores = [
             r.get("distillation_metadata", {}).get("distillation_effectiveness", 0.0)
             for r in worker_results
         ]
-        distillation_score = np.mean(distillation_scores) if distillation_scores else 0.0
+        distillation_score = (
+            np.mean(distillation_scores) if distillation_scores else 0.0
+        )
 
         # Knowledge application effectiveness
-        knowledge_applied = len(hierarchy_knowledge.get("coordination_patterns", [])) > 0
+        knowledge_applied = (
+            len(hierarchy_knowledge.get("coordination_patterns", [])) > 0
+        )
 
         # Overall effectiveness
-        overall_success_rate = sum(1 for r in results if r.get("success", False)) / len(results)
+        overall_success_rate = sum(1 for r in results if r.get("success", False)) / len(
+            results
+        )
         effectiveness = (
             overall_success_rate * 0.3
             + coordination_quality * 0.3
@@ -918,9 +1040,15 @@ class LearningEnhancedExecutionFactory:
     def _initialize_strategies(self):
         """Initialize all learning-enhanced execution strategies"""
         self._strategies = {
-            SwarmExecutionMode.PARALLEL: LearningEnhancedParallelExecution(self.learning_system),
-            SwarmExecutionMode.LINEAR: LearningEnhancedSequentialExecution(self.learning_system),
-            SwarmExecutionMode.DEBATE: LearningEnhancedDebateExecution(self.learning_system),
+            SwarmExecutionMode.PARALLEL: LearningEnhancedParallelExecution(
+                self.learning_system
+            ),
+            SwarmExecutionMode.LINEAR: LearningEnhancedSequentialExecution(
+                self.learning_system
+            ),
+            SwarmExecutionMode.DEBATE: LearningEnhancedDebateExecution(
+                self.learning_system
+            ),
             SwarmExecutionMode.HIERARCHICAL: LearningEnhancedHierarchicalExecution(
                 self.learning_system
             ),
@@ -966,7 +1094,9 @@ async def integrate_learning_with_swarm(
     # Override execute_agents method with learning-enhanced version
     original_execute_agents = swarm.execute_agents
 
-    async def learning_enhanced_execute_agents(problem: dict[str, Any], context: dict[str, Any]):
+    async def learning_enhanced_execute_agents(
+        problem: dict[str, Any], context: dict[str, Any]
+    ):
         """Learning-enhanced version of execute_agents"""
         try:
             # Use learning-enhanced execution
@@ -984,7 +1114,9 @@ async def integrate_learning_with_swarm(
             return results
 
         except Exception as e:
-            logger.error(f"Learning-enhanced execution failed, falling back to original: {e}")
+            logger.error(
+                f"Learning-enhanced execution failed, falling back to original: {e}"
+            )
             return await original_execute_agents(problem, context)
 
     # Replace method

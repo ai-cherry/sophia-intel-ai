@@ -14,12 +14,19 @@ from fastapi.responses import StreamingResponse
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.swarms import SwarmOrchestrator
-from app.swarms.coding.models import DebateResult, PoolType, SwarmConfiguration, SwarmRequest
+from app.swarms.coding.models import (
+    DebateResult,
+    PoolType,
+    SwarmConfiguration,
+    SwarmRequest,
+)
 from app.swarms.coding.team import execute_swarm_request
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/swarms", tags=["swarms"], responses={404: {"description": "Not found"}})
+router = APIRouter(
+    prefix="/swarms", tags=["swarms"], responses={404: {"description": "Not found"}}
+)
 
 
 @router.post("/coding/execute", response_model=DebateResult)
@@ -92,14 +99,18 @@ async def stream_coding_swarm(request: SwarmRequest):
             orchestrator = SwarmOrchestrator(team, request.configuration, memory)
 
             # Stream events
-            yield json.dumps({"event": "start", "team": team.name, "task": request.task}) + "\n"
+            yield json.dumps(
+                {"event": "start", "team": team.name, "task": request.task}
+            ) + "\n"
 
             # Run debate with streaming
             # (In production, would modify orchestrator to support streaming)
             result = await orchestrator.run_debate(request.task, request.context)
 
             # Stream final result
-            yield json.dumps({"event": "complete", "result": result.model_dump()}) + "\n"
+            yield json.dumps(
+                {"event": "complete", "result": result.model_dump()}
+            ) + "\n"
 
         except Exception as e:
             yield json.dumps({"event": "error", "message": str(e)}) + "\n"
@@ -165,13 +176,19 @@ async def validate_configuration(config: SwarmConfiguration) -> dict[str, Any]:
 
     # Add suggestions
     if config.max_generators > 6:
-        result["suggestions"].append("Consider reducing max_generators for better coordination")
+        result["suggestions"].append(
+            "Consider reducing max_generators for better coordination"
+        )
 
     if config.timeout_seconds < 60:
-        result["suggestions"].append("Very short timeout may not allow complex tasks to complete")
+        result["suggestions"].append(
+            "Very short timeout may not allow complex tasks to complete"
+        )
 
     if config.accuracy_threshold > 9:
-        result["suggestions"].append("Very high accuracy threshold may reject valid solutions")
+        result["suggestions"].append(
+            "Very high accuracy threshold may reject valid solutions"
+        )
 
     if config.enable_file_write and not config.include_runner:
         result["warnings"].append("File write enabled but no runner agent included")
@@ -216,7 +233,9 @@ async def get_swarm_history(
             try:
                 # Parse stored result
                 content = (
-                    json.loads(entry.content) if isinstance(entry.content, str) else entry.content
+                    json.loads(entry.content)
+                    if isinstance(entry.content, str)
+                    else entry.content
                 )
                 history.append(
                     {

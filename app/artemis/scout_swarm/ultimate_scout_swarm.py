@@ -37,7 +37,9 @@ try:
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
-    logging.warning("MCP tools not available - scout swarm will use limited functionality")
+    logging.warning(
+        "MCP tools not available - scout swarm will use limited functionality"
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -229,9 +231,7 @@ No time limit. Be exhaustive and thorough.
 
         # Add repository statistics
         if context.get("repo_stats"):
-            base_prompt += (
-                f"\n\nREPOSITORY STATISTICS:\n{json.dumps(context['repo_stats'], indent=2)}"
-            )
+            base_prompt += f"\n\nREPOSITORY STATISTICS:\n{json.dumps(context['repo_stats'], indent=2)}"
 
         return base_prompt
 
@@ -274,7 +274,9 @@ No time limit. Be exhaustive and thorough.
 
         # Update rolling average execution time
         prev_avg = self.average_time
-        self.average_time = ((prev_avg * (self.scan_count - 1)) + execution_time) / self.scan_count
+        self.average_time = (
+            (prev_avg * (self.scan_count - 1)) + execution_time
+        ) / self.scan_count
 
         # Update performance metrics
         self.config.performance_metrics["scan_count"] = self.scan_count
@@ -296,7 +298,9 @@ class LlamaScout(BaseScout):
             model="meta-llama/llama-4-scout",
             provider="AIMLAPI",
             tier=ScoutTier.RAPID,
-            api_key=os.environ.get("AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"),
+            api_key=os.environ.get(
+                "AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"
+            ),
             endpoint="https://api.aimlapi.com/v2/chat/completions",
             temperature=0.3,
             timeout=30,
@@ -325,7 +329,9 @@ class LlamaScout(BaseScout):
             if response.status_code == 200:
                 return response.json()
             else:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+                raise HTTPException(
+                    status_code=response.status_code, detail=response.text
+                )
 
 
 # ==============================================================================
@@ -376,7 +382,9 @@ class GrokScout(BaseScout):
             if response.status_code == 200:
                 return response.json()
             else:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+                raise HTTPException(
+                    status_code=response.status_code, detail=response.text
+                )
 
 
 class GeminiScout(BaseScout):
@@ -388,11 +396,17 @@ class GeminiScout(BaseScout):
             model="gemini-2.0-flash-exp",
             provider="Google",
             tier=ScoutTier.DEEP,
-            api_key=os.environ.get("GEMINI_API_KEY", "AIzaSyA0rewcfUHo87WMEz4a8Og1eAWTslxlgEE"),
+            api_key=os.environ.get(
+                "GEMINI_API_KEY", "AIzaSyA0rewcfUHo87WMEz4a8Og1eAWTslxlgEE"
+            ),
             endpoint="https://generativelanguage.googleapis.com/v1beta/models",
             temperature=0.3,
             timeout=60,
-            specialties=["architecture_analysis", "performance_optimization", "best_practices"],
+            specialties=[
+                "architecture_analysis",
+                "performance_optimization",
+                "best_practices",
+            ],
             performance_metrics={"expected_time": 19.64, "quality_score": 88.5},
         )
         super().__init__(config)
@@ -427,7 +441,9 @@ class GeminiScout(BaseScout):
                     "usage": {"total_tokens": len(content.split()) * 1.3},  # Estimate
                 }
             else:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+                raise HTTPException(
+                    status_code=response.status_code, detail=response.text
+                )
 
 
 # ==============================================================================
@@ -475,7 +491,9 @@ class GPTScout(BaseScout):
             if response.status_code == 200:
                 return response.json()
             else:
-                raise HTTPException(status_code=response.status_code, detail=response.text)
+                raise HTTPException(
+                    status_code=response.status_code, detail=response.text
+                )
 
 
 class MaverickScout(BaseScout):
@@ -487,7 +505,9 @@ class MaverickScout(BaseScout):
             model="meta-llama/llama-4-maverick",
             provider="AIMLAPI",
             tier=ScoutTier.VALIDATION,
-            api_key=os.environ.get("AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"),
+            api_key=os.environ.get(
+                "AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"
+            ),
             endpoint="https://api.aimlapi.com/v2/chat/completions",
             temperature=0.3,
             timeout=45,
@@ -515,7 +535,9 @@ class GLMScout(BaseScout):
             model="zhipu/glm-4.5-air",
             provider="AIMLAPI",
             tier=ScoutTier.AUDIT,
-            api_key=os.environ.get("AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"),
+            api_key=os.environ.get(
+                "AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"
+            ),
             endpoint="https://api.aimlapi.com/v2/chat/completions",
             temperature=0.2,
             timeout=120,  # Longer timeout for exhaustive analysis
@@ -568,7 +590,10 @@ class UltimateScoutSwarm:
         logger.info(f"MCP Tools: {'ENABLED' if self.use_mcp else 'DISABLED'}")
 
     async def execute_tiered_scan(
-        self, repository_path: str, scan_depth: str = "standard", include_audit: bool = False
+        self,
+        repository_path: str,
+        scan_depth: str = "standard",
+        include_audit: bool = False,
     ) -> SwarmReport:
         """
         Execute tiered repository scan
@@ -593,7 +618,9 @@ class UltimateScoutSwarm:
 
         # TIER 1: Rapid Scan (Always)
         logger.info("🏃 Executing Tier 1: Rapid Scan")
-        tier_1_results = await self._execute_tier(ScoutTier.RAPID, repository_path, context)
+        tier_1_results = await self._execute_tier(
+            ScoutTier.RAPID, repository_path, context
+        )
         tier_results[ScoutTier.RAPID] = tier_1_results
 
         # Analyze Tier 1 findings
@@ -605,7 +632,9 @@ class UltimateScoutSwarm:
             logger.info(
                 f"🔍 Executing Tier 2: Deep Analysis ({len(critical_issues)} critical issues found)"
             )
-            tier_2_results = await self._execute_tier(ScoutTier.DEEP, repository_path, context)
+            tier_2_results = await self._execute_tier(
+                ScoutTier.DEEP, repository_path, context
+            )
             tier_results[ScoutTier.DEEP] = tier_2_results
             context["previous_findings"].extend(self._extract_findings(tier_2_results))
 
@@ -620,7 +649,9 @@ class UltimateScoutSwarm:
         # TIER 4: Audit (if requested or exhaustive)
         if include_audit or scan_depth == "exhaustive":
             logger.info("📊 Executing Tier 4: Exhaustive Audit")
-            tier_4_results = await self._execute_tier(ScoutTier.AUDIT, repository_path, context)
+            tier_4_results = await self._execute_tier(
+                ScoutTier.AUDIT, repository_path, context
+            )
             tier_results[ScoutTier.AUDIT] = tier_4_results
 
         # Compile report
@@ -707,7 +738,9 @@ class UltimateScoutSwarm:
 
         return stats
 
-    def _extract_critical_issues(self, results: list[ScanResult]) -> list[dict[str, Any]]:
+    def _extract_critical_issues(
+        self, results: list[ScanResult]
+    ) -> list[dict[str, Any]]:
         """
         Extract critical issues from scan results
 
@@ -724,7 +757,9 @@ class UltimateScoutSwarm:
                 for finding in result.findings:
                     severity = finding.get("severity", "").upper()
                     if severity in ["CRITICAL", "HIGH"]:
-                        critical.append({"scout": result.scout_name, "finding": finding})
+                        critical.append(
+                            {"scout": result.scout_name, "finding": finding}
+                        )
 
         return critical
 
@@ -744,7 +779,11 @@ class UltimateScoutSwarm:
             if result.success:
                 for finding in result.findings:
                     findings.append(
-                        {"scout": result.scout_name, "tier": result.tier.value, "finding": finding}
+                        {
+                            "scout": result.scout_name,
+                            "tier": result.tier.value,
+                            "finding": finding,
+                        }
                     )
 
         return findings
@@ -784,13 +823,17 @@ class UltimateScoutSwarm:
         statistics = {
             "total_scouts_used": sum(len(r) for r in tier_results.values()),
             "total_findings": sum(
-                len(r.findings) for results in tier_results.values() for r in results if r.success
+                len(r.findings)
+                for results in tier_results.values()
+                for r in results
+                if r.success
             ),
             "critical_issues": len(critical_findings),
             "total_tokens": sum(
                 r.tokens_used for results in tier_results.values() for r in results
             ),
-            "average_scout_time": total_time / max(1, sum(len(r) for r in tier_results.values())),
+            "average_scout_time": total_time
+            / max(1, sum(len(r) for r in tier_results.values())),
             "repo_stats": repo_stats,
         }
 
@@ -846,7 +889,9 @@ class UltimateScoutSwarm:
                 )
 
         # Sort by priority and count
-        recommendations.sort(key=lambda x: (x["priority"] == "HIGH", x["count"]), reverse=True)
+        recommendations.sort(
+            key=lambda x: (x["priority"] == "HIGH", x["count"]), reverse=True
+        )
 
         return recommendations[:10]  # Top 10 recommendations
 
@@ -885,7 +930,10 @@ class UltimateScoutSwarm:
         }
 
     async def execute_custom_scan(
-        self, repository_path: str, scouts_to_use: list[str], custom_prompt: Optional[str] = None
+        self,
+        repository_path: str,
+        scouts_to_use: list[str],
+        custom_prompt: Optional[str] = None,
     ) -> SwarmReport:
         """
         Execute custom scan with specific scouts
@@ -1031,7 +1079,9 @@ class ArtemisScoutSwarmIntegration:
         include_audit = threat_level == "critical"
 
         # Execute scan
-        report = await swarm.execute_tiered_scan(repository_path, scan_depth, include_audit)
+        report = await swarm.execute_tiered_scan(
+            repository_path, scan_depth, include_audit
+        )
 
         # Convert to tactical format
         return {

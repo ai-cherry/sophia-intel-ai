@@ -17,7 +17,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import logging
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -216,7 +218,10 @@ def test_direct_api_keys():
             "max_tokens": 10,
         }
         response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions", headers=headers, json=data, timeout=10
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=10,
         )
         if response.status_code == 200:
             print(f"{Colors.GREEN}✓ OpenRouter Direct API works{Colors.ENDC}")
@@ -227,7 +232,9 @@ def test_direct_api_keys():
             )
             results["openrouter_direct"] = f"failed: {response.status_code}"
     except Exception as e:
-        print(f"{Colors.RED}✗ OpenRouter Direct API failed: {str(e)[:100]}{Colors.ENDC}")
+        print(
+            f"{Colors.RED}✗ OpenRouter Direct API failed: {str(e)[:100]}{Colors.ENDC}"
+        )
         results["openrouter_direct"] = f"failed: {str(e)[:100]}"
 
     # Test Together AI directly
@@ -237,7 +244,8 @@ def test_direct_api_keys():
 
         client = Together(
             api_key=os.getenv(
-                "TOGETHER_AI_API_KEY", "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo"
+                "TOGETHER_AI_API_KEY",
+                "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo",
             )
         )
         response = client.chat.completions.create(
@@ -248,7 +256,9 @@ def test_direct_api_keys():
         print(f"{Colors.GREEN}✓ Together AI Direct API works{Colors.ENDC}")
         results["together_direct"] = "success"
     except Exception as e:
-        print(f"{Colors.RED}✗ Together AI Direct API failed: {str(e)[:100]}{Colors.ENDC}")
+        print(
+            f"{Colors.RED}✗ Together AI Direct API failed: {str(e)[:100]}{Colors.ENDC}"
+        )
         results["together_direct"] = f"failed: {str(e)[:100]}"
 
     # Test HuggingFace directly
@@ -259,7 +269,10 @@ def test_direct_api_keys():
         headers = {
             "Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_TOKEN', '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')}"
         }
-        data = {"inputs": "Say 'HuggingFace works'", "parameters": {"max_new_tokens": 10}}
+        data = {
+            "inputs": "Say 'HuggingFace works'",
+            "parameters": {"max_new_tokens": 10},
+        }
         response = requests.post(
             "https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct",
             headers=headers,
@@ -275,7 +288,9 @@ def test_direct_api_keys():
             )
             results["huggingface_direct"] = f"failed: {response.status_code}"
     except Exception as e:
-        print(f"{Colors.RED}✗ HuggingFace Direct API failed: {str(e)[:100]}{Colors.ENDC}")
+        print(
+            f"{Colors.RED}✗ HuggingFace Direct API failed: {str(e)[:100]}{Colors.ENDC}"
+        )
         results["huggingface_direct"] = f"failed: {str(e)[:100]}"
 
     # Test Groq directly
@@ -285,7 +300,8 @@ def test_direct_api_keys():
 
         client = Groq(
             api_key=os.getenv(
-                "GROQ_API_KEY", "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"
+                "GROQ_API_KEY",
+                "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",
             )
         )
         response = client.chat.completions.create(
@@ -324,7 +340,9 @@ def test_direct_api_keys():
         from openai import OpenAI
 
         client = OpenAI(
-            api_key=os.getenv("DEEPSEEK_API_KEY", "sk-c8a5f1725d7b4f96b29a3d041848cb74"),
+            api_key=os.getenv(
+                "DEEPSEEK_API_KEY", "sk-c8a5f1725d7b4f96b29a3d041848cb74"
+            ),
             base_url="https://api.deepseek.com/v1",
         )
         response = client.chat.completions.create(
@@ -345,7 +363,8 @@ def test_direct_api_keys():
 
         client = OpenAI(
             api_key=os.getenv(
-                "PERPLEXITY_API_KEY", "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"
+                "PERPLEXITY_API_KEY",
+                "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",
             ),
             base_url="https://api.perplexity.ai",
         )
@@ -357,7 +376,9 @@ def test_direct_api_keys():
         print(f"{Colors.GREEN}✓ Perplexity Direct API works{Colors.ENDC}")
         results["perplexity_direct"] = "success"
     except Exception as e:
-        print(f"{Colors.RED}✗ Perplexity Direct API failed: {str(e)[:100]}{Colors.ENDC}")
+        print(
+            f"{Colors.RED}✗ Perplexity Direct API failed: {str(e)[:100]}{Colors.ENDC}"
+        )
         results["perplexity_direct"] = f"failed: {str(e)[:100]}"
 
     # Test Gemini directly
@@ -366,7 +387,9 @@ def test_direct_api_keys():
         import google.generativeai as genai
 
         genai.configure(
-            api_key=os.getenv("GEMINI_API_KEY", "AIzaSyA0rewcfUHo87WMEz4a8Og1eAWTslxlgEE")
+            api_key=os.getenv(
+                "GEMINI_API_KEY", "AIzaSyA0rewcfUHo87WMEz4a8Og1eAWTslxlgEE"
+            )
         )
         model = genai.GenerativeModel("gemini-1.5-flash")
         response = model.generate_content("Say 'Gemini works'")
@@ -384,15 +407,23 @@ def test_direct_api_keys():
         headers = {
             "Authorization": f"Bearer {os.getenv('LLAMA_API_KEY', 'llx-MfsEhU0wHNL7PcRN4YEFM3eWcPQggq7edEr52IdnvkHZPPYj')}"
         }
-        data = {"messages": [{"role": "user", "content": "Say 'Llama works'"}], "stream": False}
+        data = {
+            "messages": [{"role": "user", "content": "Say 'Llama works'"}],
+            "stream": False,
+        }
         response = requests.post(
-            "https://api.llama-api.com/chat/completions", headers=headers, json=data, timeout=10
+            "https://api.llama-api.com/chat/completions",
+            headers=headers,
+            json=data,
+            timeout=10,
         )
         if response.status_code == 200:
             print(f"{Colors.GREEN}✓ Llama API works{Colors.ENDC}")
             results["llama_api"] = "success"
         else:
-            print(f"{Colors.RED}✗ Llama API failed: {response.status_code}{Colors.ENDC}")
+            print(
+                f"{Colors.RED}✗ Llama API failed: {response.status_code}{Colors.ENDC}"
+            )
             results["llama_api"] = f"failed: {response.status_code}"
     except Exception as e:
         print(f"{Colors.RED}✗ Llama API failed: {str(e)[:100]}{Colors.ENDC}")
@@ -469,7 +500,9 @@ def save_comprehensive_report(all_results: Dict[str, Any]):
         "test_results": all_results,
         "summary": {
             "portkey_virtual_keys": {
-                "total": len([k for k in all_results.get("portkey_keys", {}) if "-VK" in k]),
+                "total": len(
+                    [k for k in all_results.get("portkey_keys", {}) if "-VK" in k]
+                ),
                 "successful": len(
                     [
                         v
@@ -481,7 +514,11 @@ def save_comprehensive_report(all_results: Dict[str, Any]):
             "direct_api_keys": {
                 "total": len(all_results.get("direct_keys", {})),
                 "successful": len(
-                    [v for v in all_results.get("direct_keys", {}).values() if v == "success"]
+                    [
+                        v
+                        for v in all_results.get("direct_keys", {}).values()
+                        if v == "success"
+                    ]
                 ),
             },
             "orchestrator_access": all_results.get("orchestrator_access", {}),
@@ -489,7 +526,9 @@ def save_comprehensive_report(all_results: Dict[str, Any]):
     }
 
     # Save to JSON
-    report_file = f"comprehensive_key_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    report_file = (
+        f"comprehensive_key_test_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(report_file, "w") as f:
         json.dump(report, f, indent=2)
 
@@ -562,13 +601,17 @@ def main():
     )
     portkey_total = len([k for k in all_results["portkey_keys"] if "-VK" in k])
 
-    direct_success = len([v for v in all_results["direct_keys"].values() if v == "success"])
+    direct_success = len(
+        [v for v in all_results["direct_keys"].values() if v == "success"]
+    )
     direct_total = len(all_results["direct_keys"])
 
     print(
         f"\n{Colors.BOLD}Portkey Virtual Keys:{Colors.ENDC} {portkey_success}/{portkey_total} working"
     )
-    print(f"{Colors.BOLD}Direct API Keys:{Colors.ENDC} {direct_success}/{direct_total} working")
+    print(
+        f"{Colors.BOLD}Direct API Keys:{Colors.ENDC} {direct_success}/{direct_total} working"
+    )
     print(
         f"{Colors.BOLD}Orchestrator Access:{Colors.ENDC} {all_results['orchestrator_access'].get('artemis_access', 'unknown')}"
     )

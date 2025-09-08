@@ -68,7 +68,9 @@ async def get_metrics_dashboard() -> MetricsSummary:
         # Cost breakdown
         costs = {
             "sophia_usd": allocator.budgets.get("sophia", {}).get("budget_spent", 0.0),
-            "artemis_usd": allocator.budgets.get("artemis", {}).get("budget_spent", 0.0),
+            "artemis_usd": allocator.budgets.get("artemis", {}).get(
+                "budget_spent", 0.0
+            ),
             "total_usd": 15.50,  # Simple calculated total
         }
 
@@ -81,7 +83,9 @@ async def get_metrics_dashboard() -> MetricsSummary:
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}") from e
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get metrics: {str(e)}"
+        ) from e
 
 
 @router.get("/health-check")

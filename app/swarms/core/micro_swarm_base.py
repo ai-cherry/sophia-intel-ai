@@ -132,7 +132,9 @@ class MicroSwarmAgent:
         self._tool_usage.clear()
         self._tool_usage_total = 0
 
-    async def process_message(self, message: SwarmMessage, context: dict[str, Any]) -> SwarmMessage:
+    async def process_message(
+        self, message: SwarmMessage, context: dict[str, Any]
+    ) -> SwarmMessage:
         """Process incoming message and generate response"""
 
         # Add to message history
@@ -157,9 +159,15 @@ class MicroSwarmAgent:
             safe_max_tokens = min(self.profile.max_tokens, max_tokens_cap)
             if policy.mode == "manual":
                 # Strict manual mode: allow per-role overrides; fall back to global force vars
-                role_key = self.profile.role.value.upper()  # ANALYST/STRATEGIST/VALIDATOR
-                provider = os.getenv(f"LLM_{role_key}_PROVIDER") or os.getenv("LLM_FORCE_PROVIDER")
-                model = os.getenv(f"LLM_{role_key}_MODEL") or os.getenv("LLM_FORCE_MODEL")
+                role_key = (
+                    self.profile.role.value.upper()
+                )  # ANALYST/STRATEGIST/VALIDATOR
+                provider = os.getenv(f"LLM_{role_key}_PROVIDER") or os.getenv(
+                    "LLM_FORCE_PROVIDER"
+                )
+                model = os.getenv(f"LLM_{role_key}_MODEL") or os.getenv(
+                    "LLM_FORCE_MODEL"
+                )
                 if not provider or not model:
                     raise RuntimeError(
                         "LLM manual mode active. Set LLM_FORCE_PROVIDER/LLM_FORCE_MODEL or per-role LLM_"
@@ -167,7 +175,8 @@ class MicroSwarmAgent:
                     )
                 # Enforce central approval list unless explicitly disabled
                 if (
-                    os.getenv("LLM_APPROVAL_STRICT", "true").lower() in {"1", "true", "yes"}
+                    os.getenv("LLM_APPROVAL_STRICT", "true").lower()
+                    in {"1", "true", "yes"}
                 ) and not is_model_approved(provider, model):
                     raise RuntimeError(
                         f"Model not approved: provider='{provider}', model='{model}'."
@@ -215,7 +224,9 @@ class MicroSwarmAgent:
                 thread_id=message.thread_id,
                 metadata={
                     "model_used": model_used,
-                    "tokens_used": getattr(response, "usage", {}).get("total_tokens", 0),
+                    "tokens_used": getattr(response, "usage", {}).get(
+                        "total_tokens", 0
+                    ),
                     "cost": est_cost,
                 },
             )
@@ -241,7 +252,9 @@ class MicroSwarmAgent:
                 thread_id=message.thread_id,
             )
 
-    async def _build_role_prompt(self, message: SwarmMessage, context: dict[str, Any]) -> str:
+    async def _build_role_prompt(
+        self, message: SwarmMessage, context: dict[str, Any]
+    ) -> str:
         """Build role-specific prompt (with Scout overlays when applicable)"""
 
         base_prompt = f"""You are {self.profile.name}, a {self.profile.role.value} in a micro-swarm AI system.
@@ -266,7 +279,9 @@ Current coordination pattern: {context.get('coordination_pattern', 'Unknown')}
                     VALIDATOR_OVERLAY,
                 )
 
-                base_prompt += f"\nOutput schema (follow strictly):\n{SCOUT_OUTPUT_SCHEMA}\n"
+                base_prompt += (
+                    f"\nOutput schema (follow strictly):\n{SCOUT_OUTPUT_SCHEMA}\n"
+                )
                 role = self.profile.role
                 if role == AgentRole.ANALYST:
                     base_prompt += f"\nOverlay:\n{ANALYST_OVERLAY}\n"
@@ -283,7 +298,9 @@ Current coordination pattern: {context.get('coordination_pattern', 'Unknown')}
             base_prompt += "\n\nPrevious messages in this thread:\n"
             for msg in self.message_history[-3:]:  # Last 3 messages
                 role_label = (
-                    msg.sender_role.value if getattr(msg, "sender_role", None) else "system"
+                    msg.sender_role.value
+                    if getattr(msg, "sender_role", None)
+                    else "system"
                 )
                 base_prompt += f"- {role_label}: {msg.content[:200]}...\n"
 
@@ -368,12 +385,19 @@ Always include:
         try:
             if "REASONING:" in content:
                 lines = content.split("\n")
-                reasoning_start = next(i for i, l in enumerate(lines) if "REASONING:" in l)
+                reasoning_start = next(
+                    i for i, l in enumerate(lines) if "REASONING:" in l
+                )
                 reasoning_end = len(lines)
                 for i in range(reasoning_start + 1, len(lines)):
                     if any(
                         marker in lines[i]
-                        for marker in ["FINDINGS:", "STRATEGY:", "ISSUES:", "VERIFICATION:"]
+                        for marker in [
+                            "FINDINGS:",
+                            "STRATEGY:",
+                            "ISSUES:",
+                            "VERIFICATION:",
+                        ]
                     ):
                         reasoning_end = i
                         break
@@ -399,9 +423,13 @@ class MicroSwarmCoordinator:
 
         # Initialize agents
         for agent_profile in config.agents:
-            self.agents[agent_profile.role] = MicroSwarmAgent(agent_profile, self.swarm_id)
+            self.agents[agent_profile.role] = MicroSwarmAgent(
+                agent_profile, self.swarm_id
+            )
 
-        logger.info(f"Initialized micro-swarm '{config.name}' with {len(self.agents)} agents")
+        logger.info(
+            f"Initialized micro-swarm '{config.name}' with {len(self.agents)} agents"
+        )
 
     async def execute(self, task: str, context: dict[str, Any] = None) -> SwarmResult:
         """Execute micro-swarm coordination"""
@@ -459,7 +487,9 @@ class MicroSwarmCoordinator:
                 if "Scout" in self.config.name:
                     # Apply header injection shim before validation
                     original_output = result.final_output
-                    result.final_output = self._inject_missing_headers(result.final_output)
+                    result.final_output = self._inject_missing_headers(
+                        result.final_output
+                    )
 
                     missing = self._validate_scout_output(result.final_output)
                     if missing:
@@ -474,7 +504,9 @@ class MicroSwarmCoordinator:
                             "yes",
                         }:
                             result.success = False
-                            result.errors.append(f"Missing required sections: {missing}")
+                            result.errors.append(
+                                f"Missing required sections: {missing}"
+                            )
             except Exception:
                 pass
 
@@ -487,11 +519,17 @@ class MicroSwarmCoordinator:
                 pass
 
             # Store results in memory
-            store_on_failure = os.getenv("STORE_RESULTS_ON_FAILURE", "false").lower() == "true"
-            if self.config.enable_memory_integration and (result.success or store_on_failure):
+            store_on_failure = (
+                os.getenv("STORE_RESULTS_ON_FAILURE", "false").lower() == "true"
+            )
+            if self.config.enable_memory_integration and (
+                result.success or store_on_failure
+            ):
                 await self._store_swarm_results(task, result)
 
-            logger.info(f"Micro-swarm '{self.config.name}' completed in {execution_time:.2f}ms")
+            logger.info(
+                f"Micro-swarm '{self.config.name}' completed in {execution_time:.2f}ms"
+            )
 
         except Exception as e:
             logger.error(f"Micro-swarm execution failed: {e}")
@@ -529,7 +567,8 @@ class MicroSwarmCoordinator:
         from app.mcp.clients.stdio_client import detect_stdio_mcp
 
         line = next(
-            (l for l in text.splitlines() if l.strip().startswith("REQUEST_FS_READ:")), None
+            (l for l in text.splitlines() if l.strip().startswith("REQUEST_FS_READ:")),
+            None,
         )
         if not line:
             return None
@@ -581,7 +620,11 @@ class MicroSwarmCoordinator:
         import os
         import re
 
-        if os.getenv("SCOUT_HEADER_INJECT_ENABLED", "true").lower() not in {"1", "true", "yes"}:
+        if os.getenv("SCOUT_HEADER_INJECT_ENABLED", "true").lower() not in {
+            "1",
+            "true",
+            "yes",
+        }:
             return text
 
         if not text or not text.strip():
@@ -590,7 +633,12 @@ class MicroSwarmCoordinator:
         # Required sections mapping
         required_sections = {
             "FINDINGS:": ["findings", "issues", "patterns", "discovered"],
-            "INTEGRATIONS:": ["integrations", "subsystems", "interactions", "components"],
+            "INTEGRATIONS:": [
+                "integrations",
+                "subsystems",
+                "interactions",
+                "components",
+            ],
             "RISKS:": ["risks", "failures", "security", "concerns", "bottlenecks"],
             "RECOMMENDATIONS:": ["recommendations", "actions", "steps", "suggestions"],
             "METRICS:": ["metrics", "context", "files", "time", "tokens"],
@@ -696,7 +744,9 @@ class MicroSwarmCoordinator:
             # Create message for agent
             message = SwarmMessage(
                 recipient_role=role,
-                message_type=MessageType.TASK_ASSIGNMENT if i == 0 else MessageType.SYNTHESIS,
+                message_type=(
+                    MessageType.TASK_ASSIGNMENT if i == 0 else MessageType.SYNTHESIS
+                ),
                 content=current_content,
                 thread_id=thread_id,
             )
@@ -798,7 +848,9 @@ class MicroSwarmCoordinator:
                 synthesis_content = await self._synthesize_parallel_results(
                     valid_responses, context
                 )
-            avg_confidence = sum(r.confidence for r in valid_responses) / len(valid_responses)
+            avg_confidence = sum(r.confidence for r in valid_responses) / len(
+                valid_responses
+            )
         else:
             synthesis_content = "No valid responses from agents"
             avg_confidence = 0.0
@@ -840,7 +892,9 @@ class MicroSwarmCoordinator:
                 thread_id=thread_id,
             )
 
-            response = await self.agents[AgentRole.ANALYST].process_message(initial_msg, context)
+            response = await self.agents[AgentRole.ANALYST].process_message(
+                initial_msg, context
+            )
             messages.append(response)
             total_cost += response.metadata.get("cost", 0.0)
             current_analysis = response.content
@@ -862,9 +916,9 @@ class MicroSwarmCoordinator:
                     thread_id=thread_id,
                 )
 
-                strategy_response = await self.agents[AgentRole.STRATEGIST].process_message(
-                    challenge_msg, context
-                )
+                strategy_response = await self.agents[
+                    AgentRole.STRATEGIST
+                ].process_message(challenge_msg, context)
                 round_messages.append(strategy_response)
                 total_cost += strategy_response.metadata.get("cost", 0.0)
 
@@ -878,9 +932,9 @@ class MicroSwarmCoordinator:
                     thread_id=thread_id,
                 )
 
-                validation_response = await self.agents[AgentRole.VALIDATOR].process_message(
-                    validation_msg, context
-                )
+                validation_response = await self.agents[
+                    AgentRole.VALIDATOR
+                ].process_message(validation_msg, context)
                 round_messages.append(validation_response)
                 total_cost += validation_response.metadata.get("cost", 0.0)
 
@@ -888,7 +942,9 @@ class MicroSwarmCoordinator:
 
             # Check for consensus
             if round_messages:
-                avg_confidence = sum(msg.confidence for msg in round_messages) / len(round_messages)
+                avg_confidence = sum(msg.confidence for msg in round_messages) / len(
+                    round_messages
+                )
                 if avg_confidence >= self.config.consensus_threshold:
                     break
 
@@ -953,11 +1009,14 @@ class MicroSwarmCoordinator:
             # Check consensus
             confidences = [msg.confidence for msg in round_messages]
             avg_confidence = sum(confidences) / len(confidences)
-            confidence_variance = sum((c - avg_confidence) ** 2 for c in confidences) / len(
-                confidences
-            )
+            confidence_variance = sum(
+                (c - avg_confidence) ** 2 for c in confidences
+            ) / len(confidences)
 
-            if avg_confidence >= self.config.consensus_threshold and confidence_variance < 0.1:
+            if (
+                avg_confidence >= self.config.consensus_threshold
+                and confidence_variance < 0.1
+            ):
                 consensus_achieved = True
                 break
 
@@ -1078,7 +1137,11 @@ class MicroSwarmCoordinator:
 
             return {
                 "relevant_documents": [
-                    {"content": hit.content[:500], "source": hit.source_uri, "score": hit.score}
+                    {
+                        "content": hit.content[:500],
+                        "source": hit.source_uri,
+                        "score": hit.score,
+                    }
                     for hit in hits
                 ],
                 "document_count": len(hits),
@@ -1096,7 +1159,9 @@ class MicroSwarmCoordinator:
                     {
                         "task": task,
                         "result": result.final_output,
-                        "reasoning_chain": [msg.content[:200] for msg in result.reasoning_chain],
+                        "reasoning_chain": [
+                            msg.content[:200] for msg in result.reasoning_chain
+                        ],
                         "confidence": result.confidence,
                         "consensus_achieved": result.consensus_achieved,
                     }
@@ -1164,7 +1229,10 @@ class MicroSwarmCoordinator:
         )
         user = f"Task: {task}\n\n{overlay}\n\nAgent outputs to synthesize:\n{context_block}\n\nProduce the final report now."
 
-        messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
 
         # Choose provider/model for synthesis
         import os as _os
@@ -1183,7 +1251,8 @@ class MicroSwarmCoordinator:
         # Enforce approval list unless disabled
         try:
             if (
-                _os.getenv("LLM_APPROVAL_STRICT", "true").lower() in {"1", "true", "yes"}
+                _os.getenv("LLM_APPROVAL_STRICT", "true").lower()
+                in {"1", "true", "yes"}
             ) and not is_model_approved(provider, model):
                 # Fall back to existing synthesis
                 return await self._synthesize_parallel_results(responses, context)
@@ -1242,7 +1311,9 @@ class MicroSwarmCoordinator:
                 temperature=0.1,
             )
             content = resp.choices[0].message.content
-            return content or await self._synthesize_parallel_results(responses, context)
+            return content or await self._synthesize_parallel_results(
+                responses, context
+            )
         except Exception:
             return await self._synthesize_parallel_results(responses, context)
 

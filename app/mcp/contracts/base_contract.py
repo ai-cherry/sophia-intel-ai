@@ -137,7 +137,9 @@ class BaseMCPServerContract(ABC):
 
     # Connection Management
 
-    async def register_connection(self, client_id: str, metadata: dict[str, Any] = None) -> bool:
+    async def register_connection(
+        self, client_id: str, metadata: dict[str, Any] = None
+    ) -> bool:
         """Register a new client connection"""
         try:
             self.active_connections[client_id] = ConnectionInfo(
@@ -184,7 +186,9 @@ class BaseMCPServerContract(ABC):
         except Exception:
             return False
 
-    async def update_capability_status(self, capability_name: str, status: CapabilityStatus):
+    async def update_capability_status(
+        self, capability_name: str, status: CapabilityStatus
+    ):
         """Update the status of a capability"""
         if capability_name in self.capabilities:
             self.capabilities[capability_name].status = status
@@ -202,8 +206,12 @@ class BaseMCPServerContract(ABC):
         uptime = (datetime.now() - self.server_start_time).total_seconds()
 
         # Calculate connection metrics
-        total_requests = sum(conn.request_count for conn in self.active_connections.values())
-        total_errors = sum(conn.error_count for conn in self.active_connections.values())
+        total_requests = sum(
+            conn.request_count for conn in self.active_connections.values()
+        )
+        total_errors = sum(
+            conn.error_count for conn in self.active_connections.values()
+        )
 
         return {
             "server_id": self.server_id,
@@ -217,7 +225,11 @@ class BaseMCPServerContract(ABC):
             "error_rate": total_errors / max(total_requests, 1),
             "capabilities_count": len(self.capabilities),
             "available_capabilities": len(
-                [c for c in self.capabilities.values() if c.status == CapabilityStatus.AVAILABLE]
+                [
+                    c
+                    for c in self.capabilities.values()
+                    if c.status == CapabilityStatus.AVAILABLE
+                ]
             ),
             "timestamp": datetime.now().isoformat(),
         }
@@ -229,7 +241,9 @@ class BaseMCPServerContract(ABC):
                 "client_id": conn.client_id,
                 "connected_at": conn.connected_at.isoformat(),
                 "last_activity": conn.last_activity.isoformat(),
-                "connection_duration": (datetime.now() - conn.connected_at).total_seconds(),
+                "connection_duration": (
+                    datetime.now() - conn.connected_at
+                ).total_seconds(),
                 "request_count": conn.request_count,
                 "error_count": conn.error_count,
                 "client_metadata": conn.client_metadata,

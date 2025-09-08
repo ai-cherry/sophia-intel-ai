@@ -27,14 +27,21 @@ class TaskConfig:
 class ArtemisAgent(MicroSwarmAgent):
     """Extended Artemis agent with task-specific LLM routing."""
 
-    def __init__(self, profile: AgentProfile, task_config: TaskConfig, swarm_id: str | None = None):
+    def __init__(
+        self,
+        profile: AgentProfile,
+        task_config: TaskConfig,
+        swarm_id: str | None = None,
+    ):
         import uuid
 
         super().__init__(profile, swarm_id or str(uuid.uuid4()))
         self.task_config = task_config
         self.llm = MultiTransportLLM()
 
-    async def process_task(self, task: str, context: dict[str, Any] = None) -> dict[str, Any]:
+    async def process_task(
+        self, task: str, context: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Process a task using the configured model."""
 
         messages = [
@@ -48,7 +55,9 @@ class ArtemisAgent(MicroSwarmAgent):
         # Add context if provided
         if context:
             context_str = "\n".join([f"{k}: {v}" for k, v in context.items()])
-            messages.insert(1, {"role": "system", "content": f"Context:\n{context_str}"})
+            messages.insert(
+                1, {"role": "system", "content": f"Context:\n{context_str}"}
+            )
 
         # Execute with task-specific model
         response = await self.llm.complete(

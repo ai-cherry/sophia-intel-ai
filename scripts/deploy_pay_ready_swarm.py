@@ -77,10 +77,14 @@ class PayReadySwarmCoordinator:
         """Get or create an agent for a specific role"""
         if role not in self.agents:
             agent_config = self.AGENT_ROLES[role]
-            self.agents[role] = Portkey(api_key=self.api_key, virtual_key=agent_config["vk"])
+            self.agents[role] = Portkey(
+                api_key=self.api_key, virtual_key=agent_config["vk"]
+            )
         return self.agents[role]
 
-    async def execute_task(self, role: str, task: str, context: str = "") -> Dict[str, Any]:
+    async def execute_task(
+        self, role: str, task: str, context: str = ""
+    ) -> Dict[str, Any]:
         """Execute a task with a specific agent"""
         agent = self.get_agent(role)
         agent_config = self.AGENT_ROLES[role]
@@ -204,7 +208,9 @@ class PayReadySwarmCoordinator:
             "timestamp": datetime.now().isoformat(),
             "phases_completed": len(implementation_phases),
             "implementation_phases": implementation_phases,
-            "success_rate": sum(1 for p in implementation_phases if p["status"] == "success")
+            "success_rate": sum(
+                1 for p in implementation_phases if p["status"] == "success"
+            )
             / len(implementation_phases)
             * 100,
         }
@@ -279,7 +285,9 @@ async def main():
     await coordinator.generate_implementation_files()
 
     # Save results
-    output_file = f"pay_ready_swarm_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    output_file = (
+        f"pay_ready_swarm_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    )
     with open(output_file, "w") as f:
         json.dump(results, f, indent=2, default=str)
 

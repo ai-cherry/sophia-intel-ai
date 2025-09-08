@@ -90,7 +90,9 @@ class FoundationalKnowledgeEmbeddings:
         metadata = EmbeddingMetadata(
             content_hash="",  # Will be set by embedding system
             embedding_type=embedding_type,
-            hierarchy_level=HierarchyLevel.FILE if entity.is_foundational else HierarchyLevel.BLOCK,
+            hierarchy_level=(
+                HierarchyLevel.FILE if entity.is_foundational else HierarchyLevel.BLOCK
+            ),
             file_path=f"knowledge/{entity.category}/{entity.name}",
             language="json",
             extra_metadata={
@@ -115,7 +117,9 @@ class FoundationalKnowledgeEmbeddings:
         # Track embedded entity
         self._embedded_entities[entity.id] = datetime.now()
 
-        logger.info(f"Generated embedding for {entity.name} ({entity.classification.value})")
+        logger.info(
+            f"Generated embedding for {entity.name} ({entity.classification.value})"
+        )
         return vector, metadata
 
     async def embed_all_foundational(
@@ -147,7 +151,8 @@ class FoundationalKnowledgeEmbeddings:
 
             # Process batch concurrently
             batch_tasks = [
-                self.embed_knowledge_entity(entity, force_regenerate) for entity in batch
+                self.embed_knowledge_entity(entity, force_regenerate)
+                for entity in batch
             ]
 
             batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
@@ -197,7 +202,9 @@ class FoundationalKnowledgeEmbeddings:
 
         # Filter by classification if specified
         if classification_filter:
-            entities = [e for e in entities if e.classification == classification_filter]
+            entities = [
+                e for e in entities if e.classification == classification_filter
+            ]
 
         # Calculate similarities
         similarities = []
@@ -243,7 +250,9 @@ class FoundationalKnowledgeEmbeddings:
             # Update existing tag with knowledge info
             existing_tag.extra_metadata["knowledge_entity_id"] = entity.id
             existing_tag.extra_metadata["is_foundational"] = entity.is_foundational
-            existing_tag.extra_metadata["knowledge_classification"] = entity.classification.value
+            existing_tag.extra_metadata["knowledge_classification"] = (
+                entity.classification.value
+            )
 
             logger.info(f"Updated meta tag for {entity.name}")
             return existing_tag
@@ -259,7 +268,9 @@ class FoundationalKnowledgeEmbeddings:
             complexity=self._map_to_complexity(entity),
             priority=Priority(min(entity.priority.value, 4)),  # Map to Priority enum
             modification_risk=(
-                ModificationRisk.CRITICAL if entity.is_foundational else ModificationRisk.MODERATE
+                ModificationRisk.CRITICAL
+                if entity.is_foundational
+                else ModificationRisk.MODERATE
             ),
             capabilities=self._extract_capabilities(entity),
             dependencies=set(),
@@ -290,7 +301,9 @@ class FoundationalKnowledgeEmbeddings:
 
         return meta_tag
 
-    def _get_embedding_type(self, classification: KnowledgeClassification) -> EmbeddingType:
+    def _get_embedding_type(
+        self, classification: KnowledgeClassification
+    ) -> EmbeddingType:
         """Map knowledge classification to embedding type."""
         mapping = {
             KnowledgeClassification.COMPANY_INFO: EmbeddingType.DOCUMENTATION,
@@ -321,14 +334,18 @@ class FoundationalKnowledgeEmbeddings:
 
         # Add Pay-Ready context if available
         if entity.pay_ready_context:
-            content_parts.append(f"Business Context: {entity.pay_ready_context.business_impact}")
+            content_parts.append(
+                f"Business Context: {entity.pay_ready_context.business_impact}"
+            )
             content_parts.append(
                 f"Integration Requirements: {', '.join(entity.pay_ready_context.integration_requirements)}"
             )
 
         return "\n".join(content_parts)
 
-    def _map_to_semantic_role(self, classification: KnowledgeClassification) -> SemanticRole:
+    def _map_to_semantic_role(
+        self, classification: KnowledgeClassification
+    ) -> SemanticRole:
         """Map knowledge classification to semantic role."""
         mapping = {
             KnowledgeClassification.COMPANY_INFO: SemanticRole.DOCUMENTATION,

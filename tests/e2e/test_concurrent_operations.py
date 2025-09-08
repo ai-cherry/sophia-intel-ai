@@ -43,7 +43,9 @@ class TestConcurrentOperations:
     # ==============================================================================
 
     @pytest.mark.asyncio
-    async def test_eight_concurrent_task_limit_enforcement(self, artemis_factory, sophia_factory):
+    async def test_eight_concurrent_task_limit_enforcement(
+        self, artemis_factory, sophia_factory
+    ):
         """Test that both factories enforce the 8 concurrent task limit"""
         # Fill Artemis factory to capacity
         artemis_tasks = []
@@ -77,12 +79,18 @@ class TestConcurrentOperations:
             await sophia_factory._release_task_slot()
 
     @pytest.mark.asyncio
-    async def test_concurrent_agent_creation_across_domains(self, artemis_factory, sophia_factory):
+    async def test_concurrent_agent_creation_across_domains(
+        self, artemis_factory, sophia_factory
+    ):
         """Test concurrent agent creation in both domains"""
 
         async def create_artemis_agents():
             agents = []
-            for template in ["code_reviewer", "security_auditor", "performance_optimizer"]:
+            for template in [
+                "code_reviewer",
+                "security_auditor",
+                "performance_optimizer",
+            ]:
                 agent_id = await artemis_factory.create_technical_agent(template)
                 agents.append(agent_id)
             return agents
@@ -124,13 +132,17 @@ class TestConcurrentOperations:
 
             # Create multiple missions concurrently
             async def execute_mission(mission_type, target):
-                result = await artemis_factory.execute_mission(mission_type, target=target)
+                result = await artemis_factory.execute_mission(
+                    mission_type, target=target
+                )
                 return result
 
             # Execute missions up to limit
             tasks = []
             for i in range(8):
-                task = asyncio.create_task(execute_mission("rapid_response", f"/target_{i}"))
+                task = asyncio.create_task(
+                    execute_mission("rapid_response", f"/target_{i}")
+                )
                 tasks.append(task)
 
             # All should succeed
@@ -138,7 +150,9 @@ class TestConcurrentOperations:
             assert all(r["success"] for r in results)
 
             # 9th mission should be queued
-            ninth_result = await artemis_factory.execute_mission("rapid_response", "/target_9")
+            ninth_result = await artemis_factory.execute_mission(
+                "rapid_response", "/target_9"
+            )
 
             # Should be queued
             if isinstance(ninth_result, str):
@@ -152,7 +166,9 @@ class TestConcurrentOperations:
         # Create multiple agents
         agent_ids = []
         for _ in range(3):
-            agent_id = await sophia_factory.create_business_agent("sales_pipeline_analyst")
+            agent_id = await sophia_factory.create_business_agent(
+                "sales_pipeline_analyst"
+            )
             agent_ids.append(agent_id)
 
         # Execute tasks concurrently
@@ -162,7 +178,9 @@ class TestConcurrentOperations:
 
         tasks = []
         for i, agent_id in enumerate(agent_ids):
-            task = asyncio.create_task(execute_task(agent_id, f"Analyze pipeline segment {i}"))
+            task = asyncio.create_task(
+                execute_task(agent_id, f"Analyze pipeline segment {i}")
+            )
             tasks.append(task)
 
         results = await asyncio.gather(*tasks)
@@ -284,7 +302,9 @@ class TestConcurrentOperations:
         assert breaker.failure_count >= breaker.config.failure_threshold
 
     @pytest.mark.asyncio
-    async def test_resource_isolation_between_domains(self, artemis_factory, sophia_factory):
+    async def test_resource_isolation_between_domains(
+        self, artemis_factory, sophia_factory
+    ):
         """Test that resource exhaustion in one domain doesn't affect the other"""
         # Exhaust Artemis resources
         for _ in range(8):
@@ -293,11 +313,15 @@ class TestConcurrentOperations:
         assert artemis_factory._concurrent_tasks == 8
 
         # Sophia should still be able to operate
-        sophia_agent = await sophia_factory.create_business_agent("sales_pipeline_analyst")
+        sophia_agent = await sophia_factory.create_business_agent(
+            "sales_pipeline_analyst"
+        )
         assert sophia_agent is not None
 
         # Sophia can execute tasks
-        result = await sophia_factory.execute_business_task(sophia_agent, "Independent analysis")
+        result = await sophia_factory.execute_business_task(
+            sophia_agent, "Independent analysis"
+        )
         assert result["success"] is True
 
         # Verify isolation
@@ -309,9 +333,16 @@ class TestConcurrentOperations:
     # ==============================================================================
 
     @pytest.mark.asyncio
-    async def test_load_balancing_between_factories(self, artemis_factory, sophia_factory):
+    async def test_load_balancing_between_factories(
+        self, artemis_factory, sophia_factory
+    ):
         """Test load distribution between Artemis and Sophia factories"""
-        load_metrics = {"artemis_tasks": 0, "sophia_tasks": 0, "artemis_time": 0, "sophia_time": 0}
+        load_metrics = {
+            "artemis_tasks": 0,
+            "sophia_tasks": 0,
+            "artemis_time": 0,
+            "sophia_time": 0,
+        }
 
         async def artemis_work():
             start = time.time()
@@ -359,7 +390,9 @@ class TestConcurrentOperations:
                 # Mock successful acquisition
                 mock_conn = MagicMock()
                 mock_conn.server_name = server_name
-                connection_manager.pools[server_name].acquire = AsyncMock(return_value=mock_conn)
+                connection_manager.pools[server_name].acquire = AsyncMock(
+                    return_value=mock_conn
+                )
 
                 conn = await connection_manager.get_connection(server_name)
                 connection_counts[server_name] += 1
@@ -389,7 +422,9 @@ class TestConcurrentOperations:
         assert connection_counts["sophia_web_search"] >= 2  # ~30%
 
     @pytest.mark.asyncio
-    async def test_orchestrator_coordination_under_load(self, artemis_factory, sophia_factory):
+    async def test_orchestrator_coordination_under_load(
+        self, artemis_factory, sophia_factory
+    ):
         """Test orchestrator coordination when both are under load"""
         coordination_events = []
 
@@ -436,7 +471,9 @@ class TestConcurrentOperations:
     # ==============================================================================
 
     @pytest.mark.asyncio
-    async def test_sustained_concurrent_operations(self, artemis_factory, sophia_factory):
+    async def test_sustained_concurrent_operations(
+        self, artemis_factory, sophia_factory
+    ):
         """Test system behavior under sustained concurrent load"""
         duration_seconds = 2
         operations_count = {"artemis": 0, "sophia": 0}
@@ -446,7 +483,9 @@ class TestConcurrentOperations:
             end_time = time.time() + duration_seconds
             while time.time() < end_time:
                 try:
-                    agent = await artemis_factory.create_technical_agent("code_reviewer")
+                    agent = await artemis_factory.create_technical_agent(
+                        "code_reviewer"
+                    )
                     operations_count["artemis"] += 1
                     await asyncio.sleep(0.1)  # Small delay between operations
                 except Exception:
@@ -456,7 +495,9 @@ class TestConcurrentOperations:
             end_time = time.time() + duration_seconds
             while time.time() < end_time:
                 try:
-                    agent = await sophia_factory.create_business_agent("sales_pipeline_analyst")
+                    agent = await sophia_factory.create_business_agent(
+                        "sales_pipeline_analyst"
+                    )
                     operations_count["sophia"] += 1
                     await asyncio.sleep(0.1)
                 except Exception:
@@ -491,7 +532,9 @@ class TestConcurrentOperations:
                     return ("success", index)
                 else:
                     # Queue the task
-                    task_id = await artemis_factory.queue_task({"type": "burst", "index": index})
+                    task_id = await artemis_factory.queue_task(
+                        {"type": "burst", "index": index}
+                    )
                     return ("queued", task_id)
             except Exception as e:
                 return ("error", str(e))
@@ -527,7 +570,9 @@ class TestConcurrentOperations:
         # Mock successful connection for healthy service
         mock_conn = MagicMock()
         mock_conn.server_name = "shared_database"
-        connection_manager.pools["shared_database"].acquire = AsyncMock(return_value=mock_conn)
+        connection_manager.pools["shared_database"].acquire = AsyncMock(
+            return_value=mock_conn
+        )
 
         # Should still get connection to healthy service
         conn = await connection_manager.get_connection("shared_database")
@@ -542,7 +587,11 @@ class TestConcurrentOperations:
     async def test_recovery_from_concurrent_failures(self, connection_manager):
         """Test system recovery from multiple concurrent failures"""
         # Simulate multiple circuit breakers opening
-        breakers_to_test = ["artemis_filesystem", "sophia_web_search", "shared_database"]
+        breakers_to_test = [
+            "artemis_filesystem",
+            "sophia_web_search",
+            "shared_database",
+        ]
 
         # Force all circuits open
         for name in breakers_to_test:
@@ -552,7 +601,9 @@ class TestConcurrentOperations:
 
         # All should be open
         for name in breakers_to_test:
-            assert connection_manager.circuit_breakers[name].state == ConnectionState.OPEN
+            assert (
+                connection_manager.circuit_breakers[name].state == ConnectionState.OPEN
+            )
 
         # Simulate recovery timeout
         for name in breakers_to_test:

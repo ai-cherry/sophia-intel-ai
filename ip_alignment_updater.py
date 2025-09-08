@@ -21,7 +21,9 @@ class IPAlignmentUpdater:
 
         # Extract key information
         if self.deployment_config:
-            self.primary_ip = self.deployment_config["deployment"]["primary_instance"]["public_ip"]
+            self.primary_ip = self.deployment_config["deployment"]["primary_instance"][
+                "public_ip"
+            ]
             self.endpoints = self.deployment_config["deployment"]["endpoints"]
         else:
             self.primary_ip = "104.171.202.103"  # Fallback from scan
@@ -141,7 +143,10 @@ class IPAlignmentUpdater:
                 (r"ssh ubuntu@104.171.202.103", f"ssh ubuntu@{self.primary_ip}"),
                 (r"ssh ubuntu@104.171.202.103", f"ssh ubuntu@{self.primary_ip}"),
                 # Domain patterns (update to use IP for now)
-                (r"https://api\.sophia-intel\.ai", f"http://{self.primary_ip}:8080/api"),
+                (
+                    r"https://api\.sophia-intel\.ai",
+                    f"http://{self.primary_ip}:8080/api",
+                ),
                 (r"https://app\.sophia-intel\.ai", f"http://{self.primary_ip}:8080"),
                 (r"https://monitoring\.sophia-intel\.ai", self.endpoints["grafana"]),
                 (r"https://metrics\.sophia-intel\.ai", self.endpoints["prometheus"]),
@@ -161,7 +166,9 @@ class IPAlignmentUpdater:
                 with open(filepath, "w", encoding="utf-8") as f:
                     f.write(content)
 
-                self.updates_made.extend([f"{filepath}: {update}" for update in updates_in_file])
+                self.updates_made.extend(
+                    [f"{filepath}: {update}" for update in updates_in_file]
+                )
                 self.log(f"Updated {filepath} ({len(updates_in_file)} changes)")
                 return True
 

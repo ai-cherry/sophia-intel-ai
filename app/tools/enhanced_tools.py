@@ -178,7 +178,9 @@ class EnhancedWriteFile(Tool):
                 f"{path.suffix}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
             )
             try:
-                backup_path.write_text(path.read_text(encoding=encoding), encoding=encoding)
+                backup_path.write_text(
+                    path.read_text(encoding=encoding), encoding=encoding
+                )
                 logger.info(f"Created backup: {backup_path}")
             except Exception as e:
                 logger.warning(f"Failed to create backup: {e}")
@@ -204,7 +206,9 @@ class EnhancedWriteFile(Tool):
             # Attempt to restore backup
             if backup_path and backup_path.exists():
                 try:
-                    path.write_text(backup_path.read_text(encoding=encoding), encoding=encoding)
+                    path.write_text(
+                        backup_path.read_text(encoding=encoding), encoding=encoding
+                    )
                     logger.info(f"Restored from backup: {backup_path}")
                 except Exception as restore_error:
                     logger.error(f"Failed to restore backup: {restore_error}")
@@ -225,7 +229,11 @@ class EnhancedCodeSearch(Tool):
         self._result_cache = {}
 
     async def run(
-        self, query: str, path: str = ".", file_type: Optional[str] = None, context_lines: int = 2
+        self,
+        query: str,
+        path: str = ".",
+        file_type: Optional[str] = None,
+        context_lines: int = 2,
     ) -> list[dict[str, Any]]:
         """Search code with enhanced features."""
         search_path = Path(path)
@@ -280,7 +288,9 @@ class EnhancedCodeSearch(Tool):
 
             # Clean old cache entries
             if len(self._result_cache) > 100:
-                oldest = sorted(self._result_cache.items(), key=lambda x: x[1]["timestamp"])[:50]
+                oldest = sorted(
+                    self._result_cache.items(), key=lambda x: x[1]["timestamp"]
+                )[:50]
                 for key, _ in oldest:
                     del self._result_cache[key]
 
@@ -359,7 +369,10 @@ class EnhancedGitOps(Tool):
     async def _git_status(self) -> dict[str, Any]:
         """Get git status."""
         result = subprocess.run(
-            ["git", "status", "--porcelain", "-b"], capture_output=True, text=True, timeout=10
+            ["git", "status", "--porcelain", "-b"],
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
 
         # Parse status
@@ -401,7 +414,9 @@ class EnhancedGitOps(Tool):
             if not SafetyChecker.is_safe_path(path):
                 raise ValueError(f"Unsafe path: {filepath}")
 
-        result = subprocess.run(["git", "add"] + files, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(
+            ["git", "add"] + files, capture_output=True, text=True, timeout=10
+        )
 
         if result.returncode != 0:
             raise RuntimeError(f"Git add failed: {result.stderr}")
@@ -447,13 +462,17 @@ class EnhancedGitOps(Tool):
         for line in result.stdout.strip().split("\n"):
             if line:
                 parts = line.split(" ", 1)
-                commits.append({"hash": parts[0], "message": parts[1] if len(parts) > 1 else ""})
+                commits.append(
+                    {"hash": parts[0], "message": parts[1] if len(parts) > 1 else ""}
+                )
 
         return {"commits": commits, "count": len(commits)}
 
     async def _git_branch(self) -> dict[str, Any]:
         """List git branches."""
-        result = subprocess.run(["git", "branch", "-a"], capture_output=True, text=True, timeout=10)
+        result = subprocess.run(
+            ["git", "branch", "-a"], capture_output=True, text=True, timeout=10
+        )
 
         branches = {"local": [], "remote": [], "current": None}
 

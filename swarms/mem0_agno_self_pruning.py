@@ -121,7 +121,8 @@ class RedisPruningAgent(Agent):
                     if (
                         ttl == -1  # No expiration
                         and memory_usage
-                        and memory_usage > threshold_mb * 1024 * 1024  # Large memory usage
+                        and memory_usage
+                        > threshold_mb * 1024 * 1024  # Large memory usage
                         and last_access
                         and last_access > 3600
                     ):  # Not accessed in 1 hour
@@ -149,7 +150,9 @@ class RedisPruningAgent(Agent):
             logger.error(f"Error identifying pruning candidates: {e}")
             return []
 
-    async def execute_pruning(self, candidates: List[Dict], max_prune: int = 10) -> Dict:
+    async def execute_pruning(
+        self, candidates: List[Dict], max_prune: int = 10
+    ) -> Dict:
         """Execute intelligent pruning of Redis keys"""
         pruned_keys = []
         total_memory_saved = 0
@@ -300,7 +303,9 @@ class MemoryOptimizationSwarm:
     async def start_continuous_optimization(self, interval_minutes: int = 30):
         """Start continuous optimization with specified interval"""
         self.running = True
-        logger.info(f"Starting continuous optimization (every {interval_minutes} minutes)")
+        logger.info(
+            f"Starting continuous optimization (every {interval_minutes} minutes)"
+        )
 
         while self.running:
             try:

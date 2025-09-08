@@ -62,7 +62,9 @@ class TestSophiaSwarmBehavior:
         # Verify debate strategy for council
         assert team["strategy"] == "debate"
         assert team["enable_debate"] is True
-        assert team["consensus_threshold"] == 0.88  # High threshold for divine consensus
+        assert (
+            team["consensus_threshold"] == 0.88
+        )  # High threshold for divine consensus
 
     @pytest.mark.asyncio
     async def test_hermes_market_intelligence_coordination(self, factory):
@@ -153,7 +155,9 @@ class TestSophiaSwarmBehavior:
 
         # Execute multiple tasks
         for i in range(3):
-            await factory.execute_business_task(athena_id, f"Strategic analysis task {i}")
+            await factory.execute_business_task(
+                athena_id, f"Strategic analysis task {i}"
+            )
 
         # Check wisdom accumulation (represented by metrics)
         updated_metrics = factory.performance_metrics[athena_id]
@@ -182,7 +186,9 @@ class TestSophiaSwarmBehavior:
     @pytest.mark.asyncio
     async def test_asclepius_business_health_diagnosis(self, factory):
         """Test Asclepius' business health diagnostic wisdom"""
-        asclepius_id = await factory.create_mythology_agent(MythologyArchetype.ASCLEPIUS)
+        asclepius_id = await factory.create_mythology_agent(
+            MythologyArchetype.ASCLEPIUS
+        )
         asclepius = factory.active_agents[asclepius_id]
 
         # Verify diagnostic wisdom traits
@@ -346,7 +352,9 @@ class TestSophiaSwarmBehavior:
             "focus_areas": ["market_expansion", "product_innovation"],
         }
 
-        with patch.object(factory, "create_mythology_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_mythology_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda arch: f"divine_{arch.value}_id"
 
             swarm_id = await factory.create_analytical_swarm(
@@ -371,7 +379,9 @@ class TestSophiaSwarmBehavior:
             "competitors": ["comp_a", "comp_b", "comp_c"],
         }
 
-        with patch.object(factory, "create_business_agent", new_callable=AsyncMock) as mock_create:
+        with patch.object(
+            factory, "create_business_agent", new_callable=AsyncMock
+        ) as mock_create:
             mock_create.side_effect = lambda t: f"agent_{t}_id"
 
             swarm_id = await factory.create_analytical_swarm(
@@ -501,7 +511,9 @@ class TestSophiaSwarmBehavior:
     async def test_domain_distribution_tracking(self, factory):
         """Test tracking of agent distribution across domains"""
         # Create agents across different domains
-        await factory.create_business_agent("sales_pipeline_analyst")  # SALES_INTELLIGENCE
+        await factory.create_business_agent(
+            "sales_pipeline_analyst"
+        )  # SALES_INTELLIGENCE
         await factory.create_business_agent("revenue_forecaster")  # REVENUE_OPERATIONS
         await factory.create_mythology_agent(MythologyArchetype.ATHENA)  # DIVINE_WISDOM
 

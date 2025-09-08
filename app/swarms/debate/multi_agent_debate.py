@@ -128,7 +128,9 @@ class MultiAgentDebateSystem:
         # Agent registry for debate participation
         self.registered_agents: dict[str, dict[str, Any]] = {}
 
-        logger.info("🗣️ MultiAgentDebateSystem initialized - enhanced with MCP integration")
+        logger.info(
+            "🗣️ MultiAgentDebateSystem initialized - enhanced with MCP integration"
+        )
 
     async def register_debate_agent(
         self, agent_id: str, capabilities: list[str], expertise: dict[str, float]
@@ -225,7 +227,9 @@ class MultiAgentDebateSystem:
 
             return debate_id
 
-    async def conduct_debate_round(self, debate_id: str, phase: DebatePhase) -> DebateRound:
+    async def conduct_debate_round(
+        self, debate_id: str, phase: DebatePhase
+    ) -> DebateRound:
         """Conduct a single round of debate"""
         with tracer.start_span("conduct_debate_round", kind=SpanKind.SERVER) as span:
             span.set_attribute("debate.id", debate_id)
@@ -322,7 +326,11 @@ class MultiAgentDebateSystem:
                 sender_agent_id="debate_system",
                 receiver_agent_id=participant,
                 message_type=MessageType.PROPOSAL,  # Reusing existing enum
-                content={"debate_id": debate_id, "message_type": message_type, "data": content},
+                content={
+                    "debate_id": debate_id,
+                    "message_type": message_type,
+                    "data": content,
+                },
                 thread_id=debate_id,
             )
 
@@ -332,7 +340,9 @@ class MultiAgentDebateSystem:
         """Collect opening statements from all participants"""
         # Implementation would collect structured statements from agents
         # This demonstrates the enhanced architecture with MCP integration
-        logger.info(f"📝 Collecting opening statements for debate: {debate_round.round_id}")
+        logger.info(
+            f"📝 Collecting opening statements for debate: {debate_round.round_id}"
+        )
 
         # Simulated collection - in real implementation, this would await agent responses
         for participant in debate_round.participants:
@@ -346,7 +356,9 @@ class MultiAgentDebateSystem:
 
     async def _conduct_cross_examination(self, debate_round: DebateRound):
         """Facilitate cross-examination between agents"""
-        logger.info(f"🔍 Conducting cross-examination for debate: {debate_round.round_id}")
+        logger.info(
+            f"🔍 Conducting cross-examination for debate: {debate_round.round_id}"
+        )
         # Cross-examination logic would be implemented here
         pass
 
@@ -377,7 +389,9 @@ class MultiAgentDebateSystem:
         if not debate_round.votes:
             return False
 
-        approve_votes = sum(1 for vote in debate_round.votes if vote.vote == VoteType.APPROVE)
+        approve_votes = sum(
+            1 for vote in debate_round.votes if vote.vote == VoteType.APPROVE
+        )
         total_votes = len(debate_round.votes)
         consensus_ratio = approve_votes / total_votes if total_votes > 0 else 0.0
 

@@ -108,7 +108,11 @@ class ArtemisDirectExecutor:
             refactor_swarm = await self.factory.create_specialized_swarm(
                 swarm_type="refactoring_swarm",
                 swarm_config={
-                    "targets": ["unified_server.py", "agent_factories", "dashboard_components"],
+                    "targets": [
+                        "unified_server.py",
+                        "agent_factories",
+                        "dashboard_components",
+                    ],
                     "quality_gates": True,
                     "test_coverage_target": 85.0,
                 },
@@ -143,7 +147,11 @@ class ArtemisDirectExecutor:
 
         except Exception as e:
             logger.error(f"❌ Mission execution failed: {e}")
-            return {"status": "failed", "error": str(e), "partial_results": self.results}
+            return {
+                "status": "failed",
+                "error": str(e),
+                "partial_results": self.results,
+            }
 
     def _generate_report(self):
         """Generate comprehensive execution report"""
@@ -260,7 +268,11 @@ class ArtemisDirectExecutor:
             },
             "phase_4": {
                 "name": "Optimization (Week 4)",
-                "tasks": ["Performance tuning", "Security hardening", "Documentation and training"],
+                "tasks": [
+                    "Performance tuning",
+                    "Security hardening",
+                    "Documentation and training",
+                ],
             },
         }
 

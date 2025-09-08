@@ -18,7 +18,8 @@ def validate_request(request_data: dict[str, Any]) -> bool:
 
     # Validate model name format
     return not (
-        "model" in request_data and not re.match(r"^[a-zA-Z0-9\-_]+$", request_data["model"])
+        "model" in request_data
+        and not re.match(r"^[a-zA-Z0-9\-_]+$", request_data["model"])
     )
 
 

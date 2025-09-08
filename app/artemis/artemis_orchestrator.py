@@ -148,7 +148,9 @@ class ArtemisOrchestrator(BaseOrchestrator):
         # Code execution sandbox
         self._sandbox = CodeSandbox()
 
-        logger.info("Artemis Code Orchestrator initialized with unified factory and MCP routing")
+        logger.info(
+            "Artemis Code Orchestrator initialized with unified factory and MCP routing"
+        )
 
     def _get_default_context(self) -> CodeContext:
         """Get default code context"""
@@ -207,7 +209,9 @@ class ArtemisOrchestrator(BaseOrchestrator):
             code_examples = await self._load_code_examples(task)
 
             # Prepare messages for LLM
-            messages = self._prepare_code_messages(task, codebase_context, code_examples)
+            messages = self._prepare_code_messages(
+                task, codebase_context, code_examples
+            )
 
             # Route based on task type
             if task.type == TaskType.CODE_GENERATION:
@@ -249,12 +253,16 @@ class ArtemisOrchestrator(BaseOrchestrator):
             # Track usage
             if hasattr(response, "usage"):
                 result.tokens_used = response.usage.total_tokens
-                result.cost = self.portkey._estimate_cost(routing.model, result.tokens_used)
+                result.cost = self.portkey._estimate_cost(
+                    routing.model, result.tokens_used
+                )
 
             # Record metrics to shared services
             if self.shared_services.get_monitoring_service():
                 await self.shared_services.get_monitoring_service().record_metric(
-                    "artemis_task_execution", 1.0, {"task_type": task.type, "success": "true"}
+                    "artemis_task_execution",
+                    1.0,
+                    {"task_type": task.type, "success": "true"},
                 )
 
         except Exception as e:
@@ -264,7 +272,9 @@ class ArtemisOrchestrator(BaseOrchestrator):
             # Record failure metric
             if self.shared_services.get_monitoring_service():
                 await self.shared_services.get_monitoring_service().record_metric(
-                    "artemis_task_execution", 1.0, {"task_type": task.type, "success": "false"}
+                    "artemis_task_execution",
+                    1.0,
+                    {"task_type": task.type, "success": "false"},
                 )
 
         return result
@@ -301,7 +311,9 @@ class ArtemisOrchestrator(BaseOrchestrator):
             repo_path = Path(self.code_context.repository_path)
 
             # Use MCP filesystem server for file operations
-            filesystem_connection = await self._get_mcp_connection(MCPServerType.FILESYSTEM)
+            filesystem_connection = await self._get_mcp_connection(
+                MCPServerType.FILESYSTEM
+            )
 
             if filesystem_connection:
                 try:
@@ -321,7 +333,9 @@ class ArtemisOrchestrator(BaseOrchestrator):
             context["dependencies"] = self._detect_dependencies(repo_path)
 
             # Use MCP code analysis server for patterns
-            code_analysis_connection = await self._get_mcp_connection(MCPServerType.CODE_ANALYSIS)
+            code_analysis_connection = await self._get_mcp_connection(
+                MCPServerType.CODE_ANALYSIS
+            )
 
             if code_analysis_connection:
                 try:
@@ -338,8 +352,12 @@ class ArtemisOrchestrator(BaseOrchestrator):
                     )
             else:
                 # Fallback to local analysis
-                context["patterns"] = await self.code_analyzer.identify_patterns(repo_path)
-                context["conventions"] = await self.code_analyzer.detect_conventions(repo_path)
+                context["patterns"] = await self.code_analyzer.identify_patterns(
+                    repo_path
+                )
+                context["conventions"] = await self.code_analyzer.detect_conventions(
+                    repo_path
+                )
 
         return context
 
@@ -362,7 +380,9 @@ class ArtemisOrchestrator(BaseOrchestrator):
             try:
                 # Search via MCP indexing server with domain-specific partitions
                 search_results = await self._search_code_mcp(
-                    task.content, indexing_connection, filters={"type": "code", "domain": "artemis"}
+                    task.content,
+                    indexing_connection,
+                    filters={"type": "code", "domain": "artemis"},
                 )
 
                 for result in search_results:
@@ -375,11 +395,16 @@ class ArtemisOrchestrator(BaseOrchestrator):
                         }
                     )
             finally:
-                await self.mcp_connection_manager.release_connection(indexing_connection, "artemis")
+                await self.mcp_connection_manager.release_connection(
+                    indexing_connection, "artemis"
+                )
         elif self.memory:
             # Fallback to direct memory search
             hits = await self.memory.search(
-                query=task.content, domain=MemoryDomain.ARTEMIS, k=5, filters={"type": "code"}
+                query=task.content,
+                domain=MemoryDomain.ARTEMIS,
+                k=5,
+                filters={"type": "code"},
             )
 
             for hit in hits:
@@ -409,7 +434,10 @@ class ArtemisOrchestrator(BaseOrchestrator):
         return examples
 
     def _prepare_code_messages(
-        self, task: Task, codebase_context: dict[str, Any], code_examples: list[dict[str, Any]]
+        self,
+        task: Task,
+        codebase_context: dict[str, Any],
+        code_examples: list[dict[str, Any]],
     ) -> list[dict[str, str]]:
         """Prepare messages for code-focused LLM"""
         system_prompt = f"""You are Artemis, an expert software engineer specializing in {', '.join(self.code_context.languages)}.
@@ -464,7 +492,9 @@ Requirements:
             {"role": "user", "content": user_prompt},
         ]
 
-    async def _generate_code(self, messages: list[dict], routing: Any, task: Task) -> Any:
+    async def _generate_code(
+        self, messages: list[dict], routing: Any, task: Task
+    ) -> Any:
         """Generate code using appropriate model"""
         # Use DeepSeek Coder for code generation as per config
         response = await self.portkey.execute_with_fallback(
@@ -497,7 +527,9 @@ Requirements:
 
         return response
 
-    async def _general_code_task(self, messages: list[dict], routing: Any, task: Task) -> Any:
+    async def _general_code_task(
+        self, messages: list[dict], routing: Any, task: Task
+    ) -> Any:
         """Handle general code-related tasks"""
         response = await self.portkey.execute_with_fallback(
             task_type=PortkeyTaskType.GENERAL,
@@ -511,7 +543,9 @@ Requirements:
     async def _process_code_response(self, response: Any, task: Task) -> dict[str, Any]:
         """Process LLM response into structured format"""
         content = (
-            response.choices[0].message.content if hasattr(response, "choices") else str(response)
+            response.choices[0].message.content
+            if hasattr(response, "choices")
+            else str(response)
         )
 
         # Extract code blocks
@@ -550,9 +584,16 @@ Requirements:
         cleaned = re.sub(r"```.*?```", "", content, flags=re.DOTALL)
         return cleaned.strip()
 
-    async def _validate_generated_code(self, processed: dict[str, Any]) -> dict[str, Any]:
+    async def _validate_generated_code(
+        self, processed: dict[str, Any]
+    ) -> dict[str, Any]:
         """Validate generated code"""
-        validation = {"syntax_valid": False, "errors": [], "warnings": [], "metrics": {}}
+        validation = {
+            "syntax_valid": False,
+            "errors": [],
+            "warnings": [],
+            "metrics": {},
+        }
 
         if not processed.get("primary_code"):
             validation["errors"].append("No code generated")
@@ -568,12 +609,14 @@ Requirements:
             validation.update(await self._validate_javascript(code))
 
         # Complexity analysis
-        validation["metrics"]["complexity"] = await self.code_analyzer.calculate_complexity(
-            {"code": code}
+        validation["metrics"]["complexity"] = (
+            await self.code_analyzer.calculate_complexity({"code": code})
         )
 
         # Security check
-        validation["metrics"]["security_score"] = await self.security_scanner.quick_scan(code)
+        validation["metrics"]["security_score"] = (
+            await self.security_scanner.quick_scan(code)
+        )
 
         return validation
 
@@ -595,7 +638,10 @@ Requirements:
 
                 # Run pylint
                 proc = subprocess.run(
-                    ["pylint", "--errors-only", f.name], capture_output=True, text=True, timeout=5
+                    ["pylint", "--errors-only", f.name],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
                 )
 
                 if proc.stdout:
@@ -698,7 +744,9 @@ Requirements:
                 if path.is_file():
                     structure["total_files"] += 1
                     ext = path.suffix
-                    structure["file_types"][ext] = structure["file_types"].get(ext, 0) + 1
+                    structure["file_types"][ext] = (
+                        structure["file_types"].get(ext, 0) + 1
+                    )
                 elif path.is_dir():
                     structure["directories"].append(str(path.relative_to(repo_path)))
         except Exception as e:
@@ -841,9 +889,13 @@ Requirements:
             code=content.get("primary_code", ""),
             language=language,
             explanation=content.get("explanation", ""),
-            tests=content.get("tests", {}).get("code") if content.get("tests") else None,
+            tests=(
+                content.get("tests", {}).get("code") if content.get("tests") else None
+            ),
             documentation=content.get("documentation", ""),
-            complexity_score=content.get("validation", {}).get("metrics", {}).get("complexity", 0),
+            complexity_score=content.get("validation", {})
+            .get("metrics", {})
+            .get("complexity", 0),
             security_analysis=content.get("security", {}),
             dependencies=[],
         )
@@ -969,7 +1021,9 @@ class PerformanceAnalyzer:
 class CodeSandbox:
     """Safe code execution sandbox"""
 
-    async def execute(self, code: str, language: str, timeout: int = 5) -> dict[str, Any]:
+    async def execute(
+        self, code: str, language: str, timeout: int = 5
+    ) -> dict[str, Any]:
         """Execute code in sandbox"""
         # Would implement sandboxed execution
         return {"output": "", "errors": [], "execution_time": 0.0}
@@ -1004,23 +1058,31 @@ class CodeSandbox:
 
         return None
 
-    async def _analyze_file_structure_mcp(self, repo_path: Path, connection) -> dict[str, Any]:
+    async def _analyze_file_structure_mcp(
+        self, repo_path: Path, connection
+    ) -> dict[str, Any]:
         """Analyze file structure using MCP filesystem server"""
         # Implementation would use MCP filesystem server
         # This is a placeholder showing the pattern
         return {"total_files": 0, "file_types": {}, "directories": []}
 
-    async def _identify_patterns_mcp(self, repo_path: Path, connection) -> dict[str, Any]:
+    async def _identify_patterns_mcp(
+        self, repo_path: Path, connection
+    ) -> dict[str, Any]:
         """Identify code patterns using MCP code analysis server"""
         # Implementation would use MCP code analysis server
         return {"design_patterns": [], "anti_patterns": [], "common_imports": []}
 
-    async def _detect_conventions_mcp(self, repo_path: Path, connection) -> dict[str, Any]:
+    async def _detect_conventions_mcp(
+        self, repo_path: Path, connection
+    ) -> dict[str, Any]:
         """Detect coding conventions using MCP code analysis server"""
         # Implementation would use MCP code analysis server
         return {"naming": "snake_case", "indentation": "spaces_4", "quotes": "double"}
 
-    async def _search_code_mcp(self, query: str, connection, filters: dict = None) -> list[dict]:
+    async def _search_code_mcp(
+        self, query: str, connection, filters: dict = None
+    ) -> list[dict]:
         """Search code using MCP indexing server"""
         # Implementation would use MCP indexing server
         return []

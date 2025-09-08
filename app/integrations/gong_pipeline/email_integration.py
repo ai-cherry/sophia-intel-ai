@@ -162,14 +162,21 @@ class GongEmailExtractor:
 
     def set_department_mapping(self, mapping: dict[str, str]):
         """Set email to department mapping"""
-        self.department_mapping = {email.lower(): dept for email, dept in mapping.items()}
+        self.department_mapping = {
+            email.lower(): dept for email, dept in mapping.items()
+        }
 
     async def get_auth_headers(self) -> dict[str, str]:
         """Get authentication headers"""
         import base64
 
-        auth_string = base64.b64encode(f"{self.access_key}:{self.client_secret}".encode()).decode()
-        return {"Authorization": f"Basic {auth_string}", "Content-Type": "application/json"}
+        auth_string = base64.b64encode(
+            f"{self.access_key}:{self.client_secret}".encode()
+        ).decode()
+        return {
+            "Authorization": f"Basic {auth_string}",
+            "Content-Type": "application/json",
+        }
 
     async def extract_emails(
         self, start_date: datetime = None, end_date: datetime = None, limit: int = 100
@@ -205,7 +212,9 @@ class GongEmailExtractor:
                     return emails
                 else:
                     error_text = await response.text()
-                    logger.error(f"Failed to extract emails: {response.status} - {error_text}")
+                    logger.error(
+                        f"Failed to extract emails: {response.status} - {error_text}"
+                    )
                     return []
 
         except Exception as e:
@@ -222,7 +231,9 @@ class GongEmailExtractor:
 
             async with (
                 aiohttp.ClientSession() as session,
-                session.get(f"{self.api_url}/v2/emails/{email_id}", headers=headers) as response,
+                session.get(
+                    f"{self.api_url}/v2/emails/{email_id}", headers=headers
+                ) as response,
             ):
                 if response.status == 200:
                     return await response.json()
@@ -239,7 +250,9 @@ class EmailProcessor:
     """Processes and enriches email data"""
 
     def __init__(
-        self, internal_domains: list[str] = None, department_mapping: dict[str, str] = None
+        self,
+        internal_domains: list[str] = None,
+        department_mapping: dict[str, str] = None,
     ):
         self.internal_domains = set(internal_domains or [])
         self.department_mapping = department_mapping or {}
@@ -417,10 +430,33 @@ class EmailProcessor:
                 "purchase",
                 "sales",
             ],
-            "support": ["issue", "problem", "bug", "error", "help", "support", "troubleshoot"],
-            "meeting": ["meeting", "call", "schedule", "agenda", "discuss", "zoom", "teams"],
+            "support": [
+                "issue",
+                "problem",
+                "bug",
+                "error",
+                "help",
+                "support",
+                "troubleshoot",
+            ],
+            "meeting": [
+                "meeting",
+                "call",
+                "schedule",
+                "agenda",
+                "discuss",
+                "zoom",
+                "teams",
+            ],
             "product": ["product", "feature", "demo", "functionality", "requirements"],
-            "legal": ["contract", "agreement", "terms", "legal", "compliance", "privacy"],
+            "legal": [
+                "contract",
+                "agreement",
+                "terms",
+                "legal",
+                "compliance",
+                "privacy",
+            ],
             "finance": ["invoice", "payment", "budget", "cost", "expense", "billing"],
         }
 
@@ -432,7 +468,9 @@ class EmailProcessor:
         entities = []
 
         # Email addresses
-        email_pattern = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+        email_pattern = re.compile(
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+        )
         entities.extend(email_pattern.findall(content))
 
         # Phone numbers
@@ -483,13 +521,17 @@ class EmailProcessor:
         negative_count = sum(content_lower.count(word) for word in negative_words)
 
         if positive_count + negative_count > 0:
-            sentiment_score = (positive_count - negative_count) / (positive_count + negative_count)
+            sentiment_score = (positive_count - negative_count) / (
+                positive_count + negative_count
+            )
         else:
             sentiment_score = 0.0
 
         return topics, top_keywords, list(set(entities)), sentiment_score, urgency_score
 
-    def _detect_email_type(self, subject: str, content: str) -> tuple[bool, bool, EmailDirection]:
+    def _detect_email_type(
+        self, subject: str, content: str
+    ) -> tuple[bool, bool, EmailDirection]:
         """Detect if email is reply, forward, and determine direction"""
 
         is_reply = any(pattern.search(subject) for pattern in self.reply_patterns)
@@ -511,7 +553,9 @@ class EmailProcessor:
         # Generate from subject (simplified)
         subject = email_data.get("subject", "")
         # Remove re: fw: etc. and use cleaned subject as thread ID
-        cleaned_subject = re.sub(r"^(re|fw|fwd):\s*", "", subject, flags=re.IGNORECASE).strip()
+        cleaned_subject = re.sub(
+            r"^(re|fw|fwd):\s*", "", subject, flags=re.IGNORECASE
+        ).strip()
 
         # Generate hash from cleaned subject
         return hashlib.md5(cleaned_subject.encode()).hexdigest()[:16]
@@ -524,16 +568,22 @@ class EmailProcessor:
             email_id = raw_email.get("id", "")
             subject = raw_email.get("subject", "")
             body_html = raw_email.get("body_html", "")
-            body_plain = raw_email.get("body_plain", "") or self._extract_plain_text(body_html)
+            body_plain = raw_email.get("body_plain", "") or self._extract_plain_text(
+                body_html
+            )
 
             # Parse participants
             from_email_data = raw_email.get("from", {})
             from_participant = self._create_participant(
-                from_email_data.get("email", ""), from_email_data.get("name", ""), "sender"
+                from_email_data.get("email", ""),
+                from_email_data.get("name", ""),
+                "sender",
             )
 
             to_participants = [
-                self._create_participant(p.get("email", ""), p.get("name", ""), "recipient")
+                self._create_participant(
+                    p.get("email", ""), p.get("name", ""), "recipient"
+                )
                 for p in raw_email.get("to", [])
             ]
 
@@ -560,12 +610,14 @@ class EmailProcessor:
 
             # Analyze content
             full_content = f"{subject} {body_plain}"
-            topics, keywords, entities, sentiment_score, urgency_score = self._analyze_content(
-                full_content
+            topics, keywords, entities, sentiment_score, urgency_score = (
+                self._analyze_content(full_content)
             )
 
             # Detect email characteristics
-            is_reply, is_forward, direction = self._detect_email_type(subject, body_plain)
+            is_reply, is_forward, direction = self._detect_email_type(
+                subject, body_plain
+            )
 
             # Extract thread ID
             thread_id = self._extract_thread_id(raw_email)
@@ -577,7 +629,9 @@ class EmailProcessor:
             attachment_types = [att.get("type", "") for att in attachments]
 
             # Determine priority (simplified)
-            priority = EmailPriority.HIGH if urgency_score > 0.7 else EmailPriority.NORMAL
+            priority = (
+                EmailPriority.HIGH if urgency_score > 0.7 else EmailPriority.NORMAL
+            )
 
             return ProcessedEmail(
                 email_id=email_id,
@@ -612,7 +666,9 @@ class EmailProcessor:
             )
 
         except Exception as e:
-            logger.error(f"Error processing email {raw_email.get('id', 'unknown')}: {e}")
+            logger.error(
+                f"Error processing email {raw_email.get('id', 'unknown')}: {e}"
+            )
             raise
 
 
@@ -622,7 +678,9 @@ class EmailThreadAnalyzer:
     def __init__(self):
         pass
 
-    async def analyze_threads(self, processed_emails: list[ProcessedEmail]) -> list[EmailThread]:
+    async def analyze_threads(
+        self, processed_emails: list[ProcessedEmail]
+    ) -> list[EmailThread]:
         """Analyze email threads from processed emails"""
 
         threads = {}
@@ -674,7 +732,8 @@ class EmailThreadAnalyzer:
                 email_count=len(thread_data["emails"]),
                 first_email_date=thread_data["first_date"],
                 last_email_date=thread_data["last_date"],
-                is_active=thread_data["last_date"] > datetime.now() - timedelta(days=30),
+                is_active=thread_data["last_date"]
+                > datetime.now() - timedelta(days=30),
                 related_deals=list(thread_data["related_deals"]),
                 related_contacts=list(thread_data["related_contacts"]),
                 related_calls=list(thread_data["related_calls"]),
@@ -729,7 +788,9 @@ class GongEmailPipeline:
                 processed_email = await self.processor.process_email(raw_email)
                 processed_emails.append(processed_email)
             except Exception as e:
-                logger.error(f"Failed to process email {raw_email.get('id', 'unknown')}: {e}")
+                logger.error(
+                    f"Failed to process email {raw_email.get('id', 'unknown')}: {e}"
+                )
                 continue
 
         logger.info(f"Successfully processed {len(processed_emails)} emails")
@@ -744,7 +805,9 @@ class GongEmailPipeline:
 
         return processed_emails, email_threads
 
-    def prepare_for_weaviate(self, processed_emails: list[ProcessedEmail]) -> list[dict[str, Any]]:
+    def prepare_for_weaviate(
+        self, processed_emails: list[ProcessedEmail]
+    ) -> list[dict[str, Any]]:
         """Prepare processed emails for Weaviate ingestion"""
 
         weaviate_objects = []
@@ -788,7 +851,9 @@ class GongEmailPipeline:
                 "entities": email.entities,
                 "is_internal": email.from_participant.is_internal,
                 "department_from": email.from_participant.department,
-                "departments_to": [p.department for p in email.to_participants if p.department],
+                "departments_to": [
+                    p.department for p in email.to_participants if p.department
+                ],
             }
 
             weaviate_obj = create_email_object(email_data)

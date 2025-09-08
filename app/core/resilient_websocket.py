@@ -15,7 +15,11 @@ from enum import Enum
 from typing import Any, Optional
 
 import websockets
-from websockets.exceptions import ConnectionClosed, ConnectionClosedError, WebSocketException
+from websockets.exceptions import (
+    ConnectionClosed,
+    ConnectionClosedError,
+    WebSocketException,
+)
 
 from app.core.circuit_breaker import with_circuit_breaker
 from app.core.websocket_manager import WebSocketManager
@@ -148,7 +152,10 @@ class ResilientWebSocketClient:
             logger.info(f"Connecting to MCP WebSocket: {self.url}")
 
             # Configure WebSocket with timeouts and headers
-            extra_headers = {"User-Agent": "Sophia-Intel-AI/1.0", "X-Client-Type": "MCP-Client"}
+            extra_headers = {
+                "User-Agent": "Sophia-Intel-AI/1.0",
+                "X-Client-Type": "MCP-Client",
+            }
 
             self.websocket = await websockets.connect(
                 self.url,
@@ -277,7 +284,12 @@ class ResilientWebSocketClient:
 
         try:
             # Prepare message payload
-            payload = {"jsonrpc": "2.0", "id": message.id, "method": method, "params": params or {}}
+            payload = {
+                "jsonrpc": "2.0",
+                "id": message.id,
+                "method": method,
+                "params": params or {},
+            }
 
             # Send message
             await self.websocket.send(json.dumps(payload))
@@ -366,7 +378,9 @@ class ResilientWebSocketClient:
         finally:
             # Connection ended - attempt reconnection if appropriate
             if self.state == ConnectionState.CONNECTED:
-                await self._handle_connection_error(Exception("Connection ended unexpectedly"))
+                await self._handle_connection_error(
+                    Exception("Connection ended unexpectedly")
+                )
 
     async def _handle_incoming_message(self, message: dict[str, Any]):
         """Handle incoming MCP message"""
@@ -391,7 +405,11 @@ class ResilientWebSocketClient:
 
                     # Send response if message has ID
                     if message_id:
-                        response_payload = {"jsonrpc": "2.0", "id": message_id, "result": response}
+                        response_payload = {
+                            "jsonrpc": "2.0",
+                            "id": message_id,
+                            "result": response,
+                        }
                         await self.websocket.send(json.dumps(response_payload))
 
                 except Exception as e:
@@ -448,10 +466,13 @@ class ResilientWebSocketClient:
 
             # Exponential backoff with jitter
             delay = min(
-                delay * self.reconnect_config.backoff_factor, self.reconnect_config.max_delay
+                delay * self.reconnect_config.backoff_factor,
+                self.reconnect_config.max_delay,
             )
             delay += (
-                delay * self.reconnect_config.jitter * (0.5 - asyncio.get_event_loop().time() % 1)
+                delay
+                * self.reconnect_config.jitter
+                * (0.5 - asyncio.get_event_loop().time() % 1)
             )
 
         # Exhausted reconnection attempts
@@ -505,7 +526,9 @@ class ResilientWebSocketClient:
             "pending_messages": len(self.pending_messages),
             "queued_messages": len(self.message_queue),
             "last_connection": (
-                self.last_connection_time.isoformat() if self.last_connection_time else None
+                self.last_connection_time.isoformat()
+                if self.last_connection_time
+                else None
             ),
             "metrics": {
                 "total_connections": self.metrics.total_connections,
@@ -521,7 +544,9 @@ class ResilientWebSocketClient:
     async def health_check(self) -> dict[str, Any]:
         """Perform health check by pinging MCP server"""
         try:
-            response = await self.send_mcp_message(method="ping", expect_response=True, timeout=5.0)
+            response = await self.send_mcp_message(
+                method="ping", expect_response=True, timeout=5.0
+            )
 
             return {
                 "healthy": response is not None,
@@ -549,7 +574,9 @@ class MCPWebSocketManager(WebSocketManager):
         # Get secret key from environment or use default
         import os
 
-        secret_key = os.getenv("JWT_SECRET_KEY", "default-secret-key-change-in-production")
+        secret_key = os.getenv(
+            "JWT_SECRET_KEY", "default-secret-key-change-in-production"
+        )
         super().__init__(secret_key)
         self.mcp_clients: dict[str, ResilientWebSocketClient] = {}
         self.mcp_servers = {
@@ -584,7 +611,11 @@ class MCPWebSocketManager(WebSocketManager):
             await client.connect()
 
     async def send_to_mcp_server(
-        self, server: str, method: str, params: dict[str, Any] = None, expect_response: bool = True
+        self,
+        server: str,
+        method: str,
+        params: dict[str, Any] = None,
+        expect_response: bool = True,
     ) -> Optional[dict[str, Any]]:
         """Send message to specific MCP server"""
         client = self.mcp_clients.get(server)
@@ -599,36 +630,47 @@ class MCPWebSocketManager(WebSocketManager):
     async def _handle_memory_update(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle memory update from MCP server"""
         # Broadcast to WebSocket clients
-        await self.broadcast("memory_updates", {"type": "mcp_memory_update", "data": params})
+        await self.broadcast(
+            "memory_updates", {"type": "mcp_memory_update", "data": params}
+        )
         return {"status": "received"}
 
     async def _handle_tool_result(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle tool execution result from MCP server"""
         # Broadcast to WebSocket clients
-        await self.broadcast("tool_results", {"type": "mcp_tool_result", "data": params})
+        await self.broadcast(
+            "tool_results", {"type": "mcp_tool_result", "data": params}
+        )
         return {"status": "received"}
 
     async def _handle_status_update(self, params: dict[str, Any]) -> dict[str, Any]:
         """Handle status update from MCP server"""
         # Broadcast to WebSocket clients
-        await self.broadcast("status_updates", {"type": "mcp_status_update", "data": params})
+        await self.broadcast(
+            "status_updates", {"type": "mcp_status_update", "data": params}
+        )
         return {"status": "received"}
 
     async def _on_mcp_connected(self, server_name: str):
         """Handle MCP client connection"""
         logger.info(f"MCP client connected: {server_name}")
-        await self.broadcast("mcp_status", {"type": "mcp_connected", "server": server_name})
+        await self.broadcast(
+            "mcp_status", {"type": "mcp_connected", "server": server_name}
+        )
 
     async def _on_mcp_disconnected(self, server_name: str):
         """Handle MCP client disconnection"""
         logger.warning(f"MCP client disconnected: {server_name}")
-        await self.broadcast("mcp_status", {"type": "mcp_disconnected", "server": server_name})
+        await self.broadcast(
+            "mcp_status", {"type": "mcp_disconnected", "server": server_name}
+        )
 
     async def _on_mcp_error(self, server_name: str, error: Exception):
         """Handle MCP client error"""
         logger.error(f"MCP client error on {server_name}: {error}")
         await self.broadcast(
-            "mcp_status", {"type": "mcp_error", "server": server_name, "error": str(error)}
+            "mcp_status",
+            {"type": "mcp_error", "server": server_name, "error": str(error)},
         )
 
     async def get_mcp_health(self) -> dict[str, Any]:
@@ -640,7 +682,9 @@ class MCPWebSocketManager(WebSocketManager):
 
         return {
             "servers": health_status,
-            "overall_healthy": all(status["healthy"] for status in health_status.values()),
+            "overall_healthy": all(
+                status["healthy"] for status in health_status.values()
+            ),
             "timestamp": datetime.now().isoformat(),
         }
 

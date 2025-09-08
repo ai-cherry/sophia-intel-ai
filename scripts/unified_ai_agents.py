@@ -58,10 +58,16 @@ def pick_model(agent: str, mode: str, keys: Dict[str, str]) -> Tuple[str, str]:
             return ("openrouter" if has_or else "together", "qwen/qwen3-coder")
         else:
             # Balanced chat fallback
-            return ("openrouter" if has_or else "anthropic", "anthropic/claude-3.5-sonnet-20241022")
+            return (
+                "openrouter" if has_or else "anthropic",
+                "anthropic/claude-3.5-sonnet-20241022",
+            )
 
     # Default fallback
-    return ("openrouter" if has_or else "anthropic", "anthropic/claude-3.5-sonnet-20241022")
+    return (
+        "openrouter" if has_or else "anthropic",
+        "anthropic/claude-3.5-sonnet-20241022",
+    )
 
 
 def summarize_env(llm: MultiTransportLLM) -> str:
@@ -101,7 +107,9 @@ async def run_task(
         r = router._route_for(tt)
         provider = provider_override or r.provider
         model = model_override or r.model
-        print(f"Agent: {agent}\nMode: {mode}\nTask-Type: {tt}\nProvider: {provider}\nModel: {model}")
+        print(
+            f"Agent: {agent}\nMode: {mode}\nTask-Type: {tt}\nProvider: {provider}\nModel: {model}"
+        )
         print(summarize_env(llm))
         return
 
@@ -131,14 +139,28 @@ def main():
     )
     parser.add_argument("--mode", choices=["chat", "code"], default="chat")
     parser.add_argument("--task", type=str, help="Task instruction text")
-    parser.add_argument("--file", type=str, help="Optional file path for context", default=None)
+    parser.add_argument(
+        "--file", type=str, help="Optional file path for context", default=None
+    )
     parser.add_argument(
         "--dry-run", action="store_true", help="Print configuration without calling LLM"
     )
-    parser.add_argument("--whoami", action="store_true", help="Show environment and routing info")
-    parser.add_argument("--provider", choices=["xai", "openrouter", "anthropic", "openai", "groq", "aimlapi"], help="Force provider override")
-    parser.add_argument("--model", type=str, help="Force model override (e.g., x-ai/grok-code-fast-1)")
-    parser.add_argument("--task-type", choices=["planning", "generation", "validation", "indexing", "vision"], help="Task type for router selection")
+    parser.add_argument(
+        "--whoami", action="store_true", help="Show environment and routing info"
+    )
+    parser.add_argument(
+        "--provider",
+        choices=["xai", "openrouter", "anthropic", "openai", "groq", "aimlapi"],
+        help="Force provider override",
+    )
+    parser.add_argument(
+        "--model", type=str, help="Force model override (e.g., x-ai/grok-code-fast-1)"
+    )
+    parser.add_argument(
+        "--task-type",
+        choices=["planning", "generation", "validation", "indexing", "vision"],
+        help="Task type for router selection",
+    )
 
     args = parser.parse_args()
 

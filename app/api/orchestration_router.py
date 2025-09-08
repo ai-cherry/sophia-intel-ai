@@ -93,7 +93,9 @@ async def chat_endpoint(
         )
 
         # Log chat interaction
-        background_tasks.add_task(_log_chat_interaction, request, response, current_user)
+        background_tasks.add_task(
+            _log_chat_interaction, request, response, current_user
+        )
 
         return response
 
@@ -166,7 +168,9 @@ async def streaming_chat_endpoint(
 # ============================================
 
 
-@router.post("/command", response_model=CommandResponse, summary="Execute system command")
+@router.post(
+    "/command", response_model=CommandResponse, summary="Execute system command"
+)
 async def command_endpoint(
     request: CommandRequest, current_user: Optional[Dict] = Depends(get_current_user)
 ):
@@ -178,7 +182,9 @@ async def command_endpoint(
     if request.command in sensitive_commands and (
         not current_user or "admin" not in current_user.get("permissions", set())
     ):
-        raise HTTPException(status_code=403, detail="Admin permissions required for this command")
+        raise HTTPException(
+            status_code=403, detail="Admin permissions required for this command"
+        )
 
     start_time = time.time()
 
@@ -345,7 +351,11 @@ async def agent_endpoint(
 # ============================================
 
 
-@router.post("/orchestrate", response_model=OrchestrationResponse, summary="General orchestration")
+@router.post(
+    "/orchestrate",
+    response_model=OrchestrationResponse,
+    summary="General orchestration",
+)
 async def orchestration_endpoint(
     request: OrchestrationRequest,
     background_tasks: BackgroundTasks,
@@ -601,7 +611,9 @@ async def get_tasks(
 # ============================================
 
 
-async def _log_chat_interaction(request: ChatRequest, response: ChatResponse, user: Optional[Dict]):
+async def _log_chat_interaction(
+    request: ChatRequest, response: ChatResponse, user: Optional[Dict]
+):
     """Log chat interaction for analytics"""
     try:
         # This would log to a proper analytics system

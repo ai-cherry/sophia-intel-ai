@@ -31,8 +31,12 @@ class CreateEmbeddingRequest(BaseModel):
     """Request to create embeddings"""
 
     text: Union[str, list[str]]
-    model: Optional[str] = Field(None, description="Model to use (auto-selected if not provided)")
-    use_case: str = Field("general", description="Use case: rag, search, clustering, etc.")
+    model: Optional[str] = Field(
+        None, description="Model to use (auto-selected if not provided)"
+    )
+    use_case: str = Field(
+        "general", description="Use case: rag, search, clustering, etc."
+    )
     language: str = Field("en", description="Language code")
     dimensions: Optional[int] = Field(None, description="Target dimensions")
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -183,12 +187,15 @@ async def create_embedding(
         )
 
         return create_api_response(
-            data=api_response.model_dump(), message=f"Created {len(response.embeddings)} embeddings"
+            data=api_response.model_dump(),
+            message=f"Created {len(response.embeddings)} embeddings",
         )
 
     except Exception as e:
         logger.error(f"Failed to create embeddings: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.post("/batch", response_model=APIResponse)
@@ -255,12 +262,15 @@ async def create_batch_embeddings(
 
     except Exception as e:
         logger.error(f"Failed to create batch embeddings: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.post("/search", response_model=APIResponse)
 async def semantic_search(
-    request: SearchRequest, service: AgnoEmbeddingService = Depends(get_embedding_service)
+    request: SearchRequest,
+    service: AgnoEmbeddingService = Depends(get_embedding_service),
 ) -> APIResponse:
     """
     Perform semantic search over documents
@@ -318,12 +328,15 @@ async def semantic_search(
         )
 
         return create_api_response(
-            data=api_response.model_dump(), message=f"Found {len(results)} relevant documents"
+            data=api_response.model_dump(),
+            message=f"Found {len(results)} relevant documents",
         )
 
     except Exception as e:
         logger.error(f"Search failed: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.get("/models", response_model=APIResponse)
@@ -396,12 +409,15 @@ async def recommend_model(
             )
 
         return create_api_response(
-            data={"recommendations": results}, message=f"Found {len(results)} recommended models"
+            data={"recommendations": results},
+            message=f"Found {len(results)} recommended models",
         )
 
     except Exception as e:
         logger.error(f"Failed to get recommendations: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
 @router.get("/stats", response_model=APIResponse)
@@ -418,7 +434,10 @@ async def get_embedding_stats(
     provider_status = gateway.get_provider_status()
 
     # Get cache stats (if available)
-    cache_stats = {"size": len(service._embedding_cache), "providers": list(provider_status.keys())}
+    cache_stats = {
+        "size": len(service._embedding_cache),
+        "providers": list(provider_status.keys()),
+    }
 
     return create_api_response(
         data={"cache": cache_stats, "providers": provider_status},
@@ -493,7 +512,12 @@ async def health_check(
 
     try:
         # Initialize health data
-        health_data = {"status": "initializing", "health_score": 0, "checks": {}, "errors": []}
+        health_data = {
+            "status": "initializing",
+            "health_score": 0,
+            "checks": {},
+            "errors": [],
+        }
 
         # 1. Check model registry
         try:
@@ -501,10 +525,15 @@ async def health_check(
             health_data["checks"]["model_registry"] = {
                 "status": "healthy",
                 "total_models": len(available_models),
-                "models": [model.value for model in available_models[:5]],  # First 5 models
+                "models": [
+                    model.value for model in available_models[:5]
+                ],  # First 5 models
             }
         except Exception as e:
-            health_data["checks"]["model_registry"] = {"status": "unhealthy", "error": str(e)}
+            health_data["checks"]["model_registry"] = {
+                "status": "unhealthy",
+                "error": str(e),
+            }
             health_data["errors"].append(f"Model registry check failed: {e}")
 
         # 2. Check provider status via Portkey
@@ -518,12 +547,17 @@ async def health_check(
                 "providers": active_providers,
             }
         except Exception as e:
-            health_data["checks"]["providers"] = {"status": "unhealthy", "error": str(e)}
+            health_data["checks"]["providers"] = {
+                "status": "unhealthy",
+                "error": str(e),
+            }
             health_data["errors"].append(f"Provider check failed: {e}")
 
         # 3. Test embedding generation
         try:
-            test_request = AgnoEmbeddingRequest(texts=["health check test"], use_case="general")
+            test_request = AgnoEmbeddingRequest(
+                texts=["health check test"], use_case="general"
+            )
             test_response = await service.embed(test_request)
 
             health_data["checks"]["embedding_generation"] = {
@@ -532,13 +566,18 @@ async def health_check(
                 "model_used": test_response.model_used,
             }
         except Exception as e:
-            health_data["checks"]["embedding_generation"] = {"status": "unhealthy", "error": str(e)}
+            health_data["checks"]["embedding_generation"] = {
+                "status": "unhealthy",
+                "error": str(e),
+            }
             health_data["errors"].append(f"Embedding generation failed: {e}")
 
         # 4. Check cache status
         try:
             cache_size = (
-                len(service._embedding_cache) if hasattr(service, "_embedding_cache") else 0
+                len(service._embedding_cache)
+                if hasattr(service, "_embedding_cache")
+                else 0
             )
             service_metrics = service.get_metrics()
 
@@ -596,7 +635,10 @@ async def health_check(
         await metrics.record_metric(
             name="health_check",
             value=1,
-            tags={"status": health_data["status"], "score": str(health_data["health_score"])},
+            tags={
+                "status": health_data["status"],
+                "score": str(health_data["health_score"]),
+            },
         )
 
         # Return appropriate response based on status

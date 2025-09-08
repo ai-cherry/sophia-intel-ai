@@ -112,7 +112,9 @@ class CircuitBreakerApplicator:
                     if func_source:
                         for breaker_type in breaker_types:
                             if self._needs_protection(func_source, breaker_type):
-                                functions_to_protect.append((node.name, breaker_type, node.lineno))
+                                functions_to_protect.append(
+                                    (node.name, breaker_type, node.lineno)
+                                )
                                 break
 
             if not functions_to_protect:
@@ -123,8 +125,12 @@ class CircuitBreakerApplicator:
 
             # Apply decorators to functions
             for func_name, breaker_type, _line_no in functions_to_protect:
-                content = self._add_decorator_to_function(content, func_name, breaker_type)
-                self.report["functions_protected"].append(f"{file_path.name}:{func_name}")
+                content = self._add_decorator_to_function(
+                    content, func_name, breaker_type
+                )
+                self.report["functions_protected"].append(
+                    f"{file_path.name}:{func_name}"
+                )
 
                 # Track breaker types
                 if breaker_type not in self.report["circuit_breakers_added"]:
@@ -143,9 +149,13 @@ class CircuitBreakerApplicator:
                     with open(file_path, "w") as f:
                         f.write(content)
 
-                    logger.info(f"    ✅ Protected {len(functions_to_protect)} functions")
+                    logger.info(
+                        f"    ✅ Protected {len(functions_to_protect)} functions"
+                    )
                 else:
-                    logger.info(f"    🔍 Would protect {len(functions_to_protect)} functions")
+                    logger.info(
+                        f"    🔍 Would protect {len(functions_to_protect)} functions"
+                    )
 
                 self.report["files_updated"] += 1
                 return True
@@ -166,7 +176,10 @@ class CircuitBreakerApplicator:
                 if btype == breaker_type:
                     patterns_to_check.append(pattern)
 
-        return any(re.search(pattern, func_source, re.IGNORECASE) for pattern in patterns_to_check)
+        return any(
+            re.search(pattern, func_source, re.IGNORECASE)
+            for pattern in patterns_to_check
+        )
 
     def _add_circuit_breaker_import(self, content: str) -> str:
         """Add circuit breaker import to file"""
@@ -179,7 +192,9 @@ class CircuitBreakerApplicator:
         # Find the last import line
         last_import_idx = 0
         for i, line in enumerate(lines):
-            if line.startswith(("import ", "from ")) and not line.startswith("from __future__"):
+            if line.startswith(("import ", "from ")) and not line.startswith(
+                "from __future__"
+            ):
                 last_import_idx = i
 
         # Insert import
@@ -192,7 +207,9 @@ class CircuitBreakerApplicator:
 
         return "\n".join(lines)
 
-    def _add_decorator_to_function(self, content: str, func_name: str, breaker_type: str) -> str:
+    def _add_decorator_to_function(
+        self, content: str, func_name: str, breaker_type: str
+    ) -> str:
         """Add circuit breaker decorator to a function"""
         lines = content.splitlines()
         decorator = f'@with_circuit_breaker("{breaker_type}")'
@@ -255,7 +272,9 @@ class CircuitBreakerApplicator:
         # Scan for files needing circuit breakers
         self.scan_directory(directory)
 
-        logger.info(f"\n📋 Found {len(self.files_to_update)} files needing circuit breakers")
+        logger.info(
+            f"\n📋 Found {len(self.files_to_update)} files needing circuit breakers"
+        )
 
         # Apply to each file
         for file_path, breaker_types in self.files_to_update:
@@ -266,8 +285,12 @@ class CircuitBreakerApplicator:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Apply circuit breakers to external service calls")
-    parser.add_argument("--directory", default="app", help="Directory to scan (default: app)")
+    parser = argparse.ArgumentParser(
+        description="Apply circuit breakers to external service calls"
+    )
+    parser.add_argument(
+        "--directory", default="app", help="Directory to scan (default: app)"
+    )
     parser.add_argument(
         "--live", action="store_true", help="Run in live mode (actually modify files)"
     )

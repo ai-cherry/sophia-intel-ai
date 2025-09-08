@@ -36,7 +36,9 @@ def test_basic_models():
         try:
             response = aimlapi_manager.chat_completion(
                 model=model_name,
-                messages=[{"role": "user", "content": "Say 'AIMLAPI works' in 3 words"}],
+                messages=[
+                    {"role": "user", "content": "Say 'AIMLAPI works' in 3 words"}
+                ],
                 max_tokens=20,
                 temperature=0.1,
             )
@@ -60,8 +62,14 @@ def test_flagship_models():
         response = aimlapi_manager.chat_completion(
             model="gpt-5",
             messages=[
-                {"role": "system", "content": "You are GPT-5, the most advanced AI model."},
-                {"role": "user", "content": "Introduce yourself briefly and confirm you're GPT-5."},
+                {
+                    "role": "system",
+                    "content": "You are GPT-5, the most advanced AI model.",
+                },
+                {
+                    "role": "user",
+                    "content": "Introduce yourself briefly and confirm you're GPT-5.",
+                },
             ],
             max_tokens=50,
             temperature=0.7,
@@ -77,7 +85,10 @@ def test_flagship_models():
         response = aimlapi_manager.chat_completion(
             model="grok-4",
             messages=[
-                {"role": "system", "content": "You are Grok-4, xAI's most intelligent model."},
+                {
+                    "role": "system",
+                    "content": "You are Grok-4, xAI's most intelligent model.",
+                },
                 {
                     "role": "user",
                     "content": "Introduce yourself briefly and confirm you're Grok-4.",
@@ -101,7 +112,10 @@ def test_reasoning_models():
         response = aimlapi_manager.chat_completion(
             model="o3",
             messages=[
-                {"role": "user", "content": "What is 7 * 8 + 15 - 3? Show your reasoning briefly."}
+                {
+                    "role": "user",
+                    "content": "What is 7 * 8 + 15 - 3? Show your reasoning briefly.",
+                }
             ],
             max_tokens=100,
             temperature=0.1,
@@ -185,7 +199,8 @@ def test_direct_api_call():
         from openai import OpenAI
 
         client = OpenAI(
-            api_key="562d964ac0b54357874b01de33cb91e9", base_url="https://api.aimlapi.com/v1"
+            api_key="562d964ac0b54357874b01de33cb91e9",
+            base_url="https://api.aimlapi.com/v1",
         )
 
         response = client.chat.completions.create(
@@ -227,7 +242,9 @@ def main():
 
     total_tested = len(basic_results) + len(connection_results)
     successful = sum(1 for r in basic_results.values() if r == "success")
-    successful += sum(1 for r in connection_results.values() if r["status"] == "success")
+    successful += sum(
+        1 for r in connection_results.values() if r["status"] == "success"
+    )
 
     print(f"\nTotal models tested: {total_tested}")
     print(f"Successful: {successful}")

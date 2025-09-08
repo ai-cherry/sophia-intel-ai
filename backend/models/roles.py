@@ -293,7 +293,9 @@ def require_role(required_role: Role):
 
 
 # FastAPI dependency for permission verification
-async def verify_permissions(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+async def verify_permissions(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> dict:
     """
     FastAPI dependency to verify user permissions
 

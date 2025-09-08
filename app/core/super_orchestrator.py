@@ -20,7 +20,10 @@ from app.core.orchestrator_enhancements import (
     SystemType,
     UniversalRegistry,
 )
-from app.core.orchestrator_personality import orchestrator_personality, smart_suggestions
+from app.core.orchestrator_personality import (
+    orchestrator_personality,
+    smart_suggestions,
+)
 from app.embeddings.agno_embedding_service import AgnoEmbeddingService
 
 # LLM will be injected or use portkey
@@ -78,7 +81,9 @@ class EmbeddedStateManager:
         for key, value in kwargs.items():
             if hasattr(self.state, key):
                 setattr(self.state, key, value)
-        self.history.append({"timestamp": datetime.now(), "state": self.state.__dict__.copy()})
+        self.history.append(
+            {"timestamp": datetime.now(), "state": self.state.__dict__.copy()}
+        )
 
     def get_state(self) -> SystemState:
         return self.state
@@ -225,7 +230,13 @@ class SuperOrchestrator:
             name="SuperOrchestrator",
             type=SystemType.SERVICE,
             status=SystemStatus.ACTIVE,
-            capabilities=["orchestrate", "monitor", "optimize", "personality", "natural_language"],
+            capabilities=[
+                "orchestrate",
+                "monitor",
+                "optimize",
+                "personality",
+                "natural_language",
+            ],
             metadata={"role": "master", "personality": True},
         )
         await self.registry.register(master)
@@ -264,7 +275,9 @@ class SuperOrchestrator:
         request_type = request.get("type")
 
         # Add to task queue
-        task_id = await self.tasks.add_task(request, priority=self._determine_priority(request))
+        task_id = await self.tasks.add_task(
+            request, priority=self._determine_priority(request)
+        )
 
         # Process based on type
         if request_type == "chat":
@@ -308,7 +321,11 @@ class SuperOrchestrator:
         # Get personality-infused greeting if appropriate
         if any(word in user_message.lower() for word in ["hi", "hello", "hey", "sup"]):
             greeting = self.personality.generate_response("greeting")
-            return {"type": "chat_response", "message": greeting, "timestamp": datetime.now()}
+            return {
+                "type": "chat_response",
+                "message": greeting,
+                "timestamp": datetime.now(),
+            }
 
         # Build prompt with context and personality
         prompt = f"""
@@ -334,7 +351,11 @@ class SuperOrchestrator:
             {"user": user_message, "assistant": response.content},
         )
 
-        return {"type": "chat_response", "message": response.content, "timestamp": datetime.now()}
+        return {
+            "type": "chat_response",
+            "message": response.content,
+            "timestamp": datetime.now(),
+        }
 
     async def _handle_command(self, request: dict) -> dict:
         """Execute system commands"""
@@ -417,7 +438,9 @@ class SuperOrchestrator:
         """AI determines task priority"""
 
         # Critical keywords
-        if any(word in str(request).lower() for word in ["critical", "urgent", "emergency"]):
+        if any(
+            word in str(request).lower() for word in ["critical", "urgent", "emergency"]
+        ):
             return TaskPriority.CRITICAL
 
         # High priority types
@@ -502,11 +525,15 @@ class SuperOrchestrator:
             "health_score": self.state.get_state().health_score,
             "active_systems": len(self.registry.get_active_systems()),
             "error_count": sum(
-                1 for s in self.registry.systems.values() if s.status == SystemStatus.ERROR
+                1
+                for s in self.registry.systems.values()
+                if s.status == SystemStatus.ERROR
             ),
             "cost_today": self._calculate_cost(),
             "idle_systems": sum(
-                1 for s in self.registry.systems.values() if s.status == SystemStatus.IDLE
+                1
+                for s in self.registry.systems.values()
+                if s.status == SystemStatus.IDLE
             ),
         }
 
@@ -547,7 +574,9 @@ class SuperOrchestrator:
 
     async def _optimize_system(self, params: dict) -> dict:
         """Optimize the system"""
-        optimizations = await self.ai_monitor.auto_optimize(await self._collect_metrics())
+        optimizations = await self.ai_monitor.auto_optimize(
+            await self._collect_metrics()
+        )
         for opt in optimizations:
             await self._apply_optimization(opt)
         return {"optimizations_applied": optimizations}
@@ -579,13 +608,18 @@ class SuperOrchestrator:
         issue = params.get("error", "Unknown issue")
 
         # Get personality response for error
-        error_response = self.personality.generate_response("error", data={"error": issue})
+        error_response = self.personality.generate_response(
+            "error", data={"error": issue}
+        )
 
         # AI determines healing action
         prompt = f"Determine healing action for: {issue}"
         response = await self.llm.ainvoke(prompt)
 
-        return {"healing_action": response.content, "personality_message": error_response}
+        return {
+            "healing_action": response.content,
+            "personality_message": error_response,
+        }
 
     async def _apply_optimization(self, optimization: str):
         """Apply a specific optimization"""
@@ -631,7 +665,9 @@ class SuperOrchestrator:
     async def _destroy_agent(self, agent_id: str) -> dict:
         """Destroy an agent"""
         # Agent destruction logic here
-        self.state.update(active_agents=max(0, self.state.get_state().active_agents - 1))
+        self.state.update(
+            active_agents=max(0, self.state.get_state().active_agents - 1)
+        )
         return {"agent_id": agent_id, "status": "destroyed"}
 
     async def _get_agent_status(self, agent_id: str) -> dict:
@@ -665,11 +701,15 @@ class SuperOrchestrator:
         # Get contextual suggestions
         current_context = {
             "error_count": sum(
-                1 for s in self.registry.systems.values() if s.status == SystemStatus.ERROR
+                1
+                for s in self.registry.systems.values()
+                if s.status == SystemStatus.ERROR
             ),
             "cost_today": self._calculate_cost(),
             "idle_systems": sum(
-                1 for s in self.registry.systems.values() if s.status == SystemStatus.IDLE
+                1
+                for s in self.registry.systems.values()
+                if s.status == SystemStatus.IDLE
             ),
         }
         suggestions = self.suggestions.get_contextual_suggestions(current_context)
@@ -762,8 +802,14 @@ class SuperOrchestrator:
                 "code_analysis",
                 "deployment",
             ],
-            "hybrid_coordination": ["hybrid_intelligence_coordination", "cross_domain_synthesis"],
-            "swarm_orchestration": ["parallel_swarm_orchestration", "multi_agent_coordination"],
+            "hybrid_coordination": [
+                "hybrid_intelligence_coordination",
+                "cross_domain_synthesis",
+            ],
+            "swarm_orchestration": [
+                "parallel_swarm_orchestration",
+                "multi_agent_coordination",
+            ],
             "mcp_integration": ["mcp_universal_coordination", "model_context_protocol"],
         }
 

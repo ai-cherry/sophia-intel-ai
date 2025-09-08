@@ -276,7 +276,10 @@ class UnifiedMemoryRouter:
         if value:
             try:
                 deserialized = json.loads(value) if isinstance(value, bytes) else value
-                self._cache[key] = (deserialized, datetime.now() + timedelta(seconds=300))
+                self._cache[key] = (
+                    deserialized,
+                    datetime.now() + timedelta(seconds=300),
+                )
                 self.metrics.record_read("L1", cache_hit=True)
                 return deserialized
             except:
@@ -288,7 +291,9 @@ class UnifiedMemoryRouter:
 
     # ========== L2: Vector Operations ==========
 
-    async def upsert_chunks(self, chunks: list[DocChunk], domain: MemoryDomain) -> UpsertReport:
+    async def upsert_chunks(
+        self, chunks: list[DocChunk], domain: MemoryDomain
+    ) -> UpsertReport:
         """Store document chunks with embeddings"""
         report = UpsertReport(
             success=False,
@@ -311,7 +316,9 @@ class UnifiedMemoryRouter:
             weaviate_client = await self._get_weaviate()
             if weaviate_client is None:
                 report.errors.append("Weaviate unavailable; skipping L2 upsert")
-                logger.warning("L2 upsert fallback: Weaviate unavailable; skipping upsert")
+                logger.warning(
+                    "L2 upsert fallback: Weaviate unavailable; skipping upsert"
+                )
                 return report
 
             # Ensure schema (DocChunk class) exists when using local/unauth Weaviate
@@ -349,7 +356,11 @@ class UnifiedMemoryRouter:
                 }
 
                 batch.append(
-                    {"class": "DocChunk", "properties": data_object, "vector": chunk.embedding}
+                    {
+                        "class": "DocChunk",
+                        "properties": data_object,
+                        "vector": chunk.embedding,
+                    }
                 )
 
             # Batch upsert
@@ -392,8 +403,14 @@ class UnifiedMemoryRouter:
         try:
             # Detect local URL and no API key
             url = os.getenv("WEAVIATE_URL", "http://localhost:8081")
-            is_local = url.startswith("http://localhost") or url.startswith("http://127.0.0.1")
-            if os.getenv("WEAVIATE_AUTO_BOOTSTRAP", "true").lower() not in {"1", "true", "yes"}:
+            is_local = url.startswith("http://localhost") or url.startswith(
+                "http://127.0.0.1"
+            )
+            if os.getenv("WEAVIATE_AUTO_BOOTSTRAP", "true").lower() not in {
+                "1",
+                "true",
+                "yes",
+            }:
                 return
             # If cloud (https) and API key present, skip auto-bootstrap
             if url.startswith("https://") and os.getenv("WEAVIATE_API_KEY"):
@@ -449,7 +466,9 @@ class UnifiedMemoryRouter:
                             source_uri=it.get("source_uri", ""),
                             metadata=it.get("metadata", {}) or {},
                             tier=MemoryTier(it.get("tier", MemoryTier.L2_VECTOR.value)),
-                            domain=MemoryDomain(it.get("domain", MemoryDomain.SHARED.value)),
+                            domain=MemoryDomain(
+                                it.get("domain", MemoryDomain.SHARED.value)
+                            ),
                         )
                         for it in obj
                     ]
@@ -463,13 +482,16 @@ class UnifiedMemoryRouter:
         # Get Weaviate client
         weaviate_client = await self._get_weaviate()
         if weaviate_client is None:
-            logger.warning("L2 search fallback: Weaviate unavailable; returning no results")
+            logger.warning(
+                "L2 search fallback: Weaviate unavailable; returning no results"
+            )
             return []
 
         # Build query
         query_builder = (
             weaviate_client.query.get(
-                "DocChunk", ["content", "source_uri", "domain", "confidence", "metadata"]
+                "DocChunk",
+                ["content", "source_uri", "domain", "confidence", "metadata"],
             )
             .with_hybrid(query=query, alpha=alpha)
             .with_limit(k * 2 if rerank else k)
@@ -477,7 +499,11 @@ class UnifiedMemoryRouter:
 
         # Add filters
         if filters or domain != MemoryDomain.SHARED:
-            where_filter = {"path": ["domain"], "operator": "Equal", "valueString": domain.value}
+            where_filter = {
+                "path": ["domain"],
+                "operator": "Equal",
+                "valueString": domain.value,
+            }
             query_builder = query_builder.with_where(where_filter)
 
         # Execute search
@@ -486,7 +512,9 @@ class UnifiedMemoryRouter:
         # Convert to SearchHits
         hits: list[SearchHit] = []
         try:
-            doc_items = (results or {}).get("data", {}).get("Get", {}).get("DocChunk") or []
+            doc_items = (results or {}).get("data", {}).get("Get", {}).get(
+                "DocChunk"
+            ) or []
         except Exception:
             doc_items = []
 
@@ -536,11 +564,15 @@ class UnifiedMemoryRouter:
         if not conn:
             logger.warning("Structured store (Neon) unavailable; skipping record_fact")
             # Return a deterministic id without DB storage
-            fact_id = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
+            fact_id = hashlib.sha256(
+                json.dumps(data, sort_keys=True).encode()
+            ).hexdigest()[:16]
             return fact_id
 
         # Generate fact ID
-        fact_id = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
+        fact_id = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[
+            :16
+        ]
 
         # Prepare insert query
         columns = ", ".join(data.keys())
@@ -709,7 +741,8 @@ class UnifiedMemoryRouter:
                     new_embeddings = await self.portkey.embed_texts(texts_to_embed)
                     # Ensure pure python floats
                     new_embeddings = [
-                        [float(x) for x in (emb or [])] for emb in (new_embeddings or [])
+                        [float(x) for x in (emb or [])]
+                        for emb in (new_embeddings or [])
                     ]
                 except Exception as e:
                     logger.error(f"Embedding generation failed: {e}")
@@ -743,7 +776,9 @@ class UnifiedMemoryRouter:
         # (Implementation would depend on actual reranking API)
         return sorted(hits, key=lambda x: x.score, reverse=True)
 
-    def _hash_query(self, query: str, domain: MemoryDomain, filters: Optional[dict]) -> str:
+    def _hash_query(
+        self, query: str, domain: MemoryDomain, filters: Optional[dict]
+    ) -> str:
         """Create hash key for query caching"""
         key_parts = [query, domain.value]
         if filters:
@@ -752,7 +787,9 @@ class UnifiedMemoryRouter:
         combined = "|".join(key_parts)
         return hashlib.sha256(combined.encode()).hexdigest()[:16]
 
-    async def _record_lineage(self, domain: MemoryDomain, chunks: list[DocChunk]) -> None:
+    async def _record_lineage(
+        self, domain: MemoryDomain, chunks: list[DocChunk]
+    ) -> None:
         """Record chunk lineage in L3"""
         conn = await self._get_neon()
 
@@ -782,7 +819,11 @@ class UnifiedMemoryRouter:
     async def audit(self, namespace: str = "*", fix: bool = False) -> AuditReport:
         """Audit memory for issues"""
         report = AuditReport(
-            orphans=[], duplicates=[], pii_violations=[], total_chunks=0, total_size_bytes=0
+            orphans=[],
+            duplicates=[],
+            pii_violations=[],
+            total_chunks=0,
+            total_size_bytes=0,
         )
 
         # Implementation would check for:
@@ -794,7 +835,9 @@ class UnifiedMemoryRouter:
 
     async def purge(self, source_uri: str, hard: bool = False) -> PurgeReport:
         """Remove data from all tiers"""
-        report = PurgeReport(purged={"L1": 0, "L2": 0, "L3": 0, "L4": 0}, success=True, errors=[])
+        report = PurgeReport(
+            purged={"L1": 0, "L2": 0, "L3": 0, "L4": 0}, success=True, errors=[]
+        )
 
         # Purge from each tier
         # Implementation would delete from Redis, Weaviate, Neon, S3

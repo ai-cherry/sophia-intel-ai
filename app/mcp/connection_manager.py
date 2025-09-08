@@ -198,7 +198,8 @@ class CircuitBreaker:
         recent_requests = [
             success
             for timestamp, success in self.request_history
-            if (datetime.utcnow() - timestamp).total_seconds() <= self.config.monitoring_window
+            if (datetime.utcnow() - timestamp).total_seconds()
+            <= self.config.monitoring_window
         ]
 
         if len(recent_requests) > 0:
@@ -212,7 +213,9 @@ class CircuitBreaker:
         if not self.last_failure_time:
             return True
 
-        time_since_failure = (datetime.utcnow() - self.last_failure_time).total_seconds()
+        time_since_failure = (
+            datetime.utcnow() - self.last_failure_time
+        ).total_seconds()
         return time_since_failure >= self.config.timeout
 
     def get_status(self) -> dict[str, Any]:
@@ -222,7 +225,9 @@ class CircuitBreaker:
             "state": self.state.value,
             "failure_count": self.failure_count,
             "success_count": self.success_count,
-            "last_failure": self.last_failure_time.isoformat() if self.last_failure_time else None,
+            "last_failure": (
+                self.last_failure_time.isoformat() if self.last_failure_time else None
+            ),
         }
 
 
@@ -295,7 +300,9 @@ class RetryManager:
     def _get_fibonacci(self, n: int) -> int:
         """Get nth Fibonacci number"""
         while len(self.fibonacci_cache) <= n:
-            self.fibonacci_cache.append(self.fibonacci_cache[-1] + self.fibonacci_cache[-2])
+            self.fibonacci_cache.append(
+                self.fibonacci_cache[-1] + self.fibonacci_cache[-2]
+            )
         return self.fibonacci_cache[n]
 
     def _add_jitter(self, delay: float) -> float:
@@ -375,9 +382,9 @@ class ConnectionPool:
         connection.last_used = datetime.utcnow()
 
         # Check if connection is still valid
-        if connection.is_expired(self.config.max_lifetime) or connection.is_idle_timeout(
-            self.config.idle_timeout
-        ):
+        if connection.is_expired(
+            self.config.max_lifetime
+        ) or connection.is_idle_timeout(self.config.idle_timeout):
             await self._close_connection(connection)
             await self._ensure_min_connections()
         else:
@@ -532,7 +539,9 @@ class MCPConnectionManager:
             self.pools[server_name] = ConnectionPool(server_name, default_pool_config)
 
             # Create circuit breaker
-            self.circuit_breakers[server_name] = CircuitBreaker(server_name, default_breaker_config)
+            self.circuit_breakers[server_name] = CircuitBreaker(
+                server_name, default_breaker_config
+            )
 
             # Create retry manager
             self.retry_managers[server_name] = RetryManager(default_retry_config)
@@ -545,7 +554,9 @@ class MCPConnectionManager:
                 self._monitor_health(server_name)
             )
 
-    async def get_connection(self, server_name: str, domain: Optional[str] = None) -> Connection:
+    async def get_connection(
+        self, server_name: str, domain: Optional[str] = None
+    ) -> Connection:
         """
         Get a connection with circuit breaker and retry protection
 
@@ -572,7 +583,9 @@ class MCPConnectionManager:
 
         # Define connection acquisition function
         async def acquire_connection():
-            return await circuit_breaker.async_call(lambda: self.pools[server_name].acquire())
+            return await circuit_breaker.async_call(
+                lambda: self.pools[server_name].acquire()
+            )
 
         # Execute with retry logic
         try:
@@ -590,7 +603,9 @@ class MCPConnectionManager:
             self._track_connection_failed(server_name, domain)
             raise
 
-    async def release_connection(self, connection: Connection, domain: Optional[str] = None):
+    async def release_connection(
+        self, connection: Connection, domain: Optional[str] = None
+    ):
         """
         Release a connection back to the pool
 
@@ -678,7 +693,9 @@ class MCPConnectionManager:
             self.connection_metrics[server_name]["released"] += 1
 
             if domain and domain in self.connection_metrics[server_name]["by_domain"]:
-                self.connection_metrics[server_name]["by_domain"][domain]["released"] += 1
+                self.connection_metrics[server_name]["by_domain"][domain][
+                    "released"
+                ] += 1
 
     def _track_connection_failed(self, server_name: str, domain: Optional[str]):
         """Track connection failure metrics"""
@@ -693,7 +710,8 @@ class MCPConnectionManager:
         return {
             "pools": {name: pool.get_stats() for name, pool in self.pools.items()},
             "circuit_breakers": {
-                name: breaker.get_status() for name, breaker in self.circuit_breakers.items()
+                name: breaker.get_status()
+                for name, breaker in self.circuit_breakers.items()
             },
             "health_status": self.health_status,
             "metrics": self.connection_metrics,

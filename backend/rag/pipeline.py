@@ -96,20 +96,30 @@ class RAGPipeline:
 
         try:
             # Perform hybrid search
-            results = await self.retriever.hybrid_search(query=query, filters=filters, limit=limit)
+            results = await self.retriever.hybrid_search(
+                query=query, filters=filters, limit=limit
+            )
 
             # Filter by sources if specified
             if sources:
-                results = [result for result in results if result.metadata.get("source") in sources]
+                results = [
+                    result
+                    for result in results
+                    if result.metadata.get("source") in sources
+                ]
 
-            logger.info(f"RAG search returned {len(results)} results for query: {query}")
+            logger.info(
+                f"RAG search returned {len(results)} results for query: {query}"
+            )
             return results
 
         except Exception as e:
             logger.error(f"RAG search failed: {e}")
             return []
 
-    async def generate_response(self, query: str, context_limit: int = 5) -> dict[str, Any]:
+    async def generate_response(
+        self, query: str, context_limit: int = 5
+    ) -> dict[str, Any]:
         """Generate RAG response with retrieved context"""
 
         try:

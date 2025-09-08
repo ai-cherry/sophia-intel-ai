@@ -9,7 +9,11 @@ Comprehensive communications platform integrations for:
 - Compliance monitoring and audit trails
 """
 
-from .email_automation import EmailCampaignOrchestrator, EmailTemplateManager, HubSpotEmailManager
+from .email_automation import (
+    EmailCampaignOrchestrator,
+    EmailTemplateManager,
+    HubSpotEmailManager,
+)
 from .linkedin_automation import (
     LinkedInConnectionManager,
     LinkedInSalesNavigator,
@@ -22,7 +26,11 @@ from .models import (
     MessageTemplate,
     OutreachCampaign,
 )
-from .multi_channel import ChannelCoordinator, CrossChannelAnalytics, MultiChannelOrchestrator
+from .multi_channel import (
+    ChannelCoordinator,
+    CrossChannelAnalytics,
+    MultiChannelOrchestrator,
+)
 from .sms_outreach import (
     ConsentManager,
     SMSCampaignOrchestrator,

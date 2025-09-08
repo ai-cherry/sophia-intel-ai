@@ -136,7 +136,9 @@ async def store_memory(item: MemoryRecord):
             success=True, message="Memory stored successfully", data={"id": memory_id}
         )
     except Exception as e:
-        return MemoryResponse(success=False, message=f"Failed to store memory: {str(e)}")
+        return MemoryResponse(
+            success=False, message=f"Failed to store memory: {str(e)}"
+        )
 
 
 @app.post("/memory/retrieve", response_model=MemoryResponse)
@@ -148,7 +150,8 @@ async def retrieve_memory(query: MemoryQuery):
         if query.semantic_search and QDRANT_AVAILABLE:
             if not query.vector_embedding:
                 raise HTTPException(
-                    status_code=400, detail="vector_embedding required for semantic search"
+                    status_code=400,
+                    detail="vector_embedding required for semantic search",
                 )
 
             search_results = qdrant_client.search(
@@ -183,22 +186,32 @@ async def retrieve_memory(query: MemoryQuery):
 
             # Get memories by agent ID
             if query.agent_id:
-                agent_memories = redis_client.smembers(f"agent:{query.agent_id}:memories")
+                agent_memories = redis_client.smembers(
+                    f"agent:{query.agent_id}:memories"
+                )
                 memory_ids.update(agent_memories)
 
             # Intersect with session memories if specified
             if query.session_id and memory_ids:
-                session_memories = redis_client.smembers(f"session:{query.session_id}:memories")
+                session_memories = redis_client.smembers(
+                    f"session:{query.session_id}:memories"
+                )
                 memory_ids = memory_ids.intersection(session_memories)
             elif query.session_id:
-                memory_ids = redis_client.smembers(f"session:{query.session_id}:memories")
+                memory_ids = redis_client.smembers(
+                    f"session:{query.session_id}:memories"
+                )
 
             # Intersect with project memories if specified
             if query.project_id and memory_ids:
-                project_memories = redis_client.smembers(f"project:{query.project_id}:memories")
+                project_memories = redis_client.smembers(
+                    f"project:{query.project_id}:memories"
+                )
                 memory_ids = memory_ids.intersection(project_memories)
             elif query.project_id:
-                memory_ids = redis_client.smembers(f"project:{query.project_id}:memories")
+                memory_ids = redis_client.smembers(
+                    f"project:{query.project_id}:memories"
+                )
 
             # If no specific filters, get the most recent memories
             if not memory_ids:
@@ -243,7 +256,9 @@ async def retrieve_memory(query: MemoryQuery):
             success=True, message=f"Retrieved {len(memories)} memories", data=memories
         )
     except Exception as e:
-        return MemoryResponse(success=False, message=f"Failed to retrieve memories: {str(e)}")
+        return MemoryResponse(
+            success=False, message=f"Failed to retrieve memories: {str(e)}"
+        )
 
 
 @app.delete("/memory/{memory_id}", response_model=MemoryResponse)
@@ -252,7 +267,9 @@ async def delete_memory(memory_id: str):
     try:
         # Check if memory exists
         if not redis_client.exists(memory_id):
-            return MemoryResponse(success=False, message=f"Memory {memory_id} not found")
+            return MemoryResponse(
+                success=False, message=f"Memory {memory_id} not found"
+            )
 
         # Get memory data for index removal
         memory_data = redis_client.hgetall(memory_id)
@@ -263,11 +280,15 @@ async def delete_memory(memory_id: str):
 
         # Remove from session index
         if "session_id" in memory_data and memory_data["session_id"]:
-            redis_client.srem(f"session:{memory_data['session_id']}:memories", memory_id)
+            redis_client.srem(
+                f"session:{memory_data['session_id']}:memories", memory_id
+            )
 
         # Remove from project index
         if "project_id" in memory_data and memory_data["project_id"]:
-            redis_client.srem(f"project:{memory_data['project_id']}:memories", memory_id)
+            redis_client.srem(
+                f"project:{memory_data['project_id']}:memories", memory_id
+            )
 
         # Delete the memory
         redis_client.delete(memory_id)
@@ -275,14 +296,20 @@ async def delete_memory(memory_id: str):
         # Remove from Qdrant if available
         if QDRANT_AVAILABLE:
             try:
-                qdrant_client.delete(collection_name="memory_vectors", points_selector=[memory_id])
+                qdrant_client.delete(
+                    collection_name="memory_vectors", points_selector=[memory_id]
+                )
             except Exception:
                 # Ignore Qdrant deletion errors
                 pass
 
-        return MemoryResponse(success=True, message=f"Memory {memory_id} deleted successfully")
+        return MemoryResponse(
+            success=True, message=f"Memory {memory_id} deleted successfully"
+        )
     except Exception as e:
-        return MemoryResponse(success=False, message=f"Failed to delete memory: {str(e)}")
+        return MemoryResponse(
+            success=False, message=f"Failed to delete memory: {str(e)}"
+        )
 
 
 @app.post("/memory/clear", response_model=MemoryResponse)
@@ -322,13 +349,19 @@ async def clear_memories(
 
             # Remove from indexes
             if "agent_id" in memory_data:
-                redis_client.srem(f"agent:{memory_data['agent_id']}:memories", memory_id)
+                redis_client.srem(
+                    f"agent:{memory_data['agent_id']}:memories", memory_id
+                )
 
             if "session_id" in memory_data and memory_data["session_id"]:
-                redis_client.srem(f"session:{memory_data['session_id']}:memories", memory_id)
+                redis_client.srem(
+                    f"session:{memory_data['session_id']}:memories", memory_id
+                )
 
             if "project_id" in memory_data and memory_data["project_id"]:
-                redis_client.srem(f"project:{memory_data['project_id']}:memories", memory_id)
+                redis_client.srem(
+                    f"project:{memory_data['project_id']}:memories", memory_id
+                )
 
             # Delete the memory
             redis_client.delete(memory_id)
@@ -343,9 +376,13 @@ async def clear_memories(
                 # Ignore Qdrant deletion errors
                 pass
 
-        return MemoryResponse(success=True, message=f"Cleared {len(memory_ids)} memories")
+        return MemoryResponse(
+            success=True, message=f"Cleared {len(memory_ids)} memories"
+        )
     except Exception as e:
-        return MemoryResponse(success=False, message=f"Failed to clear memories: {str(e)}")
+        return MemoryResponse(
+            success=False, message=f"Failed to clear memories: {str(e)}"
+        )
 
 
 def check_redis_connection() -> bool:

@@ -81,7 +81,9 @@ class MCPStatusAPI:
                     "widget_type": "technical_excellence_oracle",
                 }
             ],
-            "domain_metrics": await self._calculate_domain_metrics(MemoryDomain.ARTEMIS),
+            "domain_metrics": await self._calculate_domain_metrics(
+                MemoryDomain.ARTEMIS
+            ),
             "real_time_metrics": (
                 await self.artemis.get_performance_metrics() if self.artemis else {}
             ),
@@ -109,13 +111,19 @@ class MCPStatusAPI:
             "mythology_agents": [
                 {
                     "name": "Hermes - Sales Intelligence",
-                    "assigned_mcp_servers": ["sophia_web_search", "sophia_sales_intelligence"],
+                    "assigned_mcp_servers": [
+                        "sophia_web_search",
+                        "sophia_sales_intelligence",
+                    ],
                     "context": "Market intelligence and sales performance",
                     "widget_type": "sales_performance_intelligence",
                 },
                 {
                     "name": "Asclepius - Client Health",
-                    "assigned_mcp_servers": ["sophia_business_analytics", "sophia_business_memory"],
+                    "assigned_mcp_servers": [
+                        "sophia_business_analytics",
+                        "sophia_business_memory",
+                    ],
                     "context": "Customer health and portfolio management",
                     "widget_type": "client_health_monitor",
                 },
@@ -221,7 +229,9 @@ class MCPStatusAPI:
             logger.error(f"Health check failed for {server_name}: {e}")
             return False
 
-    async def _get_server_performance_metrics(self, server_name: str) -> dict[str, float]:
+    async def _get_server_performance_metrics(
+        self, server_name: str
+    ) -> dict[str, float]:
         """Get performance metrics for a server"""
         # Simulate realistic metrics based on server type
         import random
@@ -248,7 +258,9 @@ class MCPStatusAPI:
             "throughput_ops_per_sec": max(
                 0, base_throughput + random.gauss(0, base_throughput * 0.3)
             ),
-            "error_rate": max(0, min(1, base_error_rate + random.gauss(0, base_error_rate * 0.5))),
+            "error_rate": max(
+                0, min(1, base_error_rate + random.gauss(0, base_error_rate * 0.5))
+            ),
             "uptime_percentage": random.uniform(98.0, 99.99),
         }
 
@@ -307,7 +319,9 @@ class MCPStatusAPI:
             "total_servers": total_servers,
             "operational_servers": operational_count,
             "total_connections": total_connections,
-            "avg_response_time": total_response_time / total_servers if total_servers > 0 else 0,
+            "avg_response_time": (
+                total_response_time / total_servers if total_servers > 0 else 0
+            ),
             "error_rate": total_error_rate / total_servers if total_servers > 0 else 0,
             "health_percentage": (
                 (operational_count / total_servers * 100) if total_servers > 0 else 0
@@ -378,7 +392,9 @@ async def get_server_status(server_name: str) -> dict[str, Any]:
         # Find the server in registry
         server_config = mcp_api.registry.servers.get(server_name)
         if not server_config:
-            raise HTTPException(status_code=404, detail=f"Server {server_name} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Server {server_name} not found"
+            )
 
         # Find allocation info
         allocation = None
@@ -396,7 +412,9 @@ async def get_server_status(server_name: str) -> dict[str, Any]:
                 status_code=404, detail=f"Server allocation not found for {server_name}"
             )
 
-        status = await mcp_api._get_server_detailed_status(server_name, allocation, server_config)
+        status = await mcp_api._get_server_detailed_status(
+            server_name, allocation, server_config
+        )
         return status
 
     except HTTPException:
@@ -412,7 +430,9 @@ async def trigger_health_check(server_name: str) -> dict[str, Any]:
     try:
         server_config = mcp_api.registry.servers.get(server_name)
         if not server_config:
-            raise HTTPException(status_code=404, detail=f"Server {server_name} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Server {server_name} not found"
+            )
 
         health = await mcp_api._check_server_health(server_name)
         metrics = await mcp_api._get_server_performance_metrics(server_name)

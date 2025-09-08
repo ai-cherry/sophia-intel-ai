@@ -79,7 +79,9 @@ error_count = Counter(
 
 # Token generation metrics
 token_generation_rate = Summary(
-    "ai_orchestra_token_generation_rate", "Token generation rate per second", registry=registry
+    "ai_orchestra_token_generation_rate",
+    "Token generation rate per second",
+    registry=registry,
 )
 
 token_count = Counter(
@@ -93,7 +95,9 @@ token_count = Counter(
 
 # Chat session metrics
 chat_sessions = Gauge(
-    "ai_orchestra_chat_sessions_active", "Number of active chat sessions", registry=registry
+    "ai_orchestra_chat_sessions_active",
+    "Number of active chat sessions",
+    registry=registry,
 )
 
 chat_messages = Counter(
@@ -127,7 +131,9 @@ manager_intent_detections = Counter(
 )
 
 manager_accuracy = Summary(
-    "ai_orchestra_manager_accuracy", "Manager intent detection accuracy", registry=registry
+    "ai_orchestra_manager_accuracy",
+    "Manager intent detection accuracy",
+    registry=registry,
 )
 
 # API version usage
@@ -140,7 +146,9 @@ api_version_usage = Counter(
 
 # Connection pool metrics
 connection_pool_size = Gauge(
-    "ai_orchestra_connection_pool_size", "Current connection pool size", registry=registry
+    "ai_orchestra_connection_pool_size",
+    "Current connection pool size",
+    registry=registry,
 )
 
 connection_pool_utilization = Gauge(
@@ -178,8 +186,12 @@ def track_request(method: str, endpoint: str):
                 raise
             finally:
                 duration = time.time() - start_time
-                request_count.labels(method=method, endpoint=endpoint, status=status).inc()
-                request_duration.labels(method=method, endpoint=endpoint).observe(duration)
+                request_count.labels(
+                    method=method, endpoint=endpoint, status=status
+                ).inc()
+                request_duration.labels(method=method, endpoint=endpoint).observe(
+                    duration
+                )
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
@@ -195,8 +207,12 @@ def track_request(method: str, endpoint: str):
                 raise
             finally:
                 duration = time.time() - start_time
-                request_count.labels(method=method, endpoint=endpoint, status=status).inc()
-                request_duration.labels(method=method, endpoint=endpoint).observe(duration)
+                request_count.labels(
+                    method=method, endpoint=endpoint, status=status
+                ).inc()
+                request_duration.labels(method=method, endpoint=endpoint).observe(
+                    duration
+                )
 
         import asyncio
 
@@ -255,16 +271,22 @@ class SystemMetricsCollector:
 
         # CPU usage
         yield GaugeMetricFamily(
-            "ai_orchestra_cpu_usage_percent", "CPU usage percentage", value=psutil.cpu_percent()
+            "ai_orchestra_cpu_usage_percent",
+            "CPU usage percentage",
+            value=psutil.cpu_percent(),
         )
 
         # Memory usage
         memory = psutil.virtual_memory()
         yield GaugeMetricFamily(
-            "ai_orchestra_memory_usage_bytes", "Memory usage in bytes", value=memory.used
+            "ai_orchestra_memory_usage_bytes",
+            "Memory usage in bytes",
+            value=memory.used,
         )
         yield GaugeMetricFamily(
-            "ai_orchestra_memory_usage_percent", "Memory usage percentage", value=memory.percent
+            "ai_orchestra_memory_usage_percent",
+            "Memory usage percentage",
+            value=memory.percent,
         )
 
         # Disk usage
@@ -273,7 +295,9 @@ class SystemMetricsCollector:
             "ai_orchestra_disk_usage_bytes", "Disk usage in bytes", value=disk.used
         )
         yield GaugeMetricFamily(
-            "ai_orchestra_disk_usage_percent", "Disk usage percentage", value=disk.percent
+            "ai_orchestra_disk_usage_percent",
+            "Disk usage percentage",
+            value=disk.percent,
         )
 
 
@@ -323,8 +347,12 @@ class MetricsAggregator:
 
     def record_intent_detection(self, intent: str, confidence: float):
         """Record manager intent detection"""
-        confidence_bucket = "high" if confidence > 0.8 else "medium" if confidence > 0.5 else "low"
-        manager_intent_detections.labels(intent=intent, confidence_bucket=confidence_bucket).inc()
+        confidence_bucket = (
+            "high" if confidence > 0.8 else "medium" if confidence > 0.5 else "low"
+        )
+        manager_intent_detections.labels(
+            intent=intent, confidence_bucket=confidence_bucket
+        ).inc()
         manager_accuracy.observe(confidence)
 
     def record_api_usage(self, version: str, endpoint: str):

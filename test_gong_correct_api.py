@@ -21,7 +21,9 @@ print("=" * 60)
 # Test 1: Current user info
 print("\n1. Testing current user endpoint...")
 try:
-    response = requests.get("https://api.gong.io/v2/users/current", auth=auth, timeout=10)
+    response = requests.get(
+        "https://api.gong.io/v2/users/current", auth=auth, timeout=10
+    )
     print(f"   Status: {response.status_code}")
     if response.status_code == 200:
         user_data = response.json()
@@ -38,7 +40,10 @@ try:
     from_date = (datetime.now() - timedelta(days=30)).isoformat()
     to_date = datetime.now().isoformat()
 
-    request_body = {"filter": {"fromDateTime": from_date, "toDateTime": to_date}, "cursor": None}
+    request_body = {
+        "filter": {"fromDateTime": from_date, "toDateTime": to_date},
+        "cursor": None,
+    }
 
     response = requests.post(
         "https://api.gong.io/v2/calls/list", auth=auth, json=request_body, timeout=10
@@ -61,7 +66,10 @@ except Exception as e:
 print("\n3. Testing transcript endpoint (POST with body)...")
 try:
     # First, get a call ID from the list
-    request_body = {"filter": {"fromDateTime": from_date, "toDateTime": to_date}, "cursor": None}
+    request_body = {
+        "filter": {"fromDateTime": from_date, "toDateTime": to_date},
+        "cursor": None,
+    }
 
     response = requests.post(
         "https://api.gong.io/v2/calls/list", auth=auth, json=request_body, timeout=10
@@ -93,7 +101,9 @@ try:
                     sentences = call_transcripts[0].get("sentences", [])
                     print(f"   ✅ Got {len(sentences)} sentences")
                     if sentences:
-                        print(f"   First sentence: {sentences[0].get('text', '')[:100]}...")
+                        print(
+                            f"   First sentence: {sentences[0].get('text', '')[:100]}..."
+                        )
                 else:
                     print("   ⚠️ No transcript available for this call")
             else:
@@ -114,7 +124,10 @@ try:
         extensive_body = {"filter": {"callIds": [call_id]}}
 
         response = requests.post(
-            "https://api.gong.io/v2/calls/extensive", auth=auth, json=extensive_body, timeout=10
+            "https://api.gong.io/v2/calls/extensive",
+            auth=auth,
+            json=extensive_body,
+            timeout=10,
         )
 
         print(f"   Status: {response.status_code}")

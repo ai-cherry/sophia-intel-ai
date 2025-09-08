@@ -111,9 +111,13 @@ class GongIntegrationMonitor:
         total_components = len(health_status) - 1  # Exclude timestamp
 
         if healthy_components == total_components:
-            print(f"✅ All components healthy ({healthy_components}/{total_components})")
+            print(
+                f"✅ All components healthy ({healthy_components}/{total_components})"
+            )
         else:
-            print(f"⚠️ Health issues detected ({healthy_components}/{total_components} healthy)")
+            print(
+                f"⚠️ Health issues detected ({healthy_components}/{total_components} healthy)"
+            )
             await self._generate_health_alert(health_status)
 
     async def _check_n8n_health(self) -> Dict[str, Any]:
@@ -153,7 +157,9 @@ class GongIntegrationMonitor:
         """Check Sophia system health"""
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(f"{MONITORING_CONFIG['sophia']['api_url']}/health")
+                response = await client.get(
+                    f"{MONITORING_CONFIG['sophia']['api_url']}/health"
+                )
 
                 if response.status_code == 200:
                     health_data = response.json()
@@ -284,12 +290,16 @@ class GongIntegrationMonitor:
                         pipeline_results.append(result)
 
                         if result["success"]:
-                            print(f"  ✅ {test_event['eventType']}: {processing_time:.3f}s")
+                            print(
+                                f"  ✅ {test_event['eventType']}: {processing_time:.3f}s"
+                            )
                         else:
                             print(
                                 f"  ❌ {test_event['eventType']}: Failed ({response.status_code})"
                             )
-                            self.monitoring_data["performance_metrics"]["error_count"] += 1
+                            self.monitoring_data["performance_metrics"][
+                                "error_count"
+                            ] += 1
 
                         # Store performance metrics
                         self.monitoring_data["performance_metrics"][
@@ -304,8 +314,12 @@ class GongIntegrationMonitor:
                 await asyncio.sleep(1)
 
             # Calculate success rate
-            successful_tests = sum(1 for result in pipeline_results if result["success"])
-            success_rate = successful_tests / len(pipeline_results) if pipeline_results else 0
+            successful_tests = sum(
+                1 for result in pipeline_results if result["success"]
+            )
+            success_rate = (
+                successful_tests / len(pipeline_results) if pipeline_results else 0
+            )
             self.monitoring_data["performance_metrics"]["success_rate"] = success_rate
 
             print(f"🎯 Pipeline test complete: {success_rate:.1%} success rate")
@@ -318,8 +332,12 @@ class GongIntegrationMonitor:
         metrics = self.monitoring_data["performance_metrics"]
 
         if len(metrics["webhook_response_times"]) > 0:
-            recent_times = metrics["webhook_response_times"][-10:]  # Last 10 measurements
-            avg_response_time = sum(recent_times) / len(recent_times) * 1000  # Convert to ms
+            recent_times = metrics["webhook_response_times"][
+                -10:
+            ]  # Last 10 measurements
+            avg_response_time = (
+                sum(recent_times) / len(recent_times) * 1000
+            )  # Convert to ms
 
             print("📊 Performance Metrics:")
             print(f"   Average Response Time: {avg_response_time:.1f}ms")
@@ -327,11 +345,21 @@ class GongIntegrationMonitor:
             print(f"   Total Errors: {metrics['error_count']}")
 
             # Check performance thresholds
-            if avg_response_time > MONITORING_CONFIG["monitoring"]["performance_threshold_ms"]:
-                await self._generate_performance_alert("high_response_time", avg_response_time)
+            if (
+                avg_response_time
+                > MONITORING_CONFIG["monitoring"]["performance_threshold_ms"]
+            ):
+                await self._generate_performance_alert(
+                    "high_response_time", avg_response_time
+                )
 
-            if metrics["success_rate"] < MONITORING_CONFIG["monitoring"]["success_rate_threshold"]:
-                await self._generate_performance_alert("low_success_rate", metrics["success_rate"])
+            if (
+                metrics["success_rate"]
+                < MONITORING_CONFIG["monitoring"]["success_rate_threshold"]
+            ):
+                await self._generate_performance_alert(
+                    "low_success_rate", metrics["success_rate"]
+                )
 
     async def check_for_alerts(self):
         """Check if any alerts need to be generated"""
@@ -342,14 +370,18 @@ class GongIntegrationMonitor:
             # Check for consecutive failures of any component
             for component in ["n8n", "sophia", "webhook_endpoint", "gong_integration"]:
                 consecutive_failures = sum(
-                    1 for health in recent_health if not health[component].get("healthy", False)
+                    1
+                    for health in recent_health
+                    if not health[component].get("healthy", False)
                 )
 
                 if (
                     consecutive_failures
                     >= MONITORING_CONFIG["monitoring"]["alert_threshold_errors"]
                 ):
-                    await self._generate_component_alert(component, consecutive_failures)
+                    await self._generate_component_alert(
+                        component, consecutive_failures
+                    )
 
     async def _generate_health_alert(self, health_status: Dict[str, Any]):
         """Generate alert for health issues"""
@@ -383,7 +415,9 @@ class GongIntegrationMonitor:
             "severity": "warning",
             "alert_type": alert_type,
             "metric_value": metric_value,
-            "message": alert_messages.get(alert_type, f"Performance issue: {alert_type}"),
+            "message": alert_messages.get(
+                alert_type, f"Performance issue: {alert_type}"
+            ),
             "threshold": (
                 MONITORING_CONFIG["monitoring"]["performance_threshold_ms"]
                 if alert_type == "high_response_time"
@@ -445,7 +479,9 @@ class GongIntegrationMonitor:
 
     def save_monitoring_report(self):
         """Save comprehensive monitoring report"""
-        report_file = f"monitoring_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_file = (
+            f"monitoring_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
 
         # Calculate summary statistics
         recent_health = (
@@ -458,7 +494,9 @@ class GongIntegrationMonitor:
             component_health = {}
             for component in ["n8n", "sophia", "webhook_endpoint", "gong_integration"]:
                 healthy_count = sum(
-                    1 for health in recent_health if health[component].get("healthy", False)
+                    1
+                    for health in recent_health
+                    if health[component].get("healthy", False)
                 )
                 component_health[component] = {
                     "health_percentage": healthy_count / len(recent_health) * 100,
@@ -472,15 +510,20 @@ class GongIntegrationMonitor:
                 "start_time": self.monitoring_data["start_time"],
                 "end_time": datetime.now().isoformat(),
                 "duration_hours": (
-                    datetime.now() - datetime.fromisoformat(self.monitoring_data["start_time"])
+                    datetime.now()
+                    - datetime.fromisoformat(self.monitoring_data["start_time"])
                 ).total_seconds()
                 / 3600,
             },
             "summary": {
                 "total_checks": self.monitoring_data["checks_performed"],
                 "total_alerts": self.monitoring_data["alerts_generated"],
-                "current_success_rate": self.monitoring_data["performance_metrics"]["success_rate"],
-                "total_errors": self.monitoring_data["performance_metrics"]["error_count"],
+                "current_success_rate": self.monitoring_data["performance_metrics"][
+                    "success_rate"
+                ],
+                "total_errors": self.monitoring_data["performance_metrics"][
+                    "error_count"
+                ],
             },
             "component_health": component_health,
             "performance_metrics": self.monitoring_data["performance_metrics"],
@@ -516,7 +559,9 @@ class GongIntegrationMonitor:
 
         # Error count recommendations
         if metrics["error_count"] > 10:
-            recommendations.append("Review error logs and implement additional error handling")
+            recommendations.append(
+                "Review error logs and implement additional error handling"
+            )
 
         # Health check recommendations
         if len(self.monitoring_data["health_history"]) > 0:

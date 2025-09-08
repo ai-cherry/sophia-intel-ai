@@ -129,7 +129,9 @@ class TestFusionSystemsIntegration:
             assert indexed_count > 0, "Failed to index transcripts"
 
             # Test RAG query
-            results = await rag_system.query_rag("property management automation", limit=3)
+            results = await rag_system.query_rag(
+                "property management automation", limit=3
+            )
             assert isinstance(results, list), "RAG query should return a list"
 
             # Test coding assistant
@@ -188,7 +190,9 @@ class TestFusionSystemsIntegration:
             assert "latency_ms" in result
             assert "cost" in result
 
-            print(f"Hybrid routing test passed: {result['provider']} -> {result['model_type']}")
+            print(
+                f"Hybrid routing test passed: {result['provider']} -> {result['model_type']}"
+            )
 
         except ImportError as e:
             pytest.skip(f"Hybrid routing system not available: {e}")
@@ -203,7 +207,11 @@ class TestFusionSystemsIntegration:
         sys.path.append("/home/ubuntu/sophia-main/pipelines")
 
         try:
-            from neon_qdrant_analytics import AnalyticsQuery, CrossDatabaseAnalyticsMCP, DataDomain
+            from neon_qdrant_analytics import (
+                AnalyticsQuery,
+                CrossDatabaseAnalyticsMCP,
+                DataDomain,
+            )
 
             # Initialize MCP system
             mcp = CrossDatabaseAnalyticsMCP()
@@ -282,10 +290,14 @@ class TestFusionSystemsIntegration:
                 "timestamp": datetime.now().isoformat(),
             }
 
-            self.redis_client.setex("fusion:edge_rag:metrics", 3600, json.dumps(edge_metrics))
+            self.redis_client.setex(
+                "fusion:edge_rag:metrics", 3600, json.dumps(edge_metrics)
+            )
 
             # 3. Verify metrics can be retrieved
-            stored_redis_metrics = self.redis_client.get("fusion:redis_optimization:metrics")
+            stored_redis_metrics = self.redis_client.get(
+                "fusion:redis_optimization:metrics"
+            )
             stored_edge_metrics = self.redis_client.get("fusion:edge_rag:metrics")
 
             assert stored_redis_metrics is not None
@@ -404,7 +416,9 @@ class TestFusionSystemsPerformance:
 
             # Performance assertions
             assert creation_time < 1.0, f"Redis creation too slow: {creation_time:.3f}s"
-            assert retrieval_time < 0.5, f"Redis retrieval too slow: {retrieval_time:.3f}s"
+            assert (
+                retrieval_time < 0.5
+            ), f"Redis retrieval too slow: {retrieval_time:.3f}s"
 
             print(
                 f"Redis performance test passed: Create={creation_time:.3f}s, Retrieve={retrieval_time:.3f}s"

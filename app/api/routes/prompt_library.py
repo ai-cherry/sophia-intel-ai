@@ -63,7 +63,9 @@ class BranchCreateRequest(BaseModel):
 class MergeRequest(BaseModel):
     from_branch: str = Field(..., description="Source branch")
     to_branch: str = Field("main", description="Target branch")
-    strategy: MergeStrategy = Field(MergeStrategy.FAST_FORWARD, description="Merge strategy")
+    strategy: MergeStrategy = Field(
+        MergeStrategy.FAST_FORWARD, description="Merge strategy"
+    )
     commit_message: Optional[str] = Field(None, description="Commit message")
 
 
@@ -72,7 +74,9 @@ class ABTestCreateRequest(BaseModel):
     description: str = Field(..., description="Test description")
     control_version: str = Field(..., description="Control version ID")
     test_versions: list[str] = Field(..., description="Test version IDs")
-    traffic_split: dict[str, float] = Field(..., description="Traffic split percentages")
+    traffic_split: dict[str, float] = Field(
+        ..., description="Traffic split percentages"
+    )
     success_metrics: list[str] = Field(..., description="Success metrics to track")
     end_time: Optional[datetime] = Field(None, description="Test end time")
     minimum_sample_size: int = Field(100, description="Minimum sample size")
@@ -218,7 +222,9 @@ async def update_prompt(prompt_id: str, request: PromptUpdateRequest):
 
 
 @router.get("/{prompt_id}", response_model=PromptResponse)
-async def get_prompt(prompt_id: str, branch: str = "main", version: Optional[str] = None):
+async def get_prompt(
+    prompt_id: str, branch: str = "main", version: Optional[str] = None
+):
     """Get a specific prompt version"""
     try:
         versions = prompt_library.get_prompt_history(prompt_id, branch)
@@ -475,7 +481,9 @@ async def get_active_ab_tests():
                         "name": config.name,
                         "description": config.description,
                         "start_time": config.start_time.isoformat(),
-                        "end_time": config.end_time.isoformat() if config.end_time else None,
+                        "end_time": (
+                            config.end_time.isoformat() if config.end_time else None
+                        ),
                         "traffic_split": config.traffic_split,
                         "success_metrics": config.success_metrics,
                     }
@@ -490,7 +498,9 @@ async def get_active_ab_tests():
 
 # Performance Analytics
 @router.post("/{version_id}/metrics")
-async def update_performance_metrics(version_id: str, metrics: dict[str, float] = Body(...)):
+async def update_performance_metrics(
+    version_id: str, metrics: dict[str, float] = Body(...)
+):
     """Update performance metrics for a prompt version"""
     try:
         prompt_library.update_performance_metrics(version_id, metrics)
@@ -535,7 +545,9 @@ async def get_performance_leaderboard(
 
 # Mythology-specific endpoints
 @router.get("/mythology/{agent_name}/context/{business_context}")
-async def get_context_prompt(agent_name: str, business_context: str, task_type: str = Query(...)):
+async def get_context_prompt(
+    agent_name: str, business_context: str, task_type: str = Query(...)
+):
     """Get context-aware prompt for mythology agent"""
     try:
         context_enum = BusinessContext(business_context)
@@ -554,7 +566,9 @@ async def get_context_prompt(agent_name: str, business_context: str, task_type: 
         }
 
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid business context: {business_context}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid business context: {business_context}"
+        )
     except Exception as e:
         logger.error(f"Error getting context prompt: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -583,7 +597,9 @@ async def create_context_variant(
         }
 
     except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid business context: {business_context}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid business context: {business_context}"
+        )
     except Exception as e:
         logger.error(f"Error creating context variant: {e}")
         raise HTTPException(status_code=400, detail=str(e))
@@ -627,7 +643,9 @@ async def export_prompts(prompt_ids: Optional[list[str]] = Query(None)):
 
 
 @router.post("/import")
-async def import_prompts(import_data: dict[str, Any] = Body(...), overwrite: bool = Body(False)):
+async def import_prompts(
+    import_data: dict[str, Any] = Body(...), overwrite: bool = Body(False)
+):
     """Import prompts from exported data"""
     try:
         prompt_library.import_prompts(import_data, overwrite)
@@ -643,8 +661,12 @@ async def import_prompts(import_data: dict[str, Any] = Body(...), overwrite: boo
 async def health_check():
     """Health check endpoint"""
     try:
-        prompt_count = sum(len(versions) for versions in prompt_library.prompts.values())
-        branch_count = sum(len(branches) for branches in prompt_library.branches.values())
+        prompt_count = sum(
+            len(versions) for versions in prompt_library.prompts.values()
+        )
+        branch_count = sum(
+            len(branches) for branches in prompt_library.branches.values()
+        )
         ab_test_count = len(prompt_library.ab_tests)
 
         return {

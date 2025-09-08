@@ -81,7 +81,9 @@ async def validate_adr_005_implementation():
                     "class_instantiated": True,
                     "memory_mixin_present": hasattr(swarm, "memory_client"),
                     "memory_pattern_present": hasattr(swarm, "memory_pattern"),
-                    "memory_methods_present": hasattr(swarm, "solve_with_memory_integration"),
+                    "memory_methods_present": hasattr(
+                        swarm, "solve_with_memory_integration"
+                    ),
                     "status": "functional",
                 }
                 logger.info(f"✅ {swarm_name}: FUNCTIONAL")
@@ -102,7 +104,9 @@ async def validate_adr_005_implementation():
 
         # Check memory integration
         memory_enabled_swarms = sum(
-            1 for info in orchestrator.swarm_registry.values() if info.get("memory_enabled", False)
+            1
+            for info in orchestrator.swarm_registry.values()
+            if info.get("memory_enabled", False)
         )
 
         validation_results["components"]["unified_orchestrator"] = {
@@ -113,7 +117,9 @@ async def validate_adr_005_implementation():
             )
             * 100,
             "global_memory_client_ready": hasattr(orchestrator, "global_memory_client"),
-            "memory_enhanced_execution": hasattr(orchestrator, "execute_with_memory_enhancement"),
+            "memory_enhanced_execution": hasattr(
+                orchestrator, "execute_with_memory_enhancement"
+            ),
             "status": "functional" if memory_enabled_swarms > 0 else "degraded",
         }
 
@@ -158,7 +164,10 @@ async def validate_adr_005_implementation():
         logger.info("✅ Memory Pattern Integration: FUNCTIONAL")
 
     except Exception as e:
-        validation_results["components"]["memory_pattern"] = {"status": "failed", "error": str(e)}
+        validation_results["components"]["memory_pattern"] = {
+            "status": "failed",
+            "error": str(e),
+        }
         logger.info(f"❌ Memory Pattern Integration: FAILED - {e}")
 
     # Test 5: Memory Operations
@@ -243,7 +252,8 @@ async def validate_adr_005_implementation():
                         "task_complexity": task["complexity"],
                         "selected_swarm": selected_swarm,
                         "memory_enabled": swarm_info.get("memory_enabled", False),
-                        "swarm_available": selected_swarm in orchestrator.swarm_registry,
+                        "swarm_available": selected_swarm
+                        in orchestrator.swarm_registry,
                         "status": "success",
                     }
                 )
@@ -253,12 +263,16 @@ async def validate_adr_005_implementation():
                 )
 
             except Exception as e:
-                workflow_results.append({"task_id": i + 1, "status": "failed", "error": str(e)})
+                workflow_results.append(
+                    {"task_id": i + 1, "status": "failed", "error": str(e)}
+                )
                 logger.info(f"❌ Task {i+1}: FAILED - {e}")
 
         validation_results["workflow"] = {
             "tasks_tested": len(test_tasks),
-            "successful_tasks": len([r for r in workflow_results if r.get("status") == "success"]),
+            "successful_tasks": len(
+                [r for r in workflow_results if r.get("status") == "success"]
+            ),
             "memory_enabled_selections": len(
                 [r for r in workflow_results if r.get("memory_enabled", False)]
             ),
@@ -312,7 +326,9 @@ async def validate_adr_005_implementation():
             "operations_per_second": 1000 / avg_op_time if avg_op_time > 0 else 0,
             "performance_target_met": avg_op_time < 100,  # Target: <100ms per operation
             "status": (
-                "optimal" if avg_op_time < 50 else "acceptable" if avg_op_time < 100 else "degraded"
+                "optimal"
+                if avg_op_time < 50
+                else "acceptable" if avg_op_time < 100 else "degraded"
             ),
         }
 
@@ -384,13 +400,17 @@ async def validate_adr_005_implementation():
     validation_results["recommendations"] = recommendations
 
     # Print Results Summary
-    logger.info(f"\n{status_icon} OVERALL STATUS: {validation_results['overall_status'].upper()}")
+    logger.info(
+        f"\n{status_icon} OVERALL STATUS: {validation_results['overall_status'].upper()}"
+    )
     logger.info(
         f"📊 Integration Coverage: {functional_components}/{total_components} components functional"
     )
 
     if validation_results["integration_gaps"]:
-        logger.info(f"⚠️  Integration Gaps: {', '.join(validation_results['integration_gaps'])}")
+        logger.info(
+            f"⚠️  Integration Gaps: {', '.join(validation_results['integration_gaps'])}"
+        )
 
     logger.info("\n💡 Recommendations:")
     for rec in recommendations:
@@ -451,14 +471,18 @@ async def validate_adr_005_implementation():
 
     if validation_results["overall_status"] == "fully_integrated":
         logger.info("🎯 SUCCESS: ADR-005 Memory System Integration COMPLETE")
-        logger.info("✅ All swarm orchestrators successfully connected to memory systems")
+        logger.info(
+            "✅ All swarm orchestrators successfully connected to memory systems"
+        )
         logger.info("✅ Persistent knowledge storage and retrieval operational")
         logger.info("✅ Inter-swarm communication through memory functional")
         logger.info("✅ Memory-based learning and adaptation enabled")
         logger.info("✅ No integration conflicts with existing swarm functionality")
         logger.info("✅ Real-time memory operations performing efficiently")
     else:
-        logger.info(f"⚠️  PARTIAL SUCCESS: Integration {validation_results['overall_status']}")
+        logger.info(
+            f"⚠️  PARTIAL SUCCESS: Integration {validation_results['overall_status']}"
+        )
         logger.info("Some components may need additional attention")
 
     # Save validation report
@@ -484,7 +508,9 @@ async def demonstrate_memory_integration():
         logger.info("\n1️⃣ Creating Memory-Enhanced Orchestrator...")
         orchestrator = UnifiedSwarmOrchestrator()
 
-        logger.info(f"   ✅ Created orchestrator with {len(orchestrator.swarm_registry)} swarms")
+        logger.info(
+            f"   ✅ Created orchestrator with {len(orchestrator.swarm_registry)} swarms"
+        )
 
         # Check memory-enabled swarms
         memory_swarms = [
@@ -498,7 +524,12 @@ async def demonstrate_memory_integration():
         logger.info("\n2️⃣ Demonstrating Memory-Enhanced Swarm Selection...")
 
         demo_tasks = [
-            {"type": "code", "description": "Fix bug", "complexity": 0.2, "urgency": "critical"},
+            {
+                "type": "code",
+                "description": "Fix bug",
+                "complexity": 0.2,
+                "urgency": "critical",
+            },
             {
                 "type": "code",
                 "description": "Implement feature",
@@ -544,7 +575,9 @@ async def demonstrate_memory_integration():
         for name, info in orchestrator.swarm_registry.items():
             memory_status = "🧠" if info.get("memory_enabled") else "💤"
             advanced_memory = "🌟" if info.get("advanced_memory") else ""
-            logger.info(f"   {memory_status} {name}: {info['description']} {advanced_memory}")
+            logger.info(
+                f"   {memory_status} {name}: {info['description']} {advanced_memory}"
+            )
 
         logger.info("\n✅ Memory Integration Demonstration Complete!")
 
@@ -588,7 +621,9 @@ if __name__ == "__main__":
         logger.info(f"Functional Components: {functional_count}/{total_count}")
 
         if validation_results["overall_status"] == "fully_integrated":
-            logger.info("\n🎉 ADR-005 MEMORY SYSTEM INTEGRATION: SUCCESSFULLY IMPLEMENTED")
+            logger.info(
+                "\n🎉 ADR-005 MEMORY SYSTEM INTEGRATION: SUCCESSFULLY IMPLEMENTED"
+            )
         else:
             logger.info(
                 f"\n⚠️  ADR-005 IMPLEMENTATION: {validation_results['overall_status'].upper()}"

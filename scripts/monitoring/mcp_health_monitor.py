@@ -44,10 +44,18 @@ class MCPHealthMonitor:
             },
             "IDE Client": {"status": "❓", "config": ".vscode/settings.json"},
             "Sophia Swarm": {"status": "❓", "endpoint": "http://localhost:8003/teams"},
-            "Artemis Swarm": {"status": "❓", "endpoint": "http://localhost:8003/artemis"},
+            "Artemis Swarm": {
+                "status": "❓",
+                "endpoint": "http://localhost:8003/artemis",
+            },
         }
 
-        self.stats = {"uptime": 0, "total_requests": 0, "failed_checks": 0, "last_check": None}
+        self.stats = {
+            "uptime": 0,
+            "total_requests": 0,
+            "failed_checks": 0,
+            "last_check": None,
+        }
 
     async def check_http_server(self, name: str, port: int, endpoint: str) -> bool:
         """Check HTTP server health"""
@@ -144,11 +152,17 @@ class MCPHealthMonitor:
             health = (
                 "Healthy"
                 if status == "✅"
-                else "Down" if status == "❌" else "Starting" if status == "🟡" else "Unknown"
+                else (
+                    "Down"
+                    if status == "❌"
+                    else "Starting" if status == "🟡" else "Unknown"
+                )
             )
             color = "green" if status == "✅" else "red" if status == "❌" else "yellow"
 
-            table.add_row(name, str(config.get("port", "N/A")), status, Text(health, style=color))
+            table.add_row(
+                name, str(config.get("port", "N/A")), status, Text(health, style=color)
+            )
 
         return table
 
@@ -161,14 +175,18 @@ class MCPHealthMonitor:
 
         for name, config in self.connections.items():
             table.add_row(
-                name, config["status"], config.get("config", config.get("endpoint", "N/A"))
+                name,
+                config["status"],
+                config.get("config", config.get("endpoint", "N/A")),
             )
 
         return table
 
     def create_stats_panel(self) -> Panel:
         """Create statistics panel"""
-        self.stats["uptime"] = int(time.time() - self.stats.get("start_time", time.time()))
+        self.stats["uptime"] = int(
+            time.time() - self.stats.get("start_time", time.time())
+        )
         uptime_min = self.stats["uptime"] // 60
         uptime_sec = self.stats["uptime"] % 60
 
@@ -208,12 +226,18 @@ class MCPHealthMonitor:
 
         layout = Layout()
         layout.split_column(
-            Layout(name="header", size=3), Layout(name="main"), Layout(name="footer", size=12)
+            Layout(name="header", size=3),
+            Layout(name="main"),
+            Layout(name="footer", size=12),
         )
 
         layout["header"].update(
             Panel(
-                Text("🚀 MCP MASTER HEALTH MONITOR", justify="center", style="bold magenta"),
+                Text(
+                    "🚀 MCP MASTER HEALTH MONITOR",
+                    justify="center",
+                    style="bold magenta",
+                ),
                 border_style="magenta",
             )
         )
@@ -239,7 +263,8 @@ class MCPHealthMonitor:
                     # Update footer
                     footer_layout = Layout()
                     footer_layout.split_row(
-                        Layout(self.create_stats_panel()), Layout(self.create_commands_panel())
+                        Layout(self.create_stats_panel()),
+                        Layout(self.create_commands_panel()),
                     )
                     layout["footer"].update(footer_layout)
 
@@ -259,7 +284,9 @@ async def main():
     monitor = MCPHealthMonitor()
 
     console.print(
-        Panel.fit("🚀 Starting MCP Health Monitor\nPress Ctrl+C to exit", border_style="green")
+        Panel.fit(
+            "🚀 Starting MCP Health Monitor\nPress Ctrl+C to exit", border_style="green"
+        )
     )
 
     await monitor.monitor_loop()

@@ -87,7 +87,9 @@ class BaseMCPServer(ABC):
         self.logger.setLevel(log_level)
         if not self.logger.handlers:
             handler = logging.StreamHandler()
-            formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
 
@@ -98,7 +100,9 @@ class BaseMCPServer(ABC):
             if not os.getenv(var):
                 missing_vars.append(var)
         if missing_vars:
-            error_msg = f"Missing required environment variables: {', '.join(missing_vars)}"
+            error_msg = (
+                f"Missing required environment variables: {', '.join(missing_vars)}"
+            )
             self.logger.error(f"❌ {error_msg}")
             raise ValueError(error_msg)
 
@@ -107,7 +111,9 @@ class BaseMCPServer(ABC):
         """Initialize and return the list of tools for this server"""
 
     @abstractmethod
-    async def handle_tool_call(self, name: str, arguments: dict[str, Any]) -> list[TextContent]:
+    async def handle_tool_call(
+        self, name: str, arguments: dict[str, Any]
+    ) -> list[TextContent]:
         """Handle tool calls - must be implemented by subclasses"""
 
     async def initialize(self):
@@ -125,7 +131,9 @@ class BaseMCPServer(ABC):
                 result = await self.handle_tool_call(name, arguments)
                 execution_time = time.time() - start_time
                 self._record_success_metrics(name, execution_time)
-                self.logger.info(f"✅ {name} completed in {execution_time * 1000:.1f}ms")
+                self.logger.info(
+                    f"✅ {name} completed in {execution_time * 1000:.1f}ms"
+                )
                 return result
             except Exception as e:
                 execution_time = time.time() - start_time
@@ -260,7 +268,9 @@ class BaseMCPServer(ABC):
             return
         current_time = time.time()
         expired_keys = [
-            key for key, data in self._cache.items() if data.get("expires", 0) < current_time
+            key
+            for key, data in self._cache.items()
+            if data.get("expires", 0) < current_time
         ]
         for key in expired_keys:
             del self._cache[key]

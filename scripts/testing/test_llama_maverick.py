@@ -125,7 +125,11 @@ This is a REAL repository scan, not a simulation.
 
                 if response.status_code == 200:
                     data = response.json()
-                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     tokens = data.get("usage", {}).get("total_tokens", 0)
                     exec_time = time.time() - start
 
@@ -188,7 +192,11 @@ This is a REAL repository scan, not a simulation.
 
                 if response.status_code == 200:
                     data = response.json()
-                    content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    content = (
+                        data.get("choices", [{}])[0]
+                        .get("message", {})
+                        .get("content", "")
+                    )
                     tokens = data.get("usage", {}).get("total_tokens", 0)
                     exec_time = time.time() - start
 
@@ -260,7 +268,13 @@ This is a REAL repository scan, not a simulation.
 
         # Completeness (covers objectives)
         completeness = 0
-        objectives = ["security", "architecture", "performance", "code quality", "recommendation"]
+        objectives = [
+            "security",
+            "architecture",
+            "performance",
+            "code quality",
+            "recommendation",
+        ]
         for obj in objectives:
             if obj in response_lower:
                 completeness += 20
@@ -304,7 +318,9 @@ This is a REAL repository scan, not a simulation.
             "Speed": 0.10,
         }
 
-        overall = sum(scores.get(metric, 0) * weight for metric, weight in weights.items())
+        overall = sum(
+            scores.get(metric, 0) * weight for metric, weight in weights.items()
+        )
         scores["Overall"] = round(overall, 1)
 
         return scores
@@ -338,13 +354,19 @@ async def main():
         }
 
     # Sort by score
-    sorted_models = sorted(all_results.items(), key=lambda x: x[1]["score"], reverse=True)
+    sorted_models = sorted(
+        all_results.items(), key=lambda x: x[1]["score"], reverse=True
+    )
 
     for i, (model, stats) in enumerate(sorted_models, 1):
         medal = (
             "🥇"
             if i == 1
-            else "🥈" if i == 2 else "🥉" if i == 3 else "🏅" if i == 4 else "🎖️" if i == 5 else "🏆"
+            else (
+                "🥈"
+                if i == 2
+                else "🥉" if i == 3 else "🏅" if i == 4 else "🎖️" if i == 5 else "🏆"
+            )
         )
         print(f"\n{medal} RANK {i}: {model}")
         print(f"   Score: {stats['score']}/100")
@@ -359,7 +381,9 @@ async def main():
                 "timestamp": datetime.now().isoformat(),
                 "total_models": len(sorted_models),
                 "all_models": sorted_models,
-                "maverick_details": maverick_result if maverick_result.get("success") else None,
+                "maverick_details": (
+                    maverick_result if maverick_result.get("success") else None
+                ),
             },
             f,
             indent=2,

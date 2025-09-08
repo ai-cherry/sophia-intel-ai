@@ -115,13 +115,19 @@ class ResilienceMetrics:
     def success_rate(self) -> float:
         """Calculate success rate percentage"""
         return (
-            self.successful_requests / self.total_requests * 100 if self.total_requests > 0 else 0.0
+            self.successful_requests / self.total_requests * 100
+            if self.total_requests > 0
+            else 0.0
         )
 
     @property
     def failure_rate(self) -> float:
         """Calculate failure rate percentage"""
-        return self.failed_requests / self.total_requests * 100 if self.total_requests > 0 else 0.0
+        return (
+            self.failed_requests / self.total_requests * 100
+            if self.total_requests > 0
+            else 0.0
+        )
 
 
 class RetryManager:
@@ -156,7 +162,9 @@ class RetryManager:
             next_fib = self.fibonacci_cache[-1] + self.fibonacci_cache[-2]
             self.fibonacci_cache.append(next_fib)
         return (
-            self.fibonacci_cache[n] if n < len(self.fibonacci_cache) else self.fibonacci_cache[-1]
+            self.fibonacci_cache[n]
+            if n < len(self.fibonacci_cache)
+            else self.fibonacci_cache[-1]
         )
 
     def should_retry(self, attempt: int, exception: Exception) -> bool:
@@ -213,7 +221,11 @@ class BulkheadManager:
     @property
     def utilization(self) -> float:
         """Get current utilization percentage"""
-        return self.active_requests / self.max_concurrent * 100 if self.max_concurrent > 0 else 0.0
+        return (
+            self.active_requests / self.max_concurrent * 100
+            if self.max_concurrent > 0
+            else 0.0
+        )
 
 
 class AdaptiveTimeoutManager:
@@ -236,7 +248,9 @@ class AdaptiveTimeoutManager:
         """Update timeout based on historical response times"""
         if len(self.response_times) < 10:
             return
-        p_value = statistics.quantiles(self.response_times, n=100)[int(self.percentile) - 1]
+        p_value = statistics.quantiles(self.response_times, n=100)[
+            int(self.percentile) - 1
+        ]
         new_timeout = p_value * 2
         new_timeout = max(self.min_timeout, min(new_timeout, self.max_timeout))
         self.current_timeout = self.current_timeout * 0.7 + new_timeout * 0.3
@@ -263,7 +277,9 @@ class CircuitBreaker:
         self.name = name
         self.config = config
         self.state = CircuitState.CLOSED
-        self.failure_window = FailureWindow(window_size_seconds=config.failure_window_seconds)
+        self.failure_window = FailureWindow(
+            window_size_seconds=config.failure_window_seconds
+        )
         self.metrics = ResilienceMetrics()
         self.retry_manager = RetryManager(config)
         self.bulkhead = BulkheadManager(config.bulkhead_max_concurrent)
@@ -284,7 +300,9 @@ class CircuitBreaker:
             if fallback_key and self.config.enable_fallback:
                 return await self._execute_fallback(fallback_key, *args, **kwargs)
             else:
-                raise CircuitBreakerOpenException(f"Circuit breaker {self.name} is OPEN")
+                raise CircuitBreakerOpenException(
+                    f"Circuit breaker {self.name} is OPEN"
+                )
         if not await self.bulkhead.acquire():
             self.metrics.bulkhead_rejections += 1
             raise BulkheadFullException(f"Bulkhead for {self.name} is full")
@@ -296,7 +314,9 @@ class CircuitBreaker:
                 try:
                     self.metrics.total_requests += 1
                     timeout = self.timeout_manager.get_timeout()
-                    result = await asyncio.wait_for(func(*args, **kwargs), timeout=timeout)
+                    result = await asyncio.wait_for(
+                        func(*args, **kwargs), timeout=timeout
+                    )
                     response_time = time.time() - start_time
                     self.timeout_manager.record_response_time(response_time)
                     await self._on_success(response_time)
@@ -328,8 +348,10 @@ class CircuitBreaker:
         if self.state == CircuitState.CLOSED:
             return True
         elif self.state == CircuitState.OPEN:
-            if self.last_failure_time and datetime.utcnow() - self.last_failure_time > timedelta(
-                seconds=self.config.timeout_seconds
+            if (
+                self.last_failure_time
+                and datetime.utcnow() - self.last_failure_time
+                > timedelta(seconds=self.config.timeout_seconds)
             ):
                 await self._transition_to_half_open()
                 return True
@@ -416,7 +438,9 @@ class CircuitBreaker:
                 self.logger.error(f"Fallback execution failed: {e}")
                 raise
         else:
-            raise FallbackNotFound(f"No fallback function registered for key: {fallback_key}")
+            raise FallbackNotFound(
+                f"No fallback function registered for key: {fallback_key}"
+            )
 
     def register_fallback(self, key: str, fallback_func: Callable):
         """Register a fallback function"""
@@ -461,7 +485,9 @@ class CircuitBreaker:
                 "consecutive_failures": self.consecutive_failures,
                 "failure_rate_window": self.failure_window.get_failure_rate(),
                 "last_failure_time": (
-                    self.last_failure_time.isoformat() if self.last_failure_time else None
+                    self.last_failure_time.isoformat()
+                    if self.last_failure_time
+                    else None
                 ),
                 "adaptive_timeout": self.timeout_manager.get_timeout(),
                 "bulkhead_utilization": self.bulkhead.utilization,
@@ -514,10 +540,16 @@ class ResilienceManager:
 
     def get_global_status(self) -> dict[str, Any]:
         """Get global resilience system status"""
-        total_requests = sum(cb.metrics.total_requests for cb in self.circuit_breakers.values())
-        total_failures = sum(cb.metrics.failed_requests for cb in self.circuit_breakers.values())
+        total_requests = sum(
+            cb.metrics.total_requests for cb in self.circuit_breakers.values()
+        )
+        total_failures = sum(
+            cb.metrics.failed_requests for cb in self.circuit_breakers.values()
+        )
         open_breakers = [
-            name for name, cb in self.circuit_breakers.items() if cb.state == CircuitState.OPEN
+            name
+            for name, cb in self.circuit_breakers.items()
+            if cb.state == CircuitState.OPEN
         ]
         return {
             "circuit_breakers_count": len(self.circuit_breakers),
@@ -531,10 +563,12 @@ class ResilienceManager:
                     else 0
                 ),
                 "total_circuit_opens": sum(
-                    cb.metrics.circuit_breaker_opens for cb in self.circuit_breakers.values()
+                    cb.metrics.circuit_breaker_opens
+                    for cb in self.circuit_breakers.values()
                 ),
                 "total_fallback_executions": sum(
-                    cb.metrics.fallback_executions for cb in self.circuit_breakers.values()
+                    cb.metrics.fallback_executions
+                    for cb in self.circuit_breakers.values()
                 ),
             },
             "circuit_breakers": {

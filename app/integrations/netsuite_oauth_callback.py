@@ -111,13 +111,13 @@ async def start_oauth_flow(client_id, redirect_uri, account_id):
     return None
 
 
-async def exchange_code_for_token(code, client_id, client_secret, redirect_uri, account_id):
+async def exchange_code_for_token(
+    code, client_id, client_secret, redirect_uri, account_id
+):
     """Exchange authorization code for access token"""
     import aiohttp
 
-    token_url = (
-        f"https://{account_id}.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token"
-    )
+    token_url = f"https://{account_id}.suitetalk.api.netsuite.com/services/rest/auth/oauth2/v1/token"
 
     data = {
         "grant_type": "authorization_code",
@@ -165,7 +165,9 @@ async def main():
 
     if not all([client_id, client_secret, account_id]):
         print("❌ Missing NetSuite OAuth 2.0 credentials in .env")
-        print("Required: NETSUITE_CLIENT_ID, NETSUITE_CLIENT_SECRET, NETSUITE_ACCOUNT_ID")
+        print(
+            "Required: NETSUITE_CLIENT_ID, NETSUITE_CLIENT_SECRET, NETSUITE_ACCOUNT_ID"
+        )
         return
 
     print("=== NetSuite OAuth 2.0 Setup ===")

@@ -46,10 +46,18 @@ AsyncPGInstrumentor().instrument()
 HTTPXClientInstrumentor().instrument()
 
 # Metrics
-WEBSOCKET_CONNECTIONS = Gauge("chat_websocket_connections_total", "Active WebSocket connections")
-MESSAGE_COUNT = Counter("chat_messages_total", "Total messages processed", ["message_type"])
-MESSAGE_LATENCY = Histogram("chat_message_latency_seconds", "Message processing latency")
-NEURAL_REQUESTS = Counter("chat_neural_requests_total", "Neural engine requests", ["status"])
+WEBSOCKET_CONNECTIONS = Gauge(
+    "chat_websocket_connections_total", "Active WebSocket connections"
+)
+MESSAGE_COUNT = Counter(
+    "chat_messages_total", "Total messages processed", ["message_type"]
+)
+MESSAGE_LATENCY = Histogram(
+    "chat_message_latency_seconds", "Message processing latency"
+)
+NEURAL_REQUESTS = Counter(
+    "chat_neural_requests_total", "Neural engine requests", ["status"]
+)
 
 # Global state
 connection_manager: Optional["ChatConnectionManager"] = None
@@ -124,7 +132,9 @@ class ChatConnectionManager:
         WEBSOCKET_CONNECTIONS.inc()
 
         # Send session info
-        await self.send_to_user(user_id, {"type": "session_created", "data": session.dict()})
+        await self.send_to_user(
+            user_id, {"type": "session_created", "data": session.dict()}
+        )
 
         logger.info(f"User {user_id} connected to session {session.id}")
         return session
@@ -180,7 +190,9 @@ class ChatConnectionManager:
 
         # Fallback to database
         async with db_pool.acquire() as conn:
-            row = await conn.fetchrow("SELECT * FROM chat_sessions WHERE id = $1", session_id)
+            row = await conn.fetchrow(
+                "SELECT * FROM chat_sessions WHERE id = $1", session_id
+            )
             if row:
                 session = ChatSession(**dict(row))
                 # Cache for future use
@@ -194,7 +206,9 @@ class ChatConnectionManager:
     async def save_session(self, session: ChatSession):
         """Save session to cache and database"""
         # Update Redis cache
-        await redis_client.setex(f"session:{session.id}", 3600, session.json())  # 1 hour TTL
+        await redis_client.setex(
+            f"session:{session.id}", 3600, session.json()
+        )  # 1 hour TTL
 
         # Update database
         async with db_pool.acquire() as conn:
@@ -289,10 +303,16 @@ class ChatConnectionManager:
         )
 
         # Process with neural engine
-        await self.process_with_neural_engine(user_id, session, user_message, message_data)
+        await self.process_with_neural_engine(
+            user_id, session, user_message, message_data
+        )
 
     async def process_with_neural_engine(
-        self, user_id: str, session: ChatSession, user_message: ChatMessage, message_data: dict
+        self,
+        user_id: str,
+        session: ChatSession,
+        user_message: ChatMessage,
+        message_data: dict,
     ):
         """Process message with neural engine"""
         try:
@@ -310,9 +330,13 @@ class ChatConnectionManager:
             neural_url = "http://neural-gateway:8000/api/v1/inference"
 
             if neural_request["stream"]:
-                await self.process_streaming_response(user_id, session, neural_url, neural_request)
+                await self.process_streaming_response(
+                    user_id, session, neural_url, neural_request
+                )
             else:
-                await self.process_single_response(user_id, session, neural_url, neural_request)
+                await self.process_single_response(
+                    user_id, session, neural_url, neural_request
+                )
 
         except Exception as e:
             logger.error(f"Neural processing error: {e}")
@@ -342,7 +366,10 @@ class ChatConnectionManager:
                     user_id,
                     {
                         "type": "agent_status",
-                        "data": {"status": "responding", "message": "Generating response..."},
+                        "data": {
+                            "status": "responding",
+                            "message": "Generating response...",
+                        },
                     },
                 )
 
@@ -428,7 +455,9 @@ class ChatConnectionManager:
             await self.save_session(session)
 
             # Send response to user
-            await self.send_to_user(user_id, {"type": "message", "data": assistant_message.dict()})
+            await self.send_to_user(
+                user_id, {"type": "message", "data": assistant_message.dict()}
+            )
 
             # Send completion status
             await self.send_to_user(
@@ -546,9 +575,13 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             message_type = data.get("type")
 
             if message_type == "send_message":
-                await connection_manager.process_user_message(user_id, data.get("data", {}))
+                await connection_manager.process_user_message(
+                    user_id, data.get("data", {})
+                )
             elif message_type == "ping":
-                await connection_manager.send_to_user(user_id, {"type": "pong", "data": {}})
+                await connection_manager.send_to_user(
+                    user_id, {"type": "pong", "data": {}}
+                )
             else:
                 logger.warning(f"Unknown message type: {message_type}")
 

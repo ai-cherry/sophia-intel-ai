@@ -72,7 +72,10 @@ def process_file(file_path: str):
         for i, chunk in enumerate(chunks):
             # Create metadata for this chunk
             metadata = MemoryMetadata(
-                type="doc", source=file_path, timestamp=datetime.utcnow(), tags=["etl", "processed"]
+                type="doc",
+                source=file_path,
+                timestamp=datetime.utcnow(),
+                tags=["etl", "processed"],
             )
 
             # Create temporary file for indexing

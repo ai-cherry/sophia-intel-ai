@@ -141,8 +141,12 @@ class ExecutionPlan:
                         level = []
                         for tid in sorted_ids:
                             if tid not in seen:
-                                task = next((t for t in self.tasks if t.id == tid), None)
-                                if task and all(dep in seen for dep in task.dependencies):
+                                task = next(
+                                    (t for t in self.tasks if t.id == tid), None
+                                )
+                                if task and all(
+                                    dep in seen for dep in task.dependencies
+                                ):
                                     level.append(task)
                                     seen.add(tid)
                         if level:
@@ -199,7 +203,9 @@ class CapabilityMapper:
             del self.servers[server_name]
             logger.info(f"Unregistered MCP server: {server_name}")
 
-    def find_servers(self, capability: MCPCapability, min_health: float = 0.3) -> list[MCPServer]:
+    def find_servers(
+        self, capability: MCPCapability, min_health: float = 0.3
+    ) -> list[MCPServer]:
         """Find servers that support a capability"""
         servers = []
 
@@ -250,7 +256,9 @@ class ExecutionPlanner:
             dag = self._build_dag(tasks)
 
         # Estimate duration
-        estimated_duration = self._estimate_duration(tasks, strategy, server_assignments)
+        estimated_duration = self._estimate_duration(
+            tasks, strategy, server_assignments
+        )
 
         # Determine parallelism level
         parallelism = self._calculate_parallelism(tasks, strategy)
@@ -329,7 +337,9 @@ class ExecutionPlanner:
         else:
             return sum(task_durations) * 0.7
 
-    def _calculate_parallelism(self, tasks: list[MCPTask], strategy: ExecutionStrategy) -> int:
+    def _calculate_parallelism(
+        self, tasks: list[MCPTask], strategy: ExecutionStrategy
+    ) -> int:
         """Calculate optimal parallelism level"""
 
         if strategy == ExecutionStrategy.SEQUENTIAL:
@@ -385,7 +395,9 @@ class ResultAggregator:
 
         return merged
 
-    def _chain_results(self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]) -> Any:
+    def _chain_results(
+        self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]
+    ) -> Any:
         """Chain results (output of one is input to next)"""
         if not results:
             return None
@@ -420,7 +432,9 @@ class ResultAggregator:
         best = max(successful, key=lambda r: r[0].priority)
         return best[1]
 
-    def _consensus_result(self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]) -> Any:
+    def _consensus_result(
+        self, results: list[tuple[MCPTask, Any]], options: dict[str, Any]
+    ) -> Any:
         """Find consensus among results"""
         if not results:
             return None
@@ -572,7 +586,9 @@ class MCPOrchestrator:
 
             return None
 
-    async def execute_plan(self, plan: ExecutionPlan, max_workers: int = 5) -> dict[str, Any]:
+    async def execute_plan(
+        self, plan: ExecutionPlan, max_workers: int = 5
+    ) -> dict[str, Any]:
         """Execute an execution plan"""
 
         start_time = datetime.now()
@@ -592,7 +608,9 @@ class MCPOrchestrator:
                 tasks_to_execute = level[:max_workers]
 
                 coroutines = [self.execute_task(task) for task in tasks_to_execute]
-                level_results = await asyncio.gather(*coroutines, return_exceptions=True)
+                level_results = await asyncio.gather(
+                    *coroutines, return_exceptions=True
+                )
 
                 for task, result in zip(tasks_to_execute, level_results):
                     if isinstance(result, Exception):
@@ -610,7 +628,8 @@ class MCPOrchestrator:
             "strategy": plan.strategy.value,
             "task_count": len(plan.tasks),
             "execution_time_s": execution_time,
-            "success_rate": sum(1 for t in plan.tasks if t.status == "completed") / len(plan.tasks),
+            "success_rate": sum(1 for t in plan.tasks if t.status == "completed")
+            / len(plan.tasks),
             "timestamp": start_time.isoformat(),
         }
 

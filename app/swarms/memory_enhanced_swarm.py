@@ -14,7 +14,10 @@ from app.memory.supermemory_mcp import MemoryType
 from .consciousness_tracking import ConsciousnessTracker
 from .improved_swarm import ImprovedAgentSwarm
 from .memory_integration import SwarmMemoryEventType, SwarmMemoryMixin
-from .patterns.memory_integration import MemoryEnhancedStrategyArchive, MemoryIntegrationPattern
+from .patterns.memory_integration import (
+    MemoryEnhancedStrategyArchive,
+    MemoryIntegrationPattern,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +60,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         self.memory_execution_log = []
         self.context_cache = {}
 
-        logger.info(f"Memory-enhanced swarm initialized: {self.swarm_type}:{self.swarm_id}")
+        logger.info(
+            f"Memory-enhanced swarm initialized: {self.swarm_type}:{self.swarm_id}"
+        )
 
     async def initialize_full_system(self):
         """Initialize all swarm systems including memory integration."""
@@ -139,18 +144,22 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         # Enhance safety system with historical risk patterns
         if "patterns" in context and hasattr(self, "safety_system"):
             risk_patterns = [
-                p for p in context["patterns"] if "risk" in p.get("pattern_name", "").lower()
+                p
+                for p in context["patterns"]
+                if "risk" in p.get("pattern_name", "").lower()
             ]
 
             # Update safety thresholds based on historical data
             if risk_patterns:
-                avg_risk_score = sum(p.get("success_score", 0.5) for p in risk_patterns) / len(
-                    risk_patterns
-                )
+                avg_risk_score = sum(
+                    p.get("success_score", 0.5) for p in risk_patterns
+                ) / len(risk_patterns)
                 if avg_risk_score < 0.6:
                     # Increase safety threshold if historical patterns show risks
                     self.safety_system.max_risk *= 0.9
-                    logger.info("Adjusted safety threshold based on historical risk patterns")
+                    logger.info(
+                        "Adjusted safety threshold based on historical risk patterns"
+                    )
 
     async def solve_with_memory_integration(self, problem: dict) -> dict:
         """
@@ -194,7 +203,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             base_result["consciousness_measurement"] = consciousness_result
 
         # Post-execution memory operations
-        await self._post_execution_memory_operations(problem, base_result, relevant_context)
+        await self._post_execution_memory_operations(
+            problem, base_result, relevant_context
+        )
 
         # Combine results
         execution_time = (datetime.now() - start_time).total_seconds()
@@ -205,8 +216,12 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                 "active": memory_result.success,
                 "context_loaded": bool(relevant_context),
                 "patterns_applied": len(relevant_context.get("relevant_patterns", [])),
-                "learnings_applied": len(relevant_context.get("relevant_learnings", [])),
-                "memory_operations": memory_result.data if memory_result.success else {},
+                "learnings_applied": len(
+                    relevant_context.get("relevant_learnings", [])
+                ),
+                "memory_operations": (
+                    memory_result.data if memory_result.success else {}
+                ),
             },
             "total_execution_time": execution_time,
             "memory_enhanced": True,
@@ -214,7 +229,11 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         # Log execution
         self.memory_execution_log.append(
-            {"problem": problem, "result": enhanced_result, "timestamp": datetime.now().isoformat()}
+            {
+                "problem": problem,
+                "result": enhanced_result,
+                "timestamp": datetime.now().isoformat(),
+            }
         )
 
         # Include consciousness data in result
@@ -259,7 +278,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         """Execute enhanced solve with memory integration."""
 
         # Memory-enhanced safety check
-        is_safe, safety_result = await self._memory_enhanced_safety_check(enhanced_problem)
+        is_safe, safety_result = await self._memory_enhanced_safety_check(
+            enhanced_problem
+        )
         if not is_safe:
             return safety_result
 
@@ -285,7 +306,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         # Memory-enhanced adversarial debate if needed
         if 0.6 <= initial_result.get("quality_score", 0) < 0.8:
-            initial_result = await self._memory_enhanced_debate(enhanced_problem, initial_result)
+            initial_result = await self._memory_enhanced_debate(
+                enhanced_problem, initial_result
+            )
 
         # Memory-enhanced consensus if needed
         if initial_result.get("multiple_solutions"):
@@ -295,7 +318,10 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             initial_result["consensus"] = consensus_result
 
         # Archive successful pattern in memory
-        if initial_result.get("quality_score", 0) > 0.8 and self.memory_enhanced_archive:
+        if (
+            initial_result.get("quality_score", 0) > 0.8
+            and self.memory_enhanced_archive
+        ):
             await self.memory_enhanced_archive.archive_success(
                 problem_type,
                 agent_roles,
@@ -303,10 +329,14 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                 initial_result["quality_score"],
                 additional_context={
                     "memory_patterns_used": len(
-                        enhanced_problem.get("memory_insights", {}).get("successful_patterns", [])
+                        enhanced_problem.get("memory_insights", {}).get(
+                            "successful_patterns", []
+                        )
                     ),
                     "learnings_applied": len(
-                        enhanced_problem.get("historical_learnings", {}).get("learnings", [])
+                        enhanced_problem.get("historical_learnings", {}).get(
+                            "learnings", []
+                        )
                     ),
                 },
             )
@@ -327,7 +357,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             "safety_check": safety_result,
             "memory_enhanced": True,
             "memory_patterns_applied": len(
-                enhanced_problem.get("memory_insights", {}).get("successful_patterns", [])
+                enhanced_problem.get("memory_insights", {}).get(
+                    "successful_patterns", []
+                )
             ),
             "historical_learnings_applied": len(
                 enhanced_problem.get("historical_learnings", {}).get("learnings", [])
@@ -382,7 +414,8 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             try:
                 # Search for successful role patterns
                 role_patterns = await self.memory_client.retrieve_patterns(
-                    pattern_name=f"execution_strategy_{problem.get('type', 'general')}", limit=3
+                    pattern_name=f"execution_strategy_{problem.get('type', 'general')}",
+                    limit=3,
                 )
 
                 if role_patterns:
@@ -409,7 +442,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         return standard_roles
 
-    def _merge_roles(self, standard_roles: list[str], memory_roles: list[str]) -> list[str]:
+    def _merge_roles(
+        self, standard_roles: list[str], memory_roles: list[str]
+    ) -> list[str]:
         """Merge standard and memory-based roles."""
         # Combine and deduplicate while preserving order
         seen = set()
@@ -446,9 +481,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         # Adjust quality gates based on memory insights
         if quality_learnings:
-            avg_confidence = sum(l.get("confidence", 0) for l in quality_learnings) / len(
-                quality_learnings
-            )
+            avg_confidence = sum(
+                l.get("confidence", 0) for l in quality_learnings
+            ) / len(quality_learnings)
             if avg_confidence > 0.8:
                 # Historical learnings suggest adjusting quality threshold
                 original_threshold = self.quality_gates.min_quality
@@ -476,7 +511,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         return result
 
-    async def _memory_enhanced_debate(self, problem: dict, initial_result: dict) -> dict:
+    async def _memory_enhanced_debate(
+        self, problem: dict, initial_result: dict
+    ) -> dict:
         """Enhanced adversarial debate with memory-based argument quality."""
 
         logger.info("Running memory-enhanced adversarial debate")
@@ -509,11 +546,16 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         # Add standard alternatives
         alternatives.extend(
-            [{"solution": f"Alternative {i}", "confidence": 0.6 + (i * 0.1)} for i in range(1, 3)]
+            [
+                {"solution": f"Alternative {i}", "confidence": 0.6 + (i * 0.1)}
+                for i in range(1, 3)
+            ]
         )
 
         # Conduct debate
-        debate_result = await self.debate_system.conduct_debate(str(problem), alternatives)
+        debate_result = await self.debate_system.conduct_debate(
+            str(problem), alternatives
+        )
 
         # Log debate execution
         if self.memory_client:
@@ -534,7 +576,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         return initial_result
 
-    async def _memory_enhanced_consensus(self, problem: dict, multiple_solutions: list) -> dict:
+    async def _memory_enhanced_consensus(
+        self, problem: dict, multiple_solutions: list
+    ) -> dict:
         """Enhanced consensus with memory-based voting patterns."""
 
         # Load consensus strategies from memory
@@ -549,12 +593,14 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         # Adjust consensus parameters based on memory
         if consensus_strategies:
-            avg_success = sum(s.get("success_score", 0) for s in consensus_strategies) / len(
-                consensus_strategies
-            )
+            avg_success = sum(
+                s.get("success_score", 0) for s in consensus_strategies
+            ) / len(consensus_strategies)
             if avg_success > 0.85:
                 # Historical consensus patterns are very successful, use those parameters
-                best_strategy = max(consensus_strategies, key=lambda s: s.get("success_score", 0))
+                best_strategy = max(
+                    consensus_strategies, key=lambda s: s.get("success_score", 0)
+                )
                 strategy_data = best_strategy.get("pattern_data", {})
 
                 # Apply memory-based consensus configuration
@@ -615,7 +661,10 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                 # Send knowledge through memory system
                 await self.memory_client.send_message_to_swarm(
                     target_swarm_type=target_swarm,
-                    message={"type": "knowledge_transfer", "knowledge_package": knowledge_package},
+                    message={
+                        "type": "knowledge_transfer",
+                        "knowledge_package": knowledge_package,
+                    },
                     priority="normal",
                 )
 
@@ -633,7 +682,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                 logger.error(f"Knowledge transfer to {target_swarm} failed: {e}")
 
         if related_swarms:
-            logger.info(f"Knowledge transferred to {len(related_swarms)} related swarms")
+            logger.info(
+                f"Knowledge transferred to {len(related_swarms)} related swarms"
+            )
 
     def _get_related_swarm_types(self, problem_type: str) -> list[str]:
         """Get related swarm types for knowledge transfer."""
@@ -647,7 +698,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
 
         return swarm_relationships.get(self.swarm_type, [])
 
-    async def _post_execution_memory_operations(self, problem: dict, result: dict, context: dict):
+    async def _post_execution_memory_operations(
+        self, problem: dict, result: dict, context: dict
+    ):
         """Perform post-execution memory operations."""
         if not self.memory_client:
             return
@@ -661,7 +714,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                     "patterns_used": result.get("patterns_used", []),
                     "memory_enhancement_impact": {
                         "patterns_applied": result.get("memory_patterns_applied", 0),
-                        "learnings_applied": result.get("historical_learnings_applied", 0),
+                        "learnings_applied": result.get(
+                            "historical_learnings_applied", 0
+                        ),
                         "context_loaded": bool(context),
                     },
                 }
@@ -679,7 +734,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         except Exception as e:
             logger.error(f"Post-execution memory operations failed: {e}")
 
-    async def _capture_execution_learnings(self, problem: dict, result: dict, context: dict):
+    async def _capture_execution_learnings(
+        self, problem: dict, result: dict, context: dict
+    ):
         """Capture learnings from this execution."""
         if not self.memory_client:
             return
@@ -696,7 +753,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                     "confidence": 0.9,
                     "context": {
                         "patterns_applied": result.get("memory_patterns_applied", 0),
-                        "learnings_applied": result.get("historical_learnings_applied", 0),
+                        "learnings_applied": result.get(
+                            "historical_learnings_applied", 0
+                        ),
                     },
                 }
             )
@@ -757,7 +816,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                 if message_data.get("type") == "knowledge_transfer":
                     # Process knowledge transfer
                     knowledge = message_data.get("knowledge_package", {})
-                    await self._process_knowledge_transfer(knowledge, message.get("from_swarm", ""))
+                    await self._process_knowledge_transfer(
+                        knowledge, message.get("from_swarm", "")
+                    )
                     processed_messages.append(message)
 
             if processed_messages:
@@ -769,7 +830,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             logger.error(f"Failed to process inter-swarm messages: {e}")
             return []
 
-    async def _process_knowledge_transfer(self, knowledge: dict[str, Any], from_swarm: str):
+    async def _process_knowledge_transfer(
+        self, knowledge: dict[str, Any], from_swarm: str
+    ):
         """Process incoming knowledge transfer from another swarm."""
         if not self.memory_client:
             return
@@ -807,7 +870,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
         # If the transferred knowledge shows good performance, learn from it
         if execution_time > 0 and execution_time < 15.0:
             # Update our adaptive parameters
-            self.param_manager.performance_history.append(knowledge.get("success_score", 0.8))
+            self.param_manager.performance_history.append(
+                knowledge.get("success_score", 0.8)
+            )
 
         # Extract successful execution strategies
         execution_strategies = knowledge.get("execution_strategies", [])
@@ -816,7 +881,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             await self.memory_client.store_pattern(
                 pattern_name=f"transferred_strategy_{knowledge.get('problem_type', 'general')}",
                 pattern_data={
-                    "transferred_from": knowledge.get("context", {}).get("from_swarm", "unknown"),
+                    "transferred_from": knowledge.get("context", {}).get(
+                        "from_swarm", "unknown"
+                    ),
                     "strategies": execution_strategies,
                     "original_success": knowledge.get("success_score", 0),
                 },
@@ -863,7 +930,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             "memory_integration": memory_metrics,
             "memory_system_stats": memory_stats,
             "performance_trends": performance_trends,
-            "memory_execution_log": self.memory_execution_log[-10:],  # Last 10 executions
+            "memory_execution_log": self.memory_execution_log[
+                -10:
+            ],  # Last 10 executions
             "context_cache_size": len(self.context_cache),
         }
 
@@ -939,7 +1008,9 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                 },
                 "performance_data": {
                     "quality_scores": [result.get("quality_score", 0.5)],
-                    "speed_score": min(1.0, 10.0 / max(result.get("execution_time", 1), 0.1)),
+                    "speed_score": min(
+                        1.0, 10.0 / max(result.get("execution_time", 1), 0.1)
+                    ),
                     "efficiency_score": result.get("quality_score", 0.5) * 0.8,
                     "reliability_score": 0.8 if result.get("success", True) else 0.3,
                 },
@@ -951,17 +1022,19 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
             }
 
             # Perform consciousness measurement
-            measurements = await self.consciousness_tracker.measure_consciousness(context)
+            measurements = await self.consciousness_tracker.measure_consciousness(
+                context
+            )
 
             if measurements:
                 # Get comprehensive consciousness metrics
-                consciousness_metrics = self.consciousness_tracker.get_consciousness_metrics()
+                consciousness_metrics = (
+                    self.consciousness_tracker.get_consciousness_metrics()
+                )
 
                 # Correlate with performance
-                performance_correlation = (
-                    await self.consciousness_tracker.correlate_consciousness_with_performance(
-                        context["performance_data"]
-                    )
+                performance_correlation = await self.consciousness_tracker.correlate_consciousness_with_performance(
+                    context["performance_data"]
                 )
 
                 return {
@@ -969,8 +1042,12 @@ class MemoryEnhancedImprovedSwarm(ImprovedAgentSwarm, SwarmMemoryMixin):
                     "development_stage": self.consciousness_tracker.consciousness_profile.development_stage,
                     "maturity_score": self.consciousness_tracker.consciousness_profile.maturity_score,
                     "measurements": {k.value: v.value for k, v in measurements.items()},
-                    "emergence_events": len(self.consciousness_tracker.emergence_events),
-                    "breakthrough_patterns": len(self.consciousness_tracker.breakthrough_patterns),
+                    "emergence_events": len(
+                        self.consciousness_tracker.emergence_events
+                    ),
+                    "breakthrough_patterns": len(
+                        self.consciousness_tracker.breakthrough_patterns
+                    ),
                     "performance_correlation": performance_correlation,
                     "consciousness_metrics": consciousness_metrics,
                 }
@@ -1015,7 +1092,10 @@ class MemoryEnhancedCodingTeam(MemoryEnhancedImprovedSwarm):
             learning_type="code_quality", limit=3
         )
 
-        return {"coding_patterns": coding_patterns, "quality_learnings": quality_learnings}
+        return {
+            "coding_patterns": coding_patterns,
+            "quality_learnings": quality_learnings,
+        }
 
 
 class MemoryEnhancedCodingSwarm(MemoryEnhancedImprovedSwarm):
@@ -1089,7 +1169,9 @@ class MemoryEnhancedGenesisSwarm(MemoryEnhancedImprovedSwarm):
                 )
 
             # Execute standard evolution
-            evolution_result = await self.evolution_engine.evolve_agents(performance_data)
+            evolution_result = await self.evolution_engine.evolve_agents(
+                performance_data
+            )
 
             # Store evolution learnings
             await self.memory_client.store_learning(
@@ -1106,7 +1188,9 @@ class MemoryEnhancedGenesisSwarm(MemoryEnhancedImprovedSwarm):
         """Consciousness measurement enhanced with memory correlation."""
         if hasattr(self, "consciousness_tracker") and self.memory_client:
             # Standard consciousness measurement
-            consciousness_level = await self.consciousness_tracker.measure_consciousness()
+            consciousness_level = (
+                await self.consciousness_tracker.measure_consciousness()
+            )
 
             # Store consciousness measurement
             await self.memory_client.log_swarm_event(

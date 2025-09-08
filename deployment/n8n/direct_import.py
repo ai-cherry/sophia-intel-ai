@@ -45,7 +45,9 @@ def import_minimal_workflow():
             },
         ],
         "connections": {
-            "Gong Webhook": {"main": [[{"node": "Process Event", "type": "main", "index": 0}]]}
+            "Gong Webhook": {
+                "main": [[{"node": "Process Event", "type": "main", "index": 0}]]
+            }
         },
         "settings": {},
     }
@@ -58,7 +60,10 @@ def import_minimal_workflow():
 
     try:
         response = requests.post(
-            f"{N8N_INSTANCE_URL}/api/v1/workflows", headers=headers, json=workflow_data, timeout=30
+            f"{N8N_INSTANCE_URL}/api/v1/workflows",
+            headers=headers,
+            json=workflow_data,
+            timeout=30,
         )
 
         if response.status_code in [200, 201]:

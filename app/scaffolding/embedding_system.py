@@ -282,7 +282,9 @@ class CodeChunker:
 
         return chunks
 
-    def _sliding_window_chunking(self, file_path: Path, content: str) -> list[CodeChunk]:
+    def _sliding_window_chunking(
+        self, file_path: Path, content: str
+    ) -> list[CodeChunk]:
         """Create overlapping chunks"""
         chunks = []
         lines = content.split("\n")
@@ -331,7 +333,9 @@ class CodeChunker:
         # Level 3: Fine-grained chunks for large functions
         for chunk in ast_chunks:
             if len(chunk.content) > self.config.chunk_size * 2:
-                sub_chunks = self._fixed_size_chunking(Path(chunk.file_path), chunk.content)
+                sub_chunks = self._fixed_size_chunking(
+                    Path(chunk.file_path), chunk.content
+                )
                 for sub_chunk in sub_chunks:
                     sub_chunk.metadata["level"] = 3
                     sub_chunk.parent_chunk = chunk.id
@@ -447,7 +451,9 @@ Content:
 
             # Extract imports
             imports = re.findall(r"^import .*$", chunk.content, re.MULTILINE)
-            imports.extend(re.findall(r"^from .* import .*$", chunk.content, re.MULTILINE))
+            imports.extend(
+                re.findall(r"^from .* import .*$", chunk.content, re.MULTILINE)
+            )
 
             return "\n".join(imports + calls)
 
@@ -596,7 +602,8 @@ class EmbeddingIndex:
         data = {
             "dimensions": self.dimensions,
             "embeddings": {
-                chunk_id: result.to_dict() for chunk_id, result in self.embeddings.items()
+                chunk_id: result.to_dict()
+                for chunk_id, result in self.embeddings.items()
             },
         }
 

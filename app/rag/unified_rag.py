@@ -148,13 +148,19 @@ class UnifiedRAGSystem:
         # RAG configuration by domain
         self.domain_configs = {
             RAGDomain.ARTEMIS: {
-                "preferred_contexts": [MemoryContext.EXECUTION, MemoryContext.INTELLIGENCE],
+                "preferred_contexts": [
+                    MemoryContext.EXECUTION,
+                    MemoryContext.INTELLIGENCE,
+                ],
                 "weight_technical": 1.2,
                 "weight_business": 0.8,
                 "synthesis_style": "technical_analytical",
             },
             RAGDomain.SOPHIA: {
-                "preferred_contexts": [MemoryContext.INTELLIGENCE, MemoryContext.PATTERN],
+                "preferred_contexts": [
+                    MemoryContext.INTELLIGENCE,
+                    MemoryContext.PATTERN,
+                ],
                 "weight_business": 1.2,
                 "weight_technical": 0.8,
                 "synthesis_style": "business_strategic",
@@ -194,7 +200,9 @@ class UnifiedRAGSystem:
             ranked_sources = await self._rank_and_deduplicate_sources(sources, context)
 
             # Step 4: Context synthesis
-            synthesized_context, structure = await self._synthesize_context(ranked_sources, context)
+            synthesized_context, structure = await self._synthesize_context(
+                ranked_sources, context
+            )
 
             # Step 5: Generate insights and cross-references
             insights = await self._extract_insights(ranked_sources, context)
@@ -379,11 +387,27 @@ class UnifiedRAGSystem:
         query_length = len(context.query.split())
         has_technical_terms = any(
             term in context.query.lower()
-            for term in ["api", "code", "function", "database", "server", "algorithm", "system"]
+            for term in [
+                "api",
+                "code",
+                "function",
+                "database",
+                "server",
+                "algorithm",
+                "system",
+            ]
         )
         has_business_terms = any(
             term in context.query.lower()
-            for term in ["revenue", "cost", "customer", "market", "strategy", "business", "roi"]
+            for term in [
+                "revenue",
+                "cost",
+                "customer",
+                "market",
+                "strategy",
+                "business",
+                "roi",
+            ]
         )
 
         # Strategy selection logic
@@ -435,19 +459,25 @@ class UnifiedRAGSystem:
 
         return all_sources
 
-    async def _retrieve_from_intelligence_store(self, context: RAGContext) -> list[RAGSource]:
+    async def _retrieve_from_intelligence_store(
+        self, context: RAGContext
+    ) -> list[RAGSource]:
         """Retrieve from intelligence store"""
 
         try:
             intelligence_types = (
-                context.metadata.get("intelligence_types") if hasattr(context, "metadata") else None
+                context.metadata.get("intelligence_types")
+                if hasattr(context, "metadata")
+                else None
             )
 
             results = await self.intelligence_store.search_insights(
                 query=context.query,
                 intelligence_types=intelligence_types,
                 max_results=context.max_results,
-                domain=context.domain.value if context.domain != RAGDomain.SHARED else None,
+                domain=(
+                    context.domain.value if context.domain != RAGDomain.SHARED else None
+                ),
             )
 
             sources = []
@@ -462,7 +492,9 @@ class UnifiedRAGSystem:
                         relevance_score=result["relevance_score"],
                         confidence=structured.get("confidence_value", 0.8),
                         created_at=datetime.fromisoformat(
-                            structured.get("created_at", datetime.now(timezone.utc).isoformat())
+                            structured.get(
+                                "created_at", datetime.now(timezone.utc).isoformat()
+                            )
                         ),
                         metadata=structured,
                     )
@@ -474,19 +506,25 @@ class UnifiedRAGSystem:
             logger.error(f"Intelligence store retrieval failed: {e}")
             return []
 
-    async def _retrieve_from_execution_store(self, context: RAGContext) -> list[RAGSource]:
+    async def _retrieve_from_execution_store(
+        self, context: RAGContext
+    ) -> list[RAGSource]:
         """Retrieve from execution store"""
 
         try:
             execution_types = (
-                context.metadata.get("execution_types") if hasattr(context, "metadata") else None
+                context.metadata.get("execution_types")
+                if hasattr(context, "metadata")
+                else None
             )
 
             results = await self.execution_store.search_executions(
                 query=context.query,
                 execution_types=execution_types,
                 max_results=context.max_results,
-                domain=context.domain.value if context.domain != RAGDomain.SHARED else None,
+                domain=(
+                    context.domain.value if context.domain != RAGDomain.SHARED else None
+                ),
             )
 
             sources = []
@@ -501,7 +539,9 @@ class UnifiedRAGSystem:
                         relevance_score=result["relevance_score"],
                         confidence=0.9,  # Execution records are typically highly reliable
                         created_at=datetime.fromisoformat(
-                            exec_context.get("start_time", datetime.now(timezone.utc).isoformat())
+                            exec_context.get(
+                                "start_time", datetime.now(timezone.utc).isoformat()
+                            )
                         ),
                         metadata=exec_context,
                     )
@@ -513,19 +553,25 @@ class UnifiedRAGSystem:
             logger.error(f"Execution store retrieval failed: {e}")
             return []
 
-    async def _retrieve_from_pattern_store(self, context: RAGContext) -> list[RAGSource]:
+    async def _retrieve_from_pattern_store(
+        self, context: RAGContext
+    ) -> list[RAGSource]:
         """Retrieve from pattern store"""
 
         try:
             pattern_types = (
-                context.metadata.get("pattern_types") if hasattr(context, "metadata") else None
+                context.metadata.get("pattern_types")
+                if hasattr(context, "metadata")
+                else None
             )
 
             results = await self.pattern_store.search_patterns(
                 query=context.query,
                 pattern_types=pattern_types,
                 max_results=context.max_results,
-                domain=context.domain.value if context.domain != RAGDomain.SHARED else None,
+                domain=(
+                    context.domain.value if context.domain != RAGDomain.SHARED else None
+                ),
             )
 
             sources = []
@@ -550,26 +596,34 @@ class UnifiedRAGSystem:
             logger.error(f"Pattern store retrieval failed: {e}")
             return []
 
-    async def _retrieve_from_knowledge_store(self, context: RAGContext) -> list[RAGSource]:
+    async def _retrieve_from_knowledge_store(
+        self, context: RAGContext
+    ) -> list[RAGSource]:
         """Retrieve from knowledge store"""
 
         try:
             knowledge_types = (
-                context.metadata.get("knowledge_types") if hasattr(context, "metadata") else None
+                context.metadata.get("knowledge_types")
+                if hasattr(context, "metadata")
+                else None
             )
 
             # Search both entities and facts
             entity_results = await self.knowledge_store.search_entities(
                 query=context.query,
                 max_results=context.max_results // 2,
-                domain=context.domain.value if context.domain != RAGDomain.SHARED else None,
+                domain=(
+                    context.domain.value if context.domain != RAGDomain.SHARED else None
+                ),
             )
 
             fact_results = await self.knowledge_store.search_facts(
                 query=context.query,
                 knowledge_types=knowledge_types,
                 max_results=context.max_results // 2,
-                domain=context.domain.value if context.domain != RAGDomain.SHARED else None,
+                domain=(
+                    context.domain.value if context.domain != RAGDomain.SHARED else None
+                ),
             )
 
             sources = []
@@ -586,7 +640,9 @@ class UnifiedRAGSystem:
                         relevance_score=result["relevance_score"],
                         confidence=entity_data.get("confidence_score", 0.8),
                         created_at=datetime.fromisoformat(
-                            entity_data.get("last_updated", datetime.now(timezone.utc).isoformat())
+                            entity_data.get(
+                                "last_updated", datetime.now(timezone.utc).isoformat()
+                            )
                         ),
                         metadata=entity_data,
                     )
@@ -604,7 +660,9 @@ class UnifiedRAGSystem:
                         relevance_score=result["relevance_score"],
                         confidence=fact_data.get("confidence_score", 0.8),
                         created_at=datetime.fromisoformat(
-                            fact_data.get("created_at", datetime.now(timezone.utc).isoformat())
+                            fact_data.get(
+                                "created_at", datetime.now(timezone.utc).isoformat()
+                            )
                         ),
                         metadata=fact_data,
                     )
@@ -626,7 +684,11 @@ class UnifiedRAGSystem:
                 query_text=context.query,
                 top_k=context.max_results,
                 similarity_threshold=context.similarity_threshold,
-                domains={context.domain.value} if context.domain != RAGDomain.SHARED else None,
+                domains=(
+                    {context.domain.value}
+                    if context.domain != RAGDomain.SHARED
+                    else None
+                ),
             )
 
             results = await self.vector_store.semantic_search(
@@ -710,7 +772,9 @@ class UnifiedRAGSystem:
                 score *= domain_config["weight_technical"]
 
             # Recency factor
-            hours_old = (datetime.now(timezone.utc) - source.created_at).total_seconds() / 3600
+            hours_old = (
+                datetime.now(timezone.utc) - source.created_at
+            ).total_seconds() / 3600
             if hours_old < 24:
                 score *= 1.1  # Boost recent content
             elif hours_old > 168:  # > 1 week
@@ -782,24 +846,32 @@ class UnifiedRAGSystem:
 
         return synthesized, structure
 
-    def _synthesize_concatenation(self, sources: list[RAGSource], context: RAGContext) -> str:
+    def _synthesize_concatenation(
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> str:
         """Simple concatenation synthesis"""
 
         parts = [f"Context for query: {context.query}\n"]
 
         for i, source in enumerate(sources[: context.max_results], 1):
             confidence_indicator = (
-                "🔴" if source.confidence < 0.5 else "🟡" if source.confidence < 0.8 else "🟢"
+                "🔴"
+                if source.confidence < 0.5
+                else "🟡" if source.confidence < 0.8 else "🟢"
             )
             parts.append(f"\n{i}. {confidence_indicator} {source.title}")
             parts.append(
                 f"   Source: {source.source_type} | Relevance: {source.relevance_score:.2f}"
             )
-            parts.append(f"   {source.content[:300]}{'...' if len(source.content) > 300 else ''}")
+            parts.append(
+                f"   {source.content[:300]}{'...' if len(source.content) > 300 else ''}"
+            )
 
         return "\n".join(parts)
 
-    def _synthesize_structured(self, sources: list[RAGSource], context: RAGContext) -> str:
+    def _synthesize_structured(
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> str:
         """Structured synthesis organized by source type and relevance"""
 
         # Group sources by type
@@ -837,7 +909,9 @@ class UnifiedRAGSystem:
             for source in type_sources[:3]:  # Top 3 per category
                 confidence_stars = "⭐" * int(source.confidence * 5)
                 parts.append(f"### {source.title}")
-                parts.append(f"**Confidence:** {confidence_stars} ({source.confidence:.2f})")
+                parts.append(
+                    f"**Confidence:** {confidence_stars} ({source.confidence:.2f})"
+                )
                 parts.append(f"**Relevance:** {source.relevance_score:.2f}")
                 parts.append(
                     f"{source.content[:200]}{'...' if len(source.content) > 200 else ''}\n"
@@ -845,7 +919,9 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    async def _synthesize_summary(self, sources: list[RAGSource], context: RAGContext) -> str:
+    async def _synthesize_summary(
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> str:
         """Summarization synthesis extracting key points"""
 
         # For now, provide a structured summary
@@ -874,7 +950,9 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    async def _synthesize_narrative(self, sources: list[RAGSource], context: RAGContext) -> str:
+    async def _synthesize_narrative(
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> str:
         """Narrative synthesis creating a coherent story"""
 
         # Sort sources chronologically
@@ -895,7 +973,9 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    async def _synthesize_analytical(self, sources: list[RAGSource], context: RAGContext) -> str:
+    async def _synthesize_analytical(
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> str:
         """Analytical synthesis focusing on insights and patterns"""
 
         parts = [f"Analytical context for: {context.query}\n"]
@@ -905,13 +985,17 @@ class UnifiedRAGSystem:
         confidence_levels = []
 
         for source in sources:
-            source_analysis[source.source_type] = source_analysis.get(source.source_type, 0) + 1
+            source_analysis[source.source_type] = (
+                source_analysis.get(source.source_type, 0) + 1
+            )
             confidence_levels.append(source.confidence)
 
         # Overall analysis
         parts.append("## Analysis Summary")
         parts.append(f"- Sources analyzed: {len(sources)}")
-        parts.append(f"- Average confidence: {sum(confidence_levels)/len(confidence_levels):.2f}")
+        parts.append(
+            f"- Average confidence: {sum(confidence_levels)/len(confidence_levels):.2f}"
+        )
         parts.append(f"- Source diversity: {len(source_analysis)} different types\n")
 
         # High-confidence insights
@@ -919,7 +1003,9 @@ class UnifiedRAGSystem:
         if high_conf_sources:
             parts.append("## High-Confidence Insights")
             for source in high_conf_sources[:3]:
-                parts.append(f"**{source.title}** (Confidence: {source.confidence:.2f})")
+                parts.append(
+                    f"**{source.title}** (Confidence: {source.confidence:.2f})"
+                )
                 parts.append(
                     f"{source.content[:200]}{'...' if len(source.content) > 200 else ''}\n"
                 )
@@ -933,7 +1019,9 @@ class UnifiedRAGSystem:
 
         return "\n".join(parts)
 
-    async def _extract_insights(self, sources: list[RAGSource], context: RAGContext) -> list[str]:
+    async def _extract_insights(
+        self, sources: list[RAGSource], context: RAGContext
+    ) -> list[str]:
         """Extract key insights from sources"""
 
         insights = []
@@ -1030,7 +1118,9 @@ class UnifiedRAGSystem:
         reasoning = []
 
         # Step 1: Query analysis
-        reasoning.append(f"Query analysis: '{context.query}' in {context.domain.value} domain")
+        reasoning.append(
+            f"Query analysis: '{context.query}' in {context.domain.value} domain"
+        )
 
         # Step 2: Source selection rationale
         reasoning.append(
@@ -1039,7 +1129,9 @@ class UnifiedRAGSystem:
 
         # Step 3: Relevance assessment
         high_rel_sources = len([s for s in sources if s.relevance_score > 0.8])
-        reasoning.append(f"Found {high_rel_sources} highly relevant sources (>80% relevance)")
+        reasoning.append(
+            f"Found {high_rel_sources} highly relevant sources (>80% relevance)"
+        )
 
         # Step 4: Confidence assessment
         high_conf_sources = len([s for s in sources if s.confidence > 0.8])

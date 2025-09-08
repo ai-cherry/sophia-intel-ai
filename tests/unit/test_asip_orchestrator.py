@@ -243,7 +243,11 @@ class TestASIPOrchestrator:
             result = await orchestrator.process_task(simple_task)
 
             assert result.get("success") is not False
-            assert result.get("execution_mode") in [ExecutionMode.REACTIVE, "reactive", None]
+            assert result.get("execution_mode") in [
+                ExecutionMode.REACTIVE,
+                "reactive",
+                None,
+            ]
             assert result.get("execution_time", 0) <= 0.01  # <10ms target
 
     @patch("time.perf_counter")
@@ -334,7 +338,9 @@ class TestPerformanceOptimization:
     async def test_backpressure_handling(self, mock_sleep, orchestrator):
         """Test system handles backpressure gracefully"""
         # Simulate high load scenario
-        high_load_tasks = [{"type": "load_test", "input": f"Load test {i}"} for i in range(100)]
+        high_load_tasks = [
+            {"type": "load_test", "input": f"Load test {i}"} for i in range(100)
+        ]
 
         if hasattr(orchestrator, "process_task"):
             # Should handle high load without crashing
@@ -380,7 +386,13 @@ class TestErrorHandlingAndResilience:
 
     async def test_malformed_task_handling(self, orchestrator):
         """Test handling of malformed tasks"""
-        malformed_tasks = [None, {}, {"invalid": "structure"}, {"type": None}, {"input": None}]
+        malformed_tasks = [
+            None,
+            {},
+            {"invalid": "structure"},
+            {"type": None},
+            {"input": None},
+        ]
 
         for task in malformed_tasks:
             if hasattr(orchestrator, "process_task"):
@@ -431,7 +443,9 @@ class TestErrorHandlingAndResilience:
         edge_cases = [
             {},  # Empty task
             {"empty_strings": ""},  # Empty values
-            {"large_nesting": {"a": {"b": {"c": {"d": {"e": "deep"}}}}}},  # Deep nesting
+            {
+                "large_nesting": {"a": {"b": {"c": {"d": {"e": "deep"}}}}}
+            },  # Deep nesting
             {"unicode": "测试 🚀 émoji"},  # Unicode content
             {"very_long": "x" * 1000},  # Very long content
         ]
@@ -459,7 +473,9 @@ class TestMetricsAndObservability:
             metrics = orchestrator.metrics
 
             # Should track execution times
-            assert hasattr(metrics, "execution_times") or hasattr(metrics, "response_times")
+            assert hasattr(metrics, "execution_times") or hasattr(
+                metrics, "response_times"
+            )
 
     def test_mode_distribution_tracking(self, orchestrator):
         """Test execution mode distribution is tracked"""
@@ -467,7 +483,9 @@ class TestMetricsAndObservability:
             metrics = orchestrator.metrics
 
             # Should track mode distribution
-            assert hasattr(metrics, "mode_distribution") or hasattr(metrics, "execution_modes")
+            assert hasattr(metrics, "mode_distribution") or hasattr(
+                metrics, "execution_modes"
+            )
 
     def test_throughput_measurement(self, orchestrator):
         """Test throughput measurement capabilities"""

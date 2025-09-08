@@ -44,7 +44,9 @@ class MigrationConfig:
     """Configuration for the migration process"""
 
     source_env_files: List[str] = field(default_factory=list)
-    target_environments: List[str] = field(default_factory=lambda: ["dev", "staging", "production"])
+    target_environments: List[str] = field(
+        default_factory=lambda: ["dev", "staging", "production"]
+    )
     backup_directory: str = "backup_configs/migration"
     dry_run: bool = False
     validate_keys: bool = True
@@ -201,7 +203,9 @@ class ESCMigrationTool:
             if not self.config.dry_run:
                 await self._migrate_secrets()
             else:
-                console.print("[yellow]DRY RUN MODE - No actual migration performed[/yellow]")
+                console.print(
+                    "[yellow]DRY RUN MODE - No actual migration performed[/yellow]"
+                )
                 self._simulate_migration()
 
             # Step 6: Generate report
@@ -221,7 +225,9 @@ class ESCMigrationTool:
         console.print("\n[bold]Step 1: Discovering secrets...[/bold]")
 
         with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
-            discovery_task = progress.add_task("Scanning environment files...", total=None)
+            discovery_task = progress.add_task(
+                "Scanning environment files...", total=None
+            )
 
             # Auto-discover .env files if not specified
             if not self.config.source_env_files:
@@ -236,7 +242,8 @@ class ESCMigrationTool:
             await self._scan_config_directories()
 
             progress.update(
-                discovery_task, description=f"Found {len(self.discovered_secrets)} secrets"
+                discovery_task,
+                description=f"Found {len(self.discovered_secrets)} secrets",
             )
 
         await self.audit_logger.log_event(
@@ -299,7 +306,9 @@ class ESCMigrationTool:
                         )
 
                         # Determine target environments
-                        secret.environments = self._determine_target_environments(file_path, key)
+                        secret.environments = self._determine_target_environments(
+                            file_path, key
+                        )
 
                         self.discovered_secrets.append(secret)
 
@@ -423,7 +432,9 @@ class ESCMigrationTool:
 
         # Populate table
         for category, stats in sorted(category_stats.items()):
-            providers = ", ".join(sorted(stats["providers"])) if stats["providers"] else "N/A"
+            providers = (
+                ", ".join(sorted(stats["providers"])) if stats["providers"] else "N/A"
+            )
             table.add_row(category, str(stats["count"]), providers)
 
         console.print(table)
@@ -436,7 +447,9 @@ class ESCMigrationTool:
         console.print(f"• Total secrets found: {total_secrets}")
         console.print(f"• Sensitive secrets: {sensitive_secrets}")
         console.print(f"• Categories: {len(category_stats)}")
-        console.print(f"• Source files: {len(set(s.source_file for s in self.discovered_secrets))}")
+        console.print(
+            f"• Source files: {len(set(s.source_file for s in self.discovered_secrets))}"
+        )
 
         self.migration_result.total_secrets = total_secrets
 
@@ -536,7 +549,9 @@ class ESCMigrationTool:
                     secret.notes.append("OpenAI key format invalid")
                     validation_errors += 1
 
-                if secret.provider == "anthropic" and not secret.value.startswith("sk-ant-"):
+                if secret.provider == "anthropic" and not secret.value.startswith(
+                    "sk-ant-"
+                ):
                     secret.notes.append("Anthropic key format invalid")
                     validation_errors += 1
 
@@ -545,7 +560,9 @@ class ESCMigrationTool:
         self.migration_result.validation_errors = validation_errors
 
         if validation_errors > 0:
-            console.print(f"[yellow]⚠[/yellow] Found {validation_errors} validation issues")
+            console.print(
+                f"[yellow]⚠[/yellow] Found {validation_errors} validation issues"
+            )
         else:
             console.print("[green]✓[/green] All secrets passed validation")
 
@@ -556,7 +573,9 @@ class ESCMigrationTool:
         for environment in self.config.target_environments:
             console.print(f"\n[blue]Environment: {environment}[/blue]")
 
-            env_secrets = [s for s in self.discovered_secrets if environment in s.environments]
+            env_secrets = [
+                s for s in self.discovered_secrets if environment in s.environments
+            ]
 
             table = Table(title=f"Secrets for {environment}")
             table.add_column("Key", style="cyan")
@@ -587,9 +606,13 @@ class ESCMigrationTool:
             for environment in self.config.target_environments:
                 console.print(f"\n[blue]Migrating to environment: {environment}[/blue]")
 
-                env_secrets = [s for s in self.discovered_secrets if environment in s.environments]
+                env_secrets = [
+                    s for s in self.discovered_secrets if environment in s.environments
+                ]
 
-                with Progress(SpinnerColumn(), TextColumn("{task.description}")) as progress:
+                with Progress(
+                    SpinnerColumn(), TextColumn("{task.description}")
+                ) as progress:
                     migration_task = progress.add_task(
                         f"Migrating to {environment}...", total=len(env_secrets)
                     )
@@ -620,7 +643,9 @@ class ESCMigrationTool:
                                 )
                             else:
                                 self.migration_result.failed_migrations += 1
-                                error_msg = f"Failed to migrate {secret.key} to {environment}"
+                                error_msg = (
+                                    f"Failed to migrate {secret.key} to {environment}"
+                                )
                                 self.migration_result.errors.append(error_msg)
 
                                 await self.audit_logger.log_event(
@@ -727,7 +752,9 @@ class ESCMigrationTool:
         }
 
         # Save report
-        report_file = f"migration_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        report_file = (
+            f"migration_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        )
         async with aiofiles.open(report_file, "w") as f:
             await f.write(json.dumps(report, indent=2))
 
@@ -746,7 +773,9 @@ class ESCMigrationTool:
         console.print(f"\n[green]✓[/green] Migration report saved: {report_file}")
 
         if self.migration_result.errors:
-            console.print(f"\n[red]Errors encountered ({len(self.migration_result.errors)}):[/red]")
+            console.print(
+                f"\n[red]Errors encountered ({len(self.migration_result.errors)}):[/red]"
+            )
             for error in self.migration_result.errors[:5]:  # Show first 5 errors
                 console.print(f"  • {error}")
             if len(self.migration_result.errors) > 5:
@@ -757,11 +786,17 @@ async def main():
     """Main entry point"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="Migrate environment files to Pulumi ESC")
-    parser.add_argument(
-        "--dry-run", action="store_true", help="Perform dry run without actual migration"
+    parser = argparse.ArgumentParser(
+        description="Migrate environment files to Pulumi ESC"
     )
-    parser.add_argument("--no-validation", action="store_true", help="Skip secret validation")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Perform dry run without actual migration",
+    )
+    parser.add_argument(
+        "--no-validation", action="store_true", help="Skip secret validation"
+    )
     parser.add_argument("--no-backup", action="store_true", help="Skip backup creation")
     parser.add_argument("--pulumi-token", help="Pulumi API token")
     parser.add_argument("--org", default="sophia-intel", help="Pulumi organization")
@@ -777,7 +812,8 @@ async def main():
 
     # Setup logging
     logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=logging.INFO,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
 
     # Create migration configuration
@@ -798,8 +834,12 @@ async def main():
         result = await migration_tool.run_migration()
 
         if result.successful_migrations > 0:
-            console.print("\n[bold green]✓ Migration completed successfully![/bold green]")
-            console.print(f"Migrated {result.successful_migrations} secrets to Pulumi ESC")
+            console.print(
+                "\n[bold green]✓ Migration completed successfully![/bold green]"
+            )
+            console.print(
+                f"Migrated {result.successful_migrations} secrets to Pulumi ESC"
+            )
         else:
             console.print("\n[bold red]✗ Migration completed with issues[/bold red]")
 

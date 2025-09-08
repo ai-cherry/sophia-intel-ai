@@ -140,14 +140,31 @@ class CodeSemanticEngine:
                 },
             },
             "concepts": {
-                "quality": ["maintainability", "readability", "performance", "security"],
+                "quality": [
+                    "maintainability",
+                    "readability",
+                    "performance",
+                    "security",
+                ],
                 "patterns": ["creational", "structural", "behavioral", "architectural"],
-                "principles": ["solid", "dry", "kiss", "yagni", "separation_of_concerns"],
+                "principles": [
+                    "solid",
+                    "dry",
+                    "kiss",
+                    "yagni",
+                    "separation_of_concerns",
+                ],
                 "metrics": ["complexity", "coverage", "duplication", "debt"],
             },
             "relationships": {
-                "improves": ["refactoring_improves_quality", "testing_improves_reliability"],
-                "requires": ["pattern_requires_structure", "performance_requires_optimization"],
+                "improves": [
+                    "refactoring_improves_quality",
+                    "testing_improves_reliability",
+                ],
+                "requires": [
+                    "pattern_requires_structure",
+                    "performance_requires_optimization",
+                ],
                 "conflicts": [
                     "complexity_conflicts_readability",
                     "performance_conflicts_maintainability",
@@ -180,7 +197,11 @@ class CodeSemanticEngine:
             },
             "anti_patterns": {
                 "god_object": {
-                    "indicators": ["large_class", "many_methods", "many_responsibilities"],
+                    "indicators": [
+                        "large_class",
+                        "many_methods",
+                        "many_responsibilities",
+                    ],
                     "quality_impact": "negative",
                     "complexity_impact": "high",
                 },
@@ -287,7 +308,9 @@ class CodeSemanticEngine:
                 indicators = pattern_info.get("indicators", [])
                 anti_indicators = pattern_info.get("anti_indicators", [])
 
-                indicator_matches = sum(1 for indicator in indicators if indicator in code_lower)
+                indicator_matches = sum(
+                    1 for indicator in indicators if indicator in code_lower
+                )
                 anti_matches = sum(1 for anti in anti_indicators if anti in code_lower)
 
                 if indicators:
@@ -303,7 +326,9 @@ class CodeSemanticEngine:
                         locations=locations,
                         confidence=confidence,
                         impact=pattern_info.get("quality_impact", "neutral"),
-                        recommendations=self._get_pattern_recommendations(pattern_name, category),
+                        recommendations=self._get_pattern_recommendations(
+                            pattern_name, category
+                        ),
                     )
                     detected_patterns.append(pattern)
 
@@ -364,7 +389,9 @@ class CodeSemanticEngine:
                         {
                             "name": node.name,
                             "methods": [
-                                n.name for n in node.body if isinstance(n, ast.FunctionDef)
+                                n.name
+                                for n in node.body
+                                if isinstance(n, ast.FunctionDef)
                             ],
                             "line": node.lineno,
                         }
@@ -433,18 +460,32 @@ class CodeSemanticEngine:
             "maintainability": "good",
         }
 
-    def _get_pattern_recommendations(self, pattern_name: str, category: str) -> list[str]:
+    def _get_pattern_recommendations(
+        self, pattern_name: str, category: str
+    ) -> list[str]:
         """Get recommendations for detected patterns"""
         recommendations = {
-            "singleton": ["Consider dependency injection instead", "Ensure thread safety"],
-            "factory": ["Good separation of concerns", "Consider abstract factory for families"],
+            "singleton": [
+                "Consider dependency injection instead",
+                "Ensure thread safety",
+            ],
+            "factory": [
+                "Good separation of concerns",
+                "Consider abstract factory for families",
+            ],
             "observer": ["Ensure proper cleanup", "Consider using weak references"],
             "god_object": [
                 "Split into smaller, focused classes",
                 "Apply single responsibility principle",
             ],
-            "spaghetti_code": ["Refactor into clear functions", "Add proper error handling"],
-            "magic_numbers": ["Extract to named constants", "Add documentation for values"],
+            "spaghetti_code": [
+                "Refactor into clear functions",
+                "Add proper error handling",
+            ],
+            "magic_numbers": [
+                "Extract to named constants",
+                "Add documentation for values",
+            ],
         }
 
         return recommendations.get(pattern_name, ["Review implementation carefully"])
@@ -502,7 +543,9 @@ class QualityAssurancePipeline:
             "general": ["perf", "valgrind", "jmeter"],
         }
 
-    async def run_comprehensive_analysis(self, code: str, language: str) -> dict[str, Any]:
+    async def run_comprehensive_analysis(
+        self, code: str, language: str
+    ) -> dict[str, Any]:
         """Run comprehensive quality assurance analysis"""
         analysis_results = {
             "quality_metrics": {},
@@ -514,22 +557,34 @@ class QualityAssurancePipeline:
         }
 
         # Run quality analysis
-        analysis_results["quality_metrics"] = await self._analyze_quality(code, language)
+        analysis_results["quality_metrics"] = await self._analyze_quality(
+            code, language
+        )
 
         # Run security analysis
-        analysis_results["security_analysis"] = await self._analyze_security(code, language)
+        analysis_results["security_analysis"] = await self._analyze_security(
+            code, language
+        )
 
         # Run performance analysis
-        analysis_results["performance_analysis"] = await self._analyze_performance(code, language)
+        analysis_results["performance_analysis"] = await self._analyze_performance(
+            code, language
+        )
 
         # Check compliance
-        analysis_results["compliance_check"] = await self._check_compliance(code, language)
+        analysis_results["compliance_check"] = await self._check_compliance(
+            code, language
+        )
 
         # Generate recommendations
-        analysis_results["recommendations"] = self._generate_qa_recommendations(analysis_results)
+        analysis_results["recommendations"] = self._generate_qa_recommendations(
+            analysis_results
+        )
 
         # Calculate overall score
-        analysis_results["overall_score"] = self._calculate_overall_qa_score(analysis_results)
+        analysis_results["overall_score"] = self._calculate_overall_qa_score(
+            analysis_results
+        )
 
         return analysis_results
 
@@ -635,7 +690,9 @@ class QualityAssurancePipeline:
             "standards": ["pep8"] if language == "python" else ["standard"],
         }
 
-    def _generate_qa_recommendations(self, analysis_results: dict[str, Any]) -> list[str]:
+    def _generate_qa_recommendations(
+        self, analysis_results: dict[str, Any]
+    ) -> list[str]:
         """Generate quality assurance recommendations"""
         recommendations = []
 
@@ -644,8 +701,13 @@ class QualityAssurancePipeline:
         performance_analysis = analysis_results.get("performance_analysis", {})
 
         # Quality recommendations
-        if hasattr(quality_metrics, "complexity_score") and quality_metrics.complexity_score > 10:
-            recommendations.append("Reduce cyclomatic complexity by breaking down functions")
+        if (
+            hasattr(quality_metrics, "complexity_score")
+            and quality_metrics.complexity_score > 10
+        ):
+            recommendations.append(
+                "Reduce cyclomatic complexity by breaking down functions"
+            )
 
         if (
             hasattr(quality_metrics, "documentation_coverage")
@@ -671,7 +733,9 @@ class QualityAssurancePipeline:
         if hasattr(quality_metrics, "overall_quality"):
             scores.append(quality_metrics.overall_quality)
 
-        security_score = analysis_results.get("security_analysis", {}).get("security_score", 0.5)
+        security_score = analysis_results.get("security_analysis", {}).get(
+            "security_score", 0.5
+        )
         scores.append(security_score)
 
         performance_score = analysis_results.get("performance_analysis", {}).get(
@@ -679,7 +743,9 @@ class QualityAssurancePipeline:
         )
         scores.append(performance_score)
 
-        compliance_score = analysis_results.get("compliance_check", {}).get("compliance_score", 0.5)
+        compliance_score = analysis_results.get("compliance_check", {}).get(
+            "compliance_score", 0.5
+        )
         scores.append(compliance_score)
 
         return sum(scores) / len(scores) if scores else 0.5
@@ -690,7 +756,16 @@ class QualityAssurancePipeline:
         complexity = 1  # Base complexity
 
         # Count decision points
-        decision_keywords = ["if", "elif", "else", "for", "while", "except", "case", "switch"]
+        decision_keywords = [
+            "if",
+            "elif",
+            "else",
+            "for",
+            "while",
+            "except",
+            "case",
+            "switch",
+        ]
         for keyword in decision_keywords:
             complexity += code.lower().count(f" {keyword} ")
             complexity += code.lower().count(f"\t{keyword} ")
@@ -715,7 +790,9 @@ class QualityAssurancePipeline:
         """Calculate documentation coverage"""
         lines = code.split("\n")
         doc_lines = sum(
-            1 for line in lines if line.strip().startswith(('"""', "'''", "#", "//", "/*"))
+            1
+            for line in lines
+            if line.strip().startswith(('"""', "'''", "#", "//", "/*"))
         )
         total_lines = len([line for line in lines if line.strip()])
 
@@ -763,7 +840,11 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
                 "monthly_cost_usd": 10000.0,
             },
             data_sources=["repository", "documentation", "tests", "patterns"],
-            quality_thresholds={"confidence_min": 0.8, "citation_min": 2, "source_diversity": 0.7},
+            quality_thresholds={
+                "confidence_min": 0.8,
+                "citation_min": 2,
+                "source_diversity": 0.7,
+            },
         )
 
         super().__init__(config)
@@ -831,7 +912,9 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
         self.automated_refactoring_enabled = True
         self.comprehensive_testing_enabled = True
 
-        logger.info(f"Code standards initialized with {len(self.quality_gates)} quality gates")
+        logger.info(
+            f"Code standards initialized with {len(self.quality_gates)} quality gates"
+        )
 
     async def _execute_core(self, task: UnifiedTask, routing: Any) -> UnifiedResult:
         """
@@ -854,15 +937,21 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
             code_patterns = await self._load_code_patterns(task)
 
             # Prepare messages for LLM with semantic code understanding
-            messages = self._prepare_semantic_code_messages(task, codebase_context, code_patterns)
+            messages = self._prepare_semantic_code_messages(
+                task, codebase_context, code_patterns
+            )
 
             # Route based on task type with appropriate model selection
             if task.type == PortkeyTaskType.CODE_GENERATION:
                 response = await self._generate_code_with_qa(messages, routing, task)
             elif task.type == PortkeyTaskType.CODE_REVIEW:
-                response = await self._review_code_comprehensively(messages, routing, task)
+                response = await self._review_code_comprehensively(
+                    messages, routing, task
+                )
             else:
-                response = await self._general_code_task_with_qa(messages, routing, task)
+                response = await self._general_code_task_with_qa(
+                    messages, routing, task
+                )
 
             # Process response with semantic understanding
             processed = await self._process_semantic_response(response, task)
@@ -886,7 +975,9 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
                 "semantic_analysis": codebase_context.get("semantic_analysis", {}),
                 "patterns_detected": len(code_patterns.get("detected_patterns", [])),
                 "quality_score": (
-                    qa_results.get("overall_score", 0) if "qa_results" in processed else 0
+                    qa_results.get("overall_score", 0)
+                    if "qa_results" in processed
+                    else 0
                 ),
                 "language": self._detect_language(processed),
                 "complexity": processed.get("complexity_analysis", {}),
@@ -898,14 +989,18 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
                     "validate",
                 ],
             }
-            result.confidence = self._calculate_code_confidence(processed, quality_validation)
+            result.confidence = self._calculate_code_confidence(
+                processed, quality_validation
+            )
             result.citations = self._extract_code_citations(codebase_context)
             result.source_attribution = ["codebase", "patterns", "documentation"]
 
             # Track usage
             if hasattr(response, "usage"):
                 result.tokens_used = response.usage.total_tokens
-                result.cost = self.portkey._estimate_cost(routing.model, result.tokens_used)
+                result.cost = self.portkey._estimate_cost(
+                    routing.model, result.tokens_used
+                )
 
         except Exception as e:
             logger.error(f"Artemis unified execution failed: {e}")
@@ -935,20 +1030,28 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
             repo_path = Path(self.code_context.repository_path)
 
             # Analyze repository structure
-            context["repository_analysis"] = await self._analyze_repository_structure(repo_path)
+            context["repository_analysis"] = await self._analyze_repository_structure(
+                repo_path
+            )
 
             # Perform semantic analysis on key files
-            context["semantic_analysis"] = await self._perform_semantic_analysis(repo_path, task)
+            context["semantic_analysis"] = await self._perform_semantic_analysis(
+                repo_path, task
+            )
 
             # Analyze patterns across the codebase
-            context["pattern_analysis"] = await self._analyze_codebase_patterns(repo_path)
+            context["pattern_analysis"] = await self._analyze_codebase_patterns(
+                repo_path
+            )
 
             # Calculate quality metrics
-            context["quality_metrics"] = await self._calculate_codebase_quality(repo_path)
+            context["quality_metrics"] = await self._calculate_codebase_quality(
+                repo_path
+            )
 
             # Generate architectural overview
-            context["architectural_overview"] = await self._generate_architectural_overview(
-                repo_path
+            context["architectural_overview"] = (
+                await self._generate_architectural_overview(repo_path)
             )
 
         return context
@@ -971,7 +1074,9 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
                 if file_path.is_file():
                     structure["total_files"] += 1
                     ext = file_path.suffix.lower()
-                    structure["file_types"][ext] = structure["file_types"].get(ext, 0) + 1
+                    structure["file_types"][ext] = (
+                        structure["file_types"].get(ext, 0) + 1
+                    )
 
                     # Detect frameworks and libraries
                     if file_path.name in [
@@ -1048,7 +1153,9 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
                     code_content = f.read()
 
                 language = self._detect_file_language(file_path)
-                analysis = await self.semantic_engine.analyze_code_semantics(code_content, language)
+                analysis = await self.semantic_engine.analyze_code_semantics(
+                    code_content, language
+                )
 
                 semantic_results["analyzed_files"].append(
                     {
@@ -1060,7 +1167,9 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
 
                 # Aggregate patterns and concepts
                 semantic_results["patterns_found"].extend(analysis.get("patterns", []))
-                semantic_results["concepts_identified"].extend(analysis.get("concepts", []))
+                semantic_results["concepts_identified"].extend(
+                    analysis.get("concepts", [])
+                )
 
             except Exception as e:
                 logger.warning(f"Failed to analyze file {file_path}: {e}")
@@ -1122,7 +1231,9 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
         # For now, return mock structure
         return overview
 
-    def _select_files_for_analysis(self, repo_path: Path, task: UnifiedTask) -> list[Path]:
+    def _select_files_for_analysis(
+        self, repo_path: Path, task: UnifiedTask
+    ) -> list[Path]:
         """Select relevant files for semantic analysis based on task"""
         relevant_files = []
 
@@ -1139,8 +1250,9 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
             for file_path in repo_path.rglob("*"):
                 if file_path.is_file() and file_path.suffix.lower() in lang_extensions:
                     # Skip test files and node_modules
-                    if "test" not in file_path.name.lower() and "node_modules" not in str(
-                        file_path
+                    if (
+                        "test" not in file_path.name.lower()
+                        and "node_modules" not in str(file_path)
                     ):
                         relevant_files.append(file_path)
 
@@ -1207,18 +1319,27 @@ class ArtemisUnifiedOrchestrator(UnifiedBaseOrchestrator):
         task_content_lower = task.content.lower()
 
         if "class" in task_content_lower or "object" in task_content_lower:
-            patterns["recommended_patterns"].extend(["factory", "singleton", "observer"])
+            patterns["recommended_patterns"].extend(
+                ["factory", "singleton", "observer"]
+            )
 
         if "api" in task_content_lower or "service" in task_content_lower:
-            patterns["recommended_patterns"].extend(["repository", "service_layer", "dto"])
+            patterns["recommended_patterns"].extend(
+                ["repository", "service_layer", "dto"]
+            )
 
         if "test" in task_content_lower:
-            patterns["recommended_patterns"].extend(["arrange_act_assert", "mock", "fixture"])
+            patterns["recommended_patterns"].extend(
+                ["arrange_act_assert", "mock", "fixture"]
+            )
 
         return patterns
 
     def _prepare_semantic_code_messages(
-        self, task: UnifiedTask, codebase_context: dict[str, Any], code_patterns: dict[str, Any]
+        self,
+        task: UnifiedTask,
+        codebase_context: dict[str, Any],
+        code_patterns: dict[str, Any],
     ) -> list[dict[str, str]]:
         """Prepare messages for LLM with semantic code understanding"""
 
@@ -1300,12 +1421,16 @@ Ensure the solution integrates well with the existing codebase architecture and 
             return task.metadata["language"]
 
         # Check codebase context
-        main_languages = codebase_context.get("repository_analysis", {}).get("main_languages", [])
+        main_languages = codebase_context.get("repository_analysis", {}).get(
+            "main_languages", []
+        )
         if main_languages:
             return main_languages[0]
 
         # Default to first language in context
-        return self.code_context.languages[0] if self.code_context.languages else "python"
+        return (
+            self.code_context.languages[0] if self.code_context.languages else "python"
+        )
 
     def _format_codebase_insights(self, codebase_context: dict[str, Any]) -> str:
         """Format codebase insights for LLM consumption"""
@@ -1313,8 +1438,12 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         repo_analysis = codebase_context.get("repository_analysis", {})
         if repo_analysis:
-            insights.append(f"Repository contains {repo_analysis.get('total_files', 0)} files")
-            insights.append(f"Main languages: {', '.join(repo_analysis.get('main_languages', []))}")
+            insights.append(
+                f"Repository contains {repo_analysis.get('total_files', 0)} files"
+            )
+            insights.append(
+                f"Main languages: {', '.join(repo_analysis.get('main_languages', []))}"
+            )
 
         quality_metrics = codebase_context.get("quality_metrics", {})
         if quality_metrics:
@@ -1328,7 +1457,11 @@ Ensure the solution integrates well with the existing codebase architecture and 
                 f"Detected patterns: {len(semantic_analysis['patterns_found'])} patterns identified"
             )
 
-        return "\n- ".join([""] + insights) if insights else "- No codebase analysis available"
+        return (
+            "\n- ".join([""] + insights)
+            if insights
+            else "- No codebase analysis available"
+        )
 
     def _format_pattern_recommendations(self, code_patterns: dict[str, Any]) -> str:
         """Format pattern recommendations for LLM consumption"""
@@ -1405,10 +1538,14 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return response
 
-    async def _process_semantic_response(self, response: Any, task: UnifiedTask) -> dict[str, Any]:
+    async def _process_semantic_response(
+        self, response: Any, task: UnifiedTask
+    ) -> dict[str, Any]:
         """Process LLM response with semantic code understanding"""
         content = (
-            response.choices[0].message.content if hasattr(response, "choices") else str(response)
+            response.choices[0].message.content
+            if hasattr(response, "choices")
+            else str(response)
         )
 
         # Extract code blocks with language detection
@@ -1456,7 +1593,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         for lang, code in matches:
             # Enhanced language detection
-            detected_lang = lang.lower() if lang else self._detect_language_from_code(code)
+            detected_lang = (
+                lang.lower() if lang else self._detect_language_from_code(code)
+            )
 
             code_blocks.append(
                 {
@@ -1485,20 +1624,35 @@ Ensure the solution integrates well with the existing codebase architecture and 
         # JavaScript indicators
         elif any(
             indicator in code_lower
-            for indicator in ["function ", "const ", "let ", "var ", "=>", "console.log"]
+            for indicator in [
+                "function ",
+                "const ",
+                "let ",
+                "var ",
+                "=>",
+                "console.log",
+            ]
         ):
             return "javascript"
 
         # TypeScript indicators
         elif any(
             indicator in code_lower
-            for indicator in ["interface ", ": string", ": number", ": boolean", "type "]
+            for indicator in [
+                "interface ",
+                ": string",
+                ": number",
+                ": boolean",
+                "type ",
+            ]
         ):
             return "typescript"
 
         return "unknown"
 
-    async def _analyze_code_complexity(self, code_blocks: list[dict[str, str]]) -> dict[str, Any]:
+    async def _analyze_code_complexity(
+        self, code_blocks: list[dict[str, str]]
+    ) -> dict[str, Any]:
         """Analyze complexity of generated code blocks"""
         complexity_analysis = {
             "overall_complexity": 0.0,
@@ -1521,12 +1675,16 @@ Ensure the solution integrates well with the existing codebase architecture and 
                         "block_index": i,
                         "language": language,
                         "complexity": complexity,
-                        "recommendation": "Good" if complexity <= 10 else "Consider refactoring",
+                        "recommendation": (
+                            "Good" if complexity <= 10 else "Consider refactoring"
+                        ),
                     }
                 )
 
         if code_blocks:
-            complexity_analysis["overall_complexity"] = total_complexity / len(code_blocks)
+            complexity_analysis["overall_complexity"] = total_complexity / len(
+                code_blocks
+            )
 
             # Add recommendations based on complexity
             if complexity_analysis["overall_complexity"] > 15:
@@ -1534,7 +1692,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
                     "Consider breaking down complex functions"
                 )
             elif complexity_analysis["overall_complexity"] > 10:
-                complexity_analysis["recommendations"].append("Monitor complexity growth")
+                complexity_analysis["recommendations"].append(
+                    "Monitor complexity growth"
+                )
             else:
                 complexity_analysis["recommendations"].append(
                     "Complexity is within acceptable range"
@@ -1560,7 +1720,10 @@ Ensure the solution integrates well with the existing codebase architecture and 
             test_lines = [
                 line
                 for line in lines
-                if any(keyword in line.lower() for keyword in ["test", "describe", "it", "assert"])
+                if any(
+                    keyword in line.lower()
+                    for keyword in ["test", "describe", "it", "assert"]
+                )
             ]
             if test_lines:
                 return "\n".join(test_lines)
@@ -1607,7 +1770,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return qa_results
 
-    async def _run_artemis_specific_checks(self, processed: dict[str, Any]) -> dict[str, Any]:
+    async def _run_artemis_specific_checks(
+        self, processed: dict[str, Any]
+    ) -> dict[str, Any]:
         """Run Artemis-specific quality checks"""
         checks = {
             "pattern_compliance": True,
@@ -1631,14 +1796,22 @@ Ensure the solution integrates well with the existing codebase architecture and 
         patterns = semantic_analysis.get("patterns", [])
 
         if patterns:
-            positive_patterns = [p for p in patterns if getattr(p, "impact", None) == "positive"]
-            negative_patterns = [p for p in patterns if getattr(p, "impact", None) == "negative"]
+            positive_patterns = [
+                p for p in patterns if getattr(p, "impact", None) == "positive"
+            ]
+            negative_patterns = [
+                p for p in patterns if getattr(p, "impact", None) == "negative"
+            ]
 
-            checks["pattern_compliance"] = len(positive_patterns) > len(negative_patterns)
+            checks["pattern_compliance"] = len(positive_patterns) > len(
+                negative_patterns
+            )
 
         return checks
 
-    async def _validate_quality_gates(self, processed: dict[str, Any]) -> dict[str, Any]:
+    async def _validate_quality_gates(
+        self, processed: dict[str, Any]
+    ) -> dict[str, Any]:
         """Validate code against quality gates"""
         validation = {
             "passed": True,
@@ -1672,7 +1845,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
                 validation["passed"] = False
 
         # Check security score
-        security_score = qa_results.get("security_analysis", {}).get("security_score", 1.0) * 100
+        security_score = (
+            qa_results.get("security_analysis", {}).get("security_score", 1.0) * 100
+        )
         if security_score < self.quality_gates.get("security_score", 80):
             validation["failed_gates"].append(
                 f"Security score {security_score:.1f} below threshold"
@@ -1690,7 +1865,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
             artemis_score = passed_checks / len(artemis_checks)
             scores.append(artemis_score)
 
-        validation["overall_quality_score"] = sum(scores) / len(scores) if scores else 0.5
+        validation["overall_quality_score"] = (
+            sum(scores) / len(scores) if scores else 0.5
+        )
 
         return validation
 
@@ -1740,7 +1917,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
                     dependencies.append(module)
                 else:
                     # Handle direct imports
-                    import_names = [imp.strip().split(" as ")[0] for imp in imports.split(",")]
+                    import_names = [
+                        imp.strip().split(" as ")[0] for imp in imports.split(",")
+                    ]
                     dependencies.extend(import_names)
 
         # Extract JavaScript/TypeScript imports
@@ -1786,7 +1965,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
         if semantic_analysis.get("patterns"):
             # Higher confidence if good patterns detected
             positive_patterns = [
-                p for p in semantic_analysis["patterns"] if getattr(p, "impact", None) == "positive"
+                p
+                for p in semantic_analysis["patterns"]
+                if getattr(p, "impact", None) == "positive"
             ]
             pattern_factor = min(1.0, 0.6 + (len(positive_patterns) * 0.1))
             factors.append(pattern_factor)
@@ -1795,7 +1976,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return sum(factors) / len(factors)
 
-    def _extract_code_citations(self, codebase_context: dict[str, Any]) -> list[dict[str, str]]:
+    def _extract_code_citations(
+        self, codebase_context: dict[str, Any]
+    ) -> list[dict[str, str]]:
         """Extract citations from codebase analysis"""
         citations = []
 
@@ -1821,7 +2004,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
                     "type": "code_analysis",
                     "timestamp": datetime.now().isoformat(),
                     "files_analyzed": str(len(semantic_analysis["analyzed_files"])),
-                    "patterns_found": str(len(semantic_analysis.get("patterns_found", []))),
+                    "patterns_found": str(
+                        len(semantic_analysis.get("patterns_found", []))
+                    ),
                 }
             )
 
@@ -1833,7 +2018,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
                     "source": "quality_analysis",
                     "type": "metrics",
                     "timestamp": datetime.now().isoformat(),
-                    "maintainability": str(quality_metrics.get("maintainability_index", 0)),
+                    "maintainability": str(
+                        quality_metrics.get("maintainability_index", 0)
+                    ),
                     "coverage": str(quality_metrics.get("test_coverage", 0)),
                 }
             )
@@ -1953,7 +2140,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return None
 
-    async def analyze_technical_debt(self, repository_path: Optional[str] = None) -> dict[str, Any]:
+    async def analyze_technical_debt(
+        self, repository_path: Optional[str] = None
+    ) -> dict[str, Any]:
         """Analyze technical debt across the codebase"""
         content = "Analyze technical debt and provide refactoring roadmap"
         if repository_path:
@@ -1979,7 +2168,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
 
         return None
 
-    async def _format_as_comprehensive_review(self, result: UnifiedResult) -> CodeReview:
+    async def _format_as_comprehensive_review(
+        self, result: UnifiedResult
+    ) -> CodeReview:
         """Format execution result as comprehensive CodeReview"""
         # Extract review components from the result
         processed_content = result.content
@@ -2006,7 +2197,11 @@ Ensure the solution integrates well with the existing codebase architecture and 
             security_vulnerabilities=[],
             performance_concerns=[],
             best_practices=[],
-            patterns=processed_content.patterns if hasattr(processed_content, "patterns") else [],
+            patterns=(
+                processed_content.patterns
+                if hasattr(processed_content, "patterns")
+                else []
+            ),
             refactoring_opportunities=[],
             technical_debt_assessment={},
         )
@@ -2018,7 +2213,9 @@ Ensure the solution integrates well with the existing codebase architecture and 
 class CodeSandbox:
     """Safe code execution sandbox for testing generated code"""
 
-    async def execute_code(self, code: str, language: str, timeout: int = 10) -> dict[str, Any]:
+    async def execute_code(
+        self, code: str, language: str, timeout: int = 10
+    ) -> dict[str, Any]:
         """Execute code in a safe sandbox environment"""
         result = {
             "output": "",

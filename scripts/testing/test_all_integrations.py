@@ -12,7 +12,9 @@ import sys
 from typing import Dict
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -63,7 +65,10 @@ class IntegrationTester:
                         "message": "Lambda Labs API accessible",
                     }
                 else:
-                    return {"status": "error", "message": f"HTTP {response.status_code}"}
+                    return {
+                        "status": "error",
+                        "message": f"HTTP {response.status_code}",
+                    }
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
@@ -99,7 +104,9 @@ class IntegrationTester:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     "https://api.portkey.ai/v1/models",
-                    headers={"Authorization": f'Bearer {self.api_keys["PORTKEY_API_KEY"]}'},
+                    headers={
+                        "Authorization": f'Bearer {self.api_keys["PORTKEY_API_KEY"]}'
+                    },
                 )
                 if response.status_code == 200:
                     models = response.json()
@@ -109,7 +116,10 @@ class IntegrationTester:
                         "message": "Portkey API accessible",
                     }
                 else:
-                    return {"status": "error", "message": f"HTTP {response.status_code}"}
+                    return {
+                        "status": "error",
+                        "message": f"HTTP {response.status_code}",
+                    }
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
@@ -124,7 +134,9 @@ class IntegrationTester:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
                     "https://openrouter.ai/api/v1/models",
-                    headers={"Authorization": f'Bearer {self.api_keys["OPENROUTER_API_KEY"]}'},
+                    headers={
+                        "Authorization": f'Bearer {self.api_keys["OPENROUTER_API_KEY"]}'
+                    },
                 )
                 if response.status_code == 200:
                     models = response.json()
@@ -134,7 +146,10 @@ class IntegrationTester:
                         "message": "OpenRouter API accessible",
                     }
                 else:
-                    return {"status": "error", "message": f"HTTP {response.status_code}"}
+                    return {
+                        "status": "error",
+                        "message": f"HTTP {response.status_code}",
+                    }
         except Exception as e:
             return {"status": "error", "message": str(e)}
 
@@ -259,7 +274,9 @@ class IntegrationTester:
 
     def generate_report(self) -> str:
         """Generate comprehensive test report"""
-        successful_tests = sum(1 for r in self.results.values() if r.get("status") == "success")
+        successful_tests = sum(
+            1 for r in self.results.values() if r.get("status") == "success"
+        )
         total_tests = len(self.results) - 1  # Exclude api_keys from count
 
         report = f"""

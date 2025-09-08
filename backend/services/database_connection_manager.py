@@ -58,21 +58,19 @@ class DatabaseConfig:
     """Database configuration for business operations"""
 
     # Primary business database
-    BUSINESS_DB_URL = (
-        "postgresql+asyncpg://sophia_user:secure_password@localhost:5432/sophia_business"
-    )
+    BUSINESS_DB_URL = "postgresql+asyncpg://sophia_user:secure_password@localhost:5432/sophia_business"
     BUSINESS_DB_POOL_SIZE = 50
     BUSINESS_DB_MAX_OVERFLOW = 100
 
     # Analytics database (read replicas)
-    ANALYTICS_DB_URL = (
-        "postgresql+asyncpg://sophia_user:secure_password@localhost:5432/sophia_analytics"
-    )
+    ANALYTICS_DB_URL = "postgresql+asyncpg://sophia_user:secure_password@localhost:5432/sophia_analytics"
     ANALYTICS_DB_POOL_SIZE = 30
     ANALYTICS_DB_MAX_OVERFLOW = 50
 
     # Audit database (compliance)
-    AUDIT_DB_URL = "postgresql+asyncpg://sophia_user:secure_password@localhost:5432/sophia_audit"
+    AUDIT_DB_URL = (
+        "postgresql+asyncpg://sophia_user:secure_password@localhost:5432/sophia_audit"
+    )
     AUDIT_DB_POOL_SIZE = 20
     AUDIT_DB_MAX_OVERFLOW = 30
 
@@ -248,7 +246,8 @@ class OptimizedConnectionManager:
             max_size=self.config.ANALYTICS_DB_POOL_SIZE,
             max_queries=10000,
             max_inactive_connection_lifetime=self.config.IDLE_TIMEOUT,
-            command_timeout=self.config.QUERY_TIMEOUT * 2,  # Longer timeout for analytics
+            command_timeout=self.config.QUERY_TIMEOUT
+            * 2,  # Longer timeout for analytics
         )
 
         # Create SQLAlchemy engine
@@ -351,7 +350,9 @@ class OptimizedConnectionManager:
                 await self.pools[pool_name].release(connection)
 
     @asynccontextmanager
-    async def get_session(self, pool_name: str = "business") -> AsyncContextManager[AsyncSession]:
+    async def get_session(
+        self, pool_name: str = "business"
+    ) -> AsyncContextManager[AsyncSession]:
         """Get SQLAlchemy session with automatic cleanup"""
         if pool_name not in self.session_makers:
             raise ValueError(f"Session maker for pool {pool_name} not found")
@@ -411,7 +412,9 @@ class OptimizedConnectionManager:
 
                 # Log slow queries
                 if query_time > self.config.SLOW_QUERY_THRESHOLD:
-                    logger.warning(f"Slow query detected ({query_time:.2f}s): {query[:100]}...")
+                    logger.warning(
+                        f"Slow query detected ({query_time:.2f}s): {query[:100]}..."
+                    )
 
                 return [dict(row) for row in result]
 
@@ -445,7 +448,9 @@ class OptimizedConnectionManager:
                     if self.monitoring_enabled:
                         await self._update_query_metrics(pool_name, transaction_time)
 
-                    logger.info(f"Transaction completed successfully ({transaction_time:.2f}s)")
+                    logger.info(
+                        f"Transaction completed successfully ({transaction_time:.2f}s)"
+                    )
                     return True
 
                 except Exception as e:
@@ -470,7 +475,11 @@ class OptimizedConnectionManager:
                 "max_size": pool.get_max_size(),
                 "min_size": pool.get_min_size(),
                 "idle_connections": pool.get_idle_size(),
-                "metrics": (self.metrics[pool_name].to_dict() if pool_name in self.metrics else {}),
+                "metrics": (
+                    self.metrics[pool_name].to_dict()
+                    if pool_name in self.metrics
+                    else {}
+                ),
             }
             status["pools"][pool_name] = pool_status
 
@@ -594,7 +603,9 @@ class OptimizedConnectionManager:
                 )
         else:
             for name in self.metrics.keys():
-                self.metrics[name] = ConnectionMetrics(pool_name=name, last_reset=datetime.now(UTC))
+                self.metrics[name] = ConnectionMetrics(
+                    pool_name=name, last_reset=datetime.now(UTC)
+                )
 
         logger.info(f"Metrics reset for {'all pools' if not pool_name else pool_name}")
 

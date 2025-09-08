@@ -153,7 +153,14 @@ async def test_input_validation():
                 insight = bridge.translate_to_business(test_input)
         except Exception as e:
             errors.append(
-                (test_input[:50] if isinstance(test_input, str) else str(test_input)[:50], e)
+                (
+                    (
+                        test_input[:50]
+                        if isinstance(test_input, str)
+                        else str(test_input)[:50]
+                    ),
+                    e,
+                )
             )
 
     if not errors:

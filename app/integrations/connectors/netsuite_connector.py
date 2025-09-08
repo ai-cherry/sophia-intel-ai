@@ -110,12 +110,20 @@ class NetSuiteConnector(BaseConnector):
         """Load NetSuite configuration from secrets"""
         if self.credentials:
             config.account_id = self.credentials.get("account_id", config.account_id)
-            config.consumer_key = self.credentials.get("consumer_key", config.consumer_key)
-            config.consumer_secret = self.credentials.get("consumer_secret", config.consumer_secret)
+            config.consumer_key = self.credentials.get(
+                "consumer_key", config.consumer_key
+            )
+            config.consumer_secret = self.credentials.get(
+                "consumer_secret", config.consumer_secret
+            )
             config.token_id = self.credentials.get("token_id", config.token_id)
-            config.token_secret = self.credentials.get("token_secret", config.token_secret)
+            config.token_secret = self.credentials.get(
+                "token_secret", config.token_secret
+            )
             config.client_id = self.credentials.get("client_id", config.client_id)
-            config.client_secret = self.credentials.get("client_secret", config.client_secret)
+            config.client_secret = self.credentials.get(
+                "client_secret", config.client_secret
+            )
 
     def _get_default_headers(self) -> dict[str, str]:
         """Get headers with NetSuite authentication"""
@@ -153,9 +161,7 @@ class NetSuiteConnector(BaseConnector):
         # Create signature base string
         base_url = f"{self.config.base_url}{path}"
         param_string = "&".join([f"{k}={v}" for k, v in sorted(oauth_params.items())])
-        signature_base = (
-            f"{method.upper()}&{urllib.parse.quote(base_url)}&{urllib.parse.quote(param_string)}"
-        )
+        signature_base = f"{method.upper()}&{urllib.parse.quote(base_url)}&{urllib.parse.quote(param_string)}"
 
         # Generate signature
         signing_key = f"{self.config.consumer_secret}&{self.config.token_secret}"
@@ -170,7 +176,9 @@ class NetSuiteConnector(BaseConnector):
         oauth_params["oauth_signature"] = signature
 
         # Build authorization header
-        auth_header = "OAuth " + ", ".join([f'{k}="{v}"' for k, v in oauth_params.items()])
+        auth_header = "OAuth " + ", ".join(
+            [f'{k}="{v}"' for k, v in oauth_params.items()]
+        )
         return auth_header
 
     async def _get_oauth2_token(self) -> bool:
@@ -193,7 +201,9 @@ class NetSuiteConnector(BaseConnector):
                         token_data = await response.json()
                         self.access_token = token_data["access_token"]
                         expires_in = token_data.get("expires_in", 3600)
-                        self.token_expires_at = datetime.now() + timedelta(seconds=expires_in)
+                        self.token_expires_at = datetime.now() + timedelta(
+                            seconds=expires_in
+                        )
                         logger.info("NetSuite OAuth 2.0 token obtained")
                         return True
                     else:
@@ -242,7 +252,10 @@ class NetSuiteConnector(BaseConnector):
         url = f"{self.config.base_url}/{endpoint}"
 
         # Prepare headers
-        request_headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        request_headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        }
 
         if self.config.auth_method == NetSuiteAuthMethod.OAUTH2:
             request_headers["Authorization"] = f"Bearer {self.access_token}"
@@ -290,25 +303,30 @@ class NetSuiteConnector(BaseConnector):
 
         # Create signature base string
         params_string = "&".join(
-            [f"{k}={urllib.parse.quote(str(v))}" for k, v in sorted(oauth_params.items())]
+            [
+                f"{k}={urllib.parse.quote(str(v))}"
+                for k, v in sorted(oauth_params.items())
+            ]
         )
 
-        base_string = (
-            f"{method.upper()}&{urllib.parse.quote(url)}&{urllib.parse.quote(params_string)}"
-        )
+        base_string = f"{method.upper()}&{urllib.parse.quote(url)}&{urllib.parse.quote(params_string)}"
 
         # Create signing key
         signing_key = f"{urllib.parse.quote(self.config.consumer_secret)}&{urllib.parse.quote(self.config.token_secret)}"
 
         # Generate signature
         signature = base64.b64encode(
-            hmac.new(signing_key.encode(), base_string.encode(), hashlib.sha256).digest()
+            hmac.new(
+                signing_key.encode(), base_string.encode(), hashlib.sha256
+            ).digest()
         ).decode()
 
         oauth_params["oauth_signature"] = signature
 
         # Create authorization header
-        auth_header = "OAuth " + ", ".join([f'{k}="{v}"' for k, v in oauth_params.items()])
+        auth_header = "OAuth " + ", ".join(
+            [f'{k}="{v}"' for k, v in oauth_params.items()]
+        )
 
         return {"Authorization": auth_header}
 
@@ -387,7 +405,9 @@ class NetSuiteConnector(BaseConnector):
         params = {"limit": limit, "offset": offset}
 
         # Execute query
-        response = await self.make_request("POST", endpoint, params=params, json_data=payload)
+        response = await self.make_request(
+            "POST", endpoint, params=params, json_data=payload
+        )
 
         return response
 
@@ -424,7 +444,9 @@ class NetSuiteConnector(BaseConnector):
         endpoint = f"record/v1/{record_type}/{record_id}"
         return await self.make_request("GET", endpoint)
 
-    async def create_record(self, record_type: str, data: dict[str, Any]) -> dict[str, Any]:
+    async def create_record(
+        self, record_type: str, data: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Create a new record
 
@@ -544,14 +566,18 @@ class NetSuiteConnector(BaseConnector):
                     has_more = False
 
             # Transform to chunks
-            chunks = await self._transform_netsuite_records(all_records, params.get("record_type"))
+            chunks = await self._transform_netsuite_records(
+                all_records, params.get("record_type")
+            )
 
             # Store in memory
             if chunks:
                 from app.memory.unified_memory_router import get_memory_router
 
                 memory = get_memory_router()
-                upsert_report = await memory.upsert_chunks(chunks, domain=MemoryDomain.SOPHIA)
+                upsert_report = await memory.upsert_chunks(
+                    chunks, domain=MemoryDomain.SOPHIA
+                )
                 report.records_stored = upsert_report.chunks_stored
 
             report.success = True
@@ -566,7 +592,9 @@ class NetSuiteConnector(BaseConnector):
 
         finally:
             report.duration_seconds = (datetime.now() - start_time).total_seconds()
-            report.next_sync = datetime.now() + timedelta(seconds=self.config.sync_interval)
+            report.next_sync = datetime.now() + timedelta(
+                seconds=self.config.sync_interval
+            )
 
         return report
 
@@ -616,7 +644,9 @@ class NetSuiteConnector(BaseConnector):
         record_type = payload.get("recordType")
         record_id = payload.get("recordId")
 
-        logger.info(f"Processing NetSuite webhook: {event_type} for {record_type}/{record_id}")
+        logger.info(
+            f"Processing NetSuite webhook: {event_type} for {record_type}/{record_id}"
+        )
 
         # Fetch updated record
         if event_type in ["create", "edit"]:

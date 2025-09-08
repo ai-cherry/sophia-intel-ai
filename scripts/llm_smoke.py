@@ -11,7 +11,11 @@ from app.core.portkey_manager import PortkeyManager
 
 
 async def run_portkey(
-    provider: str, model: str, prompt: str, max_tokens: int = 256, temperature: float = 0.0
+    provider: str,
+    model: str,
+    prompt: str,
+    max_tokens: int = 256,
+    temperature: float = 0.0,
 ):
     pm = PortkeyManager()
     messages = [
@@ -60,20 +64,26 @@ async def run_openrouter_direct(
     }
     async with httpx.AsyncClient(timeout=20) as client:
         r = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload,
         )
         r.raise_for_status()
         data = r.json()
         out = {
             "provider": "openrouter-direct",
             "model": model,
-            "text": data.get("choices", [{}])[0].get("message", {}).get("content", "")[:400],
+            "text": data.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "")[:400],
             "raw_status": r.status_code,
         }
         print(json.dumps(out, ensure_ascii=False))
 
 
-async def run_groq_direct(model: str, prompt: str, max_tokens: int = 256, temperature: float = 0.0):
+async def run_groq_direct(
+    model: str, prompt: str, max_tokens: int = 256, temperature: float = 0.0
+):
     api_key = os.getenv("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY not set")
@@ -92,14 +102,18 @@ async def run_groq_direct(model: str, prompt: str, max_tokens: int = 256, temper
     }
     async with httpx.AsyncClient(timeout=20) as client:
         r = await client.post(
-            "https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers=headers,
+            json=payload,
         )
         r.raise_for_status()
         data = r.json()
         out = {
             "provider": "groq-direct",
             "model": model,
-            "text": data.get("choices", [{}])[0].get("message", {}).get("content", "")[:400],
+            "text": data.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "")[:400],
             "raw_status": r.status_code,
         }
         print(json.dumps(out, ensure_ascii=False))
@@ -108,7 +122,8 @@ async def run_groq_direct(model: str, prompt: str, max_tokens: int = 256, temper
 def main() -> int:
     ap = argparse.ArgumentParser(description="LLM smoke test (manual, no fallbacks)")
     ap.add_argument(
-        "--provider", help="Portkey provider key (e.g., openai, anthropic, groq, openrouter, xai)"
+        "--provider",
+        help="Portkey provider key (e.g., openai, anthropic, groq, openrouter, xai)",
     )
     ap.add_argument(
         "--transport",
@@ -116,7 +131,9 @@ def main() -> int:
         choices=["portkey", "openrouter-direct", "groq-direct"],
         help="Transport to use",
     )
-    ap.add_argument("--model", required=True, help="Exact model id for provider/transport")
+    ap.add_argument(
+        "--model", required=True, help="Exact model id for provider/transport"
+    )
     ap.add_argument("--prompt", required=False, default="Say 'ready' if online.")
     ap.add_argument("--max-tokens", type=int, default=128)
     ap.add_argument("--temperature", type=float, default=0.0)
@@ -126,14 +143,24 @@ def main() -> int:
         if not args.provider:
             raise SystemExit("--provider is required for portkey transport")
         asyncio.run(
-            run_portkey(args.provider, args.model, args.prompt, args.max_tokens, args.temperature)
+            run_portkey(
+                args.provider,
+                args.model,
+                args.prompt,
+                args.max_tokens,
+                args.temperature,
+            )
         )
     elif args.transport == "openrouter-direct":
         asyncio.run(
-            run_openrouter_direct(args.model, args.prompt, args.max_tokens, args.temperature)
+            run_openrouter_direct(
+                args.model, args.prompt, args.max_tokens, args.temperature
+            )
         )
     elif args.transport == "groq-direct":
-        asyncio.run(run_groq_direct(args.model, args.prompt, args.max_tokens, args.temperature))
+        asyncio.run(
+            run_groq_direct(args.model, args.prompt, args.max_tokens, args.temperature)
+        )
     return 0
 
 

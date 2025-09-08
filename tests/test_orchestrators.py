@@ -8,7 +8,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from app.artemis.artemis_orchestrator import ArtemisOrchestrator
-from app.orchestrators.base_orchestrator import ExecutionPriority, Result, Task, TaskStatus
+from app.orchestrators.base_orchestrator import (
+    ExecutionPriority,
+    Result,
+    Task,
+    TaskStatus,
+)
 from app.sophia.sophia_orchestrator import SophiaOrchestrator
 
 
@@ -19,7 +24,9 @@ def mock_portkey_manager():
         manager = MagicMock()
         manager.execute_with_fallback = AsyncMock(
             return_value={
-                "choices": [{"message": {"content": "Test response", "role": "assistant"}}]
+                "choices": [
+                    {"message": {"content": "Test response", "role": "assistant"}}
+                ]
             }
         )
         mock.return_value = manager
@@ -70,7 +77,10 @@ class TestBaseOrchestrator:
     async def test_result_creation(self):
         """Test result creation"""
         result = Result(
-            task_id="test-123", success=True, data={"output": "test"}, execution_time=1.5
+            task_id="test-123",
+            success=True,
+            data={"output": "test"},
+            execution_time=1.5,
         )
 
         assert result.task_id == "test-123"
@@ -105,12 +115,16 @@ class TestSophiaOrchestrator:
             mock_portkey_manager.execute_with_fallback.assert_called()
 
     @pytest.mark.asyncio
-    async def test_customer_health_analysis(self, mock_portkey_manager, mock_memory_router):
+    async def test_customer_health_analysis(
+        self, mock_portkey_manager, mock_memory_router
+    ):
         """Test customer health analysis"""
         orchestrator = SophiaOrchestrator()
 
         with patch.object(orchestrator, "connectors", {}):
-            result = await orchestrator.analyze_customer_health(account_ids=["acc1", "acc2"])
+            result = await orchestrator.analyze_customer_health(
+                account_ids=["acc1", "acc2"]
+            )
 
             assert "health_scores" in result
             assert "at_risk" in result
@@ -121,7 +135,9 @@ class TestSophiaOrchestrator:
         """Test competitive analysis"""
         orchestrator = SophiaOrchestrator()
 
-        result = await orchestrator.competitive_analysis(competitors=["Competitor1", "Competitor2"])
+        result = await orchestrator.competitive_analysis(
+            competitors=["Competitor1", "Competitor2"]
+        )
 
         assert "analysis" in result
         assert "competitors" in result
@@ -233,7 +249,10 @@ class TestArtemisOrchestrator:
                         "content": json.dumps(
                             {
                                 "refactored_code": "def clean_function():\n    x = 1\n    y = 2\n    return x + y",
-                                "changes": ["Improved formatting", "Added proper spacing"],
+                                "changes": [
+                                    "Improved formatting",
+                                    "Added proper spacing",
+                                ],
                             }
                         ),
                         "role": "assistant",
@@ -290,7 +309,9 @@ class TestIntegration:
         artemis = ArtemisOrchestrator()
 
         # Sophia generates requirements from BI analysis
-        bi_task = Task(id="bi-123", type="analysis", description="Analyze customer churn patterns")
+        bi_task = Task(
+            id="bi-123", type="analysis", description="Analyze customer churn patterns"
+        )
 
         bi_result = await sophia.execute(bi_task)
         assert bi_result.success

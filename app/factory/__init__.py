@@ -134,7 +134,13 @@ FACTORY_INFO = {
     "description": "Comprehensive AI swarm factory integrating mythology and military agents",
     "components": {
         "mythology_agents": ["Hermes", "Asclepius", "Athena", "Odin", "Minerva"],
-        "military_units": ["Pathfinders", "Sentinels", "Architects", "Operators", "Guardians"],
+        "military_units": [
+            "Pathfinders",
+            "Sentinels",
+            "Architects",
+            "Operators",
+            "Guardians",
+        ],
         "swarm_types": [
             "Business Intelligence",
             "Strategic Planning",

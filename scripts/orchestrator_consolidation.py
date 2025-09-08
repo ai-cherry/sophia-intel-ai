@@ -13,7 +13,9 @@ from datetime import datetime
 from pathlib import Path
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 
@@ -71,7 +73,9 @@ class OrchestrationConsolidator:
         # Phase 6: Validation
         await self._validate_consolidation()
 
-        logger.info("✅ Orchestrator Consolidation Complete - ZERO TECHNICAL DEBT ACHIEVED")
+        logger.info(
+            "✅ Orchestrator Consolidation Complete - ZERO TECHNICAL DEBT ACHIEVED"
+        )
 
         return self._generate_report()
 
@@ -93,7 +97,9 @@ class OrchestrationConsolidator:
                 shutil.copy2(source, dest)
                 backed_up += 1
 
-        logger.info(f"✅ Backed up {backed_up} orchestrator files to {self.backup_path}")
+        logger.info(
+            f"✅ Backed up {backed_up} orchestrator files to {self.backup_path}"
+        )
 
     async def _audit_dependencies(self):
         """Find all files that import from orchestrators"""
@@ -108,19 +114,26 @@ class OrchestrationConsolidator:
 
         # Search all Python files for imports
         for py_file in self.root_path.rglob("*.py"):
-            if any(excluded in str(py_file) for excluded in ["backup_", "__pycache__", ".git"]):
+            if any(
+                excluded in str(py_file)
+                for excluded in ["backup_", "__pycache__", ".git"]
+            ):
                 continue
 
             try:
                 content = py_file.read_text()
                 for pattern in import_patterns:
                     if pattern in content:
-                        self.dependent_files.append(str(py_file.relative_to(self.root_path)))
+                        self.dependent_files.append(
+                            str(py_file.relative_to(self.root_path))
+                        )
                         break
             except Exception as e:
                 logger.warning(f"Could not read {py_file}: {e}")
 
-        logger.info(f"📊 Found {len(self.dependent_files)} files with orchestrator dependencies")
+        logger.info(
+            f"📊 Found {len(self.dependent_files)} files with orchestrator dependencies"
+        )
 
     async def _extract_capabilities(self):
         """Extract unique capabilities from each orchestrator"""
@@ -169,7 +182,10 @@ class OrchestrationConsolidator:
         singleton_index = content.find("# Singleton instance")
         if singleton_index > 0:
             enhanced_content = (
-                content[:singleton_index] + enhancements + "\n\n" + content[singleton_index:]
+                content[:singleton_index]
+                + enhancements
+                + "\n\n"
+                + content[singleton_index:]
             )
         else:
             enhanced_content = content + "\n\n" + enhancements
@@ -247,7 +263,9 @@ class OrchestrationConsolidator:
         # Check for broken imports
         broken_imports = await self._check_broken_imports()
         if broken_imports:
-            logger.warning(f"🔧 Found broken imports that need manual fixing: {broken_imports}")
+            logger.warning(
+                f"🔧 Found broken imports that need manual fixing: {broken_imports}"
+            )
         else:
             logger.info("✅ No broken imports detected")
 
@@ -402,14 +420,20 @@ class OrchestrationConsolidator:
         broken = []
 
         for py_file in self.root_path.rglob("*.py"):
-            if any(excluded in str(py_file) for excluded in ["backup_", "__pycache__", ".git"]):
+            if any(
+                excluded in str(py_file)
+                for excluded in ["backup_", "__pycache__", ".git"]
+            ):
                 continue
 
             try:
                 content = py_file.read_text()
                 for orchestrator in self.redundant_orchestrators:
                     module_path = orchestrator.replace("/", ".").replace(".py", "")
-                    if f"from {module_path}" in content or f"import {module_path}" in content:
+                    if (
+                        f"from {module_path}" in content
+                        or f"import {module_path}" in content
+                    ):
                         broken.append(str(py_file.relative_to(self.root_path)))
                         break
             except Exception:
@@ -446,7 +470,9 @@ async def main():
 
     print("\n🎯 ORCHESTRATOR CONSOLIDATION COMPLETE")
     print("=" * 50)
-    print(f"✅ Removed {report['redundant_orchestrators_removed']} redundant orchestrators")
+    print(
+        f"✅ Removed {report['redundant_orchestrators_removed']} redundant orchestrators"
+    )
     print(f"📝 Updated {report['files_updated']} dependent files")
     print(f"🔧 Consolidated {report['capabilities_consolidated']} capability sets")
     print(f"📦 Backup stored at: {report['backup_location']}")

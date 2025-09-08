@@ -20,7 +20,10 @@ from app.performance.circuit_breaker import with_circuit_breaker
 
 # AGNO Framework Integration
 from app.swarms.base.enhanced_memory_client import EnhancedSwarmMemoryClient
-from app.swarms.orchestration.agno_swarm_framework import AGNOTeamConfig, ExecutionStrategy
+from app.swarms.orchestration.agno_swarm_framework import (
+    AGNOTeamConfig,
+    ExecutionStrategy,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +155,9 @@ class BadassImplementationSwarm:
     - Full AGNO framework integration with circuit breaker protection
     """
 
-    def __init__(self, formation: str = "full_implementation", memory_enabled: bool = True):
+    def __init__(
+        self, formation: str = "full_implementation", memory_enabled: bool = True
+    ):
         self.formation = formation
         self.swarm_id = f"impl_{int(time.time())}"
 
@@ -176,7 +181,9 @@ class BadassImplementationSwarm:
             "code_files_generated": 0,
         }
 
-        logger.info(f"🔥 BadassImplementationSwarm initialized: {self.swarm_id} ({formation})")
+        logger.info(
+            f"🔥 BadassImplementationSwarm initialized: {self.swarm_id} ({formation})"
+        )
 
     @with_circuit_breaker("implementation_execution")
     async def execute_implementation(
@@ -184,32 +191,47 @@ class BadassImplementationSwarm:
     ) -> ImplementationReport:
         """Execute full implementation pipeline with advanced orchestration"""
 
-        logger.info(f"🚀 Starting implementation execution for: {problem_description[:100]}...")
+        logger.info(
+            f"🚀 Starting implementation execution for: {problem_description[:100]}..."
+        )
 
         try:
             # Phase 1: Initialize swarm and analyze problem
             await self._initialize_implementation_teams()
-            problem_analysis = await self._analyze_problem(problem_description, target_files or [])
+            problem_analysis = await self._analyze_problem(
+                problem_description, target_files or []
+            )
 
             # Phase 2: Solution design with architecture debate
             solution_design = await self._design_solution(problem_analysis)
             refined_design = await self._conduct_architecture_debate(solution_design)
 
             # Phase 3: Build consensus on implementation approach
-            implementation_plan = await self._build_implementation_consensus(refined_design)
+            implementation_plan = await self._build_implementation_consensus(
+                refined_design
+            )
 
             # Phase 4: Execute implementation with pair programming
-            implementation_results = await self._execute_implementation_tasks(implementation_plan)
+            implementation_results = await self._execute_implementation_tasks(
+                implementation_plan
+            )
 
             # Phase 5: Integration testing and validation
-            validation_results = await self._validate_implementation(implementation_results)
+            validation_results = await self._validate_implementation(
+                implementation_results
+            )
 
             # Phase 6: Generate comprehensive report
             report = await self._generate_implementation_report(
-                problem_analysis, refined_design, implementation_results, validation_results
+                problem_analysis,
+                refined_design,
+                implementation_results,
+                validation_results,
             )
 
-            logger.info(f"✅ Implementation complete: {report.overall_confidence:.1%} confidence")
+            logger.info(
+                f"✅ Implementation complete: {report.overall_confidence:.1%} confidence"
+            )
             return report
 
         except Exception as e:
@@ -218,7 +240,9 @@ class BadassImplementationSwarm:
 
     async def _initialize_implementation_teams(self):
         """Initialize specialized agent teams based on formation"""
-        from app.swarms.implementation.badass_implementation_config import IMPLEMENTATION_FORMATIONS
+        from app.swarms.implementation.badass_implementation_config import (
+            IMPLEMENTATION_FORMATIONS,
+        )
 
         formation_config = IMPLEMENTATION_FORMATIONS[self.formation]
 
@@ -278,8 +302,16 @@ class BadassImplementationSwarm:
                 priority=TaskPriority.CRITICAL,
                 pattern=CollaborationPattern.DEBATE,
                 estimated_minutes=15,
-                required_agents=["problem_analyzer", "system_architect", "debugging_expert"],
-                deliverables=["problem_breakdown", "root_cause_analysis", "scope_definition"],
+                required_agents=[
+                    "problem_analyzer",
+                    "system_architect",
+                    "debugging_expert",
+                ],
+                deliverables=[
+                    "problem_breakdown",
+                    "root_cause_analysis",
+                    "scope_definition",
+                ],
                 success_criteria=[
                     "Clear problem definition",
                     "Identified dependencies",
@@ -297,7 +329,11 @@ class BadassImplementationSwarm:
                 estimated_minutes=10,
                 dependencies=["problem_decomposition"],
                 required_agents=["code_architect", "performance_specialist"],
-                deliverables=["complexity_score", "technical_constraints", "dependency_map"],
+                deliverables=[
+                    "complexity_score",
+                    "technical_constraints",
+                    "dependency_map",
+                ],
                 success_criteria=["Complexity quantified", "Constraints identified"],
             ),
             ImplementationTask(
@@ -309,9 +345,21 @@ class BadassImplementationSwarm:
                 pattern=CollaborationPattern.CONSENSUS,
                 estimated_minutes=12,
                 dependencies=["problem_decomposition"],
-                required_agents=["integration_specialist", "security_analyst", "testing_expert"],
-                deliverables=["impact_assessment", "integration_points", "testing_strategy"],
-                success_criteria=["Impact quantified", "Integration plan", "Test strategy"],
+                required_agents=[
+                    "integration_specialist",
+                    "security_analyst",
+                    "testing_expert",
+                ],
+                deliverables=[
+                    "impact_assessment",
+                    "integration_points",
+                    "testing_strategy",
+                ],
+                success_criteria=[
+                    "Impact quantified",
+                    "Integration plan",
+                    "Test strategy",
+                ],
                 requires_consensus=True,
             ),
         ]
@@ -351,7 +399,9 @@ class BadassImplementationSwarm:
         )
         return problem_analysis
 
-    async def _design_solution(self, problem_analysis: dict[str, Any]) -> dict[str, Any]:
+    async def _design_solution(
+        self, problem_analysis: dict[str, Any]
+    ) -> dict[str, Any]:
         """Solution design with creative collaboration"""
 
         self.current_phase = ImplementationPhase.SOLUTION_DESIGN
@@ -366,8 +416,16 @@ class BadassImplementationSwarm:
                 priority=TaskPriority.CRITICAL,
                 pattern=CollaborationPattern.DEBATE,
                 estimated_minutes=20,
-                required_agents=["solution_architect", "code_architect", "system_designer"],
-                deliverables=["architecture_diagram", "design_patterns", "component_interfaces"],
+                required_agents=[
+                    "solution_architect",
+                    "code_architect",
+                    "system_designer",
+                ],
+                deliverables=[
+                    "architecture_diagram",
+                    "design_patterns",
+                    "component_interfaces",
+                ],
                 success_criteria=[
                     "Scalable architecture",
                     "Clear interfaces",
@@ -389,7 +447,11 @@ class BadassImplementationSwarm:
                     "refactoring_expert",
                     "integration_specialist",
                 ],
-                deliverables=["implementation_phases", "risk_mitigation", "rollback_plan"],
+                deliverables=[
+                    "implementation_phases",
+                    "risk_mitigation",
+                    "rollback_plan",
+                ],
                 success_criteria=["Clear phases", "Risk mitigation", "Rollback safety"],
                 requires_consensus=True,
             ),
@@ -403,8 +465,16 @@ class BadassImplementationSwarm:
                 estimated_minutes=18,
                 dependencies=["architecture_design"],
                 required_agents=["code_architect", "api_designer"],
-                deliverables=["code_structure", "interface_definitions", "naming_conventions"],
-                success_criteria=["Clean architecture", "Clear interfaces", "Consistent naming"],
+                deliverables=[
+                    "code_structure",
+                    "interface_definitions",
+                    "naming_conventions",
+                ],
+                success_criteria=[
+                    "Clean architecture",
+                    "Clear interfaces",
+                    "Consistent naming",
+                ],
             ),
         ]
 
@@ -444,7 +514,9 @@ class BadassImplementationSwarm:
         )
         return solution_design
 
-    async def _conduct_architecture_debate(self, solution_design: dict[str, Any]) -> dict[str, Any]:
+    async def _conduct_architecture_debate(
+        self, solution_design: dict[str, Any]
+    ) -> dict[str, Any]:
         """Conduct structured architecture debate to refine design"""
 
         self.current_phase = ImplementationPhase.ARCHITECTURE_DEBATE
@@ -455,7 +527,11 @@ class BadassImplementationSwarm:
             {
                 "topic": "Architecture Scalability",
                 "focus": "Will this architecture scale with future requirements?",
-                "participants": ["solution_architect", "performance_specialist", "system_designer"],
+                "participants": [
+                    "solution_architect",
+                    "performance_specialist",
+                    "system_designer",
+                ],
                 "duration_minutes": 8,
             },
             {
@@ -471,7 +547,11 @@ class BadassImplementationSwarm:
             {
                 "topic": "Integration Impact",
                 "focus": "How will this solution integrate with existing systems?",
-                "participants": ["integration_specialist", "api_designer", "testing_expert"],
+                "participants": [
+                    "integration_specialist",
+                    "api_designer",
+                    "testing_expert",
+                ],
                 "duration_minutes": 6,
             },
         ]
@@ -488,7 +568,11 @@ class BadassImplementationSwarm:
                 estimated_minutes=round_info["duration_minutes"],
                 required_agents=round_info["participants"],
                 deliverables=["position_papers", "consensus_points", "refinements"],
-                success_criteria=["Clear positions", "Evidence provided", "Consensus reached"],
+                success_criteria=[
+                    "Clear positions",
+                    "Evidence provided",
+                    "Consensus reached",
+                ],
                 debate_worthy=True,
             )
 
@@ -541,7 +625,9 @@ class BadassImplementationSwarm:
             requires_consensus=True,
         )
 
-        consensus_result = await self._execute_weighted_consensus(consensus_task, refined_design)
+        consensus_result = await self._execute_weighted_consensus(
+            consensus_task, refined_design
+        )
         self.execution_metrics["consensus_rounds"] += 1
 
         implementation_plan = {
@@ -550,7 +636,9 @@ class BadassImplementationSwarm:
             "task_breakdown": self._generate_implementation_tasks(consensus_result),
             "success_metrics": self._define_success_metrics(consensus_result),
             "risk_mitigation": self._identify_implementation_risks(consensus_result),
-            "estimated_timeline": self._estimate_implementation_timeline(consensus_result),
+            "estimated_timeline": self._estimate_implementation_timeline(
+                consensus_result
+            ),
             "timestamp": datetime.utcnow().isoformat(),
         }
 
@@ -610,7 +698,11 @@ class BadassImplementationSwarm:
                 priority=TaskPriority.HIGH,
                 pattern=CollaborationPattern.CONSENSUS,
                 estimated_minutes=10,
-                required_agents=["quality_specialist", "code_reviewer", "security_analyst"],
+                required_agents=[
+                    "quality_specialist",
+                    "code_reviewer",
+                    "security_analyst",
+                ],
                 deliverables=["quality_report", "issue_list", "recommendations"],
                 success_criteria=[
                     "Quality standards met",
@@ -628,8 +720,16 @@ class BadassImplementationSwarm:
                 pattern=CollaborationPattern.EXPERT,
                 estimated_minutes=15,
                 required_agents=["testing_expert", "integration_specialist"],
-                deliverables=["test_results", "integration_report", "compatibility_check"],
-                success_criteria=["All tests pass", "Integration verified", "No regressions"],
+                deliverables=[
+                    "test_results",
+                    "integration_report",
+                    "compatibility_check",
+                ],
+                success_criteria=[
+                    "All tests pass",
+                    "Integration verified",
+                    "No regressions",
+                ],
             ),
             ImplementationTask(
                 id="security_validation",
@@ -640,7 +740,11 @@ class BadassImplementationSwarm:
                 pattern=CollaborationPattern.EXPERT,
                 estimated_minutes=8,
                 required_agents=["security_analyst"],
-                deliverables=["security_assessment", "vulnerability_check", "compliance_review"],
+                deliverables=[
+                    "security_assessment",
+                    "vulnerability_check",
+                    "compliance_review",
+                ],
                 success_criteria=[
                     "No security issues",
                     "Compliance verified",
@@ -656,7 +760,9 @@ class BadassImplementationSwarm:
                     task, self.agent_teams["validation_team"]
                 )
             else:
-                result = await self._execute_expert_task(task, self.agent_teams["validation_team"])
+                result = await self._execute_expert_task(
+                    task, self.agent_teams["validation_team"]
+                )
 
             validation_results[task.id] = result
 
@@ -707,7 +813,9 @@ class BadassImplementationSwarm:
             tasks_completed=implementation_results,
             code_files_modified=self._extract_modified_files(implementation_results),
             tests_added=self._extract_tests_added(implementation_results),
-            overall_confidence=self._calculate_overall_confidence(implementation_results),
+            overall_confidence=self._calculate_overall_confidence(
+                implementation_results
+            ),
             # Quality Metrics
             implementation_score=validation_results["overall_score"],
             test_coverage=validation_results.get("test_coverage", 0.0),
@@ -715,7 +823,9 @@ class BadassImplementationSwarm:
             performance_impact=validation_results.get("performance_impact", "minimal"),
             # Deployment
             deployment_ready=validation_results["deployment_ready"],
-            deployment_checklist=self._generate_deployment_checklist(validation_results),
+            deployment_checklist=self._generate_deployment_checklist(
+                validation_results
+            ),
             next_steps=self._generate_next_steps(validation_results),
         )
 
@@ -753,7 +863,8 @@ class BadassImplementationSwarm:
             "confidence": 0.85,
             "execution_time": task.estimated_minutes * 60,
             "deliverables": {
-                deliverable: f"Generated {deliverable}" for deliverable in task.deliverables
+                deliverable: f"Generated {deliverable}"
+                for deliverable in task.deliverables
             },
         }
 
@@ -775,7 +886,8 @@ class BadassImplementationSwarm:
             "confidence": 0.90,
             "execution_time": task.estimated_minutes * 60,
             "deliverables": {
-                deliverable: f"Consensus on {deliverable}" for deliverable in task.deliverables
+                deliverable: f"Consensus on {deliverable}"
+                for deliverable in task.deliverables
             },
         }
 
@@ -797,7 +909,8 @@ class BadassImplementationSwarm:
             "confidence": 0.89,
             "execution_time": task.estimated_minutes * 60,
             "deliverables": {
-                deliverable: f"Pair-developed {deliverable}" for deliverable in task.deliverables
+                deliverable: f"Pair-developed {deliverable}"
+                for deliverable in task.deliverables
             },
         }
 
@@ -812,13 +925,16 @@ class BadassImplementationSwarm:
         expert_result = {
             "task_id": task.id,
             "pattern": "expert",
-            "expert_agent": task.required_agents[0] if task.required_agents else "domain_expert",
+            "expert_agent": (
+                task.required_agents[0] if task.required_agents else "domain_expert"
+            ),
             "expertise_confidence": 0.93,
             "result": f"Expert analysis for {task.title}",
             "confidence": 0.91,
             "execution_time": task.estimated_minutes * 60,
             "deliverables": {
-                deliverable: f"Expert {deliverable}" for deliverable in task.deliverables
+                deliverable: f"Expert {deliverable}"
+                for deliverable in task.deliverables
             },
         }
 
@@ -860,7 +976,9 @@ class BadassImplementationSwarm:
         """Estimate implementation effort"""
         return "Medium (2-4 hours)"
 
-    def _extract_design_refinements(self, debate_results: list[dict[str, Any]]) -> list[str]:
+    def _extract_design_refinements(
+        self, debate_results: list[dict[str, Any]]
+    ) -> list[str]:
         """Extract design refinements from debate outcomes"""
         return [
             "Simplified authentication flow",
@@ -888,7 +1006,10 @@ class BadassImplementationSwarm:
                 "Add environment variable check",
                 "Return True when RBAC_ENABLED=false",
             ],
-            "architecture_patterns": ["Environment-based feature flags", "Graceful degradation"],
+            "architecture_patterns": [
+                "Environment-based feature flags",
+                "Graceful degradation",
+            ],
             "risk_mitigation": ["Test both enabled and disabled states"],
         }
 
@@ -907,7 +1028,11 @@ class BadassImplementationSwarm:
                 "estimated_minutes": 15,
                 "required_agents": ["code_architect", "implementation_specialist"],
                 "deliverables": ["modified_rbac_manager.py", "environment_check_logic"],
-                "success_criteria": ["Permission check bypassed", "Tests pass", "No regressions"],
+                "success_criteria": [
+                    "Permission check bypassed",
+                    "Tests pass",
+                    "No regressions",
+                ],
             },
             {
                 "id": "test_universal_endpoints",
@@ -933,7 +1058,9 @@ class BadassImplementationSwarm:
             "All existing tests continue to pass",
         ]
 
-    def _calculate_overall_confidence(self, results: list[ImplementationResult]) -> float:
+    def _calculate_overall_confidence(
+        self, results: list[ImplementationResult]
+    ) -> float:
         """Calculate overall implementation confidence"""
         if not results:
             return 0.0

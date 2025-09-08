@@ -56,7 +56,9 @@ class Task:
     status: TaskStatus = TaskStatus.PENDING
     retries: int = 0
     max_retries: int = 3
-    budget: dict[str, float] = field(default_factory=lambda: {"cost_usd": 1.0, "tokens": 10000})
+    budget: dict[str, float] = field(
+        default_factory=lambda: {"cost_usd": 1.0, "tokens": 10000}
+    )
 
 
 @dataclass
@@ -137,7 +139,9 @@ class BaseOrchestrator(ABC):
         # Cost tracking
         self._cost_tracker = {"hourly": 0.0, "daily": 0.0, "monthly": 0.0, "total": 0.0}
 
-        logger.info(f"Initialized {self.config.name} orchestrator for {self.domain.value} domain")
+        logger.info(
+            f"Initialized {self.config.name} orchestrator for {self.domain.value} domain"
+        )
 
     async def execute(self, task: Task) -> Result:
         """
@@ -192,7 +196,9 @@ class BaseOrchestrator(ABC):
             task.completed_at = datetime.now()
 
             # Calculate execution time
-            result.execution_time_ms = (task.completed_at - start_time).total_seconds() * 1000
+            result.execution_time_ms = (
+                task.completed_at - start_time
+            ).total_seconds() * 1000
 
             # Track costs
             self._update_cost_tracking(result.cost)
@@ -209,7 +215,9 @@ class BaseOrchestrator(ABC):
                 task.retries += 1
                 task.status = TaskStatus.PENDING
                 await self._task_queue.put(task)
-                logger.info(f"Retrying task {task.id} (attempt {task.retries}/{task.max_retries})")
+                logger.info(
+                    f"Retrying task {task.id} (attempt {task.retries}/{task.max_retries})"
+                )
 
         finally:
             # Clean up
@@ -217,14 +225,20 @@ class BaseOrchestrator(ABC):
                 del self._active_tasks[task.id]
 
             # Store in history
-            self._task_history.append({"task": task, "result": result, "timestamp": datetime.now()})
+            self._task_history.append(
+                {"task": task, "result": result, "timestamp": datetime.now()}
+            )
 
             # Emit basic metrics (collector exposes generic record/increment)
             if self.metrics:
                 labels = {"domain": self.domain.value, "task_type": task.type.value}
                 status_label = {"status": "success" if result.success else "failure"}
-                self.metrics.increment("tasks.total", 1.0, labels={**labels, **status_label})
-                self.metrics.record("tasks.duration_ms", result.execution_time_ms, labels=labels)
+                self.metrics.increment(
+                    "tasks.total", 1.0, labels={**labels, **status_label}
+                )
+                self.metrics.record(
+                    "tasks.duration_ms", result.execution_time_ms, labels=labels
+                )
                 self.metrics.record("tasks.cost_usd", result.cost, labels=labels)
 
         return result
@@ -290,7 +304,9 @@ class BaseOrchestrator(ABC):
                 "cost": result.cost,
                 "execution_time_ms": result.execution_time_ms,
             }
-            await self.memory.put_ephemeral(cache_key, summary, ttl_s=3600)  # 1 hour cache
+            await self.memory.put_ephemeral(
+                cache_key, summary, ttl_s=3600
+            )  # 1 hour cache
 
         # Log execution completion
         status = "succeeded" if result.success else "failed"
@@ -336,7 +352,9 @@ class BaseOrchestrator(ABC):
                 {
                     "task": task.content,
                     "result": (
-                        result.content if isinstance(result.content, str) else str(result.content)
+                        result.content
+                        if isinstance(result.content, str)
+                        else str(result.content)
                     ),
                 }
             ),
@@ -398,12 +416,18 @@ class BaseOrchestrator(ABC):
         task_cost = task.budget.get("cost_usd", 0)
 
         # Check hourly limit
-        if self._cost_tracker["hourly"] + task_cost > self.config.budget_limits["hourly_cost_usd"]:
+        if (
+            self._cost_tracker["hourly"] + task_cost
+            > self.config.budget_limits["hourly_cost_usd"]
+        ):
             logger.warning(f"Task {task.id} would exceed hourly budget limit")
             return False
 
         # Check daily limit
-        if self._cost_tracker["daily"] + task_cost > self.config.budget_limits["daily_cost_usd"]:
+        if (
+            self._cost_tracker["daily"] + task_cost
+            > self.config.budget_limits["daily_cost_usd"]
+        ):
             logger.warning(f"Task {task.id} would exceed daily budget limit")
             return False
 
@@ -435,7 +459,11 @@ class BaseOrchestrator(ABC):
         """
         import hashlib
 
-        key_parts = [self.domain.value, task.type.value, task.content[:100]]  # First 100 chars
+        key_parts = [
+            self.domain.value,
+            task.type.value,
+            task.content[:100],
+        ]  # First 100 chars
 
         combined = "|".join(key_parts)
         return f"task_cache:{hashlib.sha256(combined.encode()).hexdigest()[:16]}"
@@ -509,7 +537,9 @@ class BaseOrchestrator(ABC):
             "total_processed": len(self._task_history),
             "cost_tracking": self._cost_tracker,
             "circuit_breaker_state": self.circuit_breaker.state,
-            "cache_hit_rate": self.memory.metrics.get_cache_hit_rate() if self.memory else 0.0,
+            "cache_hit_rate": (
+                self.memory.metrics.get_cache_hit_rate() if self.memory else 0.0
+            ),
         }
 
     async def shutdown(self) -> None:

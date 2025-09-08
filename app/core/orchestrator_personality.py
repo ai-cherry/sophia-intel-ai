@@ -191,7 +191,9 @@ class OrchestratorPersonality:
             suggestions.append("archive systems before deletion")
             suggestions.append("delete systems with error status")
 
-        elif "spawn" in command.lower() and any(str(n) in command for n in range(20, 100)):
+        elif "spawn" in command.lower() and any(
+            str(n) in command for n in range(20, 100)
+        ):
             suggestions.append("spawn systems incrementally with monitoring")
             suggestions.append("use auto-scaling instead of fixed count")
             suggestions.append("spawn a test system first")
@@ -277,7 +279,11 @@ class SmartSuggestions:
         # Time-based suggestions
         if 6 <= hour < 9:  # Morning
             suggestions.extend(
-                ["health check all systems", "show overnight alerts", "analyze cost from yesterday"]
+                [
+                    "health check all systems",
+                    "show overnight alerts",
+                    "analyze cost from yesterday",
+                ]
             )
         elif 17 <= hour < 20:  # Evening
             suggestions.extend(

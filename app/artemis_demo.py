@@ -13,7 +13,11 @@ def artemis_status():
 
 def process_proposal(proposal_id: str) -> dict:
     """Process a collaboration proposal"""
-    return {"proposal_id": proposal_id, "status": "processed", "timestamp": "2025-09-06T20:45:00Z"}
+    return {
+        "proposal_id": proposal_id,
+        "status": "processed",
+        "timestamp": "2025-09-06T20:45:00Z",
+    }
 
 
 if __name__ == "__main__":

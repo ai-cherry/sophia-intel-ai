@@ -141,7 +141,10 @@ class PromptTemplate:
         return len(missing_keys) == 0, missing_keys
 
     def update_performance(
-        self, success: bool, response_time: float, user_satisfaction: Optional[float] = None
+        self,
+        success: bool,
+        response_time: float,
+        user_satisfaction: Optional[float] = None,
     ) -> None:
         """Update performance metrics for this template."""
         self.metrics.performance_history.append(1.0 if success else 0.0)
@@ -168,9 +171,9 @@ class PromptTemplate:
             if self.metrics.user_satisfaction == 0:
                 self.metrics.user_satisfaction = user_satisfaction
             else:
-                self.metrics.user_satisfaction = (self.metrics.user_satisfaction * 0.8) + (
-                    user_satisfaction * 0.2
-                )
+                self.metrics.user_satisfaction = (
+                    self.metrics.user_satisfaction * 0.8
+                ) + (user_satisfaction * 0.2)
 
         self.updated_at = datetime.now()
 
@@ -222,7 +225,9 @@ class PromptTemplateManager:
             "active_ab_tests": 0,
         }
 
-        logger.info(f"PromptTemplateManager initialized with storage path: {self.storage_path}")
+        logger.info(
+            f"PromptTemplateManager initialized with storage path: {self.storage_path}"
+        )
 
     async def load_template(self, template_id: str) -> Optional[PromptTemplate]:
         """Load a template from storage."""
@@ -262,11 +267,20 @@ class PromptTemplateManager:
             return False
 
     async def create_template(
-        self, template_id: str, name: str, prompt_type: PromptType, template_content: str, **kwargs
+        self,
+        template_id: str,
+        name: str,
+        prompt_type: PromptType,
+        template_content: str,
+        **kwargs,
     ) -> PromptTemplate:
         """Create a new prompt template."""
         template = PromptTemplate(
-            id=template_id, name=name, prompt_type=prompt_type, template=template_content, **kwargs
+            id=template_id,
+            name=name,
+            prompt_type=prompt_type,
+            template=template_content,
+            **kwargs,
         )
 
         self.templates[template_id] = template
@@ -291,7 +305,10 @@ class PromptTemplateManager:
                 continue
 
             # Check persona type compatibility
-            if template.persona_types and persona.persona_type not in template.persona_types:
+            if (
+                template.persona_types
+                and persona.persona_type not in template.persona_types
+            ):
                 continue
 
             # Check task domain compatibility
@@ -306,7 +323,9 @@ class PromptTemplateManager:
             eligible_templates.append(template)
 
         if not eligible_templates:
-            logger.warning(f"No eligible templates found for {persona.name} in {task_domain}")
+            logger.warning(
+                f"No eligible templates found for {persona.name} in {task_domain}"
+            )
             return None
 
         # Check for active A/B tests
@@ -317,7 +336,9 @@ class PromptTemplateManager:
         # Select best performing template
         best_template = max(
             eligible_templates,
-            key=lambda t: (t.metrics.success_rate * 0.6 + t.metrics.user_satisfaction * 0.4),
+            key=lambda t: (
+                t.metrics.success_rate * 0.6 + t.metrics.user_satisfaction * 0.4
+            ),
         )
 
         logger.debug(f"Selected template '{best_template.id}' for {persona.name}")
@@ -355,7 +376,9 @@ class PromptTemplateManager:
 
         selected_template = random.choices(test_templates, weights=template_weights)[0]
 
-        logger.debug(f"A/B test '{test.test_id}' selected template '{selected_template.id}'")
+        logger.debug(
+            f"A/B test '{test.test_id}' selected template '{selected_template.id}'"
+        )
         return selected_template
 
     async def create_ab_test(
@@ -426,11 +449,15 @@ class PromptTemplateManager:
                 key=lambda v: v["success_rate"] * 0.6 + v["user_satisfaction"] * 0.4,
             )
             results["winner"] = winner["template_id"]
-            results["confidence"] = self._calculate_statistical_significance(results["variants"])
+            results["confidence"] = self._calculate_statistical_significance(
+                results["variants"]
+            )
 
         return results
 
-    def _calculate_statistical_significance(self, variants: list[dict[str, Any]]) -> float:
+    def _calculate_statistical_significance(
+        self, variants: list[dict[str, Any]]
+    ) -> float:
         """Calculate statistical significance of A/B test results."""
         # Simplified significance calculation
         # In production, use proper statistical tests (chi-square, t-test, etc.)
@@ -472,7 +499,9 @@ class PromptTemplateManager:
             # Validate and prepare context
             is_valid, missing_keys = template.validate_context(context)
             if not is_valid:
-                logger.warning(f"Missing context keys for template {template.id}: {missing_keys}")
+                logger.warning(
+                    f"Missing context keys for template {template.id}: {missing_keys}"
+                )
                 # Use default values or skip missing context
                 for key in missing_keys:
                     context[key] = f"[{key}_not_provided]"
@@ -502,9 +531,12 @@ class PromptTemplateManager:
             {
                 "persona_name": persona.name,
                 "persona_type": persona.persona_type.value,
-                "persona_traits": {name: trait.value for name, trait in persona.traits.items()},
+                "persona_traits": {
+                    name: trait.value for name, trait in persona.traits.items()
+                },
                 "expertise_areas": {
-                    domain: ka.expertise_level for domain, ka in persona.knowledge_areas.items()
+                    domain: ka.expertise_level
+                    for domain, ka in persona.knowledge_areas.items()
                 },
                 "communication_style": persona.communication_style,
                 "preferred_domains": [d.value for d in persona.preferred_domains],
@@ -587,8 +619,12 @@ class PromptTemplateManager:
             ab_test_group=data.get("ab_test_group"),
             ab_test_weight=data.get("ab_test_weight", 1.0),
             metrics=metrics,
-            created_at=datetime.fromisoformat(data.get("created_at", datetime.now().isoformat())),
-            updated_at=datetime.fromisoformat(data.get("updated_at", datetime.now().isoformat())),
+            created_at=datetime.fromisoformat(
+                data.get("created_at", datetime.now().isoformat())
+            ),
+            updated_at=datetime.fromisoformat(
+                data.get("updated_at", datetime.now().isoformat())
+            ),
             created_by=data.get("created_by", "system"),
             description=data.get("description", ""),
             tags=data.get("tags", []),
@@ -625,18 +661,22 @@ class PromptTemplateManager:
             analytics["template_performance"].append(perf_data)
 
         # Top performers
-        active_templates = [t for t in self.templates.values() if t.status == PromptVersion.ACTIVE]
+        active_templates = [
+            t for t in self.templates.values() if t.status == PromptVersion.ACTIVE
+        ]
         if active_templates:
             top_performers = sorted(
                 active_templates,
-                key=lambda t: t.metrics.success_rate * 0.6 + t.metrics.user_satisfaction * 0.4,
+                key=lambda t: t.metrics.success_rate * 0.6
+                + t.metrics.user_satisfaction * 0.4,
                 reverse=True,
             )[:5]
             analytics["top_performers"] = [
                 {
                     "id": t.id,
                     "name": t.name,
-                    "score": t.metrics.success_rate * 0.6 + t.metrics.user_satisfaction * 0.4,
+                    "score": t.metrics.success_rate * 0.6
+                    + t.metrics.user_satisfaction * 0.4,
                 }
                 for t in top_performers
             ]
@@ -683,7 +723,10 @@ Your approach should be {{ communication_style.action_orientation }} and focus o
 Provide insights that are actionable and backed by data analysis.
 """,
             "persona_types": [PersonaType.SOPHIA],
-            "task_domains": [TaskDomain.BUSINESS_ANALYSIS, TaskDomain.STRATEGIC_PLANNING],
+            "task_domains": [
+                TaskDomain.BUSINESS_ANALYSIS,
+                TaskDomain.STRATEGIC_PLANNING,
+            ],
             "required_context": ["task_context"],
             "optional_context": ["urgency", "audience"],
         },

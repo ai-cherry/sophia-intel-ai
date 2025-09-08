@@ -136,7 +136,9 @@ class SophiaOrchestrator(BaseOrchestrator):
             logger.warning(f"Foundational Knowledge not available: {e}")
             self.foundational_knowledge = None
 
-        logger.info("Sophia BI Orchestrator initialized with unified factory and MCP routing")
+        logger.info(
+            "Sophia BI Orchestrator initialized with unified factory and MCP routing"
+        )
 
     def _get_default_context(self) -> BusinessContext:
         """Get default business context"""
@@ -245,7 +247,9 @@ class SophiaOrchestrator(BaseOrchestrator):
             processed = await self._process_response(response, task)
 
             # Generate insights
-            insights = await self.insight_engine.generate_insights(processed, business_data)
+            insights = await self.insight_engine.generate_insights(
+                processed, business_data
+            )
 
             # Format result
             result.success = True
@@ -261,12 +265,16 @@ class SophiaOrchestrator(BaseOrchestrator):
             # Track usage
             if hasattr(response, "usage"):
                 result.tokens_used = response.usage.total_tokens
-                result.cost = self.portkey._estimate_cost(routing.model, result.tokens_used)
+                result.cost = self.portkey._estimate_cost(
+                    routing.model, result.tokens_used
+                )
 
             # Record metrics to shared services
             if self.shared_services.get_monitoring_service():
                 await self.shared_services.get_monitoring_service().record_metric(
-                    "sophia_task_execution", 1.0, {"task_type": task.type, "success": "true"}
+                    "sophia_task_execution",
+                    1.0,
+                    {"task_type": task.type, "success": "true"},
                 )
 
         except Exception as e:
@@ -276,7 +284,9 @@ class SophiaOrchestrator(BaseOrchestrator):
             # Record failure metric
             if self.shared_services.get_monitoring_service():
                 await self.shared_services.get_monitoring_service().record_metric(
-                    "sophia_task_execution", 1.0, {"task_type": task.type, "success": "false"}
+                    "sophia_task_execution",
+                    1.0,
+                    {"task_type": task.type, "success": "false"},
                 )
 
         return result
@@ -317,7 +327,9 @@ class SophiaOrchestrator(BaseOrchestrator):
                 )
 
         # Use MCP business analytics server
-        analytics_connection = await self._get_mcp_connection(MCPServerType.BUSINESS_ANALYTICS)
+        analytics_connection = await self._get_mcp_connection(
+            MCPServerType.BUSINESS_ANALYTICS
+        )
 
         if analytics_connection:
             try:
@@ -328,13 +340,17 @@ class SophiaOrchestrator(BaseOrchestrator):
                 )
                 data["business_metrics"] = metrics
             finally:
-                await self.mcp_connection_manager.release_connection(analytics_connection, "sophia")
+                await self.mcp_connection_manager.release_connection(
+                    analytics_connection, "sophia"
+                )
 
         # First, get foundational knowledge if available
         if self.foundational_knowledge:
             try:
                 # Get Pay-Ready foundational context
-                foundational_context = await self.foundational_knowledge.get_pay_ready_context()
+                foundational_context = (
+                    await self.foundational_knowledge.get_pay_ready_context()
+                )
                 data["foundational_knowledge"] = foundational_context
 
                 # Search for relevant foundational knowledge
@@ -365,7 +381,9 @@ class SophiaOrchestrator(BaseOrchestrator):
         for connector_name in relevant_connectors:
             if connector_name in self.connectors:
                 connector = self.connectors[connector_name]
-                gather_tasks.append(self._fetch_connector_data(connector_name, connector, task))
+                gather_tasks.append(
+                    self._fetch_connector_data(connector_name, connector, task)
+                )
 
         if gather_tasks:
             results = await asyncio.gather(*gather_tasks, return_exceptions=True)
@@ -373,7 +391,9 @@ class SophiaOrchestrator(BaseOrchestrator):
                 if not isinstance(result, Exception):
                     data[connector_name] = result
                 else:
-                    logger.warning(f"Failed to gather data from {connector_name}: {result}")
+                    logger.warning(
+                        f"Failed to gather data from {connector_name}: {result}"
+                    )
 
         return data
 
@@ -417,7 +437,9 @@ class SophiaOrchestrator(BaseOrchestrator):
             "record_count": 0,
         }
 
-    async def _enrich_context(self, task: Task, business_data: dict[str, Any]) -> dict[str, Any]:
+    async def _enrich_context(
+        self, task: Task, business_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Enrich context with historical data and patterns using MCP servers
 
@@ -451,14 +473,22 @@ class SophiaOrchestrator(BaseOrchestrator):
 
                 context["historical_context"]["similar_analyses"] = similar_analyses
             finally:
-                await self.mcp_connection_manager.release_connection(indexing_connection, "sophia")
+                await self.mcp_connection_manager.release_connection(
+                    indexing_connection, "sophia"
+                )
         elif self.memory:
             # Fallback to direct memory search
-            similar = await self.memory.search(query=task.content, domain=MemoryDomain.SOPHIA, k=5)
+            similar = await self.memory.search(
+                query=task.content, domain=MemoryDomain.SOPHIA, k=5
+            )
 
             context["historical_context"] = {
                 "similar_analyses": [
-                    {"content": hit.content, "relevance": hit.score, "source": hit.source_uri}
+                    {
+                        "content": hit.content,
+                        "relevance": hit.score,
+                        "source": hit.source_uri,
+                    }
                     for hit in similar
                 ]
             }
@@ -475,10 +505,14 @@ class SophiaOrchestrator(BaseOrchestrator):
         if embedding_connection:
             try:
                 # Enhance patterns with semantic analysis
-                patterns = await self._identify_patterns_mcp(business_data, embedding_connection)
+                patterns = await self._identify_patterns_mcp(
+                    business_data, embedding_connection
+                )
                 context["patterns"] = patterns
             finally:
-                await self.mcp_connection_manager.release_connection(embedding_connection, "sophia")
+                await self.mcp_connection_manager.release_connection(
+                    embedding_connection, "sophia"
+                )
         else:
             # Fallback to local pattern identification
             context["patterns"] = await self._identify_patterns(business_data)
@@ -488,7 +522,9 @@ class SophiaOrchestrator(BaseOrchestrator):
 
         return context
 
-    def _prepare_messages(self, task: Task, context: dict[str, Any]) -> list[dict[str, str]]:
+    def _prepare_messages(
+        self, task: Task, context: dict[str, Any]
+    ) -> list[dict[str, str]]:
         """Prepare messages for LLM"""
         # Check if we have foundational knowledge
         has_foundational = "foundational_knowledge" in context
@@ -540,7 +576,9 @@ Please provide a comprehensive analysis with:
     async def _process_response(self, response: Any, task: Task) -> dict[str, Any]:
         """Process LLM response into structured format"""
         content = (
-            response.choices[0].message.content if hasattr(response, "choices") else str(response)
+            response.choices[0].message.content
+            if hasattr(response, "choices")
+            else str(response)
         )
 
         # Parse response into structured format
@@ -554,7 +592,9 @@ Please provide a comprehensive analysis with:
 
         return processed
 
-    def _calculate_confidence(self, insights: Any, business_data: dict[str, Any]) -> float:
+    def _calculate_confidence(
+        self, insights: Any, business_data: dict[str, Any]
+    ) -> float:
         """Calculate confidence score based on data quality and coverage"""
         confidence = 0.5  # Base confidence
 
@@ -729,7 +769,9 @@ Please provide a comprehensive analysis with:
     def _format_as_insight_report(self, result: Result) -> InsightReport:
         """Format execution result as InsightReport"""
         return InsightReport(
-            executive_summary=str(result.content)[:500] if result.content else "Analysis complete",
+            executive_summary=(
+                str(result.content)[:500] if result.content else "Analysis complete"
+            ),
             key_findings=[],
             recommendations=[],
             risks=[],
@@ -746,7 +788,9 @@ class InsightEngine:
     def __init__(self, orchestrator: SophiaOrchestrator):
         self.orchestrator = orchestrator
 
-    async def generate_insights(self, processed_data: dict, business_data: dict) -> InsightReport:
+    async def generate_insights(
+        self, processed_data: dict, business_data: dict
+    ) -> InsightReport:
         """Generate structured insights from processed data"""
         # Insight generation logic
         return InsightReport(
@@ -826,7 +870,9 @@ class CompetitiveIntelligence:
 
             if server_name:
                 # Get connection from manager
-                connection = await self.mcp_connection_manager.get_connection(server_name, "sophia")
+                connection = await self.mcp_connection_manager.get_connection(
+                    server_name, "sophia"
+                )
                 return connection
 
         except Exception as e:
@@ -839,7 +885,9 @@ class CompetitiveIntelligence:
         # Implementation would use MCP web search server
         return {"search_results": [], "timestamp": datetime.now().isoformat()}
 
-    async def _get_business_metrics_mcp(self, metrics: list[str], connection) -> dict[str, Any]:
+    async def _get_business_metrics_mcp(
+        self, metrics: list[str], connection
+    ) -> dict[str, Any]:
         """Get business metrics using MCP analytics server"""
         # Implementation would use MCP business analytics server
         return {

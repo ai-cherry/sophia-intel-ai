@@ -114,11 +114,15 @@ async def api_store_memory(request: MemoryStoreRequest):
 
 
 @app.get("/api/memory/retrieve/{session_id}")
-async def api_retrieve_memory(session_id: str, last_n: int = 10, include_system: bool = False):
+async def api_retrieve_memory(
+    session_id: str, last_n: int = 10, include_system: bool = False
+):
     """Retrieve memory via API endpoint"""
 
     # Find memories for this session
-    session_memories = [mem for mem in memory_store.values() if mem.get("session_id") == session_id]
+    session_memories = [
+        mem for mem in memory_store.values() if mem.get("session_id") == session_id
+    ]
 
     # Sort by creation time and limit
     session_memories.sort(key=lambda x: x["created_at"], reverse=True)
@@ -174,7 +178,11 @@ async def mcp_search_memory(request: MemorySearchRequest):
             content = memory["content"]
         elif isinstance(memory.get("messages"), list):
             content = " ".join(
-                [msg.get("content", "") for msg in memory["messages"] if isinstance(msg, dict)]
+                [
+                    msg.get("content", "")
+                    for msg in memory["messages"]
+                    if isinstance(msg, dict)
+                ]
             )
 
         if query_lower in content.lower():

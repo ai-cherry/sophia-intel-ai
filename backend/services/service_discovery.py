@@ -219,4 +219,8 @@ async def get_mcp_servers() -> list[ServiceInfo]:
     """Get all registered MCP servers"""
     service_discovery = await get_service_discovery()
     all_services = await service_discovery.get_healthy_services()
-    return [service for service in all_services if service.metadata.get("type") == "mcp_server"]
+    return [
+        service
+        for service in all_services
+        if service.metadata.get("type") == "mcp_server"
+    ]

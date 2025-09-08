@@ -49,7 +49,9 @@ def discover_large_files(root: Path, min_kb: int) -> List[dict]:
     return results
 
 
-HTTP_IMPORT_RE = re.compile(r"^(\s*from\s+(requests|httpx|aiohttp)\b|\s*import\s+(requests|httpx|aiohttp)\b)")
+HTTP_IMPORT_RE = re.compile(
+    r"^(\s*from\s+(requests|httpx|aiohttp)\b|\s*import\s+(requests|httpx|aiohttp)\b)"
+)
 
 
 def scan_http_imports(root: Path) -> List[dict]:
@@ -59,7 +61,9 @@ def scan_http_imports(root: Path) -> List[dict]:
             with p.open("r", encoding="utf-8", errors="ignore") as f:
                 for i, line in enumerate(f, start=1):
                     if HTTP_IMPORT_RE.search(line):
-                        findings.append({"file": str(p), "line": i, "text": line.strip()})
+                        findings.append(
+                            {"file": str(p), "line": i, "text": line.strip()}
+                        )
         except OSError:
             continue
     return findings
@@ -70,12 +74,17 @@ def probe_import(module: str) -> dict:
         importlib.import_module(module)
         return {"module": module, "ok": True}
     except Exception as e:  # noqa: BLE001 - show any failure
-        return {"module": module, "ok": False, "error": str(e.__class__.__name__), "detail": str(e)}
+        return {
+            "module": module,
+            "ok": False,
+            "error": str(e.__class__.__name__),
+            "detail": str(e),
+        }
 
 
 PROXY_TEMPLATE = (
     "from warnings import warn\n"
-    "warn(\"Module moved to {new_module}; this import path is deprecated\", "
+    'warn("Module moved to {new_module}; this import path is deprecated", '
     "DeprecationWarning, stacklevel=2)\n"
     "from {new_module} import *\n"
 )
@@ -101,19 +110,42 @@ def main(argv: List[str] | None = None) -> int:
     p_scan = sub.add_parser("scan-http", help="Scan for requests/httpx/aiohttp imports")
     p_scan.add_argument("--path", type=Path, default=Path("app"))
 
-    p_probe = sub.add_parser("probe-import", help="Attempt to import a module and report result")
+    p_probe = sub.add_parser(
+        "probe-import", help="Attempt to import a module and report result"
+    )
     p_probe.add_argument("--module", required=True)
 
-    p_proxy = sub.add_parser("gen-proxy", help="Generate or write a proxy shim for moved module")
-    p_proxy.add_argument("--old", type=Path, required=True, help="Old file path to host proxy (e.g., app/pkg/file.py)")
-    p_proxy.add_argument("--new", dest="new_module", required=True, help="New module path (e.g., app.pkg.file)")
-    p_proxy.add_argument("--write", action="store_true", help="Write proxy to --old path (default prints content)")
+    p_proxy = sub.add_parser(
+        "gen-proxy", help="Generate or write a proxy shim for moved module"
+    )
+    p_proxy.add_argument(
+        "--old",
+        type=Path,
+        required=True,
+        help="Old file path to host proxy (e.g., app/pkg/file.py)",
+    )
+    p_proxy.add_argument(
+        "--new",
+        dest="new_module",
+        required=True,
+        help="New module path (e.g., app.pkg.file)",
+    )
+    p_proxy.add_argument(
+        "--write",
+        action="store_true",
+        help="Write proxy to --old path (default prints content)",
+    )
 
     args = parser.parse_args(argv)
 
     if args.cmd == "discover":
         results = discover_large_files(args.path, args.min_kb)
-        print(json.dumps({"count": len(results), "min_kb": args.min_kb, "results": results}, indent=2))
+        print(
+            json.dumps(
+                {"count": len(results), "min_kb": args.min_kb, "results": results},
+                indent=2,
+            )
+        )
         return 0
 
     if args.cmd == "scan-http":
@@ -140,4 +172,3 @@ def main(argv: List[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

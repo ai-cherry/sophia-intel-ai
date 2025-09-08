@@ -90,7 +90,9 @@ class SwarmBenchmark:
         )
 
         token_reduction = (
-            (scout_without.tokens_used - scout_with.tokens_used) / scout_without.tokens_used * 100
+            (scout_without.tokens_used - scout_with.tokens_used)
+            / scout_without.tokens_used
+            * 100
         )
 
         return {
@@ -109,7 +111,10 @@ class SwarmBenchmark:
 
     def save_results(self, filepath: str = "benchmark_results.json"):
         """Save benchmark results to file"""
-        results = {"timestamp": time.time(), "benchmarks": [r.__dict__ for r in self.results]}
+        results = {
+            "timestamp": time.time(),
+            "benchmarks": [r.__dict__ for r in self.results],
+        }
 
         with open(filepath, "w") as f:
             json.dump(results, f, indent=2)
@@ -129,8 +134,12 @@ async def main():
     print(f"  Avg time: {results['summary']['avg_execution_time']:.2f}s")
 
     print("\n🚀 Improvements with prefetch:")
-    print(f"  Speed improvement: {results['improvements']['prefetch_speedup_percent']:.1f}%")
-    print(f"  Token reduction: {results['improvements']['token_reduction_percent']:.1f}%")
+    print(
+        f"  Speed improvement: {results['improvements']['prefetch_speedup_percent']:.1f}%"
+    )
+    print(
+        f"  Token reduction: {results['improvements']['token_reduction_percent']:.1f}%"
+    )
 
     benchmark.save_results()
     print("\n💾 Results saved to benchmark_results.json")

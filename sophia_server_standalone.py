@@ -180,7 +180,9 @@ async def health_check():
 async def sophia_universal_chat(request: ChatRequest):
     """Universal chat interface for all business operations"""
     if not orchestrator_initialized:
-        raise HTTPException(status_code=503, detail="Sophia orchestrator not initialized")
+        raise HTTPException(
+            status_code=503, detail="Sophia orchestrator not initialized"
+        )
 
     try:
         # Create business context
@@ -191,7 +193,9 @@ async def sophia_universal_chat(request: ChatRequest):
         )
 
         # Process through universal orchestrator
-        response = await sophia_orchestrator.process_business_request(request.message, context)
+        response = await sophia_orchestrator.process_business_request(
+            request.message, context
+        )
 
         return {
             "success": response.success,
@@ -224,20 +228,25 @@ async def sophia_universal_chat(request: ChatRequest):
 async def sophia_business_operation(request: BusinessRequest):
     """Dedicated business operation endpoint with full context"""
     if not orchestrator_initialized:
-        raise HTTPException(status_code=503, detail="Sophia orchestrator not initialized")
+        raise HTTPException(
+            status_code=503, detail="Sophia orchestrator not initialized"
+        )
 
     try:
         # Create comprehensive business context
         context = BusinessContext(
             user_id=request.user_id,
-            session_id=request.session_id or f"biz_session_{hash(request.message) % 10000}",
+            session_id=request.session_id
+            or f"biz_session_{hash(request.message) % 10000}",
             company_context=request.company_context,
             include_voice=request.include_voice,
             priority_level=request.priority_level,
         )
 
         # Process through universal orchestrator
-        response = await sophia_orchestrator.process_business_request(request.message, context)
+        response = await sophia_orchestrator.process_business_request(
+            request.message, context
+        )
 
         return {
             "success": response.success,
@@ -281,7 +290,9 @@ async def sophia_status():
 async def sophia_business_insights():
     """Get consolidated business insights summary"""
     if not orchestrator_initialized:
-        raise HTTPException(status_code=503, detail="Sophia orchestrator not initialized")
+        raise HTTPException(
+            status_code=503, detail="Sophia orchestrator not initialized"
+        )
 
     return await sophia_orchestrator.get_business_insights_summary()
 
@@ -409,7 +420,10 @@ async def slack_get_user_info(user_id: str):
 
 @app.get("/api/slack/history/{channel_id}")
 async def slack_get_conversation_history(
-    channel_id: str, limit: int = 100, oldest: Optional[str] = None, latest: Optional[str] = None
+    channel_id: str,
+    limit: int = 100,
+    oldest: Optional[str] = None,
+    latest: Optional[str] = None,
 ):
     """Get conversation history from a Slack channel"""
     try:
@@ -512,7 +526,9 @@ async def chat_legacy_endpoint(persona_id: str, request: dict):
                 session_id=f"legacy_session_{persona_id}_{hash(message) % 1000}"
             )
 
-            response = await sophia_orchestrator.process_business_request(message, context)
+            response = await sophia_orchestrator.process_business_request(
+                message, context
+            )
 
             return {
                 "success": response.success,
@@ -523,7 +539,9 @@ async def chat_legacy_endpoint(persona_id: str, request: dict):
                 "insights": (
                     response.insights[:3] if response.insights else []
                 ),  # Limit for legacy compatibility
-                "recommendations": response.recommendations[:3] if response.recommendations else [],
+                "recommendations": (
+                    response.recommendations[:3] if response.recommendations else []
+                ),
             }
         except Exception as e:
             logger.error(f"Legacy chat routing error: {str(e)}")
@@ -535,7 +553,10 @@ async def chat_legacy_endpoint(persona_id: str, request: dict):
                 "error": str(e),
             }
 
-    return {"success": False, "error": "Persona not available or orchestrator not initialized"}
+    return {
+        "success": False,
+        "error": "Persona not available or orchestrator not initialized",
+    }
 
 
 # =============================================================================
@@ -555,7 +576,11 @@ async def get_factory_templates():
         }
     except Exception as e:
         logger.error(f"Failed to get factory templates: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to retrieve templates"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to retrieve templates",
+        }
 
 
 @app.post("/api/sophia/factory/create-agent")
@@ -578,7 +603,11 @@ async def create_business_agent(request: AgentCreateRequest):
         }
     except Exception as e:
         logger.error(f"Failed to create business agent: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to create business agent"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to create business agent",
+        }
 
 
 @app.post("/api/sophia/factory/create-team")
@@ -601,7 +630,11 @@ async def create_business_team(request: TeamCreateRequest):
         }
     except Exception as e:
         logger.error(f"Failed to create business team: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to create business team"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to create business team",
+        }
 
 
 @app.get("/api/sophia/factory/agents")
@@ -617,7 +650,11 @@ async def list_created_agents():
         }
     except Exception as e:
         logger.error(f"Failed to list agents: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to retrieve agents"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to retrieve agents",
+        }
 
 
 @app.get("/api/sophia/factory/teams")
@@ -633,7 +670,11 @@ async def list_created_teams():
         }
     except Exception as e:
         logger.error(f"Failed to list teams: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to retrieve teams"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to retrieve teams",
+        }
 
 
 @app.get("/api/sophia/factory/agents/{agent_id}")
@@ -681,7 +722,11 @@ async def get_team_info(team_id: str):
         raise
     except Exception as e:
         logger.error(f"Failed to get team info: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to retrieve team information"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to retrieve team information",
+        }
 
 
 @app.post("/api/sophia/factory/execute/{agent_or_team_id}")
@@ -689,19 +734,27 @@ async def execute_business_task(agent_or_team_id: str, request: TaskExecuteReque
     """Execute a business task with an agent or team"""
     try:
         result = await sophia_business_factory.execute_business_task(
-            agent_or_team_id=agent_or_team_id, task=request.task, context=request.context
+            agent_or_team_id=agent_or_team_id,
+            task=request.task,
+            context=request.context,
         )
 
         return {
             "success": result["success"],
             "result": result,
             "message": (
-                "Task executed successfully" if result["success"] else "Task execution failed"
+                "Task executed successfully"
+                if result["success"]
+                else "Task execution failed"
             ),
         }
     except Exception as e:
         logger.error(f"Failed to execute business task: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to execute business task"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to execute business task",
+        }
 
 
 @app.get("/api/sophia/factory/metrics")
@@ -716,7 +769,11 @@ async def get_factory_metrics():
         }
     except Exception as e:
         logger.error(f"Failed to get factory metrics: {e}")
-        return {"success": False, "error": str(e), "message": "Failed to retrieve factory metrics"}
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to retrieve factory metrics",
+        }
 
 
 @app.get("/api/personas/health")

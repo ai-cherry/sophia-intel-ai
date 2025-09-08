@@ -567,7 +567,9 @@ class ArtemisSwarmFactory:
                 selected_agents.append(agent_map[agent_name.lower()])
 
         if not selected_agents:
-            raise ValueError(f"No valid agents specified. Available: {list(agent_map.keys())}")
+            raise ValueError(
+                f"No valid agents specified. Available: {list(agent_map.keys())}"
+            )
 
         config = SwarmConfig(
             name=f"Artemis Custom Swarm ({', '.join(agents)})",
@@ -602,7 +604,11 @@ class ArtemisSwarmFactory:
 
         import os as _os
 
-        enhanced = _os.getenv("SCOUT_ENHANCED_SPECIALISTS", "false").lower() in {"1", "true", "yes"}
+        enhanced = _os.getenv("SCOUT_ENHANCED_SPECIALISTS", "false").lower() in {
+            "1",
+            "true",
+            "yes",
+        }
 
         if enhanced:
             # Enhanced specialist profiles: security, architecture, performance
@@ -627,7 +633,9 @@ class ArtemisSwarmFactory:
                 role=AgentRole.STRATEGIST,
                 name="Architecture Strategist",
                 description="Analyzes topology, integration contracts, boundaries, and failure domains.",
-                model_preferences=["moonshotai/kimi-k2-0905"],  # large-context via OpenRouter
+                model_preferences=[
+                    "moonshotai/kimi-k2-0905"
+                ],  # large-context via OpenRouter
                 specializations=[
                     "system_topology",
                     "integration_contracts",
@@ -662,7 +670,11 @@ class ArtemisSwarmFactory:
                 name="Tag Hunter",
                 description="Extracts and tags repository patterns, hotspots, and architecture idioms.",
                 model_preferences=["qwen/qwen3-coder"],
-                specializations=["code_tagging", "pattern_detection", "hotspot_analysis"],
+                specializations=[
+                    "code_tagging",
+                    "pattern_detection",
+                    "hotspot_analysis",
+                ],
                 reasoning_style="Systematic tagging with lightweight code pattern recognition and repository heatmaps.",
                 confidence_threshold=0.80,
                 max_tokens=6000,
@@ -674,7 +686,11 @@ class ArtemisSwarmFactory:
                 name="Integration Stalker",
                 description="Performs deep integration analysis using massive context and parallel insights.",
                 model_preferences=["openrouter/sonoma-sky-alpha"],
-                specializations=["integration_analysis", "mcp_wiring", "tool_parallelism"],
+                specializations=[
+                    "integration_analysis",
+                    "mcp_wiring",
+                    "tool_parallelism",
+                ],
                 reasoning_style="Broad-context reasoning across repo subsystems; integration-first approach.",
                 confidence_threshold=0.88,
                 max_tokens=2000000,  # documentation-only; execution enforces env

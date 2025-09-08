@@ -152,7 +152,9 @@ class OpenAIEmbeddingService:
                 batch_embeddings = [item.embedding for item in response.data]
                 all_embeddings.extend(batch_embeddings)
 
-                logger.debug(f"Generated embeddings for batch of {len(batch_filtered)} texts")
+                logger.debug(
+                    f"Generated embeddings for batch of {len(batch_filtered)} texts"
+                )
 
             except Exception as e:
                 logger.error(f"Failed to get embeddings for batch: {e}")
@@ -196,7 +198,9 @@ class IntelligentChunker:
         chunks = []
 
         # Strategy 1: Chunk by speaker turns
-        speaker_chunks = await self._chunk_by_speaker_turns(call_data, transcript_segments)
+        speaker_chunks = await self._chunk_by_speaker_turns(
+            call_data, transcript_segments
+        )
         chunks.extend(speaker_chunks)
 
         # Strategy 2: Create topic-based chunks if we have long segments
@@ -230,7 +234,8 @@ class IntelligentChunker:
             # Start new chunk if speaker changes or chunk gets too long
             if (
                 speaker_id != current_speaker
-                or self.count_tokens(" ".join(current_content + [content])) > self.max_chunk_tokens
+                or self.count_tokens(" ".join(current_content + [content]))
+                > self.max_chunk_tokens
             ):
                 # Save current chunk if we have content
                 if current_content:
@@ -256,7 +261,11 @@ class IntelligentChunker:
         # Handle final chunk
         if current_content:
             chunk = await self._create_speaker_chunk(
-                call_data, current_content, current_metadata_list, len(chunks), current_speaker
+                call_data,
+                current_content,
+                current_metadata_list,
+                len(chunks),
+                current_speaker,
             )
             chunks.append(chunk)
 
@@ -316,7 +325,9 @@ class IntelligentChunker:
         # This is a simplified implementation
         # In production, you might use topic modeling or NLP libraries
 
-        full_text = " ".join(segment.get("content", "") for segment in transcript_segments)
+        full_text = " ".join(
+            segment.get("content", "") for segment in transcript_segments
+        )
 
         # Split into sentences and group by topics (simplified)
         sentences = self.sentence_endings.split(full_text)
@@ -332,10 +343,15 @@ class IntelligentChunker:
 
             sentence_tokens = self.count_tokens(sentence)
 
-            if current_tokens + sentence_tokens > self.max_chunk_tokens and current_chunk:
+            if (
+                current_tokens + sentence_tokens > self.max_chunk_tokens
+                and current_chunk
+            ):
                 # Create chunk
                 chunk_content = " ".join(current_chunk)
-                chunk = await self._create_topic_chunk(call_data, chunk_content, len(chunks))
+                chunk = await self._create_topic_chunk(
+                    call_data, chunk_content, len(chunks)
+                )
                 chunks.append(chunk)
 
                 # Start new chunk with overlap
@@ -349,7 +365,9 @@ class IntelligentChunker:
         # Handle final chunk
         if current_chunk:
             chunk_content = " ".join(current_chunk)
-            chunk = await self._create_topic_chunk(call_data, chunk_content, len(chunks))
+            chunk = await self._create_topic_chunk(
+                call_data, chunk_content, len(chunks)
+            )
             chunks.append(chunk)
 
         return chunks
@@ -442,7 +460,11 @@ class IntelligentChunker:
         return chunks
 
     async def _create_email_chunk(
-        self, email_data: dict[str, Any], content: str, chunk_index: int, total_chunks: int
+        self,
+        email_data: dict[str, Any],
+        content: str,
+        chunk_index: int,
+        total_chunks: int,
     ) -> ContentChunk:
         """Create an email content chunk"""
         chunk_id = hashlib.md5(
@@ -487,7 +509,10 @@ class IntelligentChunker:
 
             sentence_tokens = self.count_tokens(sentence)
 
-            if current_tokens + sentence_tokens > self.max_chunk_tokens and current_chunk:
+            if (
+                current_tokens + sentence_tokens > self.max_chunk_tokens
+                and current_chunk
+            ):
                 # Create chunk
                 chunks.append(" ".join(current_chunk))
 
@@ -515,7 +540,15 @@ class IntelligentChunker:
 
         # Simple keyword-based topic detection
         topic_keywords = {
-            "sales": ["deal", "price", "contract", "proposal", "quote", "revenue", "purchase"],
+            "sales": [
+                "deal",
+                "price",
+                "contract",
+                "proposal",
+                "quote",
+                "revenue",
+                "purchase",
+            ],
             "technical": [
                 "system",
                 "implementation",
@@ -524,9 +557,29 @@ class IntelligentChunker:
                 "database",
                 "architecture",
             ],
-            "support": ["issue", "problem", "bug", "error", "troubleshoot", "help", "fix"],
-            "meeting": ["schedule", "agenda", "follow-up", "action items", "next steps"],
-            "product": ["feature", "functionality", "requirements", "specification", "demo"],
+            "support": [
+                "issue",
+                "problem",
+                "bug",
+                "error",
+                "troubleshoot",
+                "help",
+                "fix",
+            ],
+            "meeting": [
+                "schedule",
+                "agenda",
+                "follow-up",
+                "action items",
+                "next steps",
+            ],
+            "product": [
+                "feature",
+                "functionality",
+                "requirements",
+                "specification",
+                "demo",
+            ],
         }
 
         text_lower = text.lower()
@@ -621,7 +674,9 @@ class IntelligentChunker:
         # Simple email detection
         import re
 
-        emails = re.findall(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", text)
+        emails = re.findall(
+            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", text
+        )
         entities.extend(emails)
 
         # Simple phone number detection
@@ -661,10 +716,14 @@ class IntelligentChunker:
                 all_chunks.extend(chunks)
 
             except Exception as e:
-                logger.error(f"Failed to chunk {item_type} {item.get('id', 'unknown')}: {e}")
+                logger.error(
+                    f"Failed to chunk {item_type} {item.get('id', 'unknown')}: {e}"
+                )
                 continue
 
-        logger.info(f"Generated {len(all_chunks)} chunks from {len(items)} {item_type}s")
+        logger.info(
+            f"Generated {len(all_chunks)} chunks from {len(items)} {item_type}s"
+        )
         return all_chunks
 
 
@@ -677,7 +736,9 @@ def create_chunking_service(
 ) -> IntelligentChunker:
     """Create a fully configured chunking service"""
 
-    embedding_service = OpenAIEmbeddingService(api_key=openai_api_key, model=embedding_model)
+    embedding_service = OpenAIEmbeddingService(
+        api_key=openai_api_key, model=embedding_model
+    )
 
     return IntelligentChunker(
         embedding_service=embedding_service,

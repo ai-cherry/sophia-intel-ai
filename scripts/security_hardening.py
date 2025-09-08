@@ -39,7 +39,9 @@ def print_error(message):
 def run_command(command, check=True):
     """Run shell command and return result"""
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, text=True, check=check)
+        result = subprocess.run(
+            command, shell=True, capture_output=True, text=True, check=check
+        )
         return result.stdout.strip(), result.stderr.strip(), result.returncode
     except subprocess.CalledProcessError as e:
         return e.stdout.strip(), e.stderr.strip(), e.returncode
@@ -65,7 +67,9 @@ def fix_python_vulnerabilities():
 
     for package, version in security_updates.items():
         print_status(f"Updating {package} to {version}...")
-        stdout, stderr, code = run_command(f"pip3 install '{package}{version}'", check=False)
+        stdout, stderr, code = run_command(
+            f"pip3 install '{package}{version}'", check=False
+        )
         if code == 0:
             print_success(f"Updated {package}")
         else:

@@ -159,7 +159,9 @@ class RAGConfigManager:
         config = StandardRAGConfig()
 
         # Override from environment if available
-        config.vector_dimension = int(os.getenv("RAG_VECTOR_DIMENSION", config.vector_dimension))
+        config.vector_dimension = int(
+            os.getenv("RAG_VECTOR_DIMENSION", config.vector_dimension)
+        )
         config.similarity_threshold = float(
             os.getenv("RAG_SIMILARITY_THRESHOLD", config.similarity_threshold)
         )
@@ -183,7 +185,9 @@ class RAGConfigManager:
         config.apartment_data_limit = int(
             os.getenv("APARTMENT_DATA_LIMIT", config.apartment_data_limit)
         )
-        config.qdrant_shard_count = int(os.getenv("QDRANT_SHARD_COUNT", config.qdrant_shard_count))
+        config.qdrant_shard_count = int(
+            os.getenv("QDRANT_SHARD_COUNT", config.qdrant_shard_count)
+        )
         config.postgres_shard_count = int(
             os.getenv("POSTGRES_SHARD_COUNT", config.postgres_shard_count)
         )

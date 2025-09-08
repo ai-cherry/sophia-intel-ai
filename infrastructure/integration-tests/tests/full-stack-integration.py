@@ -108,7 +108,9 @@ class FullStackIntegration:
         # Step 4: Verify AlertManager received scaling alert
         alerts = await self._get_active_alerts()
         scaling_alerts = [
-            a for a in alerts if "scaling" in a.get("labels", {}).get("alertname", "").lower()
+            a
+            for a in alerts
+            if "scaling" in a.get("labels", {}).get("alertname", "").lower()
         ]
 
         assert len(scaling_alerts) > 0, "No scaling alerts in AlertManager"
@@ -252,7 +254,9 @@ class FullStackIntegration:
 
         # Verify no error alerts
         alerts = await self._get_active_alerts()
-        error_alerts = [a for a in alerts if a.get("labels", {}).get("severity") == "critical"]
+        error_alerts = [
+            a for a in alerts if a.get("labels", {}).get("severity") == "critical"
+        ]
 
         assert len(error_alerts) == 0, "Critical errors after update"
 
@@ -374,12 +378,16 @@ class FullStackIntegration:
 
         # Verify system is degraded
         alerts = await self._get_active_alerts()
-        critical_alerts = [a for a in alerts if a.get("labels", {}).get("severity") == "critical"]
+        critical_alerts = [
+            a for a in alerts if a.get("labels", {}).get("severity") == "critical"
+        ]
         assert len(critical_alerts) > 0, "No critical alerts for breaking change"
 
         # Trigger rollback via ArgoCD
         logger.info("Triggering rollback...")
-        await self._rollback_argocd_application("full-stack-app", initial_state["revision"])
+        await self._rollback_argocd_application(
+            "full-stack-app", initial_state["revision"]
+        )
         await asyncio.sleep(30)
 
         # Verify system restored
@@ -393,7 +401,9 @@ class FullStackIntegration:
 
         # Check alerts cleared
         alerts = await self._get_active_alerts()
-        critical_alerts = [a for a in alerts if a.get("labels", {}).get("severity") == "critical"]
+        critical_alerts = [
+            a for a in alerts if a.get("labels", {}).get("severity") == "critical"
+        ]
         assert len(critical_alerts) == 0, "Critical alerts not cleared after rollback"
 
         logger.info("✓ Rollback completed successfully")
@@ -415,7 +425,9 @@ class FullStackIntegration:
 
         # Kill one AlertManager instance
         pod_to_delete = pods.items[0].metadata.name
-        self.v1.delete_namespaced_pod(name=pod_to_delete, namespace=self.alertmanager_namespace)
+        self.v1.delete_namespaced_pod(
+            name=pod_to_delete, namespace=self.alertmanager_namespace
+        )
 
         # Verify alerts still work
         await asyncio.sleep(10)
@@ -443,13 +455,17 @@ class FullStackIntegration:
         logger.info("Testing ArgoCD self-healing...")
 
         # Manually delete a resource
-        self.v1.delete_namespaced_config_map(name="test-config", namespace=self.test_namespace)
+        self.v1.delete_namespaced_config_map(
+            name="test-config", namespace=self.test_namespace
+        )
 
         # Wait for ArgoCD to heal
         await asyncio.sleep(45)
 
         # Verify resource recreated
-        cm = self.v1.read_namespaced_config_map(name="test-config", namespace=self.test_namespace)
+        cm = self.v1.read_namespaced_config_map(
+            name="test-config", namespace=self.test_namespace
+        )
         assert cm is not None, "ArgoCD did not self-heal"
 
         logger.info("✓ HA and resilience tests passed")
@@ -492,7 +508,9 @@ class FullStackIntegration:
         """Deploy test workload"""
         deployment = client.V1Deployment(
             metadata=client.V1ObjectMeta(
-                name="test-workload", namespace=self.test_namespace, labels={"app": "test-workload"}
+                name="test-workload",
+                namespace=self.test_namespace,
+                labels={"app": "test-workload"},
             ),
             spec=client.V1DeploymentSpec(
                 replicas=1,
@@ -564,7 +582,10 @@ class FullStackIntegration:
         rules = {
             "apiVersion": "monitoring.coreos.com/v1",
             "kind": "PrometheusRule",
-            "metadata": {"name": "test-alert-rules", "namespace": self.alertmanager_namespace},
+            "metadata": {
+                "name": "test-alert-rules",
+                "namespace": self.alertmanager_namespace,
+            },
             "spec": {
                 "groups": [
                     {
@@ -575,7 +596,10 @@ class FullStackIntegration:
                                 "alert": "HighLoad",
                                 "expr": f'sum(rate(nginx_requests_total{{namespace="{self.test_namespace}"}}[1m])) > 100',
                                 "for": "1m",
-                                "labels": {"severity": "warning", "namespace": self.test_namespace},
+                                "labels": {
+                                    "severity": "warning",
+                                    "namespace": self.test_namespace,
+                                },
                                 "annotations": {
                                     "summary": "High load detected",
                                     "description": "Request rate is high",

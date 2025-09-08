@@ -98,8 +98,11 @@ class SecureConfigManager:
             workers=int(os.getenv("SOPHIA_WORKERS", "4")),
             # Security settings
             cors_origins=self._parse_list(os.getenv("CORS_ORIGINS", "")),
-            trusted_hosts=self._parse_list(os.getenv("TRUSTED_HOSTS", "sophia-ai.sophia-intel.ai")),
-            rate_limit_enabled=os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true",
+            trusted_hosts=self._parse_list(
+                os.getenv("TRUSTED_HOSTS", "sophia-ai.sophia-intel.ai")
+            ),
+            rate_limit_enabled=os.getenv("RATE_LIMIT_ENABLED", "true").lower()
+            == "true",
             # AI Framework settings
             agno_log_level=os.getenv("AGNO_LOG_LEVEL", "INFO"),
             langgraph_cache_size=int(os.getenv("LANGGRAPH_CACHE_SIZE", "1000")),
@@ -192,7 +195,9 @@ class SecureConfigManager:
         if config.environment == "production":
             # Production-specific validations
             if not config.trusted_hosts or config.trusted_hosts == ["*"]:
-                logger.warning("Production should have specific trusted hosts configured")
+                logger.warning(
+                    "Production should have specific trusted hosts configured"
+                )
 
             if config.debug:
                 logger.warning("Debug mode should be disabled in production")
@@ -232,7 +237,12 @@ class SecureConfigManager:
     def validate_secrets(self) -> Dict[str, bool]:
         """Validate that required secrets are available"""
 
-        required_secrets = ["OPENAI_API_KEY", "OPENROUTER_API_KEY", "DATABASE_URL", "REDIS_URL"]
+        required_secrets = [
+            "OPENAI_API_KEY",
+            "OPENROUTER_API_KEY",
+            "DATABASE_URL",
+            "REDIS_URL",
+        ]
 
         results = {}
         for secret in required_secrets:

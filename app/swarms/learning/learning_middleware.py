@@ -26,8 +26,13 @@ from opentelemetry.trace import SpanKind
 
 from app.core.ai_logger import logger
 from app.swarms.core.swarm_base import SwarmBase, SwarmExecutionMode
-from app.swarms.learning.adaptive_learning_system import AdaptiveLearningSystem, LearningExperience
-from app.swarms.learning.memory_integrated_learning import MemoryIntegratedLearningSystem
+from app.swarms.learning.adaptive_learning_system import (
+    AdaptiveLearningSystem,
+    LearningExperience,
+)
+from app.swarms.learning.memory_integrated_learning import (
+    MemoryIntegratedLearningSystem,
+)
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer(__name__)
@@ -90,7 +95,9 @@ class MiddlewareChain:
 
         for middleware in self.middleware_components:
             try:
-                enhancements = await middleware.before_execution(swarm, problem, context)
+                enhancements = await middleware.before_execution(
+                    swarm, problem, context
+                )
                 if enhancements:
                     combined_enhancements.update(enhancements)
             except Exception as e:
@@ -158,7 +165,9 @@ class MiddlewareChain:
 class KnowledgeApplicationMiddleware(LearningMiddleware):
     """Middleware for applying learned knowledge before execution"""
 
-    def __init__(self, learning_system: AdaptiveLearningSystem, max_knowledge_items: int = 5):
+    def __init__(
+        self, learning_system: AdaptiveLearningSystem, max_knowledge_items: int = 5
+    ):
         self.learning_system = learning_system
         self.max_knowledge_items = max_knowledge_items
         self.applied_knowledge_history: list[dict[str, Any]] = []
@@ -266,18 +275,26 @@ class KnowledgeApplicationMiddleware(LearningMiddleware):
             return {}
 
         # Calculate effectiveness
-        success_rate = sum(1 for r in results if r.get("success", False)) / max(len(results), 1)
-        avg_quality = np.mean([r.get("quality_score", 0.0) for r in results]) if results else 0.0
+        success_rate = sum(1 for r in results if r.get("success", False)) / max(
+            len(results), 1
+        )
+        avg_quality = (
+            np.mean([r.get("quality_score", 0.0) for r in results]) if results else 0.0
+        )
 
         # Compare with expected improvements
         expected_improvements = knowledge_enhancements.get("expected_improvements", [])
         avg_expected = np.mean(expected_improvements) if expected_improvements else 0.0
 
         effectiveness_score = (
-            min((avg_quality / max(avg_expected, 0.1)), 2.0) if avg_expected > 0 else 1.0
+            min((avg_quality / max(avg_expected, 0.1)), 2.0)
+            if avg_expected > 0
+            else 1.0
         )
 
-        logger.debug(f"📊 Knowledge application effectiveness: {effectiveness_score:.2f}")
+        logger.debug(
+            f"📊 Knowledge application effectiveness: {effectiveness_score:.2f}"
+        )
 
         return {
             "knowledge_application_insights": {
@@ -347,7 +364,9 @@ class ExperienceCaptureMiddleware(LearningMiddleware):
             success_count = sum(1 for r in results if r.get("success", False))
             success_rate = success_count / max(len(results), 1)
             avg_quality = (
-                np.mean([r.get("quality_score", 0.0) for r in results]) if results else 0.0
+                np.mean([r.get("quality_score", 0.0) for r in results])
+                if results
+                else 0.0
             )
 
             # Create comprehensive solution summary
@@ -369,7 +388,9 @@ class ExperienceCaptureMiddleware(LearningMiddleware):
                     "agent_count": len(swarm.agents),
                     "execution_time": execution_time,
                     "swarm_type": swarm.config.swarm_type.value,
-                    "patterns_used": list(swarm.patterns.keys()) if swarm.patterns else [],
+                    "patterns_used": (
+                        list(swarm.patterns.keys()) if swarm.patterns else []
+                    ),
                     **execution_metadata,
                 },
                 agent_states={f"agent_{i}": {} for i in range(len(swarm.agents))},
@@ -477,7 +498,9 @@ class RealTimeLearningMiddleware(LearningMiddleware):
 
         if len(successful_results) >= 2:
             # Extract patterns from successful partial results
-            success_patterns = await self._extract_success_patterns(successful_results, problem)
+            success_patterns = await self._extract_success_patterns(
+                successful_results, problem
+            )
 
             # Generate real-time adjustments
             adjustments = await self._generate_real_time_adjustments(
@@ -494,7 +517,9 @@ class RealTimeLearningMiddleware(LearningMiddleware):
                 }
                 self.real_time_adjustments.append(adjustment_record)
 
-                logger.debug(f"⚡ Real-time learning adjustment: {len(adjustments)} modifications")
+                logger.debug(
+                    f"⚡ Real-time learning adjustment: {len(adjustments)} modifications"
+                )
 
                 return {
                     "real_time_adjustments": adjustments,
@@ -519,7 +544,9 @@ class RealTimeLearningMiddleware(LearningMiddleware):
 
         # Find adjustments made during this execution
         execution_adjustments = [
-            adj for adj in self.real_time_adjustments if adj["execution_id"] == execution_id
+            adj
+            for adj in self.real_time_adjustments
+            if adj["execution_id"] == execution_id
         ]
 
         if not execution_adjustments:
@@ -529,7 +556,9 @@ class RealTimeLearningMiddleware(LearningMiddleware):
         final_success_rate = sum(1 for r in results if r.get("success", False)) / max(
             len(results), 1
         )
-        final_quality = np.mean([r.get("quality_score", 0.0) for r in results]) if results else 0.0
+        final_quality = (
+            np.mean([r.get("quality_score", 0.0) for r in results]) if results else 0.0
+        )
 
         # Clean up tracking
         if execution_id in self.last_learning_times:
@@ -544,7 +573,9 @@ class RealTimeLearningMiddleware(LearningMiddleware):
                 "adjustments_made": len(execution_adjustments),
                 "final_success_rate": final_success_rate,
                 "final_quality": final_quality,
-                "learning_effectiveness": min(final_quality / 0.5, 2.0),  # Normalized score
+                "learning_effectiveness": min(
+                    final_quality / 0.5, 2.0
+                ),  # Normalized score
             }
         }
 
@@ -552,14 +583,20 @@ class RealTimeLearningMiddleware(LearningMiddleware):
         self, successful_results: list[dict[str, Any]], problem: dict[str, Any]
     ) -> dict[str, Any]:
         """Extract patterns from successful partial results"""
-        patterns = {"common_approaches": [], "quality_indicators": [], "timing_patterns": []}
+        patterns = {
+            "common_approaches": [],
+            "quality_indicators": [],
+            "timing_patterns": [],
+        }
 
         # Find common approaches
         approaches = [r.get("approach", "unknown") for r in successful_results]
         from collections import Counter
 
         common_approaches = Counter(approaches).most_common(3)
-        patterns["common_approaches"] = [approach for approach, count in common_approaches]
+        patterns["common_approaches"] = [
+            approach for approach, count in common_approaches
+        ]
 
         # Analyze quality indicators
         quality_scores = [r.get("quality_score", 0.0) for r in successful_results]
@@ -570,7 +607,8 @@ class RealTimeLearningMiddleware(LearningMiddleware):
                 "max_quality": max(quality_scores),
                 "quality_trend": (
                     "improving"
-                    if len(quality_scores) > 1 and quality_scores[-1] > quality_scores[0]
+                    if len(quality_scores) > 1
+                    and quality_scores[-1] > quality_scores[0]
                     else "stable"
                 ),
             }
@@ -621,7 +659,9 @@ class CrossModalLearningMiddleware(LearningMiddleware):
         self.learning_system = learning_system
         self.memory_system = memory_system
         self.mode_transfer_cache: dict[SwarmExecutionMode, dict[str, Any]] = {}
-        self.transfer_effectiveness: dict[tuple[SwarmExecutionMode, SwarmExecutionMode], float] = {}
+        self.transfer_effectiveness: dict[
+            tuple[SwarmExecutionMode, SwarmExecutionMode], float
+        ] = {}
 
     async def before_execution(
         self, swarm: SwarmBase, problem: dict[str, Any], context: dict[str, Any]
@@ -654,7 +694,9 @@ class CrossModalLearningMiddleware(LearningMiddleware):
                 )
 
                 if transfer_patterns:
-                    logger.debug(f"🔄 Found {len(transfer_patterns)} cross-modal transfer patterns")
+                    logger.debug(
+                        f"🔄 Found {len(transfer_patterns)} cross-modal transfer patterns"
+                    )
                     return {
                         "cross_modal_learning": {
                             "transfer_patterns": transfer_patterns,
@@ -693,11 +735,13 @@ class CrossModalLearningMiddleware(LearningMiddleware):
 
         if transfer_patterns:
             # Calculate transfer effectiveness
-            final_success_rate = sum(1 for r in results if r.get("success", False)) / max(
-                len(results), 1
-            )
+            final_success_rate = sum(
+                1 for r in results if r.get("success", False)
+            ) / max(len(results), 1)
             final_quality = (
-                np.mean([r.get("quality_score", 0.0) for r in results]) if results else 0.0
+                np.mean([r.get("quality_score", 0.0) for r in results])
+                if results
+                else 0.0
             )
 
             # Compare with baseline expectations
@@ -709,7 +753,9 @@ class CrossModalLearningMiddleware(LearningMiddleware):
 
             transfer_effectiveness = (success_improvement + quality_improvement) / 2.0
 
-            logger.debug(f"🔄 Cross-modal transfer effectiveness: {transfer_effectiveness:.2f}")
+            logger.debug(
+                f"🔄 Cross-modal transfer effectiveness: {transfer_effectiveness:.2f}"
+            )
 
             return {
                 "cross_modal_insights": {
@@ -759,7 +805,10 @@ class CrossModalLearningMiddleware(LearningMiddleware):
                     "target_mode": target_mode.value,
                     "episode_count": len(successful_episodes),
                     "avg_quality": np.mean(
-                        [ep["metadata"].get("quality_score", 0) for ep in successful_episodes]
+                        [
+                            ep["metadata"].get("quality_score", 0)
+                            for ep in successful_episodes
+                        ]
                     ),
                     "transfer_confidence": min(len(successful_episodes) / 5.0, 1.0),
                 }
@@ -801,7 +850,9 @@ class LearningMiddlewareFactory:
 
         # Always include knowledge application and experience capture
         chain.add_middleware(KnowledgeApplicationMiddleware(self.learning_system))
-        chain.add_middleware(ExperienceCaptureMiddleware(self.learning_system, self.memory_system))
+        chain.add_middleware(
+            ExperienceCaptureMiddleware(self.learning_system, self.memory_system)
+        )
 
         # Optional components
         if include_real_time:
@@ -834,7 +885,9 @@ class LearningMiddlewareFactory:
         chain.add_middleware(
             KnowledgeApplicationMiddleware(self.learning_system, max_knowledge_items=10)
         )
-        chain.add_middleware(ExperienceCaptureMiddleware(self.learning_system, self.memory_system))
+        chain.add_middleware(
+            ExperienceCaptureMiddleware(self.learning_system, self.memory_system)
+        )
         chain.add_middleware(
             RealTimeLearningMiddleware(self.learning_system, learning_interval=2.0)
         )
@@ -891,7 +944,9 @@ async def inject_learning_middleware(
             )
 
             # Apply quality gates
-            quality_passed, filtered_results = await swarm.apply_quality_gates(results, problem)
+            quality_passed, filtered_results = await swarm.apply_quality_gates(
+                results, problem
+            )
 
             # Build final response with learning insights
             final_result = await swarm.reach_consensus(filtered_results)
@@ -928,7 +983,9 @@ if __name__ == "__main__":
         from app.memory.unified_memory import get_memory_store
         from app.swarms.communication.message_bus import MessageBus
         from app.swarms.learning.adaptive_learning_system import create_learning_system
-        from app.swarms.learning.memory_integrated_learning import create_memory_integrated_learning
+        from app.swarms.learning.memory_integrated_learning import (
+            create_memory_integrated_learning,
+        )
 
         # Initialize components
         memory_store = get_memory_store()
@@ -948,9 +1005,15 @@ if __name__ == "__main__":
         research_chain = factory.create_research_middleware_chain()
 
         print("🔧 Learning middleware chains created:")
-        print(f"  Standard chain: {len(standard_chain.middleware_components)} components")
-        print(f"  Lightweight chain: {len(lightweight_chain.middleware_components)} components")
-        print(f"  Research chain: {len(research_chain.middleware_components)} components")
+        print(
+            f"  Standard chain: {len(standard_chain.middleware_components)} components"
+        )
+        print(
+            f"  Lightweight chain: {len(lightweight_chain.middleware_components)} components"
+        )
+        print(
+            f"  Research chain: {len(research_chain.middleware_components)} components"
+        )
 
         # Cleanup
         await learning_system.cleanup()

@@ -126,11 +126,17 @@ You provide clear, actionable insights backed by data and strategic thinking.
     )
 
     # Business intelligence knowledge areas
-    sophia.add_knowledge_area(TaskDomain.BUSINESS_ANALYSIS.value, 0.95, learning_rate=0.12)
+    sophia.add_knowledge_area(
+        TaskDomain.BUSINESS_ANALYSIS.value, 0.95, learning_rate=0.12
+    )
 
-    sophia.add_knowledge_area(TaskDomain.DATA_VISUALIZATION.value, 0.90, learning_rate=0.10)
+    sophia.add_knowledge_area(
+        TaskDomain.DATA_VISUALIZATION.value, 0.90, learning_rate=0.10
+    )
 
-    sophia.add_knowledge_area(TaskDomain.STRATEGIC_PLANNING.value, 0.88, learning_rate=0.11)
+    sophia.add_knowledge_area(
+        TaskDomain.STRATEGIC_PLANNING.value, 0.88, learning_rate=0.11
+    )
 
     # Additional specialized knowledge areas
     sophia.add_knowledge_area("financial_analysis", 0.87, learning_rate=0.09)
@@ -272,11 +278,17 @@ def get_sophia_evolution_patterns() -> dict[str, dict[str, Any]]:
                 "curiosity": 0.04,
                 "executive_communication": 0.03,
             },
-            "knowledge_boosts": {"executive_reporting": 0.03, "presentation_skills": 0.04},
+            "knowledge_boosts": {
+                "executive_reporting": 0.03,
+                "presentation_skills": 0.04,
+            },
         },
         "domain_specialization_pattern": {
             "specialization_threshold": 10,  # tasks in domain
-            "trait_adjustments": {"attention_to_detail": 0.02, "financial_acumen": 0.03},
+            "trait_adjustments": {
+                "attention_to_detail": 0.02,
+                "financial_acumen": 0.03,
+            },
             "knowledge_boosts": {"domain_specific": 0.06},
         },
         "error_recovery_pattern": {
@@ -324,7 +336,9 @@ def customize_sophia_for_context(sophia: Persona, context: dict[str, Any]) -> Pe
         customized_sophia.communication_style["technical_level"] = "detailed_technical"
     elif audience == "board":
         customized_sophia.communication_style["formality"] = "highly_formal"
-        customized_sophia.communication_style["structure_preference"] = "executive_summary_only"
+        customized_sophia.communication_style["structure_preference"] = (
+            "executive_summary_only"
+        )
 
     # Domain-specific adjustments
     domain = context.get("domain")
@@ -389,7 +403,9 @@ class SophiaPersonaFactory:
         sophia.traits["market_awareness"].value = min(
             1.0, sophia.traits["market_awareness"].value * 1.12
         )
-        sophia.traits["curiosity"].value = min(1.0, sophia.traits["curiosity"].value * 1.08)
+        sophia.traits["curiosity"].value = min(
+            1.0, sophia.traits["curiosity"].value * 1.08
+        )
         return sophia
 
     @staticmethod
@@ -409,8 +425,20 @@ SOPHIA_CONFIG = {
     "MIN_CONFIDENCE_THRESHOLD": 0.75,
     "MAX_RESPONSE_LENGTH": 2000,
     "PREFERRED_CHART_TYPES": ["bar", "line", "pie", "scatter", "heatmap"],
-    "EXECUTIVE_KEYWORDS": ["strategic", "ROI", "value", "impact", "competitive", "growth"],
-    "ANALYSIS_FRAMEWORKS": ["SWOT", "Porter's Five Forces", "BCG Matrix", "Balanced Scorecard"],
+    "EXECUTIVE_KEYWORDS": [
+        "strategic",
+        "ROI",
+        "value",
+        "impact",
+        "competitive",
+        "growth",
+    ],
+    "ANALYSIS_FRAMEWORKS": [
+        "SWOT",
+        "Porter's Five Forces",
+        "BCG Matrix",
+        "Balanced Scorecard",
+    ],
     "DEFAULT_METRICS": [
         "Revenue",
         "Profit Margin",

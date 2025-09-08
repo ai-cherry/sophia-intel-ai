@@ -7,14 +7,19 @@ Zero-conflict architecture with existing MCP services
 
 import asyncio
 import json
+import os
+import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 import httpx
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException, Depends, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel, Field, validator
 import redis
+from redis.exceptions import ConnectionError, TimeoutError, RedisError
 
 # Optional Weaviate support
 try:
@@ -26,11 +31,20 @@ except ImportError:
 
 class MemoryQuery(BaseModel):
     """Query model for memory service"""
-    query: str
+    query: str = Field(..., min_length=1, max_length=1000)
     domain: Optional[str] = None
-    limit: int = 10
+    limit: int = Field(default=10, ge=1, le=100)
     include_context: bool = True
     filters: Optional[Dict[str, Any]] = None
+    
+    @validator('query')
+    def sanitize_query(cls, v):
+        """Sanitize query input"""
+        # Remove potential injection attempts
+        dangerous_chars = ['<', '>', '"', "'", '\\', '\0', '\n', '\r', '\t']
+        for char in dangerous_chars:
+            v = v.replace(char, '')
+        return v.strip()
 
 class MemoryResponse(BaseModel):
     """Response model for memory queries"""
@@ -42,11 +56,18 @@ class MemoryResponse(BaseModel):
 
 class IndexRequest(BaseModel):
     """Request model for indexing documents"""
-    content: str
-    metadata: Optional[Dict[str, Any]] = {}
-    source: Optional[str] = None
-    type: Optional[str] = None
-    id: Optional[str] = None
+    content: str = Field(..., min_length=1, max_length=100000)
+    metadata: Optional[Dict[str, Any]] = Field(default_factory=dict)
+    source: Optional[str] = Field(None, max_length=100)
+    type: Optional[str] = Field(None, max_length=50)
+    id: Optional[str] = Field(None, max_length=100)
+    
+    @validator('content')
+    def validate_content_size(cls, v):
+        """Validate content size"""
+        if len(v.encode('utf-8')) > 100000:  # 100KB limit
+            raise ValueError("Content too large (max 100KB)")
+        return v
 
 class BaseMemoryService(ABC):
     """
@@ -57,42 +78,124 @@ class BaseMemoryService(ABC):
     def __init__(self, domain: str, port: int):
         self.domain = domain
         self.port = port
+        
+        # Setup logging
+        self.logger = logging.getLogger(f"{domain}_memory")
+        self.logger.setLevel(os.getenv("MEMORY_LOG_LEVEL", "INFO"))
+        
+        # Load configuration
+        from app.memory.config import get_config
+        self.config = get_config()
+        
         self.app = FastAPI(
             title=f"{domain.title()} Memory Service",
             description=f"RAG memory service for {domain} domain",
             version="1.0.0"
         )
         
-        # Initialize Redis (required)
-        try:
-            self.redis_client = redis.Redis(
-                host='localhost', 
-                port=6379, 
-                decode_responses=True,
-                socket_connect_timeout=5
-            )
-            self.redis_client.ping()
-            self.redis_available = True
-        except:
-            print(f"⚠️  Redis not available, using in-memory cache")
-            self.redis_available = False
-            self.memory_cache = {}
+        # Security setup (optional)
+        self.security = HTTPBearer(auto_error=False) if self.config.enable_auth else None
         
-        # Initialize Weaviate (optional)
-        self.weaviate_client = None
-        if WEAVIATE_AVAILABLE:
-            try:
-                self.weaviate_client = WeaviateClient("http://localhost:8080")
-                self.weaviate_client.is_ready()
-                print(f"✅ Weaviate connected for {domain}")
-            except:
-                print(f"⚠️  Weaviate not available for {domain}, using Redis only")
-                self.weaviate_client = None
+        # Initialize storage backends with proper fallback
+        self._init_redis()
+        self._init_weaviate()
+        self._init_fallback_storage()
         
         self._setup_routes()
     
+    def _init_redis(self):
+        """Initialize Redis with proper error handling"""
+        self.redis_client = None
+        self.redis_available = False
+        
+        if not self.config.enable_redis:
+            self.logger.info("Redis disabled by configuration")
+            return
+        
+        try:
+            self.redis_client = redis.Redis(
+                host=self.config.redis_host,
+                port=self.config.redis_port,
+                db=self.config.redis_db,
+                password=self.config.redis_password,
+                decode_responses=True,
+                socket_connect_timeout=self.config.redis_timeout,
+                retry_on_timeout=True,
+                retry_on_error=[ConnectionError, TimeoutError]
+            )
+            # Test connection
+            self.redis_client.ping()
+            self.redis_available = True
+            self.logger.info(f"✅ Redis connected for {self.domain}")
+        except (ConnectionError, TimeoutError, RedisError) as e:
+            self.logger.warning(f"⚠️  Redis not available for {self.domain}: {e}")
+            self.redis_client = None
+            self.redis_available = False
+    
+    def _init_weaviate(self):
+        """Initialize Weaviate with proper error handling"""
+        self.weaviate_client = None
+        
+        if not self.config.enable_weaviate or not WEAVIATE_AVAILABLE:
+            self.logger.info("Weaviate disabled or not available")
+            return
+        
+        try:
+            self.weaviate_client = WeaviateClient(
+                url=self.config.weaviate_url,
+                auth_client_secret=self.config.weaviate_api_key,
+                timeout=(self.config.weaviate_timeout, self.config.weaviate_timeout)
+            )
+            if self.weaviate_client.is_ready():
+                self.logger.info(f"✅ Weaviate connected for {self.domain}")
+            else:
+                raise Exception("Weaviate not ready")
+        except Exception as e:
+            self.logger.warning(f"⚠️  Weaviate not available for {self.domain}: {e}")
+            self.weaviate_client = None
+    
+    def _init_fallback_storage(self):
+        """Initialize fallback storage mechanisms"""
+        # In-memory cache (always available)
+        self.memory_cache = {}
+        self.memory_cache_size = 0
+        
+        # File-based persistence (optional)
+        if self.config.enable_persistence:
+            self.persistence_dir = Path(f"/tmp/{self.domain}_memory")
+            self.persistence_dir.mkdir(parents=True, exist_ok=True)
+            self.logger.info(f"📁 Persistence enabled at {self.persistence_dir}")
+        else:
+            self.persistence_dir = None
+    
+    def _validate_auth(self, credentials: HTTPAuthorizationCredentials = None) -> bool:
+        """Validate authentication if enabled"""
+        if not self.config.enable_auth:
+            return True
+        
+        if not credentials or not credentials.credentials:
+            return False
+        
+        return credentials.credentials == self.config.api_key
+    
+    def _get_auth_dependency(self):
+        """Get authentication dependency for routes"""
+        if self.config.enable_auth:
+            async def verify_auth(credentials: HTTPAuthorizationCredentials = Security(self.security)):
+                if not self._validate_auth(credentials):
+                    raise HTTPException(status_code=401, detail="Invalid authentication")
+                return credentials
+            return verify_auth
+        else:
+            async def no_auth():
+                return None
+            return no_auth
+    
     def _setup_routes(self):
-        """Setup FastAPI routes"""
+        """Setup FastAPI routes with optional authentication"""
+        
+        # Create auth dependency
+        auth_dep = self._get_auth_dependency()
         
         @self.app.get("/")
         async def root():
@@ -100,22 +203,42 @@ class BaseMemoryService(ABC):
                 "service": f"{self.domain.title()} Memory Service",
                 "status": "running",
                 "redis": self.redis_available,
-                "weaviate": self.weaviate_client is not None
+                "weaviate": self.weaviate_client is not None,
+                "auth_required": self.config.enable_auth
             }
         
         @self.app.get("/health")
         async def health():
             """Health check endpoint"""
+            # Build health status
+            health_status = "healthy"
+            warnings = []
+            
+            if not self.redis_available and not self.weaviate_client:
+                health_status = "degraded"
+                warnings.append("No vector storage available")
+            
             return {
-                "status": "healthy",
+                "status": health_status,
                 "domain": self.domain,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "backends": {
+                    "redis": self.redis_available,
+                    "weaviate": self.weaviate_client is not None,
+                    "memory": True,
+                    "persistence": self.persistence_dir is not None
+                },
+                "warnings": warnings
             }
         
-        @self.app.post("/query", response_model=MemoryResponse)
+        @self.app.post("/query", response_model=MemoryResponse, dependencies=[Depends(auth_dep)])
         async def query_memory(request: MemoryQuery):
             """Query memory with optional context enrichment"""
             try:
+                # Validate request limits
+                if request.limit > self.config.max_search_limit:
+                    request.limit = self.config.max_search_limit
+                
                 results = await self.search(
                     request.query, 
                     request.limit,
@@ -132,13 +255,20 @@ class BaseMemoryService(ABC):
                     context_used=request.include_context,
                     total_results=len(results)
                 )
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+                self.logger.error(f"Query error: {e}")
+                raise HTTPException(status_code=500, detail="Internal server error")
         
-        @self.app.post("/index")
+        @self.app.post("/index", dependencies=[Depends(auth_dep)])
         async def index_document(request: IndexRequest):
             """Index a document into memory"""
             try:
+                # Validate content size
+                if len(request.content.encode('utf-8')) > self.config.max_entry_size:
+                    raise HTTPException(status_code=413, detail="Content too large")
+                
                 document = {
                     "content": request.content,
                     "metadata": request.metadata,
@@ -158,8 +288,11 @@ class BaseMemoryService(ABC):
                     "domain": self.domain,
                     "document_id": document.get("id", "auto-generated")
                 }
+            except ValueError as e:
+                raise HTTPException(status_code=400, detail=str(e))
             except Exception as e:
-                raise HTTPException(status_code=500, detail=str(e))
+                self.logger.error(f"Index error: {e}")
+                raise HTTPException(status_code=500, detail="Internal server error")
         
         @self.app.delete("/clear")
         async def clear_memory():
@@ -207,19 +340,68 @@ class BaseMemoryService(ABC):
         return f"{self.domain}:cache:{safe_query}"
     
     def _get_from_cache(self, key: str) -> Optional[Any]:
-        """Get value from cache (Redis or memory)"""
-        if self.redis_available:
-            value = self.redis_client.get(key)
-            return json.loads(value) if value else None
-        else:
-            return self.memory_cache.get(key)
+        """Get value from cache with fallback chain"""
+        # Try Redis first
+        if self.redis_available and self.redis_client:
+            try:
+                value = self.redis_client.get(key)
+                if value:
+                    return json.loads(value) if isinstance(value, str) else value
+            except (ConnectionError, TimeoutError, RedisError) as e:
+                self.logger.warning(f"Redis read failed, falling back: {e}")
+        
+        # Fallback to memory cache
+        value = self.memory_cache.get(key)
+        if value:
+            return value
+        
+        # Fallback to file persistence
+        if self.persistence_dir:
+            try:
+                file_path = self.persistence_dir / f"{key}.json"
+                if file_path.exists():
+                    with open(file_path, 'r') as f:
+                        return json.load(f)
+            except Exception as e:
+                self.logger.warning(f"File read failed: {e}")
+        
+        return None
     
-    def _set_cache(self, key: str, value: Any, ttl: int = 3600):
-        """Set value in cache with TTL"""
-        if self.redis_available:
-            self.redis_client.setex(key, ttl, json.dumps(value))
-        else:
-            self.memory_cache[key] = value
+    def _set_cache(self, key: str, value: Any, ttl: int = None):
+        """Set value in cache with fallback chain"""
+        if ttl is None:
+            ttl = self.config.cache_ttl
+        
+        success = False
+        
+        # Try Redis first
+        if self.redis_available and self.redis_client:
+            try:
+                self.redis_client.setex(key, ttl, json.dumps(value))
+                success = True
+            except (ConnectionError, TimeoutError, RedisError) as e:
+                self.logger.warning(f"Redis write failed, using fallback: {e}")
+        
+        # Always update memory cache
+        self.memory_cache[key] = value
+        
+        # Enforce memory limits
+        if len(self.memory_cache) > self.config.max_memory_entries:
+            # Remove oldest entries (simple FIFO)
+            oldest_keys = list(self.memory_cache.keys())[:100]
+            for old_key in oldest_keys:
+                del self.memory_cache[old_key]
+        
+        # Persist to file if enabled
+        if self.persistence_dir:
+            try:
+                file_path = self.persistence_dir / f"{key}.json"
+                with open(file_path, 'w') as f:
+                    json.dump(value, f)
+            except Exception as e:
+                self.logger.warning(f"File write failed: {e}")
+        
+        return success
     
     @abstractmethod
     async def search(self, query: str, limit: int, filters: Optional[Dict] = None) -> List[Dict[str, Any]]:

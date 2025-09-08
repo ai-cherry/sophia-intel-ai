@@ -24,7 +24,7 @@ class BudgetManager:
     """
 
     def __init__(self, yaml_path: Optional[str] = None):
-        root = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        root = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
         self.yaml_path = yaml_path or os.path.join(root, "config", "budgets.yaml")
         self.limits: Dict[str, BudgetLimit] = {}
         self.usage_usd: Dict[str, float] = {}
@@ -66,4 +66,3 @@ class BudgetManager:
             return "soft_cap"
         self.add_usage(vk_env, estimated_cost_usd)
         return "allow"
-

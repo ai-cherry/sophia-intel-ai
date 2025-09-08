@@ -7,9 +7,8 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 
-MODELS_YAML_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "config", "..", "config", "models.yaml")
 # Resolve to repo-root/config/models.yaml regardless of caller CWD
-MODELS_YAML_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "config", "models.yaml"))
+MODELS_YAML_PATH = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "config", "models.yaml"))
 
 
 class ConfigError(RuntimeError):
@@ -75,8 +74,19 @@ class PortkeyClient:
         }
         if self.call.virtual_key_env:
             spec["virtual_key"] = os.getenv(self.call.virtual_key_env)
+            spec["vk_env"] = self.call.virtual_key_env
         if self.call.virtual_key_envs:
-            spec["virtual_keys"] = [os.getenv(k) for k in self.call.virtual_key_envs if os.getenv(k)]
+            # Resolved VK values and their env var names
+            resolved = []
+            resolved_envs = []
+            for k in self.call.virtual_key_envs:
+                val = os.getenv(k)
+                if val:
+                    resolved.append(val)
+                    resolved_envs.append(k)
+            if resolved:
+                spec["virtual_keys"] = resolved
+                spec["vk_envs"] = resolved_envs
         params = {}
         if self.call.max_tokens is not None:
             params["max_tokens"] = self.call.max_tokens

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search
+.PHONY: help env.check rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -51,6 +51,12 @@ swarm-start: ## Start multi-agent swarm (use: make swarm-start TASK="your task")
 memory-search: ## Search shared memory (use: make memory-search QUERY="search term")
 	@docker compose -f docker-compose.multi-agent.yml run --rm agent-dev \
 		python3 scripts/sophia.py memory search "$(QUERY)"
+
+mcp-status: ## Check MCP service health endpoints
+	@echo "MCP Memory:   " && (curl -sf http://localhost:8081/health | jq '.' || echo "not responding")
+	@echo "MCP FS Sophia:" && (curl -sf http://localhost:8082/health | jq '.' || echo "not responding")
+	@echo "MCP FS Artemis:" && (curl -sf http://localhost:8083/health | jq '.' || echo "not responding")
+	@echo "MCP Git:      " && (curl -sf http://localhost:8084/health | jq '.' || echo "not responding")
 
 clean: ## Clean up Docker resources
 	@echo "🧹 Cleaning Docker resources..."

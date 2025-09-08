@@ -35,3 +35,10 @@ Quick Tips
 - Run preflight before boot: python3 scripts/agents_env_check.py
 - For IDEs: start bridge: (cd mcp-bridge && npm install && npx tsx src/index.ts) if not using orchestrator.
 
+SSH Agent Forwarding (Git MCP)
+- Ensure an SSH agent is running and your key is loaded:
+  - Start: eval "$(ssh-agent)"
+  - Add key: ssh-add ~/.ssh/id_rsa (or your key path)
+- Verify the socket: echo $SSH_AUTH_SOCK
+- The multi-agent compose mounts SSH_AUTH_SOCK for the Git MCP container so pushes use your agent.
+- Fallback: when SSH agent is not available, you can set a temporary GitHub PAT within the agent-dev shell for ad-hoc operations (avoid persisting secrets).

@@ -84,13 +84,9 @@ class BridgeRegistrationManager:
             if ide_name == "claude_desktop":
                 await self._register_claude_desktop_servers(ide_config)
 
-            # Handle Roo/Cursor servers
-            elif ide_name == "roo_cursor":
-                await self._register_roo_cursor_servers(ide_config)
-
-            # Handle Cline servers
-            elif ide_name == "cline":
-                await self._register_cline_servers(ide_config)
+            # Note: Roo/Cursor and Cline integrations removed - use unified MCP approach
+            elif ide_name in ["roo_cursor", "cline"]:
+                logger.warning(f"Legacy {ide_name} integration removed. Use unified MCP servers instead.")
 
         except Exception as e:
             logger.error(f"Failed to register servers for {ide_name}: {e}")
@@ -145,109 +141,8 @@ class BridgeRegistrationManager:
             except Exception as e:
                 logger.error(f"Failed to register Claude Desktop server {server_id}: {e}")
 
-    async def _register_roo_cursor_servers(self, ide_config: Dict[str, Any]):
-        """Register Roo/Cursor MCP servers"""
-        mcp_servers = ide_config.get("mcp_servers", [])
-
-        for server_config in mcp_servers:
-            try:
-                server_name = server_config.get("name", "unknown")
-
-                # Map capabilities
-                capabilities = []
-                for cap_name in server_config.get("capabilities", []):
-                    if cap_name in ["code", "refactor", "analyze", "test", "debug"]:
-                        capabilities.append(MCPCapabilityType.CODE_ANALYSIS)
-                    elif cap_name in ["file_read", "file_write", "directory_operations"]:
-                        capabilities.append(MCPCapabilityType.FILESYSTEM)
-                    elif cap_name in ["search", "retrieve"]:
-                        capabilities.append(MCPCapabilityType.EMBEDDINGS)
-
-                # Determine domain
-                domain_str = server_config.get("domain", "shared")
-                domain = MCPDomain(domain_str)
-
-                # Create registration
-                registration = MCPServerRegistration(
-                    server_id=f"bridge_{server_name.replace('-', '_')}",
-                    name=server_name.replace("-", " ").title(),
-                    domain=domain,
-                    capabilities=capabilities,
-                    endpoint=server_config.get("endpoint", "ws://localhost:8000/mcp"),
-                    connection_type=ConnectionType.WEBSOCKET,
-                    priority=server_config.get("priority", 5),
-                    max_connections=server_config.get("connection_config", {}).get(
-                        "max_connections", 10
-                    ),
-                    timeout_seconds=server_config.get("connection_config", {}).get(
-                        "connection_timeout", 30
-                    ),
-                    description=f"Roo/Cursor bridge server for {server_name}",
-                    tags={"bridge", "roo_cursor", "websocket"},
-                )
-
-                # Register with central registry
-                success = await self.registry.register_server(registration)
-                if success:
-                    self.registered_servers[registration.server_id] = registration
-                    logger.info(f"✅ Registered Roo/Cursor server: {registration.server_id}")
-
-            except Exception as e:
-                logger.error(
-                    f"Failed to register Roo/Cursor server {server_config.get('name', 'unknown')}: {e}"
-                )
-
-    async def _register_cline_servers(self, ide_config: Dict[str, Any]):
-        """Register Cline MCP servers"""
-        mcp_servers = ide_config.get("mcp_servers", [])
-
-        for server_config in mcp_servers:
-            try:
-                server_name = server_config.get("name", "unknown")
-
-                # Map capabilities
-                capabilities = []
-                for cap_name in server_config.get("capabilities", []):
-                    if "analysis" in cap_name or "intelligence" in cap_name:
-                        capabilities.append(MCPCapabilityType.CODE_ANALYSIS)
-                    elif "tagging" in cap_name or "classification" in cap_name:
-                        capabilities.append(MCPCapabilityType.EMBEDDINGS)
-                    elif "design" in cap_name:
-                        capabilities.append(MCPCapabilityType.CODE_ANALYSIS)
-
-                # Determine domain
-                domain_str = server_config.get("domain", "artemis")
-                domain = MCPDomain(domain_str)
-
-                # Create registration
-                registration = MCPServerRegistration(
-                    server_id=f"bridge_{server_name.replace('-', '_')}",
-                    name=server_name.replace("-", " ").title(),
-                    domain=domain,
-                    capabilities=capabilities,
-                    endpoint=server_config.get("endpoint", "ws://localhost:8000/mcp"),
-                    connection_type=ConnectionType.WEBSOCKET,
-                    priority=server_config.get("priority", 10),
-                    max_connections=server_config.get("connection_config", {}).get(
-                        "max_connections", 5
-                    ),
-                    timeout_seconds=server_config.get("connection_config", {}).get(
-                        "connection_timeout", 30
-                    ),
-                    description=f"Cline bridge server for {server_name}",
-                    tags={"bridge", "cline", "intelligence"},
-                )
-
-                # Register with central registry
-                success = await self.registry.register_server(registration)
-                if success:
-                    self.registered_servers[registration.server_id] = registration
-                    logger.info(f"✅ Registered Cline server: {registration.server_id}")
-
-            except Exception as e:
-                logger.error(
-                    f"Failed to register Cline server {server_config.get('name', 'unknown')}: {e}"
-                )
+    # Note: Roo/Cursor and Cline server registration methods removed
+    # Use unified MCP servers via central registry instead
 
     async def update_server_status(self, server_id: str, status: ServerStatus):
         """Update status of a bridge server"""

@@ -1,4 +1,0 @@
-# Personal API Token Optimizer Dependencies
-aiohttp>=3.8.0
-backoff>=2.2.0
-ratelimit>=2.2.0

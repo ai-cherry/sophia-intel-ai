@@ -46,7 +46,7 @@ class MCPMasterController:
                 "port": 8001,
                 "command": ["python3", "-m", "mcp.servers.filesystem"],
                 "health_endpoint": "/health",
-                "required_for": ["claude-coder", "roo", "cline", "cursor", "codex"],
+                "required_for": ["unified-agent-cli"],
                 "capabilities": ["read_files", "write_files", "list_directory", "file_search"],
             },
             "git": {
@@ -54,7 +54,7 @@ class MCPMasterController:
                 "port": 8002,
                 "command": ["python3", "-m", "mcp.servers.git"],
                 "health_endpoint": "/health",
-                "required_for": ["claude-coder", "roo", "cline", "cursor", "codex"],
+                "required_for": ["unified-agent-cli"],
                 "capabilities": ["git_status", "git_commit", "git_push", "git_diff"],
             },
             "memory": {

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "description": "MCP Bridge Configuration for IDE Connections - Sophia-Artemis Consolidated System",
-  "last_updated": "2025-01-05",
+  "description": "MCP Bridge Configuration - Unified System for Sophia-Artemis",
+  "last_updated": "2025-01-07",
 
   "ide_connections": {
     "claude_desktop": {
@@ -101,178 +101,76 @@
       }
     },
 
-    "roo_cursor": {
-      "name": "Roo/Cursor MCP Bridge",
-      "description": "Roo and Cursor IDE connections for repository operations",
+    "unified_agent_cli": {
+      "name": "Unified AI Agent CLI",
+      "description": "Unified CLI for Grok, Claude Coder, and Codex agents",
       "enabled": true,
       "priority": "high",
 
       "mcp_servers": [
         {
-          "name": "artemis-codebase-primary",
+          "name": "unified-artemis-bridge",
           "endpoint": "ws://localhost:8001/mcp",
           "protocol": "websocket",
           "domain": "artemis",
           "priority": 1,
-          "capabilities": ["code", "refactor", "analyze", "test", "debug"],
+          "capabilities": ["code", "refactor", "analyze", "test", "debug", "document"],
           "connection_config": {
-            "max_connections": 5,
+            "max_connections": 10,
             "connection_timeout": 30,
             "idle_timeout": 300,
             "reconnect": true,
             "reconnect_delay": 5
-          },
-          "authentication": {
-            "type": "api_key",
-            "key_env": "ROO_MCP_API_KEY"
           }
         },
 
         {
-          "name": "artemis-filesystem",
-          "endpoint": "ws://localhost:8010/mcp",
+          "name": "unified-sophia-bridge",
+          "endpoint": "ws://localhost:8002/mcp",
           "protocol": "websocket",
-          "domain": "artemis",
+          "domain": "sophia",
           "priority": 1,
-          "capabilities": ["file_read", "file_write", "file_watch", "directory_operations"],
+          "capabilities": ["business_analysis", "integrations", "reporting"],
           "connection_config": {
-            "max_connections": 3,
-            "connection_timeout": 20,
-            "idle_timeout": 600,
-            "reconnect": true
-          }
-        },
-
-        {
-          "name": "shared-indexing-secondary",
-          "endpoint": "ws://localhost:8031/mcp",
-          "protocol": "websocket",
-          "domain": "shared",
-          "priority": 2,
-          "capabilities": ["search", "retrieve", "index_update"],
-          "connection_config": {
-            "max_connections": 2,
+            "max_connections": 5,
             "connection_timeout": 30,
             "idle_timeout": 300,
             "reconnect": true
-          },
-          "filters": {
-            "index_partitions": ["code", "documentation", "tests"]
           }
         },
 
         {
-          "name": "shared-embedding-secondary",
-          "endpoint": "ws://localhost:8032/mcp",
+          "name": "unified-shared-bridge",
+          "endpoint": "ws://localhost:8765/mcp",
           "protocol": "websocket",
           "domain": "shared",
           "priority": 2,
-          "capabilities": ["generate_embedding", "similarity_search", "semantic_search"],
+          "capabilities": ["memory", "search", "embeddings", "indexing"],
           "connection_config": {
-            "max_connections": 2,
-            "connection_timeout": 45,
+            "max_connections": 5,
+            "connection_timeout": 30,
             "idle_timeout": 300,
             "reconnect": true
-          },
-          "filters": {
-            "namespaces": ["technical_embeddings", "code_embeddings"]
           }
         }
       ],
 
-      "routing_config": {
-        "primary_domain": "artemis",
-        "load_balancing": "round_robin",
-        "failover_enabled": true,
-        "circuit_breaker": {
-          "enabled": true,
-          "failure_threshold": 5,
-          "reset_timeout": 60
-        }
-      }
-    },
-
-    "cline": {
-      "name": "Cline MCP Bridge",
-      "description": "Cline IDE connections for code intelligence and meta-tagging",
-      "enabled": true,
-      "priority": "medium",
-
-      "mcp_servers": [
-        {
-          "name": "artemis-code-intelligence",
-          "endpoint": "ws://localhost:8011/mcp",
-          "protocol": "websocket",
-          "domain": "artemis",
-          "priority": 1,
-          "capabilities": [
-            "code_analysis",
-            "intelligence",
-            "suggestions",
-            "diagnostics",
-            "quick_fixes"
-          ],
-          "connection_config": {
-            "max_connections": 3,
-            "connection_timeout": 30,
-            "idle_timeout": 300,
-            "reconnect": true,
-            "reconnect_delay": 3
-          },
-          "features": {
-            "auto_complete": true,
-            "inline_suggestions": true,
-            "real_time_analysis": true,
-            "semantic_highlighting": true
-          }
+      "agent_config": {
+        "grok": {
+          "model": "x-ai/grok-code-fast-1",
+          "provider": "openrouter",
+          "specialties": ["code_generation", "debugging", "review"]
         },
-
-        {
-          "name": "artemis-design-server",
-          "endpoint": "ws://localhost:8012/mcp",
-          "protocol": "websocket",
-          "domain": "artemis",
-          "priority": 2,
-          "capabilities": ["architecture_analysis", "design_patterns", "uml_generation"],
-          "connection_config": {
-            "max_connections": 2,
-            "connection_timeout": 45,
-            "idle_timeout": 600,
-            "reconnect": true
-          }
+        "claude": {
+          "model": "anthropic/claude-3.5-sonnet-20241022",
+          "provider": "anthropic",
+          "specialties": ["refactoring", "architecture", "complex_logic"]
         },
-
-        {
-          "name": "shared-meta-tagging",
-          "endpoint": "ws://localhost:8033/mcp",
-          "protocol": "websocket",
-          "domain": "shared",
-          "priority": 1,
-          "capabilities": [
-            "auto_tagging",
-            "classification",
-            "metadata_extraction",
-            "semantic_tagging"
-          ],
-          "connection_config": {
-            "max_connections": 2,
-            "connection_timeout": 30,
-            "idle_timeout": 300,
-            "reconnect": true
-          },
-          "tag_configuration": {
-            "domains": ["code", "architecture", "quality", "security"],
-            "auto_tag_on_save": true,
-            "tag_propagation": true
-          }
+        "codex": {
+          "model": "openai/gpt-4-turbo-preview",
+          "provider": "openai",
+          "specialties": ["testing", "documentation", "completion"]
         }
-      ],
-
-      "intelligence_config": {
-        "analysis_depth": "deep",
-        "suggestion_frequency": "moderate",
-        "learning_mode": true,
-        "personalization": true
       }
     }
   },
@@ -322,13 +220,13 @@
     "enabled": true,
     "strategies": {
       "artemis": {
-        "primary": ["artemis-codebase-primary", "artemis-filesystem"],
-        "fallback": ["shared-indexing-secondary"],
+        "primary": ["unified-artemis-bridge"],
+        "fallback": ["unified-shared-bridge"],
         "health_check_endpoint": "/health"
       },
       "sophia": {
-        "primary": ["sophia-business-bridge"],
-        "fallback": ["shared-knowledge-bridge"],
+        "primary": ["unified-sophia-bridge"],
+        "fallback": ["unified-shared-bridge"],
         "health_check_endpoint": "/health"
       }
     }
@@ -342,22 +240,6 @@
       "enabled": true,
       "learning_algorithm": "reinforcement",
       "optimization_metric": "latency"
-    }
-  },
-
-  "ide_specific_overrides": {
-    "vscode": {
-      "extensions": ["roo.mcp-bridge", "cursor.mcp-integration"],
-      "settings": {
-        "mcp.autoConnect": true,
-        "mcp.showStatusBar": true
-      }
-    },
-    "intellij": {
-      "plugins": ["com.cline.mcp"],
-      "settings": {
-        "mcp.enableIntelliSense": true
-      }
     }
   }
 }

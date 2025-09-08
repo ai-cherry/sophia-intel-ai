@@ -52,9 +52,8 @@ validate_platform() {
     
     # 1. Check UV environments
     echo -e "\n${YELLOW}1️⃣ UV ENVIRONMENTS:${NC}"
-    for env in prod dev agent; do
-        check_item "venv-$env exists" "[ -d '$SOPHIA_HOME/venv-$env' ]"
-    done
+        # Note: Virtual environment management removed - use system Python
+        check_item "System Python available" "command -v python3 >/dev/null"
     
     # 2. Verify encrypted environment
     echo -e "\n${YELLOW}2️⃣ ENCRYPTED ENVIRONMENT:${NC}"
@@ -221,12 +220,11 @@ launch_production() {
     # Start services with proper error handling
     cd "$SOPHIA_HOME"
     
-    # Function to start a service
+    # Function to start a service (uses system Python, no venv)
     start_service() {
         local name="$1"
         local command="$2"
         local port="${3:-}"
-        local venv="${4:-prod}"
         
         echo -e "\n${YELLOW}Starting $name...${NC}"
         
@@ -238,29 +236,21 @@ launch_production() {
             fi
         fi
         
-        # Activate virtual environment and start service
-        if [ -d "venv-$venv" ]; then
-            (
-                source "venv-$venv/bin/activate"
-                eval "$command" > "$LOGS_DIR/$name.log" 2>&1 &
-                local pid=$!
-                echo $pid > "$PIDS_DIR/$name.pid"
-                
-                # Wait a moment and check if process started
-                sleep 2
-                if ps -p $pid > /dev/null; then
-                    echo -e "${GREEN}✅ $name started (PID: $pid)${NC}"
-                    [ -n "$port" ] && echo -e "   ${BLUE}→ Available at: http://localhost:$port${NC}"
-                    return 0
-                else
-                    echo -e "${RED}❌ $name failed to start${NC}"
-                    echo -e "   Check logs: $LOGS_DIR/$name.log"
-                    rm -f "$PIDS_DIR/$name.pid"
-                    return 1
-                fi
-            )
+        # Start service with system Python (no venv activation)
+        eval "$command" > "$LOGS_DIR/$name.log" 2>&1 &
+        local pid=$!
+        echo $pid > "$PIDS_DIR/$name.pid"
+        
+        # Wait a moment and check if process started
+        sleep 2
+        if ps -p $pid > /dev/null; then
+            echo -e "${GREEN}✅ $name started (PID: $pid)${NC}"
+            [ -n "$port" ] && echo -e "   ${BLUE}→ Available at: http://localhost:$port${NC}"
+            return 0
         else
-            echo -e "${YELLOW}⚠️  Virtual environment venv-$venv not found${NC}"
+            echo -e "${RED}❌ $name failed to start${NC}"
+            echo -e "   Check logs: $LOGS_DIR/$name.log"
+            rm -f "$PIDS_DIR/$name.pid"
             return 1
         fi
     }
@@ -275,7 +265,7 @@ launch_production() {
     fi
     
     if [ -f "$SOPHIA_MAIN/ai_router.py" ]; then
-        (cd "$SOPHIA_MAIN" && start_service "router" "python ai_router.py" "" "prod")
+        (cd "$SOPHIA_MAIN" && start_service "router" "python ai_router.py" "")
     fi
     
     # Start monitoring if available
@@ -399,4 +389,3 @@ case "$1" in
         echo "  $0 logs mcp        # View MCP server logs"
         ;;
 esac
-

@@ -112,17 +112,10 @@ install_dependencies() {
 
     cd "$PROJECT_ROOT"
 
-    # Create virtual environment if it doesn't exist
-    if [ ! -d "venv" ]; then
-        log_info "Creating virtual environment..."
-        python3 -m venv venv
-    fi
+    # Use system Python - no virtual environment
 
-    # Activate virtual environment
-    source venv/bin/activate
-
-    # Upgrade pip
-    pip install --upgrade pip
+    # Upgrade pip for user
+    python3 -m pip install --user --upgrade pip
 
     # Install dependencies with uv if available
     if command -v uv &> /dev/null; then
@@ -130,13 +123,13 @@ install_dependencies() {
         uv pip sync requirements.txt
     else
         log_info "Installing with pip..."
-        pip install -r requirements.txt
+        pip3 install --user -r requirements.txt
     fi
 
     # Install development dependencies
     if [ "${1:-}" = "--dev" ]; then
         log_info "Installing development dependencies..."
-        pip install -r requirements-dev.txt
+        [ -f requirements-dev.txt ] && pip3 install --user -r requirements-dev.txt || true
         pre-commit install
     fi
 
@@ -175,7 +168,7 @@ initialize_system() {
     log_info "Initializing Sophia + Artemis system..."
 
     cd "$PROJECT_ROOT"
-    source venv/bin/activate
+    # No venv activation - using system Python
 
     # Initialize secrets
     log_info "Initializing secrets manager..."
@@ -245,7 +238,7 @@ start_services() {
     log_info "Starting Sophia + Artemis services..."
 
     cd "$PROJECT_ROOT"
-    source venv/bin/activate
+    # No venv activation - using system Python
 
     # Start based on deployment mode
     case "${DEPLOYMENT_MODE:-development}" in

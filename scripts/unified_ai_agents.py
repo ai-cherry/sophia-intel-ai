@@ -77,9 +77,11 @@ def summarize_env(llm: MultiTransportLLM) -> str:
     return "\n".join(lines)
 
 
-async def run_task(agent: str, mode: str, task: str, dry_run: bool = False) -> None:
+async def run_task(agent: str, mode: str, task: str, dry_run: bool = False, provider_override: str | None = None) -> None:
     llm = MultiTransportLLM()
     provider, model = pick_model(agent, mode, llm.keys)
+    if provider_override:
+        provider = provider_override
 
     print(f"Agent: {agent}\nMode: {mode}\nProvider: {provider}\nModel: {model}")
     if dry_run:
@@ -115,6 +117,7 @@ def main():
         "--dry-run", action="store_true", help="Print configuration without calling LLM"
     )
     parser.add_argument("--whoami", action="store_true", help="Show environment and routing info")
+    parser.add_argument("--provider", choices=["xai", "openrouter", "anthropic", "openai", "groq"], help="Force provider override")
 
     args = parser.parse_args()
 
@@ -127,7 +130,7 @@ def main():
         print("--task is required unless --dry-run or --whoami is used")
         return
 
-    asyncio.run(run_task(args.agent, args.mode, args.task or "", args.dry_run))
+    asyncio.run(run_task(args.agent, args.mode, args.task or "", args.dry_run, args.provider))
 
 
 if __name__ == "__main__":

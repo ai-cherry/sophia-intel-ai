@@ -18,6 +18,7 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.responses import StreamingResponse
+import json
 
 from app.core.super_orchestrator import get_orchestrator
 from app.models.orchestration_models import (
@@ -124,24 +125,56 @@ async def streaming_chat_endpoint(
         try:
             orchestrator = get_orchestrator()
 
-            # This would implement actual streaming
-            # For now, simulate streaming response
-            message_parts = [
-                "I'm processing your request...",
-                "Analyzing the information...",
-                "Generating response based on your query...",
-            ]
+            # Prepare orchestrator request with optional system prompt and context
+            orch_req = {
+                "type": "chat",
+                "message": request.message,
+                "conversation_id": request.conversation_id,
+                "metadata": {
+                    **request.metadata,
+                    "user_id": current_user.get("user_id") if current_user else None,
+                    "model_preference": request.model_preference,
+                    "temperature": request.temperature,
+                    "max_tokens": request.max_tokens,
+                    "system_prompt": request.system_prompt,
+                    "context": request.context,
+                },
+            }
 
-            for i, part in enumerate(message_parts):
-                chunk = {
+            # Get full response once, then stream it token-wise (word chunks)
+            result = await orchestrator.process_request(orch_req)
+            full_text = (result or {}).get("message", "")
+
+            if not full_text.strip():
+                payload = {
                     "request_id": request.request_id,
-                    "chunk_id": i,
-                    "content": part,
-                    "is_final": i == len(message_parts) - 1,
+                    "chunk_id": 0,
+                    "content": "",
+                    "is_final": True,
                     "timestamp": datetime.now().isoformat(),
                 }
-                yield f"data: {chunk}\n\n"
-                await asyncio.sleep(0.5)  # Simulate processing delay
+                yield f"data: {json.dumps(payload)}\n\n"
+                return
+
+            # Stream chunks by words to mimic live tokens
+            words = full_text.split()
+            buf = []
+            chunk_id = 0
+            for i, w in enumerate(words):
+                buf.append(w)
+                # Emit every ~20 words or at end
+                if len(buf) >= 20 or i == len(words) - 1:
+                    content = " ".join(buf)
+                    payload = {
+                        "request_id": request.request_id,
+                        "chunk_id": chunk_id,
+                        "content": content,
+                        "is_final": i == len(words) - 1,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                    yield f"data: {json.dumps(payload)}\n\n"
+                    buf = []
+                    chunk_id += 1
 
         except Exception as e:
             error_chunk = {
@@ -150,7 +183,7 @@ async def streaming_chat_endpoint(
                 "is_final": True,
                 "timestamp": datetime.now().isoformat(),
             }
-            yield f"data: {error_chunk}\n\n"
+            yield f"data: {json.dumps(error_chunk)}\n\n"
 
     return StreamingResponse(
         generate_response(),

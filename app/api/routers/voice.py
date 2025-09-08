@@ -82,8 +82,21 @@ class VoiceCapabilitiesResponse(BaseModel):
     real_time_processing: bool
 
 
-# Initialize voice integration
-sophia_voice = SophiaVoiceIntegration()
+# Lazy-init voice integration to avoid startup failures when ELEVENLABS_API_KEY is missing
+_sophia_voice: SophiaVoiceIntegration | None = None
+
+
+def _get_sophia_voice() -> SophiaVoiceIntegration:
+    global _sophia_voice
+    if _sophia_voice is None:
+        try:
+            _sophia_voice = SophiaVoiceIntegration()
+        except Exception as e:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Voice integration not configured: {e}",
+            )
+    return _sophia_voice
 
 
 @router.get(
@@ -94,7 +107,7 @@ sophia_voice = SophiaVoiceIntegration()
 async def get_voice_status():
     """Get the current status of voice integration for both systems"""
     try:
-        status = await sophia_voice.get_voice_status()
+        status = await _get_sophia_voice().get_voice_status()
         return VoiceStatusResponse(**status)
     except Exception as e:
         logger.error(f"Voice status check failed: {str(e)}")
@@ -123,7 +136,7 @@ async def get_voice_personas():
             "playful",
         ]
         for persona in sophia_personas:
-            voice_info = sophia_voice.get_persona_voice_info(persona)
+            voice_info = _get_sophia_voice().get_persona_voice_info(persona)
             if voice_info:
                 personas.append(
                     VoicePersonaResponse(
@@ -223,11 +236,11 @@ async def _synthesize_sophia_voice(
     if request.persona:
         # Remove 'sophia_' prefix if present
         persona = request.persona.replace("sophia_", "")
-        result = await sophia_voice.generate_persona_speech(
+        result = await _get_sophia_voice().generate_persona_speech(
             text=request.text, persona=persona, custom_settings=request.settings
         )
     else:
-        result = await sophia_voice.text_to_speech(
+        result = await _get_sophia_voice().text_to_speech(
             text=request.text, voice_id=request.voice_id, settings=settings
         )
 
@@ -285,7 +298,7 @@ async def _synthesize_artemis_voice(
     artemis_text = _add_artemis_personality(request.text)
 
     # Generate speech using Sophia's voice integration with Artemis settings
-    result = await sophia_voice.text_to_speech(
+    result = await _get_sophia_voice().text_to_speech(
         text=artemis_text, voice_id=voice_id, settings=settings
     )
 
@@ -331,7 +344,7 @@ async def test_voice_integration():
         results = {}
 
         # Test Sophia
-        sophia_test = await sophia_voice.text_to_speech(
+        sophia_test = await _get_sophia_voice().text_to_speech(
             text="This is Sophia testing voice integration.", persona="smart"
         )
         results["sophia"] = {
@@ -342,7 +355,7 @@ async def test_voice_integration():
         }
 
         # Test Artemis (using same integration with different settings)
-        artemis_test = await sophia_voice.text_to_speech(
+        artemis_test = await _get_sophia_voice().text_to_speech(
             text="This is Artemis testing voice integration protocols.",
             voice_id="ErXwobaYiN019PkySvjV",  # Technical voice
             settings=VoiceSettings(stability=0.9, similarity_boost=0.8, style=0.1),
@@ -375,7 +388,7 @@ async def test_voice_integration():
 async def get_available_voices():
     """Get list of available voices from ElevenLabs"""
     try:
-        voices = await sophia_voice.get_available_voices()
+        voices = await _get_sophia_voice().get_available_voices()
         return {
             "voices": voices,
             "count": len(voices),
@@ -403,7 +416,7 @@ async def transcribe_speech(request: SpeechToTextRequest):
             )
 
         # Use Sophia's speech-to-text capability for both systems
-        result = await sophia_voice.speech_to_text(
+        result = await _get_sophia_voice().speech_to_text(
             audio_base64=request.audio_base64, audio_format=request.audio_format
         )
 
@@ -432,7 +445,7 @@ async def transcribe_speech(request: SpeechToTextRequest):
 async def get_voice_capabilities():
     """Get comprehensive voice capabilities for both systems"""
     try:
-        capabilities = await sophia_voice.get_voice_capabilities()
+        capabilities = await _get_sophia_voice().get_voice_capabilities()
         return VoiceCapabilitiesResponse(**capabilities)
     except Exception as e:
         logger.error(f"Failed to get voice capabilities: {str(e)}")
@@ -459,7 +472,7 @@ async def full_duplex_conversation(request: dict[str, Any]):
             raise HTTPException(status_code=400, detail="audio_base64 is required")
 
         # Step 1: Speech to Text
-        transcription = await sophia_voice.speech_to_text(audio_base64, audio_format)
+        transcription = await _get_sophia_voice().speech_to_text(audio_base64, audio_format)
 
         if not transcription.success:
             return {
@@ -475,7 +488,7 @@ async def full_duplex_conversation(request: dict[str, Any]):
 
         # Step 3: Text to Speech
         if system == "sophia":
-            synthesis = await sophia_voice.generate_persona_speech(
+            synthesis = await _get_sophia_voice().generate_persona_speech(
                 ai_response_text, persona
             )
         else:

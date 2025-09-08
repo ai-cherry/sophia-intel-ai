@@ -109,8 +109,24 @@ def main() -> int:
             print(f"  - {lbl:20s} -> {p}")
         print("  Action: run `make env.clean-deprecated` after merging.")
 
-    required = ["PORTKEY_API_KEY"]
-    optional = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "XAI_API_KEY"]
+    required = [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "PORTKEY_API_KEY",
+        "JWT_SECRET",
+        "POSTGRES_URL",
+        "REDIS_URL",
+        "WEAVIATE_URL",
+    ]
+    optional = [
+        "XAI_API_KEY",
+        "GROK_API_KEY",
+        "OPENROUTER_API_KEY",
+        "SLACK_API_TOKEN",
+        "GONG_ACCESS_KEY",
+        "AIRTABLE_API_KEY",
+        "N8N_API_KEY",
+    ]
     env_all = {}
     for _lbl, _p, d in sources:
         env_all.update(d)

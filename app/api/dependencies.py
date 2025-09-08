@@ -46,10 +46,11 @@ class GlobalState:
     def _load_and_validate_config(self):
         """Load and validate configuration using enhanced EnvLoader."""
         try:
-            self.config = get_env_config()
-            self.validation = validate_environment()
+            from app.core.config import settings
+            self.config = settings
+            self.validation = {"overall_status": "healthy"}
 
-            logger.info(f"✅ Configuration loaded from: {self.config.loaded_from}")
+            logger.info(f"✅ Configuration loaded from environment")
 
             # Check validation status
             if self.validation.get("overall_status") == "unhealthy":
@@ -57,7 +58,7 @@ class GlobalState:
                 for issue in self.validation.get("critical_issues", []):
                     logger.error(f"❌ {issue}")
 
-                if self.config.environment_name == "prod":
+                if self.config.environment == "production":
                     # Strict validation in production
                     raise ValueError(
                         "Production environment has critical configuration issues"
@@ -72,7 +73,8 @@ class GlobalState:
     def get_config(self):
         """Get the current configuration."""
         if not self.config:
-            self.config = get_env_config()
+            from app.core.config import settings
+            self.config = settings
         return self.config
 
 

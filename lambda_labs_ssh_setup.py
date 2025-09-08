@@ -550,7 +550,7 @@ python3 -c "
 import sys
 sys.path.insert(0, '.')
 try:
-    from backend.core.config import settings
+    from app.api.core.config import settings
     print('✅ Sophia AI platform imported successfully')
 except ImportError as e:
     print(f'⚠️  Import warning: {{e}}')
@@ -618,7 +618,7 @@ checks=(
     "docker --version"
     "nvidia-smi --query-gpu=name --format=csv,noheader"
     "ls -la ~/sophia-main"
-    "cd ~/sophia-main && python3 -c 'import backend.core.config; print(\"Config OK\")'"
+    "cd ~/sophia-main && python3 -c 'import app.api.core.config; print(\"Config OK\")'"
 )
 
 for check in "${checks[@]}"; do

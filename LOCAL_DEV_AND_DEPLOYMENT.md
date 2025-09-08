@@ -29,19 +29,22 @@ MCP Endpoints (for Cursor/Cline)
 - VS Code settings are in `.vscode/settings.json` (tracked) and should work out of the box.
 
 Single Local Startup (Canonical)
-1) Start the stack (quick)
-   - `docker compose --env-file .env.local -f docker-compose.dev.yml up -d`
-2) Open a development shell
-   - `docker compose -f docker-compose.dev.yml exec agent-dev bash`
-3) Run tooling inside the container
-   - Lint: `ruff check .` (install if needed)
-   - Tests: `pytest -q`
-   - App-specific commands as documented in the repository
+1) Start dev infra + MCP and Sophia UI
+   - `make dev-all`
+   - Starts Redis, Weaviate, MCP (Memory/FS/Git), and Next.js UI.
+2) Start the Sophia API (another terminal)
+   - `make api-dev` (http://localhost:8003)
+3) Open the UI
+   - Dashboard: http://localhost:3000/(sophia)/dashboard
+   - Chat:      http://localhost:3000/(sophia)/chat
+4) If CORS errors occur
+   - Set `CORS_ORIGINS=http://localhost:3000` in your env and restart the API.
 
 Optional Profiles
 - Artemis integration (only if you need a second repo):
+  - One-time setup (SSH): `make artemis.sidecar-setup` (clones to `~/artemis-cli`)
   - Set `ARTEMIS_PATH` in your `.env` or shell to the absolute path of your artemis repo
-  - Start services with profile: `docker compose -f docker-compose.dev.yml --profile artemis up -d`
+  - Start services with profile: `docker compose -f docker-compose.dev.yml --profile artemis up -d mcp-filesystem-artemis`
 
 Shut Down and Cleanup
 - Stop: `docker compose -f docker-compose.dev.yml down`
@@ -69,6 +72,8 @@ Troubleshooting
 - Env not loading: `make env.doctor`, `source scripts/env.sh`, verify `~/.config/artemis/env` exists.
 - MCP endpoints unreachable: ensure `docker-compose.dev.yml` is running and ports 8081/8082/8084 are free.
 - SSH operations failing in containers: ensure `SSH_AUTH_SOCK` is set and your agent has keys (`ssh-add -l`).
+ - CORS in browser: set `CORS_ORIGINS=http://localhost:3000` and restart the API.
+ - Voice endpoints: set `ELEVENLABS_API_KEY` (TTS) and `OPENAI_API_KEY` (STT).
 
 Complete Startup Sequence (with verification)
 1) Start infrastructure

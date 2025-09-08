@@ -9,7 +9,7 @@ import os
 from datetime import datetime
 from typing import Dict, List
 
-from backend.services.feature_flags import (
+from app.api.services.feature_flags import (
     FeatureFlags,
     get_available_models,
     require_feature,

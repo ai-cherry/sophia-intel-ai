@@ -265,13 +265,15 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
 
         except Exception as e:
             logger.error(f"Authentication middleware error: {e}")
+            import json
+            error_response = create_error_response(
+                request_id=request.headers.get("X-Request-ID", "unknown"),
+                error_code="AUTH_MIDDLEWARE_ERROR",
+                error_message="Internal authentication error",
+            )
             return JSONResponse(
                 status_code=500,
-                content=create_error_response(
-                    request_id=request.headers.get("X-Request-ID", "unknown"),
-                    error_code="AUTH_MIDDLEWARE_ERROR",
-                    error_message="Internal authentication error",
-                ).dict(),
+                content=json.loads(error_response.json()),
             )
 
     def _is_public_path(self, path: str) -> bool:

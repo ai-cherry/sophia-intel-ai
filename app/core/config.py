@@ -255,6 +255,25 @@ class AppSettings(BaseSettings):
             raise ValueError(f"Log level must be one of {allowed}")
         return v.upper()
 
+    @validator("cors_origins", pre=True)
+    def parse_cors_origins(cls, v):
+        """Allow JSON array or comma-separated string for CORS_ORIGINS."""
+        if isinstance(v, str):
+            s = v.strip()
+            if not s:
+                return []
+            if s.startswith("["):
+                # JSON array
+                import json
+                try:
+                    return json.loads(s)
+                except Exception:
+                    # Fall back to single origin if bad JSON
+                    return [s]
+            # Comma-separated
+            return [o.strip() for o in s.split(",") if o.strip()]
+        return v
+
     @with_circuit_breaker("external_api")
     def validate_required_keys(self) -> dict[str, bool]:
         """Check if required API keys are present."""

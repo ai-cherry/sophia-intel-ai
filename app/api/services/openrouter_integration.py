@@ -16,8 +16,8 @@ from typing import Any, Dict, List, Optional
 
 import aiohttp
 
-from backend.services.intelligent_cache import cached
-from backend.services.performance_monitor import monitor_performance
+from app.api.services.intelligent_cache import cached
+from app.api.services.performance_monitor import monitor_performance
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

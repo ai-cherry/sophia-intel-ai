@@ -9,8 +9,8 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 # Import required services
-from backend.services.estuary_cdc_pool import get_estuary_pool
-from backend.services.resource_pools import get_resource_pools
+from app.api.services.estuary_cdc_pool import get_estuary_pool
+from app.api.services.resource_pools import get_resource_pools
 
 logger = logging.getLogger(__name__)
 

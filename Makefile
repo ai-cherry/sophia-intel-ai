@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild ui-up ui-health ui-smoke nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild ui-up ui-health ui-smoke dev-all nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations next-ui-up doctor-all artemis.sidecar-setup api-dev
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -94,6 +94,10 @@ ui-up: ## Start UI backend locally (http://localhost:8000)
 	@echo "Starting UI backend on http://localhost:8000"
 	@python3 -m uvicorn webui.backend.main:app --host 0.0.0.0 --port 8000
 
+next-ui-up: ## Start Next.js UI (agent-ui) on http://localhost:3000
+	@echo "🔗 Ensure NEXT_PUBLIC_API_URL=http://localhost:8003 in agent-ui/.env.local"
+	@cd agent-ui && (pnpm install || npm install) && pnpm dev
+
 ui-health: ## Check UI backend health
 	@echo "UI backend health:" && (curl -sf http://localhost:8000/health | sed -e 's/^/  /' || (echo "  not responding" && exit 1))
 
@@ -102,6 +106,48 @@ ui-smoke: ## Basic UI tools proxy smoke (FS list in repo root)
 	@curl -s -X POST http://localhost:8000/tools/invoke \
 		-H 'Content-Type: application/json' \
 		-d '{"capability":"fs","scope":"sophia","action":"list","params":{"path":"."}}' || echo "Smoke failed"
+
+dev-all: ## Start infra+MCP and Next.js UI; auto-enable FS Artemis if present
+	@echo "Starting Sophia dev environment (infra + MCP + UI)..."
+	@bash scripts/dev.sh all
+	@if [ -d "$$HOME/artemis-cli" ]; then \\
+		echo "Detected $$HOME/artemis-cli — enabling FS Artemis (profile)"; \\
+		export ARTEMIS_PATH="$$HOME/artemis-cli"; \\
+		docker compose -f docker-compose.dev.yml --profile artemis up -d mcp-filesystem-artemis; \\
+		echo "FS Artemis up at http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health"; \\
+	else \\
+		echo "No ~/artemis-cli detected. Skipping FS Artemis."; \\
+	fi
+	@$(MAKE) next-ui-up
+	@echo "\n=== Endpoints ==="; \\
+	 echo "Memory MCP:     http://localhost:$${MCP_MEMORY_PORT:-8081}/health"; \\
+	 echo "FS (Sophia) MCP: http://localhost:$${MCP_FS_SOPHIA_PORT:-8082}/health"; \\
+	 echo "Git MCP:        http://localhost:$${MCP_GIT_PORT:-8084}/health"; \\
+	 echo "Sophia UI:      http://localhost:3000/(sophia)/dashboard"; \\
+	 echo "Sophia Chat:    http://localhost:3000/(sophia)/chat"; \\
+	 if [ -d "$$HOME/artemis-cli" ]; then echo "FS (Artemis) MCP: http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health"; fi
+
+doctor-all: ## Verify keys, infra, MCP, Next.js UI, and optional Artemis chat
+	@echo "\n[doctor] Verifying keys..."; \\
+	 $(MAKE) -s keys-check || true; \\
+	 echo "\n[doctor] Infra health..."; \\
+	 $(MAKE) -s health-infra || true; \\
+	 echo "\n[doctor] MCP health..."; \\
+	 $(MAKE) -s mcp-test || true; \\
+	 echo "\n[doctor] API health..."; \\
+	 (curl -sf http://localhost:8003/health | sed -e 's/^/  /' || echo "  API not responding") ; \\
+	 if [ -d "$$HOME/artemis-cli" ]; then \\
+	   echo "\n[doctor] Artemis chat (optional)..."; \\
+	   (curl -sf http://localhost:8095/health >/dev/null && echo "✓ Artemis chat: http://localhost:8095/health") || echo "! Artemis chat not responding on 8095"; \\
+	 fi; \\
+	 echo "\n[doctor] docker compose status (dev)..."; \\
+	 docker compose -f docker-compose.dev.yml ps || true
+
+artemis.sidecar-setup: ## One-time: clone Artemis sidecar repo to ~/artemis-cli via SSH
+	@bash scripts/setup_artemis_sidecar.sh
+
+api-dev: ## Run Sophia production server locally on port 8003
+	uvicorn app.api.production_server:create_production_app --host 0.0.0.0 --port 8003
 
 nuke-fragmentation: ## Nuclear option - force consolidation (DESTRUCTIVE)
 	@echo "\xE2\x9A\xA0\xEF\xB8\x8F  This will delete non-canonical files. Ctrl-C to abort..." && sleep 5
@@ -186,6 +232,16 @@ clean: ## Clean up Docker resources
 	@echo "🧹 Cleaning Docker resources..."
 	@docker system prune -f
 	@docker volume prune -f
+
+stop-all: ## Stop Sophia dev compose and kill dev processes
+	@docker compose -f docker-compose.dev.yml down || true
+	@pkill -f "next dev" || true
+	@pkill -f "uvicorn" || true
+
+restart-all: ## Restart dev stack (stop-all + dev-all)
+	@$(MAKE) stop-all
+	@sleep 2
+	@$(MAKE) dev-all
 
 env-docs: ## Show environment guide for SSH agent and env files
 	@echo "Environment Guide (ENVIRONMENT_GUIDE.md)" && echo "------------------------------"

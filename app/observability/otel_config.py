@@ -53,8 +53,8 @@ def configure_opentelemetry(
     )
 
     # 1. Resource configuration
-    env_config = get_env_config()
-    deployment_env = env_config.environment_name
+    from app.core.config import settings
+    deployment_env = settings.environment
     hostname = socket.gethostname()
     resource = Resource.create(
         {

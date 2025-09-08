@@ -569,14 +569,13 @@ class GongClient:
     """Real Gong.io API client"""
 
     def __init__(self):
-        # Credentials from environment (managed by Pulumi ESC)
-        self.access_key = os.getenv(
-            "GONG_ACCESS_KEY", "TV33BPZ5UN45QKZCZ2UCAKRXHQ6Q3L5N"
-        )
-        self.secret = os.getenv(
-            "GONG_CLIENT_SECRET",
-            "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwNTQxNTA4ODUsImFjY2Vzc0tZXkiOiJUVjMzQlBaNVVONDRRS1pDWjJVQ0FLUlhIUTZRM0w1TiJ9.zgPvDQQIvU1kvF_9ctjcKuqC5xKhlpZo7MH5v7AYufU",
-        )
+        # Credentials from environment (managed externally; never hardcoded)
+        self.access_key = os.getenv("GONG_ACCESS_KEY")
+        self.secret = os.getenv("GONG_CLIENT_SECRET")
+        if not self.access_key or not self.secret:
+            raise ValueError(
+                "Missing Gong credentials: set GONG_ACCESS_KEY and GONG_CLIENT_SECRET in environment"
+            )
         self.base_url = "https://api.gong.io/v2"
 
         # Create Basic Auth header

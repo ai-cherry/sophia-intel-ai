@@ -100,6 +100,12 @@ class ChatRequest(BaseRequest):
     conversation_id: Optional[str] = Field(
         default=None, description="Conversation identifier"
     )
+    system_prompt: Optional[str] = Field(
+        default=None, description="Optional system prompt/persona instructions"
+    )
+    context: Optional[str] = Field(
+        default=None, description="Optional additional context to ground the reply"
+    )
     model_preference: Optional[str] = Field(default=None, description="Preferred model")
     temperature: Optional[float] = Field(
         default=0.7, ge=0.0, le=2.0, description="Model temperature"
@@ -228,6 +234,9 @@ class BaseResponse(BaseModel):
 
     class Config:
         use_enum_values = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 
 class ChatResponse(BaseResponse):
@@ -346,7 +355,7 @@ class Task(BaseModel):
     retries: int = Field(default=0, description="Number of retries")
     max_retries: int = Field(default=3, description="Maximum retries allowed")
 
-    @root_validator
+    @root_validator(skip_on_failure=True)
     def validate_timestamps(cls, values):
         created = values.get("created_at")
         updated = values.get("updated_at")

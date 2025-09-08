@@ -17,7 +17,9 @@ from app.api.health_monitoring import router as health_router
 from app.api.memory.memory_endpoints import router as memory_router
 from app.api.orchestration_router import router as orchestration_router
 from app.api.routers.teams import router as teams_router
+from app.api.routers.voice import router as voice_router
 from app.api.unified_gateway import router as unified_gateway_router
+from app.api.routers.health_integrations import router as health_integrations_router
 from app.core.config import settings
 from app.core.middleware import setup_middleware
 from app.core.resource_manager import cleanup_resources, get_resource_manager
@@ -95,6 +97,7 @@ def create_production_app() -> FastAPI:
 
     # Include routers with proper prefixes
     app.include_router(health_router, prefix="/health", tags=["health"])
+    app.include_router(health_integrations_router, tags=["health"])
     app.include_router(
         orchestration_router, prefix="/api/orchestration", tags=["orchestration"]
     )
@@ -102,6 +105,7 @@ def create_production_app() -> FastAPI:
     app.include_router(memory_router, prefix="/api/memory", tags=["memory"])
     app.include_router(teams_router, prefix="/api/teams", tags=["teams"])
     app.include_router(unified_gateway_router, prefix="/api", tags=["gateway"])
+    app.include_router(voice_router, prefix="/api", tags=["voice"])
 
     # Production error handlers
     @app.exception_handler(Exception)
@@ -130,7 +134,8 @@ def create_production_app() -> FastAPI:
                 error_message="Internal server error",
             )
 
-        return JSONResponse(status_code=500, content=error_response.dict())
+        import json
+        return JSONResponse(status_code=500, content=json.loads(error_response.json()))
 
     @app.exception_handler(HTTPException)
     async def http_exception_handler(request: Request, exc: HTTPException):
@@ -148,7 +153,7 @@ def create_production_app() -> FastAPI:
 
         return JSONResponse(
             status_code=exc.status_code,
-            content=error_response.dict(),
+            content=json.loads(error_response.json()),
             headers=getattr(exc, "headers", None),
         )
 
@@ -166,7 +171,7 @@ def create_production_app() -> FastAPI:
             ),
         )
 
-        return JSONResponse(status_code=422, content=error_response.dict())
+        return JSONResponse(status_code=422, content=json.loads(error_response.json()))
 
     @app.exception_handler(TimeoutError)
     async def timeout_exception_handler(request: Request, exc: TimeoutError):
@@ -180,7 +185,7 @@ def create_production_app() -> FastAPI:
             retry_after=60,
         )
 
-        return JSONResponse(status_code=408, content=error_response.dict())
+        return JSONResponse(status_code=408, content=json.loads(error_response.json()))
 
     # Root endpoint with production info
     @app.get("/")

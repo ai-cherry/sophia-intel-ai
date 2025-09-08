@@ -26,6 +26,9 @@ services:
     working_dir: /app
     volumes:
       - ./:/app
+    env_file:
+      - .env
+      - .env.local
     environment:
       AGENT_API_PORT: "8003"
       LOCAL_DEV_MODE: "true"

@@ -70,7 +70,7 @@ def test_no_docs_directory():
 async def test_api_imports():
     """Test that minimal API can be imported"""
     try:
-        from backend.main import app
+        from app.api.main import app
 
         assert app is not None
     except ImportError as e:

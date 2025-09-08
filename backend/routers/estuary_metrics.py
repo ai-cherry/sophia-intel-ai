@@ -10,7 +10,7 @@ from typing import Dict
 from fastapi import APIRouter, HTTPException
 
 # Import Estuary services
-from backend.services.estuary_cdc_pool import get_estuary_pool
+from app.api.services.estuary_cdc_pool import get_estuary_pool
 from monitoring.estuary_haystack_rag import EstuaryHaystackRAG
 from swarms.estuary_swarm_fusion import EstuarySwarmFusion
 

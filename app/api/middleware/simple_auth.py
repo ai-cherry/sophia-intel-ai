@@ -8,7 +8,7 @@ from typing import Optional
 
 from fastapi import Header, HTTPException, Request
 
-from backend.config.secrets import get_api_key
+from app.api.config.secrets import get_api_key
 
 logger = logging.getLogger(__name__)
 

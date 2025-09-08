@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Configure structured logging
-from backend.core.logging import setup_logging
+from app.api.core.logging import setup_logging
 
 setup_logging()
 
@@ -30,7 +30,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize database
     try:
-        from backend.core.database import init_db
+        from app.api.core.database import init_db
 
         await init_db()
         logger.info("✓ Database connected")
@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 
     # Initialize Redis
     try:
-        from backend.core.cache import init_redis
+        from app.api.core.cache import init_redis
 
         await init_redis()
         logger.info("✓ Redis connected")
@@ -124,7 +124,7 @@ async def readiness_check() -> Dict[str, Any]:
 
     # Check database
     try:
-        from backend.core.database import check_connection
+        from app.api.core.database import check_connection
 
         checks["database"] = await check_connection()
     except:
@@ -132,7 +132,7 @@ async def readiness_check() -> Dict[str, Any]:
 
     # Check Redis
     try:
-        from backend.core.cache import check_connection
+        from app.api.core.cache import check_connection
 
         checks["redis"] = await check_connection()
     except:
@@ -181,7 +181,7 @@ async def metrics():
 
 # Import routers
 try:
-    from backend.routers import chat, memory, orchestration
+    from app.api.routers import chat, memory, orchestration
 
     app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
     app.include_router(

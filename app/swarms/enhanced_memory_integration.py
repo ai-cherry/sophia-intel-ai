@@ -118,7 +118,8 @@ class EnhancedSwarmMemoryClient:
     def __init__(self, swarm_type: str, swarm_id: str):
         self.swarm_type = swarm_type
         self.swarm_id = swarm_id
-        self.config = get_env_config()
+        from app.core.config import settings
+        self.config = settings
         self.mcp_server_url = self.config.mcp_server_url
         self.session: aiohttp.Optional[ClientSession] = None
         self.tag_extractor = AutoTagExtractor()

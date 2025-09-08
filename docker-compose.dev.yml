@@ -69,6 +69,26 @@ services:
       timeout: 5s
       retries: 5
 
+  # PostgreSQL for structured storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: sophia-postgres
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: sophia
+      POSTGRES_USER: sophia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sophia_secure_password_2024}
+    networks:
+      - sophia-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sophia"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # MCP Memory Server - Coordinates memory operations
   mcp-memory:
     build:
@@ -328,23 +348,4 @@ volumes:
   neo4j-data:
   neo4j-logs:
   prometheus-data:
-  # PostgreSQL for structured storage
-  postgres:
-    image: postgres:15-alpine
-    container_name: sophia-postgres
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_DB: sophia
-      POSTGRES_USER: sophia
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sophia123}
-    networks:
-      - sophia-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sophia"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
   grafana-data:

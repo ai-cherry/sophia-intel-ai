@@ -11,7 +11,8 @@ from datetime import datetime
 from typing import Any, Dict
 
 # Set up environment
-os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+if not os.environ.get("PORTKEY_API_KEY"):
+    raise RuntimeError("PORTKEY_API_KEY is required for this script.")
 
 # Direct API keys (you'll need to add these)
 DIRECT_API_KEYS = {

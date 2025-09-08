@@ -11,7 +11,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+if not os.environ.get("PORTKEY_API_KEY"):
+    raise RuntimeError(
+        "PORTKEY_API_KEY is required for this script. Set it in your shell or ~/.config/artemis/env"
+    )
 
 from portkey_ai import Portkey
 

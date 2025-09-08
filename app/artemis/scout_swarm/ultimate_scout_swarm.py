@@ -460,7 +460,7 @@ class GPTScout(BaseScout):
             model="gpt-4o-mini",
             provider="Portkey",
             tier=ScoutTier.VALIDATION,
-            api_key=os.environ.get("PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I"),
+            api_key=os.environ.get("PORTKEY_API_KEY"),
             endpoint="https://api.portkey.ai/v1/chat/completions",
             temperature=0.3,
             timeout=45,

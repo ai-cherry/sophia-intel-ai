@@ -16,7 +16,8 @@ from typing import Any, Dict, List
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Set environment variable for Portkey API key
-os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+if not os.environ.get("PORTKEY_API_KEY"):
+    raise RuntimeError("PORTKEY_API_KEY is required for this script.")
 
 from portkey_ai import Portkey
 

@@ -8,8 +8,9 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-# Set Portkey API key
-os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+# Require Portkey key to be provided via environment
+if not os.environ.get("PORTKEY_API_KEY"):
+    raise RuntimeError("PORTKEY_API_KEY is required to run this deployment helper.")
 
 
 def create_pay_ready_models():

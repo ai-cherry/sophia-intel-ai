@@ -82,7 +82,7 @@ ANTHROPIC_API_KEY=your_anthropic_key_here
 # COHERE_API_KEY=your_cohere_key_here
 
 # Portkey Configuration (For providers without direct keys)
-PORTKEY_API_KEY=hPxFZGd8AN269n4bznDf2/Onbi8I
+PORTKEY_API_KEY=${PORTKEY_API_KEY}
 
 # System Configuration
 MAX_RETRIES=2

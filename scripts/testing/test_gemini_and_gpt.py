@@ -22,11 +22,9 @@ load_dotenv()
 
 # Set API keys
 if not os.environ.get("OPENROUTER_API_KEY"):
-    os.environ["OPENROUTER_API_KEY"] = (
-        "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"
-    )
+    raise RuntimeError("OPENROUTER_API_KEY is required to run this test.")
 if not os.environ.get("PORTKEY_API_KEY"):
-    os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+    raise RuntimeError("PORTKEY_API_KEY is required to run this test.")
 
 
 class GeminiGPTTest:

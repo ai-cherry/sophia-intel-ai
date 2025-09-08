@@ -281,7 +281,7 @@ def test_portkey_virtual_keys():
     for name, vk, model in test_configs:
         print(f"\n{Colors.BOLD}[{name} via Portkey]{Colors.ENDC}")
         try:
-            client = Portkey(api_key="hPxFZGd8AN269n4bznDf2/Onbi8I", virtual_key=vk)
+            client = Portkey(api_key=os.getenv("PORTKEY_API_KEY"), virtual_key=vk)
             response = client.chat.completions.create(
                 model=model,
                 messages=[{"role": "user", "content": f"Say '{name} OK'"}],

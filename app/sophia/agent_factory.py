@@ -506,7 +506,7 @@ Always think like a competitive strategist who understands market dynamics and s
             model = AGNOPortkey(
                 id=template.model,
                 name=f"Sophia_{template.name.replace(' ', '_')}",
-                portkey_api_key="hPxFZGd8AN269n4bznDf2/Onbi8I",
+                portkey_api_key=os.getenv("PORTKEY_API_KEY", ""),
                 virtual_key=template.virtual_key,
                 temperature=template.temperature,
                 max_tokens=4096,

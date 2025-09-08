@@ -19,7 +19,7 @@ class PortkeySetup:
     # Actual keys to be configured (DO NOT COMMIT WITH REAL KEYS)
     KEYS_TO_CONFIGURE = {
         # Main Portkey Configuration
-        "PORTKEY_API_KEY": "hPxFZGd8AN269n4bznDf2/Onbi8I",
+        "PORTKEY_API_KEY": os.getenv("PORTKEY_API_KEY", ""),
         "PORTKEY_BASE_URL": "https://api.portkey.ai/v1",
         # Virtual Keys for Providers
         "DEEPSEEK_VK": "deepseek-vk-24102f",

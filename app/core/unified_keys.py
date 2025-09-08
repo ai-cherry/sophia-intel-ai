@@ -47,9 +47,7 @@ class UnifiedKeysManager:
             return
 
         # Main Portkey configuration
-        self.portkey_api_key = os.getenv(
-            "PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I"
-        )
+        self.portkey_api_key = os.getenv("PORTKEY_API_KEY", "")
         self.portkey_base_url = "https://api.portkey.ai/v1"
 
         # Portkey Virtual Keys (exact names from dashboard)
@@ -166,20 +164,14 @@ class UnifiedKeysManager:
         # Direct API Keys
         self.direct_api_keys = {
             "OPENAI": APIKeyConfig(
-                key=os.getenv(
-                    "OPENAI_API_KEY",
-                    "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",
-                ),
+                key=os.getenv("OPENAI_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="openai",
                 base_url="https://api.openai.com/v1",
                 models=["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-4o"],
             ),
             "ANTHROPIC": APIKeyConfig(
-                key=os.getenv(
-                    "ANTHROPIC_API_KEY",
-                    "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",
-                ),
+                key=os.getenv("ANTHROPIC_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="anthropic",
                 models=[
@@ -189,39 +181,28 @@ class UnifiedKeysManager:
                 ],
             ),
             "DEEPSEEK": APIKeyConfig(
-                key=os.getenv(
-                    "DEEPSEEK_API_KEY", "sk-c8a5f1725d7b4f96b29a3d041848cb74"
-                ),
+                key=os.getenv("DEEPSEEK_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="deepseek",
                 base_url="https://api.deepseek.com/v1",
                 models=["deepseek-chat", "deepseek-coder"],
             ),
             "OPENROUTER": APIKeyConfig(
-                key=os.getenv(
-                    "OPENROUTER_API_KEY",
-                    "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",
-                ),
+                key=os.getenv("OPENROUTER_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="openrouter",
                 base_url="https://openrouter.ai/api/v1",
                 models=["auto", "openai/gpt-3.5-turbo", "anthropic/claude-3-haiku"],
             ),
             "PERPLEXITY": APIKeyConfig(
-                key=os.getenv(
-                    "PERPLEXITY_API_KEY",
-                    "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",
-                ),
+                key=os.getenv("PERPLEXITY_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="perplexity",
                 base_url="https://api.perplexity.ai",
                 models=["sonar-pro", "sonar", "sonar-reasoning"],
             ),
             "GROQ": APIKeyConfig(
-                key=os.getenv(
-                    "GROQ_API_KEY",
-                    "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",
-                ),
+                key=os.getenv("GROQ_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="groq",
                 models=[
@@ -231,7 +212,7 @@ class UnifiedKeysManager:
                 ],
             ),
             "MISTRAL": APIKeyConfig(
-                key=os.getenv("MISTRAL_API_KEY", "jCGVZEeBzppPH0pPVL0vxRCPnZuWL90i"),
+                key=os.getenv("MISTRAL_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="mistral",
                 models=[
@@ -241,10 +222,7 @@ class UnifiedKeysManager:
                 ],
             ),
             "TOGETHER_AI": APIKeyConfig(
-                key=os.getenv(
-                    "TOGETHER_AI_API_KEY",
-                    "tgp_v1_HE_uluFh-fELZDmEP9xKZXuSBT4a8EHd6s9CmSe5WWo",
-                ),
+                key=os.getenv("TOGETHER_AI_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="together",
                 base_url="https://api.together.xyz/v1",
@@ -254,9 +232,7 @@ class UnifiedKeysManager:
                 ],
             ),
             "HUGGINGFACE": APIKeyConfig(
-                key=os.getenv(
-                    "HUGGINGFACE_API_TOKEN", "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"
-                ),
+                key=os.getenv("HUGGINGFACE_API_TOKEN", ""),
                 type=KeyType.DIRECT_API,
                 provider="huggingface",
                 base_url="https://api-inference.huggingface.co",
@@ -266,25 +242,20 @@ class UnifiedKeysManager:
                 ],
             ),
             "GEMINI": APIKeyConfig(
-                key=os.getenv(
-                    "GEMINI_API_KEY", "AIzaSyA0rewcfUHo87WMEz4a8Og1eAWTslxlgEE"
-                ),
+                key=os.getenv("GEMINI_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="gemini",
                 models=["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"],
             ),
             "LLAMA": APIKeyConfig(
-                key=os.getenv(
-                    "LLAMA_API_KEY",
-                    "llx-MfsEhU0wHNL7PcRN4YEFM3eWcPQggq7edEr52IdnvkHZPPYj",
-                ),
+                key=os.getenv("LLAMA_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="llama",
                 base_url="https://api.llama-api.com",
                 models=["llama-13b-chat", "llama-70b-chat"],
             ),
             "AIMLAPI": APIKeyConfig(
-                key=os.getenv("AIMLAPI_API_KEY", "562d964ac0b54357874b01de33cb91e9"),
+                key=os.getenv("AIMLAPI_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="aimlapi",
                 base_url="https://api.aimlapi.com/v1",
@@ -308,9 +279,7 @@ class UnifiedKeysManager:
                 description="Access to 300+ models including GPT-5, Grok-4, O-series, and more",
             ),
             "COHERE": APIKeyConfig(
-                key=os.getenv(
-                    "COHERE_API_KEY", "your_cohere_api_key_here"
-                ),  # Need real key
+                key=os.getenv("COHERE_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="cohere",
                 models=["command-r", "command-r-plus"],

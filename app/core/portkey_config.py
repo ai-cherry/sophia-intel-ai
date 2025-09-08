@@ -74,7 +74,12 @@ class PortkeyManager:
         if self._initialized:
             return
 
-        self.api_key = os.getenv("PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I")
+        # Require PORTKEY_API_KEY from environment or secure vault
+        self.api_key = os.getenv("PORTKEY_API_KEY")
+        if not self.api_key:
+            raise RuntimeError(
+                "PORTKEY_API_KEY is not set. Configure it via environment or ~/.config/artemis/env"
+            )
         self.base_url = os.getenv("PORTKEY_BASE_URL", "https://api.portkey.ai/v1")
 
         # Initialize provider configurations with actual virtual keys

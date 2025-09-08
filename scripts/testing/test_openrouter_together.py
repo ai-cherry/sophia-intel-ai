@@ -7,7 +7,8 @@ import os
 import time
 from datetime import datetime
 
-os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+if not os.environ.get("PORTKEY_API_KEY"):
+    raise RuntimeError("PORTKEY_API_KEY is required for this test.")
 
 from portkey_ai import Portkey
 

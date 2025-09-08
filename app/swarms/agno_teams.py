@@ -41,7 +41,7 @@ PORTKEY_VIRTUAL_KEYS = {
 
 # Initialize Portkey client with new API key
 portkey = Portkey(
-    api_key="hPxFZGd8AN269n4bznDf2/Onbi8I",
+    api_key=os.getenv("PORTKEY_API_KEY", ""),
     config={
         "retry": {"attempts": 3, "on_status": [429, 500, 502, 503]},
         "cache": {"simple": {"ttl": 3600}},
@@ -298,7 +298,7 @@ class SophiaAGNOTeam:
         model = AGNOPortkey(
             id=model_config["model"],
             name=f"Portkey_{model_config['provider']}_{model_config['model']}",
-            portkey_api_key="hPxFZGd8AN269n4bznDf2/Onbi8I",
+            portkey_api_key=os.getenv("PORTKEY_API_KEY", ""),
             virtual_key=model_config["virtual_key"],
             temperature=temperatures.get(role, 0.5),
             max_tokens=4096,

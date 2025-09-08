@@ -113,7 +113,9 @@ def test_portkey_virtual_keys():
     # Vector DB virtual keys (these don't support chat completions)
     vector_keys = {"QDRANT-VK": "qdrant-vk-d2b62a", "MILVUS-VK": "milvus-vk-34fa02"}
 
-    portkey_api_key = os.getenv("PORTKEY_API_KEY", "hPxFZGd8AN269n4bznDf2/Onbi8I")
+    portkey_api_key = os.getenv("PORTKEY_API_KEY")
+    if not portkey_api_key:
+        raise RuntimeError("PORTKEY_API_KEY is required to run this test.")
     results = {}
 
     print(f"\n{Colors.BOLD}Testing LLM Virtual Keys:{Colors.ENDC}")

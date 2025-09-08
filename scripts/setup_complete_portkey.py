@@ -19,7 +19,7 @@ class CompletePortkeySetup:
 
     def __init__(self):
         # API Keys
-        self.portkey_key = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+        self.portkey_key = os.getenv("PORTKEY_API_KEY", "")
         self.openrouter_key = (
             "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"
         )

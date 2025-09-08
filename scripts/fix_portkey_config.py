@@ -19,7 +19,7 @@ def store_portkey_configuration():
     # Critical Portkey configuration
     PORTKEY_CONFIG = {
         # Main API Key - using the correct one from your message
-        "PORTKEY_API_KEY": "hPxFZGd8AN269n4bznDf2/Onbi8I",
+        "PORTKEY_API_KEY": os.getenv("PORTKEY_API_KEY", ""),
         # Virtual Keys for each provider
         "VK_DEEPSEEK": "deepseek-vk-24102f",
         "VK_OPENAI": "openai-vk-190a60",

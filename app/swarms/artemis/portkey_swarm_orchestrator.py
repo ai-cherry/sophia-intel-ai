@@ -34,7 +34,7 @@ class AgentRole(Enum):
 class PortkeyConfig:
     """Configuration for Portkey LLM connections"""
 
-    api_key: str = "hPxFZGd8AN269n4bznDf2/Onbi8I"
+    api_key: str
     base_url: str = "https://api.portkey.ai/v1/chat/completions"
     virtual_keys: dict[str, str] = field(
         default_factory=lambda: {
@@ -89,6 +89,8 @@ class ArtemisPortkeyAgent:
         """Initialize agent with HTTP session"""
         if not self.session:
             self.session = aiohttp.ClientSession()
+        if not self.portkey_config.api_key:
+            raise RuntimeError("PORTKEY_API_KEY is not configured for ArtemisPortkeyAgent")
 
     async def cleanup(self):
         """Cleanup agent resources"""
@@ -289,7 +291,14 @@ class ArtemisSwarmOrchestrator:
     def __init__(self, websocket_manager: WebSocketManager, message_bus: MessageBus):
         self.websocket_manager = websocket_manager
         self.message_bus = message_bus
-        self.portkey_config = PortkeyConfig()
+        # Load Portkey API key from environment
+        import os
+        api_key = os.getenv("PORTKEY_API_KEY")
+        if not api_key:
+            raise RuntimeError(
+                "PORTKEY_API_KEY is required for ArtemisSwarmOrchestrator."
+            )
+        self.portkey_config = PortkeyConfig(api_key=api_key)
 
         # Initialize agents
         self.agents: dict[str, ArtemisPortkeyAgent] = {}

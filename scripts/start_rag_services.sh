@@ -4,7 +4,11 @@
 # Zero-conflict architecture with existing MCP services
 # Ports: Sophia=8767, Artemis=8768
 
-source "$(dirname "$0")/env.sh"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/env.sh"
+
+# Establish repository root and use it for paths
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,11 +24,11 @@ SERVICES=(
 )
 
 # Logging directory
-LOG_DIR="$SOPHIA_HOME/logs/rag"
+LOG_DIR="$REPO_ROOT/logs/rag"
 mkdir -p "$LOG_DIR"
 
 # PID file directory
-PID_DIR="$SOPHIA_HOME/run"
+PID_DIR="$REPO_ROOT/.pids"
 mkdir -p "$PID_DIR"
 
 # Function to check if Redis is running

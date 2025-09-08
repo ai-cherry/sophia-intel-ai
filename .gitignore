@@ -4,9 +4,30 @@
 !.env.example
 !.env.template
 *.env
+
+# Virtual Environments - STRICT POLICY: NO VENVS IN REPO
 env/
-.venv
 venv/
+.venv/
+.env/
+virtualenv/
+pyenv/
+.pyenv/
+pipenv/
+.pipenv/
+poetry/
+.poetry/
+conda-env/
+.conda/
+ENV/
+VENV/
+.virtualenv/
+.venv*/
+venv*/
+env*/
+**/venv/
+**/env/
+**/.venv/
 
 # API Keys and secrets
 *_api_key*
@@ -28,12 +49,18 @@ pulumi/stack-*.json
 *.bak
 *~
 
-# Python
+# Python Cache and Bytecode
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
+*.so
+
+# Python Package Management
 build/
 develop-eggs/
 dist/
@@ -49,6 +76,11 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+pip-log.txt
+pip-delete-this-directory.txt
+.pip/
+.pip_cache/
 
 # Node
 node_modules/
@@ -74,11 +106,21 @@ docker-compose.override.yml
 logs/
 *.log
 
-# Cache
+# Cache and Temporary Files
 .cache/
 cache/
 tmp/
 temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.~*
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # Database and dumps
 *.db
@@ -94,11 +136,28 @@ embedding_cache.db
 knowledge_graph.db
 supermemory.db
 
-# Test
+# Testing and Coverage
 .coverage
+.coverage.*
 .pytest_cache/
+**/.pytest_cache/
 htmlcov/
 .tox/
+.nox/
+.hypothesis/
+.mypy_cache/
+**/.mypy_cache/
+.ruff_cache/
+**/.ruff_cache/
+dmypy.json
+.pyre/
+.pytype/
+cov.xml
+*.cover
+.cache
+nosetests.xml
+coverage.xml
+*.py,cover
 
 # Local development
 local/

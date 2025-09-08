@@ -5,6 +5,7 @@ try:
     from core.environment_enforcer import enforce_environment
     enforce_environment()
 except ImportError:
+    pass  # Environment enforcer not available
 
 """
 Artemis Swarm - 5-Agent Coding Intelligence System

@@ -6,12 +6,18 @@
 default_language_version:
   python: python3.11
 
+# Fail fast on critical issues
+fail_fast: false
+
+# Run on both commit and push by default
+default_stages: [pre-commit]
+
 repos:
   # ========================================
   # Basic Code Quality Checks
   # ========================================
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: v5.0.0  # Pinned version
     hooks:
       # Whitespace and formatting
       - id: trailing-whitespace
@@ -45,7 +51,7 @@ repos:
   # Python Code Formatting
   # ========================================
   - repo: https://github.com/psf/black
-    rev: 25.1.0
+    rev: 24.10.0  # Pinned version
     hooks:
       - id: black
         language_version: python3.11
@@ -53,7 +59,7 @@ repos:
         exclude: ^(migrations/|.*\.ipynb)$
 
   - repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
+    rev: 5.13.2  # Pinned version
     hooks:
       - id: isort
         args: [--profile, black, --line-length, "100"]
@@ -63,7 +69,7 @@ repos:
   # Python Code Quality
   # ========================================
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.12.12
+    rev: v0.8.6  # Pinned version
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --ignore, "E501"] # Only ignore line length
@@ -73,7 +79,7 @@ repos:
   # Security Scanning (Relaxed)
   # ========================================
   - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.5.0
+    rev: v1.4.0  # Pinned version
     hooks:
       - id: detect-secrets
         args: [--baseline, .secrets.baseline]
@@ -94,7 +100,7 @@ repos:
 
   # Bandit - Only for critical security issues
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.8.6
+    rev: 1.7.10  # Pinned version
     hooks:
       - id: bandit
         args: ["-ll", "--skip", "B101,B601,B602,B607"] # Only high severity
@@ -105,7 +111,7 @@ repos:
   # Type Checking (Optional)
   # ========================================
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+    rev: v1.14.1  # Pinned version
     hooks:
       - id: mypy
         additional_dependencies:
@@ -120,7 +126,7 @@ repos:
   # Documentation and Markdown
   # ========================================
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.45.0
+    rev: v0.43.0  # Pinned version
     hooks:
       - id: markdownlint
         args: [--fix, --disable, MD013, --disable, MD033, --disable, MD041]
@@ -130,7 +136,7 @@ repos:
   # Other File Formats
   # ========================================
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
+    rev: v3.1.0  # Pinned version
     hooks:
       - id: prettier
         types_or: [yaml, json]
@@ -138,7 +144,7 @@ repos:
         args: [--print-width=100, --tab-width=2]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1
+    rev: v0.10.0.1  # Pinned version
     hooks:
       - id: shellcheck
         args: [--severity=error] # Only catch serious issues
@@ -199,6 +205,52 @@ repos:
         language: pygrep
         types: [javascript]
         exclude: ^(.*test.*|.*spec.*|.*\.config\..*)$
+      
+      # ========================================
+      # Dependency & Environment Checks
+      # ========================================
+      
+      # Check for unpinned dependencies
+      - id: check-pinned-dependencies
+        name: Check for unpinned dependencies
+        entry: python scripts/pin_dependencies.py pin
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|requirements.*\.txt)$
+        stages: [pre-push]
+      
+      # Check for security vulnerabilities
+      - id: check-dependency-security
+        name: Check dependency security
+        entry: python scripts/pin_dependencies.py security
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        verbose: true
+      
+      # No virtual environments in repo
+      - id: no-virtualenv
+        name: No virtual environments in repository
+        entry: python scripts/pin_dependencies.py clean
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]
+      
+      # Check for common virtualenv patterns
+      - id: no-venv-files
+        name: No virtualenv files
+        entry: 'venv/|env/|\.venv|\.env/|virtualenv/|pyenv/|\.pyenv/'
+        language: pygrep
+        types: [text]
+        exclude: ^(\.env\.example|\.env\.template|\.gitignore)$
+      
+      # Ensure requirements are locked
+      - id: requirements-locked
+        name: Ensure requirements are locked
+        entry: '(>=|~=|>|<|!=)'
+        language: pygrep
+        files: ^requirements-lock\.txt$
+        stages: [pre-commit]
 
 # ========================================
 # Global Configuration

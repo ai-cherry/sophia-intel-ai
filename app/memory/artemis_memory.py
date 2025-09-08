@@ -248,6 +248,11 @@ class ArtemisMemoryService(BaseMemoryService):
 
         return results
 
+
+if __name__ == "__main__":
+    svc = ArtemisMemoryService()
+    svc.run()
+
     def _apply_code_filters(self, doc: Dict[str, Any], filters: Optional[Dict]) -> bool:
         if not filters:
             return True

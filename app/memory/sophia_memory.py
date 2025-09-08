@@ -117,6 +117,11 @@ class SophiaMemoryService(BaseMemoryService):
 
         return results[:limit]
 
+
+if __name__ == "__main__":
+    svc = SophiaMemoryService()
+    svc.run()
+
     async def index(self, document: Dict[str, Any]) -> bool:
         """
         Index business document with metadata enrichment

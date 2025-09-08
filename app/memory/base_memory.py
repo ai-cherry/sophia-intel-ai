@@ -18,6 +18,7 @@ from fastapi import Depends, FastAPI, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, validator
 from redis.exceptions import ConnectionError, RedisError, TimeoutError
+import subprocess
 
 # Optional Weaviate support
 try:
@@ -291,6 +292,18 @@ class BaseMemoryService(ABC):
                 "warnings": warnings,
             }
 
+        @self.app.get("/ready")
+        async def ready():
+            return {"status": "ready", "domain": self.domain}
+
+        @self.app.get("/live")
+        async def live():
+            return {"status": "alive", "domain": self.domain}
+
+        @self.app.get("/version")
+        async def version():
+            return {"version": getattr(self, "_version", "unknown"), "service": f"{self.domain}-memory"}
+
         @self.app.post(
             "/query",
             response_model=MemoryResponse,
@@ -464,6 +477,13 @@ class BaseMemoryService(ABC):
                 self.logger.warning(f"File write failed: {e}")
 
         return success
+
+    def _compute_version(self) -> str:
+        try:
+            out = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL)
+            return out.decode().strip()
+        except Exception:
+            return "unknown"
 
     @abstractmethod
     async def search(

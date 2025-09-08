@@ -849,3 +849,25 @@ Built with ❤️ using Agno, Portkey, OpenRouter, and Weaviate
 - Unified startup: `./start.sh` launches API and MCP memory server.
 - Unified AI Agents CLI: `scripts/unified_ai_agents.py` with thin wrappers for Grok/Claude/Codex.
 - MCP integrations standardized (no Roo/Cline/Cursor special bridges).
+## Anti-Fragmentation Enforcement
+
+This repository enforces strict guardrails to prevent sprawl:
+
+- Environment
+  - Single template: `.env.template`; local overrides: `.env`, `.env.local`
+  - Scripts: `scripts/env_doctor.py` (diagnose/merge), `scripts/env.sh` (shell loader)
+  - Pre-commit/CI block any new `.env*` variants outside the allowed set
+
+- Documentation
+  - Root-level Markdown is limited to a small whitelist (README, ARCHITECTURE, etc.)
+  - All other docs live under `docs/` or are merged into canonical files
+  - Pre-commit/CI reject non-whitelisted root Markdown additions
+
+- AI Workspaces
+  - Single workspace: `.ai/` with shared prompts/configs/context
+  - Legacy directories like `.artemis`, `.claude`, `.cursor`, `.sophia` are removed
+
+- CI Workflow
+  - `.github/workflows/anti-fragmentation.yml` enforces policy on every PR
+
+Run `make health` before commits to check env, docs policy, and quick linting.

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source health nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -24,6 +24,18 @@ env.clean-deprecated: ## Remove deprecated env examples (keeps .env.template aut
 
 env.source: ## Source unified environment in current shell (bash/zsh: `source <(make env.source)`)
 	@cat scripts/env.sh
+
+health: ## Run full health check
+	@echo "\xF0\x9F\x8F\xA5 Running health check..."
+	@python3 scripts/env_doctor.py
+	@bash scripts/check_env_variants.sh
+	@bash scripts/check_root_docs.sh
+	@ruff check . --select F401,F841 --quiet || true
+	@echo "\xE2\x9C\x85 Health check complete"
+
+nuke-fragmentation: ## Nuclear option - force consolidation (DESTRUCTIVE)
+	@echo "\xE2\x9A\xA0\xEF\xB8\x8F  This will delete non-canonical files. Ctrl-C to abort..." && sleep 5
+	@python3 scripts/nuke_fragmentation.py --confirm
 
 rag.start: ## Start unified API with optional RAG
 	./unified-start.sh --with-rag

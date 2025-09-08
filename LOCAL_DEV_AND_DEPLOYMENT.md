@@ -30,7 +30,7 @@ MCP Endpoints (for Cursor/Cline)
 
 Single Local Startup (Canonical)
 1) Start the stack
-   - `docker compose -f docker-compose.dev.yml up -d`
+   - `docker compose --env-file .env.local -f docker-compose.dev.yml up -d`
 2) Open a development shell
    - `docker compose -f docker-compose.dev.yml exec agent-dev bash`
 3) Run tooling inside the container
@@ -69,4 +69,3 @@ Troubleshooting
 - Env not loading: `make env.doctor`, `source scripts/env.sh`, verify `~/.config/artemis/env` exists.
 - MCP endpoints unreachable: ensure `docker-compose.dev.yml` is running and ports 8081/8082/8084 are free.
 - SSH operations failing in containers: ensure `SSH_AUTH_SOCK` is set and your agent has keys (`ssh-add -l`).
-

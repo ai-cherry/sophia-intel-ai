@@ -110,7 +110,8 @@ except:
     
     # 7. Port availability
     echo -e "\n${YELLOW}7️⃣ PORT AVAILABILITY:${NC}"
-    for port in 8000 8001 3000; do
+    API_PORT_CHECK="${AGENT_API_PORT:-8000}"
+    for port in "$API_PORT_CHECK" 8001 3000; do
         if ! lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
             check_item "Port $port available" "true"
         else
@@ -256,8 +257,9 @@ launch_production() {
     }
     
     # Start services
+    API_PORT_RUN="${AGENT_API_PORT:-8000}"
     if [ -f "backend/main.py" ]; then
-        start_service "api" "uvicorn backend.main:app --host ${BIND_IP} --port 8000" "8000"
+        start_service "api" "uvicorn backend.main:app --host ${BIND_IP} --port ${API_PORT_RUN}" "${API_PORT_RUN}"
     fi
     
     if [ -f "mcp_servers/master_mcp_server.py" ]; then
@@ -334,7 +336,8 @@ show_status() {
     echo "============="
     echo "• Logs: $LOGS_DIR/"
     echo "• PIDs: $PIDS_DIR/"
-    echo "• API Docs: http://localhost:8000/docs"
+    API_PORT_PRINT="${AGENT_API_PORT:-8000}"
+    echo "• API Docs: http://localhost:${API_PORT_PRINT}/docs"
     echo "• MCP Server: http://localhost:8001"
     echo "• Grafana: ${SOPHIA_FRONTEND_ENDPOINT}"
 }

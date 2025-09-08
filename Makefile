@@ -152,6 +152,8 @@ doctor-all: ## Verify keys, infra, MCP, Next.js UI, and optional Artemis chat
 	   echo "\n[doctor] Artemis chat (optional)..."; \\
 	   (curl -sf http://localhost:8095/health >/dev/null && echo "✓ Artemis chat: http://localhost:8095/health") || echo "! Artemis chat not responding on 8095"; \\
 	 fi; \\
+	 echo "\n[doctor] Telemetry (optional)..."; \\
+	 (curl -sf http://localhost:5003/api/telemetry/health | sed -e 's/^/  /' || echo "  Telemetry service not responding on 5003") ; \\
 	 echo "\n[doctor] docker compose status (dev)..."; \\
 	 docker compose -f docker-compose.dev.yml ps || true
 

@@ -54,7 +54,7 @@ make full-start
 ### 5. Start Telemetry Service
 ```bash
 # Start telemetry endpoint (port 5003)
-python webui/telemetry_endpoint.py &
+python webui/telemetry_endpoint.py &  # serves on http://localhost:5003
 ```
 
 ### 6. Verify Installation

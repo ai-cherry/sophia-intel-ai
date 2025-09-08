@@ -583,7 +583,7 @@ const MCPBusinessIntelligence: React.FC = () => {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Support Response</span>
-                <span className="font-semibold text-blue-600">< 2 hours</span>
+                <span className="font-semibold text-blue-600">&lt; 2 hours</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm">Issue Resolution</span>

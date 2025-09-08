@@ -3,17 +3,16 @@
 MCP Memory Server - Provides centralized memory and context for AI agents
 """
 
-import os
-import sys
 import json
-import asyncio
 import logging
-from typing import Dict, List, Any, Optional
-from fastapi import FastAPI, Request, HTTPException, Depends
+import os
+from typing import Any, Dict, List, Optional
+
+import qdrant_client
+import redis
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import redis
-import qdrant_client
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +22,7 @@ logger = logging.getLogger("mcp_memory")
 app = FastAPI(
     title="MCP Memory Server",
     description="Provides contextualized memory for AI agents in Sophia",
-    version="1.0.0"
+    version="1.0.0",
 )
 
 # Add CORS middleware
@@ -40,7 +39,7 @@ redis_client = redis.Redis(
     host=os.environ.get("REDIS_HOST", "localhost"),
     port=int(os.environ.get("REDIS_PORT", 6379)),
     db=0,
-    decode_responses=True
+    decode_responses=True,
 )
 
 # Initialize Qdrant client
@@ -48,32 +47,31 @@ qdrant_client = qdrant_client.QdrantClient(
     url=os.environ.get("QDRANT_URL", "http://localhost:6333")
 )
 
+
 # Models for API
 class MemoryItem(BaseModel):
     key: str
     value: Any
     ttl: Optional[int] = None  # Time to live in seconds, None for permanent storage
 
+
 class MemoryQuery(BaseModel):
     query: str
     limit: int = 5
     namespace: Optional[str] = None
+
 
 class VectorEmbedding(BaseModel):
     text: str
     embedding: List[float]
     metadata: Dict[str, Any] = {}
 
+
 # Health check endpoint
 @app.get("/health")
 async def health_check():
     """Check the health of the MCP Memory Server and its dependencies"""
-    status = {
-        "status": "operational",
-        "version": "1.0.0",
-        "redis": False,
-        "qdrant": False
-    }
+    status = {"status": "operational", "version": "1.0.0", "redis": False, "qdrant": False}
 
     # Check Redis connection
     try:
@@ -95,6 +93,7 @@ async def health_check():
         status["status"] = "degraded"
         return status
 
+
 # Memory storage endpoints
 @app.post("/memory/store")
 async def store_memory(item: MemoryItem):
@@ -110,6 +109,7 @@ async def store_memory(item: MemoryItem):
         logger.error(f"Error storing memory: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/memory/{key}")
 async def retrieve_memory(key: str):
     """Retrieve an item from memory by key"""
@@ -123,6 +123,7 @@ async def retrieve_memory(key: str):
     except Exception as e:
         logger.error(f"Error retrieving memory: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.delete("/memory/{key}")
 async def delete_memory(key: str):
@@ -138,8 +139,10 @@ async def delete_memory(key: str):
         logger.error(f"Error deleting memory: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # Vector search endpoints (simplified for initial implementation)
 COLLECTION_NAME = "agent_memory"
+
 
 @app.post("/vector/store")
 async def store_vector(item: VectorEmbedding):
@@ -152,7 +155,7 @@ async def store_vector(item: VectorEmbedding):
         if COLLECTION_NAME not in collection_names:
             qdrant_client.create_collection(
                 collection_name=COLLECTION_NAME,
-                vectors_config={"size": len(item.embedding), "distance": "Cosine"}
+                vectors_config={"size": len(item.embedding), "distance": "Cosine"},
             )
 
         # Store the vector
@@ -162,18 +165,16 @@ async def store_vector(item: VectorEmbedding):
                 {
                     "id": abs(hash(item.text)) % (10**10),  # Simple hash as ID
                     "vector": item.embedding,
-                    "payload": {
-                        "text": item.text,
-                        **item.metadata
-                    }
+                    "payload": {"text": item.text, **item.metadata},
                 }
-            ]
+            ],
         )
 
         return {"status": "success"}
     except Exception as e:
         logger.error(f"Error storing vector: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/vector/search")
 async def search_vector(query: VectorEmbedding):
@@ -188,16 +189,14 @@ async def search_vector(query: VectorEmbedding):
 
         # Search for similar vectors
         search_results = qdrant_client.search(
-            collection_name=COLLECTION_NAME,
-            query_vector=query.embedding,
-            limit=10
+            collection_name=COLLECTION_NAME, query_vector=query.embedding, limit=10
         )
 
         results = [
             {
                 "text": point.payload["text"],
                 "metadata": {k: v for k, v in point.payload.items() if k != "text"},
-                "score": point.score
+                "score": point.score,
             }
             for point in search_results
         ]
@@ -206,6 +205,7 @@ async def search_vector(query: VectorEmbedding):
     except Exception as e:
         logger.error(f"Error searching vectors: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # Context management endpoints
 @app.post("/context/store")
@@ -226,6 +226,7 @@ async def store_context(request: Request):
         logger.error(f"Error storing context: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/context/{agent_id}/{context_type}")
 async def get_context(agent_id: str, context_type: str):
     """Retrieve context for a specific agent and type"""
@@ -241,6 +242,7 @@ async def get_context(agent_id: str, context_type: str):
         logger.error(f"Error retrieving context: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 # GitHub integration endpoints
 @app.get("/github/repo/{owner}/{repo}")
 async def get_github_repo(owner: str, repo: str):
@@ -248,12 +250,14 @@ async def get_github_repo(owner: str, repo: str):
     # In a full implementation, this would connect to GitHub API
     return {
         "status": "success",
-        "message": "GitHub MCP integration placeholder - would connect to GitHub API"
+        "message": "GitHub MCP integration placeholder - would connect to GitHub API",
     }
+
 
 # Main entry point
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.environ.get("PORT", 8001))
     host = os.environ.get("BIND_IP", "0.0.0.0")
     uvicorn.run("server:app", host=host, port=port, reload=True)

@@ -4,23 +4,14 @@ Tests mythology-based coordination, wisdom accumulation, and business strategy f
 """
 
 import asyncio
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
 from app.sophia.unified_factory import (
-    BusinessAgentProfile,
-    BusinessAgentRole,
     BusinessDomain,
     BusinessPersonality,
-    BusinessTeamConfig,
-    MemoryDomain,
     MythologyArchetype,
-    OKRMetrics,
     SophiaUnifiedFactory,
     SwarmType,
 )

@@ -6,13 +6,11 @@ Handles debugging, error analysis, and automated fix generation.
 """
 
 import ast
-import json
 import re
-import traceback
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class BugType(Enum):

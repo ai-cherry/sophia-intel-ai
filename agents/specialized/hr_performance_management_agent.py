@@ -10,9 +10,9 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from ..core.base_agent import (
     AgentCapability,
@@ -26,6 +26,7 @@ from ..shared.llm.portkey_gateway import PortkeyGateway
 
 logger = logging.getLogger(__name__)
 
+
 class ReviewCycle(Enum):
     """Performance review cycle types"""
 
@@ -35,6 +36,7 @@ class ReviewCycle(Enum):
     MONTHLY = "monthly"
     PROJECT_BASED = "project_based"
 
+
 class PerformanceRating(Enum):
     """Performance rating scale"""
 
@@ -43,6 +45,7 @@ class PerformanceRating(Enum):
     PARTIALLY_MEETS = "partially_meets_expectations"
     BELOW_EXPECTATIONS = "below_expectations"
     UNSATISFACTORY = "unsatisfactory"
+
 
 class GoalStatus(Enum):
     """Goal tracking status"""
@@ -54,6 +57,7 @@ class GoalStatus(Enum):
     COMPLETED = "completed"
     EXCEEDED = "exceeded"
     CANCELLED = "cancelled"
+
 
 @dataclass
 class PerformanceGoal:
@@ -71,6 +75,7 @@ class PerformanceGoal:
     success_metrics: dict[str, Any]
     created_date: datetime
     last_updated: datetime
+
 
 @dataclass
 class PerformanceReview:
@@ -90,6 +95,7 @@ class PerformanceReview:
     development_plan: dict[str, Any]
     created_date: datetime
     completed_date: datetime | None
+
 
 class PerformanceManagementAgent(BaseAgent):
     """
@@ -195,9 +201,7 @@ class PerformanceManagementAgent(BaseAgent):
             logger.error(f"Error processing performance management task: {e}")
             return AgentResult(task_id=task.task_id, success=False, error=str(e))
 
-    async def conduct_performance_review(
-        self, context: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def conduct_performance_review(self, context: dict[str, Any]) -> dict[str, Any]:
         """Conduct comprehensive AI-powered performance review"""
         employee_id = context.get("employee_id")
         review_period = context.get("review_period")
@@ -224,9 +228,7 @@ class PerformanceManagementAgent(BaseAgent):
         )
 
         # Collect and analyze goal achievements
-        goal_analysis = await self._analyze_goal_achievements(
-            employee_id, review_period
-        )
+        goal_analysis = await self._analyze_goal_achievements(employee_id, review_period)
 
         # Generate manager assessment framework
         manager_assessment = await self._generate_manager_assessment(
@@ -353,9 +355,7 @@ class PerformanceManagementAgent(BaseAgent):
         at_risk_goals = await self._identify_at_risk_goals(goals_data)
 
         # Generate progress insights
-        progress_insights = await self._generate_progress_insights(
-            goals_data, progress_analysis
-        )
+        progress_insights = await self._generate_progress_insights(goals_data, progress_analysis)
 
         # Recommend interventions for at-risk goals
         interventions = await self._recommend_goal_interventions(at_risk_goals)
@@ -389,9 +389,7 @@ class PerformanceManagementAgent(BaseAgent):
         feedback_strategy = await self._design_feedback_strategy(employee_id)
 
         # Generate feedback questions
-        feedback_questions = await self._generate_feedback_questions(
-            employee_id, feedback_strategy
-        )
+        feedback_questions = await self._generate_feedback_questions(employee_id, feedback_strategy)
 
         # Collect feedback from multiple sources
         feedback_collection = await self._collect_multi_source_feedback(
@@ -402,9 +400,7 @@ class PerformanceManagementAgent(BaseAgent):
         feedback_analysis = await self._analyze_feedback_themes(feedback_collection)
 
         # Generate feedback insights
-        feedback_insights = await self._generate_feedback_insights(
-            feedback_analysis, employee_id
-        )
+        feedback_insights = await self._generate_feedback_insights(feedback_analysis, employee_id)
 
         # Create feedback report
         feedback_report = await self._create_feedback_report(
@@ -460,9 +456,7 @@ class PerformanceManagementAgent(BaseAgent):
         )
 
         # Design mentorship recommendations
-        mentorship_plan = await self._design_mentorship_plan(
-            employee_id, development_opportunities
-        )
+        mentorship_plan = await self._design_mentorship_plan(employee_id, development_opportunities)
 
         # Create stretch assignments
         stretch_assignments = await self._create_stretch_assignments(
@@ -475,9 +469,7 @@ class PerformanceManagementAgent(BaseAgent):
         )
 
         # Calculate development ROI
-        development_roi = await self._calculate_development_roi(
-            development_timeline, employee_id
-        )
+        development_roi = await self._calculate_development_roi(development_timeline, employee_id)
 
         # Create development plan
         development_plan = {
@@ -489,9 +481,7 @@ class PerformanceManagementAgent(BaseAgent):
             "mentorship_plan": mentorship_plan,
             "stretch_assignments": stretch_assignments,
             "timeline": development_timeline,
-            "success_metrics": await self._define_development_success_metrics(
-                development_timeline
-            ),
+            "success_metrics": await self._define_development_success_metrics(development_timeline),
             "roi_projection": development_roi,
             "created_date": datetime.now(),
         }
@@ -504,9 +494,7 @@ class PerformanceManagementAgent(BaseAgent):
 
         return development_plan
 
-    async def analyze_performance_trends(
-        self, context: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def analyze_performance_trends(self, context: dict[str, Any]) -> dict[str, Any]:
         """Analyze performance trends and patterns across the organization"""
         analysis_scope = context.get(
             "scope", "organization"
@@ -514,17 +502,13 @@ class PerformanceManagementAgent(BaseAgent):
         time_period = context.get("time_period", "last_year")
 
         # Gather performance data
-        performance_data = await self._gather_performance_data(
-            analysis_scope, time_period
-        )
+        performance_data = await self._gather_performance_data(analysis_scope, time_period)
 
         # Analyze performance trends
         trend_analysis = await self._analyze_performance_trends_data(performance_data)
 
         # Identify performance patterns
-        performance_patterns = await self._identify_performance_patterns(
-            performance_data
-        )
+        performance_patterns = await self._identify_performance_patterns(performance_data)
 
         # Correlate with business metrics
         business_correlation = await self._correlate_performance_with_business_metrics(
@@ -556,14 +540,10 @@ class PerformanceManagementAgent(BaseAgent):
             "performance_predictions": performance_predictions,
             "insights": performance_insights,
             "action_plan": action_plan,
-            "roi_impact": await self._calculate_performance_improvement_roi(
-                action_plan
-            ),
+            "roi_impact": await self._calculate_performance_improvement_roi(action_plan),
         }
 
-    async def manage_succession_planning(
-        self, context: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def manage_succession_planning(self, context: dict[str, Any]) -> dict[str, Any]:
         """Manage succession planning and talent pipeline"""
         role_id = context.get("role_id")
         department = context.get("department")
@@ -596,9 +576,7 @@ class PerformanceManagementAgent(BaseAgent):
         )
 
         # Create succession timeline
-        succession_timeline = await self._create_succession_timeline(
-            succession_matrix, urgency
-        )
+        succession_timeline = await self._create_succession_timeline(succession_matrix, urgency)
 
         return {
             "role_id": role_id,
@@ -622,14 +600,10 @@ class PerformanceManagementAgent(BaseAgent):
         session_type = context.get("session_type", "development")
 
         # Prepare coaching context
-        coaching_context = await self._prepare_coaching_context(
-            employee_id, coaching_focus
-        )
+        coaching_context = await self._prepare_coaching_context(employee_id, coaching_focus)
 
         # Generate coaching questions
-        coaching_questions = await self._generate_coaching_questions(
-            coaching_context, session_type
-        )
+        coaching_questions = await self._generate_coaching_questions(coaching_context, session_type)
 
         # Conduct coaching conversation
         coaching_conversation = await self._conduct_coaching_conversation(
@@ -792,8 +766,10 @@ class PerformanceManagementAgent(BaseAgent):
         """Generate manager assessment framework"""
         return {"assessment_areas": [], "rating_scale": "1-5", "comments": ""}
 
+
 # Export the agent
 performance_management_agent = PerformanceManagementAgent()
+
 
 async def main():
     """Main function for testing"""
@@ -808,6 +784,7 @@ async def main():
         }
     )
     print(f"Review Result: {review_result}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

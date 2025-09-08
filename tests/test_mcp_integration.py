@@ -5,21 +5,22 @@ Tests EVERY MCP server with REAL queries
 """
 
 import asyncio
+from typing import Dict
+
 import aiohttp
-import json
-from typing import Dict, List
+
 
 class MCPIntegrationTester:
     def __init__(self):
         self.servers = {
-            'sophia': {'port': 8001, 'endpoint': '/query'},
-            'github': {'port': 8002, 'endpoint': '/query'},
-            'gong': {'port': 8003, 'endpoint': '/query'},
-            'hubspot': {'port': 8004, 'endpoint': '/query'},
-            'slack': {'port': 8005, 'endpoint': '/query'},
-            'notion': {'port': 8006, 'endpoint': '/query'},
-            'kb': {'port': 8007, 'endpoint': '/query'},
-            'monitor': {'port': 8008, 'endpoint': '/health'}
+            "sophia": {"port": 8001, "endpoint": "/query"},
+            "github": {"port": 8002, "endpoint": "/query"},
+            "gong": {"port": 8003, "endpoint": "/query"},
+            "hubspot": {"port": 8004, "endpoint": "/query"},
+            "slack": {"port": 8005, "endpoint": "/query"},
+            "notion": {"port": 8006, "endpoint": "/query"},
+            "kb": {"port": 8007, "endpoint": "/query"},
+            "monitor": {"port": 8008, "endpoint": "/health"},
         }
         self.results = {}
 
@@ -29,18 +30,15 @@ class MCPIntegrationTester:
             url = f"http://localhost:{config['port']}{config['endpoint']}"
 
             async with aiohttp.ClientSession() as session:
-                if config['endpoint'] == '/health':
+                if config["endpoint"] == "/health":
                     async with session.get(url, timeout=5) as response:
                         return response.status == 200
                 else:
-                    test_data = {
-                        "query": f"Test query for {name}",
-                        "context": {"test": True}
-                    }
+                    test_data = {"query": f"Test query for {name}", "context": {"test": True}}
                     async with session.post(url, json=test_data, timeout=10) as response:
                         if response.status == 200:
                             data = await response.json()
-                            return 'response' in data or 'result' in data
+                            return "response" in data or "result" in data
                         return False
         except Exception:
             return False
@@ -64,6 +62,7 @@ class MCPIntegrationTester:
         print(f"\n📊 MCP Server Results: {working}/{total} working")
 
         return working >= total // 2  # At least half should work
+
 
 if __name__ == "__main__":
     tester = MCPIntegrationTester()

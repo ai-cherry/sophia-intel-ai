@@ -7,7 +7,8 @@ Eliminates vector dimension inconsistencies and similarity threshold variations
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any
+
 
 class VectorProvider(Enum):
     """Supported vector database providers"""
@@ -17,6 +18,7 @@ class VectorProvider(Enum):
     WEAVIATE = "weaviate"
     UNIFIED_MEMORY = "unified_memory"
 
+
 class EmbeddingModel(Enum):
     """Standardized embedding models with consistent dimensions"""
 
@@ -25,6 +27,7 @@ class EmbeddingModel(Enum):
     OPENAI_3_LARGE = ("text-embedding-3-large", 3072)
     VERTEX_GECKO = ("textembedding-gecko@003", 768)
     HUGGINGFACE_MINI = ("all-MiniLM-L6-v2", 384)
+
 
 @dataclass
 class StandardRAGConfig:
@@ -67,6 +70,7 @@ class StandardRAGConfig:
     apartment_data_limit: int = 1000000
     qdrant_shard_count: int = 5
     postgres_shard_count: int = 3
+
 
 class RAGConfigManager:
     """Centralized RAG configuration management"""
@@ -155,9 +159,7 @@ class RAGConfigManager:
         config = StandardRAGConfig()
 
         # Override from environment if available
-        config.vector_dimension = int(
-            os.getenv("RAG_VECTOR_DIMENSION", config.vector_dimension)
-        )
+        config.vector_dimension = int(os.getenv("RAG_VECTOR_DIMENSION", config.vector_dimension))
         config.similarity_threshold = float(
             os.getenv("RAG_SIMILARITY_THRESHOLD", config.similarity_threshold)
         )
@@ -181,14 +183,13 @@ class RAGConfigManager:
         config.apartment_data_limit = int(
             os.getenv("APARTMENT_DATA_LIMIT", config.apartment_data_limit)
         )
-        config.qdrant_shard_count = int(
-            os.getenv("QDRANT_SHARD_COUNT", config.qdrant_shard_count)
-        )
+        config.qdrant_shard_count = int(os.getenv("QDRANT_SHARD_COUNT", config.qdrant_shard_count))
         config.postgres_shard_count = int(
             os.getenv("POSTGRES_SHARD_COUNT", config.postgres_shard_count)
         )
 
         return cls(config)
+
 
 # Global standardized configuration instance
 STANDARD_RAG_CONFIG = RAGConfigManager.from_environment()

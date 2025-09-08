@@ -6,9 +6,9 @@ cross-domain intelligence and memory capabilities.
 """
 
 import asyncio
-import json
-from datetime import datetime
-from core.memory.unified_hybrid_memory import UnifiedHybridMemory, MemoryQuery
+
+from core.memory.unified_hybrid_memory import MemoryQuery, UnifiedHybridMemory
+
 
 async def test_unified_hybrid_memory():
     """Test the unified hybrid memory system"""
@@ -18,24 +18,16 @@ async def test_unified_hybrid_memory():
 
     # Configuration for memory systems
     config = {
-        "zep": {
-            "url": "http://localhost:8000",
-            "api_key": None  # Set if required
-        },
+        "zep": {"url": "http://localhost:8000", "api_key": None},  # Set if required
         "neon": {
             "host": "localhost",
             "port": 5432,
             "user": "postgres",
             "password": "password",
-            "database": "sophia_v7"
+            "database": "sophia_v7",
         },
-        "qdrant": {
-            "url": "http://localhost:6333",
-            "api_key": None
-        },
-        "redis": {
-            "url": "${REDIS_URL}"
-        }
+        "qdrant": {"url": "http://localhost:6333", "api_key": None},
+        "redis": {"url": "${REDIS_URL}"},
     }
 
     # Initialize memory system
@@ -58,8 +50,8 @@ async def test_unified_hybrid_memory():
             metadata={
                 "conversation_type": "pricing_discussion",
                 "customer_segment": "enterprise",
-                "confidence_score": 0.9
-            }
+                "confidence_score": 0.9,
+            },
         )
         print(f"✅ Stored episodic memory with session: {session_id}")
 
@@ -72,10 +64,7 @@ async def test_unified_hybrid_memory():
             importance_weight=0.9,
             access_level="standard",
             domain="payready",
-            metadata={
-                "source": "competitive_analysis_2025",
-                "last_updated": "2025-01-01"
-            }
+            metadata={"source": "competitive_analysis_2025", "last_updated": "2025-01-01"},
         )
         print(f"✅ Stored foundational data with ID: {foundational_id}")
 
@@ -91,8 +80,8 @@ async def test_unified_hybrid_memory():
             metadata={
                 "code_module": "payment_processing",
                 "review_type": "security_performance",
-                "confidence_score": 0.85
-            }
+                "confidence_score": 0.85,
+            },
         )
         print(f"✅ Stored Artemis development memory: {artemis_session}")
 
@@ -105,11 +94,11 @@ async def test_unified_hybrid_memory():
             session_id="artemis_session_001",
             memory_types=["episodic", "foundational", "vector", "cache"],
             max_results=10,
-            confidence_threshold=0.7
+            confidence_threshold=0.7,
         )
 
         result = await memory_system.hybrid_query(query)
-        print(f"✅ Hybrid query completed:")
+        print("✅ Hybrid query completed:")
         print(f"   📊 Total results: {result.total_results}")
         print(f"   🎯 Confidence scores: {result.confidence_scores}")
         print(f"   ⚡ Response times: {result.response_times}")
@@ -124,13 +113,15 @@ async def test_unified_hybrid_memory():
             user_id="business_analyst",
             memory_types=["foundational", "vector"],
             max_results=15,
-            confidence_threshold=0.6
+            confidence_threshold=0.6,
         )
 
         cross_result = await memory_system.hybrid_query(cross_domain_query)
-        print(f"✅ Cross-domain query completed:")
+        print("✅ Cross-domain query completed:")
         print(f"   📊 Total results: {cross_result.total_results}")
-        print(f"   🎯 Average confidence: {sum(cross_result.confidence_scores.values()) / len(cross_result.confidence_scores) if cross_result.confidence_scores else 0}")
+        print(
+            f"   🎯 Average confidence: {sum(cross_result.confidence_scores.values()) / len(cross_result.confidence_scores) if cross_result.confidence_scores else 0}"
+        )
 
         # Test 6: Store business insight from cross-domain analysis
         print("\n💡 Test 6: Storing unified business insight")
@@ -144,13 +135,13 @@ async def test_unified_hybrid_memory():
             recommendations=[
                 "Increase deployment frequency to improve customer satisfaction",
                 "Implement automated testing to maintain quality at higher velocity",
-                "Monitor customer feedback during development sprints"
+                "Monitor customer feedback during development sprints",
             ],
             evidence={
                 "correlation_coefficient": 0.73,
                 "sample_size": 150,
-                "time_period": "Q4_2024"
-            }
+                "time_period": "Q4_2024",
+            },
         )
         print(f"✅ Stored business insight with ID: {insight_id}")
 
@@ -173,13 +164,15 @@ async def test_unified_hybrid_memory():
             query="sales conversation sentiment analysis",
             domain="gong",
             user_id="sales_manager",
-            session_id="gong_session_001"
+            session_id="gong_session_001",
         )
 
         gong_result = await memory_system.hybrid_query(gong_query)
-        print(f"✅ Gong-specific query completed:")
+        print("✅ Gong-specific query completed:")
         print(f"   📞 Results: {gong_result.total_results}")
-        print(f"   🎯 Confidence: {sum(gong_result.confidence_scores.values()) / len(gong_result.confidence_scores) if gong_result.confidence_scores else 0:.2f}")
+        print(
+            f"   🎯 Confidence: {sum(gong_result.confidence_scores.values()) / len(gong_result.confidence_scores) if gong_result.confidence_scores else 0:.2f}"
+        )
 
         # Test 10: Artemis development query
         print("\n💻 Test 10: Artemis development query")
@@ -187,13 +180,15 @@ async def test_unified_hybrid_memory():
             query="code quality and deployment optimization",
             domain="artemis",
             user_id="dev_lead",
-            session_id="artemis_session_001"
+            session_id="artemis_session_001",
         )
 
         artemis_result = await memory_system.hybrid_query(artemis_query)
-        print(f"✅ Artemis development query completed:")
+        print("✅ Artemis development query completed:")
         print(f"   💻 Results: {artemis_result.total_results}")
-        print(f"   🎯 Confidence: {sum(artemis_result.confidence_scores.values()) / len(artemis_result.confidence_scores) if artemis_result.confidence_scores else 0:.2f}")
+        print(
+            f"   🎯 Confidence: {sum(artemis_result.confidence_scores.values()) / len(artemis_result.confidence_scores) if artemis_result.confidence_scores else 0:.2f}"
+        )
 
         print("\n🎉 All tests completed successfully!")
         print("🧠 Unified Hybrid Memory System is operational")
@@ -203,8 +198,10 @@ async def test_unified_hybrid_memory():
     except Exception as e:
         print(f"❌ Test failed: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 async def test_memory_integration():
     """Test memory system integration with mock data"""
@@ -218,12 +215,12 @@ async def test_memory_integration():
         "neon": {
             "host": "localhost",
             "port": 5432,
-            "user": "postgres", 
+            "user": "postgres",
             "password": "password",
-            "database": "sophia_test"
+            "database": "sophia_test",
         },
         "qdrant": {"url": "http://localhost:6333"},
-        "redis": {"url": "${REDIS_URL}"}
+        "redis": {"url": "${REDIS_URL}"},
     }
 
     memory_system = UnifiedHybridMemory(config)
@@ -234,9 +231,7 @@ async def test_memory_integration():
 
         # Test query with mock data
         query = MemoryQuery(
-            query="test unified intelligence query",
-            domain="test",
-            user_id="test_user"
+            query="test unified intelligence query", domain="test", user_id="test_user"
         )
 
         result = await memory_system.hybrid_query(query)
@@ -253,6 +248,7 @@ async def test_memory_integration():
     except Exception as e:
         print(f"⚠️  Integration test with limited services: {e}")
         return False
+
 
 if __name__ == "__main__":
     print("🚀 Starting Sophia V7 Unified Hybrid Memory Tests")

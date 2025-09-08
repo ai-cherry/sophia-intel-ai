@@ -1,5 +1,5 @@
-import LAMBDA_LABS_CONFIG
 import pulumi
+
 
 class SophiaCluster(pulumi.ComponentResource):
     def __init__(self, name, opts=None):
@@ -12,6 +12,7 @@ class SophiaCluster(pulumi.ComponentResource):
                 "subnet_ids": pulumi.Config().require_object("subnet_ids"),
             },
         )
+
 
 # Create cluster
 sophia_cluster = SophiaCluster("sophia-production")

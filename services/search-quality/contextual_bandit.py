@@ -3,25 +3,26 @@ Contextual Bandit for Search Provider Selection
 Uses MABWiser with Thompson Sampling for intelligent provider routing
 """
 
-from mabwiser.mab import MAB, LearningPolicy, NeighborhoodPolicy
-import numpy as np
-from typing import Dict, List, Tuple, Optional, Any
-import time
-import redis.asyncio as redis
-from dataclasses import dataclass, asdict, field
-import pandas as pd
+import asyncio
 import json
 import logging
-import asyncio
-from sklearn.preprocessing import StandardScaler
+import time
+from dataclasses import asdict, dataclass, field
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import redis.asyncio as redis
+from mabwiser.mab import MAB, LearningPolicy, NeighborhoodPolicy
 from sklearn.cluster import KMeans
-import hashlib
+from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ProviderContext:
     """Enhanced context for provider selection"""
+
     query_length: int
     query_type: str  # 'semantic', 'factual', 'news', 'code'
     time_of_day: float  # 0-23.99
@@ -36,25 +37,29 @@ class ProviderContext:
     def to_feature_vector(self) -> np.ndarray:
         """Convert context to feature vector for ML models"""
         # Normalize categorical features
-        query_type_map = {'semantic': 0, 'factual': 1, 'news': 2, 'code': 3}
-        user_context_map = {'general': 0, 'technical': 1, 'business': 2, 'research': 3}
+        query_type_map = {"semantic": 0, "factual": 1, "news": 2, "code": 3}
+        user_context_map = {"general": 0, "technical": 1, "business": 2, "research": 3}
 
-        return np.array([
-            self.query_length / 1000,  # Normalize to 0-1 range
-            query_type_map.get(self.query_type, 0),
-            self.time_of_day / 24,
-            min(self.recent_latency_p95 / 5000, 1),  # Cap at 5s
-            self.recent_error_rate,
-            min(self.cost_per_request / 10, 1),  # Cap at 10 cents
-            self.provider_load,
-            self.query_embedding_cluster / 10,
-            user_context_map.get(self.user_context, 0),
-            self.urgency_level
-        ])
+        return np.array(
+            [
+                self.query_length / 1000,  # Normalize to 0-1 range
+                query_type_map.get(self.query_type, 0),
+                self.time_of_day / 24,
+                min(self.recent_latency_p95 / 5000, 1),  # Cap at 5s
+                self.recent_error_rate,
+                min(self.cost_per_request / 10, 1),  # Cap at 10 cents
+                self.provider_load,
+                self.query_embedding_cluster / 10,
+                user_context_map.get(self.user_context, 0),
+                self.urgency_level,
+            ]
+        )
+
 
 @dataclass
 class ProviderMetrics:
     """Metrics tracking for each provider"""
+
     total_requests: int = 0
     successful_requests: int = 0
     total_latency_ms: float = 0
@@ -80,21 +85,26 @@ class ProviderMetrics:
             return 0
         return self.total_cost_cents / self.total_requests
 
+
 @dataclass
 class BanditConfig:
     """Configuration for contextual bandit"""
+
     exploration_decay_rate: float = 0.01
     min_exploration_rate: float = 0.05
     max_exploration_rate: float = 0.3
     context_similarity_threshold: float = 0.8
-    reward_weights: Dict[str, float] = field(default_factory=lambda: {
-        'latency': -0.4,  # Lower latency is better
-        'success': 0.5,   # Higher success rate is better
-        'cost': -0.1      # Lower cost is better
-    })
+    reward_weights: Dict[str, float] = field(
+        default_factory=lambda: {
+            "latency": -0.4,  # Lower latency is better
+            "success": 0.5,  # Higher success rate is better
+            "cost": -0.1,  # Lower cost is better
+        }
+    )
     ewma_alpha: float = 0.2
     enable_clustering: bool = True
     cluster_count: int = 10
+
 
 class ProductionContextualBandit:
     """
@@ -109,10 +119,7 @@ class ProductionContextualBandit:
     """
 
     def __init__(
-        self,
-        providers: List[str],
-        redis_client: redis.Redis,
-        config: Optional[BanditConfig] = None
+        self, providers: List[str], redis_client: redis.Redis, config: Optional[BanditConfig] = None
     ):
         self.providers = providers
         self.redis = redis_client
@@ -122,11 +129,10 @@ class ProductionContextualBandit:
         self.bandit = MAB(
             arms=providers,
             learning_policy=LearningPolicy.ThompsonSampling(
-                alpha=1.0,  # Prior success count
-                beta=1.0    # Prior failure count
+                alpha=1.0, beta=1.0  # Prior success count  # Prior failure count
             ),
             neighborhood_policy=NeighborhoodPolicy.KNearest(k=5),
-            seed=42
+            seed=42,
         )
 
         # Metrics tracking
@@ -149,9 +155,7 @@ class ProductionContextualBandit:
         self._start_background_tasks()
 
     async def select_provider(
-        self,
-        context: ProviderContext,
-        force_exploration: bool = False
+        self, context: ProviderContext, force_exploration: bool = False
     ) -> Tuple[str, float, Dict[str, Any]]:
         """
         Select optimal provider using contextual bandit
@@ -179,9 +183,9 @@ class ProductionContextualBandit:
 
         # Decide between exploration and exploitation
         should_explore = (
-            force_exploration or 
-            np.random.random() < exploration_rate or
-            self.total_decisions < len(self.providers) * 2  # Ensure all providers tried
+            force_exploration
+            or np.random.random() < exploration_rate
+            or self.total_decisions < len(self.providers) * 2  # Ensure all providers tried
         )
 
         if should_explore:
@@ -200,35 +204,37 @@ class ProductionContextualBandit:
 
         # Create decision metadata
         decision_metadata = {
-            'decision_type': decision_type,
-            'exploration_rate': exploration_rate,
-            'confidence_score': confidence_score,
-            'context_cluster': context.query_embedding_cluster,
-            'total_decisions': self.total_decisions,
-            'provider_metrics': {
+            "decision_type": decision_type,
+            "exploration_rate": exploration_rate,
+            "confidence_score": confidence_score,
+            "context_cluster": context.query_embedding_cluster,
+            "total_decisions": self.total_decisions,
+            "provider_metrics": {
                 p: {
-                    'success_rate': m.get_success_rate(),
-                    'avg_latency': m.get_avg_latency(),
-                    'avg_cost': m.get_avg_cost()
+                    "success_rate": m.get_success_rate(),
+                    "avg_latency": m.get_avg_latency(),
+                    "avg_cost": m.get_avg_cost(),
                 }
                 for p, m in self.provider_metrics.items()
-            }
+            },
         }
 
         # Store decision for learning
         decision_record = {
-            'timestamp': time.time(),
-            'provider': selected_provider,
-            'context': asdict(context),
-            'decision_type': decision_type,
-            'confidence': confidence_score
+            "timestamp": time.time(),
+            "provider": selected_provider,
+            "context": asdict(context),
+            "decision_type": decision_type,
+            "confidence": confidence_score,
         }
         self.decision_history.append(decision_record)
 
         # Persist state to Redis
         await self._persist_state()
 
-        logger.debug(f"Selected provider {selected_provider} with confidence {confidence_score:.3f}")
+        logger.debug(
+            f"Selected provider {selected_provider} with confidence {confidence_score:.3f}"
+        )
         return selected_provider, confidence_score, decision_metadata
 
     async def update_reward(
@@ -238,7 +244,7 @@ class ProductionContextualBandit:
         latency_ms: float,
         success: bool,
         cost_cents: float = 0,
-        quality_score: Optional[float] = None
+        quality_score: Optional[float] = None,
     ):
         """
         Update bandit with reward signal from request outcome
@@ -269,17 +275,17 @@ class ProductionContextualBandit:
         if success:
             metrics.ewma_latency = (
                 alpha * latency_ms + (1 - alpha) * metrics.ewma_latency
-                if metrics.ewma_latency > 0 else latency_ms
+                if metrics.ewma_latency > 0
+                else latency_ms
             )
 
         success_value = 1.0 if success else 0.0
-        metrics.ewma_success_rate = (
-            alpha * success_value + (1 - alpha) * metrics.ewma_success_rate
-        )
+        metrics.ewma_success_rate = alpha * success_value + (1 - alpha) * metrics.ewma_success_rate
 
         metrics.ewma_cost = (
             alpha * cost_cents + (1 - alpha) * metrics.ewma_cost
-            if metrics.ewma_cost > 0 else cost_cents
+            if metrics.ewma_cost > 0
+            else cost_cents
         )
 
         # Calculate composite reward
@@ -291,9 +297,7 @@ class ProductionContextualBandit:
         try:
             # MABWiser expects context as list of features
             self.bandit.partial_fit(
-                decisions=[provider],
-                rewards=[reward],
-                contexts=[feature_vector.tolist()]
+                decisions=[provider], rewards=[reward], contexts=[feature_vector.tolist()]
             )
         except Exception as e:
             logger.warning(f"Failed to update bandit: {e}")
@@ -301,21 +305,25 @@ class ProductionContextualBandit:
         # Update decision history with outcome
         if self.decision_history:
             last_decision = self.decision_history[-1]
-            if last_decision.get('provider') == provider:
-                last_decision.update({
-                    'outcome': {
-                        'latency_ms': latency_ms,
-                        'success': success,
-                        'cost_cents': cost_cents,
-                        'quality_score': quality_score,
-                        'reward': reward
+            if last_decision.get("provider") == provider:
+                last_decision.update(
+                    {
+                        "outcome": {
+                            "latency_ms": latency_ms,
+                            "success": success,
+                            "cost_cents": cost_cents,
+                            "quality_score": quality_score,
+                            "reward": reward,
+                        }
                     }
-                })
+                )
 
         # Persist updated state
         await self._persist_state()
 
-        logger.debug(f"Updated reward for {provider}: {reward:.3f} (latency={latency_ms:.1f}ms, success={success})")
+        logger.debug(
+            f"Updated reward for {provider}: {reward:.3f} (latency={latency_ms:.1f}ms, success={success})"
+        )
 
     def _explore_provider(self, context: ProviderContext) -> str:
         """Select provider for exploration"""
@@ -326,7 +334,9 @@ class ProductionContextualBandit:
             metrics = self.provider_metrics[provider]
 
             # Base weight on inverse of recent usage and error rate
-            recency_weight = max(0.1, 1.0 - (time.time() - metrics.last_used) / 3600)  # Decay over 1 hour
+            recency_weight = max(
+                0.1, 1.0 - (time.time() - metrics.last_used) / 3600
+            )  # Decay over 1 hour
             error_weight = max(0.1, 1.0 - metrics.ewma_success_rate)
 
             weight = recency_weight * error_weight
@@ -357,16 +367,16 @@ class ProductionContextualBandit:
 
             # Fallback: Select provider with best recent performance
             best_provider = self.providers[0]
-            best_score = -float('inf')
+            best_score = -float("inf")
 
             for provider in self.providers:
                 metrics = self.provider_metrics[provider]
 
                 # Composite score based on success rate, latency, and cost
                 score = (
-                    metrics.ewma_success_rate * 0.5 +
-                    (1.0 - min(metrics.ewma_latency / 5000, 1.0)) * 0.3 +
-                    (1.0 - min(metrics.ewma_cost / 10, 1.0)) * 0.2
+                    metrics.ewma_success_rate * 0.5
+                    + (1.0 - min(metrics.ewma_latency / 5000, 1.0)) * 0.3
+                    + (1.0 - min(metrics.ewma_cost / 10, 1.0)) * 0.2
                 )
 
                 if score > best_score:
@@ -400,9 +410,7 @@ class ProductionContextualBandit:
 
         # Composite confidence
         confidence = (
-            sample_confidence * 0.4 +
-            performance_confidence * 0.4 +
-            context_confidence * 0.2
+            sample_confidence * 0.4 + performance_confidence * 0.4 + context_confidence * 0.2
         )
 
         return confidence
@@ -412,7 +420,7 @@ class ProductionContextualBandit:
         latency_ms: float,
         success: bool,
         cost_cents: float,
-        quality_score: Optional[float] = None
+        quality_score: Optional[float] = None,
     ) -> float:
         """Calculate composite reward signal"""
 
@@ -426,10 +434,10 @@ class ProductionContextualBandit:
 
         # Weighted composite reward
         reward = (
-            self.config.reward_weights['latency'] * (1.0 - latency_score) +
-            self.config.reward_weights['success'] * 1.0 +
-            self.config.reward_weights['cost'] * (1.0 - cost_score) +
-            0.2 * quality_score  # Quality bonus
+            self.config.reward_weights["latency"] * (1.0 - latency_score)
+            + self.config.reward_weights["success"] * 1.0
+            + self.config.reward_weights["cost"] * (1.0 - cost_score)
+            + 0.2 * quality_score  # Quality bonus
         )
 
         return reward
@@ -443,7 +451,10 @@ class ProductionContextualBandit:
         self._context_history.append(feature_vector)
 
         # Retrain clustering periodically
-        if len(self._context_history) % 100 == 0 and len(self._context_history) >= self.config.cluster_count:
+        if (
+            len(self._context_history) % 100 == 0
+            and len(self._context_history) >= self.config.cluster_count
+        ):
             try:
                 # Fit scaler and clusterer
                 context_matrix = np.array(self._context_history[-1000:])  # Use last 1000 samples
@@ -503,30 +514,19 @@ class ProductionContextualBandit:
         try:
             # Persist provider metrics
             metrics_data = {
-                provider: asdict(metrics)
-                for provider, metrics in self.provider_metrics.items()
+                provider: asdict(metrics) for provider, metrics in self.provider_metrics.items()
             }
 
             await self.redis.set(
-                "bandit:provider_metrics",
-                json.dumps(metrics_data),
-                ex=86400  # 24 hour expiry
+                "bandit:provider_metrics", json.dumps(metrics_data), ex=86400  # 24 hour expiry
             )
 
             # Persist decision history (last 1000 decisions)
             recent_decisions = self.decision_history[-1000:]
-            await self.redis.set(
-                "bandit:decision_history",
-                json.dumps(recent_decisions),
-                ex=86400
-            )
+            await self.redis.set("bandit:decision_history", json.dumps(recent_decisions), ex=86400)
 
             # Persist bandit configuration
-            await self.redis.set(
-                "bandit:config",
-                json.dumps(asdict(self.config)),
-                ex=86400
-            )
+            await self.redis.set("bandit:config", json.dumps(asdict(self.config)), ex=86400)
 
         except Exception as e:
             logger.warning(f"Failed to persist bandit state: {e}")
@@ -590,27 +590,27 @@ class ProductionContextualBandit:
         provider_stats = {}
         for provider, metrics in self.provider_metrics.items():
             provider_stats[provider] = {
-                'total_requests': metrics.total_requests,
-                'success_rate': metrics.get_success_rate(),
-                'avg_latency_ms': metrics.get_avg_latency(),
-                'avg_cost_cents': metrics.get_avg_cost(),
-                'ewma_success_rate': metrics.ewma_success_rate,
-                'ewma_latency': metrics.ewma_latency,
-                'ewma_cost': metrics.ewma_cost,
-                'last_used': metrics.last_used
+                "total_requests": metrics.total_requests,
+                "success_rate": metrics.get_success_rate(),
+                "avg_latency_ms": metrics.get_avg_latency(),
+                "avg_cost_cents": metrics.get_avg_cost(),
+                "ewma_success_rate": metrics.ewma_success_rate,
+                "ewma_latency": metrics.ewma_latency,
+                "ewma_cost": metrics.ewma_cost,
+                "last_used": metrics.last_used,
             }
 
         return {
-            'total_decisions': self.total_decisions,
-            'total_requests': total_requests,
-            'overall_success_rate': total_successes / max(1, total_requests),
-            'total_errors': total_errors,
-            'exploration_rate': self._calculate_exploration_rate(),
-            'provider_count': len(self.providers),
-            'clustering_fitted': self._clustering_fitted,
-            'context_history_size': len(self._context_history),
-            'decision_history_size': len(self.decision_history),
-            'provider_stats': provider_stats
+            "total_decisions": self.total_decisions,
+            "total_requests": total_requests,
+            "overall_success_rate": total_successes / max(1, total_requests),
+            "total_errors": total_errors,
+            "exploration_rate": self._calculate_exploration_rate(),
+            "provider_count": len(self.providers),
+            "clustering_fitted": self._clustering_fitted,
+            "context_history_size": len(self._context_history),
+            "decision_history_size": len(self.decision_history),
+            "provider_stats": provider_stats,
         }
 
     async def close(self):
@@ -628,18 +628,18 @@ class ProductionContextualBandit:
 
         logger.info("Contextual bandit closed")
 
+
 # Factory function for easy integration
 def create_contextual_bandit(
     providers: List[str],
     redis_client: redis.Redis,
     exploration_decay_rate: float = 0.01,
-    reward_weights: Optional[Dict[str, float]] = None
+    reward_weights: Optional[Dict[str, float]] = None,
 ) -> ProductionContextualBandit:
     """Factory function to create configured contextual bandit"""
 
     config = BanditConfig(
-        exploration_decay_rate=exploration_decay_rate,
-        reward_weights=reward_weights or {}
+        exploration_decay_rate=exploration_decay_rate, reward_weights=reward_weights or {}
     )
 
     return ProductionContextualBandit(providers, redis_client, config)

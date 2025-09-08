@@ -6,14 +6,11 @@ alerts fire correctly, and ArgoCD maintains desired state
 """
 
 import asyncio
-import json
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import aiohttp
-import pytest
 from kubernetes import client, config
 
 # Configure logging

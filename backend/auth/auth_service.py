@@ -3,11 +3,9 @@ Authentication Service for Sophia AI Dashboard
 Implements JWT-based authentication with role-based access control
 """
 
-import hashlib
 import os
 import secrets
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
 
 import jwt
 from fastapi import HTTPException, status
@@ -23,6 +21,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = 30
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 class User(BaseModel):
     id: str
     email: str
@@ -33,12 +32,15 @@ class User(BaseModel):
     created_at: datetime
     last_login: datetime | None = None
 
+
 class UserInDB(User):
     hashed_password: str
+
 
 class LoginCredentials(BaseModel):
     email: str
     password: str
+
 
 class TokenData(BaseModel):
     token: str
@@ -46,8 +48,10 @@ class TokenData(BaseModel):
     token_type: str = "bearer"
     expires_in: int
 
+
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
+
 
 # Role-based permissions
 ROLE_PERMISSIONS = {
@@ -120,6 +124,7 @@ USERS_DB: dict[str, UserInDB] = {
 # Refresh token store (replace with database/Redis in production)
 REFRESH_TOKENS: dict[str, dict] = {}
 
+
 class AuthService:
     """Authentication and authorization service"""
 
@@ -151,9 +156,7 @@ class AuthService:
         return user
 
     @staticmethod
-    def create_access_token(
-        data: dict, expires_delta: timedelta | None = None
-    ) -> str:
+    def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
         """Create a JWT access token"""
         to_encode = data.copy()
         if expires_delta:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 """Pydantic models for the MCP memory server."""
 
-from typing import Any, Dict, List, Optional, Literal
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 

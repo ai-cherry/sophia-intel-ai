@@ -5,15 +5,8 @@ Tests deployment via ArgoCD, verifies KEDA picks up new config, and AlertManager
 """
 
 import asyncio
-import json
 import logging
-import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
 
-import aiohttp
-import pytest
-import yaml
 from kubernetes import client, config
 
 # Configure logging

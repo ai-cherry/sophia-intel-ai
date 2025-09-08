@@ -4,25 +4,21 @@ Memory System Performance Test
 Tests the performance of the new Mem0 + LangChain hybrid memory system
 """
 
-import os
-import sys
-import json
-import time
-import asyncio
-import logging
-import random
 import argparse
-from typing import Dict, List, Any
+import asyncio
+import json
+import logging
+import os
+import random
+import sys
+import time
 from datetime import datetime
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.FileHandler("logs/memory_benchmark.log"),
-        logging.StreamHandler()
-    ]
+    handlers=[logging.FileHandler("logs/memory_benchmark.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger("memory_benchmark")
 
@@ -35,6 +31,7 @@ except ImportError:
     logger.error("Error: Could not import Mem0Bridge. Make sure memory/mem0_bridge.py exists.")
     sys.exit(1)
 
+
 class MemoryBenchmark:
     """Benchmark the memory system performance"""
 
@@ -44,12 +41,7 @@ class MemoryBenchmark:
         self.agent_id = agent_id
         self.bridge = Mem0Bridge()
         self.memories = []
-        self.results = {
-            "add_time": 0,
-            "retrieve_time": 0,
-            "precision": 0,
-            "recall": 0
-        }
+        self.results = {"add_time": 0, "retrieve_time": 0, "precision": 0, "recall": 0}
         logger.info(f"Initialized benchmark with {num_memories} memories")
 
     def generate_test_memories(self):
@@ -58,8 +50,16 @@ class MemoryBenchmark:
 
         # Categories of content
         categories = [
-            "bug", "feature", "documentation", "refactor", "test",
-            "performance", "security", "database", "ui", "api"
+            "bug",
+            "feature",
+            "documentation",
+            "refactor",
+            "test",
+            "performance",
+            "security",
+            "database",
+            "ui",
+            "api",
         ]
 
         # Generate memories with different relevance scores
@@ -84,14 +84,12 @@ class MemoryBenchmark:
                 "category": category,
                 "timestamp": datetime.now().isoformat(),
                 "priority": random.choice(["high", "medium", "low"]),
-                "tags": random.sample(["python", "javascript", "database", "api", "ui", "test", "security"], k=2)
+                "tags": random.sample(
+                    ["python", "javascript", "database", "api", "ui", "test", "security"], k=2
+                ),
             }
 
-            self.memories.append({
-                "content": content,
-                "relevance": relevance,
-                "metadata": metadata
-            })
+            self.memories.append({"content": content, "relevance": relevance, "metadata": metadata})
 
         logger.info(f"Generated {len(self.memories)} test memories")
         return self.memories
@@ -106,14 +104,16 @@ class MemoryBenchmark:
                 agent_id=self.agent_id,
                 content=memory["content"],
                 relevance=memory["relevance"],
-                metadata=memory["metadata"]
+                metadata=memory["metadata"],
             )
 
         total_time = time.time() - start_time
         avg_time = total_time / len(self.memories)
 
         self.results["add_time"] = avg_time
-        logger.info(f"Added {len(self.memories)} memories in {total_time:.2f}s (avg: {avg_time:.4f}s per memory)")
+        logger.info(
+            f"Added {len(self.memories)} memories in {total_time:.2f}s (avg: {avg_time:.4f}s per memory)"
+        )
         return avg_time
 
     async def benchmark_retrieval(self, num_queries: int = 20):
@@ -131,7 +131,7 @@ class MemoryBenchmark:
             "user interface",
             "api endpoint",
             "test coverage",
-            "refactoring code"
+            "refactoring code",
         ]
 
         # Add more random queries if needed
@@ -152,36 +152,45 @@ class MemoryBenchmark:
             logger.info(f"Running query: {query}")
 
             # Count expected results (how many memories should match this query)
-            expected = sum(1 for memory in self.memories if any(term in memory["content"].lower() for term in query.lower().split()))
+            expected = sum(
+                1
+                for memory in self.memories
+                if any(term in memory["content"].lower() for term in query.lower().split())
+            )
             total_expected += expected
 
             # Run query and measure time
             start_time = time.time()
             results = await self.bridge.retrieve(
-                agent_id=self.agent_id,
-                query=query,
-                limit=10,
-                include_entities=True
+                agent_id=self.agent_id, query=query, limit=10, include_entities=True
             )
             query_time = time.time() - start_time
             total_time += query_time
 
             # Count relevant results (how many returned results actually contain query terms)
-            query_relevant = sum(1 for r in results["merged_results"] if any(term in r["content"].lower() for term in query.lower().split()))
+            query_relevant = sum(
+                1
+                for r in results["merged_results"]
+                if any(term in r["content"].lower() for term in query.lower().split())
+            )
             relevant_results += query_relevant
 
-            logger.info(f"Query '{query}' returned {len(results['merged_results'])} results ({query_relevant} relevant) in {query_time:.4f}s")
+            logger.info(
+                f"Query '{query}' returned {len(results['merged_results'])} results ({query_relevant} relevant) in {query_time:.4f}s"
+            )
 
         # Calculate metrics
         avg_time = total_time / len(queries)
-        precision = relevant_results / (len(queries) * 10) if queries else 0  # 10 is the limit per query
+        precision = (
+            relevant_results / (len(queries) * 10) if queries else 0
+        )  # 10 is the limit per query
         recall = relevant_results / total_expected if total_expected > 0 else 0
 
         self.results["retrieve_time"] = avg_time
         self.results["precision"] = precision
         self.results["recall"] = recall
 
-        logger.info(f"Retrieval benchmark completed:")
+        logger.info("Retrieval benchmark completed:")
         logger.info(f"  Average retrieval time: {avg_time:.4f}s")
         logger.info(f"  Precision: {precision:.4f}")
         logger.info(f"  Recall: {recall:.4f}")
@@ -194,13 +203,18 @@ class MemoryBenchmark:
         await self.bridge.clear(self.agent_id)
         logger.info("Cleanup complete")
 
+
 async def main():
     """Run the benchmark"""
     parser = argparse.ArgumentParser(description="Memory System Benchmark")
-    parser.add_argument("--memories", type=int, default=100, help="Number of test memories to generate")
+    parser.add_argument(
+        "--memories", type=int, default=100, help="Number of test memories to generate"
+    )
     parser.add_argument("--queries", type=int, default=20, help="Number of test queries to run")
     parser.add_argument("--agent", type=str, default="benchmark", help="Agent ID for the benchmark")
-    parser.add_argument("--skip-cleanup", action="store_true", help="Skip cleaning up test memories")
+    parser.add_argument(
+        "--skip-cleanup", action="store_true", help="Skip cleaning up test memories"
+    )
     args = parser.parse_args()
 
     logger.info("Starting memory system benchmark...")
@@ -219,7 +233,7 @@ async def main():
         # Save results
         with open("logs/memory_benchmark_results.json", "w") as f:
             json.dump(results, f, indent=2)
-        logger.info(f"Benchmark results saved to logs/memory_benchmark_results.json")
+        logger.info("Benchmark results saved to logs/memory_benchmark_results.json")
 
         # Clean up if not skipped
         if not args.skip_cleanup:
@@ -233,6 +247,7 @@ async def main():
         # Try to clean up anyway
         if not args.skip_cleanup:
             await benchmark.cleanup()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -4,7 +4,6 @@ Direct n8n workflow import - minimal approach
 This script directly imports a clean workflow without problematic fields
 """
 
-import json
 from datetime import datetime
 
 import requests

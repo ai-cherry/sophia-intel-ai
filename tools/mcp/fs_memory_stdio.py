@@ -16,14 +16,12 @@ Outputs a single JSON response per request with matching id.
 
 from __future__ import annotations
 
-import io
 import json
 import os
 import re
 import subprocess
 import sys
 import time
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, List
 

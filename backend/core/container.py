@@ -9,6 +9,7 @@ from typing import Any, TypeVar
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
+
 class ServiceContainer:
     """Sophisticated DI container with async support and circular dependency detection"""
 
@@ -19,9 +20,7 @@ class ServiceContainer:
         self._initialization_stack: set = set()
         self._initialized: set = set()
 
-    def register(
-        self, interface: type, factory: Callable[[], Any], singleton: bool = True
-    ):
+    def register(self, interface: type, factory: Callable[[], Any], singleton: bool = True):
         """Register a service with its factory"""
         self._factories[interface] = factory
         if singleton:
@@ -91,9 +90,8 @@ class ServiceContainer:
                             service.shutdown()
                     logger.info(f"🛑 Service shutdown: {type(service).__name__}")
                 except Exception as e:
-                    logger.error(
-                        f"❌ Error shutting down {type(service).__name__}: {e}"
-                    )
+                    logger.error(f"❌ Error shutting down {type(service).__name__}: {e}")
+
 
 class CircularDependencyError(Exception):
     """Raised when circular dependencies are detected"""
@@ -104,6 +102,7 @@ class ServiceNotFoundError(Exception):
 
 
 _container = ServiceContainer()
+
 
 async def resolve_service(interface: type[T]) -> T:
     """Resolve a service from the global container"""

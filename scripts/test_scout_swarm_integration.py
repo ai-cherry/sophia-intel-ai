@@ -10,7 +10,6 @@ import os
 import sys
 import time
 from datetime import datetime
-from pathlib import Path
 
 # Add parent directory to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -19,11 +18,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.artemis.scout_swarm.ultimate_scout_swarm import (
     ArtemisScoutSwarmIntegration,
     UltimateScoutSwarm,
-    get_scout_swarm,
 )
 
 # Import base factory
-from app.core.base_factory import BaseAgentFactory, create_base_factory, initialize_factory
+from app.core.base_factory import create_base_factory
 
 # Test MCP connectivity
 try:

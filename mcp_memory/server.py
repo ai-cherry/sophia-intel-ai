@@ -3,25 +3,25 @@ Simple MCP Memory Server
 Provides memory storage and retrieval services for AI agents
 """
 
-import asyncio
 import json
 import os
 import time
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
+from typing import Any, Dict, List, Optional
 
-import uvicorn
-from fastapi import FastAPI, HTTPException, Body, Query
-from fastapi.middleware.cors import CORSMiddleware
-
-from .models import MemoryRecord, MemoryQuery, MemoryResponse
 import redis
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from redis.exceptions import ConnectionError as RedisConnectionError
+
+from .models import MemoryQuery, MemoryRecord, MemoryResponse
 
 try:
     from qdrant_client import QdrantClient
     from qdrant_client.http.models import Distance, VectorParams
+
     QDRANT_AVAILABLE = True
 except ImportError:
     QDRANT_AVAILABLE = False
@@ -52,7 +52,7 @@ if QDRANT_AVAILABLE:
         try:
             qdrant_client.create_collection(
                 collection_name="memory_vectors",
-                vectors_config=VectorParams(size=1536, distance=Distance.COSINE)
+                vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
             )
         except Exception:
             # Collection might already exist
@@ -61,6 +61,7 @@ if QDRANT_AVAILABLE:
         QDRANT_AVAILABLE = False
 
 # Models are defined in models.py and imported above
+
 
 # Routes
 @app.get("/health")
@@ -72,10 +73,11 @@ async def health_check():
         "version": "0.1.0",
         "services": {
             "redis": "connected" if check_redis_connection() else "disconnected",
-            "qdrant": "available" if QDRANT_AVAILABLE else "unavailable"
-        }
+            "qdrant": "available" if QDRANT_AVAILABLE else "unavailable",
+        },
     }
     return health_data
+
 
 @app.post("/memory/store", response_model=MemoryResponse)
 async def store_memory(item: MemoryRecord):
@@ -124,22 +126,18 @@ async def store_memory(item: MemoryRecord):
                             "agent_id": item.agent_id,
                             "session_id": item.session_id,
                             "project_id": item.project_id,
-                            "timestamp": memory_data["timestamp"]
-                        }
+                            "timestamp": memory_data["timestamp"],
+                        },
                     }
-                ]
+                ],
             )
 
         return MemoryResponse(
-            success=True,
-            message="Memory stored successfully",
-            data={"id": memory_id}
+            success=True, message="Memory stored successfully", data={"id": memory_id}
         )
     except Exception as e:
-        return MemoryResponse(
-            success=False,
-            message=f"Failed to store memory: {str(e)}"
-        )
+        return MemoryResponse(success=False, message=f"Failed to store memory: {str(e)}")
+
 
 @app.post("/memory/retrieve", response_model=MemoryResponse)
 async def retrieve_memory(query: MemoryQuery):
@@ -149,7 +147,9 @@ async def retrieve_memory(query: MemoryQuery):
         memories: List[Dict[str, Any]] = []
         if query.semantic_search and QDRANT_AVAILABLE:
             if not query.vector_embedding:
-                raise HTTPException(status_code=400, detail="vector_embedding required for semantic search")
+                raise HTTPException(
+                    status_code=400, detail="vector_embedding required for semantic search"
+                )
 
             search_results = qdrant_client.search(
                 collection_name="memory_vectors",
@@ -237,18 +237,14 @@ async def retrieve_memory(query: MemoryQuery):
             memories.sort(key=lambda x: x["timestamp"], reverse=True)
 
             # Limit results
-            memories = memories[:query.limit]
+            memories = memories[: query.limit]
 
         return MemoryResponse(
-            success=True,
-            message=f"Retrieved {len(memories)} memories",
-            data=memories
+            success=True, message=f"Retrieved {len(memories)} memories", data=memories
         )
     except Exception as e:
-        return MemoryResponse(
-            success=False,
-            message=f"Failed to retrieve memories: {str(e)}"
-        )
+        return MemoryResponse(success=False, message=f"Failed to retrieve memories: {str(e)}")
+
 
 @app.delete("/memory/{memory_id}", response_model=MemoryResponse)
 async def delete_memory(memory_id: str):
@@ -256,10 +252,7 @@ async def delete_memory(memory_id: str):
     try:
         # Check if memory exists
         if not redis_client.exists(memory_id):
-            return MemoryResponse(
-                success=False,
-                message=f"Memory {memory_id} not found"
-            )
+            return MemoryResponse(success=False, message=f"Memory {memory_id} not found")
 
         # Get memory data for index removal
         memory_data = redis_client.hgetall(memory_id)
@@ -282,29 +275,21 @@ async def delete_memory(memory_id: str):
         # Remove from Qdrant if available
         if QDRANT_AVAILABLE:
             try:
-                qdrant_client.delete(
-                    collection_name="memory_vectors",
-                    points_selector=[memory_id]
-                )
+                qdrant_client.delete(collection_name="memory_vectors", points_selector=[memory_id])
             except Exception:
                 # Ignore Qdrant deletion errors
                 pass
 
-        return MemoryResponse(
-            success=True,
-            message=f"Memory {memory_id} deleted successfully"
-        )
+        return MemoryResponse(success=True, message=f"Memory {memory_id} deleted successfully")
     except Exception as e:
-        return MemoryResponse(
-            success=False,
-            message=f"Failed to delete memory: {str(e)}"
-        )
+        return MemoryResponse(success=False, message=f"Failed to delete memory: {str(e)}")
+
 
 @app.post("/memory/clear", response_model=MemoryResponse)
 async def clear_memories(
     agent_id: Optional[str] = None,
     session_id: Optional[str] = None,
-    project_id: Optional[str] = None
+    project_id: Optional[str] = None,
 ):
     """Clear memories based on filters"""
     try:
@@ -327,7 +312,7 @@ async def clear_memories(
         if not memory_ids:
             return MemoryResponse(
                 success=False,
-                message="No filter specified. For safety, specify at least one filter: agent_id, session_id, or project_id."
+                message="No filter specified. For safety, specify at least one filter: agent_id, session_id, or project_id.",
             )
 
         # Delete each memory
@@ -352,22 +337,16 @@ async def clear_memories(
         if QDRANT_AVAILABLE and memory_ids:
             try:
                 qdrant_client.delete(
-                    collection_name="memory_vectors",
-                    points_selector=list(memory_ids)
+                    collection_name="memory_vectors", points_selector=list(memory_ids)
                 )
             except Exception:
                 # Ignore Qdrant deletion errors
                 pass
 
-        return MemoryResponse(
-            success=True,
-            message=f"Cleared {len(memory_ids)} memories"
-        )
+        return MemoryResponse(success=True, message=f"Cleared {len(memory_ids)} memories")
     except Exception as e:
-        return MemoryResponse(
-            success=False,
-            message=f"Failed to clear memories: {str(e)}"
-        )
+        return MemoryResponse(success=False, message=f"Failed to clear memories: {str(e)}")
+
 
 def check_redis_connection() -> bool:
     """Check if Redis is available"""
@@ -375,6 +354,7 @@ def check_redis_connection() -> bool:
         return redis_client.ping()
     except RedisConnectionError:
         return False
+
 
 if __name__ == "__main__":
     import argparse

@@ -4,15 +4,16 @@ Tests for Pulumi IDP Governance
 Validates policy enforcement and component registration
 """
 
-import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-import pulumi
-from pulumi_policy import EnforcementLevel, PolicyPack
-
 from orchestration.infrastructure.pulumi_governance import (
-    GovernanceManager, pulumi_idp_governance, register_reusable_component)
+    GovernanceManager,
+    pulumi_idp_governance,
+    register_reusable_component,
+)
+from pulumi_policy import PolicyPack
+
 
 class TestPulumiGovernance(unittest.TestCase):
     """Test cases for Pulumi IDP Governance"""
@@ -22,7 +23,7 @@ class TestPulumiGovernance(unittest.TestCase):
         self.config = {
             "policy_name": "test-governance",
             "environment": "test",
-            "enforcement_level": "advisory"
+            "enforcement_level": "advisory",
         }
 
     def test_pulumi_idp_governance_creation(self):
@@ -77,19 +78,16 @@ class TestPulumiGovernance(unittest.TestCase):
 
         # Verify the registration
         self.assertEqual(result, "registered-component")
-        self.assertEqual(
-            manager.registered_components["test-component"], "registered-component")
+        self.assertEqual(manager.registered_components["test-component"], "registered-component")
         mock_register.assert_called_once_with("test-component", test_component, None)
+
 
 class TestPulumiPolicies(unittest.TestCase):
     """Test specific policy enforcement"""
 
     def setUp(self):
         """Set up test environment"""
-        self.config = {
-            "policy_name": "test-policies",
-            "environment": "test"
-        }
+        self.config = {"policy_name": "test-policies", "environment": "test"}
         self.policy_pack = pulumi_idp_governance(self.config)
 
     def test_web_access_security_policy_lambda(self):
@@ -97,13 +95,7 @@ class TestPulumiPolicies(unittest.TestCase):
         # Create a mock validation context for a Lambda function
         resource_args = MagicMock()
         resource_args.resource_type = "aws:lambda/function:Function"
-        resource_args.props = {
-            "environment": {
-                "variables": {
-                    "ALLOW_WEB_ACCESS": "true"
-                }
-            }
-        }
+        resource_args.props = {"environment": {"variables": {"ALLOW_WEB_ACCESS": "true"}}}
 
         report_violation = MagicMock()
 
@@ -125,7 +117,7 @@ class TestPulumiPolicies(unittest.TestCase):
         resource_args.resource_name = "standard-function"
         resource_args.props = {
             "memory_size": 10240,  # Excessive memory
-            "timeout": 1000        # Excessive timeout
+            "timeout": 1000,  # Excessive timeout
         }
 
         report_violation = MagicMock()
@@ -145,9 +137,7 @@ class TestPulumiPolicies(unittest.TestCase):
         # Create a mock validation context for an S3 bucket
         resource_args = MagicMock()
         resource_args.resource_type = "aws:s3/bucket:Bucket"
-        resource_args.props = {
-            "acl": "public-read"  # Insecure ACL
-        }
+        resource_args.props = {"acl": "public-read"}  # Insecure ACL
 
         report_violation = MagicMock()
 
@@ -161,20 +151,17 @@ class TestPulumiPolicies(unittest.TestCase):
         # Verify violations were reported (one for encryption, one for public access)
         self.assertEqual(report_violation.call_count, 2)
 
+
 class TestIntegrationWithSwarm(unittest.TestCase):
     """Integration tests with swarm architecture"""
 
     @patch("pulumi.export")
     def test_integration_with_hybrid_cloud(self, mock_export):
         """Test integration with hybrid cloud manager"""
-        from orchestration.infrastructure.hybrid_cloud import \
-            HybridCloudManager
+        from orchestration.infrastructure.hybrid_cloud import HybridCloudManager
 
         # Create governance manager
-        governance_config = {
-            "policy_name": "swarm-governance",
-            "environment": "production"
-        }
+        governance_config = {"policy_name": "swarm-governance", "environment": "production"}
         governance = GovernanceManager(governance_config)
         governance.initialize()
 
@@ -182,7 +169,7 @@ class TestIntegrationWithSwarm(unittest.TestCase):
         cloud_config = {
             "primary_region": "us-west-2",
             "fallback_region": "eastus",
-            "env_prefix": "test-swarm"
+            "env_prefix": "test-swarm",
         }
         cloud_manager = HybridCloudManager(cloud_config)
 
@@ -193,24 +180,20 @@ class TestIntegrationWithSwarm(unittest.TestCase):
                 "name": name,
                 "memory": memory,
                 "timeout": timeout,
-                "security": {
-                    "development environment_enabled": True
-                }
+                "security": {"development environment_enabled": True},
             }
 
         # Register the component with governance
         secure_lambda_factory = governance.register_component(
             "secure-lambda",
             create_secure_lambda,
-            {
-                "version": "1.0.0",
-                "description": "Secure Lambda function with guardrails"
-            }
+            {"version": "1.0.0", "description": "Secure Lambda function with guardrails"},
         )
 
         # Verify component registration
         self.assertIsNotNone(secure_lambda_factory)
         self.assertIn("secure-lambda", governance.registered_components)
+
 
 if __name__ == "__main__":
     unittest.main()

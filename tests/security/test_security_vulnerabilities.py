@@ -3,30 +3,31 @@ Comprehensive Security Vulnerability Test Suite
 Tests for common security vulnerabilities across all MCP servers
 """
 
-import pytest
-import asyncio
-import aiohttp
-import json
-import time
-import hashlib
-import jwt
 import base64
-import urllib.parse
-import ssl
+import json
+import os
 import socket
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Tuple
-from dataclasses import dataclass
-import xml.etree.ElementTree as ET
+import ssl
 
 # Security testing utilities
 import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import time
+import urllib.parse
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Dict, List
+
+import aiohttp
+import jwt
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+
 
 @dataclass
 class SecurityTestResult:
     """Security test result"""
+
     test_name: str
     vulnerability_type: str
     status: str  # 'passed', 'failed', 'vulnerable'
@@ -35,9 +36,11 @@ class SecurityTestResult:
     details: Dict[str, Any]
     timestamp: datetime
 
+
 @dataclass
 class VulnerabilityReport:
     """Vulnerability assessment report"""
+
     component: str
     total_tests: int
     vulnerabilities_found: int
@@ -47,6 +50,7 @@ class VulnerabilityReport:
     low_issues: int
     test_results: List[SecurityTestResult]
 
+
 class SecurityTester:
     """Core security testing functionality"""
 
@@ -55,10 +59,10 @@ class SecurityTester:
         self.test_results = []
         self.base_urls = {
             "unified_mcp": "${SOPHIA_API_ENDPOINT}",
-            "artemis": "http://localhost:8081", 
+            "artemis": "http://localhost:8081",
             "bi_server": "http://localhost:8082",
             "mem0": "http://localhost:8083",
-            "base_mcp": "http://localhost:8084"
+            "base_mcp": "http://localhost:8084",
         }
 
     async def setup(self):
@@ -66,8 +70,7 @@ class SecurityTester:
         # Disable SSL verification for testing (controlled environment)
         connector = aiohttp.TCPConnector(ssl=False)
         self.session = aiohttp.ClientSession(
-            connector=connector,
-            timeout=aiohttp.ClientTimeout(total=30)
+            connector=connector, timeout=aiohttp.ClientTimeout(total=30)
         )
 
     async def teardown(self):
@@ -79,13 +82,10 @@ class SecurityTester:
         """Record security test result"""
         self.test_results.append(result)
 
-        if result.status == 'vulnerable':
-            severity_symbol = {
-                'low': '🟡',
-                'medium': '🟠', 
-                'high': '🔴',
-                'critical': '🚨'
-            }.get(result.severity, '❓')
+        if result.status == "vulnerable":
+            severity_symbol = {"low": "🟡", "medium": "🟠", "high": "🔴", "critical": "🚨"}.get(
+                result.severity, "❓"
+            )
 
             print(f"{severity_symbol} {result.vulnerability_type}: {result.description}")
 
@@ -94,24 +94,25 @@ class SecurityTester:
         component_results = [r for r in self.test_results if component in r.test_name.lower()]
 
         severity_counts = {
-            'critical': len([r for r in component_results if r.severity == 'critical']),
-            'high': len([r for r in component_results if r.severity == 'high']),
-            'medium': len([r for r in component_results if r.severity == 'medium']),
-            'low': len([r for r in component_results if r.severity == 'low'])
+            "critical": len([r for r in component_results if r.severity == "critical"]),
+            "high": len([r for r in component_results if r.severity == "high"]),
+            "medium": len([r for r in component_results if r.severity == "medium"]),
+            "low": len([r for r in component_results if r.severity == "low"]),
         }
 
-        vulnerabilities_found = len([r for r in component_results if r.status == 'vulnerable'])
+        vulnerabilities_found = len([r for r in component_results if r.status == "vulnerable"])
 
         return VulnerabilityReport(
             component=component,
             total_tests=len(component_results),
             vulnerabilities_found=vulnerabilities_found,
-            critical_issues=severity_counts['critical'],
-            high_issues=severity_counts['high'],
-            medium_issues=severity_counts['medium'],
-            low_issues=severity_counts['low'],
-            test_results=component_results
+            critical_issues=severity_counts["critical"],
+            high_issues=severity_counts["high"],
+            medium_issues=severity_counts["medium"],
+            low_issues=severity_counts["low"],
+            test_results=component_results,
         )
+
 
 class TestAuthenticationSecurity:
     """Authentication and authorization security tests"""
@@ -137,35 +138,43 @@ class TestAuthenticationSecurity:
         none_payload = {"sub": "admin", "iat": int(time.time()), "exp": int(time.time()) + 3600}
         none_header = {"alg": "none", "typ": "JWT"}
 
-        none_token = base64.urlsafe_b64encode(json.dumps(none_header).encode()).decode().rstrip('=') + '.'
-        none_token += base64.urlsafe_b64encode(json.dumps(none_payload).encode()).decode().rstrip('=') + '.'
+        none_token = (
+            base64.urlsafe_b64encode(json.dumps(none_header).encode()).decode().rstrip("=") + "."
+        )
+        none_token += (
+            base64.urlsafe_b64encode(json.dumps(none_payload).encode()).decode().rstrip("=") + "."
+        )
 
         for service_name, base_url in security_tester.base_urls.items():
             try:
                 async with security_tester.session.get(
                     f"{base_url}/protected-endpoint",
-                    headers={"Authorization": f"Bearer {none_token}"}
+                    headers={"Authorization": f"Bearer {none_token}"},
                 ) as response:
                     if response.status == 200:
-                        security_tester.record_result(SecurityTestResult(
-                            test_name=f"{service_name}_jwt_none_algorithm",
-                            vulnerability_type="JWT None Algorithm",
-                            status="vulnerable",
-                            severity="high",
-                            description=f"{service_name} accepts JWT tokens with 'none' algorithm",
-                            details={"token": none_token, "response_status": response.status},
-                            timestamp=datetime.now()
-                        ))
+                        security_tester.record_result(
+                            SecurityTestResult(
+                                test_name=f"{service_name}_jwt_none_algorithm",
+                                vulnerability_type="JWT None Algorithm",
+                                status="vulnerable",
+                                severity="high",
+                                description=f"{service_name} accepts JWT tokens with 'none' algorithm",
+                                details={"token": none_token, "response_status": response.status},
+                                timestamp=datetime.now(),
+                            )
+                        )
                     else:
-                        security_tester.record_result(SecurityTestResult(
-                            test_name=f"{service_name}_jwt_none_algorithm",
-                            vulnerability_type="JWT None Algorithm",
-                            status="passed",
-                            severity="high",
-                            description=f"{service_name} properly rejects JWT 'none' algorithm",
-                            details={"response_status": response.status},
-                            timestamp=datetime.now()
-                        ))
+                        security_tester.record_result(
+                            SecurityTestResult(
+                                test_name=f"{service_name}_jwt_none_algorithm",
+                                vulnerability_type="JWT None Algorithm",
+                                status="passed",
+                                severity="high",
+                                description=f"{service_name} properly rejects JWT 'none' algorithm",
+                                details={"response_status": response.status},
+                                timestamp=datetime.now(),
+                            )
+                        )
             except:
                 # Service might not have this endpoint, which is fine
                 pass
@@ -178,25 +187,27 @@ class TestAuthenticationSecurity:
 
         for secret in weak_secrets:
             try:
-                weak_token = jwt.encode(test_payload, secret, algorithm='HS256')
+                weak_token = jwt.encode(test_payload, secret, algorithm="HS256")
 
                 # Try to use weak token
                 for service_name, base_url in security_tester.base_urls.items():
                     try:
                         async with security_tester.session.get(
                             f"{base_url}/protected",
-                            headers={"Authorization": f"Bearer {weak_token}"}
+                            headers={"Authorization": f"Bearer {weak_token}"},
                         ) as response:
                             if response.status == 200:
-                                security_tester.record_result(SecurityTestResult(
-                                    test_name=f"{service_name}_jwt_weak_secret",
-                                    vulnerability_type="JWT Weak Secret",
-                                    status="vulnerable",
-                                    severity="critical",
-                                    description=f"{service_name} uses weak JWT secret: {secret}",
-                                    details={"weak_secret": secret},
-                                    timestamp=datetime.now()
-                                ))
+                                security_tester.record_result(
+                                    SecurityTestResult(
+                                        test_name=f"{service_name}_jwt_weak_secret",
+                                        vulnerability_type="JWT Weak Secret",
+                                        status="vulnerable",
+                                        severity="critical",
+                                        description=f"{service_name} uses weak JWT secret: {secret}",
+                                        details={"weak_secret": secret},
+                                        timestamp=datetime.now(),
+                                    )
+                                )
                     except:
                         pass
             except:
@@ -216,12 +227,10 @@ class TestAuthenticationSecurity:
             {"headers": {"X-Remote-IP": "localhost"}},
             {"headers": {"X-Admin": "true"}},
             {"headers": {"X-User-Role": "admin"}},
-
             # Parameter pollution
             {"params": {"user": ["admin", "guest"]}},
             {"params": {"role": "admin"}},
             {"params": {"bypass": "true"}},
-
             # Path manipulation
             {"path_suffix": "/../admin"},
             {"path_suffix": "/./protected"},
@@ -234,20 +243,20 @@ class TestAuthenticationSecurity:
                     url = base_url + "/protected" + attempt.get("path_suffix", "")
 
                     async with security_tester.session.get(
-                        url,
-                        headers=attempt.get("headers", {}),
-                        params=attempt.get("params", {})
+                        url, headers=attempt.get("headers", {}), params=attempt.get("params", {})
                     ) as response:
                         if response.status == 200:
-                            security_tester.record_result(SecurityTestResult(
-                                test_name=f"{service_name}_auth_bypass",
-                                vulnerability_type="Authentication Bypass",
-                                status="vulnerable", 
-                                severity="high",
-                                description=f"{service_name} authentication bypassed",
-                                details={"bypass_method": attempt},
-                                timestamp=datetime.now()
-                            ))
+                            security_tester.record_result(
+                                SecurityTestResult(
+                                    test_name=f"{service_name}_auth_bypass",
+                                    vulnerability_type="Authentication Bypass",
+                                    status="vulnerable",
+                                    severity="high",
+                                    description=f"{service_name} authentication bypassed",
+                                    details={"bypass_method": attempt},
+                                    timestamp=datetime.now(),
+                                )
+                            )
                 except:
                     pass
 
@@ -261,51 +270,57 @@ class TestAuthenticationSecurity:
             try:
                 # Test session fixation
                 async with security_tester.session.get(
-                    f"{base_url}/login",
-                    cookies={"SESSIONID": "fixed_session_id"}
+                    f"{base_url}/login", cookies={"SESSIONID": "fixed_session_id"}
                 ) as response:
                     # Check if server accepts pre-set session ID
-                    set_cookie = response.headers.get('Set-Cookie', '')
-                    if 'fixed_session_id' in set_cookie:
-                        security_tester.record_result(SecurityTestResult(
-                            test_name=f"{service_name}_session_fixation",
-                            vulnerability_type="Session Fixation",
-                            status="vulnerable",
-                            severity="medium",
-                            description=f"{service_name} vulnerable to session fixation",
-                            details={"set_cookie": set_cookie},
-                            timestamp=datetime.now()
-                        ))
+                    set_cookie = response.headers.get("Set-Cookie", "")
+                    if "fixed_session_id" in set_cookie:
+                        security_tester.record_result(
+                            SecurityTestResult(
+                                test_name=f"{service_name}_session_fixation",
+                                vulnerability_type="Session Fixation",
+                                status="vulnerable",
+                                severity="medium",
+                                description=f"{service_name} vulnerable to session fixation",
+                                details={"set_cookie": set_cookie},
+                                timestamp=datetime.now(),
+                            )
+                        )
 
                 # Test secure cookie flags
-                if 'Set-Cookie' in response.headers:
-                    cookie_header = response.headers['Set-Cookie']
+                if "Set-Cookie" in response.headers:
+                    cookie_header = response.headers["Set-Cookie"]
 
                     # Check for Secure flag
-                    if 'Secure' not in cookie_header:
-                        security_tester.record_result(SecurityTestResult(
-                            test_name=f"{service_name}_cookie_secure_flag",
-                            vulnerability_type="Insecure Cookie",
-                            status="vulnerable",
-                            severity="medium",
-                            description=f"{service_name} cookies missing Secure flag",
-                            details={"cookie_header": cookie_header},
-                            timestamp=datetime.now()
-                        ))
+                    if "Secure" not in cookie_header:
+                        security_tester.record_result(
+                            SecurityTestResult(
+                                test_name=f"{service_name}_cookie_secure_flag",
+                                vulnerability_type="Insecure Cookie",
+                                status="vulnerable",
+                                severity="medium",
+                                description=f"{service_name} cookies missing Secure flag",
+                                details={"cookie_header": cookie_header},
+                                timestamp=datetime.now(),
+                            )
+                        )
 
                     # Check for HttpOnly flag
-                    if 'HttpOnly' not in cookie_header:
-                        security_tester.record_result(SecurityTestResult(
-                            test_name=f"{service_name}_cookie_httponly_flag",
-                            vulnerability_type="Cookie XSS Risk",
-                            status="vulnerable",
-                            severity="medium",
-                            description=f"{service_name} cookies missing HttpOnly flag",
-                            details={"cookie_header": cookie_header},
-                            timestamp=datetime.now()
-                        ))
+                    if "HttpOnly" not in cookie_header:
+                        security_tester.record_result(
+                            SecurityTestResult(
+                                test_name=f"{service_name}_cookie_httponly_flag",
+                                vulnerability_type="Cookie XSS Risk",
+                                status="vulnerable",
+                                severity="medium",
+                                description=f"{service_name} cookies missing HttpOnly flag",
+                                details={"cookie_header": cookie_header},
+                                timestamp=datetime.now(),
+                            )
+                        )
             except:
                 pass
+
 
 class TestInputValidationSecurity:
     """Input validation and sanitization security tests"""
@@ -347,12 +362,12 @@ class TestInputValidationSecurity:
         # Test endpoints that might be vulnerable
         test_endpoints = [
             "/users",
-            "/login", 
+            "/login",
             "/search",
             "/api/query",
             "/customers",
             "/memories",
-            "/workflows"
+            "/workflows",
         ]
 
         for service_name, base_url in security_tester.base_urls.items():
@@ -361,8 +376,7 @@ class TestInputValidationSecurity:
                     try:
                         # Test in URL parameters
                         async with security_tester.session.get(
-                            f"{base_url}{endpoint}",
-                            params={"id": payload, "search": payload}
+                            f"{base_url}{endpoint}", params={"id": payload, "search": payload}
                         ) as response:
                             await self._check_sql_injection_response(
                                 security_tester, service_name, endpoint, payload, response
@@ -371,7 +385,7 @@ class TestInputValidationSecurity:
                         # Test in POST body
                         async with security_tester.session.post(
                             f"{base_url}{endpoint}",
-                            json={"username": payload, "query": payload, "filter": payload}
+                            json={"username": payload, "query": payload, "filter": payload},
                         ) as response:
                             await self._check_sql_injection_response(
                                 security_tester, service_name, endpoint, payload, response
@@ -380,7 +394,9 @@ class TestInputValidationSecurity:
                     except:
                         pass  # Endpoint might not exist
 
-    async def _check_sql_injection_response(self, security_tester, service_name, endpoint, payload, response):
+    async def _check_sql_injection_response(
+        self, security_tester, service_name, endpoint, payload, response
+    ):
         """Check response for SQL injection indicators"""
         try:
             response_text = await response.text()
@@ -406,19 +422,21 @@ class TestInputValidationSecurity:
 
             for indicator in sql_error_indicators:
                 if indicator in response_lower:
-                    security_tester.record_result(SecurityTestResult(
-                        test_name=f"{service_name}_sql_injection_{endpoint}",
-                        vulnerability_type="SQL Injection",
-                        status="vulnerable",
-                        severity="critical",
-                        description=f"{service_name}{endpoint} vulnerable to SQL injection",
-                        details={
-                            "payload": payload,
-                            "error_indicator": indicator,
-                            "response_snippet": response_text[:200]
-                        },
-                        timestamp=datetime.now()
-                    ))
+                    security_tester.record_result(
+                        SecurityTestResult(
+                            test_name=f"{service_name}_sql_injection_{endpoint}",
+                            vulnerability_type="SQL Injection",
+                            status="vulnerable",
+                            severity="critical",
+                            description=f"{service_name}{endpoint} vulnerable to SQL injection",
+                            details={
+                                "payload": payload,
+                                "error_indicator": indicator,
+                                "response_snippet": response_text[:200],
+                            },
+                            timestamp=datetime.now(),
+                        )
+                    )
                     break
         except:
             pass
@@ -458,39 +476,40 @@ class TestInputValidationSecurity:
                             test_data = {"filter": payload}
 
                         async with security_tester.session.post(
-                            f"{base_url}{endpoint}",
-                            json=test_data
+                            f"{base_url}{endpoint}", json=test_data
                         ) as response:
                             response_text = await response.text()
 
                             # Check for NoSQL error indicators
                             nosql_errors = [
                                 "mongodb",
-                                "bson", 
+                                "bson",
                                 "couchdb",
                                 "redis error",
                                 "cassandra",
                                 "$where",
                                 "db.eval",
-                                "mapreduce"
+                                "mapreduce",
                             ]
 
                             response_lower = response_text.lower()
 
                             for error in nosql_errors:
                                 if error in response_lower:
-                                    security_tester.record_result(SecurityTestResult(
-                                        test_name=f"{service_name}_nosql_injection_{endpoint}",
-                                        vulnerability_type="NoSQL Injection",
-                                        status="vulnerable",
-                                        severity="high",
-                                        description=f"{service_name}{endpoint} vulnerable to NoSQL injection",
-                                        details={
-                                            "payload": str(payload),
-                                            "error_indicator": error
-                                        },
-                                        timestamp=datetime.now()
-                                    ))
+                                    security_tester.record_result(
+                                        SecurityTestResult(
+                                            test_name=f"{service_name}_nosql_injection_{endpoint}",
+                                            vulnerability_type="NoSQL Injection",
+                                            status="vulnerable",
+                                            severity="high",
+                                            description=f"{service_name}{endpoint} vulnerable to NoSQL injection",
+                                            details={
+                                                "payload": str(payload),
+                                                "error_indicator": error,
+                                            },
+                                            timestamp=datetime.now(),
+                                        )
+                                    )
                                     break
                 except:
                     pass
@@ -518,7 +537,7 @@ class TestInputValidationSecurity:
             "<<SCRIPT>alert('XSS')<</SCRIPT>",
             "<SCRIPT SRC=http://xss.example.com/xss.js></SCRIPT>",
             "';alert('XSS');//",
-            "\";alert('XSS');//"
+            "\";alert('XSS');//",
         ]
 
         for service_name, base_url in security_tester.base_urls.items():
@@ -529,8 +548,7 @@ class TestInputValidationSecurity:
                     try:
                         # Test in URL parameters
                         async with security_tester.session.get(
-                            f"{base_url}{endpoint}",
-                            params={"q": payload, "message": payload}
+                            f"{base_url}{endpoint}", params={"q": payload, "message": payload}
                         ) as response:
                             await self._check_xss_response(
                                 security_tester, service_name, endpoint, payload, response
@@ -538,8 +556,7 @@ class TestInputValidationSecurity:
 
                         # Test in POST data
                         async with security_tester.session.post(
-                            f"{base_url}{endpoint}",
-                            json={"content": payload, "message": payload}
+                            f"{base_url}{endpoint}", json={"content": payload, "message": payload}
                         ) as response:
                             await self._check_xss_response(
                                 security_tester, service_name, endpoint, payload, response
@@ -564,21 +581,24 @@ class TestInputValidationSecurity:
                 is_properly_encoded = any(variant in response_text for variant in encoded_variants)
 
                 if not is_properly_encoded:
-                    security_tester.record_result(SecurityTestResult(
-                        test_name=f"{service_name}_xss_{endpoint}",
-                        vulnerability_type="Cross-Site Scripting (XSS)",
-                        status="vulnerable",
-                        severity="high",
-                        description=f"{service_name}{endpoint} vulnerable to XSS",
-                        details={
-                            "payload": payload,
-                            "response_contains_payload": True,
-                            "properly_encoded": False
-                        },
-                        timestamp=datetime.now()
-                    ))
+                    security_tester.record_result(
+                        SecurityTestResult(
+                            test_name=f"{service_name}_xss_{endpoint}",
+                            vulnerability_type="Cross-Site Scripting (XSS)",
+                            status="vulnerable",
+                            severity="high",
+                            description=f"{service_name}{endpoint} vulnerable to XSS",
+                            details={
+                                "payload": payload,
+                                "response_contains_payload": True,
+                                "properly_encoded": False,
+                            },
+                            timestamp=datetime.now(),
+                        )
+                    )
         except:
             pass
+
 
 class TestAPISecurityVulnerabilities:
     """API-specific security vulnerability tests"""
@@ -615,26 +635,28 @@ class TestAPISecurityVulnerabilities:
                         headers={
                             "Origin": origin,
                             "Access-Control-Request-Method": "POST",
-                            "Access-Control-Request-Headers": "Content-Type"
-                        }
+                            "Access-Control-Request-Headers": "Content-Type",
+                        },
                     ) as response:
-                        cors_header = response.headers.get('Access-Control-Allow-Origin', '')
+                        cors_header = response.headers.get("Access-Control-Allow-Origin", "")
 
                         if cors_header == "*" or cors_header == origin:
                             severity = "high" if origin in ["*", "null"] else "medium"
 
-                            security_tester.record_result(SecurityTestResult(
-                                test_name=f"{service_name}_cors_misconfiguration",
-                                vulnerability_type="CORS Misconfiguration",
-                                status="vulnerable",
-                                severity=severity,
-                                description=f"{service_name} allows requests from {origin}",
-                                details={
-                                    "malicious_origin": origin,
-                                    "cors_header": cors_header
-                                },
-                                timestamp=datetime.now()
-                            ))
+                            security_tester.record_result(
+                                SecurityTestResult(
+                                    test_name=f"{service_name}_cors_misconfiguration",
+                                    vulnerability_type="CORS Misconfiguration",
+                                    status="vulnerable",
+                                    severity=severity,
+                                    description=f"{service_name} allows requests from {origin}",
+                                    details={
+                                        "malicious_origin": origin,
+                                        "cors_header": cors_header,
+                                    },
+                                    timestamp=datetime.now(),
+                                )
+                            )
                 except:
                     pass
 
@@ -650,22 +672,20 @@ class TestAPISecurityVulnerabilities:
             for method in dangerous_methods:
                 try:
                     async with security_tester.session.request(
-                        method,
-                        f"{base_url}/api/test"
+                        method, f"{base_url}/api/test"
                     ) as response:
                         if response.status != 405:  # Method Not Allowed
-                            security_tester.record_result(SecurityTestResult(
-                                test_name=f"{service_name}_dangerous_http_method",
-                                vulnerability_type="Dangerous HTTP Method",
-                                status="vulnerable",
-                                severity="medium",
-                                description=f"{service_name} allows {method} method",
-                                details={
-                                    "method": method,
-                                    "status_code": response.status
-                                },
-                                timestamp=datetime.now()
-                            ))
+                            security_tester.record_result(
+                                SecurityTestResult(
+                                    test_name=f"{service_name}_dangerous_http_method",
+                                    vulnerability_type="Dangerous HTTP Method",
+                                    status="vulnerable",
+                                    severity="medium",
+                                    description=f"{service_name} allows {method} method",
+                                    details={"method": method, "status_code": response.status},
+                                    timestamp=datetime.now(),
+                                )
+                            )
                 except:
                     pass
 
@@ -682,7 +702,7 @@ class TestAPISecurityVulnerabilities:
             {"X-Remote-IP": "172.16.0.1"},
             {"X-Cluster-Client-IP": "${LOCALHOST_IP}"},
             {"CF-Connecting-IP": "1.1.1.1"},
-            {"True-Client-IP": "8.8.8.8"}
+            {"True-Client-IP": "8.8.8.8"},
         ]
 
         for service_name, base_url in security_tester.base_urls.items():
@@ -694,22 +714,23 @@ class TestAPISecurityVulnerabilities:
                             # Now try to bypass with headers
                             for headers in bypass_headers:
                                 async with security_tester.session.get(
-                                    f"{base_url}/api/test",
-                                    headers=headers
+                                    f"{base_url}/api/test", headers=headers
                                 ) as bypass_response:
                                     if bypass_response.status != 429:
-                                        security_tester.record_result(SecurityTestResult(
-                                            test_name=f"{service_name}_rate_limit_bypass",
-                                            vulnerability_type="Rate Limiting Bypass",
-                                            status="vulnerable",
-                                            severity="medium",
-                                            description=f"{service_name} rate limiting bypassed",
-                                            details={
-                                                "bypass_headers": headers,
-                                                "bypass_status": bypass_response.status
-                                            },
-                                            timestamp=datetime.now()
-                                        ))
+                                        security_tester.record_result(
+                                            SecurityTestResult(
+                                                test_name=f"{service_name}_rate_limit_bypass",
+                                                vulnerability_type="Rate Limiting Bypass",
+                                                status="vulnerable",
+                                                severity="medium",
+                                                description=f"{service_name} rate limiting bypassed",
+                                                details={
+                                                    "bypass_headers": headers,
+                                                    "bypass_status": bypass_response.status,
+                                                },
+                                                timestamp=datetime.now(),
+                                            )
+                                        )
                             break
             except:
                 pass
@@ -729,7 +750,7 @@ class TestAPISecurityVulnerabilities:
                     f"{base_url}/{version}/admin",
                     f"{base_url}/api/{version}/users",
                     f"{base_url}/{version}/config",
-                    f"{base_url}/api/{version}/debug"
+                    f"{base_url}/api/{version}/debug",
                 ]
 
                 for url in version_urls:
@@ -740,29 +761,41 @@ class TestAPISecurityVulnerabilities:
 
                                 # Check if it exposes sensitive information
                                 sensitive_keywords = [
-                                    "debug", "admin", "config", "password", "token",
-                                    "secret", "key", "internal", "private"
+                                    "debug",
+                                    "admin",
+                                    "config",
+                                    "password",
+                                    "token",
+                                    "secret",
+                                    "key",
+                                    "internal",
+                                    "private",
                                 ]
 
                                 response_lower = response_text.lower()
-                                found_sensitive = [kw for kw in sensitive_keywords if kw in response_lower]
+                                found_sensitive = [
+                                    kw for kw in sensitive_keywords if kw in response_lower
+                                ]
 
                                 if found_sensitive:
-                                    security_tester.record_result(SecurityTestResult(
-                                        test_name=f"{service_name}_api_version_exposure",
-                                        vulnerability_type="API Version Information Exposure",
-                                        status="vulnerable",
-                                        severity="medium",
-                                        description=f"{service_name} exposes sensitive info in {version}",
-                                        details={
-                                            "version": version,
-                                            "url": url,
-                                            "sensitive_keywords": found_sensitive
-                                        },
-                                        timestamp=datetime.now()
-                                    ))
+                                    security_tester.record_result(
+                                        SecurityTestResult(
+                                            test_name=f"{service_name}_api_version_exposure",
+                                            vulnerability_type="API Version Information Exposure",
+                                            status="vulnerable",
+                                            severity="medium",
+                                            description=f"{service_name} exposes sensitive info in {version}",
+                                            details={
+                                                "version": version,
+                                                "url": url,
+                                                "sensitive_keywords": found_sensitive,
+                                            },
+                                            timestamp=datetime.now(),
+                                        )
+                                    )
                     except:
                         pass
+
 
 class TestDataProtectionSecurity:
     """Data protection and encryption security tests"""
@@ -785,7 +818,7 @@ class TestDataProtectionSecurity:
         # Common endpoints that might expose sensitive data
         sensitive_endpoints = [
             "/debug",
-            "/admin", 
+            "/admin",
             "/config",
             "/env",
             "/status",
@@ -798,12 +831,12 @@ class TestDataProtectionSecurity:
             "/api/config",
             "/.env",
             "/config.json",
-            "/settings.json"
+            "/settings.json",
         ]
 
         sensitive_patterns = [
             r"password[\"'\s]*[:=][\"'\s]*[^\s\"']+",
-            r"secret[\"'\s]*[:=][\"'\s]*[^\s\"']+", 
+            r"secret[\"'\s]*[:=][\"'\s]*[^\s\"']+",
             r"api[_-]?key[\"'\s]*[:=][\"'\s]*[^\s\"']+",
             r"token[\"'\s]*[:=][\"'\s]*[^\s\"']+",
             r"database[\"'\s]*[:=][\"'\s]*[^\s\"']+",
@@ -825,19 +858,21 @@ class TestDataProtectionSecurity:
                             for pattern in sensitive_patterns:
                                 matches = re.finditer(pattern, response_text, re.IGNORECASE)
                                 for match in matches:
-                                    security_tester.record_result(SecurityTestResult(
-                                        test_name=f"{service_name}_sensitive_data_exposure",
-                                        vulnerability_type="Sensitive Data Exposure",
-                                        status="vulnerable",
-                                        severity="high",
-                                        description=f"{service_name} exposes sensitive data",
-                                        details={
-                                            "endpoint": endpoint,
-                                            "pattern_matched": pattern,
-                                            "match": match.group()[:50] + "..."
-                                        },
-                                        timestamp=datetime.now()
-                                    ))
+                                    security_tester.record_result(
+                                        SecurityTestResult(
+                                            test_name=f"{service_name}_sensitive_data_exposure",
+                                            vulnerability_type="Sensitive Data Exposure",
+                                            status="vulnerable",
+                                            severity="high",
+                                            description=f"{service_name} exposes sensitive data",
+                                            details={
+                                                "endpoint": endpoint,
+                                                "pattern_matched": pattern,
+                                                "match": match.group()[:50] + "...",
+                                            },
+                                            timestamp=datetime.now(),
+                                        )
+                                    )
                 except:
                     pass
 
@@ -850,9 +885,9 @@ class TestDataProtectionSecurity:
         for service_name, base_url in security_tester.base_urls.items():
             try:
                 # Test SSL/TLS configuration
-                if base_url.startswith('https://'):
-                    hostname = base_url.split('://')[1].split(':')[0]
-                    port = int(base_url.split(':')[-1]) if ':' in base_url.split('://')[1] else 443
+                if base_url.startswith("https://"):
+                    hostname = base_url.split("://")[1].split(":")[0]
+                    port = int(base_url.split(":")[-1]) if ":" in base_url.split("://")[1] else 443
 
                     context = ssl.create_default_context()
                     context.check_hostname = False
@@ -863,55 +898,56 @@ class TestDataProtectionSecurity:
                             cipher = ssock.cipher()
 
                             # Check for weak ciphers
-                            weak_ciphers = ['RC4', 'DES', '3DES', 'MD5', 'SHA1']
-                            cipher_name = cipher[0] if cipher else ''
+                            weak_ciphers = ["RC4", "DES", "3DES", "MD5", "SHA1"]
+                            cipher_name = cipher[0] if cipher else ""
 
                             for weak in weak_ciphers:
                                 if weak in cipher_name:
-                                    security_tester.record_result(SecurityTestResult(
-                                        test_name=f"{service_name}_weak_cipher",
-                                        vulnerability_type="Weak Encryption",
-                                        status="vulnerable",
-                                        severity="high",
-                                        description=f"{service_name} uses weak cipher: {cipher_name}",
-                                        details={"cipher": cipher_name},
-                                        timestamp=datetime.now()
-                                    ))
+                                    security_tester.record_result(
+                                        SecurityTestResult(
+                                            test_name=f"{service_name}_weak_cipher",
+                                            vulnerability_type="Weak Encryption",
+                                            status="vulnerable",
+                                            severity="high",
+                                            description=f"{service_name} uses weak cipher: {cipher_name}",
+                                            details={"cipher": cipher_name},
+                                            timestamp=datetime.now(),
+                                        )
+                                    )
 
                 # Test for weak hashing algorithms in responses
                 test_endpoints = ["/api/hash", "/login", "/register"]
 
                 for endpoint in test_endpoints:
                     async with security_tester.session.post(
-                        f"{base_url}{endpoint}",
-                        json={"password": "test123"}
+                        f"{base_url}{endpoint}", json={"password": "test123"}
                     ) as response:
                         response_text = await response.text()
 
                         # Look for weak hash indicators
                         weak_hash_patterns = [
-                            r'[a-f0-9]{32}',  # MD5
-                            r'[a-f0-9]{40}',  # SHA1
+                            r"[a-f0-9]{32}",  # MD5
+                            r"[a-f0-9]{40}",  # SHA1
                             r'"hash":\s*"[a-f0-9]{32}"',  # MD5 in JSON
                             r'"hash":\s*"[a-f0-9]{40}"',  # SHA1 in JSON
                         ]
 
                         for pattern in weak_hash_patterns:
                             if re.search(pattern, response_text, re.IGNORECASE):
-                                security_tester.record_result(SecurityTestResult(
-                                    test_name=f"{service_name}_weak_hashing",
-                                    vulnerability_type="Weak Hashing Algorithm",
-                                    status="vulnerable",
-                                    severity="medium",
-                                    description=f"{service_name} uses weak hashing",
-                                    details={
-                                        "endpoint": endpoint,
-                                        "pattern": pattern
-                                    },
-                                    timestamp=datetime.now()
-                                ))
+                                security_tester.record_result(
+                                    SecurityTestResult(
+                                        test_name=f"{service_name}_weak_hashing",
+                                        vulnerability_type="Weak Hashing Algorithm",
+                                        status="vulnerable",
+                                        severity="medium",
+                                        description=f"{service_name} uses weak hashing",
+                                        details={"endpoint": endpoint, "pattern": pattern},
+                                        timestamp=datetime.now(),
+                                    )
+                                )
             except:
                 pass
+
 
 class TestSecurityHeaders:
     """Security headers and configuration tests"""
@@ -932,12 +968,12 @@ class TestSecurityHeaders:
         print("🛡️ Testing security headers...")
 
         required_headers = {
-            'X-Content-Type-Options': 'nosniff',
-            'X-Frame-Options': ['DENY', 'SAMEORIGIN'],
-            'X-XSS-Protection': '1; mode=block',
-            'Strict-Transport-Security': 'max-age=',
-            'Content-Security-Policy': '',
-            'Referrer-Policy': ['no-referrer', 'strict-origin', 'strict-origin-when-cross-origin']
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": ["DENY", "SAMEORIGIN"],
+            "X-XSS-Protection": "1; mode=block",
+            "Strict-Transport-Security": "max-age=",
+            "Content-Security-Policy": "",
+            "Referrer-Policy": ["no-referrer", "strict-origin", "strict-origin-when-cross-origin"],
         }
 
         for service_name, base_url in security_tester.base_urls.items():
@@ -947,21 +983,42 @@ class TestSecurityHeaders:
 
                     for header_name, expected_values in required_headers.items():
                         if header_name not in headers:
-                            security_tester.record_result(SecurityTestResult(
-                                test_name=f"{service_name}_missing_security_header",
-                                vulnerability_type="Missing Security Header",
-                                status="vulnerable",
-                                severity="medium",
-                                description=f"{service_name} missing {header_name} header",
-                                details={"missing_header": header_name},
-                                timestamp=datetime.now()
-                            ))
+                            security_tester.record_result(
+                                SecurityTestResult(
+                                    test_name=f"{service_name}_missing_security_header",
+                                    vulnerability_type="Missing Security Header",
+                                    status="vulnerable",
+                                    severity="medium",
+                                    description=f"{service_name} missing {header_name} header",
+                                    details={"missing_header": header_name},
+                                    timestamp=datetime.now(),
+                                )
+                            )
                         else:
                             header_value = headers[header_name]
 
                             if isinstance(expected_values, list):
-                                if not any(expected in header_value for expected in expected_values):
-                                    security_tester.record_result(SecurityTestResult(
+                                if not any(
+                                    expected in header_value for expected in expected_values
+                                ):
+                                    security_tester.record_result(
+                                        SecurityTestResult(
+                                            test_name=f"{service_name}_weak_security_header",
+                                            vulnerability_type="Weak Security Header",
+                                            status="vulnerable",
+                                            severity="low",
+                                            description=f"{service_name} weak {header_name}: {header_value}",
+                                            details={
+                                                "header": header_name,
+                                                "value": header_value,
+                                                "expected": expected_values,
+                                            },
+                                            timestamp=datetime.now(),
+                                        )
+                                    )
+                            elif expected_values and expected_values not in header_value:
+                                security_tester.record_result(
+                                    SecurityTestResult(
                                         test_name=f"{service_name}_weak_security_header",
                                         vulnerability_type="Weak Security Header",
                                         status="vulnerable",
@@ -970,24 +1027,11 @@ class TestSecurityHeaders:
                                         details={
                                             "header": header_name,
                                             "value": header_value,
-                                            "expected": expected_values
+                                            "expected": expected_values,
                                         },
-                                        timestamp=datetime.now()
-                                    ))
-                            elif expected_values and expected_values not in header_value:
-                                security_tester.record_result(SecurityTestResult(
-                                    test_name=f"{service_name}_weak_security_header",
-                                    vulnerability_type="Weak Security Header",
-                                    status="vulnerable",
-                                    severity="low",
-                                    description=f"{service_name} weak {header_name}: {header_value}",
-                                    details={
-                                        "header": header_name,
-                                        "value": header_value,
-                                        "expected": expected_values
-                                    },
-                                    timestamp=datetime.now()
-                                ))
+                                        timestamp=datetime.now(),
+                                    )
+                                )
             except:
                 pass
 
@@ -1004,29 +1048,29 @@ class TestSecurityHeaders:
 
                     # Check for information disclosure in headers
                     disclosure_headers = {
-                        'Server': 'Reveals server software and version',
-                        'X-Powered-By': 'Reveals technology stack',
-                        'X-AspNet-Version': 'Reveals ASP.NET version',
-                        'X-Runtime': 'Reveals runtime information',
-                        'X-Version': 'Reveals application version'
+                        "Server": "Reveals server software and version",
+                        "X-Powered-By": "Reveals technology stack",
+                        "X-AspNet-Version": "Reveals ASP.NET version",
+                        "X-Runtime": "Reveals runtime information",
+                        "X-Version": "Reveals application version",
                     }
 
                     for header_name, description in disclosure_headers.items():
                         if header_name in headers:
-                            security_tester.record_result(SecurityTestResult(
-                                test_name=f"{service_name}_information_disclosure",
-                                vulnerability_type="Information Disclosure",
-                                status="vulnerable",
-                                severity="low",
-                                description=f"{service_name} {description}",
-                                details={
-                                    "header": header_name,
-                                    "value": headers[header_name]
-                                },
-                                timestamp=datetime.now()
-                            ))
+                            security_tester.record_result(
+                                SecurityTestResult(
+                                    test_name=f"{service_name}_information_disclosure",
+                                    vulnerability_type="Information Disclosure",
+                                    status="vulnerable",
+                                    severity="low",
+                                    description=f"{service_name} {description}",
+                                    details={"header": header_name, "value": headers[header_name]},
+                                    timestamp=datetime.now(),
+                                )
+                            )
             except:
                 pass
+
 
 class TestComprehensiveSecurityAssessment:
     """Comprehensive security assessment combining all tests"""
@@ -1098,7 +1142,7 @@ class TestComprehensiveSecurityAssessment:
             total_critical += report.critical_issues
             total_high += report.high_issues
 
-        print(f"\nOVERALL SECURITY STATUS:")
+        print("\nOVERALL SECURITY STATUS:")
         print(f"  Total Vulnerabilities Found: {total_vulnerabilities}")
         print(f"  Critical Issues: {total_critical}")
         print(f"  High Severity Issues: {total_high}")
@@ -1114,12 +1158,7 @@ class TestComprehensiveSecurityAssessment:
 
         return reports
 
+
 if __name__ == "__main__":
     # Run security vulnerability tests
-    pytest.main([
-        __file__,
-        "-v",
-        "--tb=short",
-        "-x",  # Stop on first failure
-        "--durations=10"
-    ])
+    pytest.main([__file__, "-v", "--tb=short", "-x", "--durations=10"])  # Stop on first failure

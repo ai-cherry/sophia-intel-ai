@@ -4,21 +4,19 @@ Handles automatic rotation of API keys, database passwords, and other secrets.
 """
 
 import asyncio
-import json
 import logging
 import secrets
 import string
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Union
+from typing import Any, Callable, Dict, List, Optional, Set
 
 import aiohttp
-from cryptography.fernet import Fernet
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from .secrets_manager import ESCSecretsManager, SecretScope, SecretStatus
+from .secrets_manager import ESCSecretsManager
 
 logger = logging.getLogger(__name__)
 

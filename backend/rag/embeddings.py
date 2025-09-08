@@ -1,5 +1,3 @@
-import asyncio
-
 """
 Sophia AI Embedding Service
 Production-ready embedding generation with caching and optimization
@@ -17,6 +15,7 @@ from redis.asyncio import Redis
 from shared.core.unified_config import get_config_value
 
 logger = logging.getLogger(__name__)
+
 
 class EmbeddingService:
     """Production embedding service with caching and batch processing"""
@@ -53,14 +52,10 @@ class EmbeddingService:
             return embedding
 
         except Exception as e:
-            logger.error(
-                f"Embedding generation failed for text: {text[:50]}... Error: {e}"
-            )
+            logger.error(f"Embedding generation failed for text: {text[:50]}... Error: {e}")
             raise
 
-    async def embed_documents(
-        self, texts: list[str], use_cache: bool = True
-    ) -> list[list[float]]:
+    async def embed_documents(self, texts: list[str], use_cache: bool = True) -> list[list[float]]:
         """Generate embeddings for multiple texts with batch optimization"""
 
         if not texts:
@@ -90,9 +85,7 @@ class EmbeddingService:
                 embeddings_list = await self.embeddings.aembed_documents(texts_to_embed)
 
                 # Store new embeddings
-                for (i, text), embedding in zip(
-                    uncached_texts, embeddings_list, strict=False
-                ):
+                for (i, text), embedding in zip(uncached_texts, embeddings_list, strict=False):
                     new_embeddings[i] = embedding
 
                     # Cache the new embedding

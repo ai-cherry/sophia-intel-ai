@@ -3,17 +3,16 @@ Production Readiness Test Suite
 Tests for Sophia AI V7+ production deployment validation
 """
 
+import os
+import time
+
 import pytest
 import requests
-import time
-import os
-import json
-from unittest.mock import patch, MagicMock
-from typing import Dict, Any
 
 # Test configuration
 BASE_URL = os.getenv("SOPHIA_TEST_URL", "http://localhost:8000")
 TIMEOUT = 30
+
 
 class TestProductionHealth:
     """Test production health and availability"""
@@ -62,6 +61,7 @@ class TestProductionHealth:
         assert "uptime" in data
         assert "pid" in data
 
+
 class TestProductionSecurity:
     """Test production security measures"""
 
@@ -75,12 +75,19 @@ class TestProductionSecurity:
 
             # Check for common secret patterns
             forbidden_patterns = [
-                "password", "secret", "key", "token", 
-                "api_key", "private", "credential"
+                "password",
+                "secret",
+                "key",
+                "token",
+                "api_key",
+                "private",
+                "credential",
             ]
 
             for pattern in forbidden_patterns:
-                assert pattern not in response_text, f"Secret pattern '{pattern}' found in {endpoint}"
+                assert (
+                    pattern not in response_text
+                ), f"Secret pattern '{pattern}' found in {endpoint}"
 
     def test_cors_headers_configured(self):
         """Test CORS headers are properly configured"""
@@ -99,16 +106,13 @@ class TestProductionSecurity:
         headers = response.headers
 
         # These should be present in production
-        security_headers = [
-            "x-content-type-options",
-            "x-frame-options", 
-            "x-xss-protection"
-        ]
+        security_headers = ["x-content-type-options", "x-frame-options", "x-xss-protection"]
 
         # Note: These may not be implemented yet, so we'll check if present
         for header in security_headers:
             if header in headers:
                 assert headers[header] is not None
+
 
 class TestProductionAI:
     """Test AI functionality in production"""
@@ -117,11 +121,7 @@ class TestProductionAI:
         """Test AI chat endpoint works correctly"""
         payload = {"message": "Test production AI functionality"}
 
-        response = requests.post(
-            f"{BASE_URL}/ai/chat",
-            json=payload,
-            timeout=TIMEOUT
-        )
+        response = requests.post(f"{BASE_URL}/ai/chat", json=payload, timeout=TIMEOUT)
 
         assert response.status_code == 200
         data = response.json()
@@ -143,16 +143,13 @@ class TestProductionAI:
         ]
 
         for payload in test_cases:
-            response = requests.post(
-                f"{BASE_URL}/ai/chat",
-                json=payload,
-                timeout=TIMEOUT
-            )
+            response = requests.post(f"{BASE_URL}/ai/chat", json=payload, timeout=TIMEOUT)
 
             assert response.status_code == 200
             data = response.json()
             assert "response" in data
             assert "timestamp" in data
+
 
 class TestProductionPerformance:
     """Test production performance characteristics"""
@@ -174,7 +171,6 @@ class TestProductionPerformance:
     def test_concurrent_requests_handled(self):
         """Test system handles concurrent requests"""
         import concurrent.futures
-        import threading
 
         def make_request():
             response = requests.get(f"{BASE_URL}/health", timeout=TIMEOUT)
@@ -197,6 +193,7 @@ class TestProductionPerformance:
         # Just verify the endpoint is responsive (actual memory monitoring would be external)
         data = response.json()
         assert "uptime" in data
+
 
 class TestProductionIntegration:
     """Test production integration points"""
@@ -225,6 +222,7 @@ class TestProductionIntegration:
 
         # Check if Agno-related services are indicated as available
         assert data["architecture"] == "agno-first"
+
 
 class TestProductionConfiguration:
     """Test production configuration is correct"""
@@ -262,6 +260,7 @@ class TestProductionConfiguration:
         assert "text/html" in response.headers.get("content-type", "")
         assert "Sophia AI Platform V7+" in response.text
 
+
 # Test fixtures and utilities
 @pytest.fixture(scope="session")
 def production_server():
@@ -274,6 +273,7 @@ def production_server():
         pytest.skip("Production server not accessible")
 
     return BASE_URL
+
 
 # Utility functions for production testing
 def wait_for_server_ready(max_wait=60):
@@ -291,6 +291,7 @@ def wait_for_server_ready(max_wait=60):
         time.sleep(1)
 
     return False
+
 
 if __name__ == "__main__":
     # Run production tests

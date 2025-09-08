@@ -5,16 +5,12 @@ Tests the integration between ArgoCD GitOps deployments and KEDA autoscaling
 """
 
 import asyncio
-import json
 import logging
-import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict
 
 import aiohttp
-import pytest
 import yaml
-from git import Repo
 from kubernetes import client, config
 
 # Configure logging

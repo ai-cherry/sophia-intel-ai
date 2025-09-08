@@ -2,18 +2,18 @@
 Estuary-Swarm Fusion Loop
 Real-time business intelligence with Estuary Flow CDC and AI swarms
 """
-import os
+
 import asyncio
-import json
-from typing import Dict, List, Optional, Any
-from datetime import datetime
 import logging
+from datetime import datetime
+from typing import Dict, List, Optional
 
 # Import required services
 from backend.services.estuary_cdc_pool import get_estuary_pool
 from backend.services.resource_pools import get_resource_pools
 
 logger = logging.getLogger(__name__)
+
 
 class EstuarySwarmFusion:
     """
@@ -34,20 +34,20 @@ class EstuarySwarmFusion:
                 "model": "gpt-3.5-turbo",
                 "temperature": 0.3,
                 "max_tokens": 500,
-                "system_prompt": "You are a churn prediction specialist. Analyze customer data and predict churn risk."
+                "system_prompt": "You are a churn prediction specialist. Analyze customer data and predict churn risk.",
             },
             "lead_scorer": {
-                "model": "gpt-3.5-turbo", 
+                "model": "gpt-3.5-turbo",
                 "temperature": 0.2,
                 "max_tokens": 300,
-                "system_prompt": "You are a lead scoring expert. Evaluate lead quality and conversion probability."
+                "system_prompt": "You are a lead scoring expert. Evaluate lead quality and conversion probability.",
             },
             "opportunity_analyzer": {
                 "model": "gpt-3.5-turbo",
                 "temperature": 0.4,
                 "max_tokens": 400,
-                "system_prompt": "You are a sales opportunity analyst. Assess deal health and provide recommendations."
-            }
+                "system_prompt": "You are a sales opportunity analyst. Assess deal health and provide recommendations.",
+            },
         }
 
         # Performance metrics
@@ -57,7 +57,7 @@ class EstuarySwarmFusion:
             "data_points_processed": 0,
             "avg_processing_time": 0,
             "accuracy_score": 0,
-            "cost_savings": 0
+            "cost_savings": 0,
         }
 
         # Memory system for learning
@@ -85,7 +85,7 @@ class EstuarySwarmFusion:
             "data_processed": 0,
             "predictions": [],
             "insights": [],
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -127,7 +127,7 @@ class EstuarySwarmFusion:
             return {
                 "status": "error",
                 "error": error_msg,
-                "processing_time": (datetime.now() - start_time).total_seconds()
+                "processing_time": (datetime.now() - start_time).total_seconds(),
             }
 
     async def _capture_estuary_data(self) -> Dict:
@@ -138,19 +138,19 @@ class EstuarySwarmFusion:
                 "gong_calls": [],
                 "salesforce_accounts": [],
                 "salesforce_opportunities": [],
-                "salesforce_leads": []
+                "salesforce_leads": [],
             },
             "total_records": 0,
-            "errors": []
+            "errors": [],
         }
 
         try:
             # Define data sources to capture
             sources = {
                 "gong_calls": "sophia/gong-calls",
-                "salesforce_accounts": "sophia/salesforce-accounts", 
+                "salesforce_accounts": "sophia/salesforce-accounts",
                 "salesforce_opportunities": "sophia/salesforce-opportunities",
-                "salesforce_leads": "sophia/salesforce-leads"
+                "salesforce_leads": "sophia/salesforce-leads",
             }
 
             for source_name, collection_name in sources.items():
@@ -177,12 +177,7 @@ class EstuarySwarmFusion:
             return capture_result
 
         except Exception as e:
-            return {
-                "status": "error",
-                "error": str(e),
-                "data": {},
-                "total_records": 0
-            }
+            return {"status": "error", "error": str(e), "data": {}, "total_records": 0}
 
     async def _process_with_swarms(self, data: Dict) -> Dict:
         """Process captured data through AI swarms"""
@@ -190,7 +185,7 @@ class EstuarySwarmFusion:
             "predictions": [],
             "scores": [],
             "recommendations": [],
-            "processing_stats": {}
+            "processing_stats": {},
         }
 
         try:
@@ -213,12 +208,7 @@ class EstuarySwarmFusion:
 
         except Exception as e:
             logger.error(f"Swarm processing failed: {str(e)}")
-            return {
-                "predictions": [],
-                "scores": [],
-                "recommendations": [],
-                "error": str(e)
-            }
+            return {"predictions": [], "scores": [], "recommendations": [], "error": str(e)}
 
     async def _predict_churn(self, gong_calls: List[Dict]) -> List[Dict]:
         """Predict customer churn from Gong call data"""
@@ -249,14 +239,18 @@ class EstuarySwarmFusion:
                 """
 
                 # Simulate AI prediction (replace with actual OpenAI call)
-                prediction = await self._simulate_ai_prediction(prediction_prompt, "churn_predictor")
+                prediction = await self._simulate_ai_prediction(
+                    prediction_prompt, "churn_predictor"
+                )
 
-                predictions.append({
-                    "call_id": call.get("id", "unknown"),
-                    "account": call.get("account", "unknown"),
-                    "prediction": prediction,
-                    "timestamp": datetime.now().isoformat()
-                })
+                predictions.append(
+                    {
+                        "call_id": call.get("id", "unknown"),
+                        "account": call.get("account", "unknown"),
+                        "prediction": prediction,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
 
             return predictions
 
@@ -297,13 +291,15 @@ class EstuarySwarmFusion:
                 # Simulate AI scoring
                 score_result = await self._simulate_ai_prediction(scoring_prompt, "lead_scorer")
 
-                scores.append({
-                    "lead_id": lead.get("Id", "unknown"),
-                    "name": lead.get("Name", "unknown"),
-                    "company": lead.get("Company", "unknown"),
-                    "score": score_result,
-                    "timestamp": datetime.now().isoformat()
-                })
+                scores.append(
+                    {
+                        "lead_id": lead.get("Id", "unknown"),
+                        "name": lead.get("Name", "unknown"),
+                        "company": lead.get("Company", "unknown"),
+                        "score": score_result,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
 
             return scores
 
@@ -342,15 +338,19 @@ class EstuarySwarmFusion:
                 """
 
                 # Simulate AI analysis
-                analysis = await self._simulate_ai_prediction(analysis_prompt, "opportunity_analyzer")
+                analysis = await self._simulate_ai_prediction(
+                    analysis_prompt, "opportunity_analyzer"
+                )
 
-                analyses.append({
-                    "opportunity_id": opp.get("Id", "unknown"),
-                    "name": opp.get("Name", "unknown"),
-                    "amount": opp.get("Amount", 0),
-                    "analysis": analysis,
-                    "timestamp": datetime.now().isoformat()
-                })
+                analyses.append(
+                    {
+                        "opportunity_id": opp.get("Id", "unknown"),
+                        "name": opp.get("Name", "unknown"),
+                        "amount": opp.get("Amount", 0),
+                        "analysis": analysis,
+                        "timestamp": datetime.now().isoformat(),
+                    }
+                )
 
             return analyses
 
@@ -365,7 +365,7 @@ class EstuarySwarmFusion:
             "sentiment": call.get("sentiment", "neutral"),
             "topics": call.get("topics", []),
             "participant_count": len(call.get("participants", [])),
-            "keywords": call.get("keywords", [])
+            "keywords": call.get("keywords", []),
         }
 
     def _extract_lead_features(self, lead: Dict) -> Dict:
@@ -376,7 +376,7 @@ class EstuarySwarmFusion:
             "title": lead.get("Title", ""),
             "source": lead.get("LeadSource", ""),
             "status": lead.get("Status", ""),
-            "revenue": lead.get("AnnualRevenue", 0)
+            "revenue": lead.get("AnnualRevenue", 0),
         }
 
     def _extract_opportunity_features(self, opp: Dict) -> Dict:
@@ -387,7 +387,7 @@ class EstuarySwarmFusion:
             "amount": opp.get("Amount", 0),
             "close_date": opp.get("CloseDate", ""),
             "probability": opp.get("Probability", 0),
-            "days_in_stage": opp.get("DaysInStage", 0)
+            "days_in_stage": opp.get("DaysInStage", 0),
         }
 
     async def _simulate_ai_prediction(self, prompt: str, agent_type: str) -> Dict:
@@ -400,21 +400,21 @@ class EstuarySwarmFusion:
             return {
                 "risk_score": 65,
                 "risk_factors": ["Decreased call frequency", "Negative sentiment"],
-                "recommendations": ["Schedule check-in call", "Offer additional support"]
+                "recommendations": ["Schedule check-in call", "Offer additional support"],
             }
         elif agent_type == "lead_scorer":
             return {
                 "score": 78,
                 "probability": 0.65,
                 "priority": "High",
-                "next_action": "Schedule demo call"
+                "next_action": "Schedule demo call",
             }
         elif agent_type == "opportunity_analyzer":
             return {
                 "health_score": 82,
                 "risks": ["Long sales cycle"],
                 "success_factors": ["Strong champion", "Budget confirmed"],
-                "actions": ["Accelerate decision timeline"]
+                "actions": ["Accelerate decision timeline"],
             }
 
         return {"status": "simulated"}
@@ -426,39 +426,52 @@ class EstuarySwarmFusion:
         try:
             # Churn insights
             if swarm_results.get("predictions"):
-                high_risk_count = sum(1 for p in swarm_results["predictions"] 
-                                    if p.get("prediction", {}).get("risk_score", 0) > 70)
+                high_risk_count = sum(
+                    1
+                    for p in swarm_results["predictions"]
+                    if p.get("prediction", {}).get("risk_score", 0) > 70
+                )
 
-                insights.append({
-                    "type": "churn_alert",
-                    "message": f"{high_risk_count} accounts at high churn risk",
-                    "priority": "high" if high_risk_count > 3 else "medium",
-                    "action_required": True
-                })
+                insights.append(
+                    {
+                        "type": "churn_alert",
+                        "message": f"{high_risk_count} accounts at high churn risk",
+                        "priority": "high" if high_risk_count > 3 else "medium",
+                        "action_required": True,
+                    }
+                )
 
             # Lead insights
             if swarm_results.get("scores"):
-                high_quality_leads = sum(1 for s in swarm_results["scores"]
-                                       if s.get("score", {}).get("score", 0) > 80)
+                high_quality_leads = sum(
+                    1 for s in swarm_results["scores"] if s.get("score", {}).get("score", 0) > 80
+                )
 
-                insights.append({
-                    "type": "lead_opportunity",
-                    "message": f"{high_quality_leads} high-quality leads ready for outreach",
-                    "priority": "medium",
-                    "action_required": True
-                })
+                insights.append(
+                    {
+                        "type": "lead_opportunity",
+                        "message": f"{high_quality_leads} high-quality leads ready for outreach",
+                        "priority": "medium",
+                        "action_required": True,
+                    }
+                )
 
             # Opportunity insights
             if swarm_results.get("recommendations"):
-                at_risk_deals = sum(1 for r in swarm_results["recommendations"]
-                                  if r.get("analysis", {}).get("health_score", 0) < 60)
+                at_risk_deals = sum(
+                    1
+                    for r in swarm_results["recommendations"]
+                    if r.get("analysis", {}).get("health_score", 0) < 60
+                )
 
-                insights.append({
-                    "type": "deal_risk",
-                    "message": f"{at_risk_deals} deals need immediate attention",
-                    "priority": "high" if at_risk_deals > 2 else "medium",
-                    "action_required": True
-                })
+                insights.append(
+                    {
+                        "type": "deal_risk",
+                        "message": f"{at_risk_deals} deals need immediate attention",
+                        "priority": "high" if at_risk_deals > 2 else "medium",
+                        "action_required": True,
+                    }
+                )
 
             return insights
 
@@ -480,8 +493,8 @@ class EstuarySwarmFusion:
                 "patterns": {
                     "high_churn_indicators": [],
                     "high_value_lead_traits": [],
-                    "successful_deal_patterns": []
-                }
+                    "successful_deal_patterns": [],
+                },
             }
 
             # Store in local memory (in production, use Redis)
@@ -496,11 +509,19 @@ class EstuarySwarmFusion:
         """Calculate estimated cost savings from predictions"""
         try:
             # Estimate savings based on predictions
-            churn_prevention_value = len(swarm_results.get("predictions", [])) * 5000  # $5k per prevented churn
-            lead_conversion_value = len(swarm_results.get("scores", [])) * 1000  # $1k per qualified lead
-            deal_optimization_value = len(swarm_results.get("recommendations", [])) * 2000  # $2k per optimized deal
+            churn_prevention_value = (
+                len(swarm_results.get("predictions", [])) * 5000
+            )  # $5k per prevented churn
+            lead_conversion_value = (
+                len(swarm_results.get("scores", [])) * 1000
+            )  # $1k per qualified lead
+            deal_optimization_value = (
+                len(swarm_results.get("recommendations", [])) * 2000
+            )  # $2k per optimized deal
 
-            total_potential_savings = (churn_prevention_value + lead_conversion_value + deal_optimization_value) * 0.1  # 10% realization rate
+            total_potential_savings = (
+                churn_prevention_value + lead_conversion_value + deal_optimization_value
+            ) * 0.1  # 10% realization rate
 
             return round(total_potential_savings, 2)
 
@@ -518,7 +539,9 @@ class EstuarySwarmFusion:
             # Update average processing time
             current_avg = self.metrics["avg_processing_time"]
             loop_count = self.metrics["fusion_loops"]
-            self.metrics["avg_processing_time"] = (current_avg * (loop_count - 1) + processing_time) / loop_count
+            self.metrics["avg_processing_time"] = (
+                current_avg * (loop_count - 1) + processing_time
+            ) / loop_count
 
             # Update cost savings
             self.metrics["cost_savings"] += loop_result.get("cost_savings", 0)
@@ -536,7 +559,7 @@ class EstuarySwarmFusion:
             "memory_patterns": len(self.memory_store),
             "cache_size": len(self.pattern_cache),
             "uptime": "99.2%",  # Placeholder
-            "last_run": datetime.now().isoformat()
+            "last_run": datetime.now().isoformat(),
         }
 
     async def health_check(self) -> Dict:
@@ -549,9 +572,8 @@ class EstuarySwarmFusion:
             resource_health = await self.resource_pools.health_check()
 
             # Overall health
-            overall_healthy = (
-                estuary_health.get("status") == "healthy" and
-                resource_health.get("overall", False)
+            overall_healthy = estuary_health.get("status") == "healthy" and resource_health.get(
+                "overall", False
             )
 
             return {
@@ -559,15 +581,12 @@ class EstuarySwarmFusion:
                 "estuary_health": estuary_health,
                 "resource_health": resource_health,
                 "fusion_metrics": await self.get_performance_metrics(),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
         except Exception as e:
-            return {
-                "status": "unhealthy",
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            return {"status": "unhealthy", "error": str(e), "timestamp": datetime.now().isoformat()}
+
 
 # Example usage and testing
 async def example_usage():
@@ -598,12 +617,13 @@ async def example_usage():
 
     # Performance metrics
     metrics = await fusion.get_performance_metrics()
-    print(f"\nPerformance Metrics:")
+    print("\nPerformance Metrics:")
     print(f"- Total fusion loops: {metrics['fusion_loops']}")
     print(f"- Predictions made: {metrics['predictions_made']}")
     print(f"- Avg processing time: {metrics['avg_processing_time']:.2f}s")
     print(f"- Accuracy score: {metrics['accuracy_score']}%")
     print(f"- Total cost savings: ${metrics['cost_savings']}")
+
 
 if __name__ == "__main__":
     asyncio.run(example_usage())

@@ -1,20 +1,15 @@
-import asyncio
-
 from shared.core.common_functions import get_service_registry
 
 "\nSophia AI Service Registry\nRegisters all services with the dependency injection container\n"
 import logging
 from typing import Any
 
+from container import register_service
 from orchestration.state_manager import StateManager
 from orchestration.task_analyzer import TaskAnalyzer
 from orchestration.tool_registry import ToolRegistry
 from orchestration.workflow_engine import SophiaWorkflowEngine
 from orchestration.workflow_monitor import WorkflowMonitor
-from services.memory_service import RealMemoryService
-from services.shared.enhanced_memory_router import EnhancedMemoryRouter
-
-from container import register_service
 from protocols import (
     MemoryRouterProtocol,
     MemoryServiceProtocol,
@@ -25,7 +20,11 @@ from protocols import (
     WorkflowEngineProtocol,
 )
 
+from services.memory_service import RealMemoryService
+from services.shared.enhanced_memory_router import EnhancedMemoryRouter
+
 logger = logging.getLogger(__name__)
+
 
 class ServiceRegistry:
     """Centralized service registration and initialization"""
@@ -43,15 +42,9 @@ class ServiceRegistry:
         register_service(StateManagerProtocol, lambda: StateManager(), singleton=True)
         register_service(ToolRegistryProtocol, lambda: ToolRegistry(), singleton=True)
         register_service(TaskAnalyzerProtocol, lambda: TaskAnalyzer(), singleton=True)
-        register_service(
-            MetricsCollectorProtocol, lambda: WorkflowMonitor(), singleton=True
-        )
-        register_service(
-            MemoryServiceProtocol, lambda: RealMemoryService(), singleton=True
-        )
-        register_service(
-            MemoryRouterProtocol, lambda: EnhancedMemoryRouter(), singleton=True
-        )
+        register_service(MetricsCollectorProtocol, lambda: WorkflowMonitor(), singleton=True)
+        register_service(MemoryServiceProtocol, lambda: RealMemoryService(), singleton=True)
+        register_service(MemoryRouterProtocol, lambda: EnhancedMemoryRouter(), singleton=True)
 
         async def create_workflow_engine():
             from core.container import resolve_service
@@ -108,7 +101,9 @@ class ServiceRegistry:
         """Get a service instance (for testing)"""
         return self._services.get(service_type.__name__)
 
+
 _registry = ServiceRegistry()
+
 
 async def bootstrap_services() -> None:
     """Bootstrap the entire service layer"""
@@ -116,10 +111,12 @@ async def bootstrap_services() -> None:
     await registry.register_all()
     await registry.initialize_services()
 
+
 async def shutdown_services() -> None:
     """Shutdown all services"""
     registry = get_service_registry()
     await registry.shutdown_services()
+
 
 class ServiceLocator:
     """Convenient service locator for common services"""

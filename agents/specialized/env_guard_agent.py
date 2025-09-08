@@ -6,10 +6,9 @@ Monitors and maintains devcontainer stability with cloud-locked configuration
 import asyncio
 import json
 import os
-import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import structlog
 
@@ -21,6 +20,7 @@ from agents.core.base_agent import (
 )
 
 logger = structlog.get_logger(__name__)
+
 
 class EnvironmentGuardAgent(BaseAgent):
     """
@@ -118,9 +118,7 @@ class EnvironmentGuardAgent(BaseAgent):
 
         # Determine overall status
         critical_issues = [
-            issue
-            for issue in check_results["issues"]
-            if issue["severity"] == "critical"
+            issue for issue in check_results["issues"] if issue["severity"] == "critical"
         ]
         if critical_issues:
             check_results["overall_status"] = "critical"
@@ -142,13 +140,9 @@ class EnvironmentGuardAgent(BaseAgent):
                 # Quick re-check of fixed items
                 for fix in fix_results["fixes_applied"]:
                     if fix["check"] == "virtual_env":
-                        check_results["checks"][
-                            "virtual_env"
-                        ] = await self._check_virtual_env()
+                        check_results["checks"]["virtual_env"] = await self._check_virtual_env()
                     elif fix["check"] == "agno_mode":
-                        check_results["checks"][
-                            "agno_mode"
-                        ] = await self._check_agno_mode()
+                        check_results["checks"]["agno_mode"] = await self._check_agno_mode()
 
         logger.info(
             "Environment check completed",
@@ -265,9 +259,7 @@ class EnvironmentGuardAgent(BaseAgent):
                 import aiohttp
 
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(
-                        f"{qdrant_url}/health", timeout=5
-                    ) as response:
+                    async with session.get(f"{qdrant_url}/health", timeout=5) as response:
                         connectivity_results["qdrant"] = response.status == 200
             except:
                 connectivity_results["qdrant"] = False
@@ -429,16 +421,12 @@ class EnvironmentGuardAgent(BaseAgent):
             if Path(expected_venv).exists():
                 # Update environment variables
                 os.environ["VIRTUAL_ENV"] = expected_venv
-                os.environ["PATH"] = f"{expected_venv}/bin:" + os.environ.get(
-                    "PATH", ""
-                )
+                os.environ["PATH"] = f"{expected_venv}/bin:" + os.environ.get("PATH", "")
 
                 logger.info("Virtual environment fixed", venv=expected_venv)
                 return True
             else:
-                logger.error(
-                    "Virtual environment path does not exist", path=expected_venv
-                )
+                logger.error("Virtual environment path does not exist", path=expected_venv)
                 return False
 
         except Exception as e:
@@ -567,12 +555,8 @@ class EnvironmentGuardAgent(BaseAgent):
 
         # Calculate stability score
         total_checks = len(check_results["checks"])
-        passed_checks = sum(
-            1 for check in check_results["checks"].values() if check["status"]
-        )
-        enforcement_results["stability_score"] = int(
-            (passed_checks / total_checks) * 100
-        )
+        passed_checks = sum(1 for check in check_results["checks"].values() if check["status"])
+        enforcement_results["stability_score"] = int((passed_checks / total_checks) * 100)
 
         # Take enforcement actions based on issues
         if check_results["issues"]:
@@ -599,9 +583,7 @@ class EnvironmentGuardAgent(BaseAgent):
                         json.dumps(stability_checkpoint),
                     )
 
-                    enforcement_results["actions_taken"].append(
-                        "stability_checkpoint_created"
-                    )
+                    enforcement_results["actions_taken"].append("stability_checkpoint_created")
 
                 except Exception as e:
                     logger.error("Failed to create stability checkpoint", error=str(e))
@@ -625,9 +607,7 @@ class EnvironmentGuardAgent(BaseAgent):
             "critical_paths": self.critical_paths,
             "drift_monitoring": {
                 "drift_count": self.drift_count,
-                "last_check": (
-                    self.last_env_check.isoformat() if self.last_env_check else None
-                ),
+                "last_check": (self.last_env_check.isoformat() if self.last_env_check else None),
                 "drift_threshold": self.drift_threshold,
             },
             "current_environment": {

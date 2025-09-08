@@ -4,13 +4,13 @@ Security Patches Script for Sophia AI V7
 Updates critical dependencies and patches security vulnerabilities.
 """
 
-import os
-import sys
-import subprocess
 import json
 import re
-from pathlib import Path
+import subprocess
+import sys
 from datetime import datetime
+from pathlib import Path
+
 
 class SecurityPatcher:
     def __init__(self):
@@ -40,7 +40,7 @@ class SecurityPatcher:
             print(f"❌ pyproject.toml not found at {self.pyproject_file}")
             return False
 
-        with open(self.pyproject_file, 'r') as f:
+        with open(self.pyproject_file) as f:
             content = f.read()
 
         current_versions = {}
@@ -66,20 +66,16 @@ class SecurityPatcher:
         """Update pyproject.toml with security patches"""
         print("🔧 Updating pyproject.toml with security patches...")
 
-        with open(self.pyproject_file, 'r') as f:
+        with open(self.pyproject_file) as f:
             content = f.read()
 
         # Update Python version requirement
-        content = re.sub(
-            r'requires-python = ">=3\.11"',
-            'requires-python = ">=3.12"',
-            content
-        )
+        content = re.sub(r'requires-python = ">=3\.11"', 'requires-python = ">=3.12"', content)
 
         # Update dependency versions
         updates = {
             "fastapi": "fastapi>=0.116.1",
-            "qdrant-client": "qdrant-client>=1.15.1", 
+            "qdrant-client": "qdrant-client>=1.15.1",
             "crewai": "crewai>=0.152.0",
             "langgraph": "langgraph>=0.6.0",
             "mem0ai": "mem0ai>=2.0.0",
@@ -102,7 +98,7 @@ class SecurityPatcher:
                 print(f"⚠️ {package} not found in dependencies")
 
         # Write updated content
-        with open(self.pyproject_file, 'w') as f:
+        with open(self.pyproject_file, "w") as f:
             f.write(content)
 
         print("✅ pyproject.toml updated successfully")
@@ -115,18 +111,24 @@ class SecurityPatcher:
             {
                 "name": "Safety - Known vulnerabilities",
                 "cmd": ["python", "-m", "pip", "install", "safety"],
-                "scan_cmd": ["safety", "check", "--json"]
+                "scan_cmd": ["safety", "check", "--json"],
             },
             {
-                "name": "Bandit - Code security analysis", 
+                "name": "Bandit - Code security analysis",
                 "cmd": ["python", "-m", "pip", "install", "bandit"],
-                "scan_cmd": ["bandit", "-r", ".", "-f", "json", "-o", "bandit-report.json"]
+                "scan_cmd": ["bandit", "-r", ".", "-f", "json", "-o", "bandit-report.json"],
             },
             {
                 "name": "Semgrep - Static analysis",
                 "cmd": ["python", "-m", "pip", "install", "semgrep"],
-                "scan_cmd": ["semgrep", "--config=auto", "--json", "--output=semgrep-report.json", "."]
-            }
+                "scan_cmd": [
+                    "semgrep",
+                    "--config=auto",
+                    "--json",
+                    "--output=semgrep-report.json",
+                    ".",
+                ],
+            },
         ]
 
         scan_results = {}
@@ -138,16 +140,13 @@ class SecurityPatcher:
 
                 print(f"🔍 Running {scan['name']}...")
                 result = subprocess.run(
-                    scan["scan_cmd"], 
-                    capture_output=True, 
-                    text=True,
-                    cwd=self.repo_root
+                    scan["scan_cmd"], capture_output=True, text=True, cwd=self.repo_root
                 )
 
                 scan_results[scan["name"]] = {
                     "returncode": result.returncode,
                     "stdout": result.stdout,
-                    "stderr": result.stderr
+                    "stderr": result.stderr,
                 }
 
                 if result.returncode == 0:
@@ -170,10 +169,7 @@ class SecurityPatcher:
             if subprocess.run(["which", "uv"], capture_output=True).returncode == 0:
                 print("🚀 Using UV for dependency installation...")
                 result = subprocess.run(
-                    ["uv", "sync", "--dev"],
-                    cwd=self.repo_root,
-                    capture_output=True,
-                    text=True
+                    ["uv", "sync", "--dev"], cwd=self.repo_root, capture_output=True, text=True
                 )
             else:
                 print("🐍 Using pip for dependency installation...")
@@ -181,7 +177,7 @@ class SecurityPatcher:
                     ["pip", "install", "-e", ".[dev]"],
                     cwd=self.repo_root,
                     capture_output=True,
-                    text=True
+                    text=True,
                 )
 
             if result.returncode == 0:
@@ -202,7 +198,10 @@ class SecurityPatcher:
         sophia_commands = [
             {
                 "name": "Import tests",
-                "cmd": ["python", "-c", """
+                "cmd": [
+                    "python",
+                    "-c",
+                    """
 import fastapi
 import qdrant_client
 import crewai
@@ -214,11 +213,15 @@ import transformers
 import torch
 import numpy
 print('✅ All critical imports successful')
-"""]
+""",
+                ],
             },
             {
                 "name": "Basic functionality tests",
-                "cmd": ["python", "-c", """
+                "cmd": [
+                    "python",
+                    "-c",
+                    """
 from fastapi import FastAPI
 from qdrant_client import QdrantClient
 import numpy as np
@@ -237,19 +240,16 @@ arr = np.array([1, 2, 3])
 tensor = torch.tensor([1.0, 2.0, 3.0])
 
 print('✅ Basic functionality tests passed')
-"""]
-            }
+""",
+                ],
+            },
         ]
 
         for test in sophia_commands:
             try:
                 print(f"🧪 Running {test['name']}...")
                 result = subprocess.run(
-                    test["cmd"],
-                    cwd=self.repo_root,
-                    capture_output=True,
-                    text=True,
-                    timeout=30
+                    test["cmd"], cwd=self.repo_root, capture_output=True, text=True, timeout=30
                 )
 
                 if result.returncode == 0:
@@ -282,38 +282,43 @@ print('✅ Basic functionality tests passed')
                 "Monitor for new security advisories",
                 "Schedule regular dependency updates",
                 "Implement automated security scanning in CI/CD",
-                "Review and rotate API keys regularly"
-            ]
+                "Review and rotate API keys regularly",
+            ],
         }
 
         report_file = self.repo_root / "security_patch_report.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(report, f, indent=2)
 
         print(f"📄 Security report saved to {report_file}")
 
         # Create human-readable summary
         summary_file = self.repo_root / "SECURITY_PATCH_SUMMARY.md"
-        with open(summary_file, 'w') as f:
-            f.write(f"""# Security Patch Summary
+        with open(summary_file, "w") as f:
+            f.write(
+                f"""# Security Patch Summary
 **Date**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 **Status**: ✅ COMPLETED
 
 ## 🔒 Security Updates Applied
 
 ### Critical Dependencies Updated
-""")
+"""
+            )
             for package, version in self.target_versions.items():
                 f.write(f"- **{package}**: Updated to {version}\n")
 
-            f.write(f"""
+            f.write(
+                """
 ### Security Scans Performed
-""")
+"""
+            )
             for scan_name, result in scan_results.items():
                 status = "✅ PASSED" if result.get("returncode") == 0 else "⚠️ ISSUES FOUND"
                 f.write(f"- **{scan_name}**: {status}\n")
 
-            f.write(f"""
+            f.write(
+                """
 ## 🎯 Next Steps
 1. Deploy updated dependencies to staging environment
 2. Run comprehensive integration tests
@@ -327,7 +332,8 @@ print('✅ Basic functionality tests passed')
 - **Risk Level**: Reduced
 
 *This report was generated automatically by the Security Patcher.*
-""")
+"""
+            )
 
         print(f"📄 Security summary saved to {summary_file}")
 
@@ -371,6 +377,7 @@ print('✅ Basic functionality tests passed')
 
         return True
 
+
 def main():
     patcher = SecurityPatcher()
 
@@ -379,6 +386,7 @@ def main():
     else:
         print("❌ Security patching failed")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

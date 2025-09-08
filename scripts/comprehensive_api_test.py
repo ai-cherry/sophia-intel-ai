@@ -6,14 +6,12 @@ Provides actual proof that every API and integration is working
 
 import asyncio
 import json
-import os
 import sys
 import time
 from datetime import datetime
-from typing import Dict, List, Any
 
-import httpx
 import requests
+
 
 class ComprehensiveAPITester:
     """Tests all APIs and integrations with real proof"""
@@ -28,7 +26,7 @@ class ComprehensiveAPITester:
             "api_tests": {},
             "integration_tests": {},
             "performance_tests": {},
-            "errors": []
+            "errors": [],
         }
 
     async def run_all_tests(self):
@@ -59,7 +57,7 @@ class ComprehensiveAPITester:
             ("/api/fusion/trigger/redis_optimization", "POST", "Redis Trigger"),
             ("/api/fusion/trigger/edge_rag", "POST", "Edge RAG Trigger"),
             ("/api/fusion/trigger/hybrid_routing", "POST", "Hybrid Routing Trigger"),
-            ("/api/fusion/trigger/cross_db_analytics", "POST", "Cross-DB Trigger")
+            ("/api/fusion/trigger/cross_db_analytics", "POST", "Cross-DB Trigger"),
         ]
 
         for endpoint, method, name in fusion_endpoints:
@@ -74,7 +72,7 @@ class ComprehensiveAPITester:
             ("/smoke", "GET", "Smoke Test"),
             ("/", "GET", "Root Endpoint"),
             ("/info", "GET", "Platform Info"),
-            ("/api/gpu-quota", "GET", "GPU Quota")
+            ("/api/gpu-quota", "GET", "GPU Quota"),
         ]
 
         for endpoint, method, name in core_endpoints:
@@ -102,9 +100,15 @@ class ComprehensiveAPITester:
                 # Try to parse JSON response
                 try:
                     response_data = response.json()
-                    data_preview = str(response_data)[:100] + "..." if len(str(response_data)) > 100 else str(response_data)
+                    data_preview = (
+                        str(response_data)[:100] + "..."
+                        if len(str(response_data)) > 100
+                        else str(response_data)
+                    )
                 except:
-                    data_preview = response.text[:100] + "..." if len(response.text) > 100 else response.text
+                    data_preview = (
+                        response.text[:100] + "..." if len(response.text) > 100 else response.text
+                    )
 
                 self.test_results["api_tests"][name] = {
                     "status": "PASS",
@@ -112,10 +116,12 @@ class ComprehensiveAPITester:
                     "method": method,
                     "status_code": response.status_code,
                     "response_preview": data_preview,
-                    "response_time_ms": response.elapsed.total_seconds() * 1000
+                    "response_time_ms": response.elapsed.total_seconds() * 1000,
                 }
 
-                print(f"  {status} {name} ({method} {endpoint}) - {response.status_code} - {response.elapsed.total_seconds()*1000:.0f}ms")
+                print(
+                    f"  {status} {name} ({method} {endpoint}) - {response.status_code} - {response.elapsed.total_seconds()*1000:.0f}ms"
+                )
 
             else:
                 self.test_results["failed_tests"] += 1
@@ -126,7 +132,7 @@ class ComprehensiveAPITester:
                     "endpoint": endpoint,
                     "method": method,
                     "status_code": response.status_code,
-                    "error": response.text[:200]
+                    "error": response.text[:200],
                 }
 
                 print(f"  {status} {name} ({method} {endpoint}) - {response.status_code}")
@@ -139,7 +145,7 @@ class ComprehensiveAPITester:
                 "status": "ERROR",
                 "endpoint": endpoint,
                 "method": method,
-                "error": str(e)
+                "error": str(e),
             }
 
             print(f"  ❌ ERROR {name} ({method} {endpoint}) - {str(e)}")
@@ -168,7 +174,13 @@ class ComprehensiveAPITester:
                 data = response.json()
 
                 # Verify required fields
-                required_fields = ["redis_optimization", "edge_rag", "hybrid_routing", "cross_db_analytics", "timestamp"]
+                required_fields = [
+                    "redis_optimization",
+                    "edge_rag",
+                    "hybrid_routing",
+                    "cross_db_analytics",
+                    "timestamp",
+                ]
 
                 all_fields_present = all(field in data for field in required_fields)
 
@@ -179,10 +191,22 @@ class ComprehensiveAPITester:
                     hybrid_metrics = data["hybrid_routing"]
                     cross_db_metrics = data["cross_db_analytics"]
 
-                    redis_valid = all(key in redis_metrics for key in ["memory_saved", "cost_savings", "keys_pruned", "status"])
-                    edge_valid = all(key in edge_metrics for key in ["query_count", "avg_latency", "success_rate", "status"])
-                    hybrid_valid = all(key in hybrid_metrics for key in ["requests_routed", "cost_optimization", "uptime", "status"])
-                    cross_db_valid = all(key in cross_db_metrics for key in ["predictions_made", "accuracy", "data_points", "status"])
+                    redis_valid = all(
+                        key in redis_metrics
+                        for key in ["memory_saved", "cost_savings", "keys_pruned", "status"]
+                    )
+                    edge_valid = all(
+                        key in edge_metrics
+                        for key in ["query_count", "avg_latency", "success_rate", "status"]
+                    )
+                    hybrid_valid = all(
+                        key in hybrid_metrics
+                        for key in ["requests_routed", "cost_optimization", "uptime", "status"]
+                    )
+                    cross_db_valid = all(
+                        key in cross_db_metrics
+                        for key in ["predictions_made", "accuracy", "data_points", "status"]
+                    )
 
                     if redis_valid and edge_valid and hybrid_valid and cross_db_valid:
                         self.test_results["passed_tests"] += 1
@@ -193,8 +217,8 @@ class ComprehensiveAPITester:
                                 "redis_cost_savings": redis_metrics["cost_savings"],
                                 "edge_success_rate": edge_metrics["success_rate"],
                                 "hybrid_uptime": hybrid_metrics["uptime"],
-                                "cross_db_accuracy": cross_db_metrics["accuracy"]
-                            }
+                                "cross_db_accuracy": cross_db_metrics["accuracy"],
+                            },
                         }
                         print("  ✅ PASS Fusion Metrics Structure - All fields valid")
                     else:
@@ -208,7 +232,7 @@ class ComprehensiveAPITester:
             self.test_results["failed_tests"] += 1
             self.test_results["integration_tests"]["Fusion Metrics Structure"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             print(f"  ❌ FAIL Fusion Metrics Structure - {str(e)}")
 
@@ -223,16 +247,38 @@ class ComprehensiveAPITester:
                 data = response.json()
 
                 # Verify health metrics
-                required_fields = ["overall_uptime", "avg_response_time", "total_cost_savings", "active_systems", "timestamp"]
+                required_fields = [
+                    "overall_uptime",
+                    "avg_response_time",
+                    "total_cost_savings",
+                    "active_systems",
+                    "timestamp",
+                ]
 
                 if all(field in data for field in required_fields):
                     # Verify data types and ranges
-                    uptime_valid = isinstance(data["overall_uptime"], (int, float)) and 0 <= data["overall_uptime"] <= 100
-                    response_time_valid = isinstance(data["avg_response_time"], (int, float)) and data["avg_response_time"] > 0
-                    cost_savings_valid = isinstance(data["total_cost_savings"], (int, float)) and data["total_cost_savings"] >= 0
-                    active_systems_valid = isinstance(data["active_systems"], int) and data["active_systems"] >= 0
+                    uptime_valid = (
+                        isinstance(data["overall_uptime"], (int, float))
+                        and 0 <= data["overall_uptime"] <= 100
+                    )
+                    response_time_valid = (
+                        isinstance(data["avg_response_time"], (int, float))
+                        and data["avg_response_time"] > 0
+                    )
+                    cost_savings_valid = (
+                        isinstance(data["total_cost_savings"], (int, float))
+                        and data["total_cost_savings"] >= 0
+                    )
+                    active_systems_valid = (
+                        isinstance(data["active_systems"], int) and data["active_systems"] >= 0
+                    )
 
-                    if uptime_valid and response_time_valid and cost_savings_valid and active_systems_valid:
+                    if (
+                        uptime_valid
+                        and response_time_valid
+                        and cost_savings_valid
+                        and active_systems_valid
+                    ):
                         self.test_results["passed_tests"] += 1
                         self.test_results["integration_tests"]["System Health Calculations"] = {
                             "status": "PASS",
@@ -241,10 +287,12 @@ class ComprehensiveAPITester:
                                 "uptime": data["overall_uptime"],
                                 "response_time": data["avg_response_time"],
                                 "cost_savings": data["total_cost_savings"],
-                                "active_systems": data["active_systems"]
-                            }
+                                "active_systems": data["active_systems"],
+                            },
                         }
-                        print(f"  ✅ PASS System Health Calculations - Uptime: {data['overall_uptime']}%, Cost Savings: ${data['total_cost_savings']}")
+                        print(
+                            f"  ✅ PASS System Health Calculations - Uptime: {data['overall_uptime']}%, Cost Savings: ${data['total_cost_savings']}"
+                        )
                     else:
                         raise ValueError("Invalid health metric values")
                 else:
@@ -256,7 +304,7 @@ class ComprehensiveAPITester:
             self.test_results["failed_tests"] += 1
             self.test_results["integration_tests"]["System Health Calculations"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             print(f"  ❌ FAIL System Health Calculations - {str(e)}")
 
@@ -272,9 +320,13 @@ class ComprehensiveAPITester:
 
                 # Verify performance metrics
                 required_fields = [
-                    "redis_memory_reduction", "redis_cost_optimization",
-                    "edge_rag_success_rate", "edge_rag_latency_improvement",
-                    "hybrid_routing_uptime", "cross_db_accuracy", "timestamp"
+                    "redis_memory_reduction",
+                    "redis_cost_optimization",
+                    "edge_rag_success_rate",
+                    "edge_rag_latency_improvement",
+                    "hybrid_routing_uptime",
+                    "cross_db_accuracy",
+                    "timestamp",
                 ]
 
                 if all(field in data for field in required_fields):
@@ -293,10 +345,12 @@ class ComprehensiveAPITester:
                                 "redis_memory_reduction": data["redis_memory_reduction"],
                                 "edge_rag_success_rate": data["edge_rag_success_rate"],
                                 "hybrid_routing_uptime": data["hybrid_routing_uptime"],
-                                "cross_db_accuracy": data["cross_db_accuracy"]
-                            }
+                                "cross_db_accuracy": data["cross_db_accuracy"],
+                            },
                         }
-                        print(f"  ✅ PASS Performance Metrics - Memory: {data['redis_memory_reduction']}%, Accuracy: {data['cross_db_accuracy']}%")
+                        print(
+                            f"  ✅ PASS Performance Metrics - Memory: {data['redis_memory_reduction']}%, Accuracy: {data['cross_db_accuracy']}%"
+                        )
                     else:
                         raise ValueError("Invalid performance metric values")
                 else:
@@ -308,7 +362,7 @@ class ComprehensiveAPITester:
             self.test_results["failed_tests"] += 1
             self.test_results["integration_tests"]["Performance Metrics Structure"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             print(f"  ❌ FAIL Performance Metrics Structure - {str(e)}")
 
@@ -317,11 +371,7 @@ class ComprehensiveAPITester:
         print("⚡ Testing API Performance...")
 
         # Test response times for critical endpoints
-        critical_endpoints = [
-            "/api/fusion/metrics",
-            "/api/fusion/health",
-            "/health"
-        ]
+        critical_endpoints = ["/api/fusion/metrics", "/api/fusion/health", "/health"]
 
         for endpoint in critical_endpoints:
             await self.test_endpoint_performance(endpoint)
@@ -343,17 +393,19 @@ class ComprehensiveAPITester:
                 self.test_results["performance_tests"][f"{endpoint} Performance"] = {
                     "status": "PASS",
                     "response_time_ms": response_time_ms,
-                    "threshold_ms": 5000
+                    "threshold_ms": 5000,
                 }
                 print(f"  ✅ PASS {endpoint} Performance - {response_time_ms:.0f}ms")
             else:
-                raise ValueError(f"Slow response: {response_time_ms:.0f}ms or HTTP {response.status_code}")
+                raise ValueError(
+                    f"Slow response: {response_time_ms:.0f}ms or HTTP {response.status_code}"
+                )
 
         except Exception as e:
             self.test_results["failed_tests"] += 1
             self.test_results["performance_tests"][f"{endpoint} Performance"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             print(f"  ❌ FAIL {endpoint} Performance - {str(e)}")
 
@@ -369,7 +421,7 @@ class ComprehensiveAPITester:
         failed = self.test_results["failed_tests"]
         success_rate = (passed / total * 100) if total > 0 else 0
 
-        print(f"📊 OVERALL RESULTS:")
+        print("📊 OVERALL RESULTS:")
         print(f"  Total Tests: {total}")
         print(f"  Passed: {passed}")
         print(f"  Failed: {failed}")
@@ -413,7 +465,7 @@ class ComprehensiveAPITester:
 
         # Save detailed report
         report_file = "/home/ubuntu/sophia-main/COMPREHENSIVE_API_TEST_REPORT.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(self.test_results, f, indent=2)
 
         print(f"📄 Detailed report saved to: {report_file}")
@@ -426,14 +478,20 @@ class ComprehensiveAPITester:
             print(f"\n💥 COMPREHENSIVE TESTING FAILED! ({success_rate:.1f}% success rate)")
             print("❌ Some APIs or integrations need attention.")
 
+
 async def main():
     """Main testing function"""
     tester = ComprehensiveAPITester()
     results = await tester.run_all_tests()
 
     # Return appropriate exit code
-    success_rate = (results["passed_tests"] / results["total_tests"] * 100) if results["total_tests"] > 0 else 0
+    success_rate = (
+        (results["passed_tests"] / results["total_tests"] * 100)
+        if results["total_tests"] > 0
+        else 0
+    )
     return 0 if success_rate >= 80 else 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

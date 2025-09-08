@@ -5,21 +5,18 @@ Leverages Scale Plan: 50GB storage, 750 compute hours, 8 CU, 5 branches, 14-day 
 """
 
 import asyncio
-import json
 import logging
 import os
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import asyncpg
-import psycopg2
 import requests
-from psycopg2.extras import RealDictCursor
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class NeonConfig:
@@ -53,6 +50,7 @@ class NeonConfig:
             password=os.getenv("NEON_PASSWORD", ""),
         )
 
+
 class NeonAPIClient:
     """Neon.tech API client for Scale plan management"""
 
@@ -77,9 +75,7 @@ class NeonAPIClient:
             logger.error(f"Failed to get project info: {e}")
             return {}
 
-    async def create_branch(
-        self, branch_name: str, parent_branch: str = "main"
-    ) -> dict[str, Any]:
+    async def create_branch(self, branch_name: str, parent_branch: str = "main") -> dict[str, Any]:
         """Create a new database branch (Scale plan: up to 5 branches)"""
         try:
             payload = {"branch": {"name": branch_name, "parent_id": parent_branch}}
@@ -126,9 +122,7 @@ class NeonAPIClient:
             usage = response.json()
 
             # Calculate usage percentages
-            storage_usage_pct = (
-                usage.get("storage_gb", 0) / self.config.max_storage_gb
-            ) * 100
+            storage_usage_pct = (usage.get("storage_gb", 0) / self.config.max_storage_gb) * 100
             compute_usage_pct = (
                 usage.get("compute_hours", 0) / self.config.max_compute_hours
             ) * 100
@@ -141,15 +135,14 @@ class NeonAPIClient:
                 "active_branches": usage.get("branches", 0),
                 "max_branches": self.config.max_branches,
                 "scale_plan_status": (
-                    "optimal"
-                    if storage_usage_pct < 80 and compute_usage_pct < 80
-                    else "warning"
+                    "optimal" if storage_usage_pct < 80 and compute_usage_pct < 80 else "warning"
                 ),
             }
 
         except Exception as e:
             logger.error(f"Failed to get usage metrics: {e}")
             return {}
+
 
 class NeonDatabaseManager:
     """High-performance database manager optimized for Sophia AI workloads"""
@@ -187,9 +180,7 @@ class NeonDatabaseManager:
                     "jit": "off",  # Disable JIT for faster startup
                 },
             )
-            logger.info(
-                f"Initialized connection pool: {min_size}-{max_size} connections"
-            )
+            logger.info(f"Initialized connection pool: {min_size}-{max_size} connections")
 
         except Exception as e:
             logger.error(f"Failed to initialize connection pool: {e}")
@@ -233,6 +224,7 @@ class NeonDatabaseManager:
         except Exception as e:
             logger.error(f"Transaction failed: {e}")
             return False
+
 
 class SophiaAISchemaManager:
     """Schema manager for Sophia AI platform with optimized tables"""
@@ -401,6 +393,7 @@ class SophiaAISchemaManager:
 
         logger.info("Enabled PostgreSQL extensions for AI workloads")
 
+
 class NeonOptimizer:
     """Performance optimizer for Neon Scale plan"""
 
@@ -479,6 +472,7 @@ class NeonOptimizer:
 
         return combined_metrics
 
+
 async def main():
     """Main function for testing Neon integration"""
 
@@ -486,9 +480,7 @@ async def main():
     config = NeonConfig.from_env()
 
     if not all([config.api_token, config.project_id, config.host]):
-        logger.error(
-            "Missing required Neon configuration. Check environment variables."
-        )
+        logger.error("Missing required Neon configuration. Check environment variables.")
         return
 
     # Initialize database manager
@@ -523,6 +515,7 @@ async def main():
     finally:
         if db_manager._connection_pool:
             await db_manager._connection_pool.close()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

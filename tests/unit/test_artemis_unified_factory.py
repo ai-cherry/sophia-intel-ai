@@ -4,25 +4,18 @@ Tests agent creation, military swarm configurations, concurrent task limits, and
 """
 
 import asyncio
-import json
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import pytest
 from fastapi import WebSocket
 
 from app.artemis.unified_factory import (
-    AgentProfile,
     ArtemisUnifiedFactory,
     MilitaryUnitType,
     MissionStatus,
-    MissionTemplate,
-    SquadFormation,
     SwarmType,
     TechnicalAgentRole,
     TechnicalPersonality,
-    UnifiedArtemisConfig,
 )
 
 

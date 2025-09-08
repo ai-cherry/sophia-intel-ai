@@ -11,13 +11,12 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.artemis.unified_factory import ArtemisUnifiedFactory
 from app.core.aimlapi_config import aimlapi_manager
-from app.core.enhanced_llm_router import LLMProviderType, enhanced_router
 
 
 class ArtemisParallelSwarm:

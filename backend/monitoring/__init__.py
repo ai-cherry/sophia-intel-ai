@@ -4,13 +4,13 @@ Provides comprehensive monitoring, tracing, and observability
 """
 
 from .opentelemetry_config import (
-    SophiaAITelemetryConfig,
     SophiaAITelemetry,
-    initialize_telemetry,
+    SophiaAITelemetryConfig,
     get_telemetry,
+    initialize_telemetry,
+    record_sophia_metric,
     shutdown_telemetry,
     trace_sophia_operation,
-    record_sophia_metric
 )
 
 __all__ = [
@@ -20,5 +20,5 @@ __all__ = [
     "get_telemetry",
     "shutdown_telemetry",
     "trace_sophia_operation",
-    "record_sophia_metric"
+    "record_sophia_metric",
 ]

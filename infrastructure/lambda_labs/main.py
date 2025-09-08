@@ -1,9 +1,10 @@
 """
 Lambda Labs Infrastructure Configuration
 """
-import os
-import pulumi
+
 import pulumi_command as command
+
+import pulumi
 
 # Configuration
 config = pulumi.Config()
@@ -14,9 +15,7 @@ master_ip = config.get("master_ip", "auto")
 gpu_instance = command.local.Command(
     "lambda-labs-instance",
     create="echo 'Lambda Labs instance provisioned'",
-    opts=pulumi.ResourceOptions(
-        depends_on=[]
-    )
+    opts=pulumi.ResourceOptions(depends_on=[]),
 )
 
 # Export outputs

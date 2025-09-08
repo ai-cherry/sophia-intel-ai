@@ -3,39 +3,41 @@ OpenTelemetry Configuration for Sophia AI V9.7
 Provides comprehensive monitoring, tracing, and metrics collection
 """
 
-import os
 import logging
-from typing import Dict, Any, Optional
+import os
 from contextlib import contextmanager
+from typing import Any, Dict, Optional
 
-from opentelemetry import trace, metrics
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader, ConsoleMetricExporter
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.semconv.resource import ResourceAttributes
-
-# Instrumentation
-from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
-from opentelemetry.instrumentation.redis import RedisInstrumentor
-from opentelemetry.instrumentation.asyncio import AsyncioInstrumentor
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 
 # Exporters
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
 from opentelemetry.exporter.prometheus import PrometheusMetricReader
+from opentelemetry.instrumentation.asyncio import AsyncioInstrumentor
+
+# Instrumentation
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.redis import RedisInstrumentor
+from opentelemetry.instrumentation.requests import RequestsInstrumentor
+from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import ConsoleMetricExporter, PeriodicExportingMetricReader
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, ConsoleSpanExporter
+from opentelemetry.semconv.resource import ResourceAttributes
 
 # Custom exporters for production
 try:
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+
     JAEGER_AVAILABLE = True
 except ImportError:
     JAEGER_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
 
 class SophiaAITelemetryConfig:
     """Configuration for Sophia AI telemetry"""
@@ -63,8 +65,9 @@ class SophiaAITelemetryConfig:
             "sophia.ai.version": "9.7.0",
             "sophia.ai.component": "backend",
             "sophia.ai.deployment": self.environment,
-            "sophia.ai.features": "oss_premium_hybrid"
+            "sophia.ai.features": "oss_premium_hybrid",
         }
+
 
 class SophiaAITelemetry:
     """Main telemetry manager for Sophia AI"""
@@ -87,12 +90,14 @@ class SophiaAITelemetry:
 
         try:
             # Create resource with Sophia AI attributes
-            resource = Resource.create({
-                ResourceAttributes.SERVICE_NAME: self.config.service_name,
-                ResourceAttributes.SERVICE_VERSION: self.config.service_version,
-                ResourceAttributes.DEPLOYMENT_ENVIRONMENT: self.config.environment,
-                **self.config.custom_attributes
-            })
+            resource = Resource.create(
+                {
+                    ResourceAttributes.SERVICE_NAME: self.config.service_name,
+                    ResourceAttributes.SERVICE_VERSION: self.config.service_version,
+                    ResourceAttributes.DEPLOYMENT_ENVIRONMENT: self.config.environment,
+                    **self.config.custom_attributes,
+                }
+            )
 
             # Initialize tracing
             if self.config.enable_tracing:
@@ -109,7 +114,9 @@ class SophiaAITelemetry:
             self._create_custom_metrics()
 
             self.initialized = True
-            logger.info(f"Sophia AI telemetry initialized for {self.config.service_name} v{self.config.service_version}")
+            logger.info(
+                f"Sophia AI telemetry initialized for {self.config.service_name} v{self.config.service_version}"
+            )
 
         except Exception as e:
             logger.error(f"Failed to initialize telemetry: {e}")
@@ -168,7 +175,7 @@ class SophiaAITelemetry:
         if self.config.environment == "development":
             console_reader = PeriodicExportingMetricReader(
                 ConsoleMetricExporter(),
-                export_interval_millis=self.config.metrics_export_interval * 1000
+                export_interval_millis=self.config.metrics_export_interval * 1000,
             )
             readers.append(console_reader)
 
@@ -184,17 +191,14 @@ class SophiaAITelemetry:
             try:
                 otlp_reader = PeriodicExportingMetricReader(
                     OTLPMetricExporter(endpoint=self.config.otlp_endpoint),
-                    export_interval_millis=self.config.metrics_export_interval * 1000
+                    export_interval_millis=self.config.metrics_export_interval * 1000,
                 )
                 readers.append(otlp_reader)
             except Exception as e:
                 logger.warning(f"Failed to initialize OTLP metrics reader: {e}")
 
         # Create meter provider
-        self.meter_provider = MeterProvider(
-            resource=resource,
-            metric_readers=readers
-        )
+        self.meter_provider = MeterProvider(resource=resource, metric_readers=readers)
 
         # Set global meter provider
         metrics.set_meter_provider(self.meter_provider)
@@ -231,65 +235,57 @@ class SophiaAITelemetry:
         meter = metrics.get_meter(__name__)
 
         # Business metrics
-        self.custom_metrics.update({
-            # Revenue and business metrics
-            "sophia_rpe_optimization_score": meter.create_histogram(
-                "sophia_rpe_optimization_score",
-                description="Revenue per employee optimization score",
-                unit="score"
-            ),
-            "sophia_arpu_improvement": meter.create_histogram(
-                "sophia_arpu_improvement",
-                description="ARPU improvement percentage",
-                unit="percent"
-            ),
-
-            # AI and ML metrics
-            "sophia_ai_agent_executions": meter.create_counter(
-                "sophia_ai_agent_executions_total",
-                description="Total AI agent executions"
-            ),
-            "sophia_ai_agent_latency": meter.create_histogram(
-                "sophia_ai_agent_latency_seconds",
-                description="AI agent execution latency"
-            ),
-            "sophia_rag_queries": meter.create_counter(
-                "sophia_rag_queries_total",
-                description="Total RAG queries processed"
-            ),
-            "sophia_multimodal_operations": meter.create_counter(
-                "sophia_multimodal_operations_total",
-                description="Total multimodal operations"
-            ),
-
-            # System metrics
-            "sophia_mcp_server_calls": meter.create_counter(
-                "sophia_mcp_server_calls_total",
-                description="Total MCP server calls"
-            ),
-            "sophia_workflow_executions": meter.create_counter(
-                "sophia_workflow_executions_total",
-                description="Total workflow executions"
-            ),
-            "sophia_cache_operations": meter.create_counter(
-                "sophia_cache_operations_total",
-                description="Total cache operations"
-            ),
-
-            # Integration metrics
-            "sophia_linear_sync_operations": meter.create_counter(
-                "sophia_linear_sync_operations_total",
-                description="Linear synchronization operations"
-            ),
-            "sophia_asana_sync_operations": meter.create_counter(
-                "sophia_asana_sync_operations_total",
-                description="Asana synchronization operations"
-            ),
-            "sophia_notion_sync_operations": meter.create_counter(
-                "sophia_notion_sync_operations_total",
-                description="Notion synchronization operations"
-            )
-        })
+        self.custom_metrics.update(
+            {
+                # Revenue and business metrics
+                "sophia_rpe_optimization_score": meter.create_histogram(
+                    "sophia_rpe_optimization_score",
+                    description="Revenue per employee optimization score",
+                    unit="score",
+                ),
+                "sophia_arpu_improvement": meter.create_histogram(
+                    "sophia_arpu_improvement",
+                    description="ARPU improvement percentage",
+                    unit="percent",
+                ),
+                # AI and ML metrics
+                "sophia_ai_agent_executions": meter.create_counter(
+                    "sophia_ai_agent_executions_total", description="Total AI agent executions"
+                ),
+                "sophia_ai_agent_latency": meter.create_histogram(
+                    "sophia_ai_agent_latency_seconds", description="AI agent execution latency"
+                ),
+                "sophia_rag_queries": meter.create_counter(
+                    "sophia_rag_queries_total", description="Total RAG queries processed"
+                ),
+                "sophia_multimodal_operations": meter.create_counter(
+                    "sophia_multimodal_operations_total", description="Total multimodal operations"
+                ),
+                # System metrics
+                "sophia_mcp_server_calls": meter.create_counter(
+                    "sophia_mcp_server_calls_total", description="Total MCP server calls"
+                ),
+                "sophia_workflow_executions": meter.create_counter(
+                    "sophia_workflow_executions_total", description="Total workflow executions"
+                ),
+                "sophia_cache_operations": meter.create_counter(
+                    "sophia_cache_operations_total", description="Total cache operations"
+                ),
+                # Integration metrics
+                "sophia_linear_sync_operations": meter.create_counter(
+                    "sophia_linear_sync_operations_total",
+                    description="Linear synchronization operations",
+                ),
+                "sophia_asana_sync_operations": meter.create_counter(
+                    "sophia_asana_sync_operations_total",
+                    description="Asana synchronization operations",
+                ),
+                "sophia_notion_sync_operations": meter.create_counter(
+                    "sophia_notion_sync_operations_total",
+                    description="Notion synchronization operations",
+                ),
+            }
+        )
 
         logger.info(f"Created {len(self.custom_metrics)} custom metrics")
 
@@ -301,14 +297,16 @@ class SophiaAITelemetry:
         """Get meter for a specific component"""
         return metrics.get_meter(name)
 
-    def record_business_metric(self, metric_name: str, value: float, attributes: Optional[Dict[str, Any]] = None):
+    def record_business_metric(
+        self, metric_name: str, value: float, attributes: Optional[Dict[str, Any]] = None
+    ):
         """Record a business metric"""
 
         if metric_name in self.custom_metrics:
             metric = self.custom_metrics[metric_name]
-            if hasattr(metric, 'record'):
+            if hasattr(metric, "record"):
                 metric.record(value, attributes or {})
-            elif hasattr(metric, 'add'):
+            elif hasattr(metric, "add"):
                 metric.add(value, attributes or {})
         else:
             logger.warning(f"Unknown metric: {metric_name}")
@@ -346,8 +344,10 @@ class SophiaAITelemetry:
         except Exception as e:
             logger.error(f"Error during telemetry shutdown: {e}")
 
+
 # Global telemetry instance
 _telemetry_instance: Optional[SophiaAITelemetry] = None
+
 
 def initialize_telemetry(config: Optional[SophiaAITelemetryConfig] = None) -> SophiaAITelemetry:
     """Initialize global telemetry instance"""
@@ -360,9 +360,11 @@ def initialize_telemetry(config: Optional[SophiaAITelemetryConfig] = None) -> So
 
     return _telemetry_instance
 
+
 def get_telemetry() -> Optional[SophiaAITelemetry]:
     """Get global telemetry instance"""
     return _telemetry_instance
+
 
 def shutdown_telemetry():
     """Shutdown global telemetry instance"""
@@ -372,6 +374,7 @@ def shutdown_telemetry():
     if _telemetry_instance:
         _telemetry_instance.shutdown()
         _telemetry_instance = None
+
 
 # Convenience functions
 def trace_sophia_operation(operation_name: str, attributes: Optional[Dict[str, Any]] = None):
@@ -385,15 +388,21 @@ def trace_sophia_operation(operation_name: str, attributes: Optional[Dict[str, A
                     return func(*args, **kwargs)
             else:
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
-def record_sophia_metric(metric_name: str, value: float, attributes: Optional[Dict[str, Any]] = None):
+
+def record_sophia_metric(
+    metric_name: str, value: float, attributes: Optional[Dict[str, Any]] = None
+):
     """Record a Sophia AI metric"""
 
     telemetry = get_telemetry()
     if telemetry:
         telemetry.record_business_metric(metric_name, value, attributes)
+
 
 # Example usage
 if __name__ == "__main__":

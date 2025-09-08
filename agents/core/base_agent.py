@@ -5,21 +5,21 @@ Provides standardized lifecycle, error handling, logging, and MCP integration
 """
 
 import asyncio
-import json
+import contextlib
 import logging
 import os
 import traceback
 import uuid
-import contextlib
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class AgentStatus(Enum):
     """Agent lifecycle status"""
@@ -30,6 +30,7 @@ class AgentStatus(Enum):
     ERROR = "error"
     STOPPING = "stopping"
     STOPPED = "stopped"
+
 
 class AgentCapability(Enum):
     """Standard agent capabilities"""
@@ -58,6 +59,7 @@ class ResilienceConfig:
     guardian_enabled: bool = False
     auto_recovery: bool = False
 
+
 @dataclass
 class AgentConfig:
     """Standardized agent configuration"""
@@ -84,6 +86,7 @@ class AgentConfig:
             self.max_concurrent_tasks = 1
         if self.timeout_seconds < 1:
             self.timeout_seconds = 300
+
 
 @dataclass
 class AgentMetrics:
@@ -115,6 +118,7 @@ class AgentMetrics:
 
         self.last_activity = datetime.now()
 
+
 class BaseAgent(ABC):
     """
     Unified base class for all Sophia AI agents
@@ -135,9 +139,7 @@ class BaseAgent(ABC):
         self._shutdown_event = asyncio.Event()
 
         # Configure logging
-        self.logger = logging.getLogger(
-            f"{self.__class__.__name__}[{self.agent_id[:8]}]"
-        )
+        self.logger = logging.getLogger(f"{self.__class__.__name__}[{self.agent_id[:8]}]")
         self.logger.setLevel(getattr(logging, config.log_level.upper()))
 
         self.logger.info(f"Initializing {config.agent_name} ({config.agent_type})")
@@ -209,9 +211,7 @@ class BaseAgent(ABC):
             self.logger.debug(traceback.format_exc())
             return False
 
-    async def process_task(
-        self, task_id: str, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def process_task(self, task_id: str, task_data: dict[str, Any]) -> dict[str, Any]:
         """Process a task with standardized error handling and metrics"""
         start_time = datetime.now()
 
@@ -229,9 +229,7 @@ class BaseAgent(ABC):
             processing_time = (datetime.now() - start_time).total_seconds()
             self.metrics.update_task_completion(processing_time, success=True)
 
-            self.logger.info(
-                f"Task {task_id} completed successfully in {processing_time:.2f}s"
-            )
+            self.logger.info(f"Task {task_id} completed successfully in {processing_time:.2f}s")
             self.status = AgentStatus.READY
 
             return {
@@ -277,9 +275,7 @@ class BaseAgent(ABC):
                 "average_processing_time": self.metrics.average_processing_time,
                 "uptime_seconds": self.metrics.uptime_seconds,
                 "last_activity": (
-                    self.metrics.last_activity.isoformat()
-                    if self.metrics.last_activity
-                    else None
+                    self.metrics.last_activity.isoformat() if self.metrics.last_activity else None
                 ),
             },
             "active_tasks": len(self.active_tasks),
@@ -422,9 +418,7 @@ class BaseAgent(ABC):
 
     def _log_performance(self, operation: str, duration: float, **kwargs):
         """Log performance metrics"""
-        self.logger.info(
-            f"Performance: {operation} completed in {duration:.3f}s", extra=kwargs
-        )
+        self.logger.info(f"Performance: {operation} completed in {duration:.3f}s", extra=kwargs)
 
     def _log_error(self, operation: str, error: Exception, **kwargs):
         """Log errors with context"""

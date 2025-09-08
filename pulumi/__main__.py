@@ -3,11 +3,13 @@ Sophia AI V9.7 Infrastructure Stack with Pulumi ESC Integration
 Provisions Supabase, Lambda Labs, and monitoring infrastructure
 """
 
-import pulumi
-import pulumi_supabase as supabase
-import pulumi_aws as aws
 import json
-from typing import Dict, Any
+from typing import Any, Dict
+
+import pulumi_aws as aws
+import pulumi_supabase as supabase
+
+import pulumi
 
 # Load configuration from Pulumi ESC
 config = pulumi.Config()
@@ -16,6 +18,7 @@ environment = "prod" if stack_name == "production" else "dev"
 
 # ESC Environment Configuration
 esc_env = f"sophia-{environment}"
+
 
 class SophiaInfrastructure:
     """Main infrastructure class for Sophia AI V9.7"""
@@ -40,9 +43,7 @@ class SophiaInfrastructure:
             name=f"sophia-ai-{self.environment}",
             region="us-west-2",
             plan="pro" if self.environment == "prod" else "free",
-            opts=pulumi.ResourceOptions(
-                protect=self.environment == "prod"
-            )
+            opts=pulumi.ResourceOptions(protect=self.environment == "prod"),
         )
 
         # Enable required extensions
@@ -54,10 +55,7 @@ class SophiaInfrastructure:
 
         for ext in extensions:
             supabase.Extension(
-                f"{self.project_name}-ext-{ext}",
-                project_id=project.id,
-                name=ext,
-                enabled=True
+                f"{self.project_name}-ext-{ext}", project_id=project.id, name=ext, enabled=True
             )
 
         return project
@@ -70,10 +68,7 @@ class SophiaInfrastructure:
             f"{self.project_name}-logs",
             name=f"/sophia-ai/{self.environment}",
             retention_in_days=30 if self.environment == "dev" else 90,
-            tags={
-                "Environment": self.environment,
-                "Project": "sophia-ai-v97"
-            }
+            tags={"Environment": self.environment, "Project": "sophia-ai-v97"},
         )
 
         # CloudWatch Dashboard
@@ -81,29 +76,28 @@ class SophiaInfrastructure:
             f"{self.project_name}-dashboard",
             dashboard_name=f"SophiaAI-{self.environment}",
             dashboard_body=pulumi.Output.all(log_group.name).apply(
-                lambda args: json.dumps({
-                    "widgets": [
-                        {
-                            "type": "metric",
-                            "properties": {
-                                "metrics": [
-                                    ["AWS/Logs", "IncomingLogEvents", "LogGroupName", args[0]]
-                                ],
-                                "period": 300,
-                                "stat": "Sum",
-                                "region": "us-west-2",
-                                "title": "Sophia AI Log Events"
+                lambda args: json.dumps(
+                    {
+                        "widgets": [
+                            {
+                                "type": "metric",
+                                "properties": {
+                                    "metrics": [
+                                        ["AWS/Logs", "IncomingLogEvents", "LogGroupName", args[0]]
+                                    ],
+                                    "period": 300,
+                                    "stat": "Sum",
+                                    "region": "us-west-2",
+                                    "title": "Sophia AI Log Events",
+                                },
                             }
-                        }
-                    ]
-                })
-            )
+                        ]
+                    }
+                )
+            ),
         )
 
-        return {
-            "log_group": log_group,
-            "dashboard": dashboard
-        }
+        return {"log_group": log_group, "dashboard": dashboard}
 
     def _create_secrets_manager(self) -> Dict[str, aws.secretsmanager.Secret]:
         """Create AWS Secrets Manager for runtime secrets with comprehensive ESC integration"""
@@ -116,8 +110,8 @@ class SophiaInfrastructure:
             tags={
                 "Environment": self.environment,
                 "Project": "sophia-ai-v97",
-                "ManagedBy": "pulumi-esc"
-            }
+                "ManagedBy": "pulumi-esc",
+            },
         )
 
         # API integrations secrets
@@ -128,8 +122,8 @@ class SophiaInfrastructure:
             tags={
                 "Environment": self.environment,
                 "Project": "sophia-ai-v97",
-                "ManagedBy": "pulumi-esc"
-            }
+                "ManagedBy": "pulumi-esc",
+            },
         )
 
         # Runtime secrets version
@@ -139,61 +133,56 @@ class SophiaInfrastructure:
             secret_string=pulumi.Output.all(
                 self.supabase_project.database_url,
                 self.supabase_project.anon_key,
-                self.supabase_project.service_key
+                self.supabase_project.service_key,
             ).apply(
-                lambda args: json.dumps({
-                    "supabase_url": args[0],
-                    "supabase_anon_key": args[1],
-                    "supabase_service_key": args[2],
-                    "environment": self.environment,
-                    "managed_by": "pulumi-esc",
-                    "redis_url": f"redis://sophia-redis-{self.environment}.cache.amazonaws.com:6379",
-                    "qdrant_url": f"https://sophia-qdrant-{self.environment}.qdrant.tech"
-                })
-            )
+                lambda args: json.dumps(
+                    {
+                        "supabase_url": args[0],
+                        "supabase_anon_key": args[1],
+                        "supabase_service_key": args[2],
+                        "environment": self.environment,
+                        "managed_by": "pulumi-esc",
+                        "redis_url": f"redis://sophia-redis-{self.environment}.cache.amazonaws.com:6379",
+                        "qdrant_url": f"https://sophia-qdrant-{self.environment}.qdrant.tech",
+                    }
+                )
+            ),
         )
 
         # API secrets version (values from ESC environment)
         aws.secretsmanager.SecretVersion(
             f"{self.project_name}-api-secrets-version",
             secret_id=api_secret.id,
-            secret_string=json.dumps({
-                # Salesforce
-                "salesforce_client_id": "${salesforce.client_id}",
-                "salesforce_client_secret": "${salesforce.client_secret}",
-                "salesforce_username": "${salesforce.username}",
-                "salesforce_password": "${salesforce.password}",
-                "salesforce_security_token": "${salesforce.security_token}",
-                
-                # HubSpot
-                "hubspot_access_token": "${hubspot.access_token}",
-                
-                # Gong
-                "gong_access_key": "${gong.access_key}",
-                "gong_access_key_secret": "${gong.access_key_secret}",
-                
-                # Slack
-                "slack_bot_token": "${slack.bot_token}",
-                "slack_user_token": "${slack.user_token}",
-                
-                # OpenAI
-                "openai_api_key": "${openai.api_key}",
-                
-                # Factory AI
-                "factory_ai_url": "${factory_ai.url}",
-                "factory_ai_token": "${factory_ai.token}",
-                
-                # Metadata
-                "environment": self.environment,
-                "managed_by": "pulumi-esc",
-                "last_updated": "2025-01-08T00:00:00Z"
-            })
+            secret_string=json.dumps(
+                {
+                    # Salesforce
+                    "salesforce_client_id": "${salesforce.client_id}",
+                    "salesforce_client_secret": "${salesforce.client_secret}",
+                    "salesforce_username": "${salesforce.username}",
+                    "salesforce_password": "${salesforce.password}",
+                    "salesforce_security_token": "${salesforce.security_token}",
+                    # HubSpot
+                    "hubspot_access_token": "${hubspot.access_token}",
+                    # Gong
+                    "gong_access_key": "${gong.access_key}",
+                    "gong_access_key_secret": "${gong.access_key_secret}",
+                    # Slack
+                    "slack_bot_token": "${slack.bot_token}",
+                    "slack_user_token": "${slack.user_token}",
+                    # OpenAI
+                    "openai_api_key": "${openai.api_key}",
+                    # Factory AI
+                    "factory_ai_url": "${factory_ai.url}",
+                    "factory_ai_token": "${factory_ai.token}",
+                    # Metadata
+                    "environment": self.environment,
+                    "managed_by": "pulumi-esc",
+                    "last_updated": "2025-01-08T00:00:00Z",
+                }
+            ),
         )
 
-        return {
-            "runtime": runtime_secret,
-            "api_integrations": api_secret
-        }
+        return {"runtime": runtime_secret, "api_integrations": api_secret}
 
     def _export_outputs(self):
         """Export stack outputs for consumption by applications"""
@@ -206,9 +195,12 @@ class SophiaInfrastructure:
 
         # Monitoring outputs
         pulumi.export("log_group_name", self.monitoring["log_group"].name)
-        pulumi.export("dashboard_url", self.monitoring["dashboard"].dashboard_name.apply(
-            lambda name: f"https://console.aws.amazon.com/cloudwatch/home?region=us-west-2#dashboards:name={name}"
-        ))
+        pulumi.export(
+            "dashboard_url",
+            self.monitoring["dashboard"].dashboard_name.apply(
+                lambda name: f"https://console.aws.amazon.com/cloudwatch/home?region=us-west-2#dashboards:name={name}"
+            ),
+        )
 
         # Secrets outputs
         pulumi.export("secrets_manager_runtime_arn", self.secrets["runtime"].arn)
@@ -219,25 +211,32 @@ class SophiaInfrastructure:
         pulumi.export("environment", self.environment)
 
         # Application configuration
-        pulumi.export("app_config", {
-            "project_name": self.project_name,
-            "environment": self.environment,
-            "region": "us-west-2",
-            "version": "9.7.0"
-        })
+        pulumi.export(
+            "app_config",
+            {
+                "project_name": self.project_name,
+                "environment": self.environment,
+                "region": "us-west-2",
+                "version": "9.7.0",
+            },
+        )
+
 
 # Initialize infrastructure
 infrastructure = SophiaInfrastructure()
 
 # Output summary
-pulumi.export("infrastructure_summary", {
-    "status": "deployed",
-    "components": [
-        "supabase-project",
-        "cloudwatch-monitoring", 
-        "secrets-manager",
-        "pulumi-esc-integration"
-    ],
-    "environment": environment,
-    "timestamp": pulumi.Output.from_input("2025-01-08T00:00:00Z")
-})
+pulumi.export(
+    "infrastructure_summary",
+    {
+        "status": "deployed",
+        "components": [
+            "supabase-project",
+            "cloudwatch-monitoring",
+            "secrets-manager",
+            "pulumi-esc-integration",
+        ],
+        "environment": environment,
+        "timestamp": pulumi.Output.from_input("2025-01-08T00:00:00Z"),
+    },
+)

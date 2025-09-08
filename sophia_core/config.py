@@ -3,6 +3,7 @@
 
 import os
 from enum import Enum
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,8 +11,10 @@ load_dotenv()
 # API Keys
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
+
 class Phase(Enum):
     """9-phase structure"""
+
     BRAINSTORM = 1
     RESEARCH = 2
     FILTER = 3

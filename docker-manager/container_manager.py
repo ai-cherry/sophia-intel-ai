@@ -13,6 +13,7 @@ import subprocess
 import sys
 from typing import Dict, List, Optional
 
+
 class DockerManager:
     """Manages Docker containers through the CLI."""
 
@@ -21,11 +22,7 @@ class DockerManager:
         """Run a Docker command and return the result."""
         try:
             result = subprocess.run(
-                command,
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
+                command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
             )
             return result
         except subprocess.CalledProcessError as e:
@@ -63,11 +60,15 @@ class DockerManager:
             print(f"Error parsing container stats: {result.stdout}")
             return {}
 
-    def start_container(self, image: str, name: Optional[str] = None, 
-                      ports: Optional[List[str]] = None, 
-                      volumes: Optional[List[str]] = None,
-                      env_vars: Optional[List[str]] = None,
-                      detach: bool = True) -> str:
+    def start_container(
+        self,
+        image: str,
+        name: Optional[str] = None,
+        ports: Optional[List[str]] = None,
+        volumes: Optional[List[str]] = None,
+        env_vars: Optional[List[str]] = None,
+        detach: bool = True,
+    ) -> str:
         """Start a new container with the given parameters."""
         cmd = ["docker", "run"]
 
@@ -116,6 +117,7 @@ class DockerManager:
         result = self.run_command(cmd)
         return result.stdout
 
+
 def main():
     """Main entry point for the Docker Manager CLI."""
     parser = argparse.ArgumentParser(description="Docker Container Manager")
@@ -123,8 +125,9 @@ def main():
 
     # List command
     list_parser = subparsers.add_parser("list", help="List containers")
-    list_parser.add_argument("-a", "--all", action="store_true", 
-                           help="Show all containers (default shows just running)")
+    list_parser.add_argument(
+        "-a", "--all", action="store_true", help="Show all containers (default shows just running)"
+    )
 
     # Stats command
     stats_parser = subparsers.add_parser("stats", help="Get container statistics")
@@ -134,12 +137,15 @@ def main():
     start_parser = subparsers.add_parser("start", help="Start a new container")
     start_parser.add_argument("image", help="Docker image to run")
     start_parser.add_argument("-n", "--name", help="Assign a name to the container")
-    start_parser.add_argument("-p", "--ports", action="append", 
-                            help="Port mappings (host:container)")
-    start_parser.add_argument("-v", "--volumes", action="append", 
-                            help="Volume mappings (host:container)")
-    start_parser.add_argument("-e", "--env", action="append", 
-                            help="Environment variables (KEY=VALUE)")
+    start_parser.add_argument(
+        "-p", "--ports", action="append", help="Port mappings (host:container)"
+    )
+    start_parser.add_argument(
+        "-v", "--volumes", action="append", help="Volume mappings (host:container)"
+    )
+    start_parser.add_argument(
+        "-e", "--env", action="append", help="Environment variables (KEY=VALUE)"
+    )
 
     # Stop command
     stop_parser = subparsers.add_parser("stop", help="Stop a container")
@@ -148,8 +154,9 @@ def main():
     # Remove command
     remove_parser = subparsers.add_parser("remove", help="Remove a container")
     remove_parser.add_argument("container_id", help="Container ID or name")
-    remove_parser.add_argument("-f", "--force", action="store_true", 
-                             help="Force remove a running container")
+    remove_parser.add_argument(
+        "-f", "--force", action="store_true", help="Force remove a running container"
+    )
 
     # Logs command
     logs_parser = subparsers.add_parser("logs", help="Get container logs")
@@ -172,11 +179,7 @@ def main():
 
     elif args.command == "start":
         container_id = manager.start_container(
-            args.image, 
-            name=args.name, 
-            ports=args.ports, 
-            volumes=args.volumes, 
-            env_vars=args.env
+            args.image, name=args.name, ports=args.ports, volumes=args.volumes, env_vars=args.env
         )
         print(f"Container started with ID: {container_id}")
 
@@ -194,6 +197,7 @@ def main():
 
     else:
         parser.print_help()
+
 
 if __name__ == "__main__":
     main()

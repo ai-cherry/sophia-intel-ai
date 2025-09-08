@@ -36,6 +36,7 @@ class ServiceContainer:
                     try:
                         params[param_name] = self.get(param.annotation)
                     except KeyError:
+                        pass
             instance = factory(**params)
             self._services[service_name] = instance
             return instance

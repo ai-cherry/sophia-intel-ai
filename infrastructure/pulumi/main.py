@@ -4,25 +4,19 @@ Manages Redis Cloud, vector databases, and API key infrastructure with ESC integ
 """
 
 import json
-import os
 
 # Import ESC components
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 import pulumi_aws as aws
-import pulumi_gcp as gcp
 import pulumi_random as random
-from pulumi_kubernetes import Provider as K8sProvider
 
 import pulumi
 from pulumi import Config, Output, export
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
-
-from infrastructure.pulumi.esc.config_loader import ESCConfigLoader
-from infrastructure.pulumi.esc.secrets_manager import ESCSecretsManager
 
 
 class SophiaIntelAIInfrastructure:

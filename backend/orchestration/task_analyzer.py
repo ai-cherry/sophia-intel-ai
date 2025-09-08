@@ -1,5 +1,3 @@
-import asyncio
-
 """
 Task Analyzer for Sophia AI Orchestration
 Analyzes tasks to determine complexity, required tools, and approach
@@ -12,6 +10,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class TaskComplexity(Enum):
     """Task complexity levels"""
 
@@ -20,6 +19,7 @@ class TaskComplexity(Enum):
     MODERATE = "moderate"  # 2 - 8 hours
     COMPLEX = "complex"  # 1 - 3 days
     EPIC = "epic"  # > 3 days
+
 
 @dataclass
 class TaskAnalysis:
@@ -33,6 +33,7 @@ class TaskAnalysis:
     context_needed: list[str]
     risks: list[str]
     confidence: float
+
 
 class TaskAnalyzer:
     """Analyzes development tasks to determine optimal approach"""
@@ -117,9 +118,7 @@ class TaskAnalyzer:
         # Determine task type
         task_type = "general"
         for pattern_type, pattern_info in self.task_patterns.items():
-            if any(
-                keyword in description_lower for keyword in pattern_info["keywords"]
-            ):
+            if any(keyword in description_lower for keyword in pattern_info["keywords"]):
                 task_type = pattern_type
                 break
 
@@ -127,19 +126,13 @@ class TaskAnalyzer:
 
         # Estimate complexity based on certain indicators
         complexity = pattern.get("typical_complexity", TaskComplexity.MODERATE)
-        if any(
-            word in description_lower for word in ["simple", "quick", "minor", "small"]
-        ):
+        if any(word in description_lower for word in ["simple", "quick", "minor", "small"]):
             complexity = TaskComplexity.SIMPLE
         elif any(
-            word in description_lower
-            for word in ["complex", "major", "large", "entire", "system"]
+            word in description_lower for word in ["complex", "major", "large", "entire", "system"]
         ):
             complexity = TaskComplexity.COMPLEX
-        elif any(
-            word in description_lower
-            for word in ["epic", "massive", "complete rewrite"]
-        ):
+        elif any(word in description_lower for word in ["epic", "massive", "complete rewrite"]):
             complexity = TaskComplexity.EPIC
 
         # Determine required tools
@@ -194,9 +187,7 @@ class TaskAnalyzer:
             confidence=0.6,  # Heuristic confidence
         )
 
-    def _generate_subtasks(
-        self, task_type: str, description: str
-    ) -> list[dict[str, Any]]:
+    def _generate_subtasks(self, task_type: str, description: str) -> list[dict[str, Any]]:
         """Generate subtasks based on task type"""
         subtask_templates = {
             "bugfix": [
@@ -281,9 +272,7 @@ class TaskAnalyzer:
             logger.error(f"AI analysis failed: {e}")
             return None
 
-    def _merge_analyses(
-        self, heuristic: TaskAnalysis, ai_result: dict[str, Any]
-    ) -> TaskAnalysis:
+    def _merge_analyses(self, heuristic: TaskAnalysis, ai_result: dict[str, Any]) -> TaskAnalysis:
         """Merge heuristic and AI analyses"""
         # Convert AI complexity string to enum
         complexity_map = {
@@ -303,8 +292,7 @@ class TaskAnalyzer:
 
         # Average the hour estimates
         avg_hours = (
-            heuristic.estimated_hours
-            + ai_result.get("estimated_hours", heuristic.estimated_hours)
+            heuristic.estimated_hours + ai_result.get("estimated_hours", heuristic.estimated_hours)
         ) / 2
 
         return TaskAnalysis(

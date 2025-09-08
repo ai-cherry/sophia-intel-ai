@@ -5,9 +5,7 @@ and micro-swarm configurations.
 """
 
 import asyncio
-import json
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -19,9 +17,7 @@ from app.learning.evaluation_swarm import (
     SwarmGrade,
 )
 from app.orchestration.factory_aware_orchestrator import (
-    AgentSpawnEvent,
     ComplexityAnalyzer,
-    EventBroadcaster,
     FactoryAwareOrchestrator,
     OrchestratorRequest,
     RequestType,

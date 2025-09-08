@@ -9,15 +9,14 @@ import json
 import os
 import re
 import sys
-import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import file access tools
-from app.tools.basic_tools import git_status, read_file, search_code, write_file
+from app.tools.basic_tools import git_status, read_file, write_file
 
 
 class CodeModifierAgent:

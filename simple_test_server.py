@@ -18,7 +18,6 @@ from typing import Any, Callable, Dict, List, Optional
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 # Add project root to path for imports

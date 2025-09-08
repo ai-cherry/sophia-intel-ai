@@ -3,10 +3,11 @@ Settings Configuration for Sophia AI V9.7
 Centralized configuration management with environment variable support.
 """
 
-import os
-from typing import Optional, List
-from pydantic_settings import BaseSettings
+from typing import List, Optional
+
 from pydantic import Field, validator
+from pydantic_settings import BaseSettings
+
 
 class Settings(BaseSettings):
     """
@@ -78,7 +79,7 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: List[str] = Field(
         default=["${SOPHIA_FRONTEND_ENDPOINT}", "https://sophia-intel.ai"],
-        description="CORS allowed origins"
+        description="CORS allowed origins",
     )
 
     # Monitoring
@@ -90,7 +91,7 @@ class Settings(BaseSettings):
     upload_max_size: int = Field(default=10485760, description="Max upload size in bytes (10MB)")
     upload_allowed_types: List[str] = Field(
         default=["pdf", "docx", "txt", "md", "json", "csv"],
-        description="Allowed file types for upload"
+        description="Allowed file types for upload",
     )
 
     # Email (Optional)
@@ -111,7 +112,9 @@ class Settings(BaseSettings):
     enable_knowledge_graph: bool = Field(default=True, description="Enable knowledge graph")
 
     # Model Configuration
-    embedding_model: str = Field(default="all-mpnet-base-v2", description="Sentence transformer model")
+    embedding_model: str = Field(
+        default="all-mpnet-base-v2", description="Sentence transformer model"
+    )
     anthropic_model: str = Field(default="claude-3-opus-20240805", description="Anthropic model")
     openai_model: str = Field(default="gpt-4", description="OpenAI model")
 
@@ -120,13 +123,19 @@ class Settings(BaseSettings):
     cache_max_connections: int = Field(default=20, description="Max Redis connections")
 
     # Vector Search Configuration
-    vector_collection_name: str = Field(default="project_knowledge", description="Vector collection name")
+    vector_collection_name: str = Field(
+        default="project_knowledge", description="Vector collection name"
+    )
     vector_embedding_size: int = Field(default=768, description="Embedding vector size")
     vector_search_limit: int = Field(default=10, description="Default search result limit")
-    vector_confidence_threshold: float = Field(default=0.7, description="Minimum confidence threshold")
+    vector_confidence_threshold: float = Field(
+        default=0.7, description="Minimum confidence threshold"
+    )
 
     # Intent Classification Configuration
-    intent_confidence_threshold: float = Field(default=0.7, description="Intent classification threshold")
+    intent_confidence_threshold: float = Field(
+        default=0.7, description="Intent classification threshold"
+    )
     intent_cache_ttl: int = Field(default=3600, description="Intent analysis cache TTL")
     intent_max_reasoning_tokens: int = Field(default=1000, description="Max tokens for reasoning")
 
@@ -197,7 +206,7 @@ class Settings(BaseSettings):
             "max_overflow": 30,
             "pool_timeout": 30,
             "pool_recycle": 3600,
-            "echo": self.debug
+            "echo": self.debug,
         }
 
     def get_redis_config(self) -> dict:
@@ -207,15 +216,12 @@ class Settings(BaseSettings):
             "max_connections": self.cache_max_connections,
             "retry_on_timeout": True,
             "socket_keepalive": True,
-            "health_check_interval": 30
+            "health_check_interval": 30,
         }
 
     def get_qdrant_config(self) -> dict:
         """Get Qdrant configuration dictionary"""
-        config = {
-            "host": self.qdrant_host,
-            "port": self.qdrant_port
-        }
+        config = {"host": self.qdrant_host, "port": self.qdrant_port}
         if self.qdrant_api_key:
             config["api_key"] = self.qdrant_api_key
         return config
@@ -226,7 +232,7 @@ class Settings(BaseSettings):
             "allow_origins": self.cors_origins,
             "allow_credentials": True,
             "allow_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["*"]
+            "allow_headers": ["*"],
         }
 
     def is_feature_enabled(self, feature: str) -> bool:
@@ -253,30 +259,31 @@ class Settings(BaseSettings):
                 "enabled": self.enable_slack_integration,
                 "rate_limit_tier": self.slack_rate_limit_tier,
                 "timeout": self.slack_webhook_timeout,
-                "retry_attempts": self.slack_retry_attempts
+                "retry_attempts": self.slack_retry_attempts,
             },
             "notion": {
                 "api_key": self.notion_api_key,
                 "database_id": self.notion_database_id,
-                "enabled": self.enable_notion_integration
+                "enabled": self.enable_notion_integration,
             },
             "asana": {
                 "access_token": self.asana_access_token,
                 "workspace_id": self.asana_workspace_id,
-                "enabled": self.enable_asana_integration
+                "enabled": self.enable_asana_integration,
             },
             "linear": {
                 "api_key": self.linear_api_key,
                 "team_id": self.linear_team_id,
-                "enabled": self.enable_linear_integration
+                "enabled": self.enable_linear_integration,
             },
             "gong": {
                 "api_key": self.gong_api_key,
                 "api_secret": self.gong_api_secret,
-                "enabled": self.enable_gong_integration
-            }
+                "enabled": self.enable_gong_integration,
+            },
         }
         return configs.get(integration, {})
+
 
 # Global settings instance
 settings = Settings()

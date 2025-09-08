@@ -6,41 +6,46 @@ Combines anomaly detection with self-healing workflows, adaptive optimization,
 and predictive failure analysis for 99.99% uptime targets.
 """
 
-import asyncio
-import logging
-import json
 import hashlib
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Tuple
+import json
+import logging
 from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
+import asyncpg
 import numpy as np
 import pandas as pd
+import redis.asyncio as redis
+from bayesian_optimization import BayesianOptimization
+from prometheus_client import Counter, Gauge
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-from bayesian_optimization import BayesianOptimization
-import redis.asyncio as redis
-import asyncpg
-from prometheus_client import Counter, Histogram, Gauge
 
+from ..cache.cache_service import CacheService
 from ..core.config import settings
 from ..monitoring.metrics import MetricsCollector
-from ..cache.cache_service import CacheService
 
 # Metrics
-ANOMALIES_DETECTED = Counter('sophia_anomalies_detected_total', 'Total anomalies detected', ['severity'])
-HEALING_ACTIONS = Counter('sophia_healing_actions_total', 'Total healing actions taken', ['action_type'])
-HEALING_SUCCESS_RATE = Gauge('sophia_healing_success_rate', 'Success rate of healing actions')
-PREDICTION_ACCURACY = Gauge('sophia_prediction_accuracy', 'Accuracy of failure predictions')
+ANOMALIES_DETECTED = Counter(
+    "sophia_anomalies_detected_total", "Total anomalies detected", ["severity"]
+)
+HEALING_ACTIONS = Counter(
+    "sophia_healing_actions_total", "Total healing actions taken", ["action_type"]
+)
+HEALING_SUCCESS_RATE = Gauge("sophia_healing_success_rate", "Success rate of healing actions")
+PREDICTION_ACCURACY = Gauge("sophia_prediction_accuracy", "Accuracy of failure predictions")
 
 logger = logging.getLogger(__name__)
+
 
 class SeverityLevel(Enum):
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
+
 
 @dataclass
 class Anomaly:
@@ -52,6 +57,7 @@ class Anomaly:
     confidence: float
     context: Dict[str, Any]
 
+
 @dataclass
 class HealingAction:
     action_id: str
@@ -60,6 +66,7 @@ class HealingAction:
     parameters: Dict[str, Any]
     rollback_checkpoint: Optional[str]
     estimated_impact: float
+
 
 class FusedHealingSystem:
     """
@@ -77,23 +84,19 @@ class FusedHealingSystem:
         self.metrics_collector = MetricsCollector()
 
         # ML Models
-        self.anomaly_model = IsolationForest(
-            contamination=0.05,
-            random_state=42,
-            n_estimators=200
-        )
+        self.anomaly_model = IsolationForest(contamination=0.05, random_state=42, n_estimators=200)
         self.scaler = StandardScaler()
 
         # Bayesian Optimizer for parameter tuning
         self.optimizer = BayesianOptimization(
             f=self._optimization_objective,
             pbounds={
-                'cpu_threshold': (0.5, 0.9),
-                'memory_threshold': (0.6, 0.9),
-                'response_time_threshold': (100, 500),
-                'error_rate_threshold': (0.01, 0.1)
+                "cpu_threshold": (0.5, 0.9),
+                "memory_threshold": (0.6, 0.9),
+                "response_time_threshold": (100, 500),
+                "error_rate_threshold": (0.01, 0.1),
             },
-            random_state=42
+            random_state=42,
         )
 
         # Historical data for learning
@@ -103,11 +106,11 @@ class FusedHealingSystem:
 
         # Configuration
         self.config = {
-            'anomaly_window_minutes': 15,
-            'prediction_horizon_minutes': 30,
-            'healing_cooldown_minutes': 5,
-            'max_concurrent_healings': 3,
-            'rollback_timeout_seconds': 300
+            "anomaly_window_minutes": 15,
+            "prediction_horizon_minutes": 30,
+            "healing_cooldown_minutes": 5,
+            "max_concurrent_healings": 3,
+            "rollback_timeout_seconds": 300,
         }
 
     async def initialize(self):
@@ -115,17 +118,11 @@ class FusedHealingSystem:
         try:
             # Redis connection
             self.redis_client = redis.Redis(
-                host=settings.REDIS_HOST,
-                port=settings.REDIS_PORT,
-                decode_responses=True
+                host=settings.REDIS_HOST, port=settings.REDIS_PORT, decode_responses=True
             )
 
             # Database connection
-            self.db_pool = await asyncpg.create_pool(
-                settings.DATABASE_URL,
-                min_size=2,
-                max_size=10
-            )
+            self.db_pool = await asyncpg.create_pool(settings.DATABASE_URL, min_size=2, max_size=10)
 
             # Load historical data and train models
             await self._load_historical_data()
@@ -204,7 +201,7 @@ class FusedHealingSystem:
                             expected_range=expected_range,
                             severity=severity,
                             confidence=confidence,
-                            context={"anomaly_score": anomaly_score}
+                            context={"anomaly_score": anomaly_score},
                         )
 
                         anomalies.append(anomaly)
@@ -216,32 +213,34 @@ class FusedHealingSystem:
             logger.error(f"Error detecting anomalies: {e}")
             return []
 
-    async def _predict_failures(self, metrics: Dict[str, float], anomalies: List[Anomaly]) -> Dict[str, float]:
+    async def _predict_failures(
+        self, metrics: Dict[str, float], anomalies: List[Anomaly]
+    ) -> Dict[str, float]:
         """Predict potential system failures based on current state"""
         try:
             predictions = {}
 
             # Simple rule-based predictions (can be enhanced with ML)
-            cpu_usage = metrics.get('cpu_usage_percent', 0)
-            memory_usage = metrics.get('memory_usage_percent', 0)
-            response_time = metrics.get('avg_response_time_ms', 0)
-            error_rate = metrics.get('error_rate_percent', 0)
+            cpu_usage = metrics.get("cpu_usage_percent", 0)
+            memory_usage = metrics.get("memory_usage_percent", 0)
+            response_time = metrics.get("avg_response_time_ms", 0)
+            error_rate = metrics.get("error_rate_percent", 0)
 
             # CPU failure prediction
             if cpu_usage > 85:
-                predictions['cpu_overload'] = min(1.0, (cpu_usage - 85) / 15)
+                predictions["cpu_overload"] = min(1.0, (cpu_usage - 85) / 15)
 
             # Memory failure prediction
             if memory_usage > 80:
-                predictions['memory_exhaustion'] = min(1.0, (memory_usage - 80) / 20)
+                predictions["memory_exhaustion"] = min(1.0, (memory_usage - 80) / 20)
 
             # Response time degradation
             if response_time > 1000:
-                predictions['response_degradation'] = min(1.0, (response_time - 1000) / 2000)
+                predictions["response_degradation"] = min(1.0, (response_time - 1000) / 2000)
 
             # Error rate spike
             if error_rate > 5:
-                predictions['error_spike'] = min(1.0, error_rate / 10)
+                predictions["error_spike"] = min(1.0, error_rate / 10)
 
             # Combine with anomaly severity
             for anomaly in anomalies:
@@ -255,7 +254,9 @@ class FusedHealingSystem:
             logger.error(f"Error predicting failures: {e}")
             return {}
 
-    async def _generate_healing_actions(self, anomalies: List[Anomaly], predictions: Dict[str, float]) -> List[HealingAction]:
+    async def _generate_healing_actions(
+        self, anomalies: List[Anomaly], predictions: Dict[str, float]
+    ) -> List[HealingAction]:
         """Generate appropriate healing actions based on anomalies and predictions"""
         actions = []
 
@@ -271,7 +272,9 @@ class FusedHealingSystem:
             # Add predictive actions for high-probability failures
             for failure_type, probability in predictions.items():
                 if probability > 0.7:  # High probability threshold
-                    action = await self._create_predictive_action(failure_type, probability, optimal_params)
+                    action = await self._create_predictive_action(
+                        failure_type, probability, optimal_params
+                    )
                     if action:
                         actions.append(action)
 
@@ -281,12 +284,14 @@ class FusedHealingSystem:
             logger.error(f"Error generating healing actions: {e}")
             return []
 
-    async def _create_healing_action(self, anomaly: Anomaly, optimal_params: Dict) -> Optional[HealingAction]:
+    async def _create_healing_action(
+        self, anomaly: Anomaly, optimal_params: Dict
+    ) -> Optional[HealingAction]:
         """Create specific healing action for an anomaly"""
         action_id = hashlib.md5(f"{anomaly.metric_name}_{anomaly.timestamp}".encode()).hexdigest()
 
         # CPU-related healing
-        if 'cpu' in anomaly.metric_name.lower():
+        if "cpu" in anomaly.metric_name.lower():
             return HealingAction(
                 action_id=action_id,
                 action_type="scale_resources",
@@ -294,14 +299,14 @@ class FusedHealingSystem:
                 parameters={
                     "resource_type": "cpu",
                     "scale_factor": 1.5,
-                    "threshold": optimal_params.get('cpu_threshold', 0.8)
+                    "threshold": optimal_params.get("cpu_threshold", 0.8),
                 },
                 rollback_checkpoint=await self._create_checkpoint("compute"),
-                estimated_impact=0.8
+                estimated_impact=0.8,
             )
 
         # Memory-related healing
-        elif 'memory' in anomaly.metric_name.lower():
+        elif "memory" in anomaly.metric_name.lower():
             return HealingAction(
                 action_id=action_id,
                 action_type="clear_cache",
@@ -309,14 +314,14 @@ class FusedHealingSystem:
                 parameters={
                     "cache_type": "redis",
                     "clear_percentage": 30,
-                    "preserve_critical": True
+                    "preserve_critical": True,
                 },
                 rollback_checkpoint=await self._create_checkpoint("cache"),
-                estimated_impact=0.6
+                estimated_impact=0.6,
             )
 
         # Response time healing
-        elif 'response' in anomaly.metric_name.lower():
+        elif "response" in anomaly.metric_name.lower():
             return HealingAction(
                 action_id=action_id,
                 action_type="optimize_queries",
@@ -324,10 +329,10 @@ class FusedHealingSystem:
                 parameters={
                     "enable_query_cache": True,
                     "connection_pool_size": 20,
-                    "timeout_ms": optimal_params.get('response_time_threshold', 200)
+                    "timeout_ms": optimal_params.get("response_time_threshold", 200),
                 },
                 rollback_checkpoint=await self._create_checkpoint("database"),
-                estimated_impact=0.7
+                estimated_impact=0.7,
             )
 
         return None
@@ -335,7 +340,9 @@ class FusedHealingSystem:
     async def _execute_healing_action(self, action: HealingAction) -> bool:
         """Execute a healing action with rollback capability"""
         try:
-            logger.info(f"Executing healing action: {action.action_type} for {action.target_service}")
+            logger.info(
+                f"Executing healing action: {action.action_type} for {action.target_service}"
+            )
 
             # Store action in history
             await self._store_healing_action(action)
@@ -353,7 +360,11 @@ class FusedHealingSystem:
                 success = await self._restart_service(action.parameters)
 
             # Update success rate metric
-            current_rate = HEALING_SUCCESS_RATE._value._value if hasattr(HEALING_SUCCESS_RATE._value, '_value') else 0
+            current_rate = (
+                HEALING_SUCCESS_RATE._value._value
+                if hasattr(HEALING_SUCCESS_RATE._value, "_value")
+                else 0
+            )
             new_rate = (current_rate * 0.9) + (0.1 if success else 0)
             HEALING_SUCCESS_RATE.set(new_rate)
 
@@ -375,10 +386,10 @@ class FusedHealingSystem:
 
         # Simulate performance score (in real implementation, this would
         # measure actual system performance)
-        cpu_score = 1.0 - abs(params['cpu_threshold'] - 0.75)
-        memory_score = 1.0 - abs(params['memory_threshold'] - 0.8)
-        response_score = 1.0 - abs(params['response_time_threshold'] - 200) / 200
-        error_score = 1.0 - params['error_rate_threshold']
+        cpu_score = 1.0 - abs(params["cpu_threshold"] - 0.75)
+        memory_score = 1.0 - abs(params["memory_threshold"] - 0.8)
+        response_score = 1.0 - abs(params["response_time_threshold"] - 200) / 200
+        error_score = 1.0 - params["error_rate_threshold"]
 
         return (cpu_score + memory_score + response_score + error_score) / 4
 
@@ -388,14 +399,14 @@ class FusedHealingSystem:
             # Run optimization if we have enough data
             if len(self.healing_history) > 10:
                 self.optimizer.maximize(init_points=2, n_iter=3)
-                return self.optimizer.max['params']
+                return self.optimizer.max["params"]
             else:
                 # Return default parameters
                 return {
-                    'cpu_threshold': 0.8,
-                    'memory_threshold': 0.8,
-                    'response_time_threshold': 200,
-                    'error_rate_threshold': 0.05
+                    "cpu_threshold": 0.8,
+                    "memory_threshold": 0.8,
+                    "response_time_threshold": 200,
+                    "error_rate_threshold": 0.05,
                 }
         except Exception as e:
             logger.error(f"Error getting optimal parameters: {e}")
@@ -430,9 +441,7 @@ class FusedHealingSystem:
                 if not metrics_df.empty:
                     # Pivot to get metrics as columns
                     pivot_df = metrics_df.pivot_table(
-                        index='timestamp', 
-                        columns='metric_name', 
-                        values='value'
+                        index="timestamp", columns="metric_name", values="value"
                     ).fillna(0)
 
                     self.historical_metrics = pivot_df.values
@@ -479,18 +488,18 @@ class FusedHealingSystem:
                 """
                 row = await conn.fetchrow(query, metric_name)
 
-                if row and row['p5'] is not None:
-                    range_tuple = (float(row['p5']), float(row['p95']))
+                if row and row["p5"] is not None:
+                    range_tuple = (float(row["p5"]), float(row["p95"]))
                     # Cache for 1 hour
                     await self.cache_service.set(cache_key, json.dumps(range_tuple), ttl=3600)
                     return range_tuple
                 else:
                     # Default ranges for common metrics
                     defaults = {
-                        'cpu_usage_percent': (0, 80),
-                        'memory_usage_percent': (0, 85),
-                        'avg_response_time_ms': (50, 500),
-                        'error_rate_percent': (0, 2)
+                        "cpu_usage_percent": (0, 80),
+                        "memory_usage_percent": (0, 85),
+                        "avg_response_time_ms": (50, 500),
+                        "error_rate_percent": (0, 2),
                     }
                     return defaults.get(metric_name, (0, 100))
 
@@ -498,7 +507,9 @@ class FusedHealingSystem:
             logger.error(f"Error getting expected range for {metric_name}: {e}")
             return (0, 100)
 
-    def _calculate_severity(self, metric_name: str, value: float, expected_range: Tuple[float, float]) -> SeverityLevel:
+    def _calculate_severity(
+        self, metric_name: str, value: float, expected_range: Tuple[float, float]
+    ) -> SeverityLevel:
         """Calculate severity level based on how far outside expected range"""
         min_val, max_val = expected_range
         range_size = max_val - min_val
@@ -527,7 +538,7 @@ class FusedHealingSystem:
 
             # Check concurrent healings
             active_healings = await self.redis_client.scard("active_healings")
-            if active_healings >= self.config['max_concurrent_healings']:
+            if active_healings >= self.config["max_concurrent_healings"]:
                 return False
 
             return True
@@ -544,13 +555,13 @@ class FusedHealingSystem:
         checkpoint_data = {
             "service": service,
             "timestamp": datetime.utcnow().isoformat(),
-            "state": "current_configuration"  # Would be actual config
+            "state": "current_configuration",  # Would be actual config
         }
 
         await self.redis_client.setex(
             f"checkpoint:{checkpoint_id}",
-            self.config['rollback_timeout_seconds'],
-            json.dumps(checkpoint_data)
+            self.config["rollback_timeout_seconds"],
+            json.dumps(checkpoint_data),
         )
 
         return checkpoint_id
@@ -559,14 +570,19 @@ class FusedHealingSystem:
         """Store healing action in database for learning"""
         try:
             async with self.db_pool.acquire() as conn:
-                await conn.execute("""
+                await conn.execute(
+                    """
                     INSERT INTO healing_actions (
                         action_id, action_type, target_service, parameters, 
                         timestamp, rollback_checkpoint
                     ) VALUES ($1, $2, $3, $4, $5, $6)
-                """, 
-                action.action_id, action.action_type, action.target_service,
-                json.dumps(action.parameters), datetime.utcnow(), action.rollback_checkpoint
+                """,
+                    action.action_id,
+                    action.action_type,
+                    action.target_service,
+                    json.dumps(action.parameters),
+                    datetime.utcnow(),
+                    action.rollback_checkpoint,
                 )
         except Exception as e:
             logger.error(f"Error storing healing action: {e}")
@@ -580,9 +596,9 @@ class FusedHealingSystem:
     async def _clear_cache(self, parameters: Dict) -> bool:
         """Clear cache based on parameters"""
         try:
-            if parameters.get('cache_type') == 'redis':
+            if parameters.get("cache_type") == "redis":
                 # Clear percentage of cache
-                clear_pct = parameters.get('clear_percentage', 30)
+                clear_pct = parameters.get("clear_percentage", 30)
                 # Implementation would selectively clear cache
                 logger.info(f"Clearing {clear_pct}% of Redis cache")
                 return True
@@ -598,7 +614,7 @@ class FusedHealingSystem:
 
     async def _restart_service(self, parameters: Dict) -> bool:
         """Restart a service"""
-        service_name = parameters.get('service_name')
+        service_name = parameters.get("service_name")
         logger.info(f"Restarting service: {service_name}")
         # Implementation would restart the specified service
         return True
@@ -609,7 +625,9 @@ class FusedHealingSystem:
             if not action.rollback_checkpoint:
                 return
 
-            checkpoint_data = await self.redis_client.get(f"checkpoint:{action.rollback_checkpoint}")
+            checkpoint_data = await self.redis_client.get(
+                f"checkpoint:{action.rollback_checkpoint}"
+            )
             if checkpoint_data:
                 logger.info(f"Rolling back action {action.action_id}")
                 # Implementation would restore from checkpoint
@@ -622,12 +640,14 @@ class FusedHealingSystem:
         try:
             # Update healing history
             for action in actions:
-                self.healing_history.append({
-                    'action_type': action.action_type,
-                    'success': True,  # Would check actual success
-                    'parameters': action.parameters,
-                    'timestamp': datetime.utcnow()
-                })
+                self.healing_history.append(
+                    {
+                        "action_type": action.action_type,
+                        "success": True,  # Would check actual success
+                        "parameters": action.parameters,
+                        "timestamp": datetime.utcnow(),
+                    }
+                )
 
             # Update Bayesian optimizer with results
             # This would measure actual performance improvement
@@ -644,19 +664,28 @@ class FusedHealingSystem:
         try:
             async with self.db_pool.acquire() as conn:
                 for action in actions:
-                    await conn.execute("""
+                    await conn.execute(
+                        """
                         UPDATE healing_actions 
                         SET success = $1, performance_score = $2
                         WHERE action_id = $3
-                    """, True, performance_score, action.action_id)
+                    """,
+                        True,
+                        performance_score,
+                        action.action_id,
+                    )
         except Exception as e:
             logger.error(f"Error storing learning data: {e}")
 
-    async def _create_predictive_action(self, failure_type: str, probability: float, optimal_params: Dict) -> Optional[HealingAction]:
+    async def _create_predictive_action(
+        self, failure_type: str, probability: float, optimal_params: Dict
+    ) -> Optional[HealingAction]:
         """Create preventive action based on failure prediction"""
-        action_id = hashlib.md5(f"predictive_{failure_type}_{datetime.utcnow()}".encode()).hexdigest()
+        action_id = hashlib.md5(
+            f"predictive_{failure_type}_{datetime.utcnow()}".encode()
+        ).hexdigest()
 
-        if 'cpu' in failure_type:
+        if "cpu" in failure_type:
             return HealingAction(
                 action_id=action_id,
                 action_type="preemptive_scale",
@@ -664,13 +693,14 @@ class FusedHealingSystem:
                 parameters={
                     "resource_type": "cpu",
                     "scale_factor": 1.2,
-                    "probability": probability
+                    "probability": probability,
                 },
                 rollback_checkpoint=await self._create_checkpoint("compute"),
-                estimated_impact=probability
+                estimated_impact=probability,
             )
 
         return None
+
 
 # Global instance
 fused_healing_system = FusedHealingSystem()

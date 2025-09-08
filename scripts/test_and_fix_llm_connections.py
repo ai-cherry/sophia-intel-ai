@@ -19,8 +19,6 @@ os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
 
 from portkey_ai import Portkey
 
-from app.core.secrets_manager import SecretsManager
-
 
 class LLMConnectionFixer:
     """Test and fix LLM connections through Portkey"""

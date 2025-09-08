@@ -5,10 +5,8 @@ connection pooling limits, and health monitoring with auto-reconnect
 """
 
 import asyncio
-import random
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

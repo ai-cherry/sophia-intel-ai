@@ -9,7 +9,6 @@ from datetime import datetime, timezone
 
 from app.prompts import MythologyPromptManager, PromptLibrary
 from app.prompts.mythology_prompts import BusinessContext
-from app.prompts.prompt_library import PromptMetadata, PromptStatus
 
 
 async def main():

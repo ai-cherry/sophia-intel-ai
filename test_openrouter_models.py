@@ -5,12 +5,12 @@ This script tests the performance of different OpenRouter models
 for various tasks to help optimize the model mix.
 """
 
-import os
-import time
-import json
 import argparse
+import json
+import os
 import sys
-from typing import Dict, List, Any, Optional
+import time
+from typing import Any, Dict, List
 
 try:
     from openai import OpenAI
@@ -18,6 +18,7 @@ except ImportError:
     print("Installing openai package...")
     os.system("pip install openai")
     from openai import OpenAI
+
 
 class ModelTester:
     """Tests different OpenRouter models for performance comparison."""
@@ -41,10 +42,16 @@ class ModelTester:
 
         # Model configurations
         self.models = {
-            "claude-sonnet-4": {"id": "anthropic/claude-sonnet-4", "description": "Most powerful reasoning"},
+            "claude-sonnet-4": {
+                "id": "anthropic/claude-sonnet-4",
+                "description": "Most powerful reasoning",
+            },
             "gemini-2.5-flash": {"id": "google/gemini-2.5-flash", "description": "Fast generation"},
-            "deepseek-v3-0324": {"id": "deepseek/deepseek-v3-0324", "description": "Cost-effective"},
-            "qwen3-coder": {"id": "qwen/qwen3-coder", "description": "Specialized for coding"}
+            "deepseek-v3-0324": {
+                "id": "deepseek/deepseek-v3-0324",
+                "description": "Cost-effective",
+            },
+            "qwen3-coder": {"id": "qwen/qwen3-coder", "description": "Specialized for coding"},
         }
 
     def test_model(self, model_name: str, prompt: str) -> Dict[str, Any]:
@@ -55,8 +62,7 @@ class ModelTester:
         try:
             # Call the API
             response = self.client.chat.completions.create(
-                model=model_id,
-                messages=[{"role": "user", "content": prompt}]
+                model=model_id, messages=[{"role": "user", "content": prompt}]
             )
 
             end_time = time.time()
@@ -68,7 +74,9 @@ class ModelTester:
                 "success": True,
                 "response_time": end_time - start_time,
                 "response_length": len(response_text),
-                "response_preview": response_text[:100] + "..." if len(response_text) > 100 else response_text
+                "response_preview": (
+                    response_text[:100] + "..." if len(response_text) > 100 else response_text
+                ),
             }
 
             return result
@@ -80,7 +88,7 @@ class ModelTester:
                 "description": self.models[model_name]["description"],
                 "success": False,
                 "error": str(e),
-                "response_time": end_time - start_time
+                "response_time": end_time - start_time,
             }
 
     def test_all_models(self, prompt: str) -> List[Dict[str, Any]]:
@@ -108,7 +116,7 @@ class ModelTester:
             print(f"\n--- Task: {task_name} ---\n")
 
             # Sort by response time (fastest first)
-            sorted_results = sorted(results, key=lambda x: x.get("response_time", float('inf')))
+            sorted_results = sorted(results, key=lambda x: x.get("response_time", float("inf")))
 
             for result in sorted_results:
                 model = result["model"]
@@ -135,14 +143,17 @@ class ModelTester:
                 continue
 
             # Find fastest model
-            fastest = min(successful_results, key=lambda x: x.get("response_time", float('inf')))
+            fastest = min(successful_results, key=lambda x: x.get("response_time", float("inf")))
 
             # Find most detailed response (by length)
             most_detailed = max(successful_results, key=lambda x: x.get("response_length", 0))
 
             print(f"Task: {task_name}")
             print(f"  Fastest: {fastest['model']} ({int(fastest['response_time'] * 1000)}ms)")
-            print(f"  Most detailed: {most_detailed['model']} ({most_detailed['response_length']} chars)")
+            print(
+                f"  Most detailed: {most_detailed['model']} ({most_detailed['response_length']} chars)"
+            )
+
 
 def main():
     """Main function to run benchmarks."""
@@ -155,7 +166,7 @@ def main():
         "code_generation": "Write a Python function to find all prime numbers up to n using the Sieve of Eratosthenes algorithm.",
         "code_explanation": "Explain how Promise.all works in JavaScript with examples of error handling.",
         "system_architecture": "Design a microservice architecture for an e-commerce website with high availability requirements.",
-        "api_design": "Create a REST API specification for a task management system with users, tasks, and projects."
+        "api_design": "Create a REST API specification for a task management system with users, tasks, and projects.",
     }
 
     tester = ModelTester()
@@ -166,6 +177,7 @@ def main():
         with open(args.save, "w") as f:
             json.dump(results, f, indent=2)
         print(f"\nResults saved to {args.save}")
+
 
 if __name__ == "__main__":
     main()

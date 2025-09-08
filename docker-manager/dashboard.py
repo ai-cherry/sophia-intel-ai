@@ -2,15 +2,15 @@
 """
 Docker Monitoring Dashboard
 
-A simple Flask-based web dashboard to monitor Docker containers 
+A simple Flask-based web dashboard to monitor Docker containers
 running within the dev container environment.
 """
 
-import json
 import threading
 import time
-from flask import Flask, render_template, jsonify
+
 from container_manager import DockerManager
+from flask import Flask, jsonify, render_template
 
 app = Flask(__name__)
 manager = DockerManager()
@@ -20,6 +20,7 @@ update_lock = threading.Lock()
 
 # Update container data every 5 seconds
 UPDATE_INTERVAL = 5
+
 
 def update_container_data():
     """Background thread to update container information."""
@@ -46,19 +47,19 @@ def update_container_data():
 
         time.sleep(UPDATE_INTERVAL)
 
+
 @app.route("/")
 def index():
     """Render the main dashboard page."""
     return render_template("dashboard.html")
 
+
 @app.route("/api/containers")
 def get_containers():
     """API endpoint to get container data."""
     with update_lock:
-        return jsonify({
-            "containers": containers_cache,
-            "last_update": last_update
-        })
+        return jsonify({"containers": containers_cache, "last_update": last_update})
+
 
 @app.route("/api/container/<container_id>/logs")
 def get_container_logs(container_id):
@@ -69,6 +70,7 @@ def get_container_logs(container_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 @app.route("/api/container/<container_id>/stop", methods=["POST"])
 def stop_container(container_id):
     """API endpoint to stop a container."""
@@ -77,6 +79,7 @@ def stop_container(container_id):
         return jsonify({"result": result})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 @app.route("/api/container/<container_id>/remove", methods=["POST"])
 def remove_container(container_id):
@@ -87,6 +90,7 @@ def remove_container(container_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 def main():
     """Start the Flask application and the background update thread."""
     # Start background update thread
@@ -96,6 +100,7 @@ def main():
 
     # Start Flask app
     app.run(host="${BIND_IP}", port=8080, debug=True, use_reloader=False)
+
 
 if __name__ == "__main__":
     main()

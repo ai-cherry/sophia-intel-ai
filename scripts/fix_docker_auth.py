@@ -4,14 +4,11 @@ Docker Hub Authentication Fix Script
 Fixes Docker Hub authentication issues and adds auto-rotation capabilities.
 """
 
-import os
-import sys
 import json
+import os
 import subprocess
-import requests
-from datetime import datetime, timedelta
 from pathlib import Path
-import yaml
+
 
 class DockerAuthFixer:
     def __init__(self):
@@ -26,11 +23,16 @@ class DockerAuthFixer:
         try:
             # Try to login with current credentials
             result = subprocess.run(
-                ["docker", "login", "--username", os.getenv("DOCKER_USERNAME", ""), 
-                 "--password-stdin"],
+                [
+                    "docker",
+                    "login",
+                    "--username",
+                    os.getenv("DOCKER_USERNAME", ""),
+                    "--password-stdin",
+                ],
                 input=os.getenv("DOCKER_TOKEN", "").encode(),
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode == 0:
@@ -50,11 +52,11 @@ class DockerAuthFixer:
             "DOCKER_USERNAME": "your_docker_hub_username",
             "DOCKER_TOKEN": "your_docker_hub_access_token",
             "DOCKER_REGISTRY": "docker.io",
-            "DOCKER_REPOSITORY": "sophia-ai"
+            "DOCKER_REPOSITORY": "sophia-ai",
         }
 
         template_file = self.repo_root / ".github" / "secrets-template.json"
-        with open(template_file, 'w') as f:
+        with open(template_file, "w") as f:
             json.dump(secrets_template, f, indent=2)
 
         print(f"📝 Created secrets template at {template_file}")
@@ -70,7 +72,7 @@ class DockerAuthFixer:
             if not workflow_file.exists():
                 continue
 
-            with open(workflow_file, 'r') as f:
+            with open(workflow_file) as f:
                 content = f.read()
 
             # Check if workflow uses Docker
@@ -92,7 +94,7 @@ class DockerAuthFixer:
             # Check if Docker login already exists
             if "docker/login-action" not in content:
                 # Find a good place to insert the login step
-                lines = content.split('\n')
+                lines = content.split("\n")
                 updated_lines = []
 
                 for i, line in enumerate(lines):
@@ -100,11 +102,11 @@ class DockerAuthFixer:
 
                     # Insert after checkout step
                     if "uses: actions/checkout@" in line:
-                        updated_lines.extend(docker_login_step.split('\n'))
+                        updated_lines.extend(docker_login_step.split("\n"))
 
                 # Write updated content
-                with open(workflow_file, 'w') as f:
-                    f.write('\n'.join(updated_lines))
+                with open(workflow_file, "w") as f:
+                    f.write("\n".join(updated_lines))
 
                 print(f"✅ Added Docker login to {workflow_file.name}")
             else:
@@ -229,7 +231,7 @@ pulumi.export("docker_health_alarm", health_alarm.name)
         pulumi_dir.mkdir(parents=True, exist_ok=True)
 
         health_check_file = pulumi_dir / "docker_registry_health.py"
-        with open(health_check_file, 'w') as f:
+        with open(health_check_file, "w") as f:
             f.write(health_check_script)
 
         print(f"📝 Created Docker registry health check at {health_check_file}")
@@ -390,7 +392,7 @@ if __name__ == "__main__":
         scripts_dir.mkdir(parents=True, exist_ok=True)
 
         rotation_file = scripts_dir / "rotate_docker_token.py"
-        with open(rotation_file, 'w') as f:
+        with open(rotation_file, "w") as f:
             f.write(rotation_script)
 
         # Make script executable
@@ -423,9 +425,11 @@ if __name__ == "__main__":
             print("   Please update DOCKER_USERNAME and DOCKER_TOKEN environment variables")
             print("   or GitHub repository secrets before running deployments.")
 
+
 def main():
     fixer = DockerAuthFixer()
     fixer.run_fixes()
+
 
 if __name__ == "__main__":
     main()

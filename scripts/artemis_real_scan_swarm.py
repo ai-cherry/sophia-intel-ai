@@ -8,14 +8,11 @@ import asyncio
 import glob
 import json
 import os
-import subprocess
 import sys
 import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-
-import httpx
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,7 +21,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dotenv import load_dotenv
 
 # Import the file access tools
-from app.tools.basic_tools import git_status, list_directory, read_file, search_code, write_file
+from app.tools.basic_tools import read_file
 
 load_dotenv()
 

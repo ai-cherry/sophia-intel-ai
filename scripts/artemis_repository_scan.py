@@ -4,12 +4,11 @@ Artemis Microswarm Repository Scanner
 Uses 3 specialized agents to comprehensively analyze the codebase
 """
 
-import asyncio
 import json
 import os
 import sys
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

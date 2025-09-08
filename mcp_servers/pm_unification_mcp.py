@@ -13,31 +13,29 @@ Last Updated: January 8, 2025
 """
 
 import asyncio
-import json
-import os
 import logging
-from typing import Dict, List, Optional, Any, Tuple
+import os
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
 from enum import Enum
-import aiohttp
-import numpy as np
-from sentence_transformers import SentenceTransformer
+from typing import Any, Dict, List, Optional
 
-from mcp import MCPServer, MCPTool, MCPResource
-from mcp.auth import SecureAuth
+import asana
+import linear_sdk
+import numpy as np
+from gong_api import GongClient
+from mcp import MCPServer
 from mcp.cache import IntelligentCache
 from mcp.rate_limit import AdaptiveRateLimit
 
 # Third-party integrations
 from notion_client import AsyncClient as NotionClient
-import asana
-import linear_sdk
-from gong_api import GongClient
+from sentence_transformers import SentenceTransformer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class ProjectStatus(Enum):
     ON_TRACK = "on_track"
@@ -46,11 +44,13 @@ class ProjectStatus(Enum):
     CRITICAL = "critical"
     COMPLETED = "completed"
 
+
 class UrgencyLevel(Enum):
     LOW = 1
     MEDIUM = 2
     HIGH = 3
     CRITICAL = 4
+
 
 @dataclass
 class OKRAlignment:
@@ -62,6 +62,7 @@ class OKRAlignment:
     last_updated: datetime
     owner: str
     department: str
+
 
 @dataclass
 class ProjectIntelligence:
@@ -77,6 +78,7 @@ class ProjectIntelligence:
     strategic_context: Dict[str, Any]
     recommendations: List[Dict[str, Any]]
 
+
 @dataclass
 class EscalationTrigger:
     trigger_id: str
@@ -87,6 +89,7 @@ class EscalationTrigger:
     recommended_actions: List[str]
     stakeholders_to_notify: List[str]
     escalation_deadline: datetime
+
 
 class PMUnificationMCPServer(MCPServer):
     """
@@ -100,7 +103,7 @@ class PMUnificationMCPServer(MCPServer):
         super().__init__(
             name="pm-unification",
             version="1.0.0",
-            description="Unified Project Management Intelligence with Notion-Centric Architecture"
+            description="Unified Project Management Intelligence with Notion-Centric Architecture",
         )
 
         # Initialize configuration from environment variables
@@ -111,12 +114,11 @@ class PMUnificationMCPServer(MCPServer):
         self.asana_client = asana.Client.access_token(self.config["asana_token"])
         self.linear_client = linear_sdk.LinearClient(self.config["linear_token"])
         self.gong_client = GongClient(
-            access_key=self.config["gong_access_key"],
-            access_key_secret=self.config["gong_secret"]
+            access_key=self.config["gong_access_key"], access_key_secret=self.config["gong_secret"]
         )
 
         # Initialize AI components
-        self.semantic_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.semantic_model = SentenceTransformer("all-MiniLM-L6-v2")
         self.cache = IntelligentCache(ttl=300, max_size=1000)
         self.rate_limiter = AdaptiveRateLimit(requests_per_minute=100)
 
@@ -130,13 +132,13 @@ class PMUnificationMCPServer(MCPServer):
         """Load configuration from environment variables with Pulumi ESC integration"""
         required_vars = [
             "NOTION_API_TOKEN",
-            "ASANA_ACCESS_TOKEN", 
+            "ASANA_ACCESS_TOKEN",
             "LINEAR_API_KEY",
             "GONG_ACCESS_KEY",
             "GONG_ACCESS_KEY_SECRET",
             "SLACK_BOT_TOKEN",
             "OPENAI_API_KEY",
-            "ANTHROPIC_API_KEY"
+            "ANTHROPIC_API_KEY",
         ]
 
         config = {}
@@ -156,7 +158,7 @@ class PMUnificationMCPServer(MCPServer):
                     "GONG_ACCESS_KEY_SECRET": "gong_secret",
                     "SLACK_BOT_TOKEN": "slack_token",
                     "OPENAI_API_KEY": "openai_key",
-                    "ANTHROPIC_API_KEY": "anthropic_key"
+                    "ANTHROPIC_API_KEY": "anthropic_key",
                 }
                 config[key_mapping[var]] = value
 
@@ -175,7 +177,7 @@ class PMUnificationMCPServer(MCPServer):
         async def analyze_project_health(
             project_filter: Optional[Dict[str, Any]] = None,
             include_predictions: bool = True,
-            executive_view: bool = False
+            executive_view: bool = False,
         ) -> Dict[str, Any]:
             """
             Comprehensive project health analysis across all platforms
@@ -227,7 +229,7 @@ class PMUnificationMCPServer(MCPServer):
                     "predictions": predictions,
                     "executive_briefing": executive_briefing,
                     "analysis_timestamp": datetime.now().isoformat(),
-                    "data_sources": list(platform_data.keys())
+                    "data_sources": list(platform_data.keys()),
                 }
 
                 logger.info("Project health analysis completed successfully")
@@ -235,16 +237,13 @@ class PMUnificationMCPServer(MCPServer):
 
             except Exception as e:
                 logger.error(f"Project health analysis failed: {e}")
-                return {
-                    "error": str(e),
-                    "analysis_timestamp": datetime.now().isoformat()
-                }
+                return {"error": str(e), "analysis_timestamp": datetime.now().isoformat()}
 
         @self.tool("analyze_okr_alignment")
         async def analyze_okr_alignment(
             project_data: Dict[str, Any],
             department: Optional[str] = None,
-            include_recommendations: bool = True
+            include_recommendations: bool = True,
         ) -> Dict[str, Any]:
             """
             Analyze project alignment with strategic OKRs
@@ -258,21 +257,18 @@ class PMUnificationMCPServer(MCPServer):
                 OKR alignment analysis with scores and recommendations
             """
             try:
-                logger.info(f"Analyzing OKR alignment for project: {project_data.get('title', 'Unknown')}")
+                logger.info(
+                    f"Analyzing OKR alignment for project: {project_data.get('title', 'Unknown')}"
+                )
 
                 # Retrieve relevant OKRs from Notion
                 okrs = await self._get_department_okrs(department)
 
                 if not okrs:
-                    return {
-                        "error": "No OKRs found for analysis",
-                        "alignment_score": 0.0
-                    }
+                    return {"error": "No OKRs found for analysis", "alignment_score": 0.0}
 
                 # Perform semantic alignment analysis
-                alignment_results = await self._calculate_alignment_scores(
-                    project_data, okrs
-                )
+                alignment_results = await self._calculate_alignment_scores(project_data, okrs)
 
                 # Generate strategic recommendations if requested
                 recommendations = []
@@ -287,10 +283,12 @@ class PMUnificationMCPServer(MCPServer):
                     "recommendations": recommendations,
                     "strategic_context": alignment_results["context"],
                     "department_focus": department,
-                    "analysis_timestamp": datetime.now().isoformat()
+                    "analysis_timestamp": datetime.now().isoformat(),
                 }
 
-                logger.info(f"OKR alignment analysis completed with score: {alignment_results['overall_score']:.2f}")
+                logger.info(
+                    f"OKR alignment analysis completed with score: {alignment_results['overall_score']:.2f}"
+                )
                 return result
 
             except Exception as e:
@@ -298,14 +296,14 @@ class PMUnificationMCPServer(MCPServer):
                 return {
                     "error": str(e),
                     "alignment_score": 0.0,
-                    "analysis_timestamp": datetime.now().isoformat()
+                    "analysis_timestamp": datetime.now().isoformat(),
                 }
 
         @self.tool("process_escalation")
         async def process_escalation(
             trigger_data: Dict[str, Any],
             auto_execute: bool = False,
-            notify_stakeholders: bool = True
+            notify_stakeholders: bool = True,
         ) -> Dict[str, Any]:
             """
             Process and respond to project escalation triggers
@@ -331,8 +329,10 @@ class PMUnificationMCPServer(MCPServer):
                     recommended_actions=trigger_data.get("recommended_actions", []),
                     stakeholders_to_notify=trigger_data.get("stakeholders", []),
                     escalation_deadline=datetime.fromisoformat(
-                        trigger_data.get("deadline", (datetime.now() + timedelta(hours=24)).isoformat())
-                    )
+                        trigger_data.get(
+                            "deadline", (datetime.now() + timedelta(hours=24)).isoformat()
+                        )
+                    ),
                 )
 
                 # Analyze escalation context
@@ -363,7 +363,7 @@ class PMUnificationMCPServer(MCPServer):
                     "execution_results": execution_results,
                     "notification_results": notification_results,
                     "next_review": response_strategy.get("next_review"),
-                    "processing_timestamp": datetime.now().isoformat()
+                    "processing_timestamp": datetime.now().isoformat(),
                 }
 
                 logger.info(f"Escalation processing completed: {trigger.trigger_id}")
@@ -374,14 +374,14 @@ class PMUnificationMCPServer(MCPServer):
                 return {
                     "error": str(e),
                     "escalation_id": trigger_data.get("trigger_id", "unknown"),
-                    "processing_timestamp": datetime.now().isoformat()
+                    "processing_timestamp": datetime.now().isoformat(),
                 }
 
         @self.tool("generate_executive_briefing")
         async def generate_executive_briefing(
             timeframe: str = "weekly",
             focus_areas: Optional[List[str]] = None,
-            include_predictions: bool = True
+            include_predictions: bool = True,
         ) -> Dict[str, Any]:
             """
             Generate executive briefing with strategic project intelligence
@@ -433,14 +433,14 @@ class PMUnificationMCPServer(MCPServer):
                         "scope": briefing_scope,
                         "total_projects": len(project_data.get("projects", [])),
                         "critical_issues": len(strategic_analysis.get("critical_risks", [])),
-                        "strategic_opportunities": len(strategic_analysis.get("opportunities", []))
+                        "strategic_opportunities": len(strategic_analysis.get("opportunities", [])),
                     },
                     "okr_analysis": okr_analysis,
                     "strategic_analysis": strategic_analysis,
                     "resource_insights": resource_insights,
                     "recommendations": recommendations,
                     "predictions": predictions,
-                    "generation_timestamp": datetime.now().isoformat()
+                    "generation_timestamp": datetime.now().isoformat(),
                 }
 
                 logger.info("Executive briefing generated successfully")
@@ -451,13 +451,12 @@ class PMUnificationMCPServer(MCPServer):
                 return {
                     "error": str(e),
                     "briefing_type": "executive",
-                    "generation_timestamp": datetime.now().isoformat()
+                    "generation_timestamp": datetime.now().isoformat(),
                 }
 
         @self.tool("sync_platform_data")
         async def sync_platform_data(
-            platforms: Optional[List[str]] = None,
-            force_refresh: bool = False
+            platforms: Optional[List[str]] = None, force_refresh: bool = False
         ) -> Dict[str, Any]:
             """
             Synchronize data across integrated platforms
@@ -487,34 +486,34 @@ class PMUnificationMCPServer(MCPServer):
 
                     except Exception as e:
                         logger.error(f"Failed to sync {platform}: {e}")
-                        sync_results[platform] = {
-                            "status": "error",
-                            "error": str(e)
-                        }
+                        sync_results[platform] = {"status": "error", "error": str(e)}
 
                 # Generate synchronization summary
-                successful_syncs = len([r for r in sync_results.values() if r.get("status") == "success"])
+                successful_syncs = len(
+                    [r for r in sync_results.values() if r.get("status") == "success"]
+                )
                 total_syncs = len(sync_results)
 
                 result = {
                     "sync_summary": {
                         "successful": successful_syncs,
                         "total": total_syncs,
-                        "success_rate": (successful_syncs / total_syncs) * 100 if total_syncs > 0 else 0
+                        "success_rate": (
+                            (successful_syncs / total_syncs) * 100 if total_syncs > 0 else 0
+                        ),
                     },
                     "platform_results": sync_results,
-                    "sync_timestamp": datetime.now().isoformat()
+                    "sync_timestamp": datetime.now().isoformat(),
                 }
 
-                logger.info(f"Platform synchronization completed: {successful_syncs}/{total_syncs} successful")
+                logger.info(
+                    f"Platform synchronization completed: {successful_syncs}/{total_syncs} successful"
+                )
                 return result
 
             except Exception as e:
                 logger.error(f"Platform synchronization failed: {e}")
-                return {
-                    "error": str(e),
-                    "sync_timestamp": datetime.now().isoformat()
-                }
+                return {"error": str(e), "sync_timestamp": datetime.now().isoformat()}
 
     def _register_resources(self):
         """Register MCP resources for project management data"""
@@ -537,7 +536,7 @@ class PMUnificationMCPServer(MCPServer):
                     "project_data": project_data,
                     "health_analysis": health_analysis,
                     "okr_alignment": okr_alignment,
-                    "last_updated": datetime.now().isoformat()
+                    "last_updated": datetime.now().isoformat(),
                 }
 
             except Exception as e:
@@ -562,14 +561,16 @@ class PMUnificationMCPServer(MCPServer):
                     "okrs": enhanced_okrs,
                     "department": department,
                     "total_okrs": len(enhanced_okrs),
-                    "last_updated": datetime.now().isoformat()
+                    "last_updated": datetime.now().isoformat(),
                 }
 
             except Exception as e:
                 logger.error(f"Failed to get OKR database: {e}")
                 return {"error": str(e)}
 
-    async def _gather_platform_data(self, project_filter: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _gather_platform_data(
+        self, project_filter: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Gather data from all integrated platforms"""
         platform_data = {}
 
@@ -607,7 +608,9 @@ class PMUnificationMCPServer(MCPServer):
 
         return platform_data
 
-    async def _get_notion_projects(self, project_filter: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def _get_notion_projects(
+        self, project_filter: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """Retrieve projects and OKRs from Notion"""
         cache_key = f"notion_projects_{hash(str(project_filter))}"
 
@@ -619,23 +622,24 @@ class PMUnificationMCPServer(MCPServer):
             query_filter = {
                 "and": [
                     {"property": "Type", "select": {"equals": "Project"}},
-                    {"property": "Status", "select": {"does_not_equal": "Archived"}}
+                    {"property": "Status", "select": {"does_not_equal": "Archived"}},
                 ]
             }
 
             # Add additional filters if provided
             if project_filter:
                 if "department" in project_filter:
-                    query_filter["and"].append({
-                        "property": "Department",
-                        "select": {"equals": project_filter["department"]}
-                    })
+                    query_filter["and"].append(
+                        {
+                            "property": "Department",
+                            "select": {"equals": project_filter["department"]},
+                        }
+                    )
 
                 if "priority" in project_filter:
-                    query_filter["and"].append({
-                        "property": "Priority",
-                        "select": {"equals": project_filter["priority"]}
-                    })
+                    query_filter["and"].append(
+                        {"property": "Priority", "select": {"equals": project_filter["priority"]}}
+                    )
 
             # Execute Notion query
             response = await self.notion_client.databases.query(
@@ -643,8 +647,8 @@ class PMUnificationMCPServer(MCPServer):
                 filter=query_filter,
                 sorts=[
                     {"property": "Priority", "direction": "descending"},
-                    {"property": "Last edited time", "direction": "descending"}
-                ]
+                    {"property": "Last edited time", "direction": "descending"},
+                ],
             )
 
             projects = []
@@ -656,7 +660,7 @@ class PMUnificationMCPServer(MCPServer):
             result = {
                 "projects": projects,
                 "total_count": len(projects),
-                "last_updated": datetime.now().isoformat()
+                "last_updated": datetime.now().isoformat(),
             }
 
             self.cache.set(cache_key, result)
@@ -678,23 +682,22 @@ class PMUnificationMCPServer(MCPServer):
             query_filter = {
                 "and": [
                     {"property": "Type", "select": {"equals": "OKR"}},
-                    {"property": "Status", "select": {"does_not_equal": "Archived"}}
+                    {"property": "Status", "select": {"does_not_equal": "Archived"}},
                 ]
             }
 
             if department:
-                query_filter["and"].append({
-                    "property": "Department",
-                    "select": {"equals": department}
-                })
+                query_filter["and"].append(
+                    {"property": "Department", "select": {"equals": department}}
+                )
 
             response = await self.notion_client.databases.query(
                 database_id=os.getenv("NOTION_DATABASE_ID", "default_db_id"),
                 filter=query_filter,
                 sorts=[
                     {"property": "Priority", "direction": "descending"},
-                    {"property": "Last edited time", "direction": "descending"}
-                ]
+                    {"property": "Last edited time", "direction": "descending"},
+                ],
             )
 
             okrs = []
@@ -711,9 +714,7 @@ class PMUnificationMCPServer(MCPServer):
             return []
 
     async def _calculate_alignment_scores(
-        self, 
-        project_data: Dict[str, Any], 
-        okrs: List[Dict[str, Any]]
+        self, project_data: Dict[str, Any], okrs: List[Dict[str, Any]]
     ) -> Dict[str, Any]:
         """Calculate semantic alignment scores between project and OKRs"""
         try:
@@ -732,13 +733,15 @@ class PMUnificationMCPServer(MCPServer):
                     np.linalg.norm(project_embedding[0]) * np.linalg.norm(okr_embedding[0])
                 )
 
-                alignment_results.append({
-                    "okr_id": okr["id"],
-                    "okr_title": okr["objective"],
-                    "alignment_score": float(similarity),
-                    "strategic_weight": okr.get("weight", 1.0),
-                    "department": okr.get("department", "unknown")
-                })
+                alignment_results.append(
+                    {
+                        "okr_id": okr["id"],
+                        "okr_title": okr["objective"],
+                        "alignment_score": float(similarity),
+                        "strategic_weight": okr.get("weight", 1.0),
+                        "department": okr.get("department", "unknown"),
+                    }
+                )
 
             # Sort by alignment score and calculate overall alignment
             alignment_results.sort(key=lambda x: x["alignment_score"], reverse=True)
@@ -755,21 +758,15 @@ class PMUnificationMCPServer(MCPServer):
             return {
                 "overall_score": overall_score,
                 "matches": alignment_results[:5],  # Top 5 matches
-                "context": self._generate_alignment_context(alignment_results)
+                "context": self._generate_alignment_context(alignment_results),
             }
 
         except Exception as e:
             logger.error(f"Alignment score calculation failed: {e}")
-            return {
-                "overall_score": 0.0,
-                "matches": [],
-                "context": "Alignment analysis failed"
-            }
+            return {"overall_score": 0.0, "matches": [], "context": "Alignment analysis failed"}
 
     async def _generate_alignment_recommendations(
-        self, 
-        alignment_results: Dict[str, Any], 
-        okrs: List[Dict[str, Any]]
+        self, alignment_results: Dict[str, Any], okrs: List[Dict[str, Any]]
     ) -> List[Dict[str, str]]:
         """Generate strategic recommendations based on alignment analysis"""
         recommendations = []
@@ -778,45 +775,53 @@ class PMUnificationMCPServer(MCPServer):
         top_matches = alignment_results["matches"][:3]
 
         if overall_score < 0.3:
-            recommendations.append({
-                "type": "strategic_misalignment",
-                "priority": "high",
-                "recommendation": "Project shows low strategic alignment. Consider reviewing project scope against current OKRs or updating strategic priorities.",
-                "action": "Schedule strategic review meeting with stakeholders",
-                "impact": "high"
-            })
+            recommendations.append(
+                {
+                    "type": "strategic_misalignment",
+                    "priority": "high",
+                    "recommendation": "Project shows low strategic alignment. Consider reviewing project scope against current OKRs or updating strategic priorities.",
+                    "action": "Schedule strategic review meeting with stakeholders",
+                    "impact": "high",
+                }
+            )
 
         elif overall_score < 0.6:
             if top_matches:
-                recommendations.append({
-                    "type": "partial_alignment",
-                    "priority": "medium",
-                    "recommendation": f"Project partially aligns with {top_matches[0]['okr_title']}. Consider strengthening connection to strategic objectives.",
-                    "action": "Refine project goals to better align with strategic priorities",
-                    "impact": "medium"
-                })
+                recommendations.append(
+                    {
+                        "type": "partial_alignment",
+                        "priority": "medium",
+                        "recommendation": f"Project partially aligns with {top_matches[0]['okr_title']}. Consider strengthening connection to strategic objectives.",
+                        "action": "Refine project goals to better align with strategic priorities",
+                        "impact": "medium",
+                    }
+                )
 
         else:
             if top_matches:
-                recommendations.append({
-                    "type": "strong_alignment",
-                    "priority": "low",
-                    "recommendation": f"Project strongly aligns with strategic objectives, particularly {top_matches[0]['okr_title']}.",
-                    "action": "Maintain current strategic direction and monitor progress",
-                    "impact": "positive"
-                })
+                recommendations.append(
+                    {
+                        "type": "strong_alignment",
+                        "priority": "low",
+                        "recommendation": f"Project strongly aligns with strategic objectives, particularly {top_matches[0]['okr_title']}.",
+                        "action": "Maintain current strategic direction and monitor progress",
+                        "impact": "positive",
+                    }
+                )
 
         # Add department-specific recommendations
         if top_matches:
             departments = set(match["department"] for match in top_matches)
             if len(departments) > 1:
-                recommendations.append({
-                    "type": "cross_functional",
-                    "priority": "medium",
-                    "recommendation": f"Project impacts multiple departments: {', '.join(departments)}. Ensure cross-functional coordination.",
-                    "action": "Establish cross-departmental communication protocols",
-                    "impact": "medium"
-                })
+                recommendations.append(
+                    {
+                        "type": "cross_functional",
+                        "priority": "medium",
+                        "recommendation": f"Project impacts multiple departments: {', '.join(departments)}. Ensure cross-functional coordination.",
+                        "action": "Establish cross-departmental communication protocols",
+                        "impact": "medium",
+                    }
+                )
 
         return recommendations
 
@@ -826,7 +831,11 @@ class PMUnificationMCPServer(MCPServer):
             return "No strategic alignment data available"
 
         top_match = alignment_results[0]
-        alignment_level = "strong" if top_match["alignment_score"] > 0.7 else "moderate" if top_match["alignment_score"] > 0.4 else "weak"
+        alignment_level = (
+            "strong"
+            if top_match["alignment_score"] > 0.7
+            else "moderate" if top_match["alignment_score"] > 0.4 else "weak"
+        )
 
         context = f"Project shows {alignment_level} alignment with strategic objectives. "
         context += f"Strongest alignment is with '{top_match['okr_title']}' "
@@ -836,6 +845,7 @@ class PMUnificationMCPServer(MCPServer):
             context += f" Secondary alignments include {len(alignment_results) - 1} additional strategic objectives."
 
         return context
+
 
 # Additional implementation methods would continue here...
 # This includes platform-specific data gathering, analysis methods, and utility functions

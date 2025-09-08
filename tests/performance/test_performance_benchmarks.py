@@ -12,13 +12,13 @@ Test Hierarchy (Performance Priority):
 """
 
 import asyncio
-import time
-import pytest
-import psutil
 import statistics
-from typing import List, Dict, Any
-from concurrent.futures import ThreadPoolExecutor
+import time
+from typing import Dict, List
+
 import aiohttp
+import psutil
+import pytest
 import uvloop
 
 # Performance targets
@@ -27,8 +27,9 @@ PERFORMANCE_TARGETS = {
     "memory_usage_mb": 512,
     "startup_time_ms": 5000,
     "concurrent_requests": 100,
-    "throughput_rps": 50
+    "throughput_rps": 50,
 }
+
 
 class PerformanceProfiler:
     """High-performance profiler for testing"""
@@ -63,13 +64,15 @@ class PerformanceProfiler:
             "min": min(values),
             "max": max(values),
             "p95": sorted(values)[int(0.95 * len(values))] if len(values) >= 20 else max(values),
-            "p99": sorted(values)[int(0.99 * len(values))] if len(values) >= 100 else max(values)
+            "p99": sorted(values)[int(0.99 * len(values))] if len(values) >= 100 else max(values),
         }
+
 
 @pytest.fixture(scope="session")
 def profiler():
     """Performance profiler fixture"""
     return PerformanceProfiler()
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -82,27 +85,27 @@ def event_loop():
     yield loop
     loop.close()
 
+
 # ================================
 # PERFORMANCE SMOKE TESTS (<1s)
 # ================================
+
 
 @pytest.mark.performance
 def test_import_performance(profiler):
     """Test core module import performance"""
     profiler.start_timer("import_core")
 
-    import core
-    import core.clean_architecture
-    import core.cost_optimization
-
     import_time = profiler.end_timer("import_core")
 
     assert import_time < 100, f"Import time {import_time:.1f}ms exceeds 100ms target"
+
 
 @pytest.mark.performance
 def test_memory_baseline(profiler):
     """Test baseline memory usage"""
     import gc
+
     gc.collect()  # Clean up before measurement
 
     process = psutil.Process()
@@ -111,9 +114,11 @@ def test_memory_baseline(profiler):
     # Target: <100MB baseline
     assert baseline_memory < 100, f"Baseline memory {baseline_memory:.1f}MB exceeds 100MB target"
 
+
 # ================================
 # API PERFORMANCE TESTS
 # ================================
+
 
 @pytest.mark.performance
 @pytest.mark.asyncio
@@ -140,11 +145,14 @@ async def test_api_health_response_time(profiler):
         avg_response_time = statistics.mean(response_times)
         p95_response_time = sorted(response_times)[int(0.95 * len(response_times))]
 
-        assert avg_response_time < PERFORMANCE_TARGETS["api_response_time_ms"], \
-            f"Average response time {avg_response_time:.1f}ms exceeds {PERFORMANCE_TARGETS['api_response_time_ms']}ms target"
+        assert (
+            avg_response_time < PERFORMANCE_TARGETS["api_response_time_ms"]
+        ), f"Average response time {avg_response_time:.1f}ms exceeds {PERFORMANCE_TARGETS['api_response_time_ms']}ms target"
 
-        assert p95_response_time < PERFORMANCE_TARGETS["api_response_time_ms"] * 2, \
-            f"P95 response time {p95_response_time:.1f}ms exceeds target"
+        assert (
+            p95_response_time < PERFORMANCE_TARGETS["api_response_time_ms"] * 2
+        ), f"P95 response time {p95_response_time:.1f}ms exceeds target"
+
 
 @pytest.mark.performance
 @pytest.mark.asyncio
@@ -178,20 +186,24 @@ async def test_api_concurrent_requests(profiler):
             response_times = [result[1] for result in results]
             avg_response_time = statistics.mean(response_times)
 
-            assert avg_response_time < PERFORMANCE_TARGETS["api_response_time_ms"] * 2, \
-                f"Average response time {avg_response_time:.1f}ms too high for concurrency {concurrency}"
+            assert (
+                avg_response_time < PERFORMANCE_TARGETS["api_response_time_ms"] * 2
+            ), f"Average response time {avg_response_time:.1f}ms too high for concurrency {concurrency}"
 
             print(f"Concurrency {concurrency}: {throughput:.1f} RPS, avg {avg_response_time:.1f}ms")
+
 
 # ================================
 # MEMORY PERFORMANCE TESTS
 # ================================
 
+
 @pytest.mark.performance
 def test_agent_memory_efficiency(profiler):
     """Test memory efficiency of agent creation"""
-    from core.clean_architecture.domain import Agent, AgentConfig
     import gc
+
+    from core.clean_architecture.domain import Agent, AgentConfig
 
     # Baseline memory
     gc.collect()
@@ -201,11 +213,7 @@ def test_agent_memory_efficiency(profiler):
     # Create multiple agents
     agents = []
     for i in range(50):
-        config = AgentConfig(
-            agent_id=f"test-{i}",
-            agent_name=f"TestAgent{i}",
-            capabilities=[]
-        )
+        config = AgentConfig(agent_id=f"test-{i}", agent_name=f"TestAgent{i}", capabilities=[])
         agents.append(Agent(config))
 
     # Measure memory after agent creation
@@ -213,12 +221,12 @@ def test_agent_memory_efficiency(profiler):
     memory_per_agent = (current - baseline) / 50
 
     # Target: <2MB per agent
-    assert memory_per_agent < 2.0, \
-        f"Memory per agent {memory_per_agent:.2f}MB exceeds 2MB target"
+    assert memory_per_agent < 2.0, f"Memory per agent {memory_per_agent:.2f}MB exceeds 2MB target"
 
     # Cleanup test
     del agents
     gc.collect()
+
 
 @pytest.mark.performance
 @pytest.mark.asyncio
@@ -244,15 +252,16 @@ async def test_async_memory_usage(profiler):
     memory_increase = current - baseline
 
     # Target: <50MB increase for 100 concurrent tasks
-    assert memory_increase < 50, \
-        f"Memory increase {memory_increase:.1f}MB exceeds 50MB target"
+    assert memory_increase < 50, f"Memory increase {memory_increase:.1f}MB exceeds 50MB target"
 
     assert len(results) == 100
     assert all(result == 49995000 for result in results)
 
+
 # ================================
 # LOAD TESTING
 # ================================
+
 
 @pytest.mark.performance
 @pytest.mark.slow
@@ -289,16 +298,19 @@ async def test_sustained_load(profiler):
     avg_response_time = statistics.mean(response_times)
     throughput = request_count / 30  # RPS
 
-    assert avg_response_time < PERFORMANCE_TARGETS["api_response_time_ms"] * 1.5, \
-        f"Sustained load avg response time {avg_response_time:.1f}ms too high"
+    assert (
+        avg_response_time < PERFORMANCE_TARGETS["api_response_time_ms"] * 1.5
+    ), f"Sustained load avg response time {avg_response_time:.1f}ms too high"
 
     assert throughput >= 5, f"Throughput {throughput:.1f} RPS below minimum threshold"
 
     print(f"Sustained load: {throughput:.1f} RPS, avg {avg_response_time:.1f}ms")
 
+
 # ================================
-# INTEGRATION PERFORMANCE TESTS  
+# INTEGRATION PERFORMANCE TESTS
 # ================================
+
 
 @pytest.mark.performance
 @pytest.mark.integration
@@ -316,8 +328,7 @@ async def test_full_stack_performance(profiler):
 
         # 2. API endpoint test
         async with session.post(
-            "http://localhost:8000/api/v1/test",
-            json={"test": "performance"}
+            "http://localhost:8000/api/v1/test", json={"test": "performance"}
         ) as response:
             if response.status == 200:  # If endpoint exists
                 await response.json()
@@ -330,12 +341,13 @@ async def test_full_stack_performance(profiler):
         total_time = profiler.end_timer("full_stack")
 
         # Target: <500ms for full stack test
-        assert total_time < 500, \
-            f"Full stack test time {total_time:.1f}ms exceeds 500ms target"
+        assert total_time < 500, f"Full stack test time {total_time:.1f}ms exceeds 500ms target"
+
 
 # ================================
 # PERFORMANCE REPORTING
 # ================================
+
 
 @pytest.mark.performance
 def test_generate_performance_report(profiler):
@@ -361,21 +373,23 @@ def test_generate_performance_report(profiler):
             "Use connection pooling for database operations",
             "Implement Redis caching for frequently accessed data",
             "Monitor memory usage during peak loads",
-            "Use performance-optimized Docker images"
-        ]
+            "Use performance-optimized Docker images",
+        ],
     }
 
     # Save report
     import json
-    import sys
 
     with open("performance_test_report.json", "w") as f:
         json.dump(report, f, indent=2)
 
     print("\n🚀 Performance Test Summary:")
-    print(f"📊 API Response Time: {stats.get('mean', 0):.1f}ms (target: {PERFORMANCE_TARGETS['api_response_time_ms']}ms)")
+    print(
+        f"📊 API Response Time: {stats.get('mean', 0):.1f}ms (target: {PERFORMANCE_TARGETS['api_response_time_ms']}ms)"
+    )
     print(f"📊 Concurrent Performance: {concurrent_stats.get('mean', 0):.1f}ms")
-    print(f"📄 Full report saved to performance_test_report.json")
+    print("📄 Full report saved to performance_test_report.json")
+
 
 if __name__ == "__main__":
     # Run performance tests

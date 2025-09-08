@@ -1,8 +1,11 @@
 # Auto-added by pre-commit hook
-import sys, os
+import os
+import sys
+
 try:
     sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
     from core.environment_enforcer import enforce_environment
+
     enforce_environment()
 except ImportError:
     pass
@@ -13,28 +16,25 @@ Testing all 5 agents and advanced integrations
 """
 
 import asyncio
-import json
-import pytest
-import uuid
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+import os
 
 # Import the modules to test
 import sys
-import os
+
+import pytest
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from swarm_orchestrator import (
-    ArtemisSwarm,
-    PlannerAgent,
+    AgentRole,
     CoderAgent,
-    TesterAgent,
     DeployerAgent,
     EvolverAgent,
-    SwarmState,
-    AgentRole,
-    create_artemis_swarm
+    PlannerAgent,
+    TesterAgent,
+    create_artemis_swarm,
 )
+
 
 class TestArtemisAgents:
     """Test individual Artemis agents"""
@@ -45,7 +45,7 @@ class TestArtemisAgents:
         return {
             "openai_api_key": "test-key",
             "cost_optimization": True,
-            "register_on_blockchain": False
+            "register_on_blockchain": False,
         }
 
     @pytest.mark.asyncio
@@ -80,8 +80,8 @@ class TestArtemisAgents:
             "plan": {
                 "requirements": ["Create FastAPI endpoint"],
                 "architecture": "REST API",
-                "steps": ["Setup FastAPI", "Create endpoint", "Add validation"]
-            }
+                "steps": ["Setup FastAPI", "Create endpoint", "Add validation"],
+            },
         }
 
         result = await coder.execute(intent, context)
@@ -103,7 +103,7 @@ class TestArtemisAgents:
         intent = "Test the FastAPI endpoint"
         context = {
             "execution_id": "test-789",
-            "code": "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/')\ndef read_root():\n    return {'Hello': 'World'}"
+            "code": "from fastapi import FastAPI\napp = FastAPI()\n@app.get('/')\ndef read_root():\n    return {'Hello': 'World'}",
         }
 
         result = await tester.execute(intent, context)
@@ -132,8 +132,8 @@ class TestArtemisAgents:
                 "syntax_test": {"passed": True},
                 "unit_tests": {"passed": True},
                 "security_scan": {"passed": True},
-                "performance_test": {"passed": True}
-            }
+                "performance_test": {"passed": True},
+            },
         }
 
         result = await deployer.execute(intent, context)
@@ -155,7 +155,7 @@ class TestArtemisAgents:
         context = {
             "execution_id": "test-202",
             "result": {"success": True, "execution_time": 5.2},
-            "agents_used": ["planner", "coder", "tester", "deployer"]
+            "agents_used": ["planner", "coder", "tester", "deployer"],
         }
 
         result = await evolver.execute(intent, context)
@@ -170,6 +170,7 @@ class TestArtemisAgents:
         assert "success_rate" in insights
         assert "execution_efficiency" in insights
 
+
 class TestArtemisSwarm:
     """Test the complete Artemis swarm"""
 
@@ -180,7 +181,7 @@ class TestArtemisSwarm:
             "openai_api_key": "test-key",
             "anthropic_api_key": "test-key",
             "cost_optimization": True,
-            "register_on_blockchain": False
+            "register_on_blockchain": False,
         }
 
     @pytest.fixture
@@ -235,7 +236,7 @@ class TestArtemisSwarm:
                 "syntax_test": {"passed": False, "message": "Syntax error"},
                 "unit_tests": {"passed": False},
                 "security_scan": {"passed": True},
-                "performance_test": {"passed": True}
+                "performance_test": {"passed": True},
             }
             return result
 
@@ -283,7 +284,7 @@ class TestArtemisSwarm:
         intents = [
             "Create a user registration API",
             "Build a data processing pipeline",
-            "Develop a notification service"
+            "Develop a notification service",
         ]
 
         for intent in intents:
@@ -303,16 +304,14 @@ class TestArtemisSwarm:
         assert metrics["success_rate"] >= 0
         assert metrics["avg_execution_time"] >= 0
 
+
 class TestIntegrations:
     """Test advanced integrations"""
 
     @pytest.mark.asyncio
     async def test_memory_system_integration(self):
         """Test memory system integration"""
-        config = {
-            "memory_enabled": True,
-            "register_on_blockchain": False
-        }
+        config = {"memory_enabled": True, "register_on_blockchain": False}
 
         swarm = create_artemis_swarm(config)
 
@@ -329,10 +328,7 @@ class TestIntegrations:
     @pytest.mark.asyncio
     async def test_zk_proof_integration(self):
         """Test zero-knowledge proof integration"""
-        config = {
-            "zk_proofs_enabled": True,
-            "register_on_blockchain": False
-        }
+        config = {"zk_proofs_enabled": True, "register_on_blockchain": False}
 
         swarm = create_artemis_swarm(config)
 
@@ -352,7 +348,7 @@ class TestIntegrations:
         config = {
             "cost_optimization": True,
             "openai_api_key": "test-key",
-            "anthropic_api_key": "test-key"
+            "anthropic_api_key": "test-key",
         }
 
         swarm = create_artemis_swarm(config)
@@ -369,6 +365,7 @@ class TestIntegrations:
             assert "total_cost" in cost_info
             assert "savings" in cost_info
             assert "requests" in cost_info
+
 
 class TestErrorHandling:
     """Test error handling and edge cases"""
@@ -411,6 +408,7 @@ class TestErrorHandling:
         assert "success" in result
         assert "execution_time" in result
 
+
 class TestPerformance:
     """Test performance characteristics"""
 
@@ -419,11 +417,7 @@ class TestPerformance:
         """Test concurrent intent processing"""
         swarm = create_artemis_swarm(mock_config)
 
-        intents = [
-            "Create API endpoint 1",
-            "Create API endpoint 2", 
-            "Create API endpoint 3"
-        ]
+        intents = ["Create API endpoint 1", "Create API endpoint 2", "Create API endpoint 3"]
 
         # Process intents concurrently
         tasks = [swarm.process_intent(intent) for intent in intents]
@@ -448,6 +442,7 @@ class TestPerformance:
         assert result["execution_time"] > 0
         assert result["execution_time"] < 60  # Should complete within 60 seconds
 
+
 # Fixtures for pytest
 @pytest.fixture(scope="session")
 def event_loop():
@@ -455,6 +450,7 @@ def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
 
 if __name__ == "__main__":
     # Run tests directly

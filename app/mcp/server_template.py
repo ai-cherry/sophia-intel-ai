@@ -636,6 +636,7 @@ if __name__ == "__main__":
                     return {"echo": message, "timestamp": datetime.utcnow().isoformat()}
             
             async def shutdown(self):
+                pass
         
         server = TestMCPServer("test", ["echo"], memory_bus, metrics)
         await server.initialize()
@@ -646,4 +647,3 @@ if __name__ == "__main__":
     
     # Run test
     asyncio.run(sophia_server())
-

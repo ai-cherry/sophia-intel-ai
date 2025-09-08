@@ -4,24 +4,24 @@ Unit tests for Fusion Metrics API
 Tests the backend API endpoints for fusion system monitoring
 """
 
-import asyncio
 import json
 import os
+from unittest.mock import Mock, patch
+
 import pytest
-from datetime import datetime
-from unittest.mock import Mock, patch, AsyncMock
-
-from fastapi.testclient import TestClient
 import redis
-
-# Import the router under test
-from routers.fusion_metrics import router, get_redis_client
 
 # Create test client
 from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+# Import the router under test
+from routers.fusion_metrics import get_redis_client, router
+
 app = FastAPI()
 app.include_router(router)
 client = TestClient(app)
+
 
 class TestFusionMetricsAPI:
     """Unit tests for Fusion Metrics API endpoints"""
@@ -39,37 +39,45 @@ class TestFusionMetricsAPI:
 
     def test_get_fusion_metrics_with_redis(self, mock_redis_client):
         """Test getting fusion metrics with Redis available"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=mock_redis_client):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
             # Mock Redis responses for each system
             def mock_get(key):
                 if "redis_optimization" in key:
-                    return json.dumps({
-                        "memory_saved_gb": 2.4,
-                        "cost_savings": 127.50,
-                        "keys_pruned": 1847,
-                        "status": "active"
-                    })
+                    return json.dumps(
+                        {
+                            "memory_saved_gb": 2.4,
+                            "cost_savings": 127.50,
+                            "keys_pruned": 1847,
+                            "status": "active",
+                        }
+                    )
                 elif "edge_rag" in key:
-                    return json.dumps({
-                        "query_count": 342,
-                        "avg_latency": 245,
-                        "success_rate": 98.7,
-                        "status": "active"
-                    })
+                    return json.dumps(
+                        {
+                            "query_count": 342,
+                            "avg_latency": 245,
+                            "success_rate": 98.7,
+                            "status": "active",
+                        }
+                    )
                 elif "hybrid_routing" in key:
-                    return json.dumps({
-                        "requests_routed": 15420,
-                        "cost_optimization": 31.2,
-                        "uptime": 99.94,
-                        "status": "active"
-                    })
+                    return json.dumps(
+                        {
+                            "requests_routed": 15420,
+                            "cost_optimization": 31.2,
+                            "uptime": 99.94,
+                            "status": "active",
+                        }
+                    )
                 elif "cross_db_analytics" in key:
-                    return json.dumps({
-                        "predictions_made": 89,
-                        "accuracy": 94.3,
-                        "data_points": 12847,
-                        "status": "active"
-                    })
+                    return json.dumps(
+                        {
+                            "predictions_made": 89,
+                            "accuracy": 94.3,
+                            "data_points": 12847,
+                            "status": "active",
+                        }
+                    )
                 return None
 
             mock_redis_client.get.side_effect = mock_get
@@ -104,7 +112,7 @@ class TestFusionMetricsAPI:
 
     def test_get_fusion_metrics_without_redis(self):
         """Test getting fusion metrics without Redis (fallback to mock data)"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=None):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=None):
             # Test the endpoint
             response = client.get("/api/fusion/metrics")
 
@@ -127,28 +135,17 @@ class TestFusionMetricsAPI:
 
     def test_get_system_health_with_redis(self, mock_redis_client):
         """Test getting system health with Redis available"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=mock_redis_client):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
             # Mock Redis responses
             def mock_get(key):
                 if "redis_optimization" in key:
-                    return json.dumps({
-                        "cost_savings": 127.50,
-                        "status": "active"
-                    })
+                    return json.dumps({"cost_savings": 127.50, "status": "active"})
                 elif "edge_rag" in key:
-                    return json.dumps({
-                        "avg_latency": 245,
-                        "status": "active"
-                    })
+                    return json.dumps({"avg_latency": 245, "status": "active"})
                 elif "hybrid_routing" in key:
-                    return json.dumps({
-                        "uptime": 99.94,
-                        "status": "active"
-                    })
+                    return json.dumps({"uptime": 99.94, "status": "active"})
                 elif "cross_db_analytics" in key:
-                    return json.dumps({
-                        "status": "active"
-                    })
+                    return json.dumps({"status": "active"})
                 return None
 
             mock_redis_client.get.side_effect = mock_get
@@ -173,7 +170,7 @@ class TestFusionMetricsAPI:
 
     def test_get_system_health_without_redis(self):
         """Test getting system health without Redis (fallback to mock data)"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=None):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=None):
             # Test the endpoint
             response = client.get("/api/fusion/health")
 
@@ -189,24 +186,15 @@ class TestFusionMetricsAPI:
 
     def test_get_performance_metrics_with_redis(self, mock_redis_client):
         """Test getting performance metrics with Redis available"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=mock_redis_client):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
             # Mock Redis responses
             def mock_get(key):
                 if "edge_rag" in key:
-                    return json.dumps({
-                        "success_rate": 98.7,
-                        "status": "active"
-                    })
+                    return json.dumps({"success_rate": 98.7, "status": "active"})
                 elif "hybrid_routing" in key:
-                    return json.dumps({
-                        "uptime": 99.94,
-                        "status": "active"
-                    })
+                    return json.dumps({"uptime": 99.94, "status": "active"})
                 elif "cross_db_analytics" in key:
-                    return json.dumps({
-                        "accuracy": 94.3,
-                        "status": "active"
-                    })
+                    return json.dumps({"accuracy": 94.3, "status": "active"})
                 return None
 
             mock_redis_client.get.side_effect = mock_get
@@ -234,7 +222,7 @@ class TestFusionMetricsAPI:
 
     def test_get_performance_metrics_without_redis(self):
         """Test getting performance metrics without Redis (fallback to mock data)"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=None):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=None):
             # Test the endpoint
             response = client.get("/api/fusion/performance")
 
@@ -311,7 +299,7 @@ class TestFusionMetricsAPI:
 
     def test_get_fusion_status_with_redis(self, mock_redis_client):
         """Test getting fusion status with Redis available"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=mock_redis_client):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=mock_redis_client):
             # Mock Redis responses
             def mock_get(key):
                 return json.dumps({"status": "active"})
@@ -340,7 +328,7 @@ class TestFusionMetricsAPI:
 
     def test_get_fusion_status_without_redis(self):
         """Test getting fusion status without Redis"""
-        with patch('routers.fusion_metrics.get_redis_client', return_value=None):
+        with patch("routers.fusion_metrics.get_redis_client", return_value=None):
             # Test the endpoint
             response = client.get("/api/fusion/status")
 
@@ -358,13 +346,14 @@ class TestFusionMetricsAPI:
             systems = data["systems"]
             assert all(status == "unknown" for status in systems.values())
 
+
 class TestRedisClientManagement:
     """Test Redis client management functions"""
 
     def test_get_redis_client_success(self):
         """Test successful Redis client creation"""
-        with patch.dict(os.environ, {'REDIS_URL': '${REDIS_URL}'}):
-            with patch('redis.from_url') as mock_redis:
+        with patch.dict(os.environ, {"REDIS_URL": "${REDIS_URL}"}):
+            with patch("redis.from_url") as mock_redis:
                 mock_client = Mock()
                 mock_client.ping.return_value = True
                 mock_redis.return_value = mock_client
@@ -374,13 +363,13 @@ class TestRedisClientManagement:
 
                 # Verify client
                 assert client == mock_client
-                mock_redis.assert_called_once_with('${REDIS_URL}', decode_responses=True)
+                mock_redis.assert_called_once_with("${REDIS_URL}", decode_responses=True)
                 mock_client.ping.assert_called_once()
 
     def test_get_redis_client_connection_error(self):
         """Test Redis client creation with connection error"""
-        with patch.dict(os.environ, {'REDIS_URL': '${REDIS_URL}'}):
-            with patch('redis.from_url') as mock_redis:
+        with patch.dict(os.environ, {"REDIS_URL": "${REDIS_URL}"}):
+            with patch("redis.from_url") as mock_redis:
                 mock_client = Mock()
                 mock_client.ping.side_effect = redis.ConnectionError("Connection failed")
                 mock_redis.return_value = mock_client
@@ -394,7 +383,7 @@ class TestRedisClientManagement:
     def test_get_redis_client_default_url(self):
         """Test Redis client creation with default URL"""
         with patch.dict(os.environ, {}, clear=True):  # Clear REDIS_URL
-            with patch('redis.from_url') as mock_redis:
+            with patch("redis.from_url") as mock_redis:
                 mock_client = Mock()
                 mock_client.ping.return_value = True
                 mock_redis.return_value = mock_client
@@ -403,14 +392,15 @@ class TestRedisClientManagement:
                 client = get_redis_client()
 
                 # Verify default URL is used
-                mock_redis.assert_called_once_with('${REDIS_URL}', decode_responses=True)
+                mock_redis.assert_called_once_with("${REDIS_URL}", decode_responses=True)
+
 
 class TestErrorHandling:
     """Test error handling in the API"""
 
     def test_metrics_endpoint_error(self):
         """Test metrics endpoint with internal error"""
-        with patch('routers.fusion_metrics.get_redis_client') as mock_get_redis:
+        with patch("routers.fusion_metrics.get_redis_client") as mock_get_redis:
             # Mock Redis client that raises an exception
             mock_client = Mock()
             mock_client.get.side_effect = Exception("Redis error")
@@ -426,7 +416,7 @@ class TestErrorHandling:
 
     def test_health_endpoint_error(self):
         """Test health endpoint with internal error"""
-        with patch('routers.fusion_metrics.get_redis_client') as mock_get_redis:
+        with patch("routers.fusion_metrics.get_redis_client") as mock_get_redis:
             # Mock Redis client that raises an exception
             mock_client = Mock()
             mock_client.get.side_effect = Exception("Redis error")
@@ -442,7 +432,7 @@ class TestErrorHandling:
 
     def test_status_endpoint_with_error(self):
         """Test status endpoint handling errors gracefully"""
-        with patch('routers.fusion_metrics.get_redis_client') as mock_get_redis:
+        with patch("routers.fusion_metrics.get_redis_client") as mock_get_redis:
             # Mock Redis client that raises an exception
             mock_get_redis.side_effect = Exception("Redis connection failed")
 
@@ -455,6 +445,7 @@ class TestErrorHandling:
 
             assert data["overall_status"] == "error"
             assert "error" in data
+
 
 if __name__ == "__main__":
     # Run tests directly

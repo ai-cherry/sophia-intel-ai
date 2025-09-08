@@ -105,7 +105,7 @@ class AgentRegistry:
             try:
                 await self.health_monitor_task
             except asyncio.CancelledError:
-
+                pass
         logger.info("Agent Registry stopped")
 
     def register_agent(
@@ -315,7 +315,7 @@ class AgentRegistry:
                 )
                 score += version_score * 0.01
             except:
-
+                pass
             return score
 
         return max(candidates, key=score_agent)

@@ -5,9 +5,9 @@ ML-based task selection and chat task handling into a single place.
 Currently the ML components are simplified placeholders that can be
 replaced with real models in the future.
 """
-from typing import Any
 
 from .main import OrchestrationRequest
+
 
 async def ml_route_task(request: OrchestrationRequest) -> str:
     """Select a service based on task characteristics.

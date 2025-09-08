@@ -7,8 +7,8 @@ Sets up comprehensive monitoring for the complete Gong → n8n → Sophia pipeli
 import asyncio
 import json
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List
 
 import httpx
 

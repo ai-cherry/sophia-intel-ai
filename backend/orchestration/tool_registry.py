@@ -11,6 +11,7 @@ import httpx
 
 logger = logging.getLogger(__name__)
 
+
 class Tool(Protocol):
     """Protocol for all tools"""
 
@@ -18,6 +19,7 @@ class Tool(Protocol):
     description: str
 
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]: ...
+
 
 class MCPToolAdapter:
     """Adapter for MCP servers"""
@@ -68,6 +70,7 @@ class MCPToolAdapter:
             logger.error(f"Failed to list tools for {self.name}: {e}")
             return []
 
+
 class DirectAPITool:
     """Base class for direct API integrations"""
 
@@ -78,6 +81,7 @@ class DirectAPITool:
     @abstractmethod
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
         """Execute the tool"""
+
 
 class CodeSearchTool(DirectAPITool):
     """Direct code search implementation"""
@@ -97,6 +101,7 @@ class CodeSearchTool(DirectAPITool):
             "results": [],
             "message": "Direct code search not yet implemented",
         }
+
 
 class GitTool(DirectAPITool):
     """Git operations tool"""
@@ -125,6 +130,7 @@ class GitTool(DirectAPITool):
             }
         except Exception as e:
             return {"status": "error", "error": str(e)}
+
 
 class ToolRegistry:
     """Central registry for all tools"""
@@ -188,9 +194,7 @@ class ToolRegistry:
         self.tools[tool.name] = tool
         logger.debug(f"Registered tool: {tool.name}")
 
-    async def execute_tool(
-        self, tool_name: str, params: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def execute_tool(self, tool_name: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute a tool and track usage"""
         if tool_name not in self.tools:
             return {
@@ -211,9 +215,7 @@ class ToolRegistry:
                 "success": result.get("status") != "error",
             }
             self.execution_history.append(execution_record)
-            logger.info(
-                f"Executed tool '{tool_name}' in {execution_record['duration_ms']:.2f}ms"
-            )
+            logger.info(f"Executed tool '{tool_name}' in {execution_record['duration_ms']:.2f}ms")
             return result
         except Exception as e:
             logger.error(f"Tool execution failed for '{tool_name}': {e}")
@@ -230,14 +232,9 @@ class ToolRegistry:
             )
             return error_result
 
-    async def execute_parallel(
-        self, executions: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    async def execute_parallel(self, executions: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Execute multiple tools in parallel"""
-        tasks = [
-            self.execute_tool(exec["tool"], exec.get("params", {}))
-            for exec in executions
-        ]
+        tasks = [self.execute_tool(exec["tool"], exec.get("params", {})) for exec in executions]
         return await asyncio.gather(*tasks)
 
     async def _health_check_all(self):
@@ -302,9 +299,7 @@ class ToolRegistry:
             "total_executions": total,
             "success_rate": successful / total if total > 0 else 0,
             "average_duration_ms": (
-                sum(e["duration_ms"] for e in self.execution_history) / total
-                if total > 0
-                else 0
+                sum(e["duration_ms"] for e in self.execution_history) / total if total > 0 else 0
             ),
             "by_tool": by_tool,
         }

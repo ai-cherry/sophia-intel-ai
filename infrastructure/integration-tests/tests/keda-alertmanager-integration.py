@@ -5,16 +5,11 @@ Tests the integration between KEDA autoscaling and AlertManager alerting
 """
 
 import asyncio
-import json
 import logging
-import time
-from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import aiohttp
-import pytest
 from kubernetes import client, config
-from prometheus_client.parser import text_string_to_metric_families
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

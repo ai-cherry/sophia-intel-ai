@@ -4,19 +4,21 @@ Monitor Agno/MCP — AgentOps for prod insights
 """
 
 import asyncio
-import aiohttp
-from datetime import datetime
-import redis
-import json
 import os
+from datetime import datetime
+
+import aiohttp
+import redis
 
 # Import AgentOps if available, otherwise graceful degradation
 try:
     import agentops
+
     agentops_available = True
 except ImportError:
     agentops_available = False
     print("⚠️ AgentOps not installed - monitoring without telemetry")
+
 
 async def check_mcp_health():
     """Check health of all MCP servers"""
@@ -30,7 +32,7 @@ async def check_mcp_health():
         ("notion", 8007),
         ("kb", 8008),
         ("monitor", 8009),
-        ("data", 8010)
+        ("data", 8010),
     ]
 
     results = {}
@@ -40,7 +42,7 @@ async def check_mcp_health():
                 async with session.get(f"http://localhost:{port}/health", timeout=5) as resp:
                     if resp.status == 200:
                         data = await resp.json()
-                        if not data.get('mock', False):
+                        if not data.get("mock", False):
                             results[name] = "✅ Healthy (Real)"
                         else:
                             results[name] = "❌ Mock alert!"
@@ -53,19 +55,21 @@ async def check_mcp_health():
 
     return results
 
+
 async def monitor_redis_memory():
     """Monitor Redis memory usage and keys"""
     try:
-        r = redis.from_url(os.getenv('REDIS_URL', '${REDIS_URL}'))
+        r = redis.from_url(os.getenv("REDIS_URL", "${REDIS_URL}"))
         info = r.info()
         return {
             "status": "✅ Connected",
-            "used_memory": info['used_memory_human'],
+            "used_memory": info["used_memory_human"],
             "keys": r.dbsize(),
-            "connected_clients": info['connected_clients']
+            "connected_clients": info["connected_clients"],
         }
     except Exception as e:
         return {"status": f"❌ Error: {str(e)[:50]}"}
+
 
 async def monitor_qdrant():
     """Monitor Qdrant vector database"""
@@ -74,15 +78,13 @@ async def monitor_qdrant():
             async with session.get("http://localhost:6333/collections", timeout=5) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    collections = data.get('result', {}).get('collections', [])
-                    return {
-                        "status": "✅ Connected",
-                        "collections": len(collections)
-                    }
+                    collections = data.get("result", {}).get("collections", [])
+                    return {"status": "✅ Connected", "collections": len(collections)}
                 else:
                     return {"status": f"❌ HTTP {resp.status}"}
     except Exception as e:
         return {"status": f"❌ Error: {str(e)[:50]}"}
+
 
 async def monitor_neo4j():
     """Monitor Neo4j graph database"""
@@ -97,9 +99,10 @@ async def monitor_neo4j():
     except Exception as e:
         return {"status": f"❌ Error: {str(e)[:50]}"}
 
+
 async def main():
     """Main monitoring function"""
-    if agentops_available and os.getenv('AGENTOPS_API_KEY'):
+    if agentops_available and os.getenv("AGENTOPS_API_KEY"):
         agentops.init()
 
     print("🔍 Sophia AI Fortress Monitor — Real Metrics Only")
@@ -116,12 +119,14 @@ async def main():
 
     redis_stats = await monitor_redis_memory()
     print(f"  Redis:              {redis_stats['status']}")
-    if 'used_memory' in redis_stats:
-        print(f"    Memory: {redis_stats['used_memory']} | Keys: {redis_stats['keys']} | Clients: {redis_stats['connected_clients']}")
+    if "used_memory" in redis_stats:
+        print(
+            f"    Memory: {redis_stats['used_memory']} | Keys: {redis_stats['keys']} | Clients: {redis_stats['connected_clients']}"
+        )
 
     qdrant_stats = await monitor_qdrant()
     print(f"  Qdrant:             {qdrant_stats['status']}")
-    if 'collections' in qdrant_stats:
+    if "collections" in qdrant_stats:
         print(f"    Collections: {qdrant_stats['collections']}")
 
     neo4j_stats = await monitor_neo4j()
@@ -131,13 +136,14 @@ async def main():
     healthy_mcp = sum(1 for status in mcp_health.values() if "✅" in status)
     total_mcp = len(mcp_health)
 
-    print(f"\n📊 Summary:")
+    print("\n📊 Summary:")
     print(f"  MCP Servers: {healthy_mcp}/{total_mcp} healthy")
     print(f"  Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
-    if agentops_available and os.getenv('AGENTOPS_API_KEY'):
+    if agentops_available and os.getenv("AGENTOPS_API_KEY"):
         agentops.log(f"Monitoring complete - {healthy_mcp}/{total_mcp} MCP servers healthy")
         agentops.stop()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

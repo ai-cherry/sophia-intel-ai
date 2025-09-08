@@ -4,7 +4,6 @@ Test Artemis agent creation and model assignments.
 Verifies that task-specific models are correctly configured.
 """
 import asyncio
-import json
 import os
 import sys
 

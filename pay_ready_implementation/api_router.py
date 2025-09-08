@@ -1,10 +1,9 @@
 """Pay Ready API Router for Operational Intelligence"""
 
-import asyncio
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 router = APIRouter(prefix="/api/pay-ready", tags=["pay-ready"])
 

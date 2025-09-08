@@ -9,13 +9,14 @@ import json
 import sys
 import traceback
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 
+from core.memory.unified_memory import UnifiedMemoryManager
+from core.shared_services.auth.contextual_rbac import ContextualRBACEngine
+from core.shared_services.mcp_framework.agno_mcp_coordinator import MCPFramework
 from core.sophia.orchestration.sophia_brain import SophiaBrain
-from core.memory.unified_memory import UnifiedMemoryManager, test_hybrid_query
-from core.shared_services.mcp_framework.agno_mcp_coordinator import MCPFramework, test_mcp_framework
-from core.shared_services.auth.contextual_rbac import ContextualRBACEngine, test_contextual_rbac
-from core.sophia.routing.claude_mal_router import ClaudeMALRouter, test_claude_mal_router
+from core.sophia.routing.claude_mal_router import ClaudeMALRouter
+
 
 class SophiaV7TestSuite:
     """Comprehensive test suite for Sophia V7 Phase 1"""
@@ -139,7 +140,9 @@ class SophiaV7TestSuite:
         status = await framework.get_workflow_status("test_workflow")
 
         # Test ETL trigger creation
-        trigger_id = await framework.create_estuary_trigger({"source": "test", "destination": "test"})
+        trigger_id = await framework.create_estuary_trigger(
+            {"source": "test", "destination": "test"}
+        )
 
         return {
             "framework_initialized": True,
@@ -230,7 +233,9 @@ class SophiaV7TestSuite:
         end_time = datetime.now()
         duration = (end_time - self.start_time).total_seconds()
 
-        passed_tests = sum(1 for result in self.test_results.values() if result["status"] == "PASSED")
+        passed_tests = sum(
+            1 for result in self.test_results.values() if result["status"] == "PASSED"
+        )
         total_tests = len(self.test_results)
 
         report = {
@@ -250,7 +255,9 @@ class SophiaV7TestSuite:
         print("🎯 SOPHIA V7 PHASE 1 TEST SUMMARY")
         print("=" * 60)
         print(f"⏱️  Duration: {duration:.2f} seconds")
-        print(f"📊 Tests: {passed_tests}/{total_tests} passed ({(passed_tests/total_tests)*100:.1f}%)")
+        print(
+            f"📊 Tests: {passed_tests}/{total_tests} passed ({(passed_tests/total_tests)*100:.1f}%)"
+        )
 
         if passed_tests == total_tests:
             print("🎉 ALL TESTS PASSED! Phase 1 implementation successful!")
@@ -263,6 +270,7 @@ class SophiaV7TestSuite:
             print(f"  {status_emoji} {test_name}: {result['status']}")
 
         return report
+
 
 async def main():
     """Main test execution"""
@@ -279,7 +287,7 @@ async def main():
         with open("sophia_v7_phase1_test_report.json", "w") as f:
             json.dump(report, f, indent=2)
 
-        print(f"\n📄 Test report saved to: sophia_v7_phase1_test_report.json")
+        print("\n📄 Test report saved to: sophia_v7_phase1_test_report.json")
 
         # Return appropriate exit code
         success_rate = report["sophia_v7_phase1_test_report"]["success_rate"]
@@ -294,6 +302,7 @@ async def main():
         print(f"\n💥 Test suite execution failed: {str(e)}")
         traceback.print_exc()
         return 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

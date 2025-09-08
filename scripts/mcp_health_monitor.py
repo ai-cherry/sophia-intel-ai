@@ -10,7 +10,6 @@ import os
 import subprocess
 import time
 from datetime import datetime
-from typing import Dict, List
 
 import httpx
 import redis

@@ -6,14 +6,10 @@ Validates all 4 fusion systems are properly implemented and integrated
 
 import asyncio
 import json
-import os
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-
-import requests
+from typing import Any, Dict
 
 # Add project paths
 project_root = Path(__file__).parent.parent
@@ -23,6 +19,7 @@ sys.path.append(str(project_root / "monitoring"))
 sys.path.append(str(project_root / "devops"))
 sys.path.append(str(project_root / "pipelines"))
 sys.path.append(str(project_root / "backend"))
+
 
 class FusionSystemsValidator:
     """Validates all fusion systems implementation"""
@@ -34,7 +31,7 @@ class FusionSystemsValidator:
             "overall_status": "unknown",
             "systems": {},
             "integration": {},
-            "errors": []
+            "errors": [],
         }
 
     async def validate_all_systems(self) -> Dict[str, Any]:
@@ -71,7 +68,7 @@ class FusionSystemsValidator:
             "files_present": False,
             "imports_valid": False,
             "tests_present": False,
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -85,6 +82,7 @@ class FusionSystemsValidator:
             if result["files_present"]:
                 try:
                     from mem0_agno_self_pruning import MemoryOptimizationSwarm, RedisPruningAgent
+
                     result["imports_valid"] = True
                     print("  ✅ Redis optimization module imports successfully")
                 except ImportError as e:
@@ -114,12 +112,7 @@ class FusionSystemsValidator:
         print("🧠 Validating Edge RAG System...")
 
         system_name = "edge_rag"
-        result = {
-            "status": "unknown",
-            "files_present": False,
-            "imports_valid": False,
-            "errors": []
-        }
+        result = {"status": "unknown", "files_present": False, "imports_valid": False, "errors": []}
 
         try:
             # Check if main file exists
@@ -128,7 +121,8 @@ class FusionSystemsValidator:
 
             if result["files_present"]:
                 try:
-                    from qdrant_edge_rag import QdrantEdgeRAG, EdgeRAGOrchestrator
+                    from qdrant_edge_rag import EdgeRAGOrchestrator, QdrantEdgeRAG
+
                     result["imports_valid"] = True
                     print("  ✅ Edge RAG module imports successfully")
                 except ImportError as e:
@@ -158,12 +152,7 @@ class FusionSystemsValidator:
         print("🔀 Validating Hybrid Routing System...")
 
         system_name = "hybrid_routing"
-        result = {
-            "status": "unknown",
-            "files_present": False,
-            "imports_valid": False,
-            "errors": []
-        }
+        result = {"status": "unknown", "files_present": False, "imports_valid": False, "errors": []}
 
         try:
             # Check if main file exists
@@ -173,6 +162,7 @@ class FusionSystemsValidator:
             if result["files_present"]:
                 try:
                     from portkey_openrouter_hybrid import HybridModelRouter
+
                     result["imports_valid"] = True
                     print("  ✅ Hybrid routing module imports successfully")
                 except ImportError as e:
@@ -202,12 +192,7 @@ class FusionSystemsValidator:
         print("📊 Validating Cross-DB Analytics System...")
 
         system_name = "cross_db_analytics"
-        result = {
-            "status": "unknown",
-            "files_present": False,
-            "imports_valid": False,
-            "errors": []
-        }
+        result = {"status": "unknown", "files_present": False, "imports_valid": False, "errors": []}
 
         try:
             # Check if main file exists
@@ -217,6 +202,7 @@ class FusionSystemsValidator:
             if result["files_present"]:
                 try:
                     from neon_qdrant_analytics import CrossDatabaseAnalyticsMCP
+
                     result["imports_valid"] = True
                     print("  ✅ Cross-DB analytics module imports successfully")
                 except ImportError as e:
@@ -250,7 +236,7 @@ class FusionSystemsValidator:
             "router_file_present": False,
             "router_imported": False,
             "main_updated": False,
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -269,14 +255,18 @@ class FusionSystemsValidator:
             if result["router_file_present"]:
                 try:
                     from routers.fusion_metrics import router
+
                     print("  ✅ Fusion metrics router imports successfully")
                 except ImportError as e:
                     result["errors"].append(f"Router import error: {e}")
                     print(f"  ❌ Router import error: {e}")
 
             # Determine status
-            if (result["router_file_present"] and result["router_imported"] and 
-                result["main_updated"]):
+            if (
+                result["router_file_present"]
+                and result["router_imported"]
+                and result["main_updated"]
+            ):
                 result["status"] = "valid"
                 print("  ✅ Backend API integration validation passed")
             else:
@@ -298,12 +288,18 @@ class FusionSystemsValidator:
             "status": "unknown",
             "dashboard_file_present": False,
             "component_valid": False,
-            "errors": []
+            "errors": [],
         }
 
         try:
             # Check if dashboard file exists
-            dashboard_file = self.project_root / "frontend" / "src" / "components" / "FusionMonitoringDashboard.tsx"
+            dashboard_file = (
+                self.project_root
+                / "frontend"
+                / "src"
+                / "components"
+                / "FusionMonitoringDashboard.tsx"
+            )
             result["dashboard_file_present"] = dashboard_file.exists()
 
             if result["dashboard_file_present"]:
@@ -315,7 +311,7 @@ class FusionSystemsValidator:
                     "edge_rag",
                     "hybrid_routing",
                     "cross_db_analytics",
-                    "/api/fusion/metrics"
+                    "/api/fusion/metrics",
                 ]
 
                 result["component_valid"] = all(
@@ -355,7 +351,7 @@ class FusionSystemsValidator:
             "workflow_file_present": False,
             "sophia_files_present": False,
             "workflow_valid": False,
-            "errors": []
+            "errors": [],
         }
 
         try:
@@ -367,7 +363,7 @@ class FusionSystemsValidator:
             sophia_files = [
                 self.project_root / "tests" / "integration" / "sophia_fusion_systems.py",
                 self.project_root / "swarms" / "sophia_mem0_agno_self_pruning.py",
-                self.project_root / "backend" / "sophia_fusion_metrics_api.py"
+                self.project_root / "backend" / "sophia_fusion_metrics_api.py",
             ]
 
             result["sophia_files_present"] = all(f.exists() for f in sophia_files)
@@ -380,7 +376,7 @@ class FusionSystemsValidator:
                     "fusion-integration-tests",
                     "frontend-fusion-tests",
                     "security-scan",
-                    "sophia_fusion_systems.py"
+                    "sophia_fusion_systems.py",
                 ]
 
                 result["workflow_valid"] = all(
@@ -397,8 +393,11 @@ class FusionSystemsValidator:
                 print("  ❌ Workflow file not found")
 
             # Determine status
-            if (result["workflow_file_present"] and result["sophia_files_present"] and 
-                result["workflow_valid"]):
+            if (
+                result["workflow_file_present"]
+                and result["sophia_files_present"]
+                and result["workflow_valid"]
+            ):
                 result["status"] = "valid"
                 print("  ✅ GitHub Actions integration validation passed")
             else:
@@ -415,8 +414,7 @@ class FusionSystemsValidator:
     def calculate_overall_status(self):
         """Calculate overall validation status"""
         all_systems_valid = all(
-            system["status"] == "valid" 
-            for system in self.validation_results["systems"].values()
+            system["status"] == "valid" for system in self.validation_results["systems"].values()
         )
 
         all_integrations_valid = all(
@@ -427,8 +425,7 @@ class FusionSystemsValidator:
         if all_systems_valid and all_integrations_valid:
             self.validation_results["overall_status"] = "valid"
         elif any(
-            system["status"] == "error" 
-            for system in self.validation_results["systems"].values()
+            system["status"] == "error" for system in self.validation_results["systems"].values()
         ) or any(
             integration["status"] == "error"
             for integration in self.validation_results["integration"].values()
@@ -444,12 +441,7 @@ class FusionSystemsValidator:
         print("=" * 60)
 
         # Overall status
-        status_emoji = {
-            "valid": "✅",
-            "invalid": "❌", 
-            "error": "💥",
-            "unknown": "❓"
-        }
+        status_emoji = {"valid": "✅", "invalid": "❌", "error": "💥", "unknown": "❓"}
 
         overall_status = self.validation_results["overall_status"]
         print(f"Overall Status: {status_emoji[overall_status]} {overall_status.upper()}")
@@ -478,27 +470,30 @@ class FusionSystemsValidator:
         # Summary
         total_systems = len(self.validation_results["systems"])
         valid_systems = sum(
-            1 for system in self.validation_results["systems"].values()
+            1
+            for system in self.validation_results["systems"].values()
             if system["status"] == "valid"
         )
 
         total_integrations = len(self.validation_results["integration"])
         valid_integrations = sum(
-            1 for integration in self.validation_results["integration"].values()
+            1
+            for integration in self.validation_results["integration"].values()
             if integration["status"] == "valid"
         )
 
-        print(f"📊 SUMMARY:")
+        print("📊 SUMMARY:")
         print(f"  Systems: {valid_systems}/{total_systems} valid")
         print(f"  Integrations: {valid_integrations}/{total_integrations} valid")
         print(f"  Timestamp: {self.validation_results['timestamp']}")
 
         # Save report to file
         report_file = self.project_root / "FUSION_VALIDATION_REPORT.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(self.validation_results, f, indent=2)
 
         print(f"\n📄 Full report saved to: {report_file}")
+
 
 async def main():
     """Main validation function"""
@@ -512,6 +507,7 @@ async def main():
     else:
         print("\n💥 Fusion systems validation failed!")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

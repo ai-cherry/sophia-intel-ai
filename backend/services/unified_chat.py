@@ -4,30 +4,33 @@ Enhanced with intent caching, predictive fetching, and intelligent blending
 """
 
 import asyncio
+import hashlib
+import json
 import logging
 import time
-from typing import Dict, List, Optional, Any
-from functools import lru_cache
 from dataclasses import dataclass, field
 from enum import Enum
-import json
-import hashlib
+from typing import Any, Dict, List, Optional
 
-from services.circuit_breaker import CircuitBreaker, circuit_breaker, CircuitBreakerConfig
+from services.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 
 logger = logging.getLogger(__name__)
 
+
 class QueryIntent(Enum):
     """Types of query intents"""
+
     WEB_SEARCH = "web_search"
     INTERNAL_DATA = "internal_data"
     MCP_QUERY = "mcp_query"
     MIXED = "mixed"
     UNKNOWN = "unknown"
 
+
 @dataclass
 class Intent:
     """Query intent analysis result"""
+
     primary_intent: QueryIntent
     confidence: float
     requires_web: bool = False
@@ -36,30 +39,58 @@ class Intent:
     domains: List[str] = field(default_factory=list)
     keywords: List[str] = field(default_factory=list)
 
+
 @dataclass
 class QueryResult:
     """Result from a query source"""
+
     source: str
     data: Any
     confidence: float
     response_time: float
     error: Optional[str] = None
 
+
 class IntentAnalyzer:
     """Analyzes query intent using simple heuristics"""
 
     def __init__(self):
         self.web_keywords = {
-            'search', 'find', 'google', 'web', 'internet', 'online',
-            'latest', 'news', 'current', 'recent', 'today'
+            "search",
+            "find",
+            "google",
+            "web",
+            "internet",
+            "online",
+            "latest",
+            "news",
+            "current",
+            "recent",
+            "today",
         }
         self.internal_keywords = {
-            'dashboard', 'report', 'analytics', 'data', 'metrics',
-            'sales', 'marketing', 'crm', 'pipeline', 'revenue'
+            "dashboard",
+            "report",
+            "analytics",
+            "data",
+            "metrics",
+            "sales",
+            "marketing",
+            "crm",
+            "pipeline",
+            "revenue",
         }
         self.mcp_keywords = {
-            'gong', 'slack', 'github', 'notion', 'asana', 'hubspot',
-            'integration', 'sync', 'connect', 'api'
+            "gong",
+            "slack",
+            "github",
+            "notion",
+            "asana",
+            "hubspot",
+            "integration",
+            "sync",
+            "connect",
+            "api",
         }
 
     async def analyze(self, query: str, user_context: Dict) -> Intent:
@@ -85,7 +116,7 @@ class IntentAnalyzer:
         scores = {
             QueryIntent.WEB_SEARCH: web_score,
             QueryIntent.INTERNAL_DATA: internal_score,
-            QueryIntent.MCP_QUERY: mcp_score
+            QueryIntent.MCP_QUERY: mcp_score,
         }
 
         primary_intent = max(scores, key=scores.get)
@@ -101,14 +132,14 @@ class IntentAnalyzer:
             confidence = min(0.9, max_score / 3.0)
 
         # Determine requirements
-        requires_web = web_score > 0 or 'search' in query_lower
+        requires_web = web_score > 0 or "search" in query_lower
         requires_internal = internal_score > 0 or any(
-            domain in query_lower for domain in user_context.get('domains', [])
+            domain in query_lower for domain in user_context.get("domains", [])
         )
         requires_mcp = mcp_score > 0
 
         # Extract domains and keywords
-        domains = [d for d in user_context.get('domains', []) if d in query_lower]
+        domains = [d for d in user_context.get("domains", []) if d in query_lower]
         keywords = [w for w in words if len(w) > 3][:5]  # Top 5 keywords
 
         return Intent(
@@ -118,8 +149,9 @@ class IntentAnalyzer:
             requires_internal=requires_internal,
             requires_mcp=requires_mcp,
             domains=domains,
-            keywords=keywords
+            keywords=keywords,
         )
+
 
 class PredictiveCache:
     """Predictive cache for query results and patterns"""
@@ -142,9 +174,9 @@ class PredictiveCache:
 
         if key in self.cache:
             cached = self.cache[key]
-            if time.time() - cached['timestamp'] < self.ttl:
+            if time.time() - cached["timestamp"] < self.ttl:
                 self.access_patterns[key] = self.access_patterns.get(key, 0) + 1
-                return cached['data']
+                return cached["data"]
             else:
                 # Expired, remove from cache
                 del self.cache[key]
@@ -157,15 +189,12 @@ class PredictiveCache:
 
         # Evict oldest entries if cache is full
         if len(self.cache) >= self.max_size:
-            oldest_key = min(self.cache.keys(), key=lambda k: self.cache[k]['timestamp'])
+            oldest_key = min(self.cache.keys(), key=lambda k: self.cache[k]["timestamp"])
             del self.cache[oldest_key]
             if oldest_key in self.access_patterns:
                 del self.access_patterns[oldest_key]
 
-        self.cache[key] = {
-            'data': data,
-            'timestamp': time.time()
-        }
+        self.cache[key] = {"data": data, "timestamp": time.time()}
 
     async def prefetch_related(self, query: str, context: Dict):
         """Prefetch related queries based on patterns"""
@@ -176,6 +205,7 @@ class PredictiveCache:
     async def warm_common_queries(self):
         """Warm cache with common queries"""
         # Placeholder for cache warming logic
+
 
 class UnifiedChatService:
     """
@@ -189,12 +219,10 @@ class UnifiedChatService:
 
         # Initialize circuit breakers for external services
         self.web_circuit = CircuitBreaker(
-            "web_search",
-            CircuitBreakerConfig(failure_threshold=3, recovery_timeout=30)
+            "web_search", CircuitBreakerConfig(failure_threshold=3, recovery_timeout=30)
         )
         self.mcp_circuit = CircuitBreaker(
-            "mcp_services", 
-            CircuitBreakerConfig(failure_threshold=5, recovery_timeout=60)
+            "mcp_services", CircuitBreakerConfig(failure_threshold=5, recovery_timeout=60)
         )
 
         logger.info("🤖 Unified Chat Service initialized")
@@ -216,31 +244,27 @@ class UnifiedChatService:
         cached_result = await self.predictive_cache.get(query, user_context)
         if cached_result:
             logger.info(f"📋 Cache hit for query: {query[:50]}...")
-            cached_result['cached'] = True
+            cached_result["cached"] = True
             return cached_result
 
         # Analyze intent
         intent = await self._get_or_analyze_intent(query, user_context)
 
         # Predictive pre-fetch for likely follow-up queries
-        asyncio.create_task(
-            self.predictive_cache.prefetch_related(query, user_context)
-        )
+        asyncio.create_task(self.predictive_cache.prefetch_related(query, user_context))
 
         # Parallel fetch with smart timeout management
         fetch_tasks = []
         timeout_map = {
-            'web': 3.0,      # Flexible timeout for web
-            'internal': 1.5,  # Fast internal systems
-            'mcp': 4.0       # More flexible for MCP
+            "web": 3.0,  # Flexible timeout for web
+            "internal": 1.5,  # Fast internal systems
+            "mcp": 4.0,  # More flexible for MCP
         }
 
         if intent.requires_web:
             fetch_tasks.append(
                 self._fetch_with_timeout(
-                    self._fetch_web_results(query, user_context),
-                    timeout_map['web'],
-                    'web'
+                    self._fetch_web_results(query, user_context), timeout_map["web"], "web"
                 )
             )
 
@@ -248,17 +272,15 @@ class UnifiedChatService:
             fetch_tasks.append(
                 self._fetch_with_timeout(
                     self._fetch_internal_results(query, user_context),
-                    timeout_map['internal'],
-                    'internal'
+                    timeout_map["internal"],
+                    "internal",
                 )
             )
 
         if intent.requires_mcp:
             fetch_tasks.append(
                 self._fetch_with_timeout(
-                    self._fetch_mcp_results(query, user_context),
-                    timeout_map['mcp'],
-                    'mcp'
+                    self._fetch_mcp_results(query, user_context), timeout_map["mcp"], "mcp"
                 )
             )
 
@@ -275,20 +297,20 @@ class UnifiedChatService:
                 processed_results.append(result)
 
         # Intelligent blending with source confidence scoring
-        response = await self._blend_with_confidence(
-            query, processed_results, user_context, intent
-        )
+        response = await self._blend_with_confidence(query, processed_results, user_context, intent)
 
         # Add metadata
-        response.update({
-            'processing_time': time.time() - start_time,
-            'intent': {
-                'primary': intent.primary_intent.value,
-                'confidence': intent.confidence,
-                'domains': intent.domains
-            },
-            'cached': False
-        })
+        response.update(
+            {
+                "processing_time": time.time() - start_time,
+                "intent": {
+                    "primary": intent.primary_intent.value,
+                    "confidence": intent.confidence,
+                    "domains": intent.domains,
+                },
+                "cached": False,
+            }
+        )
 
         # Cache the result
         await self.predictive_cache.set(query, user_context, response)
@@ -316,10 +338,7 @@ class UnifiedChatService:
         self.intent_cache[cache_key] = intent
         return intent
 
-    async def _fetch_with_timeout(self, 
-                                 coro, 
-                                 timeout: float, 
-                                 source: str) -> Optional[QueryResult]:
+    async def _fetch_with_timeout(self, coro, timeout: float, source: str) -> Optional[QueryResult]:
         """Fetch with timeout and error handling"""
         start_time = time.time()
 
@@ -331,17 +350,13 @@ class UnifiedChatService:
                 source=source,
                 data=result,
                 confidence=0.8,  # Default confidence
-                response_time=response_time
+                response_time=response_time,
             )
 
         except asyncio.TimeoutError:
             logger.warning(f"⏰ {source} fetch timed out after {timeout}s")
             return QueryResult(
-                source=source,
-                data={},
-                confidence=0.0,
-                response_time=timeout,
-                error="timeout"
+                source=source, data={}, confidence=0.0, response_time=timeout, error="timeout"
             )
         except Exception as e:
             logger.error(f"❌ {source} fetch failed: {e}")
@@ -350,7 +365,7 @@ class UnifiedChatService:
                 data={},
                 confidence=0.0,
                 response_time=time.time() - start_time,
-                error=str(e)
+                error=str(e),
             )
 
     async def _fetch_web_results(self, query: str, context: Dict) -> Dict:
@@ -371,11 +386,11 @@ class UnifiedChatService:
                 {
                     "title": f"Web result for: {query}",
                     "snippet": f"This is a simulated web search result for '{query}'",
-                    "url": "https://example.com/result1"
+                    "url": "https://example.com/result1",
                 }
             ],
             "source": "web",
-            "query": query
+            "query": query,
         }
 
     async def _fetch_internal_results(self, query: str, context: Dict) -> Dict:
@@ -389,11 +404,11 @@ class UnifiedChatService:
                     "type": "dashboard_metric",
                     "title": f"Internal data for: {query}",
                     "value": "42",
-                    "source": "internal_db"
+                    "source": "internal_db",
                 }
             ],
             "source": "internal",
-            "domains": context.get('domains', [])
+            "domains": context.get("domains", []),
         }
 
     async def _fetch_mcp_results(self, query: str, context: Dict) -> Dict:
@@ -415,25 +430,23 @@ class UnifiedChatService:
                     "server": "gong",
                     "type": "sales_insight",
                     "data": f"MCP result for: {query}",
-                    "confidence": 0.85
+                    "confidence": 0.85,
                 }
             ],
             "source": "mcp",
-            "servers_queried": ["gong", "hubspot", "slack"]
+            "servers_queried": ["gong", "hubspot", "slack"],
         }
 
-    async def _blend_with_confidence(self, 
-                                   query: str, 
-                                   results: List[QueryResult], 
-                                   context: Dict,
-                                   intent: Intent) -> Dict:
+    async def _blend_with_confidence(
+        self, query: str, results: List[QueryResult], context: Dict, intent: Intent
+    ) -> Dict:
         """Blend results from multiple sources with confidence scoring"""
 
         if not results:
             return {
                 "response": "I couldn't find relevant information for your query.",
                 "sources": [],
-                "confidence": 0.0
+                "confidence": 0.0,
             }
 
         # Sort results by confidence and response time
@@ -445,39 +458,43 @@ class UnifiedChatService:
         sources_used = []
 
         for result in valid_results[:3]:  # Use top 3 results
-            if result.data and result.data.get('results'):
-                response_parts.append(f"From {result.source}: {self._summarize_result(result.data)}")
-                sources_used.append({
-                    'source': result.source,
-                    'confidence': result.confidence,
-                    'response_time': result.response_time,
-                    'data_points': len(result.data.get('results', []))
-                })
+            if result.data and result.data.get("results"):
+                response_parts.append(
+                    f"From {result.source}: {self._summarize_result(result.data)}"
+                )
+                sources_used.append(
+                    {
+                        "source": result.source,
+                        "confidence": result.confidence,
+                        "response_time": result.response_time,
+                        "data_points": len(result.data.get("results", [])),
+                    }
+                )
 
         if not response_parts:
             response_text = "I found some information but couldn't extract meaningful results."
             overall_confidence = 0.2
         else:
             response_text = " ".join(response_parts)
-            overall_confidence = sum(s['confidence'] for s in sources_used) / len(sources_used)
+            overall_confidence = sum(s["confidence"] for s in sources_used) / len(sources_used)
 
         return {
             "response": response_text,
             "sources": sources_used,
             "confidence": overall_confidence,
             "query": query,
-            "intent_matched": intent.primary_intent.value
+            "intent_matched": intent.primary_intent.value,
         }
 
     def _summarize_result(self, data: Dict) -> str:
         """Summarize result data for response"""
-        results = data.get('results', [])
+        results = data.get("results", [])
         if not results:
             return "No specific results found."
 
         if len(results) == 1:
             result = results[0]
-            return result.get('title', result.get('snippet', str(result)))
+            return result.get("title", result.get("snippet", str(result)))
         else:
             return f"Found {len(results)} relevant items."
 
@@ -485,8 +502,10 @@ class UnifiedChatService:
         """Track interaction for learning and analytics"""
         # Placeholder for interaction tracking
         # In a real implementation, this would log to analytics system
-        logger.info(f"📊 Query processed: confidence={response.get('confidence', 0):.2f}, "
-                   f"sources={len(response.get('sources', []))}")
+        logger.info(
+            f"📊 Query processed: confidence={response.get('confidence', 0):.2f}, "
+            f"sources={len(response.get('sources', []))}"
+        )
 
     def get_service_stats(self) -> Dict[str, Any]:
         """Get service statistics"""
@@ -494,11 +513,13 @@ class UnifiedChatService:
             "web_circuit": self.web_circuit.get_stats(),
             "mcp_circuit": self.mcp_circuit.get_stats(),
             "intent_cache_size": len(self.intent_cache),
-            "predictive_cache_size": len(self.predictive_cache.cache)
+            "predictive_cache_size": len(self.predictive_cache.cache),
         }
+
 
 # Example usage
 if __name__ == "__main__":
+
     async def sophia_unified_chat():
         """Test the unified chat service"""
         service = UnifiedChatService()
@@ -507,13 +528,13 @@ if __name__ == "__main__":
             "What are our sales numbers this month?",
             "Search for latest PropTech trends",
             "Show me Gong call insights",
-            "What's in our marketing pipeline?"
+            "What's in our marketing pipeline?",
         ]
 
         user_context = {
             "role": "manager",
             "domains": ["sales", "marketing", "bi"],
-            "user_id": "sophia_user"
+            "user_id": "sophia_user",
         }
 
         for query in sophia_queries:
@@ -527,7 +548,7 @@ if __name__ == "__main__":
 
         # Print service stats
         stats = service.get_service_stats()
-        print(f"\n📈 Service Stats:")
+        print("\n📈 Service Stats:")
         print(json.dumps(stats, indent=2))
 
     # Run test

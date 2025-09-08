@@ -23,7 +23,7 @@ except ImportError:
     # Mock classes for when Agno is not available
     class Agent:
         def __init__(self, *args, **kwargs):
-
+            pass
     class Swarm:
         def __init__(self, *args, **kwargs):
             self.agents = []
@@ -38,9 +38,10 @@ except ImportError:
     # Mock MemoryClient for when Mem0 is not available
     class MemoryClient:
         def __init__(self, *args, **kwargs):
+            pass
 
         def add(self, *args, **kwargs):
-
+            pass
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

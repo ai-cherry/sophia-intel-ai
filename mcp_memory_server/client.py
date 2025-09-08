@@ -2,9 +2,10 @@
 MCP Memory Client - Python client for the MCP Memory Server
 """
 
-import json
+from typing import Any, Dict, List, Optional
+
 import httpx
-from typing import Dict, List, Any, Optional
+
 
 class MCPMemoryClient:
     def __init__(self, base_url: str = "http://localhost:8001"):
@@ -41,35 +42,27 @@ class MCPMemoryClient:
         response = await self.client.delete(f"{self.base_url}/memory/{key}")
         return response.json()
 
-    async def store_vector(self, text: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
+    async def store_vector(
+        self, text: str, embedding: List[float], metadata: Dict[str, Any] = {}
+    ) -> Dict[str, Any]:
         """Store a vector embedding"""
-        payload = {
-            "text": text,
-            "embedding": embedding,
-            "metadata": metadata
-        }
+        payload = {"text": text, "embedding": embedding, "metadata": metadata}
 
         response = await self.client.post(f"{self.base_url}/vector/store", json=payload)
         return response.json()
 
     async def search_vector(self, embedding: List[float], limit: int = 10) -> Dict[str, Any]:
         """Search for similar vectors"""
-        payload = {
-            "text": "",  # Placeholder
-            "embedding": embedding,
-            "metadata": {"limit": limit}
-        }
+        payload = {"text": "", "embedding": embedding, "metadata": {"limit": limit}}  # Placeholder
 
         response = await self.client.post(f"{self.base_url}/vector/search", json=payload)
         return response.json()
 
-    async def store_context(self, agent_id: str, context_type: str, content: Dict[str, Any]) -> Dict[str, Any]:
+    async def store_context(
+        self, agent_id: str, context_type: str, content: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Store context information"""
-        payload = {
-            "agent_id": agent_id,
-            "context_type": context_type,
-            "content": content
-        }
+        payload = {"agent_id": agent_id, "context_type": context_type, "content": content}
 
         response = await self.client.post(f"{self.base_url}/context/store", json=payload)
         return response.json()
@@ -84,6 +77,7 @@ class MCPMemoryClient:
     def sync(cls, base_url: str = "http://localhost:8001"):
         """Create a synchronous version of the client"""
         return MCPMemoryClientSync(base_url)
+
 
 class MCPMemoryClientSync:
     def __init__(self, base_url: str = "http://localhost:8001"):
@@ -120,35 +114,27 @@ class MCPMemoryClientSync:
         response = self.client.delete(f"{self.base_url}/memory/{key}")
         return response.json()
 
-    def store_vector(self, text: str, embedding: List[float], metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
+    def store_vector(
+        self, text: str, embedding: List[float], metadata: Dict[str, Any] = {}
+    ) -> Dict[str, Any]:
         """Store a vector embedding"""
-        payload = {
-            "text": text,
-            "embedding": embedding,
-            "metadata": metadata
-        }
+        payload = {"text": text, "embedding": embedding, "metadata": metadata}
 
         response = self.client.post(f"{self.base_url}/vector/store", json=payload)
         return response.json()
 
     def search_vector(self, embedding: List[float], limit: int = 10) -> Dict[str, Any]:
         """Search for similar vectors"""
-        payload = {
-            "text": "",  # Placeholder
-            "embedding": embedding,
-            "metadata": {"limit": limit}
-        }
+        payload = {"text": "", "embedding": embedding, "metadata": {"limit": limit}}  # Placeholder
 
         response = self.client.post(f"{self.base_url}/vector/search", json=payload)
         return response.json()
 
-    def store_context(self, agent_id: str, context_type: str, content: Dict[str, Any]) -> Dict[str, Any]:
+    def store_context(
+        self, agent_id: str, context_type: str, content: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Store context information"""
-        payload = {
-            "agent_id": agent_id,
-            "context_type": context_type,
-            "content": content
-        }
+        payload = {"agent_id": agent_id, "context_type": context_type, "content": content}
 
         response = self.client.post(f"{self.base_url}/context/store", json=payload)
         return response.json()

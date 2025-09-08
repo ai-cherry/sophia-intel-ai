@@ -454,9 +454,11 @@ class ElitePortkeyGateway:
         swarm_config = (
             EliteSwarmConfig.GENESIS_SWARM
             if swarm_type == "genesis"
-            else EliteSwarmConfig.SPEED_SWARM
-            if swarm_type == "speed"
-            else EliteSwarmConfig.HEAVY_SWARM
+            else (
+                EliteSwarmConfig.SPEED_SWARM
+                if swarm_type == "speed"
+                else EliteSwarmConfig.HEAVY_SWARM
+            )
         )
 
         swarm_agents = {}

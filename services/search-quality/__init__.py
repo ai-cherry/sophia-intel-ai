@@ -8,28 +8,26 @@ This package provides sophisticated search quality components:
 """
 
 from .contextual_bandit import (
+    BanditConfig,
     ProductionContextualBandit,
     ProviderContext,
     ProviderMetrics,
-    BanditConfig,
-    create_contextual_bandit
+    create_contextual_bandit,
 )
-
-from .reciprocal_rank_fusion import (
-    OptimizedReciprocalRankFusion,
-    SearchResult,
-    ProviderResults,
-    RRFConfig,
-    FusionMetrics,
-    create_rrf_fusion
-)
-
 from .cross_encoder_reranking import (
     OptimizedCrossEncoderReranker,
-    RerankingResult,
     RerankingConfig,
     RerankingMetrics,
-    create_cross_encoder_reranker
+    RerankingResult,
+    create_cross_encoder_reranker,
+)
+from .reciprocal_rank_fusion import (
+    FusionMetrics,
+    OptimizedReciprocalRankFusion,
+    ProviderResults,
+    RRFConfig,
+    SearchResult,
+    create_rrf_fusion,
 )
 
 __version__ = "1.0.0"
@@ -37,10 +35,9 @@ __all__ = [
     # Contextual Bandit
     "ProductionContextualBandit",
     "ProviderContext",
-    "ProviderMetrics", 
+    "ProviderMetrics",
     "BanditConfig",
     "create_contextual_bandit",
-
     # Reciprocal Rank Fusion
     "OptimizedReciprocalRankFusion",
     "SearchResult",
@@ -48,11 +45,10 @@ __all__ = [
     "RRFConfig",
     "FusionMetrics",
     "create_rrf_fusion",
-
     # Cross-Encoder Reranking
     "OptimizedCrossEncoderReranker",
     "RerankingResult",
-    "RerankingConfig", 
+    "RerankingConfig",
     "RerankingMetrics",
-    "create_cross_encoder_reranker"
+    "create_cross_encoder_reranker",
 ]

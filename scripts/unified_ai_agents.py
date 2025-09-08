@@ -92,7 +92,9 @@ async def run_task(agent: str, mode: str, task: str, dry_run: bool = False) -> N
     ]
 
     try:
-        resp = await llm.complete(provider=provider, model=model, messages=messages, max_tokens=512, temperature=0.2)
+        resp = await llm.complete(
+            provider=provider, model=model, messages=messages, max_tokens=512, temperature=0.2
+        )
         print("\n==== Result ====")
         print(resp.text)
     except Exception as e:
@@ -103,11 +105,15 @@ def main():
     load_env()
 
     parser = argparse.ArgumentParser(description="Unified AI Agents CLI")
-    parser.add_argument("--agent", choices=["grok", "claude", "codex"], required=False, default="grok")
+    parser.add_argument(
+        "--agent", choices=["grok", "claude", "codex"], required=False, default="grok"
+    )
     parser.add_argument("--mode", choices=["chat", "code"], default="chat")
     parser.add_argument("--task", type=str, help="Task instruction text")
     parser.add_argument("--file", type=str, help="Optional file path for context", default=None)
-    parser.add_argument("--dry-run", action="store_true", help="Print configuration without calling LLM")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Print configuration without calling LLM"
+    )
     parser.add_argument("--whoami", action="store_true", help="Show environment and routing info")
 
     args = parser.parse_args()
@@ -126,4 +132,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

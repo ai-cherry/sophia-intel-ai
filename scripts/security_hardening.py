@@ -4,32 +4,37 @@ Security Hardening Script for Sophia AI Platform
 Addresses vulnerabilities and implements production security measures
 """
 
-import os
-import sys
-import subprocess
 import json
-import requests
+import os
+import subprocess
+import sys
 from pathlib import Path
+
 
 # Colors for output
 class Colors:
-    RED = '\033[0;31m'
-    GREEN = '\033[0;32m'
-    YELLOW = '\033[1;33m'
-    BLUE = '\033[0;34m'
-    NC = '\033[0m'  # No Color
+    RED = "\033[0;31m"
+    GREEN = "\033[0;32m"
+    YELLOW = "\033[1;33m"
+    BLUE = "\033[0;34m"
+    NC = "\033[0m"  # No Color
+
 
 def print_status(message):
     print(f"{Colors.BLUE}[INFO]{Colors.NC} {message}")
 
+
 def print_success(message):
     print(f"{Colors.GREEN}[SUCCESS]{Colors.NC} {message}")
+
 
 def print_warning(message):
     print(f"{Colors.YELLOW}[WARNING]{Colors.NC} {message}")
 
+
 def print_error(message):
     print(f"{Colors.RED}[ERROR]{Colors.NC} {message}")
+
 
 def run_command(command, check=True):
     """Run shell command and return result"""
@@ -39,6 +44,7 @@ def run_command(command, check=True):
     except subprocess.CalledProcessError as e:
         return e.stdout.strip(), e.stderr.strip(), e.returncode
 
+
 def fix_python_vulnerabilities():
     """Fix Python package vulnerabilities"""
     print_status("Fixing Python package vulnerabilities...")
@@ -46,7 +52,7 @@ def fix_python_vulnerabilities():
     # Update all packages to latest secure versions
     security_updates = {
         "wheel": ">=0.45.1",
-        "setuptools": ">=75.0.0", 
+        "setuptools": ">=75.0.0",
         "pip": ">=25.0.0",
         "requests": ">=2.32.0",
         "urllib3": ">=2.2.3",
@@ -54,7 +60,7 @@ def fix_python_vulnerabilities():
         "cryptography": ">=43.0.0",
         "pyjwt": ">=2.9.0",
         "pillow": ">=10.4.0",
-        "jinja2": ">=3.1.4"
+        "jinja2": ">=3.1.4",
     }
 
     for package, version in security_updates.items():
@@ -77,11 +83,14 @@ def fix_python_vulnerabilities():
             else:
                 print_warning(f"Found {len(audit_data)} vulnerabilities")
                 for vuln in audit_data:
-                    print_warning(f"  {vuln.get('name', 'Unknown')} - {vuln.get('description', 'No description')}")
+                    print_warning(
+                        f"  {vuln.get('name', 'Unknown')} - {vuln.get('description', 'No description')}"
+                    )
         except json.JSONDecodeError:
             print_success("Security audit completed")
 
     print_success("Python vulnerability fixes completed")
+
 
 def fix_node_vulnerabilities():
     """Fix Node.js package vulnerabilities"""
@@ -109,7 +118,7 @@ def fix_node_vulnerabilities():
         "typescript@^5.0.0",
         "vite@^5.0.0",
         "react@^18.3.0",
-        "react-dom@^18.3.0"
+        "react-dom@^18.3.0",
     ]
 
     for package in critical_updates:
@@ -123,11 +132,12 @@ def fix_node_vulnerabilities():
     os.chdir("..")
     print_success("Node.js vulnerability fixes completed")
 
+
 def implement_rate_limiting():
     """Implement rate limiting for API endpoints"""
     print_status("Implementing rate limiting...")
 
-    rate_limit_config = '''
+    rate_limit_config = """
 # Rate Limiting Configuration
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
@@ -144,25 +154,25 @@ RATE_LIMITS = {
     "auth": "10/minute",
     "upload": "5/minute"
 }
-'''
+"""
 
     # Add rate limiting to main.py
     main_py_path = Path("backend/main.py")
     if main_py_path.exists():
-        with open(main_py_path, 'r') as f:
+        with open(main_py_path) as f:
             content = f.read()
 
-        if 'slowapi' not in content:
-            lines = content.split('\n')
+        if "slowapi" not in content:
+            lines = content.split("\n")
             import_index = 0
             for i, line in enumerate(lines):
-                if line.startswith('from ') or line.startswith('import '):
+                if line.startswith("from ") or line.startswith("import "):
                     import_index = i + 1
 
             lines.insert(import_index, rate_limit_config)
 
-            with open(main_py_path, 'w') as f:
-                f.write('\n'.join(lines))
+            with open(main_py_path, "w") as f:
+                f.write("\n".join(lines))
 
             print_success("Rate limiting added to main.py")
 
@@ -172,6 +182,7 @@ RATE_LIMITS = {
         print_success("slowapi installed for rate limiting")
 
     print_success("Rate limiting implementation completed")
+
 
 def implement_security_headers():
     """Implement security headers"""
@@ -236,18 +247,19 @@ def add_security_headers(app):
     # Add to main.py
     main_py_path = Path("backend/main.py")
     if main_py_path.exists():
-        with open(main_py_path, 'r') as f:
+        with open(main_py_path) as f:
             content = f.read()
 
-        if 'add_security_headers' not in content:
+        if "add_security_headers" not in content:
             content += security_middleware
 
-            with open(main_py_path, 'w') as f:
+            with open(main_py_path, "w") as f:
                 f.write(content)
 
             print_success("Security headers added to main.py")
 
     print_success("Security headers implementation completed")
+
 
 def implement_input_validation():
     """Implement comprehensive input validation"""
@@ -302,10 +314,11 @@ def validate_api_key(api_key: str) -> bool:
     validation_path = Path("backend/utils/validation.py")
     validation_path.parent.mkdir(exist_ok=True)
 
-    with open(validation_path, 'w') as f:
+    with open(validation_path, "w") as f:
         f.write(validation_code)
 
     print_success("Input validation utilities created")
+
 
 def run_performance_tests():
     """Run performance tests"""
@@ -364,7 +377,7 @@ if __name__ == "__main__":
 '''
 
     perf_test_path = Path("tests/performance_test.py")
-    with open(perf_test_path, 'w') as f:
+    with open(perf_test_path, "w") as f:
         f.write(perf_test)
 
     # Install aiohttp for performance testing
@@ -374,11 +387,12 @@ if __name__ == "__main__":
 
     print_success("Performance testing setup completed")
 
+
 def create_security_checklist():
     """Create security checklist"""
     print_status("Creating security checklist...")
 
-    checklist = '''# Security Checklist for Sophia AI Platform
+    checklist = """# Security Checklist for Sophia AI Platform
 
 ## ✅ Completed Security Measures
 
@@ -457,13 +471,14 @@ def create_security_checklist():
 - OWASP Top 10: https://owasp.org/www-project-top-ten/
 - FastAPI Security: https://fastapi.tiangolo.com/tutorial/security/
 - Python Security: https://python-security.readthedocs.io/
-'''
+"""
 
     checklist_path = Path("SECURITY_CHECKLIST.md")
-    with open(checklist_path, 'w') as f:
+    with open(checklist_path, "w") as f:
         f.write(checklist)
 
     print_success("Security checklist created")
+
 
 def main():
     """Main security hardening function"""
@@ -488,6 +503,7 @@ def main():
     except Exception as e:
         print_error(f"Security hardening failed: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

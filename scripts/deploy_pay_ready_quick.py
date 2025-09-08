@@ -11,8 +11,6 @@ from pathlib import Path
 # Set Portkey API key
 os.environ["PORTKEY_API_KEY"] = "hPxFZGd8AN269n4bznDf2/Onbi8I"
 
-from portkey_ai import Portkey
-
 
 def create_pay_ready_models():
     """Create Pay Ready data models"""

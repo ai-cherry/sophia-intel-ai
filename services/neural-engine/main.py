@@ -313,7 +313,7 @@ class NeuralEngineManager:
                 await cache_client.ping()
                 cache_connected = True
             except:
-
+                pass
         uptime_seconds = time.time() - self.start_time
 
         return HealthResponse(

@@ -18,7 +18,6 @@ from app.core.resource_manager import get_resource_manager
 from app.models.orchestration_models import (
     ChatRequest,
     CommandRequest,
-    QueryRequest,
     TaskPriority,
     TaskType,
     create_orchestration_task,

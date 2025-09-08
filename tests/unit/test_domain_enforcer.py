@@ -4,11 +4,8 @@ Tests access control matrix enforcement, cross-domain request blocking,
 allowed domain operations, audit logging, and domain violation detection
 """
 
-import json
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict
-from unittest.mock import MagicMock, patch
-from uuid import uuid4
+from unittest.mock import patch
 
 import pytest
 

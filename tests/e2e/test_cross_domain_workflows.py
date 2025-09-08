@@ -4,20 +4,13 @@ Tests complete workflows that span both domains, domain boundary enforcement in 
 and shared service access patterns
 """
 
-import asyncio
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
-from unittest.mock import AsyncMock, MagicMock, call, patch
-from uuid import uuid4
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from app.artemis.unified_factory import ArtemisUnifiedFactory
 from app.core.domain_enforcer import (
-    CrossDomainRequest,
     DomainEnforcer,
-    DomainRequest,
     OperationType,
     UserRole,
     request_cross_domain_access,

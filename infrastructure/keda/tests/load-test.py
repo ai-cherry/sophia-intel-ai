@@ -13,14 +13,12 @@ import random
 import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-import prometheus_client
 import redis
 from kubernetes import client, config
-from kubernetes.client import V1Deployment, V1Pod
 
 # Configure logging
 logging.basicConfig(

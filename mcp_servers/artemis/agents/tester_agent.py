@@ -1,8 +1,11 @@
 # Auto-added by pre-commit hook
-import sys, os
+import os
+import sys
+
 try:
     sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
     from core.environment_enforcer import enforce_environment
+
     enforce_environment()
 except ImportError:
     pass
@@ -19,30 +22,34 @@ Provides comprehensive testing capabilities including:
 
 import asyncio
 import logging
+import os
 import subprocess
 import tempfile
-import os
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 try:
     from crewai import Agent
 except ImportError:
     Agent = None
 
+
 @dataclass
 class TestResult:
     """Individual test result"""
+
     test_name: str
     status: str  # passed, failed, skipped
     duration: float
     error_message: Optional[str] = None
 
+
 @dataclass
 class TestSuite:
     """Complete test suite results"""
+
     total_tests: int
     passed: int
     failed: int
@@ -50,6 +57,7 @@ class TestSuite:
     coverage: float
     duration: float
     results: List[TestResult]
+
 
 class TesterAgent:
     """
@@ -96,7 +104,7 @@ class TesterAgent:
                     "error_simulation": await self._run_error_simulation(temp_dir),
                     "code_quality": await self._assess_code_quality(code_files),
                     "coverage": await self._calculate_coverage(temp_dir),
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
                 }
 
                 # Generate summary
@@ -106,23 +114,20 @@ class TesterAgent:
 
         except Exception as e:
             self.logger.error(f"Error running tests: {e}")
-            return {
-                "error": str(e),
-                "timestamp": datetime.now().isoformat()
-            }
+            return {"error": str(e), "timestamp": datetime.now().isoformat()}
 
     async def _write_code_files(self, code_files: Dict[str, Any], temp_dir: str):
         """Write code files to temporary directory"""
         for file_path, file_data in code_files.items():
             if isinstance(file_data, dict):
-                content = file_data.get('content', '')
+                content = file_data.get("content", "")
             else:
                 content = str(file_data)
 
             full_path = Path(temp_dir) / file_path
             full_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(full_path, 'w') as f:
+            with open(full_path, "w") as f:
                 f.write(content)
 
     async def _run_pytest(self, temp_dir: str) -> Dict[str, Any]:
@@ -131,7 +136,7 @@ class TesterAgent:
             # Create a basic conftest.py if it doesn't exist
             conftest_path = Path(temp_dir) / "conftest.py"
             if not conftest_path.exists():
-                with open(conftest_path, 'w') as f:
+                with open(conftest_path, "w") as f:
                     f.write("import pytest\n")
 
             # Run pytest
@@ -139,7 +144,7 @@ class TesterAgent:
                 ["python", "-m", "pytest", temp_dir, "-v", "--tb=short"],
                 capture_output=True,
                 text=True,
-                cwd=temp_dir
+                cwd=temp_dir,
             )
 
             return {
@@ -147,7 +152,7 @@ class TesterAgent:
                 "stdout": result.stdout,
                 "stderr": result.stderr,
                 "passed": "PASSED" in result.stdout,
-                "test_count": result.stdout.count("PASSED") + result.stdout.count("FAILED")
+                "test_count": result.stdout.count("PASSED") + result.stdout.count("FAILED"),
             }
 
         except Exception as e:
@@ -167,15 +172,15 @@ class TesterAgent:
                 ["python", "-m", "mypy"] + [str(f) for f in python_files],
                 capture_output=True,
                 text=True,
-                cwd=temp_dir
+                cwd=temp_dir,
             )
 
             return {
                 "exit_code": result.returncode,
                 "stdout": result.stdout,
                 "stderr": result.stderr,
-                "issues": result.stdout.split('\n') if result.stdout else [],
-                "clean": result.returncode == 0
+                "issues": result.stdout.split("\n") if result.stdout else [],
+                "clean": result.returncode == 0,
             }
 
         except Exception as e:
@@ -198,7 +203,7 @@ class TesterAgent:
             return {
                 "simulations": simulations,
                 "total_simulations": len(simulations),
-                "passed_simulations": sum(1 for s in simulations if s.get("handled", False))
+                "passed_simulations": sum(1 for s in simulations if s.get("handled", False)),
             }
 
         except Exception as e:
@@ -208,8 +213,9 @@ class TesterAgent:
         """Simulate import errors"""
         try:
             test_file = Path(temp_dir) / "test_imports.py"
-            with open(test_file, 'w') as f:
-                f.write("""
+            with open(test_file, "w") as f:
+                f.write(
+                    """
 try:
     import nonexistent_module
     result = "import_succeeded"
@@ -219,20 +225,18 @@ except Exception as e:
     result = f"unexpected_error: {e}"
 
 print(result)
-""")
+"""
+                )
 
             # Run the test
             result = subprocess.run(
-                ["python", str(test_file)],
-                capture_output=True,
-                text=True,
-                cwd=temp_dir
+                ["python", str(test_file)], capture_output=True, text=True, cwd=temp_dir
             )
 
             return {
                 "test": "import_errors",
                 "handled": "import_error_handled" in result.stdout,
-                "output": result.stdout.strip()
+                "output": result.stdout.strip(),
             }
 
         except Exception as e:
@@ -242,8 +246,9 @@ print(result)
         """Simulate runtime errors"""
         try:
             test_file = Path(temp_dir) / "test_runtime.py"
-            with open(test_file, 'w') as f:
-                f.write("""
+            with open(test_file, "w") as f:
+                f.write(
+                    """
 try:
     # Division by zero
     result = 1 / 0
@@ -253,19 +258,17 @@ except Exception as e:
     result = f"unexpected_error: {e}"
 
 print(result)
-""")
+"""
+                )
 
             result = subprocess.run(
-                ["python", str(test_file)],
-                capture_output=True,
-                text=True,
-                cwd=temp_dir
+                ["python", str(test_file)], capture_output=True, text=True, cwd=temp_dir
             )
 
             return {
                 "test": "runtime_errors",
                 "handled": "division_error_handled" in result.stdout,
-                "output": result.stdout.strip()
+                "output": result.stdout.strip(),
             }
 
         except Exception as e:
@@ -275,8 +278,9 @@ print(result)
         """Simulate network failures"""
         try:
             test_file = Path(temp_dir) / "test_network.py"
-            with open(test_file, 'w') as f:
-                f.write("""
+            with open(test_file, "w") as f:
+                f.write(
+                    """
 import socket
 
 try:
@@ -296,19 +300,17 @@ finally:
         pass
 
 print(result)
-""")
+"""
+                )
 
             result = subprocess.run(
-                ["python", str(test_file)],
-                capture_output=True,
-                text=True,
-                cwd=temp_dir
+                ["python", str(test_file)], capture_output=True, text=True, cwd=temp_dir
             )
 
             return {
                 "test": "network_failures",
                 "handled": "network_error_handled" in result.stdout,
-                "output": result.stdout.strip()
+                "output": result.stdout.strip(),
             }
 
         except Exception as e:
@@ -322,23 +324,23 @@ print(result)
             "has_documentation": 0,
             "has_tests": 0,
             "average_file_size": 0,
-            "complexity_score": "medium"
+            "complexity_score": "medium",
         }
 
         total_size = 0
 
         for file_path, file_data in code_files.items():
             if isinstance(file_data, dict):
-                content = file_data.get('content', '')
-                documentation = file_data.get('documentation', '')
-                tests = file_data.get('tests', '')
+                content = file_data.get("content", "")
+                documentation = file_data.get("documentation", "")
+                tests = file_data.get("tests", "")
             else:
                 content = str(file_data)
-                documentation = tests = ''
+                documentation = tests = ""
 
             total_size += len(content)
 
-            if file_path.endswith('.py'):
+            if file_path.endswith(".py"):
                 quality_metrics["python_files"] += 1
 
             if documentation:
@@ -375,7 +377,7 @@ print(result)
                 "coverage": coverage_percentage,
                 "total_files": len(python_files),
                 "test_files": len(test_files),
-                "method": "estimated"
+                "method": "estimated",
             }
 
         except Exception as e:
@@ -395,7 +397,7 @@ print(result)
             pytest_passed,
             mypy_clean,
             sim_passed == total_sims if total_sims > 0 else True,
-            coverage > 50
+            coverage > 50,
         ]
 
         overall_score = sum(score_components) / len(score_components) * 100
@@ -406,7 +408,7 @@ print(result)
             "mypy_clean": mypy_clean,
             "error_simulations_passed": f"{sim_passed}/{total_sims}",
             "coverage_percentage": coverage,
-            "recommendation": self._get_recommendation(overall_score)
+            "recommendation": self._get_recommendation(overall_score),
         }
 
     def _get_recommendation(self, score: float) -> str:
@@ -433,7 +435,7 @@ print(result)
             You excel at finding edge cases, simulating error conditions, and ensuring 
             robust, reliable software.""",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
         )
 
     def get_status(self) -> Dict[str, Any]:
@@ -447,20 +449,22 @@ print(result)
                 "mypy_type_checking",
                 "error_simulation",
                 "code_quality_assessment",
-                "coverage_analysis"
+                "coverage_analysis",
             ],
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
+
 
 # Example usage
 if __name__ == "__main__":
+
     async def main():
         tester = TesterAgent()
         code_files = {
             "main.py": {
                 "content": "def hello(): return 'Hello World'",
                 "documentation": "Simple hello function",
-                "tests": "def test_hello(): assert hello() == 'Hello World'"
+                "tests": "def test_hello(): assert hello() == 'Hello World'",
             }
         }
         result = await tester.run_tests(code_files)

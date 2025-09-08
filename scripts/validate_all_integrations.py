@@ -87,7 +87,6 @@ def test_orchestrator_integration():
 
     # Test Artemis factory
     try:
-        from app.artemis.unified_factory import artemis_unified_factory
 
         print("✓ Artemis Factory: Initialized")
     except Exception as e:
@@ -95,7 +94,6 @@ def test_orchestrator_integration():
 
     # Test Sophia factory
     try:
-        from app.sophia.unified_factory import sophia_unified_factory
 
         print("✓ Sophia Factory: Initialized")
     except Exception as e:

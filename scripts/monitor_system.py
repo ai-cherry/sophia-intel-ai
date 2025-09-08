@@ -7,34 +7,36 @@ Monitors system resources, API endpoints, and service health.
 Sends alerts if thresholds are exceeded.
 """
 
-import os
-import json
-import time
-import logging
 import argparse
 import datetime
-import requests
+import json
+import logging
+import os
 import subprocess
-import psutil
+import time
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict
+
+import psutil
+import requests
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='logs/system_monitor.log',
-    filemode='a'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename="logs/system_monitor.log",
+    filemode="a",
 )
-logger = logging.getLogger('system_monitor')
+logger = logging.getLogger("system_monitor")
 
 # Constants
-CPU_THRESHOLD = 80.0        # Alert if CPU usage exceeds this percentage
-MEMORY_THRESHOLD = 80.0     # Alert if memory usage exceeds this percentage
-DISK_THRESHOLD = 85.0       # Alert if disk usage exceeds this percentage
-API_TIMEOUT = 5             # Timeout for API health checks (seconds)
-COST_THRESHOLD = 0.55       # $ per million tokens
-RETENTION_DAYS = 7          # How long to keep monitoring data
+CPU_THRESHOLD = 80.0  # Alert if CPU usage exceeds this percentage
+MEMORY_THRESHOLD = 80.0  # Alert if memory usage exceeds this percentage
+DISK_THRESHOLD = 85.0  # Alert if disk usage exceeds this percentage
+API_TIMEOUT = 5  # Timeout for API health checks (seconds)
+COST_THRESHOLD = 0.55  # $ per million tokens
+RETENTION_DAYS = 7  # How long to keep monitoring data
+
 
 def check_system_resources() -> Dict[str, Any]:
     """
@@ -49,34 +51,33 @@ def check_system_resources() -> Dict[str, Any]:
         memory_percent = memory.percent
 
         # Disk usage
-        disk = psutil.disk_usage('/')
+        disk = psutil.disk_usage("/")
         disk_percent = disk.percent
 
         result = {
             "timestamp": datetime.datetime.now().isoformat(),
-            "cpu": {
-                "percent": cpu_percent,
-                "alert": cpu_percent > CPU_THRESHOLD
-            },
+            "cpu": {"percent": cpu_percent, "alert": cpu_percent > CPU_THRESHOLD},
             "memory": {
                 "total_gb": memory.total / (1024**3),
                 "used_gb": memory.used / (1024**3),
                 "percent": memory_percent,
-                "alert": memory_percent > MEMORY_THRESHOLD
+                "alert": memory_percent > MEMORY_THRESHOLD,
             },
             "disk": {
                 "total_gb": disk.total / (1024**3),
                 "used_gb": disk.used / (1024**3),
                 "percent": disk_percent,
-                "alert": disk_percent > DISK_THRESHOLD
-            }
+                "alert": disk_percent > DISK_THRESHOLD,
+            },
         }
 
         # Log alerts
         if result["cpu"]["alert"]:
             logger.warning(f"CPU usage alert: {cpu_percent}% (threshold: {CPU_THRESHOLD}%)")
         if result["memory"]["alert"]:
-            logger.warning(f"Memory usage alert: {memory_percent}% (threshold: {MEMORY_THRESHOLD}%)")
+            logger.warning(
+                f"Memory usage alert: {memory_percent}% (threshold: {MEMORY_THRESHOLD}%)"
+            )
         if result["disk"]["alert"]:
             logger.warning(f"Disk usage alert: {disk_percent}% (threshold: {DISK_THRESHOLD}%)")
 
@@ -88,8 +89,9 @@ def check_system_resources() -> Dict[str, Any]:
             "error": str(e),
             "cpu": {"percent": 0, "alert": False},
             "memory": {"percent": 0, "alert": False},
-            "disk": {"percent": 0, "alert": False}
+            "disk": {"percent": 0, "alert": False},
         }
+
 
 def check_api_health() -> Dict[str, Any]:
     """
@@ -97,15 +99,20 @@ def check_api_health() -> Dict[str, Any]:
     """
     endpoints = [
         {"name": "MCP Server", "url": "http://localhost:8000/health", "expected_status": 200},
-        {"name": "OpenRouter", "url": "https://openrouter.ai/api/v1/auth/key", "expected_status": 200},
+        {
+            "name": "OpenRouter",
+            "url": "https://openrouter.ai/api/v1/auth/key",
+            "expected_status": 200,
+        },
         {"name": "Portkey", "url": "https://api.portkey.ai/v1/health", "expected_status": 200},
-        {"name": "Memory System", "url": "http://localhost:6333/health", "expected_status": 200},  # Qdrant
+        {
+            "name": "Memory System",
+            "url": "http://localhost:6333/health",
+            "expected_status": 200,
+        },  # Qdrant
     ]
 
-    results = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "endpoints": []
-    }
+    results = {"timestamp": datetime.datetime.now().isoformat(), "endpoints": []}
 
     any_alert = False
 
@@ -125,29 +132,36 @@ def check_api_health() -> Dict[str, Any]:
 
             if is_alert:
                 any_alert = True
-                logger.warning(f"API alert: {endpoint['name']} is {status} (status: {response.status_code})")
+                logger.warning(
+                    f"API alert: {endpoint['name']} is {status} (status: {response.status_code})"
+                )
 
-            results["endpoints"].append({
-                "name": endpoint["name"],
-                "status": status,
-                "latency_ms": latency,
-                "status_code": response.status_code,
-                "alert": is_alert
-            })
+            results["endpoints"].append(
+                {
+                    "name": endpoint["name"],
+                    "status": status,
+                    "latency_ms": latency,
+                    "status_code": response.status_code,
+                    "alert": is_alert,
+                }
+            )
         except Exception as e:
             any_alert = True
             logger.warning(f"API alert: {endpoint['name']} is DOWN (error: {e})")
 
-            results["endpoints"].append({
-                "name": endpoint["name"],
-                "status": "DOWN",
-                "latency_ms": 0,
-                "error": str(e),
-                "alert": True
-            })
+            results["endpoints"].append(
+                {
+                    "name": endpoint["name"],
+                    "status": "DOWN",
+                    "latency_ms": 0,
+                    "error": str(e),
+                    "alert": True,
+                }
+            )
 
     results["alert"] = any_alert
     return results
+
 
 def check_processes() -> Dict[str, Any]:
     """
@@ -158,10 +172,7 @@ def check_processes() -> Dict[str, Any]:
         {"name": "streamlit", "pattern": "dashboard.py", "critical": False},
     ]
 
-    results = {
-        "timestamp": datetime.datetime.now().isoformat(),
-        "processes": []
-    }
+    results = {"timestamp": datetime.datetime.now().isoformat(), "processes": []}
 
     any_alert = False
 
@@ -178,28 +189,33 @@ def check_processes() -> Dict[str, Any]:
                 any_alert = True
                 logger.warning(f"Process alert: {proc['name']} ({proc['pattern']}) is not running")
 
-            results["processes"].append({
-                "name": proc["name"],
-                "pattern": proc["pattern"],
-                "running": is_running,
-                "critical": proc["critical"],
-                "alert": is_alert
-            })
+            results["processes"].append(
+                {
+                    "name": proc["name"],
+                    "pattern": proc["pattern"],
+                    "running": is_running,
+                    "critical": proc["critical"],
+                    "alert": is_alert,
+                }
+            )
         except Exception as e:
             logger.error(f"Error checking process {proc['name']}: {e}")
             any_alert = True if proc["critical"] else any_alert
 
-            results["processes"].append({
-                "name": proc["name"],
-                "pattern": proc["pattern"],
-                "running": False,
-                "error": str(e),
-                "critical": proc["critical"],
-                "alert": proc["critical"]
-            })
+            results["processes"].append(
+                {
+                    "name": proc["name"],
+                    "pattern": proc["pattern"],
+                    "running": False,
+                    "error": str(e),
+                    "critical": proc["critical"],
+                    "alert": proc["critical"],
+                }
+            )
 
     results["alert"] = any_alert
     return results
+
 
 def check_costs() -> Dict[str, Any]:
     """
@@ -213,11 +229,11 @@ def check_costs() -> Dict[str, Any]:
         return {
             "timestamp": datetime.datetime.now().isoformat(),
             "error": "No model rankings data available",
-            "alert": False
+            "alert": False,
         }
 
     try:
-        with open(rankings_file, "r") as f:
+        with open(rankings_file) as f:
             models = json.load(f)
 
         # Find current models in use
@@ -226,10 +242,10 @@ def check_costs() -> Dict[str, Any]:
             return {
                 "timestamp": datetime.datetime.now().isoformat(),
                 "error": "Continue config not found",
-                "alert": False
+                "alert": False,
             }
 
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = json.load(f)
 
         active_models = []
@@ -239,34 +255,40 @@ def check_costs() -> Dict[str, Any]:
                 # Find this model in rankings
                 model_data = next((m for m in models if m.get("id") == model_id), None)
                 if model_data:
-                    active_models.append({
-                        "name": model.get("title"),
-                        "model_id": model_id,
-                        "cost_per_million": model_data.get("cost_per_million", 0),
-                        "above_threshold": model_data.get("cost_per_million", 0) > COST_THRESHOLD * 1000000
-                    })
+                    active_models.append(
+                        {
+                            "name": model.get("title"),
+                            "model_id": model_id,
+                            "cost_per_million": model_data.get("cost_per_million", 0),
+                            "above_threshold": model_data.get("cost_per_million", 0)
+                            > COST_THRESHOLD * 1000000,
+                        }
+                    )
 
         # Check if any models are above threshold
         above_threshold = any(m["above_threshold"] for m in active_models)
         if above_threshold:
-            logger.warning(f"Cost alert: Some models exceed cost threshold (${COST_THRESHOLD}/1M tokens)")
+            logger.warning(
+                f"Cost alert: Some models exceed cost threshold (${COST_THRESHOLD}/1M tokens)"
+            )
 
         return {
             "timestamp": datetime.datetime.now().isoformat(),
             "active_models": active_models,
             "cost_threshold": COST_THRESHOLD,
-            "alert": above_threshold
+            "alert": above_threshold,
         }
     except Exception as e:
         logger.error(f"Error checking costs: {e}")
-        return {
-            "timestamp": datetime.datetime.now().isoformat(),
-            "error": str(e),
-            "alert": False
-        }
+        return {"timestamp": datetime.datetime.now().isoformat(), "error": str(e), "alert": False}
 
-def save_metrics(system_data: Dict[str, Any], api_data: Dict[str, Any], 
-                process_data: Dict[str, Any], cost_data: Dict[str, Any]):
+
+def save_metrics(
+    system_data: Dict[str, Any],
+    api_data: Dict[str, Any],
+    process_data: Dict[str, Any],
+    cost_data: Dict[str, Any],
+):
     """
     Save metrics to file for dashboard to read
     """
@@ -284,13 +306,13 @@ def save_metrics(system_data: Dict[str, Any], api_data: Dict[str, Any],
         "processes": process_data,
         "costs": cost_data,
         "alert": (
-            system_data.get("cpu", {}).get("alert", False) or
-            system_data.get("memory", {}).get("alert", False) or
-            system_data.get("disk", {}).get("alert", False) or
-            api_data.get("alert", False) or
-            process_data.get("alert", False) or
-            cost_data.get("alert", False)
-        )
+            system_data.get("cpu", {}).get("alert", False)
+            or system_data.get("memory", {}).get("alert", False)
+            or system_data.get("disk", {}).get("alert", False)
+            or api_data.get("alert", False)
+            or process_data.get("alert", False)
+            or cost_data.get("alert", False)
+        ),
     }
 
     # Save to file
@@ -303,6 +325,7 @@ def save_metrics(system_data: Dict[str, Any], api_data: Dict[str, Any],
 
     # Clean up old metrics
     cleanup_old_metrics(metrics_dir)
+
 
 def cleanup_old_metrics(metrics_dir: Path):
     """
@@ -322,6 +345,7 @@ def cleanup_old_metrics(metrics_dir: Path):
                 logger.debug(f"Deleted old metrics file: {file.name}")
             except Exception as e:
                 logger.error(f"Error deleting old metrics file {file.name}: {e}")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Monitor system resources and API health")
@@ -349,11 +373,15 @@ def main():
     if system_data.get("disk", {}).get("alert", False):
         alerts.append(f"Disk: {system_data['disk']['percent']}%")
 
-    api_alerts = sum(1 for endpoint in api_data.get("endpoints", []) if endpoint.get("alert", False))
+    api_alerts = sum(
+        1 for endpoint in api_data.get("endpoints", []) if endpoint.get("alert", False)
+    )
     if api_alerts > 0:
         alerts.append(f"API: {api_alerts} endpoints down")
 
-    process_alerts = sum(1 for proc in process_data.get("processes", []) if proc.get("alert", False))
+    process_alerts = sum(
+        1 for proc in process_data.get("processes", []) if proc.get("alert", False)
+    )
     if process_alerts > 0:
         alerts.append(f"Processes: {process_alerts} critical processes down")
 
@@ -364,6 +392,7 @@ def main():
         logger.warning(f"Monitoring alerts: {', '.join(alerts)}")
     else:
         logger.info("Monitoring completed: All systems healthy")
+
 
 if __name__ == "__main__":
     # Create logs directory if it doesn't exist

@@ -4,17 +4,16 @@ Test script for Mem0 Bridge and Memory MCP
 Tests the functionality of the enhanced memory system
 """
 
+import asyncio
+import json
+import logging
 import os
 import sys
-import json
-import asyncio
-import logging
 from datetime import datetime
 
 # Setup logging
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger("memory_test")
 
@@ -26,6 +25,7 @@ try:
 except ImportError:
     logger.error("Error: Could not import Mem0Bridge. Make sure memory/mem0_bridge.py exists.")
     sys.exit(1)
+
 
 async def test_memory_bridge():
     """Test the Mem0Bridge functionality"""
@@ -45,20 +45,20 @@ async def test_memory_bridge():
             "agent_id": "artemis_test",
             "content": "Fixed a critical bug in the authentication system related to token expiration.",
             "relevance": 0.95,
-            "metadata": {"type": "bugfix", "priority": "high"}
+            "metadata": {"type": "bugfix", "priority": "high"},
         },
         {
             "agent_id": "artemis_test",
             "content": "Added documentation for the memory system explaining how to configure Mem0 and LangChain integration.",
             "relevance": 0.85,
-            "metadata": {"type": "documentation", "priority": "medium"}
+            "metadata": {"type": "documentation", "priority": "medium"},
         },
         {
             "agent_id": "artemis_test",
             "content": "Team meeting discussed project timeline and next sprint priorities.",
             "relevance": 0.65,
-            "metadata": {"type": "meeting", "priority": "low"}
-        }
+            "metadata": {"type": "meeting", "priority": "low"},
+        },
     ]
 
     for memory in memories:
@@ -67,7 +67,7 @@ async def test_memory_bridge():
                 agent_id=memory["agent_id"],
                 content=memory["content"],
                 relevance=memory["relevance"],
-                metadata=memory["metadata"]
+                metadata=memory["metadata"],
             )
             if success:
                 logger.info(f"✅ Added memory with relevance {memory['relevance']}")
@@ -79,23 +79,18 @@ async def test_memory_bridge():
             return False
 
     # Test retrieving memories with different queries
-    queries = [
-        "authentication bug",
-        "memory system documentation",
-        "meeting"
-    ]
+    queries = ["authentication bug", "memory system documentation", "meeting"]
 
     for query in queries:
         try:
             results = await bridge.retrieve(
-                agent_id="artemis_test",
-                query=query,
-                limit=5,
-                include_entities=True
+                agent_id="artemis_test", query=query, limit=5, include_entities=True
             )
 
-            logger.info(f"✅ Retrieved {len(results['merged_results'])} memories for query: {query}")
-            for i, result in enumerate(results['merged_results']):
+            logger.info(
+                f"✅ Retrieved {len(results['merged_results'])} memories for query: {query}"
+            )
+            for i, result in enumerate(results["merged_results"]):
                 logger.info(f"  {i+1}. Relevance: {result.get('relevance', 0):.2f}")
                 logger.info(f"     Content: {result.get('content', '')[:50]}...")
 
@@ -140,6 +135,7 @@ async def test_memory_bridge():
 
     return True
 
+
 async def test_http_client():
     """Test the Memory MCP server using HTTP client"""
     import httpx
@@ -168,14 +164,16 @@ async def test_http_client():
                 "agent_id": "http_test",
                 "content": "Testing the Memory MCP server via HTTP",
                 "relevance": 0.9,
-                "metadata": {"type": "test", "timestamp": datetime.now().isoformat()}
+                "metadata": {"type": "test", "timestamp": datetime.now().isoformat()},
             }
 
             response = await client.post(f"{base_url}/add", json=memory)
             if response.status_code == 200:
                 logger.info(f"✅ Added memory via HTTP: {response.json()}")
             else:
-                logger.error(f"❌ Failed to add memory via HTTP: {response.status_code} {response.text}")
+                logger.error(
+                    f"❌ Failed to add memory via HTTP: {response.status_code} {response.text}"
+                )
                 return False
         except Exception as e:
             logger.error(f"❌ Error adding memory via HTTP: {str(e)}")
@@ -187,15 +185,19 @@ async def test_http_client():
                 "agent_id": "http_test",
                 "query": "test server",
                 "limit": 5,
-                "include_entities": True
+                "include_entities": True,
             }
 
             response = await client.post(f"{base_url}/retrieve", json=query)
             if response.status_code == 200:
                 results = response.json()
-                logger.info(f"✅ Retrieved {len(results.get('merged_results', []))} memories via HTTP")
+                logger.info(
+                    f"✅ Retrieved {len(results.get('merged_results', []))} memories via HTTP"
+                )
             else:
-                logger.error(f"❌ Failed to retrieve memories via HTTP: {response.status_code} {response.text}")
+                logger.error(
+                    f"❌ Failed to retrieve memories via HTTP: {response.status_code} {response.text}"
+                )
                 return False
         except Exception as e:
             logger.error(f"❌ Error retrieving memories via HTTP: {str(e)}")
@@ -207,25 +209,28 @@ async def test_http_client():
             if response.status_code == 200:
                 logger.info(f"✅ Continue.dev integration: {response.json()}")
             else:
-                logger.error(f"❌ Failed Continue.dev integration: {response.status_code} {response.text}")
+                logger.error(
+                    f"❌ Failed Continue.dev integration: {response.status_code} {response.text}"
+                )
         except Exception as e:
             logger.error(f"❌ Error testing Continue.dev integration: {str(e)}")
 
         # Cleanup - clear test memories
         try:
-            clear_request = {
-                "agent_id": "http_test"
-            }
+            clear_request = {"agent_id": "http_test"}
 
             response = await client.post(f"{base_url}/clear", json=clear_request)
             if response.status_code == 200:
                 logger.info(f"✅ Cleared test memories via HTTP: {response.json()}")
             else:
-                logger.error(f"❌ Failed to clear test memories via HTTP: {response.status_code} {response.text}")
+                logger.error(
+                    f"❌ Failed to clear test memories via HTTP: {response.status_code} {response.text}"
+                )
         except Exception as e:
             logger.error(f"❌ Error clearing test memories via HTTP: {str(e)}")
 
     return True
+
 
 async def main():
     """Main test function"""
@@ -254,6 +259,7 @@ async def main():
             logger.info("Skipping Memory MCP server tests")
 
     logger.info("Memory system tests completed")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

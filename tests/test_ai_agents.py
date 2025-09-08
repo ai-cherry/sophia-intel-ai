@@ -4,13 +4,12 @@ AI Agents Test Suite
 Tests EVERY AI agent with REAL queries
 """
 
-import os
 import asyncio
-import json
-from typing import Dict, Any
+
 from dotenv import load_dotenv
 
 load_dotenv()
+
 
 class AIAgentTester:
     def __init__(self):
@@ -22,7 +21,7 @@ class AIAgentTester:
             # Import would be here - placeholder for now
             print("Testing Sophia Orchestrator...")
 
-            personas = ['executive', 'technical', 'friendly', 'eviction-advisor', 'sales-coach']
+            personas = ["executive", "technical", "friendly", "eviction-advisor", "sales-coach"]
             for persona in personas:
                 # Placeholder test - would make real API call
                 print(f"  ✅ {persona} persona: Simulated test passed")
@@ -47,7 +46,7 @@ class AIAgentTester:
         """Test Vibe RAG"""
         try:
             print("Testing Vibe RAG...")
-            vibes = ['eviction-advisor', 'sales-coach', 'renewal-optimizer']
+            vibes = ["eviction-advisor", "sales-coach", "renewal-optimizer"]
             for vibe in vibes:
                 print(f"  ✅ {vibe} vibe: Simulated test passed")
             return True
@@ -60,9 +59,9 @@ class AIAgentTester:
         print("🧪 Running AI Agent Tests...")
 
         tests = [
-            ('Sophia Orchestrator', self.test_sophia_orchestrator),
-            ('MCP RAG Service', self.test_mcp_rag_service),
-            ('Vibe RAG', self.test_vibe_rag)
+            ("Sophia Orchestrator", self.test_sophia_orchestrator),
+            ("MCP RAG Service", self.test_mcp_rag_service),
+            ("Vibe RAG", self.test_vibe_rag),
         ]
 
         for name, test_func in tests:
@@ -74,6 +73,7 @@ class AIAgentTester:
         print(f"\n📊 AI Agent Test Results: {working}/{total} passing")
 
         return working == total
+
 
 if __name__ == "__main__":
     tester = AIAgentTester()

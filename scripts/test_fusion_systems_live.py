@@ -6,17 +6,15 @@ Tests actual fusion systems functionality with real data
 
 import asyncio
 import json
-import os
 import sys
-import time
 from datetime import datetime
-from typing import Dict, List, Any
 
 # Add project paths
-sys.path.append('/home/ubuntu/sophia-main/swarms')
-sys.path.append('/home/ubuntu/sophia-main/monitoring')
-sys.path.append('/home/ubuntu/sophia-main/devops')
-sys.path.append('/home/ubuntu/sophia-main/pipelines')
+sys.path.append("/home/ubuntu/sophia-main/swarms")
+sys.path.append("/home/ubuntu/sophia-main/monitoring")
+sys.path.append("/home/ubuntu/sophia-main/devops")
+sys.path.append("/home/ubuntu/sophia-main/pipelines")
+
 
 class LiveFusionSystemsTester:
     """Tests fusion systems with live functionality"""
@@ -29,7 +27,7 @@ class LiveFusionSystemsTester:
             "failed_tests": 0,
             "fusion_systems": {},
             "live_data_tests": {},
-            "errors": []
+            "errors": [],
         }
 
     async def run_live_tests(self):
@@ -66,8 +64,8 @@ class LiveFusionSystemsTester:
 
             # Test swarm initialization
             assert swarm is not None, "Swarm initialization failed"
-            assert hasattr(swarm, 'redis_client'), "Redis client not initialized"
-            assert hasattr(swarm, 'mem0_client'), "Mem0 client not initialized"
+            assert hasattr(swarm, "redis_client"), "Redis client not initialized"
+            assert hasattr(swarm, "mem0_client"), "Mem0 client not initialized"
 
             # Test agent creation
             agent = RedisPruningAgent()
@@ -76,8 +74,8 @@ class LiveFusionSystemsTester:
             # Test memory analysis (mock data)
             memory_info = await swarm.analyze_memory_usage()
             assert isinstance(memory_info, dict), "Memory analysis failed"
-            assert 'total_memory' in memory_info, "Memory info missing total_memory"
-            assert 'used_memory' in memory_info, "Memory info missing used_memory"
+            assert "total_memory" in memory_info, "Memory info missing total_memory"
+            assert "used_memory" in memory_info, "Memory info missing used_memory"
 
             # Test pruning candidates identification
             candidates = await agent.identify_pruning_candidates()
@@ -93,10 +91,10 @@ class LiveFusionSystemsTester:
                 "status": "PASS",
                 "details": "All components functional",
                 "metrics": {
-                    "memory_analyzed": memory_info.get('total_memory', 0),
+                    "memory_analyzed": memory_info.get("total_memory", 0),
                     "candidates_found": len(candidates),
-                    "cost_savings": cost_savings
-                }
+                    "cost_savings": cost_savings,
+                },
             }
             print("  ✅ PASS Redis Optimization - All components functional")
 
@@ -104,7 +102,7 @@ class LiveFusionSystemsTester:
             self.test_results["failed_tests"] += 1
             self.test_results["fusion_systems"]["Redis Optimization"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.test_results["errors"].append(f"Redis Optimization: {str(e)}")
             print(f"  ❌ FAIL Redis Optimization - {str(e)}")
@@ -117,14 +115,14 @@ class LiveFusionSystemsTester:
 
         try:
             # Import and test the Edge RAG system
-            from qdrant_edge_rag import QdrantEdgeRAG, EdgeRAGOrchestrator
+            from qdrant_edge_rag import EdgeRAGOrchestrator, QdrantEdgeRAG
 
             # Create RAG instance
             rag = QdrantEdgeRAG()
 
             # Test RAG initialization
             assert rag is not None, "RAG initialization failed"
-            assert hasattr(rag, 'qdrant_client'), "Qdrant client not initialized"
+            assert hasattr(rag, "qdrant_client"), "Qdrant client not initialized"
 
             # Create orchestrator
             orchestrator = EdgeRAGOrchestrator()
@@ -134,8 +132,8 @@ class LiveFusionSystemsTester:
             test_query = "What are the latest PropTech trends?"
             query_result = await rag.process_query(test_query)
             assert isinstance(query_result, dict), "Query result should be a dict"
-            assert 'response' in query_result, "Query result missing response"
-            assert 'sources' in query_result, "Query result missing sources"
+            assert "response" in query_result, "Query result missing response"
+            assert "sources" in query_result, "Query result missing sources"
 
             # Test embedding generation
             test_text = "Sample text for embedding"
@@ -154,17 +152,14 @@ class LiveFusionSystemsTester:
                 "metrics": {
                     "query_processed": True,
                     "embedding_dimension": len(embedding),
-                    "collections_available": len(collections)
-                }
+                    "collections_available": len(collections),
+                },
             }
             print("  ✅ PASS Edge RAG - All RAG components functional")
 
         except Exception as e:
             self.test_results["failed_tests"] += 1
-            self.test_results["fusion_systems"]["Edge RAG"] = {
-                "status": "FAIL",
-                "error": str(e)
-            }
+            self.test_results["fusion_systems"]["Edge RAG"] = {"status": "FAIL", "error": str(e)}
             self.test_results["errors"].append(f"Edge RAG: {str(e)}")
             print(f"  ❌ FAIL Edge RAG - {str(e)}")
 
@@ -183,7 +178,7 @@ class LiveFusionSystemsTester:
 
             # Test router initialization
             assert router is not None, "Router initialization failed"
-            assert hasattr(router, 'providers'), "Providers not initialized"
+            assert hasattr(router, "providers"), "Providers not initialized"
 
             # Test provider configuration
             providers = router.get_available_providers()
@@ -194,17 +189,19 @@ class LiveFusionSystemsTester:
             test_request = {
                 "model": "gpt-4",
                 "messages": [{"role": "user", "content": "Hello"}],
-                "max_tokens": 100
+                "max_tokens": 100,
             }
 
             routing_decision = await router.route_request(test_request)
             assert isinstance(routing_decision, dict), "Routing decision should be a dict"
-            assert 'provider' in routing_decision, "Routing decision missing provider"
-            assert 'cost_estimate' in routing_decision, "Routing decision missing cost estimate"
+            assert "provider" in routing_decision, "Routing decision missing provider"
+            assert "cost_estimate" in routing_decision, "Routing decision missing cost estimate"
 
             # Test cost optimization
             cost_optimization = await router.calculate_cost_optimization()
-            assert isinstance(cost_optimization, (int, float)), "Cost optimization should be numeric"
+            assert isinstance(
+                cost_optimization, (int, float)
+            ), "Cost optimization should be numeric"
             assert cost_optimization >= 0, "Cost optimization should be non-negative"
 
             # Test performance metrics
@@ -218,8 +215,8 @@ class LiveFusionSystemsTester:
                 "metrics": {
                     "providers_available": len(providers),
                     "cost_optimization": cost_optimization,
-                    "routing_functional": True
-                }
+                    "routing_functional": True,
+                },
             }
             print("  ✅ PASS Hybrid Routing - All routing components functional")
 
@@ -227,7 +224,7 @@ class LiveFusionSystemsTester:
             self.test_results["failed_tests"] += 1
             self.test_results["fusion_systems"]["Hybrid Routing"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.test_results["errors"].append(f"Hybrid Routing: {str(e)}")
             print(f"  ❌ FAIL Hybrid Routing - {str(e)}")
@@ -247,8 +244,8 @@ class LiveFusionSystemsTester:
 
             # Test analytics initialization
             assert analytics is not None, "Analytics initialization failed"
-            assert hasattr(analytics, 'neon_client'), "Neon client not initialized"
-            assert hasattr(analytics, 'qdrant_client'), "Qdrant client not initialized"
+            assert hasattr(analytics, "neon_client"), "Neon client not initialized"
+            assert hasattr(analytics, "qdrant_client"), "Qdrant client not initialized"
 
             # Test data domains
             domains = analytics.get_supported_domains()
@@ -260,18 +257,20 @@ class LiveFusionSystemsTester:
                 "property_type": "apartment",
                 "location": "downtown",
                 "size": 1200,
-                "features": ["parking", "balcony"]
+                "features": ["parking", "balcony"],
             }
 
             prediction = await analytics.predict_property_value(test_data)
             assert isinstance(prediction, dict), "Prediction should be a dict"
-            assert 'value' in prediction, "Prediction missing value"
-            assert 'confidence' in prediction, "Prediction missing confidence"
+            assert "value" in prediction, "Prediction missing value"
+            assert "confidence" in prediction, "Prediction missing confidence"
 
             # Test analytics pipeline
             pipeline_result = await analytics.run_analytics_pipeline()
             assert isinstance(pipeline_result, dict), "Pipeline result should be a dict"
-            assert 'processed_records' in pipeline_result, "Pipeline result missing processed records"
+            assert (
+                "processed_records" in pipeline_result
+            ), "Pipeline result missing processed records"
 
             # Test accuracy calculation
             accuracy = await analytics.calculate_prediction_accuracy()
@@ -285,8 +284,8 @@ class LiveFusionSystemsTester:
                 "metrics": {
                     "domains_supported": len(domains),
                     "prediction_accuracy": accuracy,
-                    "pipeline_functional": True
-                }
+                    "pipeline_functional": True,
+                },
             }
             print("  ✅ PASS Cross-DB Analytics - All analytics components functional")
 
@@ -294,7 +293,7 @@ class LiveFusionSystemsTester:
             self.test_results["failed_tests"] += 1
             self.test_results["fusion_systems"]["Cross-DB Analytics"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.test_results["errors"].append(f"Cross-DB Analytics: {str(e)}")
             print(f"  ❌ FAIL Cross-DB Analytics - {str(e)}")
@@ -311,7 +310,7 @@ class LiveFusionSystemsTester:
                 "redis_to_analytics": False,
                 "rag_to_routing": False,
                 "analytics_to_rag": False,
-                "routing_to_redis": False
+                "routing_to_redis": False,
             }
 
             # Simulate data flow tests
@@ -335,7 +334,7 @@ class LiveFusionSystemsTester:
                 self.test_results["live_data_tests"]["Fusion Coordination"] = {
                     "status": "PASS",
                     "details": "All systems coordinate properly",
-                    "coordination_paths": coordination_test
+                    "coordination_paths": coordination_test,
                 }
                 print("  ✅ PASS Fusion Coordination - All systems coordinate properly")
             else:
@@ -345,7 +344,7 @@ class LiveFusionSystemsTester:
             self.test_results["failed_tests"] += 1
             self.test_results["live_data_tests"]["Fusion Coordination"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.test_results["errors"].append(f"Fusion Coordination: {str(e)}")
             print(f"  ❌ FAIL Fusion Coordination - {str(e)}")
@@ -362,7 +361,7 @@ class LiveFusionSystemsTester:
         failed = self.test_results["failed_tests"]
         success_rate = (passed / total * 100) if total > 0 else 0
 
-        print(f"📊 LIVE TEST RESULTS:")
+        print("📊 LIVE TEST RESULTS:")
         print(f"  Total Tests: {total}")
         print(f"  Passed: {passed}")
         print(f"  Failed: {failed}")
@@ -399,7 +398,7 @@ class LiveFusionSystemsTester:
 
         # Save detailed report
         report_file = "/home/ubuntu/sophia-main/LIVE_FUSION_SYSTEMS_TEST_REPORT.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(self.test_results, f, indent=2)
 
         print(f"📄 Detailed report saved to: {report_file}")
@@ -412,14 +411,20 @@ class LiveFusionSystemsTester:
             print(f"\n💥 LIVE FUSION SYSTEMS TESTING FAILED! ({success_rate:.1f}% success rate)")
             print("❌ Some fusion systems need attention.")
 
+
 async def main():
     """Main testing function"""
     tester = LiveFusionSystemsTester()
     results = await tester.run_live_tests()
 
     # Return appropriate exit code
-    success_rate = (results["passed_tests"] / results["total_tests"] * 100) if results["total_tests"] > 0 else 0
+    success_rate = (
+        (results["passed_tests"] / results["total_tests"] * 100)
+        if results["total_tests"] > 0
+        else 0
+    )
     return 0 if success_rate >= 80 else 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

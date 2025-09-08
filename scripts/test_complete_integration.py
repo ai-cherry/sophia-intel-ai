@@ -4,7 +4,6 @@ Comprehensive Integration Test Script
 Tests Portkey LLM routing and Vector Database connections
 """
 
-import asyncio
 import json
 import os
 import sys

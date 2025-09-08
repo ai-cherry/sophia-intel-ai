@@ -4,8 +4,8 @@ Edge deployment and optimization settings
 """
 
 import os
-from typing import Dict, List, Any
-import json
+from typing import Any, Dict, List
+
 
 class SophiaIntelCloudFlareConfig:
     """CloudFlare configuration for sophia-intel.ai domain"""
@@ -17,47 +17,43 @@ class SophiaIntelCloudFlareConfig:
 
         # Subdomain configuration
         self.subdomains = {
-            'www': {
-                'target': 'main-app',
-                'cache_level': 'aggressive',
-                'cache_ttl': 7200,
-                'minify': True,
-                'compression': True
+            "www": {
+                "target": "main-app",
+                "cache_level": "aggressive",
+                "cache_ttl": 7200,
+                "minify": True,
+                "compression": True,
             },
-            'api': {
-                'target': 'api-gateway',
-                'cache_level': 'bypass',
-                'security_level': 'high',
-                'rate_limiting': True
+            "api": {
+                "target": "api-gateway",
+                "cache_level": "bypass",
+                "security_level": "high",
+                "rate_limiting": True,
             },
-            'chat': {
-                'target': 'chat-interface',
-                'cache_level': 'bypass',
-                'websockets': True,
-                'ssl': 'full_strict'
+            "chat": {
+                "target": "chat-interface",
+                "cache_level": "bypass",
+                "websockets": True,
+                "ssl": "full_strict",
             },
-            'dashboard': {
-                'target': 'analytics-dashboard',
-                'cache_level': 'standard',
-                'cache_ttl': 3600,
-                'security_level': 'medium'
+            "dashboard": {
+                "target": "analytics-dashboard",
+                "cache_level": "standard",
+                "cache_ttl": 3600,
+                "security_level": "medium",
             },
-            'agents': {
-                'target': 'agent-playground',
-                'cache_level': 'bypass',
-                'security_level': 'high'
+            "agents": {
+                "target": "agent-playground",
+                "cache_level": "bypass",
+                "security_level": "high",
             },
-            'docs': {
-                'target': 'documentation',
-                'cache_level': 'aggressive',
-                'cache_ttl': 14400,
-                'minify': True
+            "docs": {
+                "target": "documentation",
+                "cache_level": "aggressive",
+                "cache_ttl": 14400,
+                "minify": True,
             },
-            'status': {
-                'target': 'status-page',
-                'cache_level': 'standard',
-                'cache_ttl': 300
-            }
+            "status": {"target": "status-page", "cache_level": "standard", "cache_ttl": 300},
         }
 
     def get_dns_records(self) -> List[Dict[str, Any]]:
@@ -66,152 +62,149 @@ class SophiaIntelCloudFlareConfig:
         records = [
             # A Records for root domain (CloudFlare IPs)
             {
-                'type': 'A',
-                'name': '@',
-                'content': '104.21.58.123',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'CloudFlare IP for root domain'
+                "type": "A",
+                "name": "@",
+                "content": "104.21.58.123",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "CloudFlare IP for root domain",
             },
             {
-                'type': 'A',
-                'name': '@',
-                'content': '172.67.182.45',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'CloudFlare IP for root domain (backup)'
+                "type": "A",
+                "name": "@",
+                "content": "172.67.182.45",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "CloudFlare IP for root domain (backup)",
             },
-
             # CNAME Records for subdomains
             {
-                'type': 'CNAME',
-                'name': 'www',
-                'content': 'sophia-intel.ai',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'Main website'
+                "type": "CNAME",
+                "name": "www",
+                "content": "sophia-intel.ai",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "Main website",
             },
             {
-                'type': 'CNAME',
-                'name': 'api',
-                'content': 'api-lb.sophia-intel.ai',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'API Gateway'
+                "type": "CNAME",
+                "name": "api",
+                "content": "api-lb.sophia-intel.ai",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "API Gateway",
             },
             {
-                'type': 'CNAME',
-                'name': 'chat',
-                'content': 'chat-lb.sophia-intel.ai',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'Chat Interface'
+                "type": "CNAME",
+                "name": "chat",
+                "content": "chat-lb.sophia-intel.ai",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "Chat Interface",
             },
             {
-                'type': 'CNAME',
-                'name': 'dashboard',
-                'content': 'dash-lb.sophia-intel.ai',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'Analytics Dashboard'
+                "type": "CNAME",
+                "name": "dashboard",
+                "content": "dash-lb.sophia-intel.ai",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "Analytics Dashboard",
             },
             {
-                'type': 'CNAME',
-                'name': 'agents',
-                'content': 'agents-lb.sophia-intel.ai',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'Agent Playground'
+                "type": "CNAME",
+                "name": "agents",
+                "content": "agents-lb.sophia-intel.ai",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "Agent Playground",
             },
             {
-                'type': 'CNAME',
-                'name': 'docs',
-                'content': 'docs-lb.sophia-intel.ai',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'Documentation'
+                "type": "CNAME",
+                "name": "docs",
+                "content": "docs-lb.sophia-intel.ai",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "Documentation",
             },
             {
-                'type': 'CNAME',
-                'name': 'status',
-                'content': 'status-lb.sophia-intel.ai',
-                'ttl': 300,
-                'proxied': True,
-                'comment': 'Status Page'
+                "type": "CNAME",
+                "name": "status",
+                "content": "status-lb.sophia-intel.ai",
+                "ttl": 300,
+                "proxied": True,
+                "comment": "Status Page",
             },
-
             # Load Balancer CNAMEs (pointing to Lambda Labs)
             {
-                'type': 'CNAME',
-                'name': 'api-lb',
-                'content': '192.222.58.232',
-                'ttl': 300,
-                'proxied': False,
-                'comment': 'API Load Balancer -> Lambda Labs'
+                "type": "CNAME",
+                "name": "api-lb",
+                "content": "192.222.58.232",
+                "ttl": 300,
+                "proxied": False,
+                "comment": "API Load Balancer -> Lambda Labs",
             },
             {
-                'type': 'CNAME',
-                'name': 'chat-lb',
-                'content': '192.222.58.232',
-                'ttl': 300,
-                'proxied': False,
-                'comment': 'Chat Load Balancer -> Lambda Labs'
+                "type": "CNAME",
+                "name": "chat-lb",
+                "content": "192.222.58.232",
+                "ttl": 300,
+                "proxied": False,
+                "comment": "Chat Load Balancer -> Lambda Labs",
             },
             {
-                'type': 'CNAME',
-                'name': 'dash-lb',
-                'content': '192.222.58.232',
-                'ttl': 300,
-                'proxied': False,
-                'comment': 'Dashboard Load Balancer -> Lambda Labs'
+                "type": "CNAME",
+                "name": "dash-lb",
+                "content": "192.222.58.232",
+                "ttl": 300,
+                "proxied": False,
+                "comment": "Dashboard Load Balancer -> Lambda Labs",
             },
             {
-                'type': 'CNAME',
-                'name': 'agents-lb',
-                'content': '192.222.58.232',
-                'ttl': 300,
-                'proxied': False,
-                'comment': 'Agents Load Balancer -> Lambda Labs'
+                "type": "CNAME",
+                "name": "agents-lb",
+                "content": "192.222.58.232",
+                "ttl": 300,
+                "proxied": False,
+                "comment": "Agents Load Balancer -> Lambda Labs",
             },
             {
-                'type': 'CNAME',
-                'name': 'docs-lb',
-                'content': '192.222.58.232',
-                'ttl': 300,
-                'proxied': False,
-                'comment': 'Docs Load Balancer -> Lambda Labs'
+                "type": "CNAME",
+                "name": "docs-lb",
+                "content": "192.222.58.232",
+                "ttl": 300,
+                "proxied": False,
+                "comment": "Docs Load Balancer -> Lambda Labs",
             },
             {
-                'type': 'CNAME',
-                'name': 'status-lb',
-                'content': '192.222.58.232',
-                'ttl': 300,
-                'proxied': False,
-                'comment': 'Status Load Balancer -> Lambda Labs'
+                "type": "CNAME",
+                "name": "status-lb",
+                "content": "192.222.58.232",
+                "ttl": 300,
+                "proxied": False,
+                "comment": "Status Load Balancer -> Lambda Labs",
             },
-
             # Security Records
             {
-                'type': 'TXT',
-                'name': '@',
-                'content': 'v=spf1 include:_spf.google.com ~all',
-                'ttl': 300,
-                'comment': 'SPF record for email security'
+                "type": "TXT",
+                "name": "@",
+                "content": "v=spf1 include:_spf.google.com ~all",
+                "ttl": 300,
+                "comment": "SPF record for email security",
             },
             {
-                'type': 'CAA',
-                'name': '@',
-                'content': '0 issue "letsencrypt.org"',
-                'ttl': 300,
-                'comment': 'CAA record for Let\'s Encrypt'
+                "type": "CAA",
+                "name": "@",
+                "content": '0 issue "letsencrypt.org"',
+                "ttl": 300,
+                "comment": "CAA record for Let's Encrypt",
             },
             {
-                'type': 'CAA',
-                'name': '@',
-                'content': '0 issue "digicert.com"',
-                'ttl': 300,
-                'comment': 'CAA record for DigiCert'
-            }
+                "type": "CAA",
+                "name": "@",
+                "content": '0 issue "digicert.com"',
+                "ttl": 300,
+                "comment": "CAA record for DigiCert",
+            },
         ]
 
         return records
@@ -222,81 +215,107 @@ class SophiaIntelCloudFlareConfig:
         rules = [
             # Main website optimization
             {
-                'targets': [
-                    {'target': 'url', 'constraint': {'operator': 'matches', 'value': f'https://www.{self.domain}/*'}}
+                "targets": [
+                    {
+                        "target": "url",
+                        "constraint": {
+                            "operator": "matches",
+                            "value": f"https://www.{self.domain}/*",
+                        },
+                    }
                 ],
-                'actions': [
-                    {'id': 'cache_level', 'value': 'aggressive'},
-                    {'id': 'edge_cache_ttl', 'value': 7200},
-                    {'id': 'browser_cache_ttl', 'value': 3600},
-                    {'id': 'minify', 'value': {'html': 'on', 'css': 'on', 'js': 'on'}},
-                    {'id': 'rocket_loader', 'value': 'on'},
-                    {'id': 'mirage', 'value': 'on'},
-                    {'id': 'polish', 'value': 'lossless'}
+                "actions": [
+                    {"id": "cache_level", "value": "aggressive"},
+                    {"id": "edge_cache_ttl", "value": 7200},
+                    {"id": "browser_cache_ttl", "value": 3600},
+                    {"id": "minify", "value": {"html": "on", "css": "on", "js": "on"}},
+                    {"id": "rocket_loader", "value": "on"},
+                    {"id": "mirage", "value": "on"},
+                    {"id": "polish", "value": "lossless"},
                 ],
-                'priority': 1,
-                'status': 'active'
+                "priority": 1,
+                "status": "active",
             },
-
             # API Gateway configuration
             {
-                'targets': [
-                    {'target': 'url', 'constraint': {'operator': 'matches', 'value': f'https://api.{self.domain}/*'}}
+                "targets": [
+                    {
+                        "target": "url",
+                        "constraint": {
+                            "operator": "matches",
+                            "value": f"https://api.{self.domain}/*",
+                        },
+                    }
                 ],
-                'actions': [
-                    {'id': 'cache_level', 'value': 'bypass'},
-                    {'id': 'security_level', 'value': 'high'},
-                    {'id': 'ssl', 'value': 'full_strict'},
-                    {'id': 'disable_performance', 'value': 'off'}
+                "actions": [
+                    {"id": "cache_level", "value": "bypass"},
+                    {"id": "security_level", "value": "high"},
+                    {"id": "ssl", "value": "full_strict"},
+                    {"id": "disable_performance", "value": "off"},
                 ],
-                'priority': 2,
-                'status': 'active'
+                "priority": 2,
+                "status": "active",
             },
-
             # Chat interface configuration
             {
-                'targets': [
-                    {'target': 'url', 'constraint': {'operator': 'matches', 'value': f'https://chat.{self.domain}/*'}}
+                "targets": [
+                    {
+                        "target": "url",
+                        "constraint": {
+                            "operator": "matches",
+                            "value": f"https://chat.{self.domain}/*",
+                        },
+                    }
                 ],
-                'actions': [
-                    {'id': 'cache_level', 'value': 'bypass'},
-                    {'id': 'websockets', 'value': 'on'},
-                    {'id': 'ssl', 'value': 'full_strict'},
-                    {'id': 'security_level', 'value': 'medium'}
+                "actions": [
+                    {"id": "cache_level", "value": "bypass"},
+                    {"id": "websockets", "value": "on"},
+                    {"id": "ssl", "value": "full_strict"},
+                    {"id": "security_level", "value": "medium"},
                 ],
-                'priority': 3,
-                'status': 'active'
+                "priority": 3,
+                "status": "active",
             },
-
             # Dashboard configuration
             {
-                'targets': [
-                    {'target': 'url', 'constraint': {'operator': 'matches', 'value': f'https://dashboard.{self.domain}/*'}}
+                "targets": [
+                    {
+                        "target": "url",
+                        "constraint": {
+                            "operator": "matches",
+                            "value": f"https://dashboard.{self.domain}/*",
+                        },
+                    }
                 ],
-                'actions': [
-                    {'id': 'cache_level', 'value': 'standard'},
-                    {'id': 'edge_cache_ttl', 'value': 3600},
-                    {'id': 'security_level', 'value': 'medium'},
-                    {'id': 'ssl', 'value': 'full_strict'}
+                "actions": [
+                    {"id": "cache_level", "value": "standard"},
+                    {"id": "edge_cache_ttl", "value": 3600},
+                    {"id": "security_level", "value": "medium"},
+                    {"id": "ssl", "value": "full_strict"},
                 ],
-                'priority': 4,
-                'status': 'active'
+                "priority": 4,
+                "status": "active",
             },
-
             # Documentation optimization
             {
-                'targets': [
-                    {'target': 'url', 'constraint': {'operator': 'matches', 'value': f'https://docs.{self.domain}/*'}}
+                "targets": [
+                    {
+                        "target": "url",
+                        "constraint": {
+                            "operator": "matches",
+                            "value": f"https://docs.{self.domain}/*",
+                        },
+                    }
                 ],
-                'actions': [
-                    {'id': 'cache_level', 'value': 'aggressive'},
-                    {'id': 'edge_cache_ttl', 'value': 14400},
-                    {'id': 'browser_cache_ttl', 'value': 7200},
-                    {'id': 'minify', 'value': {'html': 'on', 'css': 'on', 'js': 'on'}}
+                "actions": [
+                    {"id": "cache_level", "value": "aggressive"},
+                    {"id": "edge_cache_ttl", "value": 14400},
+                    {"id": "browser_cache_ttl", "value": 7200},
+                    {"id": "minify", "value": {"html": "on", "css": "on", "js": "on"}},
                 ],
-                'priority': 5,
-                'status': 'active'
-            }
+                "priority": 5,
+                "status": "active",
+            },
         ]
 
         return rules
@@ -304,7 +323,7 @@ class SophiaIntelCloudFlareConfig:
     def get_worker_script(self) -> str:
         """Generate CloudFlare Worker script for edge processing"""
 
-        worker_script = '''
+        worker_script = """
 addEventListener('fetch', event => {
     event.respondWith(handleRequest(event.request))
 })
@@ -481,7 +500,7 @@ async function handleWebSocket(request) {
         }
     })
 }
-'''
+"""
 
         return worker_script.strip()
 
@@ -489,44 +508,41 @@ async function handleWebSocket(request) {
         """Generate security settings for CloudFlare"""
 
         return {
-            'security_level': 'medium',
-            'challenge_ttl': 1800,
-            'browser_check': 'on',
-            'hotlink_protection': 'on',
-            'security_header': {
-                'enabled': True,
-                'max_age': 31536000,
-                'include_subdomains': True,
-                'preload': True
+            "security_level": "medium",
+            "challenge_ttl": 1800,
+            "browser_check": "on",
+            "hotlink_protection": "on",
+            "security_header": {
+                "enabled": True,
+                "max_age": 31536000,
+                "include_subdomains": True,
+                "preload": True,
             },
-            'waf': {
-                'enabled': True,
-                'mode': 'on',
-                'rules': [
+            "waf": {
+                "enabled": True,
+                "mode": "on",
+                "rules": [
                     {
-                        'id': 'sophia_rate_limit',
-                        'expression': '(http.request.uri.path contains "/api/")',
-                        'action': 'challenge',
-                        'description': 'Rate limit API endpoints'
+                        "id": "sophia_rate_limit",
+                        "expression": '(http.request.uri.path contains "/api/")',
+                        "action": "challenge",
+                        "description": "Rate limit API endpoints",
                     },
                     {
-                        'id': 'sophia_bot_protection',
-                        'expression': '(cf.bot_management.score lt 30)',
-                        'action': 'block',
-                        'description': 'Block malicious bots'
-                    }
-                ]
+                        "id": "sophia_bot_protection",
+                        "expression": "(cf.bot_management.score lt 30)",
+                        "action": "block",
+                        "description": "Block malicious bots",
+                    },
+                ],
             },
-            'ddos_protection': {
-                'enabled': True,
-                'sensitivity': 'medium'
-            }
+            "ddos_protection": {"enabled": True, "sensitivity": "medium"},
         }
 
     def export_terraform_config(self) -> str:
         """Export configuration as Terraform HCL"""
 
-        terraform_config = f'''
+        terraform_config = f"""
 # CloudFlare configuration for {self.domain}
 terraform {{
   required_providers {{
@@ -554,10 +570,10 @@ variable "zone_id" {{
 }}
 
 # DNS Records
-'''
+"""
 
         for i, record in enumerate(self.get_dns_records()):
-            terraform_config += f'''
+            terraform_config += f"""
 resource "cloudflare_record" "record_{i}" {{
   zone_id = var.zone_id
   name    = "{record['name']}"
@@ -567,14 +583,14 @@ resource "cloudflare_record" "record_{i}" {{
   proxied = {str(record.get('proxied', False)).lower()}
   comment = "{record.get('comment', '')}"
 }}
-'''
+"""
 
-        terraform_config += '''
+        terraform_config += """
 # Page Rules
-'''
+"""
 
         for i, rule in enumerate(self.get_page_rules()):
-            terraform_config += f'''
+            terraform_config += f"""
 resource "cloudflare_page_rule" "rule_{i}" {{
   zone_id  = var.zone_id
   target   = "{rule['targets'][0]['constraint']['value']}"
@@ -582,21 +598,22 @@ resource "cloudflare_page_rule" "rule_{i}" {{
   status   = "{rule['status']}"
 
   actions {{
-'''
-            for action in rule['actions']:
-                if action['id'] == 'minify':
-                    terraform_config += f'''    minify {{
+"""
+            for action in rule["actions"]:
+                if action["id"] == "minify":
+                    terraform_config += f"""    minify {{
       html = "{action['value']['html']}"
       css  = "{action['value']['css']}"
       js   = "{action['value']['js']}"
     }}
-'''
+"""
                 else:
                     terraform_config += f'    {action["id"]} = "{action["value"]}"\n'
 
-            terraform_config += '  }\n}\n'
+            terraform_config += "  }\n}\n"
 
         return terraform_config
+
 
 # Usage example
 if __name__ == "__main__":

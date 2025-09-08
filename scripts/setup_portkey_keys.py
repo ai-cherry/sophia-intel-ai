@@ -7,7 +7,7 @@ This script helps set up the .env file with all necessary keys
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))

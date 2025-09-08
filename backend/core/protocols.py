@@ -1,11 +1,10 @@
-import asyncio
-
 "\nSophia AI Service Protocols\nDefines interfaces to break circular dependencies and enable clean architecture\n"
 
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
 from typing import Any, Protocol
+
 
 class MemoryServiceProtocol(Protocol):
     """Protocol for memory storage services"""
@@ -26,6 +25,7 @@ class MemoryServiceProtocol(Protocol):
         """List all keys in a namespace"""
         ...
 
+
 class StateManagerProtocol(Protocol):
     """Protocol for workflow state management"""
 
@@ -37,9 +37,7 @@ class StateManagerProtocol(Protocol):
         """Retrieve workflow state"""
         ...
 
-    async def list_tasks(
-        self, status: str | None = None, limit: int = 100
-    ) -> list[dict[str, Any]]:
+    async def list_tasks(self, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         """List all tasks"""
         ...
 
@@ -55,6 +53,7 @@ class StateManagerProtocol(Protocol):
         """Close connections"""
         ...
 
+
 class ToolProtocol(Protocol):
     """Protocol for tools"""
 
@@ -65,6 +64,7 @@ class ToolProtocol(Protocol):
         """Execute the tool with given parameters"""
         ...
 
+
 class ToolRegistryProtocol(Protocol):
     """Protocol for tool registry"""
 
@@ -72,9 +72,7 @@ class ToolRegistryProtocol(Protocol):
         """Initialize the tool registry"""
         ...
 
-    async def execute_tool(
-        self, tool_name: str, params: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def execute_tool(self, tool_name: str, params: dict[str, Any]) -> dict[str, Any]:
         """Execute a specific tool"""
         ...
 
@@ -90,6 +88,7 @@ class ToolRegistryProtocol(Protocol):
         """Get execution statistics"""
         ...
 
+
 class TaskAnalysisResult(Protocol):
     """Protocol for task analysis results"""
 
@@ -99,12 +98,14 @@ class TaskAnalysisResult(Protocol):
     estimated_hours: float
     confidence: float
 
+
 class TaskAnalyzerProtocol(Protocol):
     """Protocol for task analysis"""
 
     async def analyze(self, task_description: str) -> TaskAnalysisResult:
         """Analyze a task description"""
         ...
+
 
 class WorkflowState(Protocol):
     """Protocol for workflow state"""
@@ -116,18 +117,18 @@ class WorkflowState(Protocol):
     results: list[dict[str, Any]]
     error: str | None
 
+
 class WorkflowEngineProtocol(Protocol):
     """Protocol for workflow engines"""
 
-    async def execute(
-        self, task_id: str, initial_state: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def execute(self, task_id: str, initial_state: dict[str, Any]) -> dict[str, Any]:
         """Execute a workflow"""
         ...
 
     async def get_status(self, task_id: str) -> WorkflowState | None:
         """Get workflow status"""
         ...
+
 
 class MetricsCollectorProtocol(Protocol):
     """Protocol for metrics collection"""
@@ -144,6 +145,7 @@ class MetricsCollectorProtocol(Protocol):
         """Get metrics summary"""
         ...
 
+
 class MemoryTier(Enum):
     """Memory tier enumeration"""
 
@@ -153,6 +155,7 @@ class MemoryTier(Enum):
     L3_POSTGRESQL = "l3_postgresql"
     L4_MEM0 = "l4_mem0"
     L5_LEGACY = "l5_legacy"
+
 
 class MemoryRouterProtocol(Protocol):
     """Protocol for memory routing"""
@@ -164,6 +167,7 @@ class MemoryRouterProtocol(Protocol):
     async def get_tier_stats(self) -> dict[str, Any]:
         """Get statistics for all memory tiers"""
         ...
+
 
 class ConfigProviderProtocol(Protocol):
     """Protocol for configuration providers"""
@@ -179,6 +183,7 @@ class ConfigProviderProtocol(Protocol):
     def has(self, key: str) -> bool:
         """Check if configuration key exists"""
         ...
+
 
 class DatabaseConnectionProtocol(Protocol):
     """Protocol for database connections"""
@@ -199,6 +204,7 @@ class DatabaseConnectionProtocol(Protocol):
         """Close the connection"""
         ...
 
+
 class CacheProtocol(Protocol):
     """Protocol for caching services"""
 
@@ -218,12 +224,14 @@ class CacheProtocol(Protocol):
         """Check if key exists"""
         ...
 
+
 class EventProtocol(Protocol):
     """Protocol for events"""
 
     name: str
     data: dict[str, Any]
     timestamp: datetime
+
 
 class EventBusProtocol(Protocol):
     """Protocol for event bus"""
@@ -239,6 +247,7 @@ class EventBusProtocol(Protocol):
     async def unsubscribe(self, event_name: str, handler: Callable) -> None:
         """Unsubscribe from events"""
         ...
+
 
 class BaseService(ABC):
     """Base class for all services"""
@@ -270,6 +279,7 @@ class BaseService(ABC):
     def is_initialized(self) -> bool:
         """Check if service is initialized"""
         return self._initialized
+
 
 class BaseRepository(ABC):
     """Base class for repositories"""

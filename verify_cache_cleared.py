@@ -15,6 +15,7 @@ sys.path.insert(0, "/appsil/sophia-main/mcp_servers")
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 async def verify_caches_cleared():
     """Verify all cache systems are cleared"""
     logger.info("🔍 Verifying cache systems are cleared...")
@@ -135,6 +136,7 @@ async def verify_caches_cleared():
         logger.warning("\n⚠️ Some caches may still contain data")
 
     return verification_results
+
 
 if __name__ == "__main__":
     asyncio.run(verify_caches_cleared())

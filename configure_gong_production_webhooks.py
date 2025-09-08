@@ -5,7 +5,6 @@ Provides instructions and automated configuration for Gong webhooks
 """
 
 import json
-import os
 from datetime import datetime
 
 import httpx

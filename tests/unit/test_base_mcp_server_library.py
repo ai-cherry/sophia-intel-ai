@@ -3,31 +3,32 @@ Comprehensive Unit Tests for Base MCP Server Library
 Target: 95% code coverage for foundational MCP server components
 """
 
-import pytest
 import asyncio
 import json
-import time
-import uuid
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional, Union
-from enum import Enum
-import logging
+import os
 
 # Import the modules we're testing
 import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import time
+import uuid
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any, Dict
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 try:
-    from base_mcp_server.server import BaseMCPServer, ServerStatus
+    from base_mcp_server.connection_manager import Connection, ConnectionManager
+    from base_mcp_server.error_handling import AuthenticationError, MCPError, ValidationError
     from base_mcp_server.handlers import RequestHandler, ResponseHandler
-    from base_mcp_server.middleware import AuthMiddleware, RateLimitMiddleware, LoggingMiddleware
-    from base_mcp_server.connection_manager import ConnectionManager, Connection
-    from base_mcp_server.error_handling import MCPError, ValidationError, AuthenticationError
-    from base_mcp_server.monitoring import MetricsCollector, HealthChecker
-    from base_mcp_server.utils import MessageValidator, ConfigManager
+    from base_mcp_server.middleware import AuthMiddleware, LoggingMiddleware, RateLimitMiddleware
+    from base_mcp_server.monitoring import HealthChecker, MetricsCollector
+    from base_mcp_server.server import BaseMCPServer, ServerStatus
+    from base_mcp_server.utils import ConfigManager, MessageValidator
 except ImportError:
+
     class ServerStatus(Enum):
         STARTING = "starting"
         RUNNING = "running"
@@ -114,6 +115,7 @@ except ImportError:
             self.health_checker = HealthChecker()
             self.middleware = []
 
+
 class TestBaseMCPServerInitialization:
     """Test Base MCP Server initialization and configuration"""
 
@@ -124,18 +126,9 @@ class TestBaseMCPServerInitialization:
             "host": "localhost",
             "port": 8080,
             "max_connections": 100,
-            "auth": {
-                "enabled": True,
-                "method": "api_key"
-            },
-            "rate_limiting": {
-                "enabled": True,
-                "requests_per_minute": 60
-            },
-            "logging": {
-                "level": "INFO",
-                "format": "json"
-            }
+            "auth": {"enabled": True, "method": "api_key"},
+            "rate_limiting": {"enabled": True, "requests_per_minute": 60},
+            "logging": {"level": "INFO", "format": "json"},
         }
 
     @pytest.fixture
@@ -159,12 +152,12 @@ class TestBaseMCPServerInitialization:
 
         assert server.config == {}
         assert server.status == ServerStatus.STOPPED
-        assert hasattr(server, 'connection_manager')
-        assert hasattr(server, 'request_handler')
+        assert hasattr(server, "connection_manager")
+        assert hasattr(server, "request_handler")
 
     async def test_server_startup_sequence(self, base_server):
         """Test server startup sequence"""
-        if hasattr(base_server, 'start'):
+        if hasattr(base_server, "start"):
             # Mock the startup process
             base_server.status = ServerStatus.STARTING
             await base_server.start()
@@ -184,7 +177,7 @@ class TestBaseMCPServerInitialization:
         # Start server first
         base_server.status = ServerStatus.RUNNING
 
-        if hasattr(base_server, 'stop'):
+        if hasattr(base_server, "stop"):
             base_server.status = ServerStatus.STOPPING
             await base_server.stop()
 
@@ -204,7 +197,7 @@ class TestBaseMCPServerInitialization:
         rate_limit_middleware = RateLimitMiddleware(server_config["rate_limiting"])
         logging_middleware = LoggingMiddleware(server_config["logging"])
 
-        if hasattr(base_server, 'add_middleware'):
+        if hasattr(base_server, "add_middleware"):
             base_server.add_middleware(auth_middleware)
             base_server.add_middleware(rate_limit_middleware)
             base_server.add_middleware(logging_middleware)
@@ -218,6 +211,7 @@ class TestBaseMCPServerInitialization:
             assert len(base_server.middleware) == 3
             assert isinstance(base_server.middleware[0], AuthMiddleware)
 
+
 class TestConnectionManager:
     """Test connection management functionality"""
 
@@ -229,13 +223,13 @@ class TestConnectionManager:
         """Test connection manager initializes correctly"""
         assert connection_manager.connections == {}
         assert connection_manager.max_connections == 100
-        assert hasattr(connection_manager, 'connections')
+        assert hasattr(connection_manager, "connections")
 
     async def test_new_connection_creation(self, connection_manager):
         """Test creating new connections"""
         connection_id = str(uuid.uuid4())
 
-        if hasattr(connection_manager, 'create_connection'):
+        if hasattr(connection_manager, "create_connection"):
             connection = await connection_manager.create_connection(connection_id)
 
             assert connection.connection_id == connection_id
@@ -255,7 +249,7 @@ class TestConnectionManager:
         connection = Connection(connection_id)
         connection_manager.connections[connection_id] = connection
 
-        if hasattr(connection_manager, 'authenticate_connection'):
+        if hasattr(connection_manager, "authenticate_connection"):
             await connection_manager.authenticate_connection(connection_id, {"api_key": "test_key"})
 
             assert connection_manager.connections[connection_id].authenticated is True
@@ -275,7 +269,7 @@ class TestConnectionManager:
 
         initial_activity = connection.last_activity
 
-        if hasattr(connection_manager, 'update_activity'):
+        if hasattr(connection_manager, "update_activity"):
             connection_manager.update_activity(connection_id)
 
             assert connection.last_activity > initial_activity
@@ -299,7 +293,7 @@ class TestConnectionManager:
         recent_connection = Connection(recent_connection_id)
         connection_manager.connections[recent_connection_id] = recent_connection
 
-        if hasattr(connection_manager, 'cleanup_idle_connections'):
+        if hasattr(connection_manager, "cleanup_idle_connections"):
             await connection_manager.cleanup_idle_connections(max_idle_minutes=60)
 
             # Old connection should be removed
@@ -331,7 +325,7 @@ class TestConnectionManager:
             conn_id = f"conn_{i}"
             connection_manager.connections[conn_id] = Connection(conn_id)
 
-        if hasattr(connection_manager, 'can_accept_connection'):
+        if hasattr(connection_manager, "can_accept_connection"):
             # Should not accept new connection when at limit
             can_accept = connection_manager.can_accept_connection()
             assert can_accept is False
@@ -349,7 +343,7 @@ class TestConnectionManager:
         connection.client_info = {"user_agent": "MCP Client 1.0", "version": "1.0"}
         connection_manager.connections[connection_id] = connection
 
-        if hasattr(connection_manager, 'get_connection_info'):
+        if hasattr(connection_manager, "get_connection_info"):
             info = connection_manager.get_connection_info(connection_id)
 
             assert info["client_info"]["user_agent"] == "MCP Client 1.0"
@@ -361,10 +355,11 @@ class TestConnectionManager:
                 "connected_at": connection.connected_at,
                 "last_activity": connection.last_activity,
                 "authenticated": connection.authenticated,
-                "client_info": connection.client_info
+                "client_info": connection.client_info,
             }
 
             assert info["client_info"]["user_agent"] == "MCP Client 1.0"
+
 
 class TestRequestHandler:
     """Test request handling functionality"""
@@ -376,14 +371,15 @@ class TestRequestHandler:
     def test_request_handler_initialization(self, request_handler):
         """Test request handler initializes correctly"""
         assert request_handler.handlers == {}
-        assert hasattr(request_handler, 'handlers')
+        assert hasattr(request_handler, "handlers")
 
     def test_handler_registration(self, request_handler):
         """Test registering request handlers"""
+
         async def test_handler(request):
             return {"result": "test_response"}
 
-        if hasattr(request_handler, 'register_handler'):
+        if hasattr(request_handler, "register_handler"):
             request_handler.register_handler("test_method", test_handler)
 
             assert "test_method" in request_handler.handlers
@@ -396,19 +392,16 @@ class TestRequestHandler:
 
     async def test_request_processing(self, request_handler):
         """Test processing incoming requests"""
+
         # Register test handler
         async def echo_handler(request):
             return {"echo": request.get("data", "")}
 
         request_handler.handlers["echo"] = echo_handler
 
-        test_request = {
-            "id": "req_1",
-            "method": "echo",
-            "params": {"data": "hello world"}
-        }
+        test_request = {"id": "req_1", "method": "echo", "params": {"data": "hello world"}}
 
-        if hasattr(request_handler, 'process_request'):
+        if hasattr(request_handler, "process_request"):
             response = await request_handler.process_request(test_request)
 
             assert response["echo"] == "hello world"
@@ -423,19 +416,16 @@ class TestRequestHandler:
 
     async def test_error_handling_in_requests(self, request_handler):
         """Test error handling during request processing"""
+
         # Register handler that raises an error
         async def error_handler(request):
             raise ValueError("Test error")
 
         request_handler.handlers["error_method"] = error_handler
 
-        error_request = {
-            "id": "req_error",
-            "method": "error_method",
-            "params": {}
-        }
+        error_request = {"id": "req_error", "method": "error_method", "params": {}}
 
-        if hasattr(request_handler, 'process_request'):
+        if hasattr(request_handler, "process_request"):
             try:
                 await request_handler.process_request(error_request)
                 assert False, "Should have raised an error"
@@ -452,13 +442,9 @@ class TestRequestHandler:
 
     def test_unknown_method_handling(self, request_handler):
         """Test handling requests with unknown methods"""
-        unknown_request = {
-            "id": "req_unknown",
-            "method": "unknown_method",
-            "params": {}
-        }
+        unknown_request = {"id": "req_unknown", "method": "unknown_method", "params": {}}
 
-        if hasattr(request_handler, 'is_method_supported'):
+        if hasattr(request_handler, "is_method_supported"):
             is_supported = request_handler.is_method_supported("unknown_method")
             assert is_supported is False
         else:
@@ -470,6 +456,7 @@ class TestRequestHandler:
 
     async def test_batch_request_processing(self, request_handler):
         """Test processing batch requests"""
+
         # Register handlers
         async def add_handler(request):
             return {"result": request["a"] + request["b"]}
@@ -482,10 +469,10 @@ class TestRequestHandler:
 
         batch_request = [
             {"id": "1", "method": "add", "params": {"a": 2, "b": 3}},
-            {"id": "2", "method": "multiply", "params": {"x": 4, "y": 5}}
+            {"id": "2", "method": "multiply", "params": {"x": 4, "y": 5}},
         ]
 
-        if hasattr(request_handler, 'process_batch_request'):
+        if hasattr(request_handler, "process_batch_request"):
             responses = await request_handler.process_batch_request(batch_request)
 
             assert len(responses) == 2
@@ -503,6 +490,7 @@ class TestRequestHandler:
             assert responses[0]["result"] == 5
             assert responses[1]["result"] == 20
 
+
 class TestResponseHandler:
     """Test response handling and formatting"""
 
@@ -513,14 +501,15 @@ class TestResponseHandler:
     def test_response_handler_initialization(self, response_handler):
         """Test response handler initializes correctly"""
         assert response_handler.response_formatters == {}
-        assert hasattr(response_handler, 'response_formatters')
+        assert hasattr(response_handler, "response_formatters")
 
     def test_response_formatter_registration(self, response_handler):
         """Test registering response formatters"""
+
         def json_formatter(response):
             return json.dumps(response)
 
-        if hasattr(response_handler, 'register_formatter'):
+        if hasattr(response_handler, "register_formatter"):
             response_handler.register_formatter("json", json_formatter)
 
             assert "json" in response_handler.response_formatters
@@ -535,7 +524,7 @@ class TestResponseHandler:
         success_data = {"result": "operation completed", "data": {"id": 123}}
         request_id = "req_success_1"
 
-        if hasattr(response_handler, 'format_success_response'):
+        if hasattr(response_handler, "format_success_response"):
             formatted = response_handler.format_success_response(request_id, success_data)
 
             assert formatted["id"] == request_id
@@ -543,11 +532,7 @@ class TestResponseHandler:
             assert "error" not in formatted
         else:
             # Mock success response formatting
-            formatted = {
-                "jsonrpc": "2.0",
-                "id": request_id,
-                "result": success_data
-            }
+            formatted = {"jsonrpc": "2.0", "id": request_id, "result": success_data}
 
             assert formatted["id"] == request_id
             assert formatted["result"] == success_data
@@ -558,8 +543,10 @@ class TestResponseHandler:
         error_message = "Invalid params"
         request_id = "req_error_1"
 
-        if hasattr(response_handler, 'format_error_response'):
-            formatted = response_handler.format_error_response(request_id, error_code, error_message)
+        if hasattr(response_handler, "format_error_response"):
+            formatted = response_handler.format_error_response(
+                request_id, error_code, error_message
+            )
 
             assert formatted["id"] == request_id
             assert formatted["error"]["code"] == error_code
@@ -569,10 +556,7 @@ class TestResponseHandler:
             formatted = {
                 "jsonrpc": "2.0",
                 "id": request_id,
-                "error": {
-                    "code": error_code,
-                    "message": error_message
-                }
+                "error": {"code": error_code, "message": error_message},
             }
 
             assert formatted["id"] == request_id
@@ -582,7 +566,7 @@ class TestResponseHandler:
         """Test formatting notification responses (no id)"""
         notification_data = {"event": "connection_established", "timestamp": "2024-01-01T00:00:00Z"}
 
-        if hasattr(response_handler, 'format_notification'):
+        if hasattr(response_handler, "format_notification"):
             formatted = response_handler.format_notification("connection_event", notification_data)
 
             assert "id" not in formatted  # Notifications don't have IDs
@@ -593,7 +577,7 @@ class TestResponseHandler:
             formatted = {
                 "jsonrpc": "2.0",
                 "method": "connection_event",
-                "params": notification_data
+                "params": notification_data,
             }
 
             assert "id" not in formatted
@@ -601,42 +585,35 @@ class TestResponseHandler:
 
     def test_response_validation(self, response_handler):
         """Test validating response format"""
-        valid_response = {
-            "jsonrpc": "2.0",
-            "id": "req_1",
-            "result": {"success": True}
-        }
+        valid_response = {"jsonrpc": "2.0", "id": "req_1", "result": {"success": True}}
 
         invalid_response = {
             "id": "req_2"
             # Missing jsonrpc and result/error
         }
 
-        if hasattr(response_handler, 'validate_response'):
+        if hasattr(response_handler, "validate_response"):
             assert response_handler.validate_response(valid_response) is True
             assert response_handler.validate_response(invalid_response) is False
         else:
             # Mock response validation
             def is_valid_response(response):
                 return (
-                    isinstance(response, dict) and
-                    "jsonrpc" in response and
-                    ("result" in response or "error" in response)
+                    isinstance(response, dict)
+                    and "jsonrpc" in response
+                    and ("result" in response or "error" in response)
                 )
 
             assert is_valid_response(valid_response) is True
             assert is_valid_response(invalid_response) is False
+
 
 class TestMiddleware:
     """Test middleware functionality"""
 
     def test_auth_middleware_initialization(self):
         """Test authentication middleware initialization"""
-        auth_config = {
-            "enabled": True,
-            "method": "api_key",
-            "api_keys": ["key1", "key2"]
-        }
+        auth_config = {"enabled": True, "method": "api_key", "api_keys": ["key1", "key2"]}
 
         auth_middleware = AuthMiddleware(auth_config)
 
@@ -645,27 +622,20 @@ class TestMiddleware:
 
     async def test_auth_middleware_processing(self):
         """Test authentication middleware request processing"""
-        auth_config = {
-            "enabled": True,
-            "method": "api_key",
-            "api_keys": ["valid_key"]
-        }
+        auth_config = {"enabled": True, "method": "api_key", "api_keys": ["valid_key"]}
 
         auth_middleware = AuthMiddleware(auth_config)
 
         # Valid authentication
-        valid_request = {
-            "headers": {"Authorization": "Bearer valid_key"},
-            "method": "test_method"
-        }
+        valid_request = {"headers": {"Authorization": "Bearer valid_key"}, "method": "test_method"}
 
         # Invalid authentication
         invalid_request = {
             "headers": {"Authorization": "Bearer invalid_key"},
-            "method": "test_method"
+            "method": "test_method",
         }
 
-        if hasattr(auth_middleware, 'process_request'):
+        if hasattr(auth_middleware, "process_request"):
             # Should pass valid request
             result = await auth_middleware.process_request(valid_request)
             assert result.get("authenticated") is True
@@ -680,7 +650,9 @@ class TestMiddleware:
             # Mock authentication logic
             def authenticate(request):
                 auth_header = request.get("headers", {}).get("Authorization", "")
-                token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+                token = (
+                    auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else ""
+                )
                 return token in auth_config["api_keys"]
 
             assert authenticate(valid_request) is True
@@ -688,11 +660,7 @@ class TestMiddleware:
 
     def test_rate_limit_middleware_initialization(self):
         """Test rate limiting middleware initialization"""
-        rate_config = {
-            "enabled": True,
-            "requests_per_minute": 60,
-            "window_size": 60
-        }
+        rate_config = {"enabled": True, "requests_per_minute": 60, "window_size": 60}
 
         rate_middleware = RateLimitMiddleware(rate_config)
 
@@ -704,7 +672,7 @@ class TestMiddleware:
         rate_config = {
             "enabled": True,
             "requests_per_minute": 2,  # Low limit for testing
-            "window_size": 60
+            "window_size": 60,
         }
 
         rate_middleware = RateLimitMiddleware(rate_config)
@@ -712,7 +680,7 @@ class TestMiddleware:
         client_id = "test_client_1"
         request = {"client_id": client_id, "method": "test"}
 
-        if hasattr(rate_middleware, 'process_request'):
+        if hasattr(rate_middleware, "process_request"):
             # First requests should pass
             result1 = await rate_middleware.process_request(request)
             assert result1.get("rate_limited") is not True
@@ -742,11 +710,7 @@ class TestMiddleware:
 
     def test_logging_middleware_initialization(self):
         """Test logging middleware initialization"""
-        logging_config = {
-            "level": "INFO",
-            "format": "json",
-            "include_request_body": True
-        }
+        logging_config = {"level": "INFO", "format": "json", "include_request_body": True}
 
         logging_middleware = LoggingMiddleware(logging_config)
 
@@ -755,21 +719,13 @@ class TestMiddleware:
 
     async def test_logging_middleware_processing(self):
         """Test logging middleware request processing"""
-        logging_config = {
-            "level": "INFO",
-            "format": "json",
-            "include_request_body": True
-        }
+        logging_config = {"level": "INFO", "format": "json", "include_request_body": True}
 
         logging_middleware = LoggingMiddleware(logging_config)
 
-        test_request = {
-            "id": "req_log_1",
-            "method": "test_method",
-            "params": {"data": "test"}
-        }
+        test_request = {"id": "req_log_1", "method": "test_method", "params": {"data": "test"}}
 
-        if hasattr(logging_middleware, 'process_request'):
+        if hasattr(logging_middleware, "process_request"):
             result = await logging_middleware.process_request(test_request)
 
             # Should process request and log it
@@ -780,11 +736,12 @@ class TestMiddleware:
                 "timestamp": datetime.now().isoformat(),
                 "request_id": test_request["id"],
                 "method": test_request["method"],
-                "level": logging_config["level"]
+                "level": logging_config["level"],
             }
 
             assert log_entry["request_id"] == "req_log_1"
             assert log_entry["method"] == "test_method"
+
 
 class TestErrorHandling:
     """Test error handling system"""
@@ -828,7 +785,7 @@ class TestErrorHandling:
         """Test error serialization for response formatting"""
         error = ValidationError("Missing required field", "MISSING_FIELD")
 
-        if hasattr(error, 'to_dict'):
+        if hasattr(error, "to_dict"):
             error_dict = error.to_dict()
 
             assert error_dict["message"] == "Missing required field"
@@ -838,11 +795,12 @@ class TestErrorHandling:
             error_dict = {
                 "message": str(error),
                 "code": error.error_code,
-                "type": type(error).__name__
+                "type": type(error).__name__,
             }
 
             assert error_dict["message"] == "Missing required field"
             assert error_dict["code"] == "MISSING_FIELD"
+
 
 class TestMetricsCollector:
     """Test metrics collection system"""
@@ -861,7 +819,7 @@ class TestMetricsCollector:
         """Test counter metric operations"""
         metric_name = "requests_total"
 
-        if hasattr(metrics_collector, 'increment_counter'):
+        if hasattr(metrics_collector, "increment_counter"):
             metrics_collector.increment_counter(metric_name)
             metrics_collector.increment_counter(metric_name)
             metrics_collector.increment_counter(metric_name, value=3)
@@ -880,7 +838,7 @@ class TestMetricsCollector:
         """Test gauge metric operations"""
         metric_name = "active_connections"
 
-        if hasattr(metrics_collector, 'set_gauge'):
+        if hasattr(metrics_collector, "set_gauge"):
             metrics_collector.set_gauge(metric_name, 10)
             assert metrics_collector.gauges[metric_name] == 10
 
@@ -898,7 +856,7 @@ class TestMetricsCollector:
         """Test histogram metric operations"""
         metric_name = "request_duration"
 
-        if hasattr(metrics_collector, 'record_histogram'):
+        if hasattr(metrics_collector, "record_histogram"):
             durations = [0.1, 0.2, 0.15, 0.3, 0.25]
             for duration in durations:
                 metrics_collector.record_histogram(metric_name, duration)
@@ -926,7 +884,7 @@ class TestMetricsCollector:
         metrics_collector.counters["test_counter"] = 42
         metrics_collector.gauges["test_gauge"] = 3.14
 
-        if hasattr(metrics_collector, 'export_prometheus'):
+        if hasattr(metrics_collector, "export_prometheus"):
             prometheus_format = metrics_collector.export_prometheus()
 
             assert "test_counter 42" in prometheus_format
@@ -944,6 +902,7 @@ class TestMetricsCollector:
             assert "test_counter 42" in prometheus_format
             assert "test_gauge 3.14" in prometheus_format
 
+
 class TestHealthChecker:
     """Test health checking system"""
 
@@ -958,6 +917,7 @@ class TestHealthChecker:
 
     async def test_health_check_registration(self, health_checker):
         """Test registering health checks"""
+
         async def database_check():
             # Mock database connectivity check
             return {"status": "healthy", "response_time": 0.05}
@@ -966,7 +926,7 @@ class TestHealthChecker:
             # Mock external API check
             return {"status": "healthy", "response_time": 0.12}
 
-        if hasattr(health_checker, 'register_check'):
+        if hasattr(health_checker, "register_check"):
             health_checker.register_check("database", database_check)
             health_checker.register_check("external_api", external_api_check)
 
@@ -981,12 +941,13 @@ class TestHealthChecker:
 
     async def test_health_check_execution(self, health_checker):
         """Test executing health checks"""
+
         async def mock_check():
             return {"status": "healthy", "details": "All systems operational"}
 
         health_checker.checks["mock_service"] = mock_check
 
-        if hasattr(health_checker, 'run_checks'):
+        if hasattr(health_checker, "run_checks"):
             results = await health_checker.run_checks()
 
             assert "mock_service" in results
@@ -1002,6 +963,7 @@ class TestHealthChecker:
 
     async def test_overall_health_status(self, health_checker):
         """Test determining overall health status"""
+
         async def healthy_check():
             return {"status": "healthy"}
 
@@ -1011,7 +973,7 @@ class TestHealthChecker:
         health_checker.checks["service1"] = healthy_check
         health_checker.checks["service2"] = unhealthy_check
 
-        if hasattr(health_checker, 'get_overall_status'):
+        if hasattr(health_checker, "get_overall_status"):
             overall_status = await health_checker.get_overall_status()
 
             # Should be unhealthy if any check fails
@@ -1023,11 +985,14 @@ class TestHealthChecker:
             for name, check_func in health_checker.checks.items():
                 results[name] = await check_func()
 
-            failed_checks = [name for name, result in results.items() if result["status"] != "healthy"]
+            failed_checks = [
+                name for name, result in results.items() if result["status"] != "healthy"
+            ]
             overall_status = "unhealthy" if failed_checks else "healthy"
 
             assert overall_status == "unhealthy"
             assert "service2" in failed_checks
+
 
 class TestUtilities:
     """Test utility functions and classes"""
@@ -1038,7 +1003,7 @@ class TestUtilities:
             "jsonrpc": "2.0",
             "method": "test_method",
             "params": {"param1": "value1"},
-            "id": "req_1"
+            "id": "req_1",
         }
 
         invalid_message = {
@@ -1056,23 +1021,18 @@ class TestUtilities:
         config_manager = ConfigManager()
 
         assert config_manager.config == {}
-        assert hasattr(config_manager, 'config')
+        assert hasattr(config_manager, "config")
 
     def test_config_loading(self):
         """Test loading configuration from various sources"""
         test_config = {
-            "server": {
-                "host": "localhost",
-                "port": 8080
-            },
-            "database": {
-                "url": "postgresql://localhost/testdb"
-            }
+            "server": {"host": "localhost", "port": 8080},
+            "database": {"url": "postgresql://localhost/testdb"},
         }
 
         config_manager = ConfigManager()
 
-        if hasattr(config_manager, 'load_config'):
+        if hasattr(config_manager, "load_config"):
             config_manager.load_config(test_config)
 
             assert config_manager.config["server"]["host"] == "localhost"
@@ -1085,16 +1045,11 @@ class TestUtilities:
 
     def test_config_validation(self):
         """Test configuration validation"""
-        valid_config = {
-            "server": {"host": "localhost", "port": 8080},
-            "auth": {"enabled": True}
-        }
+        valid_config = {"server": {"host": "localhost", "port": 8080}, "auth": {"enabled": True}}
 
-        invalid_config = {
-            "server": {"host": "localhost"}  # Missing required port
-        }
+        invalid_config = {"server": {"host": "localhost"}}  # Missing required port
 
-        if hasattr(ConfigManager, 'validate_config'):
+        if hasattr(ConfigManager, "validate_config"):
             assert ConfigManager.validate_config(valid_config) is True
             assert ConfigManager.validate_config(invalid_config) is False
         else:
@@ -1106,6 +1061,7 @@ class TestUtilities:
             assert validate_server_config(valid_config) is True
             assert validate_server_config(invalid_config) is False
 
+
 class TestIntegrationScenarios:
     """Test integration scenarios combining multiple components"""
 
@@ -1116,7 +1072,7 @@ class TestIntegrationScenarios:
             "host": "localhost",
             "port": 8080,
             "auth": {"enabled": True, "method": "api_key"},
-            "rate_limiting": {"enabled": True, "requests_per_minute": 60}
+            "rate_limiting": {"enabled": True, "requests_per_minute": 60},
         }
 
         server = BaseMCPServer(config)
@@ -1125,7 +1081,7 @@ class TestIntegrationScenarios:
         server.middleware = [
             AuthMiddleware(config["auth"]),
             RateLimitMiddleware(config["rate_limiting"]),
-            LoggingMiddleware({"level": "INFO"})
+            LoggingMiddleware({"level": "INFO"}),
         ]
 
         # Register test handler
@@ -1151,11 +1107,11 @@ class TestIntegrationScenarios:
             "jsonrpc": "2.0",
             "id": "req_flow_test",
             "method": "test_method",
-            "params": {"input": "test data"}
+            "params": {"input": "test data"},
         }
 
         # Process through full pipeline
-        if hasattr(server, 'process_full_request'):
+        if hasattr(server, "process_full_request"):
             response = await server.process_full_request(connection_id, request)
 
             assert response["id"] == "req_flow_test"
@@ -1174,11 +1130,7 @@ class TestIntegrationScenarios:
             result = await handler(request["params"])
 
             # 4. Format response
-            response = {
-                "jsonrpc": "2.0",
-                "id": request["id"],
-                "result": result
-            }
+            response = {"jsonrpc": "2.0", "id": request["id"], "result": result}
 
             assert response["id"] == "req_flow_test"
             assert response["result"]["result"] == "success"
@@ -1197,7 +1149,7 @@ class TestIntegrationScenarios:
             "jsonrpc": "2.0",
             "id": "req_error_test",
             "method": "error_method",
-            "params": {}
+            "params": {},
         }
 
         # Mock connection
@@ -1205,7 +1157,7 @@ class TestIntegrationScenarios:
         connection.authenticated = True
         server.connection_manager.connections["error_test_conn"] = connection
 
-        if hasattr(server, 'process_full_request'):
+        if hasattr(server, "process_full_request"):
             response = await server.process_full_request("error_test_conn", error_request)
 
             assert "error" in response
@@ -1221,10 +1173,7 @@ class TestIntegrationScenarios:
                 error_response = {
                     "jsonrpc": "2.0",
                     "id": error_request["id"],
-                    "error": {
-                        "code": e.error_code,
-                        "message": str(e)
-                    }
+                    "error": {"code": e.error_code, "message": str(e)},
                 }
 
                 assert error_response["error"]["message"] == "Invalid input"
@@ -1240,10 +1189,13 @@ class TestIntegrationScenarios:
         # Mock request processing
         server.metrics_collector.counters["requests_total"] += 1
         server.connection_manager.connections["conn1"] = Connection("conn1")
-        server.metrics_collector.gauges["active_connections"] = len(server.connection_manager.connections)
+        server.metrics_collector.gauges["active_connections"] = len(
+            server.connection_manager.connections
+        )
 
         assert server.metrics_collector.counters["requests_total"] == 1
         assert server.metrics_collector.gauges["active_connections"] == 1
+
 
 if __name__ == "__main__":
     # Run the tests

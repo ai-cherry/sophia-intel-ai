@@ -14,6 +14,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class FileOperationResult:
     """Result of a file operation"""
@@ -29,6 +30,7 @@ class FileOperationResult:
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
+
 
 class RealFileOperationsService:
     """
@@ -64,9 +66,7 @@ class RealFileOperationsService:
         # Security: Only allow operations within base directory
         self.base_directory = self.base_directory.resolve()
 
-        logger.info(
-            f"🗂️ File Operations Service initialized - Base: {self.base_directory}"
-        )
+        logger.info(f"🗂️ File Operations Service initialized - Base: {self.base_directory}")
 
     def _is_safe_path(self, file_path: str) -> bool:
         """Check if the file path is safe (within base directory)"""
@@ -80,9 +80,7 @@ class RealFileOperationsService:
         """Check if file extension is allowed"""
         return Path(file_path).suffix.lower() in self.allowed_extensions
 
-    async def read_file(
-        self, file_path: str, max_lines: int | None = None
-    ) -> FileOperationResult:
+    async def read_file(self, file_path: str, max_lines: int | None = None) -> FileOperationResult:
         """Read file contents safely"""
         start_time = time.time()
 
@@ -135,7 +133,9 @@ class RealFileOperationsService:
                 lines = content.split("\n")
                 if len(lines) > max_lines:
                     content = "\n".join(lines[:max_lines])
-                    content += f"\n\n... (truncated at {max_lines} lines, total: {len(lines)} lines)"
+                    content += (
+                        f"\n\n... (truncated at {max_lines} lines, total: {len(lines)} lines)"
+                    )
 
             processing_time = (time.time() - start_time) * 1000
             self.operation_count += 1
@@ -305,9 +305,7 @@ class RealFileOperationsService:
                 content=content,
                 metadata={
                     "entry_count": len(entries),
-                    "directories": len(
-                        [e for e in entries if e["type"] == "directory"]
-                    ),
+                    "directories": len([e for e in entries if e["type"] == "directory"]),
                     "files": len([e for e in entries if e["type"] == "file"]),
                     "pattern": pattern,
                 },
@@ -407,9 +405,7 @@ class RealFileOperationsService:
                 "permissions": oct(stat.st_mode)[-3:],
                 "extension": full_path.suffix if full_path.is_file() else None,
                 "is_allowed_extension": (
-                    self._is_allowed_extension(str(full_path))
-                    if full_path.is_file()
-                    else None
+                    self._is_allowed_extension(str(full_path)) if full_path.is_file() else None
                 ),
             }
 
@@ -460,8 +456,10 @@ class RealFileOperationsService:
             ],
         }
 
+
 # Global file operations service instance
 _file_operations_service: RealFileOperationsService | None = None
+
 
 async def get_file_operations_service() -> RealFileOperationsService:
     """Get global file operations service instance"""
@@ -472,6 +470,7 @@ async def get_file_operations_service() -> RealFileOperationsService:
         _file_operations_service = RealFileOperationsService()
 
     return _file_operations_service
+
 
 # Test the file operations service
 if __name__ == "__main__":

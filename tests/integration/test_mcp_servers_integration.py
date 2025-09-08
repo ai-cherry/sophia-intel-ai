@@ -3,26 +3,25 @@ Comprehensive Integration Tests for All MCP Servers
 Tests inter-server communication, data flow, and coordinated operations
 """
 
-import pytest
 import asyncio
-import json
-import time
-import uuid
-from unittest.mock import AsyncMock, Mock, patch
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+import os
 
 # Import all server components
 import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import time
+import uuid
+from datetime import datetime, timedelta
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 try:
-    from unified_mcp_server.server import UnifiedMCPServer
     from artemis.orchestrator import ArtemisSwarmOrchestrator
     from base_mcp_server.server import BaseMCPServer
     from bi_server.server import BusinessIntelligenceServer
     from mem0_server.server import Mem0MemoryServer
+    from unified_mcp_server.server import UnifiedMCPServer
 except ImportError:
     # Mock the server classes if not available
     class UnifiedMCPServer:
@@ -56,6 +55,7 @@ except ImportError:
             self.memories = {}
             self.correlations = {}
 
+
 class TestMCPServerOrchestration:
     """Test orchestrated operations across all MCP servers"""
 
@@ -67,10 +67,7 @@ class TestMCPServerOrchestration:
         unified_config = {
             "host": "localhost",
             "port": 8080,
-            "routing": {
-                "smart_routing": True,
-                "cache_enabled": True
-            }
+            "routing": {"smart_routing": True, "cache_enabled": True},
         }
 
         artemis_config = {
@@ -79,7 +76,7 @@ class TestMCPServerOrchestration:
                 "coder": {"enabled": True, "pool_size": 3},
                 "tester": {"enabled": True, "pool_size": 2},
                 "deployer": {"enabled": True, "pool_size": 1},
-                "evolver": {"enabled": True, "pool_size": 1}
+                "evolver": {"enabled": True, "pool_size": 1},
             }
         }
 
@@ -89,14 +86,14 @@ class TestMCPServerOrchestration:
                 "usergems": {"enabled": True, "cache_ttl": 1800},
                 "gong": {"enabled": True, "cache_ttl": 7200},
                 "intercom": {"enabled": True, "cache_ttl": 1800},
-                "hubspot": {"enabled": True, "cache_ttl": 3600}
+                "hubspot": {"enabled": True, "cache_ttl": 3600},
             }
         }
 
         mem0_config = {
             "memory_store": {"max_memories": 100000},
             "embedding": {"model": "text-embedding-ada-002"},
-            "optimization": {"enabled": True}
+            "optimization": {"enabled": True},
         }
 
         # Initialize servers
@@ -105,12 +102,12 @@ class TestMCPServerOrchestration:
             "artemis": ArtemisSwarmOrchestrator(artemis_config),
             "base": BaseMCPServer(),
             "bi": BusinessIntelligenceServer(bi_config),
-            "mem0": Mem0MemoryServer(mem0_config)
+            "mem0": Mem0MemoryServer(mem0_config),
         }
 
         # Mock server startup
         for server in servers.values():
-            if hasattr(server, 'initialize'):
+            if hasattr(server, "initialize"):
                 await server.initialize()
 
         return servers
@@ -125,10 +122,10 @@ class TestMCPServerOrchestration:
         workflow_request = {
             "type": "multi_agent_workflow",
             "task": "Analyze business data and provide insights",
-            "agents_required": ["plannr", "coder", "tester"]
+            "agents_required": ["plannr", "coder", "tester"],
         }
 
-        if hasattr(unified, 'route_to_artemis'):
+        if hasattr(unified, "route_to_artemis"):
             response = await unified.route_to_artemis(workflow_request)
 
             assert response["status"] == "accepted"
@@ -141,14 +138,14 @@ class TestMCPServerOrchestration:
             unified.routes[workflow_id] = {
                 "target_server": "artemis",
                 "request": workflow_request,
-                "status": "routed"
+                "status": "routed",
             }
 
             # Artemis receives and processes
             artemis.workflows[workflow_id] = {
                 "task": workflow_request["task"],
                 "status": "processing",
-                "agents_assigned": workflow_request["agents_required"]
+                "agents_assigned": workflow_request["agents_required"],
             }
 
             assert workflow_id in unified.routes
@@ -165,15 +162,13 @@ class TestMCPServerOrchestration:
         bi_insight = {
             "type": "lead_scoring",
             "data": {"lead_id": "lead_123", "score": 85, "source": "apollo"},
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
         # Store insight in memory system
-        if hasattr(mem0, 'store_memory') and hasattr(unified, 'coordinate_memory_storage'):
+        if hasattr(mem0, "store_memory") and hasattr(unified, "coordinate_memory_storage"):
             memory_id = await unified.coordinate_memory_storage(
-                content=bi_insight,
-                memory_type="business_insight",
-                source="bi_server"
+                content=bi_insight, memory_type="business_insight", source="bi_server"
             )
 
             # Artemis should be able to access this memory for workflow context
@@ -190,7 +185,7 @@ class TestMCPServerOrchestration:
                 "content": bi_insight,
                 "type": "business_insight",
                 "source": "bi_server",
-                "created_at": datetime.now()
+                "created_at": datetime.now(),
             }
 
             # Cache in Unified for quick access
@@ -213,7 +208,7 @@ class TestMCPServerOrchestration:
             "apollo_data": {"company": "TechCorp", "employees": 500, "industry": "Technology"},
             "hubspot_data": {"deal_stage": "negotiation", "deal_value": 50000},
             "gong_data": {"sentiment": "positive", "next_meeting": "2024-02-15"},
-            "intercom_data": {"satisfaction_score": 4.2, "support_tickets": 2}
+            "intercom_data": {"satisfaction_score": 4.2, "support_tickets": 2},
         }
 
         # Artemis creates workflow using this data
@@ -221,10 +216,10 @@ class TestMCPServerOrchestration:
             "type": "customer_success_workflow",
             "customer_id": "techcorp_001",
             "context": customer_data,
-            "agents_sequence": ["plannr", "coder", "deployer"]
+            "agents_sequence": ["plannr", "coder", "deployer"],
         }
 
-        if hasattr(artemis, 'create_workflow_with_context'):
+        if hasattr(artemis, "create_workflow_with_context"):
             workflow_id = await artemis.create_workflow_with_context(workflow_request)
 
             # Memory system should store workflow context
@@ -242,7 +237,7 @@ class TestMCPServerOrchestration:
                 "customer_id": "techcorp_001",
                 "context": customer_data,
                 "status": "created",
-                "agents": workflow_request["agents_sequence"]
+                "agents": workflow_request["agents_sequence"],
             }
 
             # Store context in memory
@@ -251,7 +246,7 @@ class TestMCPServerOrchestration:
                 "type": "workflow_context",
                 "workflow_id": workflow_id,
                 "data": customer_data,
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             }
 
             assert workflow_id in artemis.workflows
@@ -267,12 +262,17 @@ class TestMCPServerOrchestration:
         # Store historical context in memory
         historical_context = [
             {"request_type": "lead_analysis", "routed_to": "bi", "success": True, "duration": 2.3},
-            {"request_type": "workflow_execution", "routed_to": "artemis", "success": True, "duration": 15.7},
-            {"request_type": "memory_query", "routed_to": "mem0", "success": True, "duration": 0.8}
+            {
+                "request_type": "workflow_execution",
+                "routed_to": "artemis",
+                "success": True,
+                "duration": 15.7,
+            },
+            {"request_type": "memory_query", "routed_to": "mem0", "success": True, "duration": 0.8},
         ]
 
         for context in historical_context:
-            if hasattr(mem0, 'store_routing_history'):
+            if hasattr(mem0, "store_routing_history"):
                 await mem0.store_routing_history(context)
             else:
                 # Mock context storage
@@ -280,16 +280,16 @@ class TestMCPServerOrchestration:
                 mem0.memories[context_id] = {
                     "type": "routing_history",
                     "data": context,
-                    "timestamp": datetime.now()
+                    "timestamp": datetime.now(),
                 }
 
         # New request for lead analysis
         new_request = {
             "type": "lead_analysis",
-            "data": {"lead_source": "apollo", "urgency": "high"}
+            "data": {"lead_source": "apollo", "urgency": "high"},
         }
 
-        if hasattr(unified, 'intelligent_route'):
+        if hasattr(unified, "intelligent_route"):
             routing_decision = await unified.intelligent_route(new_request)
 
             # Should route to BI based on historical success
@@ -299,8 +299,7 @@ class TestMCPServerOrchestration:
             # Mock intelligent routing
             # Analyze historical patterns
             lead_analysis_history = [
-                c for c in historical_context 
-                if c["request_type"] == "lead_analysis"
+                c for c in historical_context if c["request_type"] == "lead_analysis"
             ]
 
             if lead_analysis_history:
@@ -313,7 +312,7 @@ class TestMCPServerOrchestration:
             routing_decision = {
                 "target_server": best_server,
                 "confidence": confidence,
-                "reason": "historical_performance"
+                "reason": "historical_performance",
             }
 
             assert routing_decision["target_server"] == "bi"
@@ -330,11 +329,11 @@ class TestMCPServerOrchestration:
             "server": "bi",
             "error_type": "connection_timeout",
             "timestamp": datetime.now(),
-            "request_id": "req_fail_001"
+            "request_id": "req_fail_001",
         }
 
         # Unified should handle the failure gracefully
-        if hasattr(unified, 'handle_server_failure'):
+        if hasattr(unified, "handle_server_failure"):
             recovery_action = await unified.handle_server_failure(bi_failure_scenario)
 
             assert recovery_action["fallback_server"] is not None
@@ -348,7 +347,7 @@ class TestMCPServerOrchestration:
                 "fallback_server": fallback_options[0],
                 "retry_scheduled": True,
                 "retry_after_seconds": 30,
-                "error_logged": True
+                "error_logged": True,
             }
 
             # Store error in memory for learning
@@ -357,7 +356,7 @@ class TestMCPServerOrchestration:
                 "type": "system_error",
                 "data": bi_failure_scenario,
                 "recovery_action": recovery_action,
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             }
 
             assert recovery_action["fallback_server"] == "artemis"
@@ -376,29 +375,29 @@ class TestMCPServerOrchestration:
                 "avg_response_time": 0.15,
                 "requests_per_second": 150,
                 "cache_hit_ratio": 0.78,
-                "active_connections": 45
+                "active_connections": 45,
             },
             "artemis": {
                 "avg_workflow_time": 25.3,
                 "active_agents": 8,
                 "queue_length": 12,
-                "success_rate": 0.94
+                "success_rate": 0.94,
             },
             "bi": {
                 "avg_query_time": 2.1,
                 "api_calls_per_hour": 500,
                 "cache_efficiency": 0.85,
-                "error_rate": 0.02
+                "error_rate": 0.02,
             },
             "mem0": {
                 "avg_retrieval_time": 0.08,
                 "memory_utilization": 0.67,
                 "correlation_accuracy": 0.89,
-                "optimization_frequency": "daily"
-            }
+                "optimization_frequency": "daily",
+            },
         }
 
-        if hasattr(unified, 'coordinate_optimization'):
+        if hasattr(unified, "coordinate_optimization"):
             optimization_plan = await unified.coordinate_optimization(performance_data)
 
             assert "recommendations" in optimization_plan
@@ -409,33 +408,28 @@ class TestMCPServerOrchestration:
 
             # Analyze bottlenecks
             if performance_data["unified"]["cache_hit_ratio"] < 0.8:
-                recommendations.append({
-                    "server": "unified",
-                    "action": "increase_cache_size",
-                    "priority": "high"
-                })
+                recommendations.append(
+                    {"server": "unified", "action": "increase_cache_size", "priority": "high"}
+                )
 
             if performance_data["artemis"]["queue_length"] > 10:
-                recommendations.append({
-                    "server": "artemis",
-                    "action": "scale_agent_pool",
-                    "priority": "medium"
-                })
+                recommendations.append(
+                    {"server": "artemis", "action": "scale_agent_pool", "priority": "medium"}
+                )
 
             if performance_data["bi"]["avg_query_time"] > 2.0:
-                recommendations.append({
-                    "server": "bi",
-                    "action": "optimize_query_caching",
-                    "priority": "medium"
-                })
+                recommendations.append(
+                    {"server": "bi", "action": "optimize_query_caching", "priority": "medium"}
+                )
 
             optimization_plan = {
                 "recommendations": recommendations,
                 "priority_actions": [r for r in recommendations if r["priority"] == "high"],
-                "estimated_improvement": "15-25% performance gain"
+                "estimated_improvement": "15-25% performance gain",
             }
 
             assert len(optimization_plan["recommendations"]) >= 2
+
 
 class TestDataFlowIntegration:
     """Test data flow between servers for complete workflows"""
@@ -447,15 +441,15 @@ class TestDataFlowIntegration:
             "unified": UnifiedMCPServer(),
             "artemis": ArtemisSwarmOrchestrator(),
             "bi": BusinessIntelligenceServer(),
-            "mem0": Mem0MemoryServer()
+            "mem0": Mem0MemoryServer(),
         }
 
         # Mock connection establishment
         for name, server in servers.items():
-            if hasattr(server, 'connect'):
+            if hasattr(server, "connect"):
                 await server.connect()
             else:
-                setattr(server, 'connected', True)
+                setattr(server, "connected", True)
 
         return servers
 
@@ -470,8 +464,11 @@ class TestDataFlowIntegration:
         customer_data_sources = {
             "apollo": {"company": "InnovaCorp", "employees": 250, "location": "San Francisco"},
             "hubspot": {"deal_id": "deal_456", "stage": "proposal", "value": 75000},
-            "gong": {"last_call_sentiment": "very_positive", "pain_points": ["scalability", "integration"]},
-            "intercom": {"support_tickets": 1, "satisfaction": 4.5}
+            "gong": {
+                "last_call_sentiment": "very_positive",
+                "pain_points": ["scalability", "integration"],
+            },
+            "intercom": {"support_tickets": 1, "satisfaction": 4.5},
         }
 
         # Mock BI data aggregation
@@ -480,11 +477,11 @@ class TestDataFlowIntegration:
             "data_sources": customer_data_sources,
             "risk_score": 0.15,  # Low risk
             "opportunity_score": 0.82,  # High opportunity
-            "recommended_actions": ["schedule_technical_demo", "prepare_implementation_plan"]
+            "recommended_actions": ["schedule_technical_demo", "prepare_implementation_plan"],
         }
 
         # 2. Store insights in memory system
-        if hasattr(mem0, 'store_customer_insights'):
+        if hasattr(mem0, "store_customer_insights"):
             insight_id = await mem0.store_customer_insights(aggregated_insights)
         else:
             # Mock insight storage
@@ -493,7 +490,7 @@ class TestDataFlowIntegration:
                 "type": "customer_insights",
                 "data": aggregated_insights,
                 "timestamp": datetime.now(),
-                "ttl": 86400  # 24 hours
+                "ttl": 86400,  # 24 hours
             }
 
         # 3. Artemis creates action workflow based on insights
@@ -502,10 +499,10 @@ class TestDataFlowIntegration:
             "customer_id": "innovacorp_001",
             "actions": aggregated_insights["recommended_actions"],
             "priority": "high",
-            "context_memory_id": insight_id
+            "context_memory_id": insight_id,
         }
 
-        if hasattr(artemis, 'create_customer_workflow'):
+        if hasattr(artemis, "create_customer_workflow"):
             workflow_id = await artemis.create_customer_workflow(workflow_request)
         else:
             # Mock workflow creation
@@ -514,11 +511,11 @@ class TestDataFlowIntegration:
                 "customer_id": "innovacorp_001",
                 "actions": workflow_request["actions"],
                 "status": "created",
-                "agents_assigned": ["plannr", "coder", "deployer"]
+                "agents_assigned": ["plannr", "coder", "deployer"],
             }
 
         # 4. Unified coordinates the entire pipeline
-        if hasattr(unified, 'track_pipeline_execution'):
+        if hasattr(unified, "track_pipeline_execution"):
             pipeline_status = await unified.track_pipeline_execution(workflow_id)
         else:
             # Mock pipeline tracking
@@ -526,13 +523,13 @@ class TestDataFlowIntegration:
                 "pipeline_id": workflow_id,
                 "stages": {
                     "data_collection": "completed",
-                    "insight_generation": "completed", 
+                    "insight_generation": "completed",
                     "memory_storage": "completed",
                     "workflow_creation": "completed",
-                    "action_execution": "in_progress"
+                    "action_execution": "in_progress",
                 },
                 "overall_status": "in_progress",
-                "estimated_completion": datetime.now() + timedelta(hours=2)
+                "estimated_completion": datetime.now() + timedelta(hours=2),
             }
 
         # Verify pipeline integrity
@@ -552,12 +549,12 @@ class TestDataFlowIntegration:
             "query": "What are the best strategies for customers similar to TechStart Inc?",
             "context": {
                 "customer_profile": "250 employees, SaaS, growing rapidly",
-                "current_challenges": ["scaling", "security", "integration"]
-            }
+                "current_challenges": ["scaling", "security", "integration"],
+            },
         }
 
         # 1. Unified decomposes query into sub-queries
-        if hasattr(unified, 'decompose_query'):
+        if hasattr(unified, "decompose_query"):
             sub_queries = await unified.decompose_query(complex_query)
         else:
             # Mock query decomposition
@@ -565,61 +562,60 @@ class TestDataFlowIntegration:
                 {
                     "server": "mem0",
                     "query": "Find similar customers with 200-300 employees in SaaS",
-                    "type": "similarity_search"
+                    "type": "similarity_search",
                 },
                 {
-                    "server": "bi", 
+                    "server": "bi",
                     "query": "Get success patterns for growing SaaS companies",
-                    "type": "analytics_query"
+                    "type": "analytics_query",
                 },
                 {
                     "server": "artemis",
                     "query": "Generate strategy recommendations based on challenges",
-                    "type": "workflow_generation"
-                }
+                    "type": "workflow_generation",
+                },
             ]
 
         # 2. Execute sub-queries in parallel
         results = {}
 
         # Memory search for similar customers
-        if hasattr(mem0, 'find_similar_customers'):
-            similar_customers = await mem0.find_similar_customers({
-                "employee_range": [200, 300],
-                "industry": "SaaS"
-            })
+        if hasattr(mem0, "find_similar_customers"):
+            similar_customers = await mem0.find_similar_customers(
+                {"employee_range": [200, 300], "industry": "SaaS"}
+            )
         else:
             # Mock similar customer search
             similar_customers = [
                 {"customer_id": "saastech_001", "employees": 275, "success_score": 0.89},
                 {"customer_id": "growthcorp_002", "employees": 220, "success_score": 0.92},
-                {"customer_id": "scaleit_003", "employees": 240, "success_score": 0.85}
+                {"customer_id": "scaleit_003", "employees": 240, "success_score": 0.85},
             ]
 
         results["similar_customers"] = similar_customers
 
         # BI analytics for success patterns
-        if hasattr(bi, 'analyze_success_patterns'):
+        if hasattr(bi, "analyze_success_patterns"):
             success_patterns = await bi.analyze_success_patterns("SaaS", "growth")
         else:
             # Mock success pattern analysis
             success_patterns = {
                 "common_strategies": [
                     "microservices_architecture",
-                    "automated_security_scanning", 
-                    "api_first_integration"
+                    "automated_security_scanning",
+                    "api_first_integration",
                 ],
                 "success_factors": ["early_automation", "security_focus", "scalable_architecture"],
-                "implementation_timeline": "3-6 months"
+                "implementation_timeline": "3-6 months",
             }
 
         results["success_patterns"] = success_patterns
 
         # Artemis workflow recommendations
-        if hasattr(artemis, 'generate_strategy_workflow'):
+        if hasattr(artemis, "generate_strategy_workflow"):
             strategy_workflow = await artemis.generate_strategy_workflow(
                 customer_profile=complex_query["context"]["customer_profile"],
-                challenges=complex_query["context"]["current_challenges"]
+                challenges=complex_query["context"]["current_challenges"],
             )
         else:
             # Mock strategy workflow generation
@@ -627,18 +623,26 @@ class TestDataFlowIntegration:
                 "workflow_id": str(uuid.uuid4()),
                 "phases": [
                     {"phase": "assessment", "duration": "2 weeks", "agents": ["plannr"]},
-                    {"phase": "architecture_design", "duration": "3 weeks", "agents": ["coder", "plannr"]},
-                    {"phase": "implementation", "duration": "8 weeks", "agents": ["coder", "tester"]},
-                    {"phase": "deployment", "duration": "2 weeks", "agents": ["deployer"]}
+                    {
+                        "phase": "architecture_design",
+                        "duration": "3 weeks",
+                        "agents": ["coder", "plannr"],
+                    },
+                    {
+                        "phase": "implementation",
+                        "duration": "8 weeks",
+                        "agents": ["coder", "tester"],
+                    },
+                    {"phase": "deployment", "duration": "2 weeks", "agents": ["deployer"]},
                 ],
                 "estimated_timeline": "15 weeks",
-                "success_probability": 0.87
+                "success_probability": 0.87,
             }
 
         results["strategy_workflow"] = strategy_workflow
 
         # 3. Unified synthesizes final answer
-        if hasattr(unified, 'synthesize_multi_server_response'):
+        if hasattr(unified, "synthesize_multi_server_response"):
             final_answer = await unified.synthesize_multi_server_response(results)
         else:
             # Mock response synthesis
@@ -649,10 +653,10 @@ class TestDataFlowIntegration:
                     "key_strategies": results["success_patterns"]["common_strategies"],
                     "implementation_plan": results["strategy_workflow"]["phases"],
                     "timeline": results["strategy_workflow"]["estimated_timeline"],
-                    "success_probability": results["strategy_workflow"]["success_probability"]
+                    "success_probability": results["strategy_workflow"]["success_probability"],
                 },
                 "confidence": 0.88,
-                "sources": ["memory_analysis", "bi_patterns", "strategy_generation"]
+                "sources": ["memory_analysis", "bi_patterns", "strategy_generation"],
             }
 
         # Verify comprehensive response
@@ -670,15 +674,15 @@ class TestDataFlowIntegration:
         # Simulate real-time customer interaction requiring immediate insights
         real_time_event = {
             "type": "customer_support_escalation",
-            "customer_id": "urgentcorp_001", 
+            "customer_id": "urgentcorp_001",
             "issue": "Production system down",
             "severity": "critical",
             "timestamp": datetime.now(),
-            "support_agent": "agent_007"
+            "support_agent": "agent_007",
         }
 
         # 1. Immediate memory lookup for customer context
-        if hasattr(mem0, 'get_customer_context'):
+        if hasattr(mem0, "get_customer_context"):
             customer_context = await mem0.get_customer_context("urgentcorp_001")
         else:
             # Mock immediate context retrieval
@@ -688,14 +692,13 @@ class TestDataFlowIntegration:
                 "previous_issues": ["scaling_problems", "database_timeout"],
                 "current_plan": "professional",
                 "success_manager": "sarah_johnson",
-                "last_contact": datetime.now() - timedelta(days=3)
+                "last_contact": datetime.now() - timedelta(days=3),
             }
 
         # 2. BI provides immediate risk assessment
-        if hasattr(bi, 'assess_customer_risk'):
+        if hasattr(bi, "assess_customer_risk"):
             risk_assessment = await bi.assess_customer_risk(
-                customer_id="urgentcorp_001",
-                current_issue=real_time_event
+                customer_id="urgentcorp_001", current_issue=real_time_event
             )
         else:
             # Mock risk assessment
@@ -704,16 +707,18 @@ class TestDataFlowIntegration:
                 "revenue_impact": 150000,  # Enterprise customer
                 "recommended_priority": "immediate",
                 "escalation_required": True,
-                "success_manager_notify": True
+                "success_manager_notify": True,
             }
 
         # 3. Artemis creates immediate response workflow
-        if hasattr(artemis, 'create_emergency_workflow'):
-            emergency_workflow = await artemis.create_emergency_workflow({
-                "customer_context": customer_context,
-                "risk_assessment": risk_assessment,
-                "incident": real_time_event
-            })
+        if hasattr(artemis, "create_emergency_workflow"):
+            emergency_workflow = await artemis.create_emergency_workflow(
+                {
+                    "customer_context": customer_context,
+                    "risk_assessment": risk_assessment,
+                    "incident": real_time_event,
+                }
+            )
         else:
             # Mock emergency workflow
             emergency_workflow = {
@@ -722,16 +727,16 @@ class TestDataFlowIntegration:
                 "agents": ["plannr", "coder", "deployer"],  # All hands on deck
                 "immediate_actions": [
                     "notify_success_manager",
-                    "escalate_to_engineering", 
+                    "escalate_to_engineering",
                     "prepare_status_update",
-                    "check_system_health"
+                    "check_system_health",
                 ],
                 "timeline": "immediate",
-                "auto_updates_every": "15 minutes"
+                "auto_updates_every": "15 minutes",
             }
 
         # 4. Unified coordinates real-time response
-        if hasattr(unified, 'coordinate_real_time_response'):
+        if hasattr(unified, "coordinate_real_time_response"):
             response_coordination = await unified.coordinate_real_time_response(
                 emergency_workflow["workflow_id"]
             )
@@ -743,7 +748,7 @@ class TestDataFlowIntegration:
                 "servers_involved": ["unified", "artemis", "bi", "mem0"],
                 "real_time_updates": True,
                 "notification_channels": ["slack", "email", "sms"],
-                "estimated_resolution": datetime.now() + timedelta(hours=2)
+                "estimated_resolution": datetime.now() + timedelta(hours=2),
             }
 
         # Verify real-time response capability
@@ -752,6 +757,7 @@ class TestDataFlowIntegration:
         assert response_coordination["real_time_updates"] is True
         assert len(response_coordination["servers_involved"]) == 4
 
+
 class TestSecurityAndAuthentication:
     """Test security and authentication across server boundaries"""
 
@@ -759,26 +765,16 @@ class TestSecurityAndAuthentication:
     async def secure_server_setup(self):
         """Set up servers with security configurations"""
         security_config = {
-            "authentication": {
-                "enabled": True,
-                "method": "jwt",
-                "token_expiry": 3600
-            },
-            "authorization": {
-                "rbac_enabled": True,
-                "permissions": ["read", "write", "admin"]
-            },
-            "encryption": {
-                "in_transit": True,
-                "at_rest": True
-            }
+            "authentication": {"enabled": True, "method": "jwt", "token_expiry": 3600},
+            "authorization": {"rbac_enabled": True, "permissions": ["read", "write", "admin"]},
+            "encryption": {"in_transit": True, "at_rest": True},
         }
 
         servers = {
             "unified": UnifiedMCPServer(security_config),
             "artemis": ArtemisSwarmOrchestrator(security_config),
             "bi": BusinessIntelligenceServer(security_config),
-            "mem0": Mem0MemoryServer(security_config)
+            "mem0": Mem0MemoryServer(security_config),
         }
 
         return servers
@@ -796,10 +792,10 @@ class TestSecurityAndAuthentication:
             "payload": {"workflow_request": "create_analysis"},
             "auth_token": "jwt_token_mock_12345",
             "timestamp": datetime.now().isoformat(),
-            "signature": "digital_signature_hash"
+            "signature": "digital_signature_hash",
         }
 
-        if hasattr(artemis, 'validate_server_request'):
+        if hasattr(artemis, "validate_server_request"):
             validation_result = await artemis.validate_server_request(secure_request)
 
             assert validation_result["authenticated"] is True
@@ -821,7 +817,7 @@ class TestSecurityAndAuthentication:
                 "authorized": token_valid,  # Simplified for test
                 "signature_valid": signature_valid,
                 "time_valid": time_valid,
-                "request_id": secure_request["request_id"]
+                "request_id": secure_request["request_id"],
             }
 
             assert validation_result["authenticated"] is True
@@ -837,32 +833,27 @@ class TestSecurityAndAuthentication:
             "admin_user": {
                 "user_id": "admin_001",
                 "roles": ["admin"],
-                "permissions": ["read", "write", "delete", "admin"]
+                "permissions": ["read", "write", "delete", "admin"],
             },
             "analyst_user": {
-                "user_id": "analyst_001", 
+                "user_id": "analyst_001",
                 "roles": ["analyst"],
-                "permissions": ["read", "write"]
+                "permissions": ["read", "write"],
             },
-            "viewer_user": {
-                "user_id": "viewer_001",
-                "roles": ["viewer"],
-                "permissions": ["read"]
-            }
+            "viewer_user": {"user_id": "viewer_001", "roles": ["viewer"], "permissions": ["read"]},
         }
 
         # Test access to sensitive BI data
         sensitive_bi_request = {
             "action": "get_revenue_data",
             "resource": "financial_analytics",
-            "sensitivity": "high"
+            "sensitivity": "high",
         }
 
         for user_type, context in user_contexts.items():
-            if hasattr(bi, 'check_access_permissions'):
+            if hasattr(bi, "check_access_permissions"):
                 access_granted = await bi.check_access_permissions(
-                    user_context=context,
-                    request=sensitive_bi_request
+                    user_context=context, request=sensitive_bi_request
                 )
             else:
                 # Mock RBAC check
@@ -886,18 +877,14 @@ class TestSecurityAndAuthentication:
             "customer_pii": {
                 "email": "john.doe@example.com",
                 "phone": "+1-555-123-4567",
-                "address": "123 Main St, Anytown, USA"
+                "address": "123 Main St, Anytown, USA",
             },
-            "financial_data": {
-                "revenue": 1500000,
-                "deals": ["deal_001", "deal_002"]
-            }
+            "financial_data": {"revenue": 1500000, "deals": ["deal_001", "deal_002"]},
         }
 
-        if hasattr(unified, 'encrypt_for_transfer'):
+        if hasattr(unified, "encrypt_for_transfer"):
             encrypted_payload = await unified.encrypt_for_transfer(
-                data=sensitive_data,
-                target_server="mem0"
+                data=sensitive_data, target_server="mem0"
             )
 
             assert encrypted_payload["encrypted"] is True
@@ -915,16 +902,14 @@ class TestSecurityAndAuthentication:
                 "encrypted": True,
                 "ciphertext": encrypted_data,
                 "algorithm": "AES-256-GCM",
-                "key_id": "key_001"
+                "key_id": "key_001",
             }
 
             # Verify data is encrypted (not readable)
             assert encrypted_payload["ciphertext"] != json.dumps(sensitive_data)
 
             # Mock decryption at destination
-            decrypted_data = json.loads(
-                base64.b64decode(encrypted_payload["ciphertext"]).decode()
-            )
+            decrypted_data = json.loads(base64.b64decode(encrypted_payload["ciphertext"]).decode())
             assert decrypted_data == sensitive_data
 
     async def test_audit_logging_across_servers(self, secure_server_setup):
@@ -938,29 +923,29 @@ class TestSecurityAndAuthentication:
                 "operation": "route_request",
                 "user": "user_001",
                 "resource": "workflow_creation",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             {
-                "server": "artemis", 
+                "server": "artemis",
                 "operation": "create_workflow",
                 "user": "user_001",
                 "resource": "customer_workflow_456",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             {
                 "server": "bi",
                 "operation": "access_customer_data",
-                "user": "user_001", 
+                "user": "user_001",
                 "resource": "customer_123_profile",
-                "timestamp": datetime.now()
+                "timestamp": datetime.now(),
             },
             {
                 "server": "mem0",
                 "operation": "store_sensitive_memory",
                 "user": "user_001",
                 "resource": "memory_789",
-                "timestamp": datetime.now()
-            }
+                "timestamp": datetime.now(),
+            },
         ]
 
         audit_logs = []
@@ -968,7 +953,7 @@ class TestSecurityAndAuthentication:
         for operation in audit_operations:
             server = servers[operation["server"]]
 
-            if hasattr(server, 'log_audit_event'):
+            if hasattr(server, "log_audit_event"):
                 audit_entry = await server.log_audit_event(operation)
             else:
                 # Mock audit logging
@@ -981,7 +966,7 @@ class TestSecurityAndAuthentication:
                     "timestamp": operation["timestamp"],
                     "ip_address": "192.168.1.100",
                     "user_agent": "MCP-Client/1.0",
-                    "success": True
+                    "success": True,
                 }
 
             audit_logs.append(audit_entry)
@@ -995,6 +980,7 @@ class TestSecurityAndAuthentication:
         servers_logged = {log["server"] for log in audit_logs}
         assert servers_logged == {"unified", "artemis", "bi", "mem0"}
 
+
 class TestPerformanceAndScalability:
     """Test performance and scalability across integrated servers"""
 
@@ -1005,7 +991,7 @@ class TestPerformanceAndScalability:
             "unified": UnifiedMCPServer({"performance_monitoring": True}),
             "artemis": ArtemisSwarmOrchestrator({"metrics_enabled": True}),
             "bi": BusinessIntelligenceServer({"analytics_enabled": True}),
-            "mem0": Mem0MemoryServer({"performance_tracking": True})
+            "mem0": Mem0MemoryServer({"performance_tracking": True}),
         }
 
         return servers
@@ -1023,7 +1009,7 @@ class TestPerformanceAndScalability:
                 "id": f"req_{i:03d}",
                 "type": request_type,
                 "timestamp": datetime.now(),
-                "payload": {"data": f"test_data_{i}"}
+                "payload": {"data": f"test_data_{i}"},
             }
             concurrent_requests.append(request)
 
@@ -1036,12 +1022,12 @@ class TestPerformanceAndScalability:
                 "workflow": servers["artemis"],
                 "analytics": servers["bi"],
                 "memory": servers["mem0"],
-                "routing": servers["unified"]
+                "routing": servers["unified"],
             }
 
             target_server = server_mapping[request["type"]]
 
-            if hasattr(target_server, 'process_request'):
+            if hasattr(target_server, "process_request"):
                 result = await target_server.process_request(request)
             else:
                 # Mock request processing with delay
@@ -1050,7 +1036,7 @@ class TestPerformanceAndScalability:
                     "request_id": request["id"],
                     "status": "completed",
                     "server": request["type"],
-                    "response_data": f"processed_{request['payload']['data']}"
+                    "response_data": f"processed_{request['payload']['data']}",
                 }
 
             end_time = time.time()
@@ -1088,7 +1074,7 @@ class TestPerformanceAndScalability:
                 "id": f"mem_{i:04d}",
                 "content": f"Memory content {i} with additional data " * 20,  # ~500 chars each
                 "type": "stress_test",
-                "metadata": {"batch": i // 100, "index": i}
+                "metadata": {"batch": i // 100, "index": i},
             }
             large_memory_dataset.append(memory_entry)
 
@@ -1099,11 +1085,11 @@ class TestPerformanceAndScalability:
         for entry in large_memory_dataset:
             entry_start = time.time()
 
-            if hasattr(mem0, 'store_memory'):
+            if hasattr(mem0, "store_memory"):
                 await mem0.store_memory(entry)
             else:
                 # Mock memory storage
-                mem0.memories = getattr(mem0, 'memories', {})
+                mem0.memories = getattr(mem0, "memories", {})
                 mem0.memories[entry["id"]] = entry
 
             storage_times.append(time.time() - entry_start)
@@ -1113,7 +1099,7 @@ class TestPerformanceAndScalability:
         # Test optimization performance
         optimization_start = time.time()
 
-        if hasattr(mem0, 'optimize_memories'):
+        if hasattr(mem0, "optimize_memories"):
             optimization_result = await mem0.optimize_memories()
         else:
             # Mock memory optimization
@@ -1122,7 +1108,7 @@ class TestPerformanceAndScalability:
                 "memories_processed": 1000,
                 "duplicates_removed": 0,  # No duplicates in this test
                 "compression_ratio": 0.95,
-                "optimization_time": 0.5
+                "optimization_time": 0.5,
             }
 
         optimization_time = time.time() - optimization_start
@@ -1146,12 +1132,12 @@ class TestPerformanceAndScalability:
         cache_test_data = {
             "customer_profile": {
                 "customer_id": "cache_test_001",
-                "profile_data": "large profile data " * 100  # ~2KB data
+                "profile_data": "large profile data " * 100,  # ~2KB data
             },
             "analytics_result": {
                 "query": "revenue_analysis",
-                "result": "analytics result " * 50  # ~1KB data
-            }
+                "result": "analytics result " * 50,  # ~1KB data
+            },
         }
 
         # First request (cache miss) - should be slower
@@ -1159,7 +1145,7 @@ class TestPerformanceAndScalability:
         for i in range(5):
             start_time = time.time()
 
-            if hasattr(unified, 'get_cached_data'):
+            if hasattr(unified, "get_cached_data"):
                 result = await unified.get_cached_data(f"cache_test_{i}")
             else:
                 # Mock cache miss - simulate data retrieval
@@ -1167,11 +1153,11 @@ class TestPerformanceAndScalability:
                 result = cache_test_data["customer_profile"]
 
                 # Store in cache
-                unified.cache = getattr(unified, 'cache', {})
+                unified.cache = getattr(unified, "cache", {})
                 unified.cache[f"cache_test_{i}"] = {
                     "data": result,
                     "timestamp": datetime.now(),
-                    "ttl": 3600
+                    "ttl": 3600,
                 }
 
             cache_miss_times.append(time.time() - start_time)
@@ -1181,7 +1167,7 @@ class TestPerformanceAndScalability:
         for i in range(5):
             start_time = time.time()
 
-            if hasattr(unified, 'get_cached_data'):
+            if hasattr(unified, "get_cached_data"):
                 result = await unified.get_cached_data(f"cache_test_{i}")
             else:
                 # Mock cache hit
@@ -1200,6 +1186,7 @@ class TestPerformanceAndScalability:
         # Calculate performance improvement
         improvement_ratio = avg_cache_miss / avg_cache_hit
         assert improvement_ratio > 5  # At least 5x improvement with caching
+
 
 if __name__ == "__main__":
     # Run the integration tests

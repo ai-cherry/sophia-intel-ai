@@ -3,44 +3,59 @@ Mem0 MCP Server - Advanced Memory-Aware AI Agent Integration
 Provides persistent, adaptive memory capabilities for Sophia AI V8+
 """
 
-import asyncio
-import json
 import logging
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 try:
     from mcp.server import Server
-    from mcp.types import Tool, TextContent
+    from mcp.types import TextContent, Tool
 except ImportError:
     # Fallback for development
     class Server:
-        def __init__(self, name: str): self.name = name
-        def register_tool(self, name: str, func): pass
-    class Tool: pass
-    class TextContent: pass
+        def __init__(self, name: str):
+            self.name = name
+
+        def register_tool(self, name: str, func):
+            pass
+
+    class Tool:
+        pass
+
+    class TextContent:
+        pass
+
 
 try:
     from mem0 import MemoryClient
 except ImportError:
     # Mock for development
     class MemoryClient:
-        def __init__(self, api_key: str): self.api_key = api_key
-        async def add(self, messages: List[Dict], user_id: str) -> Dict: return {"id": "mock"}
-        async def search(self, query: str, user_id: str) -> List[Dict]: return []
-        async def get_all(self, user_id: str) -> List[Dict]: return []
+        def __init__(self, api_key: str):
+            self.api_key = api_key
+
+        async def add(self, messages: List[Dict], user_id: str) -> Dict:
+            return {"id": "mock"}
+
+        async def search(self, query: str, user_id: str) -> List[Dict]:
+            return []
+
+        async def get_all(self, user_id: str) -> List[Dict]:
+            return []
+
 
 import os
-from agno import Agent
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class MemoryContext:
     """Enhanced memory context with adaptive learning"""
+
     user_id: str
     session_id: str
     domain: str  # e.g., "gong_analysis", "salesforce_insights"
@@ -48,6 +63,7 @@ class MemoryContext:
     access_count: int = 0
     last_accessed: datetime = None
     adaptation_score: float = 0.0  # Learning effectiveness
+
 
 class Mem0MCPServer(Server):
     """
@@ -95,19 +111,29 @@ class Mem0MCPServer(Server):
                     "properties": {
                         "content": {"type": "string", "description": "Memory content to store"},
                         "user_id": {"type": "string", "description": "User/agent identifier"},
-                        "domain": {"type": "string", "description": "Business domain (gong, salesforce, etc.)"},
-                        "priority": {"type": "integer", "description": "Memory priority 1-5", "default": 1},
-                        "metadata": {"type": "object", "description": "Additional context metadata"}
+                        "domain": {
+                            "type": "string",
+                            "description": "Business domain (gong, salesforce, etc.)",
+                        },
+                        "priority": {
+                            "type": "integer",
+                            "description": "Memory priority 1-5",
+                            "default": 1,
+                        },
+                        "metadata": {
+                            "type": "object",
+                            "description": "Additional context metadata",
+                        },
                     },
-                    "required": ["content", "user_id", "domain"]
-                }
-            )
+                    "required": ["content", "user_id", "domain"],
+                },
+            ),
         )
 
         self.register_tool(
             "recall_memory",
             Tool(
-                name="recall_memory", 
+                name="recall_memory",
                 description="Adaptive memory recall with learning optimization",
                 inputSchema={
                     "type": "object",
@@ -116,11 +142,15 @@ class Mem0MCPServer(Server):
                         "user_id": {"type": "string", "description": "User/agent identifier"},
                         "domain": {"type": "string", "description": "Business domain filter"},
                         "limit": {"type": "integer", "description": "Max results", "default": 10},
-                        "adaptive": {"type": "boolean", "description": "Enable adaptive learning", "default": True}
+                        "adaptive": {
+                            "type": "boolean",
+                            "description": "Enable adaptive learning",
+                            "default": True,
+                        },
                     },
-                    "required": ["query", "user_id"]
-                }
-            )
+                    "required": ["query", "user_id"],
+                },
+            ),
         )
 
         self.register_tool(
@@ -129,15 +159,23 @@ class Mem0MCPServer(Server):
                 name="correlate_memories",
                 description="Cross-domain memory correlation for business intelligence",
                 inputSchema={
-                    "type": "object", 
+                    "type": "object",
                     "properties": {
-                        "domains": {"type": "array", "items": {"type": "string"}, "description": "Domains to correlate"},
+                        "domains": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Domains to correlate",
+                        },
                         "user_id": {"type": "string", "description": "User/agent identifier"},
-                        "correlation_type": {"type": "string", "enum": ["temporal", "semantic", "causal"], "default": "semantic"}
+                        "correlation_type": {
+                            "type": "string",
+                            "enum": ["temporal", "semantic", "causal"],
+                            "default": "semantic",
+                        },
                     },
-                    "required": ["domains", "user_id"]
-                }
-            )
+                    "required": ["domains", "user_id"],
+                },
+            ),
         )
 
         self.register_tool(
@@ -149,15 +187,25 @@ class Mem0MCPServer(Server):
                     "type": "object",
                     "properties": {
                         "user_id": {"type": "string", "description": "User/agent identifier"},
-                        "strategy": {"type": "string", "enum": ["frequency", "recency", "importance"], "default": "frequency"}
+                        "strategy": {
+                            "type": "string",
+                            "enum": ["frequency", "recency", "importance"],
+                            "default": "frequency",
+                        },
                     },
-                    "required": ["user_id"]
-                }
-            )
+                    "required": ["user_id"],
+                },
+            ),
         )
 
-    async def store_memory(self, content: str, user_id: str, domain: str, 
-                          priority: int = 1, metadata: Optional[Dict] = None) -> Dict[str, Any]:
+    async def store_memory(
+        self,
+        content: str,
+        user_id: str,
+        domain: str,
+        priority: int = 1,
+        metadata: Optional[Dict] = None,
+    ) -> Dict[str, Any]:
         """Store adaptive memory with enhanced context"""
         try:
             # Create enhanced message for Mem0
@@ -169,8 +217,8 @@ class Mem0MCPServer(Server):
                     "priority": priority,
                     "timestamp": datetime.now().isoformat(),
                     "sophia_version": "v8+",
-                    **(metadata or {})
-                }
+                    **(metadata or {}),
+                },
             }
 
             # Store in Mem0
@@ -183,7 +231,7 @@ class Mem0MCPServer(Server):
                     user_id=user_id,
                     session_id=f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
                     domain=domain,
-                    priority=priority
+                    priority=priority,
                 )
 
             # Update access patterns for adaptive learning
@@ -198,15 +246,21 @@ class Mem0MCPServer(Server):
                 "memory_id": result.get("id", "unknown"),
                 "domain": domain,
                 "priority": priority,
-                "adaptive_score": self._calculate_adaptation_score(context_key)
+                "adaptive_score": self._calculate_adaptation_score(context_key),
             }
 
         except Exception as e:
             logger.error(f"❌ Error storing memory: {e}")
             return {"success": False, "error": str(e)}
 
-    async def recall_memory(self, query: str, user_id: str, domain: Optional[str] = None,
-                           limit: int = 10, adaptive: bool = True) -> Dict[str, Any]:
+    async def recall_memory(
+        self,
+        query: str,
+        user_id: str,
+        domain: Optional[str] = None,
+        limit: int = 10,
+        adaptive: bool = True,
+    ) -> Dict[str, Any]:
         """Adaptive memory recall with learning optimization"""
         try:
             # Check cache first for performance
@@ -246,14 +300,13 @@ class Mem0MCPServer(Server):
                 "count": len(memories),
                 "query": query,
                 "domain": domain,
-                "adaptive_insights": self._generate_adaptive_insights(user_id, domain) if adaptive else None
+                "adaptive_insights": (
+                    self._generate_adaptive_insights(user_id, domain) if adaptive else None
+                ),
             }
 
             # Cache result for performance
-            self.memory_cache[cache_key] = {
-                "data": result,
-                "timestamp": datetime.now()
-            }
+            self.memory_cache[cache_key] = {"data": result, "timestamp": datetime.now()}
 
             logger.info(f"✅ Recalled {len(memories)} memories for query: {query[:50]}...")
             return result
@@ -262,8 +315,9 @@ class Mem0MCPServer(Server):
             logger.error(f"❌ Error recalling memory: {e}")
             return {"success": False, "error": str(e)}
 
-    async def correlate_memories(self, domains: List[str], user_id: str, 
-                                correlation_type: str = "semantic") -> Dict[str, Any]:
+    async def correlate_memories(
+        self, domains: List[str], user_id: str, correlation_type: str = "semantic"
+    ) -> Dict[str, Any]:
         """Cross-domain memory correlation for business intelligence"""
         try:
             correlations = {}
@@ -273,8 +327,7 @@ class Mem0MCPServer(Server):
             for domain in domains:
                 memories = await self.mem0.search(query="", user_id=user_id)
                 domain_memories[domain] = [
-                    m for m in memories 
-                    if m.get("metadata", {}).get("domain") == domain
+                    m for m in memories if m.get("metadata", {}).get("domain") == domain
                 ]
 
             # Perform correlation analysis
@@ -292,7 +345,7 @@ class Mem0MCPServer(Server):
                 "correlations": correlations,
                 "domains": domains,
                 "correlation_type": correlation_type,
-                "insights": self._generate_correlation_insights(correlations)
+                "insights": self._generate_correlation_insights(correlations),
             }
 
         except Exception as e:
@@ -320,7 +373,7 @@ class Mem0MCPServer(Server):
                 "success": True,
                 "strategy": strategy,
                 "optimizations": optimization_results,
-                "memory_count": len(all_memories)
+                "memory_count": len(all_memories),
             }
 
         except Exception as e:
@@ -356,13 +409,17 @@ class Mem0MCPServer(Server):
         insights = {
             "adaptation_score": adaptation_score,
             "access_frequency": context.access_count,
-            "learning_effectiveness": "high" if adaptation_score > 0.7 else "medium" if adaptation_score > 0.3 else "low",
-            "recommendations": []
+            "learning_effectiveness": (
+                "high" if adaptation_score > 0.7 else "medium" if adaptation_score > 0.3 else "low"
+            ),
+            "recommendations": [],
         }
 
         # Generate recommendations
         if adaptation_score < 0.3:
-            insights["recommendations"].append("Consider more frequent memory access for better learning")
+            insights["recommendations"].append(
+                "Consider more frequent memory access for better learning"
+            )
         if context.access_count > 100:
             insights["recommendations"].append("High usage detected - consider memory optimization")
 
@@ -388,7 +445,7 @@ class Mem0MCPServer(Server):
         return [
             "Cross-domain patterns detected",
             "Potential workflow optimizations identified",
-            "Business intelligence opportunities found"
+            "Business intelligence opportunities found",
         ]
 
     def _optimize_by_frequency(self, user_id: str, memories: List) -> Dict[str, Any]:
@@ -403,10 +460,12 @@ class Mem0MCPServer(Server):
         """Optimize memories based on importance scores"""
         return {"optimized": len(memories), "strategy": "importance"}
 
+
 # Factory function for easy instantiation
 def create_mem0_server(config: Dict[str, Any]) -> Mem0MCPServer:
     """Create and configure Mem0 MCP Server"""
     return Mem0MCPServer(config)
+
 
 # CLI entry point for standalone server
 if __name__ == "__main__":
@@ -418,10 +477,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    config = {
-        "mem0_api_key": args.mem0_key,
-        "cache_ttl": 300
-    }
+    config = {"mem0_api_key": args.mem0_key, "cache_ttl": 300}
 
     server = create_mem0_server(config)
 

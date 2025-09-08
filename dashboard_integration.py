@@ -8,21 +8,15 @@ a unified interface for all dashboards.
 """
 
 import argparse
-import asyncio
-import json
 import logging
-import os
-import sys
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 import aiohttp
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel
 
 # Configure logging
@@ -69,6 +63,7 @@ API_URLS = {
 # In-memory cache
 dashboard_data_cache = {}
 
+
 # Models
 class HealthStatus(BaseModel):
     status: str
@@ -76,10 +71,12 @@ class HealthStatus(BaseModel):
     components: Dict[str, str]
     services: Dict[str, str]
 
+
 class DashboardMetrics(BaseModel):
     component: str
     metrics: Dict[str, Any]
     timestamp: str
+
 
 # Routes
 @app.get("/", response_class=HTMLResponse)
@@ -147,12 +144,14 @@ async def root():
     """
     return html_content
 
+
 @app.get("/redirect/{dashboard}")
 async def redirect_to_dashboard(dashboard: str):
     """Redirect to the specified dashboard"""
     if dashboard in DASHBOARD_URLS:
         return RedirectResponse(url=DASHBOARD_URLS[dashboard])
     raise HTTPException(status_code=404, detail=f"Dashboard '{dashboard}' not found")
+
 
 @app.get("/health", response_model=HealthStatus)
 async def health_check():
@@ -194,12 +193,12 @@ async def health_check():
                 services[f"{name}_dashboard"] = "unhealthy"
 
     return HealthStatus(
-        status="healthy" if all(
-            v == "healthy" for v in components.values()) else "degraded",
+        status="healthy" if all(v == "healthy" for v in components.values()) else "degraded",
         timestamp=datetime.now().isoformat(),
         components=components,
-        services=services
+        services=services,
     )
+
 
 @app.get("/api/dashboard/unified")
 async def unified_dashboard_data():
@@ -220,7 +219,9 @@ async def unified_dashboard_data():
         "components": {},
     }
 
-    async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT)) as session:
+    async with aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT)
+    ) as session:
         # Fetch Sophia API data
         try:
             async with session.get(f"{API_URLS['sophia']}/health") as response:
@@ -255,6 +256,7 @@ async def unified_dashboard_data():
 
     return data
 
+
 @app.post("/api/dashboard/metrics")
 async def update_metrics(metrics: DashboardMetrics):
     """Update dashboard metrics from any component"""
@@ -272,6 +274,7 @@ async def update_metrics(metrics: DashboardMetrics):
 
     return {"status": "success", "message": f"Updated metrics for {component}"}
 
+
 @app.get("/api/dashboard/{component}/metrics")
 async def get_component_metrics(component: str):
     """Get metrics for a specific component"""
@@ -281,19 +284,19 @@ async def get_component_metrics(component: str):
         cache_entry = dashboard_data_cache[cache_key]
         return cache_entry["data"]
 
-    raise HTTPException(
-        status_code=404, detail=f"No metrics found for component '{component}'")
+    raise HTTPException(status_code=404, detail=f"No metrics found for component '{component}'")
+
 
 def main():
     """Run the dashboard integration service"""
-    parser = argparse.ArgumentParser(
-        description="Sophia AI Dashboard Integration Service")
+    parser = argparse.ArgumentParser(description="Sophia AI Dashboard Integration Service")
     parser.add_argument("--host", type=str, default="${BIND_IP}", help="Host to bind to")
     parser.add_argument("--port", type=int, default=8505, help="Port to bind to")
     args = parser.parse_args()
 
     logger.info(f"Starting dashboard integration service on {args.host}:{args.port}")
     uvicorn.run(app, host=args.host, port=args.port)
+
 
 if __name__ == "__main__":
     main()

@@ -9,23 +9,25 @@ import json
 import logging
 import os
 import time
-from typing import Dict, Any, Optional, List
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import Any, Dict, Optional
 
-import redis
 import httpx
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
+import redis
 import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class MCPConfig:
     """MCP Server Configuration"""
+
     redis_url: str = "${REDIS_URL}"
     cache_ttl: int = 300  # 5 minutes
     lambda_api_key: str = ""
@@ -33,6 +35,7 @@ class MCPConfig:
     openrouter_api_key: str = ""
     max_retries: int = 3
     timeout: int = 30
+
 
 class UnifiedMCPServer:
     """Unified MCP Server with Redis caching and smart routing"""
@@ -61,12 +64,10 @@ class UnifiedMCPServer:
                 self.config.redis_url,
                 decode_responses=True,
                 socket_connect_timeout=5,
-                socket_timeout=5
+                socket_timeout=5,
             )
             # Test connection
-            await asyncio.get_event_loop().run_in_executor(
-                None, self.redis_client.ping
-            )
+            await asyncio.get_event_loop().run_in_executor(None, self.redis_client.ping)
             logger.info("✅ Redis connection established")
         except Exception as e:
             logger.warning(f"⚠️ Redis unavailable, using memory cache: {e}")
@@ -95,15 +96,14 @@ class UnifiedMCPServer:
         try:
             ttl = ttl or self.config.cache_ttl
             await asyncio.get_event_loop().run_in_executor(
-                None, 
-                lambda: self.redis_client.setex(
-                    key, ttl, json.dumps(data, default=str)
-                )
+                None, lambda: self.redis_client.setex(key, ttl, json.dumps(data, default=str))
             )
         except Exception as e:
             logger.warning(f"Cache write error: {e}")
 
-    async def smart_route_request(self, request_type: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def smart_route_request(
+        self, request_type: str, payload: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Smart routing based on request complexity and available resources"""
 
         # Check cache first
@@ -139,7 +139,7 @@ class UnifiedMCPServer:
                 response = await client.post(
                     "https://cloud.lambdalabs.com/api/v1/instances",
                     headers={"Authorization": f"Bearer {self.config.lambda_api_key}"},
-                    json=payload
+                    json=payload,
                 )
 
                 if response.status_code == 200:
@@ -160,9 +160,9 @@ class UnifiedMCPServer:
                 "data": {
                     "processed_records": payload.get("record_count", 0),
                     "processing_time": 0.1,
-                    "source": "estuary_flow"
+                    "source": "estuary_flow",
                 },
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
             return result
 
@@ -181,13 +181,13 @@ class UnifiedMCPServer:
                     "https://openrouter.ai/api/v1/chat/completions",
                     headers={
                         "Authorization": f"Bearer {self.config.openrouter_api_key}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json={
                         "model": payload.get("model", "anthropic/claude-3.5-haiku"),
                         "messages": payload.get("messages", []),
-                        "max_tokens": payload.get("max_tokens", 1000)
-                    }
+                        "max_tokens": payload.get("max_tokens", 1000),
+                    },
                 )
 
                 if response.status_code == 200:
@@ -205,12 +205,8 @@ class UnifiedMCPServer:
             # Simple local processing
             result = {
                 "success": True,
-                "data": {
-                    "processed": True,
-                    "payload_size": len(str(payload)),
-                    "source": "local"
-                },
-                "timestamp": datetime.now().isoformat()
+                "data": {"processed": True, "payload_size": len(str(payload)), "source": "local"},
+                "timestamp": datetime.now().isoformat(),
             }
             return result
 
@@ -233,7 +229,7 @@ class UnifiedMCPServer:
                 "status": "healthy",
                 "timestamp": datetime.now().isoformat(),
                 "redis": redis_status,
-                "version": "1.0.0"
+                "version": "1.0.0",
             }
 
         @self.app.post("/mcp/route")
@@ -262,7 +258,7 @@ class UnifiedMCPServer:
                     return {
                         "redis_connected": True,
                         "redis_memory": info.get("used_memory_human", "unknown"),
-                        "redis_connections": info.get("connected_clients", 0)
+                        "redis_connections": info.get("connected_clients", 0),
                     }
                 else:
                     return {"redis_connected": False}
@@ -274,14 +270,13 @@ class UnifiedMCPServer:
             """Clear MCP cache"""
             try:
                 if self.redis_client:
-                    await asyncio.get_event_loop().run_in_executor(
-                        None, self.redis_client.flushdb
-                    )
+                    await asyncio.get_event_loop().run_in_executor(None, self.redis_client.flushdb)
                     return {"success": True, "message": "Cache cleared"}
                 else:
                     return {"success": False, "message": "Redis not connected"}
             except Exception as e:
                 return {"success": False, "error": str(e)}
+
 
 def create_mcp_server() -> UnifiedMCPServer:
     """Create and configure MCP server"""
@@ -292,18 +287,16 @@ def create_mcp_server() -> UnifiedMCPServer:
         openrouter_api_key=os.getenv("OPENROUTER_API_KEY", ""),
         cache_ttl=int(os.getenv("MCP_CACHE_TTL", "300")),
         max_retries=int(os.getenv("MCP_MAX_RETRIES", "3")),
-        timeout=int(os.getenv("MCP_TIMEOUT", "30"))
+        timeout=int(os.getenv("MCP_TIMEOUT", "30")),
     )
 
     return UnifiedMCPServer(config)
+
 
 if __name__ == "__main__":
     server = create_mcp_server()
 
     # Run server
     uvicorn.run(
-        server.app,
-        host="${BIND_IP}",
-        port=int(os.getenv("MCP_PORT", "8001")),
-        log_level="info"
+        server.app, host="${BIND_IP}", port=int(os.getenv("MCP_PORT", "8001")), log_level="info"
     )

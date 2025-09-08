@@ -7,6 +7,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class UnifiedEnvironmentConfig:
     """Unified environment configuration management"""
 
@@ -83,5 +84,6 @@ class UnifiedEnvironmentConfig:
     def is_development(self) -> bool:
         """Check if running in development environment"""
         return self.environment == "development"
+
 
 config = UnifiedEnvironmentConfig()

@@ -5,13 +5,12 @@ Support System Module
 Handles customer support, ticket management, knowledge base, and customer interactions.
 """
 
-import json
 import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class TicketStatus(Enum):

@@ -4,18 +4,18 @@ Integration test for Artemis and UnifiedIaCAgent
 """
 
 import asyncio
-import json
 import os
 import tempfile
-from typing import Any, Dict
 
 from artemis.orchestrator.core_orchestrator import ArtemisOrchestrator
+
 # Import the core components
-from core.clean_architecture.agents.unified_iac_agent import (IaCConfig,
-                                                              IaCEnvironment,
-                                                              IaCOperation,
-                                                              IaCTool,
-                                                              UnifiedIaCAgent)
+from core.clean_architecture.agents.unified_iac_agent import (
+    IaCConfig,
+    IaCTool,
+    UnifiedIaCAgent,
+)
+
 
 async def test_artemis_iac_integration():
     """Test the integration between Artemis and UnifiedIaCAgent"""
@@ -26,7 +26,7 @@ async def test_artemis_iac_integration():
     config = IaCConfig(
         enable_performance_monitoring=True,
         enable_cost_optimization=True,
-        enable_conflict_resolution=True
+        enable_conflict_resolution=True,
     )
     iac_agent = UnifiedIaCAgent(config)
 
@@ -69,10 +69,9 @@ async def test_artemis_iac_integration():
     if validation_result.is_success:
         print("✅ Validation successful!")
         print(f"Validation score: {validation_result.value['validation_score']}/100")
-        if validation_result.value['security_issues']:
-            print(
-                f"Security issues found: {len(validation_result.value['security_issues'])}")
-        if validation_result.value['recommendations']:
+        if validation_result.value["security_issues"]:
+            print(f"Security issues found: {len(validation_result.value['security_issues'])}")
+        if validation_result.value["recommendations"]:
             print(f"Recommendations: {len(validation_result.value['recommendations'])}")
     else:
         print(f"❌ Validation failed: {validation_result.error}")
@@ -87,12 +86,13 @@ async def test_artemis_iac_integration():
             "configuration": {"instance_type": "t3.medium"},
             "dependencies": [],
             "tags": {"Environment": "dev"},
-            "estimated_cost": 50.0
+            "estimated_cost": 50.0,
         }
     ]
 
     # Convert to IaCResource objects
     from core.clean_architecture.agents.unified_iac_agent import IaCResource
+
     iac_resources = [
         IaCResource(
             name=r["name"],
@@ -101,7 +101,7 @@ async def test_artemis_iac_integration():
             configuration=r["configuration"],
             dependencies=r.get("dependencies", []),
             tags=r.get("tags", {}),
-            estimated_cost=r["estimated_cost"]
+            estimated_cost=r["estimated_cost"],
         )
         for r in resources
     ]
@@ -113,7 +113,8 @@ async def test_artemis_iac_integration():
         print(f"Current cost: ${optimization_result.value['current_cost']:.2f}")
         print(f"Optimized cost: ${optimization_result.value['optimized_cost']:.2f}")
         print(
-            f"Potential savings: ${optimization_result.value['potential_savings']:.2f} ({optimization_result.value['savings_percentage']:.1f}%)")
+            f"Potential savings: ${optimization_result.value['potential_savings']:.2f} ({optimization_result.value['savings_percentage']:.1f}%)"
+        )
     else:
         print(f"❌ Cost optimization failed: {optimization_result.error}")
 
@@ -144,14 +145,16 @@ async def test_artemis_iac_integration():
         "latest_input": "Can you help me optimize my AWS infrastructure costs?",
         "history": [
             {"role": "user", "content": "I need help with my cloud infrastructure"},
-            {"role": "assistant",
-                "content": "I can help with that. What specifically do you need assistance with?"}
+            {
+                "role": "assistant",
+                "content": "I can help with that. What specifically do you need assistance with?",
+            },
         ],
         "context": {
             "project_type": "infrastructure",
             "cloud_provider": "aws",
-            "iac_tool": "terraform"
-        }
+            "iac_tool": "terraform",
+        },
     }
 
     hand_off_result = await artemis.adaptive_hand_off(session_state)
@@ -162,6 +165,7 @@ async def test_artemis_iac_integration():
 
     print("\n🎉 All integration tests completed successfully!")
     print("The UnifiedIaCAgent is properly aligned with the Artemis architecture!")
+
 
 if __name__ == "__main__":
     asyncio.run(test_artemis_iac_integration())

@@ -2,20 +2,22 @@
 Standardized response models for AI-agent friendly deterministic outputs
 """
 
-from dataclasses import dataclass, asdict
-from datetime import datetime
-from typing import Optional, Dict, Any, List
-from enum import Enum
 import uuid
-import time
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
 
 class ResponseStatus(Enum):
     """Standard response status codes"""
+
     SUCCESS = "success"
     PARTIAL = "partial"
     ERROR = "error"
     TIMEOUT = "timeout"
     RATE_LIMITED = "rate_limited"
+
 
 @dataclass
 class ServiceResponse:
@@ -64,7 +66,7 @@ class ServiceResponse:
             "version": self.version,
             "confidence": self.confidence,
             "sources": self.sources,
-            "metadata": self.metadata
+            "metadata": self.metadata,
         }
 
     @classmethod
@@ -74,7 +76,7 @@ class ServiceResponse:
         service_name: str,
         confidence: float = 1.0,
         sources: List[str] = None,
-        duration_ms: float = 0.0
+        duration_ms: float = 0.0,
     ) -> "ServiceResponse":
         """Create a successful response"""
         return cls(
@@ -84,7 +86,7 @@ class ServiceResponse:
             service_name=service_name,
             confidence=confidence,
             sources=sources or [],
-            duration_ms=duration_ms
+            duration_ms=duration_ms,
         )
 
     @classmethod
@@ -93,7 +95,7 @@ class ServiceResponse:
         error: str,
         service_name: str,
         status: ResponseStatus = ResponseStatus.ERROR,
-        duration_ms: float = 0.0
+        duration_ms: float = 0.0,
     ) -> "ServiceResponse":
         """Create an error response"""
         return cls(
@@ -102,7 +104,7 @@ class ServiceResponse:
             error=error,
             service_name=service_name,
             confidence=0.0,
-            duration_ms=duration_ms
+            duration_ms=duration_ms,
         )
 
     @classmethod
@@ -113,7 +115,7 @@ class ServiceResponse:
         confidence: float,
         sources: List[str] = None,
         duration_ms: float = 0.0,
-        error: str = None
+        error: str = None,
     ) -> "ServiceResponse":
         """Create a partial success response"""
         return cls(
@@ -124,8 +126,9 @@ class ServiceResponse:
             service_name=service_name,
             confidence=confidence,
             sources=sources or [],
-            duration_ms=duration_ms
+            duration_ms=duration_ms,
         )
+
 
 @dataclass
 class SearchResponse(ServiceResponse):
@@ -144,13 +147,16 @@ class SearchResponse(ServiceResponse):
     def to_dict(self) -> Dict[str, Any]:
         """Extended serialization for search responses"""
         base_dict = super().to_dict()
-        base_dict.update({
-            "query": self.query,
-            "results_count": self.results_count,
-            "apis_used": self.apis_used,
-            "fusion_strategy": self.fusion_strategy
-        })
+        base_dict.update(
+            {
+                "query": self.query,
+                "results_count": self.results_count,
+                "apis_used": self.apis_used,
+                "fusion_strategy": self.fusion_strategy,
+            }
+        )
         return base_dict
+
 
 @dataclass
 class NeuralResponse(ServiceResponse):
@@ -165,14 +171,17 @@ class NeuralResponse(ServiceResponse):
     def to_dict(self) -> Dict[str, Any]:
         """Extended serialization for neural responses"""
         base_dict = super().to_dict()
-        base_dict.update({
-            "prompt": self.prompt[:100] + "..." if len(self.prompt) > 100 else self.prompt,
-            "model": self.model,
-            "tokens_generated": self.tokens_generated,
-            "inference_time_ms": self.inference_time_ms,
-            "gpu_memory_used_mb": self.gpu_memory_used_mb
-        })
+        base_dict.update(
+            {
+                "prompt": self.prompt[:100] + "..." if len(self.prompt) > 100 else self.prompt,
+                "model": self.model,
+                "tokens_generated": self.tokens_generated,
+                "inference_time_ms": self.inference_time_ms,
+                "gpu_memory_used_mb": self.gpu_memory_used_mb,
+            }
+        )
         return base_dict
+
 
 @dataclass
 class HealthResponse(ServiceResponse):
@@ -193,13 +202,16 @@ class HealthResponse(ServiceResponse):
     def to_dict(self) -> Dict[str, Any]:
         """Extended serialization for health responses"""
         base_dict = super().to_dict()
-        base_dict.update({
-            "service_status": self.service_status,
-            "dependencies": self.dependencies,
-            "resource_usage": self.resource_usage,
-            "uptime_seconds": self.uptime_seconds
-        })
+        base_dict.update(
+            {
+                "service_status": self.service_status,
+                "dependencies": self.dependencies,
+                "resource_usage": self.resource_usage,
+                "uptime_seconds": self.uptime_seconds,
+            }
+        )
         return base_dict
+
 
 # Response factory for easy creation
 class ResponseFactory:
@@ -211,7 +223,7 @@ class ResponseFactory:
         results: List[Dict[str, Any]],
         apis_used: List[str],
         confidence: float,
-        duration_ms: float
+        duration_ms: float,
     ) -> SearchResponse:
         """Create a search response with proper metadata"""
         return SearchResponse(
@@ -224,7 +236,7 @@ class ResponseFactory:
             duration_ms=duration_ms,
             query=query,
             results_count=len(results),
-            apis_used=apis_used
+            apis_used=apis_used,
         )
 
     @staticmethod
@@ -234,7 +246,7 @@ class ResponseFactory:
         model: str,
         tokens_generated: int,
         inference_time_ms: float,
-        confidence: float = 1.0
+        confidence: float = 1.0,
     ) -> NeuralResponse:
         """Create a neural inference response with proper metadata"""
         return NeuralResponse(
@@ -247,7 +259,7 @@ class ResponseFactory:
             prompt=prompt,
             model=model,
             tokens_generated=tokens_generated,
-            inference_time_ms=inference_time_ms
+            inference_time_ms=inference_time_ms,
         )
 
     @staticmethod
@@ -256,7 +268,7 @@ class ResponseFactory:
         status: str,
         dependencies: Dict[str, str],
         resource_usage: Dict[str, float],
-        uptime_seconds: float
+        uptime_seconds: float,
     ) -> HealthResponse:
         """Create a health check response with proper metadata"""
         return HealthResponse(
@@ -268,5 +280,5 @@ class ResponseFactory:
             service_status=status,
             dependencies=dependencies,
             resource_usage=resource_usage,
-            uptime_seconds=uptime_seconds
+            uptime_seconds=uptime_seconds,
         )

@@ -7,6 +7,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class MCPError(Exception):
     """Base exception for MCP server errors"""
 
@@ -32,6 +33,7 @@ class MCPError(Exception):
             "timestamp": self.timestamp,
         }
 
+
 class MCPValidationError(MCPError):
     """Error for input validation failures"""
 
@@ -43,12 +45,14 @@ class MCPValidationError(MCPError):
             details["invalid_value"] = str(value)
         super().__init__(message, "VALIDATION_ERROR", details)
 
+
 class MCPTimeoutError(MCPError):
     """Error for operation timeouts"""
 
     def __init__(self, message: str, timeout_seconds: float):
         details = {"timeout_seconds": timeout_seconds}
         super().__init__(message, "TIMEOUT_ERROR", details)
+
 
 class MCPAPIError(MCPError):
     """Error for external API failures"""
@@ -67,6 +71,7 @@ class MCPAPIError(MCPError):
             details["response_body"] = response_body[:500]
         super().__init__(message, "API_ERROR", details)
 
+
 class MCPCircuitBreakerError(MCPError):
     """Error when circuit breaker is open"""
 
@@ -77,6 +82,7 @@ class MCPCircuitBreakerError(MCPError):
             details["last_failure_time"] = str(last_failure_time)
         super().__init__(message, "CIRCUIT_BREAKER_OPEN", details)
 
+
 class MCPConfigurationError(MCPError):
     """Error for configuration issues"""
 
@@ -85,6 +91,7 @@ class MCPConfigurationError(MCPError):
         if config_key:
             details["config_key"] = config_key
         super().__init__(message, "CONFIGURATION_ERROR", details)
+
 
 async def handle_mcp_error_async(func):
     """Async decorator to handle MCP errors and convert them to standardized format"""
@@ -108,6 +115,7 @@ async def handle_mcp_error_async(func):
             )
 
     return wrapper
+
 
 class ErrorHandler:
     """Centralized error handler for MCP servers"""
@@ -169,8 +177,8 @@ class ErrorHandler:
                 },
             )
 
+
 """
 error_handling.py - Syntax errors fixed
 This file had severe syntax errors and was replaced with a minimal valid structure.
 """
-

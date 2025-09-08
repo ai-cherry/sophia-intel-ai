@@ -3,26 +3,23 @@ Business Intelligence MCP Server - Sophisticated Implementation
 Advanced capabilities with comprehensive error handling and monitoring
 """
 
-import asyncio
-import logging
+import os
 import time
 from contextlib import asynccontextmanager
-from typing import Dict, List, Any, Optional
 from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse, Response
-from pydantic import BaseModel, Field
+import httpx
 import structlog
 import uvicorn
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
-from cachetools import TTLCache
 from aiolimiter import AsyncLimiter
-import redis.asyncio as aioredis
-import httpx
-import os
+from cachetools import TTLCache
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+from pydantic import BaseModel, Field
 
 # Configure advanced structured logging
 structlog.configure(
@@ -31,7 +28,7 @@ structlog.configure(
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     logger_factory=structlog.stdlib.LoggerFactory(),
     wrapper_class=structlog.stdlib.BoundLogger,
@@ -41,35 +38,47 @@ structlog.configure(
 logger = structlog.get_logger(__name__)
 
 # Advanced metrics
-REQUEST_COUNT = Counter('business_intelligence_requests_total', 'Total requests', ['integration', 'status'])
-REQUEST_DURATION = Histogram('business_intelligence_request_duration_seconds', 'Request duration', ['integration'])
-ACTIVE_INTEGRATIONS = Gauge('business_intelligence_active_integrations', 'Active integrations')
-ERROR_RATE = Counter('business_intelligence_errors_total', 'Total errors', ['integration', 'error_type'])
+REQUEST_COUNT = Counter(
+    "business_intelligence_requests_total", "Total requests", ["integration", "status"]
+)
+REQUEST_DURATION = Histogram(
+    "business_intelligence_request_duration_seconds", "Request duration", ["integration"]
+)
+ACTIVE_INTEGRATIONS = Gauge("business_intelligence_active_integrations", "Active integrations")
+ERROR_RATE = Counter(
+    "business_intelligence_errors_total", "Total errors", ["integration", "error_type"]
+)
+
 
 class ApolloRequest(BaseModel):
     query: str
     filters: Optional[Dict[str, Any]] = None
     limit: int = Field(default=50, le=200)
 
+
 class UserGemsRequest(BaseModel):
     company_domain: str
     tracking_type: str = "job_changes"
     lookback_days: int = Field(default=30, le=365)
+
 
 class GongRequest(BaseModel):
     call_id: Optional[str] = None
     date_range: Optional[Dict[str, str]] = None
     analysis_type: str = "conversation_intelligence"
 
+
 class IntercomRequest(BaseModel):
     user_id: Optional[str] = None
     conversation_id: Optional[str] = None
     action: str = "get_conversations"
 
+
 class HubSpotRequest(BaseModel):
     object_type: str = "contacts"
     properties: Optional[List[str]] = None
     filters: Optional[Dict[str, Any]] = None
+
 
 class ApolloHandler:
     """Advanced Apollo integration with sophisticated capabilities"""
@@ -97,7 +106,7 @@ class ApolloHandler:
                 headers = {
                     "Cache-Control": "no-cache",
                     "Content-Type": "application/json",
-                    "X-Api-Key": self.api_key
+                    "X-Api-Key": self.api_key,
                 }
 
                 # Determine endpoint based on query type
@@ -116,7 +125,7 @@ class ApolloHandler:
                     "service": "apollo",
                     "data": response.json(),
                     "features_used": self.features,
-                    "cached": False
+                    "cached": False,
                 }
 
                 # Cache successful results
@@ -126,6 +135,7 @@ class ApolloHandler:
             except Exception as e:
                 logger.error("Apollo integration failed", error=str(e), request=request_data)
                 raise HTTPException(status_code=500, detail=f"Apollo integration error: {str(e)}")
+
 
 class UserGemsHandler:
     """Advanced UserGems integration with sophisticated capabilities"""
@@ -149,7 +159,7 @@ class UserGemsHandler:
             try:
                 headers = {
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 }
 
                 endpoint = f"{self.base_url}/job_changes"
@@ -161,7 +171,7 @@ class UserGemsHandler:
                     "service": "usergems",
                     "data": response.json(),
                     "features_used": self.features,
-                    "cached": False
+                    "cached": False,
                 }
 
                 self.cache[cache_key] = result
@@ -170,6 +180,7 @@ class UserGemsHandler:
             except Exception as e:
                 logger.error("UserGems integration failed", error=str(e), request=request_data)
                 raise HTTPException(status_code=500, detail=f"UserGems integration error: {str(e)}")
+
 
 class GongHandler:
     """Advanced Gong integration with sophisticated capabilities"""
@@ -193,7 +204,7 @@ class GongHandler:
             try:
                 headers = {
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 }
 
                 endpoint = f"{self.base_url}/calls"
@@ -205,7 +216,7 @@ class GongHandler:
                     "service": "gong",
                     "data": response.json(),
                     "features_used": self.features,
-                    "cached": False
+                    "cached": False,
                 }
 
                 self.cache[cache_key] = result
@@ -214,6 +225,7 @@ class GongHandler:
             except Exception as e:
                 logger.error("Gong integration failed", error=str(e), request=request_data)
                 raise HTTPException(status_code=500, detail=f"Gong integration error: {str(e)}")
+
 
 class IntercomHandler:
     """Advanced Intercom integration with sophisticated capabilities"""
@@ -238,7 +250,7 @@ class IntercomHandler:
                 headers = {
                     "Authorization": f"Bearer {self.access_token}",
                     "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    "Accept": "application/json",
                 }
 
                 endpoint = f"{self.base_url}/conversations"
@@ -250,7 +262,7 @@ class IntercomHandler:
                     "service": "intercom",
                     "data": response.json(),
                     "features_used": self.features,
-                    "cached": False
+                    "cached": False,
                 }
 
                 self.cache[cache_key] = result
@@ -259,6 +271,7 @@ class IntercomHandler:
             except Exception as e:
                 logger.error("Intercom integration failed", error=str(e), request=request_data)
                 raise HTTPException(status_code=500, detail=f"Intercom integration error: {str(e)}")
+
 
 class HubSpotHandler:
     """Advanced HubSpot integration with sophisticated capabilities"""
@@ -282,7 +295,7 @@ class HubSpotHandler:
             try:
                 headers = {
                     "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 }
 
                 object_type = request_data.get("object_type", "contacts")
@@ -295,7 +308,7 @@ class HubSpotHandler:
                     "service": "hubspot",
                     "data": response.json(),
                     "features_used": self.features,
-                    "cached": False
+                    "cached": False,
                 }
 
                 self.cache[cache_key] = result
@@ -304,6 +317,7 @@ class HubSpotHandler:
             except Exception as e:
                 logger.error("HubSpot integration failed", error=str(e), request=request_data)
                 raise HTTPException(status_code=500, detail=f"HubSpot integration error: {str(e)}")
+
 
 class BusinessIntelligenceServer:
     """Sophisticated Business Intelligence server with advanced capabilities"""
@@ -314,7 +328,7 @@ class BusinessIntelligenceServer:
             version="8.0+",
             description="Sophisticated business intelligence server with advanced integrations",
             docs_url="/docs",
-            redoc_url="/redoc"
+            redoc_url="/redoc",
         )
 
         # Initialize sophisticated handlers
@@ -353,17 +367,25 @@ class BusinessIntelligenceServer:
                 response = await call_next(request)
                 duration = time.time() - start_time
 
-                integration = request.url.path.split('/')[1] if len(request.url.path.split('/')) > 1 else 'root'
+                integration = (
+                    request.url.path.split("/")[1]
+                    if len(request.url.path.split("/")) > 1
+                    else "root"
+                )
                 REQUEST_DURATION.labels(integration=integration).observe(duration)
-                REQUEST_COUNT.labels(integration=integration, status='success').inc()
+                REQUEST_COUNT.labels(integration=integration, status="success").inc()
 
                 return response
 
             except Exception as e:
                 duration = time.time() - start_time
-                integration = request.url.path.split('/')[1] if len(request.url.path.split('/')) > 1 else 'root'
+                integration = (
+                    request.url.path.split("/")[1]
+                    if len(request.url.path.split("/")) > 1
+                    else "root"
+                )
                 REQUEST_DURATION.labels(integration=integration).observe(duration)
-                REQUEST_COUNT.labels(integration=integration, status='error').inc()
+                REQUEST_COUNT.labels(integration=integration, status="error").inc()
                 ERROR_RATE.labels(integration=integration, error_type=type(e).__name__).inc()
                 raise
 
@@ -377,7 +399,7 @@ class BusinessIntelligenceServer:
                 "version": "8.0+",
                 "integrations": ["apollo", "usergems", "gong", "intercom", "hubspot"],
                 "advanced_capabilities": True,
-                "status": "operational"
+                "status": "operational",
             }
 
         @self.app.get("/health")
@@ -394,13 +416,17 @@ class BusinessIntelligenceServer:
                 except Exception as e:
                     integration_status[integration_name] = f"unhealthy: {str(e)}"
 
-            overall_status = "healthy" if all(status == "healthy" for status in integration_status.values()) else "degraded"
+            overall_status = (
+                "healthy"
+                if all(status == "healthy" for status in integration_status.values())
+                else "degraded"
+            )
 
             return {
                 "status": overall_status,
                 "integrations": integration_status,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "advanced_monitoring": True
+                "advanced_monitoring": True,
             }
 
         @self.app.get("/metrics")
@@ -421,7 +447,7 @@ class BusinessIntelligenceServer:
                 "integration": "apollo",
                 "features": self.apollo_handler.features,
                 "status": "active",
-                "advanced_capabilities": True
+                "advanced_capabilities": True,
             }
 
         @self.app.post("/usergems")
@@ -436,7 +462,7 @@ class BusinessIntelligenceServer:
                 "integration": "usergems",
                 "features": self.usergems_handler.features,
                 "status": "active",
-                "advanced_capabilities": True
+                "advanced_capabilities": True,
             }
 
         @self.app.post("/gong")
@@ -451,7 +477,7 @@ class BusinessIntelligenceServer:
                 "integration": "gong",
                 "features": self.gong_handler.features,
                 "status": "active",
-                "advanced_capabilities": True
+                "advanced_capabilities": True,
             }
 
         @self.app.post("/intercom")
@@ -466,7 +492,7 @@ class BusinessIntelligenceServer:
                 "integration": "intercom",
                 "features": self.intercom_handler.features,
                 "status": "active",
-                "advanced_capabilities": True
+                "advanced_capabilities": True,
             }
 
         @self.app.post("/hubspot")
@@ -481,7 +507,7 @@ class BusinessIntelligenceServer:
                 "integration": "hubspot",
                 "features": self.hubspot_handler.features,
                 "status": "active",
-                "advanced_capabilities": True
+                "advanced_capabilities": True,
             }
 
     def _setup_monitoring(self):
@@ -499,13 +525,9 @@ class BusinessIntelligenceServer:
 
         self.app.router.lifespan_context = lifespan
 
+
 # Create sophisticated server instance
 server = BusinessIntelligenceServer()
 
 if __name__ == "__main__":
-    uvicorn.run(
-        server.app,
-        host="${BIND_IP}",
-        port=9000,
-        workers=1
-    )
+    uvicorn.run(server.app, host="${BIND_IP}", port=9000, workers=1)

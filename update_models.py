@@ -7,19 +7,20 @@ Continue.dev configuration with optimal model strategy based on performance and 
 Designed to be run as a scheduled GitHub Actions workflow.
 """
 
-import os
-import json
-import requests
-import logging
 import argparse
-from typing import Dict, List, Any
+import json
+import logging
+import os
 from datetime import datetime
+from typing import Dict, List
+
+import requests
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("model_updates.log"), logging.StreamHandler()]
+    handlers=[logging.FileHandler("model_updates.log"), logging.StreamHandler()],
 )
 logger = logging.getLogger("model_updater")
 
@@ -31,14 +32,16 @@ PERFORMANCE_WEIGHT = 0.7
 COST_WEIGHT = 0.3
 API_URL = "https://openrouter.ai/api/v1/models"
 
+
 def load_config() -> Dict:
     """Load the Continue.dev configuration file"""
     try:
-        with open(CONFIG_FILE, "r") as f:
+        with open(CONFIG_FILE) as f:
             return json.load(f)
     except Exception as e:
         logger.error(f"Error loading config: {e}")
         return {}
+
 
 def save_config(config: Dict) -> bool:
     """Save the Continue.dev configuration file"""
@@ -50,6 +53,7 @@ def save_config(config: Dict) -> bool:
     except Exception as e:
         logger.error(f"Error saving config: {e}")
         return False
+
 
 def get_model_rankings() -> List[Dict]:
     """
@@ -65,13 +69,13 @@ def get_model_rankings() -> List[Dict]:
         headers = {"Authorization": f"Bearer {api_key}"}
         response = requests.get(API_URL, headers=headers)
         response.raise_for_status()
-        data = response.json().get('data', [])
+        data = response.json().get("data", [])
 
         # Calculate scores based on formula
         models = []
         for model in data:
-            tokens_processed = model.get('tokens_processed', 0)
-            cost_per_million = model.get('pricing', {}).get('output', 0) * 1000000
+            tokens_processed = model.get("tokens_processed", 0)
+            cost_per_million = model.get("pricing", {}).get("output", 0) * 1000000
 
             # Skip models exceeding our cost threshold
             if cost_per_million > MAX_COST_THRESHOLD * 1000000:
@@ -82,22 +86,25 @@ def get_model_rankings() -> List[Dict]:
             else:
                 score = tokens_processed * PERFORMANCE_WEIGHT
 
-            models.append({
-                'id': model.get('id', 'unknown'),
-                'name': model.get('name', 'Unknown Model'),
-                'tokens_processed': tokens_processed,
-                'cost_per_million': cost_per_million,
-                'score': score,
-                'context_length': model.get('context_length', 0)
-            })
+            models.append(
+                {
+                    "id": model.get("id", "unknown"),
+                    "name": model.get("name", "Unknown Model"),
+                    "tokens_processed": tokens_processed,
+                    "cost_per_million": cost_per_million,
+                    "score": score,
+                    "context_length": model.get("context_length", 0),
+                }
+            )
 
         # Sort by score
-        models.sort(key=lambda x: x['score'], reverse=True)
+        models.sort(key=lambda x: x["score"], reverse=True)
         return models
 
     except Exception as e:
         logger.error(f"Error fetching model rankings: {e}")
         return []
+
 
 def update_continue_config(models: List[Dict]) -> bool:
     """
@@ -122,13 +129,13 @@ def update_continue_config(models: List[Dict]) -> bool:
             "coder": "coding",
             "deepseek": "debug",
             "mistral": "debug",
-            "llama": "local"
+            "llama": "local",
         }
 
         # Find best model for each category
         best_models = {}
         for model in models:
-            model_id = model['id'].lower()
+            model_id = model["id"].lower()
             for key, category in model_categories.items():
                 if key in model_id and category not in best_models:
                     best_models[category] = model
@@ -160,18 +167,18 @@ def update_continue_config(models: List[Dict]) -> bool:
                     "strategy": "Deep Strategist: Use step-by-step reasoning to break down complex problems. Consider various approaches, analyzing pros and cons of each option.",
                     "coding": "Meticulous Coder: Create clean, maintainable code. Follow best practices like PEP8 for Python. Add explanatory comments. Focus on performance, security, and readability.",
                     "debug": "Precision Debugger: Identify and fix issues methodically. Provide step-by-step reproduction of issues, analyze root causes, and suggest the most minimal effective fix.",
-                    "local": "Offline Helper: Provide assistance while working offline. Focus on practical solutions that don't require external API calls."
-                }.get(category, "Expert Assistant: Provide clear and helpful responses based on your expertise.")
+                    "local": "Offline Helper: Provide assistance while working offline. Focus on practical solutions that don't require external API calls.",
+                }.get(
+                    category,
+                    "Expert Assistant: Provide clear and helpful responses based on your expertise.",
+                )
 
                 new_model = {
                     "title": f"{category_title}Best",
                     "provider": "openrouter" if category != "local" else "ollama",
                     "model": model["id"] if category != "local" else "codellama:70b",
-                    "completionOptions": {
-                        "temperature": temp,
-                        "maxTokens": 2000
-                    },
-                    "systemPrompt": system_prompt
+                    "completionOptions": {"temperature": temp, "maxTokens": 2000},
+                    "systemPrompt": system_prompt,
                 }
 
                 updated_models.append(new_model)
@@ -183,11 +190,9 @@ def update_continue_config(models: List[Dict]) -> bool:
             strategy_data = {
                 "updated_at": datetime.now().isoformat(),
                 "models": {m["id"]: m["score"] for m in models[:10]},
-                "categories": {
-                    category: best["id"] for category, best in best_models.items()
-                },
+                "categories": {category: best["id"] for category, best in best_models.items()},
                 "formula": f"{PERFORMANCE_WEIGHT} * performance - {COST_WEIGHT} * cost",
-                "max_cost_threshold": MAX_COST_THRESHOLD
+                "max_cost_threshold": MAX_COST_THRESHOLD,
             }
 
             try:
@@ -202,6 +207,7 @@ def update_continue_config(models: List[Dict]) -> bool:
     except Exception as e:
         logger.error(f"Error updating Continue.dev config: {e}")
         return False
+
 
 def self_audit() -> Dict:
     """
@@ -236,21 +242,25 @@ def self_audit() -> Dict:
         for model in models:
             if "title" in model and model["title"] not in used_models:
                 issues.append(f"Unused model: {model['title']}")
-                recommendations.append(f"Consider removing unused model {model['title']} or assign it to tasks")
+                recommendations.append(
+                    f"Consider removing unused model {model['title']} or assign it to tasks"
+                )
 
     # Check fallbacks
     if "modelFallbacks" not in config:
         issues.append("No model fallbacks defined")
         recommendations.append("Add model fallbacks to ensure reliability")
 
-    return {
-        "issues": issues,
-        "recommendations": recommendations
-    }
+    return {"issues": issues, "recommendations": recommendations}
+
 
 def main():
-    parser = argparse.ArgumentParser(description="Update model rankings and Continue.dev configuration")
-    parser.add_argument("--audit", action="store_true", help="Run a self-audit on the configuration")
+    parser = argparse.ArgumentParser(
+        description="Update model rankings and Continue.dev configuration"
+    )
+    parser.add_argument(
+        "--audit", action="store_true", help="Run a self-audit on the configuration"
+    )
     args = parser.parse_args()
 
     if args.audit:
@@ -265,7 +275,7 @@ def main():
             logger.info("No issues found in configuration")
 
         if audit_results["recommendations"]:
-            logger.info(f"Recommendations:")
+            logger.info("Recommendations:")
             for rec in audit_results["recommendations"]:
                 logger.info(f" - {rec}")
     else:
@@ -288,6 +298,7 @@ def main():
                 logger.error("Failed to update configuration")
         else:
             logger.error("No models found")
+
 
 if __name__ == "__main__":
     main()

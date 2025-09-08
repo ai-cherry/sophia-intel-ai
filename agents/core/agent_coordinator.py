@@ -125,7 +125,7 @@ class AgentCoordinator:
             try:
                 await self.processing_task
             except asyncio.CancelledError:
-
+                pass
         # Cancel all active tasks
         for task in self.active_tasks.values():
             task.status = TaskStatus.CANCELLED

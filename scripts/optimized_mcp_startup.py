@@ -24,10 +24,9 @@ import logging
 import os
 import subprocess
 import sys
-import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import httpx
 import redis
@@ -37,7 +36,7 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from app.core.unified_credential_manager import get_credential_manager
-from app.mcp.optimized_mcp_orchestrator import MCPCapabilityType, MCPDomain, get_mcp_orchestrator
+from app.mcp.optimized_mcp_orchestrator import MCPCapabilityType, get_mcp_orchestrator
 
 logger = logging.getLogger(__name__)
 

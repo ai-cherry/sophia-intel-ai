@@ -16,8 +16,6 @@ sys.path.insert(0, "/Users/lynnmusil/sophia-intel-ai")
 
 from app.artemis.artemis_orchestrator import ArtemisOrchestrator, CodeContext
 from app.artemis.unified_factory import artemis_unified_factory
-from app.core.portkey_manager import PortkeyManager
-from app.core.shared_services import shared_services
 
 # Configure logging
 logging.basicConfig(

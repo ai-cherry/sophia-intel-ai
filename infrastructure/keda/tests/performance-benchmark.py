@@ -9,19 +9,15 @@ import argparse
 import asyncio
 import json
 import logging
-import os
 import statistics
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
 import aiohttp
 import numpy as np
-import pandas as pd
-import prometheus_client
-import redis
 from kubernetes import client, config
 
 # Configure logging

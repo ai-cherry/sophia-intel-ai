@@ -8,11 +8,10 @@ import asyncio
 import json
 import os
 import sys
-import time
 from datetime import datetime
-from typing import Dict, List, Any
 
 import requests
+
 
 class FrontendConnectivityTester:
     """Tests frontend dashboard connectivity to backend APIs"""
@@ -26,7 +25,7 @@ class FrontendConnectivityTester:
             "failed_tests": 0,
             "connectivity_tests": {},
             "dashboard_tests": {},
-            "errors": []
+            "errors": [],
         }
 
     async def run_connectivity_tests(self):
@@ -55,9 +54,9 @@ class FrontendConnectivityTester:
         # Test all fusion API endpoints that the dashboard uses
         fusion_endpoints = [
             "/api/fusion/metrics",
-            "/api/fusion/health", 
+            "/api/fusion/health",
             "/api/fusion/performance",
-            "/api/fusion/status"
+            "/api/fusion/status",
         ]
 
         for endpoint in fusion_endpoints:
@@ -77,13 +76,22 @@ class FrontendConnectivityTester:
 
                 # Check if response has expected structure
                 if endpoint == "/api/fusion/metrics":
-                    required_fields = ["redis_optimization", "edge_rag", "hybrid_routing", "cross_db_analytics"]
+                    required_fields = [
+                        "redis_optimization",
+                        "edge_rag",
+                        "hybrid_routing",
+                        "cross_db_analytics",
+                    ]
                     has_required_fields = all(field in data for field in required_fields)
                 elif endpoint == "/api/fusion/health":
                     required_fields = ["overall_uptime", "avg_response_time", "total_cost_savings"]
                     has_required_fields = all(field in data for field in required_fields)
                 elif endpoint == "/api/fusion/performance":
-                    required_fields = ["redis_memory_reduction", "edge_rag_success_rate", "cross_db_accuracy"]
+                    required_fields = [
+                        "redis_memory_reduction",
+                        "edge_rag_success_rate",
+                        "cross_db_accuracy",
+                    ]
                     has_required_fields = all(field in data for field in required_fields)
                 elif endpoint == "/api/fusion/status":
                     required_fields = ["overall_status", "systems"]
@@ -97,7 +105,9 @@ class FrontendConnectivityTester:
                         "status": "PASS",
                         "response_time_ms": response.elapsed.total_seconds() * 1000,
                         "data_structure": "valid",
-                        "sample_data": str(data)[:200] + "..." if len(str(data)) > 200 else str(data)
+                        "sample_data": (
+                            str(data)[:200] + "..." if len(str(data)) > 200 else str(data)
+                        ),
                     }
                     print(f"  ✅ PASS {endpoint} - {response.elapsed.total_seconds()*1000:.0f}ms")
                 else:
@@ -109,7 +119,7 @@ class FrontendConnectivityTester:
             self.test_results["failed_tests"] += 1
             self.test_results["connectivity_tests"][f"{endpoint} Connectivity"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.test_results["errors"].append(f"{endpoint}: {str(e)}")
             print(f"  ❌ FAIL {endpoint} - {str(e)}")
@@ -122,13 +132,15 @@ class FrontendConnectivityTester:
 
         try:
             # Check if dashboard component file exists
-            dashboard_file = "/home/ubuntu/sophia-main/frontend/src/components/FusionMonitoringDashboard.tsx"
+            dashboard_file = (
+                "/home/ubuntu/sophia-main/frontend/src/components/FusionMonitoringDashboard.tsx"
+            )
 
             if not os.path.exists(dashboard_file):
                 raise ValueError("Dashboard component file not found")
 
             # Read and analyze dashboard component
-            with open(dashboard_file, 'r') as f:
+            with open(dashboard_file) as f:
                 dashboard_content = f.read()
 
             # Check for required elements
@@ -142,18 +154,20 @@ class FrontendConnectivityTester:
                 "hybrid_routing",
                 "cross_db_analytics",
                 "Card",
-                "Tabs"
+                "Tabs",
             ]
 
             missing_elements = [elem for elem in required_elements if elem not in dashboard_content]
 
             if not missing_elements:
                 # Check for proper TypeScript/React structure
-                has_proper_structure = all([
-                    "export default" in dashboard_content,
-                    "interface" in dashboard_content or "type" in dashboard_content,
-                    "return (" in dashboard_content
-                ])
+                has_proper_structure = all(
+                    [
+                        "export default" in dashboard_content,
+                        "interface" in dashboard_content or "type" in dashboard_content,
+                        "return (" in dashboard_content,
+                    ]
+                )
 
                 if has_proper_structure:
                     self.test_results["passed_tests"] += 1
@@ -161,11 +175,13 @@ class FrontendConnectivityTester:
                         "status": "PASS",
                         "details": "All required elements present",
                         "component_size": len(dashboard_content),
-                        "required_elements": len(required_elements)
+                        "required_elements": len(required_elements),
                     }
                     print("  ✅ PASS Dashboard Component - All required elements present")
                 else:
-                    raise ValueError("Dashboard component missing proper React/TypeScript structure")
+                    raise ValueError(
+                        "Dashboard component missing proper React/TypeScript structure"
+                    )
             else:
                 raise ValueError(f"Dashboard component missing elements: {missing_elements}")
 
@@ -173,7 +189,7 @@ class FrontendConnectivityTester:
             self.test_results["failed_tests"] += 1
             self.test_results["dashboard_tests"]["Dashboard Component Structure"] = {
                 "status": "FAIL",
-                "error": str(e)
+                "error": str(e),
             }
             self.test_results["errors"].append(f"Dashboard Component: {str(e)}")
             print(f"  ❌ FAIL Dashboard Component - {str(e)}")
@@ -202,7 +218,9 @@ class FrontendConnectivityTester:
             health_data = health_response.json()
 
             # Step 3: Fetch performance data
-            performance_response = requests.get(f"{self.backend_url}/api/fusion/performance", timeout=10)
+            performance_response = requests.get(
+                f"{self.backend_url}/api/fusion/performance", timeout=10
+            )
             if performance_response.status_code != 200:
                 raise ValueError("Failed to fetch performance data")
 
@@ -213,46 +231,60 @@ class FrontendConnectivityTester:
                 "overview": {
                     "total_cost_savings": health_data.get("total_cost_savings", 0),
                     "overall_uptime": health_data.get("overall_uptime", 0),
-                    "active_systems": health_data.get("active_systems", 0)
+                    "active_systems": health_data.get("active_systems", 0),
                 },
                 "systems": {
                     "redis": {
-                        "memory_saved": metrics_data.get("redis_optimization", {}).get("memory_saved", 0),
-                        "cost_savings": metrics_data.get("redis_optimization", {}).get("cost_savings", 0),
-                        "status": metrics_data.get("redis_optimization", {}).get("status", "unknown")
+                        "memory_saved": metrics_data.get("redis_optimization", {}).get(
+                            "memory_saved", 0
+                        ),
+                        "cost_savings": metrics_data.get("redis_optimization", {}).get(
+                            "cost_savings", 0
+                        ),
+                        "status": metrics_data.get("redis_optimization", {}).get(
+                            "status", "unknown"
+                        ),
                     },
                     "edge_rag": {
                         "query_count": metrics_data.get("edge_rag", {}).get("query_count", 0),
                         "success_rate": metrics_data.get("edge_rag", {}).get("success_rate", 0),
-                        "status": metrics_data.get("edge_rag", {}).get("status", "unknown")
+                        "status": metrics_data.get("edge_rag", {}).get("status", "unknown"),
                     },
                     "hybrid_routing": {
-                        "requests_routed": metrics_data.get("hybrid_routing", {}).get("requests_routed", 0),
+                        "requests_routed": metrics_data.get("hybrid_routing", {}).get(
+                            "requests_routed", 0
+                        ),
                         "uptime": metrics_data.get("hybrid_routing", {}).get("uptime", 0),
-                        "status": metrics_data.get("hybrid_routing", {}).get("status", "unknown")
+                        "status": metrics_data.get("hybrid_routing", {}).get("status", "unknown"),
                     },
                     "cross_db_analytics": {
-                        "predictions_made": metrics_data.get("cross_db_analytics", {}).get("predictions_made", 0),
+                        "predictions_made": metrics_data.get("cross_db_analytics", {}).get(
+                            "predictions_made", 0
+                        ),
                         "accuracy": metrics_data.get("cross_db_analytics", {}).get("accuracy", 0),
-                        "status": metrics_data.get("cross_db_analytics", {}).get("status", "unknown")
-                    }
+                        "status": metrics_data.get("cross_db_analytics", {}).get(
+                            "status", "unknown"
+                        ),
+                    },
                 },
                 "performance": {
                     "redis_memory_reduction": performance_data.get("redis_memory_reduction", 0),
                     "edge_rag_success_rate": performance_data.get("edge_rag_success_rate", 0),
                     "hybrid_routing_uptime": performance_data.get("hybrid_routing_uptime", 0),
-                    "cross_db_accuracy": performance_data.get("cross_db_accuracy", 0)
-                }
+                    "cross_db_accuracy": performance_data.get("cross_db_accuracy", 0),
+                },
             }
 
             # Verify all data is present and valid
-            data_valid = all([
-                isinstance(dashboard_data["overview"]["total_cost_savings"], (int, float)),
-                isinstance(dashboard_data["overview"]["overall_uptime"], (int, float)),
-                isinstance(dashboard_data["overview"]["active_systems"], int),
-                len(dashboard_data["systems"]) == 4,
-                len(dashboard_data["performance"]) == 4
-            ])
+            data_valid = all(
+                [
+                    isinstance(dashboard_data["overview"]["total_cost_savings"], (int, float)),
+                    isinstance(dashboard_data["overview"]["overall_uptime"], (int, float)),
+                    isinstance(dashboard_data["overview"]["active_systems"], int),
+                    len(dashboard_data["systems"]) == 4,
+                    len(dashboard_data["performance"]) == 4,
+                ]
+            )
 
             if data_valid:
                 self.test_results["passed_tests"] += 1
@@ -262,19 +294,18 @@ class FrontendConnectivityTester:
                     "data_summary": {
                         "total_cost_savings": dashboard_data["overview"]["total_cost_savings"],
                         "systems_count": len(dashboard_data["systems"]),
-                        "performance_metrics_count": len(dashboard_data["performance"])
-                    }
+                        "performance_metrics_count": len(dashboard_data["performance"]),
+                    },
                 }
-                print(f"  ✅ PASS Data Flow - Cost Savings: ${dashboard_data['overview']['total_cost_savings']}, Systems: {len(dashboard_data['systems'])}")
+                print(
+                    f"  ✅ PASS Data Flow - Cost Savings: ${dashboard_data['overview']['total_cost_savings']}, Systems: {len(dashboard_data['systems'])}"
+                )
             else:
                 raise ValueError("Invalid data structure in dashboard processing")
 
         except Exception as e:
             self.test_results["failed_tests"] += 1
-            self.test_results["dashboard_tests"]["Data Flow"] = {
-                "status": "FAIL",
-                "error": str(e)
-            }
+            self.test_results["dashboard_tests"]["Data Flow"] = {"status": "FAIL", "error": str(e)}
             self.test_results["errors"].append(f"Data Flow: {str(e)}")
             print(f"  ❌ FAIL Data Flow - {str(e)}")
 
@@ -290,7 +321,7 @@ class FrontendConnectivityTester:
         failed = self.test_results["failed_tests"]
         success_rate = (passed / total * 100) if total > 0 else 0
 
-        print(f"📊 CONNECTIVITY TEST RESULTS:")
+        print("📊 CONNECTIVITY TEST RESULTS:")
         print(f"  Total Tests: {total}")
         print(f"  Passed: {passed}")
         print(f"  Failed: {failed}")
@@ -325,7 +356,7 @@ class FrontendConnectivityTester:
 
         # Save detailed report
         report_file = "/home/ubuntu/sophia-main/FRONTEND_CONNECTIVITY_TEST_REPORT.json"
-        with open(report_file, 'w') as f:
+        with open(report_file, "w") as f:
             json.dump(self.test_results, f, indent=2)
 
         print(f"📄 Detailed report saved to: {report_file}")
@@ -338,14 +369,20 @@ class FrontendConnectivityTester:
             print(f"\n💥 FRONTEND CONNECTIVITY TESTING FAILED! ({success_rate:.1f}% success rate)")
             print("❌ Frontend dashboard connectivity needs attention.")
 
+
 async def main():
     """Main testing function"""
     tester = FrontendConnectivityTester()
     results = await tester.run_connectivity_tests()
 
     # Return appropriate exit code
-    success_rate = (results["passed_tests"] / results["total_tests"] * 100) if results["total_tests"] > 0 else 0
+    success_rate = (
+        (results["passed_tests"] / results["total_tests"] * 100)
+        if results["total_tests"] > 0
+        else 0
+    )
     return 0 if success_rate >= 80 else 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

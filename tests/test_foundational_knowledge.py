@@ -3,10 +3,7 @@ Comprehensive test suite for Foundational Knowledge System
 """
 
 import asyncio
-import json
 import tempfile
-from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -20,7 +17,6 @@ from app.knowledge.models import (
     KnowledgeVersion,
     PayReadyContext,
     SyncConflict,
-    SyncOperation,
 )
 from app.knowledge.storage_adapter import StorageAdapter
 from app.knowledge.versioning_engine import VersioningEngine

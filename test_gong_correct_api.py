@@ -3,8 +3,6 @@
 Test Gong API with correct endpoints
 """
 
-import json
-import os
 from datetime import datetime, timedelta
 
 import requests

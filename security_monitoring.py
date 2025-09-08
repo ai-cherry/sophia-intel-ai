@@ -15,11 +15,10 @@ import asyncio
 import datetime
 import json
 import logging
-import os
 import signal
 import sys
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import aiohttp
 
@@ -42,10 +41,9 @@ THRESHOLDS = {
     "suspicious_activity_score": 0.7,  # Alert if suspicious activity score exceeds this threshold
 }
 
+
 class SecurityMonitor:
-    def __init__(
-        self, api_url: str = DEFAULT_API_URL, alert_webhook: str | None = None
-    ):
+    def __init__(self, api_url: str = DEFAULT_API_URL, alert_webhook: str | None = None):
         self.api_url = api_url
         self.alert_webhook = alert_webhook
         self.auth_failures: dict[str, int] = {}  # IP -> count
@@ -96,15 +94,10 @@ class SecurityMonitor:
                             for failure in failures:
                                 ip = failure.get("ip_address")
                                 if ip:
-                                    self.auth_failures[ip] = (
-                                        self.auth_failures.get(ip, 0) + 1
-                                    )
+                                    self.auth_failures[ip] = self.auth_failures.get(ip, 0) + 1
 
                                     # Check threshold
-                                    if (
-                                        self.auth_failures[ip]
-                                        >= THRESHOLDS["auth_failures"]
-                                    ):
+                                    if self.auth_failures[ip] >= THRESHOLDS["auth_failures"]:
                                         await self._send_alert(
                                             "auth_failure",
                                             f"Multiple authentication failures from IP: {ip}",
@@ -153,9 +146,7 @@ class SecurityMonitor:
                                             f"Multiple access violations by user: {user_id}",
                                             {
                                                 "user_id": user_id,
-                                                "count": self.access_violations[
-                                                    user_id
-                                                ],
+                                                "count": self.access_violations[user_id],
                                             },
                                         )
 
@@ -187,15 +178,10 @@ class SecurityMonitor:
                             for hit in rate_limits:
                                 ip = hit.get("ip_address")
                                 if ip:
-                                    self.rate_limit_hits[ip] = (
-                                        self.rate_limit_hits.get(ip, 0) + 1
-                                    )
+                                    self.rate_limit_hits[ip] = self.rate_limit_hits.get(ip, 0) + 1
 
                                     # Check threshold
-                                    if (
-                                        self.rate_limit_hits[ip]
-                                        >= THRESHOLDS["rate_limit_hits"]
-                                    ):
+                                    if self.rate_limit_hits[ip] >= THRESHOLDS["rate_limit_hits"]:
                                         await self._send_alert(
                                             "rate_limit",
                                             f"Multiple rate limit hits from IP: {ip}",
@@ -272,9 +258,7 @@ class SecurityMonitor:
                         headers={"Content-Type": "application/json"},
                     ) as response:
                         if response.status != 200:
-                            logger.error(
-                                f"Failed to send alert to webhook: {response.status}"
-                            )
+                            logger.error(f"Failed to send alert to webhook: {response.status}")
             except Exception as e:
                 logger.error(f"Error sending alert to webhook: {e}")
 
@@ -283,6 +267,7 @@ class SecurityMonitor:
         logger.info(f"Received shutdown signal {sig}, stopping...")
         self.running = False
         sys.exit(0)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Sophia Dashboard Security Monitoring")
@@ -297,6 +282,7 @@ def main():
         asyncio.run(monitor.start_monitoring())
     except KeyboardInterrupt:
         logger.info("Monitoring stopped by user")
+
 
 if __name__ == "__main__":
     main()

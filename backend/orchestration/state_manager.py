@@ -1,5 +1,3 @@
-import asyncio
-
 """
 State Manager for Sophia AI Orchestration
 Handles workflow state persistence with Redis and PostgreSQL
@@ -16,12 +14,11 @@ import redis.asyncio as redis
 
 logger = logging.getLogger(__name__)
 
+
 class StateManager:
     """Manages workflow state with Redis caching and PostgreSQL persistence"""
 
-    def __init__(
-        self, redis_url: str | None = None, pg_config: dict[str, Any] | None = None
-    ):
+    def __init__(self, redis_url: str | None = None, pg_config: dict[str, Any] | None = None):
         # Redis configuration
         self.redis_url = redis_url or os.getenv(
             "REDIS_URL", "redis://${REDIS_HOST}:${REDIS_PORT}/3"
@@ -94,9 +91,7 @@ class StateManager:
                 )
 
             # Also save to history
-            await self._save_history(
-                task_id, state.get("current_step", "unknown"), state
-            )
+            await self._save_history(task_id, state.get("current_step", "unknown"), state)
 
         logger.info(f"State saved for task {task_id}")
 
@@ -134,9 +129,7 @@ class StateManager:
             state["metadata"]["updated_at"] = datetime.now().isoformat()
             await self.save_state(task_id, state)
 
-    async def list_tasks(
-        self, status: str | None = None, limit: int = 100
-    ) -> list[dict[str, Any]]:
+    async def list_tasks(self, status: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
         """List tasks with optional status filter"""
         if not self.pg_pool:
             return []
@@ -165,13 +158,9 @@ class StateManager:
                     limit,
                 )
 
-            return [
-                {"task_id": row["task_id"], **json.loads(row["state"])} for row in rows
-            ]
+            return [{"task_id": row["task_id"], **json.loads(row["state"])} for row in rows]
 
-    async def _save_history(
-        self, task_id: str, event_type: str, event_data: dict[str, Any]
-    ):
+    async def _save_history(self, task_id: str, event_type: str, event_data: dict[str, Any]):
         """Save workflow history event"""
         if self.pg_pool:
             async with self.pg_pool.acquire() as conn:

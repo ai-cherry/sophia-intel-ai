@@ -5,19 +5,18 @@ Provides intelligent infrastructure management with Terraform, Kubernetes, and c
 """
 
 import asyncio
-import json
-import logging
 import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import yaml
 
-from agents.core.base_agent import AgentCapability, AgentConfig, AgentStatus, BaseAgent
+from agents.core.base_agent import AgentCapability, AgentConfig, BaseAgent
+
 
 class IaCTool(Enum):
     """Infrastructure as Code tools"""
@@ -28,6 +27,7 @@ class IaCTool(Enum):
     ANSIBLE = "ansible"
     CLOUDFORMATION = "cloudformation"
     PULUMI = "pulumi"
+
 
 class IaCOperation(Enum):
     """IaC operation types"""
@@ -42,6 +42,7 @@ class IaCOperation(Enum):
     SCALE = "scale"
     ROLLBACK = "rollback"
 
+
 class IaCEnvironment(Enum):
     """Infrastructure environments"""
 
@@ -49,6 +50,7 @@ class IaCEnvironment(Enum):
     STAGING = "staging"
     PRODUCTION = "production"
     TEST = "test"
+
 
 @dataclass
 class IaCResource:
@@ -60,6 +62,7 @@ class IaCResource:
     configuration: dict[str, Any]
     dependencies: list[str]
     tags: dict[str, str]
+
 
 @dataclass
 class IaCPlan:
@@ -76,6 +79,7 @@ class IaCPlan:
     validation_errors: list[str]
     warnings: list[str]
 
+
 @dataclass
 class IaCDeployment:
     """Infrastructure deployment result"""
@@ -90,6 +94,7 @@ class IaCDeployment:
     resources_destroyed: list[str]
     errors: list[str]
     logs: list[str]
+
 
 class IaCAgent(BaseAgent):
     """
@@ -147,9 +152,7 @@ class IaCAgent(BaseAgent):
             self.logger.error(f"Failed to initialize IaC Agent: {str(e)}")
             raise
 
-    async def _process_task_impl(
-        self, task_id: str, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _process_task_impl(self, task_id: str, task_data: dict[str, Any]) -> dict[str, Any]:
         """Process IaC operation tasks"""
         operation_type = task_data.get("operation_type")
 
@@ -215,9 +218,7 @@ class IaCAgent(BaseAgent):
             validation_errors = await self._validate_configuration(tool, config_path)
 
             # Parse configuration
-            resources = await self._parse_configuration(
-                tool, config_path, variables or {}
-            )
+            resources = await self._parse_configuration(tool, config_path, variables or {})
 
             # Calculate costs
             estimated_cost = await self._calculate_estimated_cost(resources)
@@ -261,9 +262,7 @@ class IaCAgent(BaseAgent):
                 raise ValueError(f"Plan risk score too high: {plan.risk_score}")
 
             if plan.validation_errors:
-                raise ValueError(
-                    f"Plan has validation errors: {plan.validation_errors}"
-                )
+                raise ValueError(f"Plan has validation errors: {plan.validation_errors}")
 
             # Create deployment record
             deployment = IaCDeployment(
@@ -292,9 +291,7 @@ class IaCAgent(BaseAgent):
             deployment.end_time = datetime.now()
             deployment.status = "completed" if not deployment.errors else "failed"
 
-            self.logger.info(
-                f"Infrastructure deployment completed: {deployment.status}"
-            )
+            self.logger.info(f"Infrastructure deployment completed: {deployment.status}")
             return deployment
 
         except Exception as e:
@@ -317,9 +314,7 @@ class IaCAgent(BaseAgent):
                 "validation_errors": validation_errors,
                 "security_issues": security_issues,
                 "best_practice_violations": best_practices,
-                "recommendations": await self._generate_recommendations(
-                    tool, config_path
-                ),
+                "recommendations": await self._generate_recommendations(tool, config_path),
             }
 
             self.logger.info(
@@ -331,9 +326,7 @@ class IaCAgent(BaseAgent):
             self.logger.error(f"Error validating configuration: {str(e)}")
             raise
 
-    async def optimize_infrastructure_costs(
-        self, resources: list[IaCResource]
-    ) -> dict[str, Any]:
+    async def optimize_infrastructure_costs(self, resources: list[IaCResource]) -> dict[str, Any]:
         """Optimize infrastructure costs"""
         try:
             self.logger.info("Analyzing infrastructure for cost optimization")
@@ -353,9 +346,7 @@ class IaCAgent(BaseAgent):
                 "current_cost": current_cost,
                 "optimized_cost": optimized_cost,
                 "potential_savings": savings,
-                "savings_percentage": (
-                    (savings / current_cost * 100) if current_cost > 0 else 0
-                ),
+                "savings_percentage": ((savings / current_cost * 100) if current_cost > 0 else 0),
                 "optimizations": optimizations,
             }
 
@@ -379,9 +370,7 @@ class IaCAgent(BaseAgent):
         if not config_path:
             raise ValueError("config_path is required for plan operation")
 
-        plan = await self.create_infrastructure_plan(
-            tool, environment, config_path, variables
-        )
+        plan = await self.create_infrastructure_plan(tool, environment, config_path, variables)
 
         return {
             "operation_type": "plan",
@@ -394,9 +383,7 @@ class IaCAgent(BaseAgent):
             "warnings": plan.warnings,
         }
 
-    async def _handle_apply_operation(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_apply_operation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle apply operation task"""
         # This would require a pre-created plan
         # For now, return a placeholder
@@ -406,9 +393,7 @@ class IaCAgent(BaseAgent):
             "message": "Apply operation requires a pre-created plan",
         }
 
-    async def _handle_destroy_operation(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_destroy_operation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle destroy operation task"""
         return {
             "operation_type": "destroy",
@@ -416,9 +401,7 @@ class IaCAgent(BaseAgent):
             "message": "Destroy operation not yet implemented",
         }
 
-    async def _handle_validate_operation(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_validate_operation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle validate operation task"""
         tool = IaCTool(task_data.get("tool", "terraform"))
         config_path = task_data.get("config_path")
@@ -436,9 +419,7 @@ class IaCAgent(BaseAgent):
             "recommendations": result["recommendations"],
         }
 
-    async def _handle_format_operation(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_format_operation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle format operation task"""
         return {
             "operation_type": "format",
@@ -454,9 +435,7 @@ class IaCAgent(BaseAgent):
             "message": "Init operation not yet implemented",
         }
 
-    async def _handle_deploy_operation(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_deploy_operation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle deploy operation task"""
         return {
             "operation_type": "deploy",
@@ -464,9 +443,7 @@ class IaCAgent(BaseAgent):
             "message": "Deploy operation not yet implemented",
         }
 
-    async def _handle_scale_operation(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_scale_operation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle scale operation task"""
         return {
             "operation_type": "scale",
@@ -474,9 +451,7 @@ class IaCAgent(BaseAgent):
             "message": "Scale operation not yet implemented",
         }
 
-    async def _handle_rollback_operation(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_rollback_operation(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle rollback operation task"""
         return {
             "operation_type": "rollback",
@@ -564,9 +539,7 @@ class IaCAgent(BaseAgent):
             }
         }
 
-    async def _validate_configuration(
-        self, tool: IaCTool, config_path: str
-    ) -> list[str]:
+    async def _validate_configuration(self, tool: IaCTool, config_path: str) -> list[str]:
         """Validate infrastructure configuration"""
         errors = []
 
@@ -594,12 +567,9 @@ class IaCAgent(BaseAgent):
 
             # Check for basic Terraform syntax
             if not any(
-                keyword in content
-                for keyword in ["resource", "provider", "variable", "output"]
+                keyword in content for keyword in ["resource", "provider", "variable", "output"]
             ):
-                errors.append(
-                    "No Terraform resources, providers, variables, or outputs found"
-                )
+                errors.append("No Terraform resources, providers, variables, or outputs found")
 
             # Check for required providers
             if "provider" not in content:
@@ -738,9 +708,7 @@ class IaCAgent(BaseAgent):
         risk_factors.append(env_risk.get(environment, 0.5))
 
         # Resource count risk
-        resource_count_risk = min(
-            len(resources) / 50, 0.5
-        )  # More resources = higher risk
+        resource_count_risk = min(len(resources) / 50, 0.5)  # More resources = higher risk
         risk_factors.append(resource_count_risk)
 
         # Resource type risk
@@ -763,17 +731,13 @@ class IaCAgent(BaseAgent):
 
         # Check for production environment
         if environment == IaCEnvironment.PRODUCTION:
-            warnings.append(
-                "Deploying to production environment - extra caution required"
-            )
+            warnings.append("Deploying to production environment - extra caution required")
 
         # Check for high-cost resources
         for resource in resources:
             cost = await self._calculate_resource_cost(resource)
             if cost > 100:  # $100/month threshold
-                warnings.append(
-                    f"High-cost resource detected: {resource.name} (${cost:.2f}/month)"
-                )
+                warnings.append(f"High-cost resource detected: {resource.name} (${cost:.2f}/month)")
 
         return warnings
 
@@ -809,9 +773,7 @@ class IaCAgent(BaseAgent):
 
         return violations
 
-    async def _generate_recommendations(
-        self, tool: IaCTool, config_path: str
-    ) -> list[str]:
+    async def _generate_recommendations(self, tool: IaCTool, config_path: str) -> list[str]:
         """Generate recommendations for improvement"""
         recommendations = []
 
@@ -828,9 +790,7 @@ class IaCAgent(BaseAgent):
 
         return recommendations
 
-    async def _analyze_resource_optimization(
-        self, resource: IaCResource
-    ) -> dict[str, Any] | None:
+    async def _analyze_resource_optimization(self, resource: IaCResource) -> dict[str, Any] | None:
         """Analyze optimization opportunities for a resource"""
         # Mock optimization analysis
         if resource.type == "LAMBDA_LABS_CONFIG":
@@ -874,9 +834,7 @@ class IaCAgent(BaseAgent):
 
         return deployment
 
-    async def _apply_docker_plan(
-        self, plan: IaCPlan, deployment: IaCDeployment
-    ) -> IaCDeployment:
+    async def _apply_docker_plan(self, plan: IaCPlan, deployment: IaCDeployment) -> IaCDeployment:
         """Apply Docker plan"""
         # Mock Docker deployment
         deployment.logs.append("Building Docker images...")
@@ -911,10 +869,12 @@ class IaCAgent(BaseAgent):
             self.logger.error(f"Error running command {command}: {str(e)}")
             raise
 
+
 # Factory function for easy instantiation
 def create_iac_agent() -> IaCAgent:
     """Create and return an IaCAgent instance"""
     return IaCAgent()
+
 
 # Entry point for immediate execution
 async def main():
@@ -940,6 +900,7 @@ async def main():
 
     finally:
         await agent.shutdown()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -5,10 +5,11 @@ No mocks - real tests only
 """
 
 import asyncio
-import aiohttp
 import json
-from datetime import datetime
 import sys
+
+import aiohttp
+
 
 async def test_server(name: str, port: int):
     """Test a single MCP server"""
@@ -51,6 +52,7 @@ async def test_server(name: str, port: int):
         results["tests"]["capabilities"] = f"❌ Failed: {str(e)[:30]}"
 
     return results
+
 
 async def main():
     """Test all MCP servers"""
@@ -105,6 +107,7 @@ async def main():
     else:
         print("⚠️ Many servers not working - needs attention")
         return 1
+
 
 if __name__ == "__main__":
     exit_code = asyncio.run(main())

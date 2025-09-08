@@ -12,7 +12,7 @@ import logging
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -86,7 +86,9 @@ class BridgeRegistrationManager:
 
             # Note: Roo/Cursor and Cline integrations removed - use unified MCP approach
             elif ide_name in ["roo_cursor", "cline"]:
-                logger.warning(f"Legacy {ide_name} integration removed. Use unified MCP servers instead.")
+                logger.warning(
+                    f"Legacy {ide_name} integration removed. Use unified MCP servers instead."
+                )
 
         except Exception as e:
             logger.error(f"Failed to register servers for {ide_name}: {e}")

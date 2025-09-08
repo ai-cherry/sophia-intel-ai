@@ -5,21 +5,22 @@ Simple Sophia AI Monitoring Script
 No complex dependencies, just basic health checks and logging
 """
 
+import datetime
 import json
 import time
+
 import requests
-import datetime
-from pathlib import Path
 
 # Simple configuration
 ENDPOINTS = [
     "http://www.sophia-intel.ai/health",
     "http://www.sophia-intel.ai/",
-    "http://api.sophia-intel.ai/health"
+    "http://api.sophia-intel.ai/health",
 ]
 
 LOG_FILE = "/tmp/sophia_monitoring.log"
 CHECK_INTERVAL = 300  # 5 minutes
+
 
 def log_message(message, level="INFO"):
     """Simple logging function"""
@@ -30,6 +31,7 @@ def log_message(message, level="INFO"):
     # Append to log file
     with open(LOG_FILE, "a") as f:
         f.write(log_entry + "\n")
+
 
 def check_endpoint(url, timeout=10):
     """Simple endpoint health check"""
@@ -43,15 +45,16 @@ def check_endpoint(url, timeout=10):
             "status": status,
             "status_code": response.status_code,
             "response_time": response_time,
-            "timestamp": datetime.datetime.now().isoformat()
+            "timestamp": datetime.datetime.now().isoformat(),
         }
     except requests.exceptions.RequestException as e:
         return {
             "url": url,
             "status": "ERROR",
             "error": str(e),
-            "timestamp": datetime.datetime.now().isoformat()
+            "timestamp": datetime.datetime.now().isoformat(),
         }
+
 
 def run_health_checks():
     """Run health checks on all endpoints"""
@@ -69,6 +72,7 @@ def run_health_checks():
 
     return results
 
+
 def save_status_report(results):
     """Save simple status report"""
     report = {
@@ -76,9 +80,9 @@ def save_status_report(results):
         "summary": {
             "total_endpoints": len(results),
             "healthy_endpoints": len([r for r in results if r["status"] == "UP"]),
-            "unhealthy_endpoints": len([r for r in results if r["status"] != "UP"])
+            "unhealthy_endpoints": len([r for r in results if r["status"] != "UP"]),
         },
-        "endpoints": results
+        "endpoints": results,
     }
 
     # Save to simple JSON file
@@ -88,6 +92,7 @@ def save_status_report(results):
 
     log_message(f"Status report saved to {status_file}")
     return report
+
 
 def main():
     """Main monitoring function"""
@@ -117,6 +122,7 @@ def main():
         log_message("Monitoring stopped by user")
     except Exception as e:
         log_message(f"Monitoring error: {e}", "ERROR")
+
 
 if __name__ == "__main__":
     main()

@@ -3,23 +3,16 @@ Behavior tests for Artemis Swarm Patterns
 Tests military coordination patterns, chain-of-command hierarchy, and tactical decision making
 """
 
-import asyncio
-import json
-from datetime import datetime, timezone
-from typing import Any, Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
 
 from app.artemis.unified_factory import (
-    AgentProfile,
     ArtemisUnifiedFactory,
     MilitaryUnitType,
     MissionStatus,
-    MissionTemplate,
     SwarmType,
-    TechnicalAgentRole,
 )
 
 

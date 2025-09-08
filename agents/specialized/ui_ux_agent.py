@@ -5,17 +5,12 @@ Provides intelligent user interface and experience optimization with design anal
 """
 
 import asyncio
-import base64
-import json
-import logging
-import os
-import tempfile
 from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from agents.core.base_agent import AgentCapability, AgentConfig, AgentStatus, BaseAgent
+from agents.core.base_agent import AgentCapability, AgentConfig, BaseAgent
+
 
 class UIFramework(Enum):
     """UI frameworks and technologies"""
@@ -28,6 +23,7 @@ class UIFramework(Enum):
     FLUTTER = "flutter"
     REACT_NATIVE = "react_native"
 
+
 class DesignSystem(Enum):
     """Design systems and libraries"""
 
@@ -38,6 +34,7 @@ class DesignSystem(Enum):
     ANT_DESIGN = "ant_design"
     CUSTOM = "custom"
 
+
 class AccessibilityLevel(Enum):
     """Accessibility compliance levels"""
 
@@ -46,6 +43,7 @@ class AccessibilityLevel(Enum):
     WCAG_AAA = "wcag_aaa"
     SECTION_508 = "section_508"
 
+
 class DeviceType(Enum):
     """Device types for responsive design"""
 
@@ -53,6 +51,7 @@ class DeviceType(Enum):
     TABLET = "tablet"
     DESKTOP = "desktop"
     LARGE_SCREEN = "large_screen"
+
 
 @dataclass
 class UIComponent:
@@ -65,6 +64,7 @@ class UIComponent:
     styles: dict[str, Any]
     accessibility_features: list[str]
     responsive_breakpoints: dict[DeviceType, dict[str, Any]]
+
 
 @dataclass
 class DesignAnalysis:
@@ -80,6 +80,7 @@ class DesignAnalysis:
     recommendations: list[str]
     best_practices: list[str]
 
+
 @dataclass
 class UXMetrics:
     """User experience metrics"""
@@ -93,6 +94,7 @@ class UXMetrics:
     conversion_rate: float
     user_satisfaction: float
 
+
 @dataclass
 class ResponsiveDesign:
     """Responsive design configuration"""
@@ -101,6 +103,7 @@ class ResponsiveDesign:
     layouts: dict[DeviceType, dict[str, Any]]
     typography_scales: dict[DeviceType, dict[str, Any]]
     spacing_systems: dict[DeviceType, dict[str, Any]]
+
 
 class UIUXAgent(BaseAgent):
     """
@@ -159,9 +162,7 @@ class UIUXAgent(BaseAgent):
             self.logger.error(f"Failed to initialize UI/UX Agent: {str(e)}")
             raise
 
-    async def _process_task_impl(
-        self, task_id: str, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _process_task_impl(self, task_id: str, task_data: dict[str, Any]) -> dict[str, Any]:
         """Process UI/UX optimization tasks"""
         task_type = task_data.get("task_type")
 
@@ -257,9 +258,7 @@ class UIUXAgent(BaseAgent):
             current_score = await self._analyze_accessibility(component)
 
             # Generate accessibility improvements
-            improvements = await self._generate_accessibility_improvements(
-                component, target_level
-            )
+            improvements = await self._generate_accessibility_improvements(component, target_level)
 
             # Apply improvements
             optimized_component = await self._apply_accessibility_improvements(
@@ -308,9 +307,7 @@ class UIUXAgent(BaseAgent):
 
             for device in target_devices:
                 layouts[device] = await self._generate_device_layout(component, device)
-                typography_scales[device] = await self._generate_typography_scale(
-                    device
-                )
+                typography_scales[device] = await self._generate_typography_scale(device)
                 spacing_systems[device] = await self._generate_spacing_system(device)
 
             responsive_design = ResponsiveDesign(
@@ -320,9 +317,7 @@ class UIUXAgent(BaseAgent):
                 spacing_systems=spacing_systems,
             )
 
-            self.logger.info(
-                f"Responsive design generated for {len(target_devices)} devices"
-            )
+            self.logger.info(f"Responsive design generated for {len(target_devices)} devices")
             return responsive_design
 
         except Exception as e:
@@ -433,9 +428,7 @@ class UIUXAgent(BaseAgent):
             "best_practices": analysis.best_practices,
         }
 
-    async def _handle_optimize_accessibility(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_optimize_accessibility(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle accessibility optimization task"""
         component_data = task_data.get("component")
         target_level = AccessibilityLevel(task_data.get("target_level", "wcag_aa"))
@@ -463,9 +456,7 @@ class UIUXAgent(BaseAgent):
             "compliance_level": result["compliance_level"],
         }
 
-    async def _handle_analyze_performance(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_analyze_performance(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle performance analysis task"""
         page_url = task_data.get("page_url")
 
@@ -487,14 +478,11 @@ class UIUXAgent(BaseAgent):
             "user_satisfaction": metrics.user_satisfaction,
         }
 
-    async def _handle_generate_responsive_design(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_generate_responsive_design(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle responsive design generation task"""
         component_data = task_data.get("component")
         target_devices = [
-            DeviceType(device)
-            for device in task_data.get("target_devices", ["mobile", "desktop"])
+            DeviceType(device) for device in task_data.get("target_devices", ["mobile", "desktop"])
         ]
 
         if not component_data:
@@ -510,9 +498,7 @@ class UIUXAgent(BaseAgent):
             responsive_breakpoints=component_data.get("responsive_breakpoints", {}),
         )
 
-        responsive_design = await self.generate_responsive_design(
-            component, target_devices
-        )
+        responsive_design = await self.generate_responsive_design(component, target_devices)
 
         return {
             "task_type": "generate_responsive_design",
@@ -524,9 +510,7 @@ class UIUXAgent(BaseAgent):
             "layouts_generated": len(responsive_design.layouts),
         }
 
-    async def _handle_validate_design_system(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_validate_design_system(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle design system validation task"""
         design_system = DesignSystem(task_data.get("design_system", "material_ui"))
         components_data = task_data.get("components", [])
@@ -556,9 +540,7 @@ class UIUXAgent(BaseAgent):
             "compliant": result["compliant"],
         }
 
-    async def _handle_optimize_user_flow(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_optimize_user_flow(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle user flow optimization task"""
         return {
             "task_type": "optimize_user_flow",
@@ -566,9 +548,7 @@ class UIUXAgent(BaseAgent):
             "message": "User flow optimization not yet implemented",
         }
 
-    async def _handle_generate_component(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_generate_component(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle component generation task"""
         return {
             "task_type": "generate_component",
@@ -576,9 +556,7 @@ class UIUXAgent(BaseAgent):
             "message": "Component generation not yet implemented",
         }
 
-    async def _handle_audit_ux_metrics(
-        self, task_data: dict[str, Any]
-    ) -> dict[str, Any]:
+    async def _handle_audit_ux_metrics(self, task_data: dict[str, Any]) -> dict[str, Any]:
         """Handle UX metrics audit task"""
         page_url = task_data.get("page_url")
 
@@ -785,9 +763,7 @@ class UIUXAgent(BaseAgent):
             score -= 0.1
 
         # Check for complex animations
-        if "animation" in str(component.styles) or "transition" in str(
-            component.styles
-        ):
+        if "animation" in str(component.styles) or "transition" in str(component.styles):
             score -= 0.05
 
         # Check for responsive design
@@ -854,9 +830,7 @@ class UIUXAgent(BaseAgent):
 
         return issues
 
-    async def _generate_design_recommendations(
-        self, component: UIComponent
-    ) -> list[str]:
+    async def _generate_design_recommendations(self, component: UIComponent) -> list[str]:
         """Generate design recommendations"""
         recommendations = []
 
@@ -872,9 +846,7 @@ class UIUXAgent(BaseAgent):
 
         # Responsive design recommendations
         if not component.responsive_breakpoints:
-            recommendations.append(
-                "Add responsive breakpoints for mobile compatibility"
-            )
+            recommendations.append("Add responsive breakpoints for mobile compatibility")
 
         # Usability recommendations
         if component.type == "button" and "hover" not in str(component.styles):
@@ -1032,9 +1004,7 @@ class UIUXAgent(BaseAgent):
 
         return systems.get(device, systems[DeviceType.DESKTOP])
 
-    async def _check_color_consistency(
-        self, components: list[UIComponent]
-    ) -> list[str]:
+    async def _check_color_consistency(self, components: list[UIComponent]) -> list[str]:
         """Check color consistency across components"""
         issues = []
 
@@ -1054,9 +1024,7 @@ class UIUXAgent(BaseAgent):
 
         return issues
 
-    async def _check_typography_consistency(
-        self, components: list[UIComponent]
-    ) -> list[str]:
+    async def _check_typography_consistency(self, components: list[UIComponent]) -> list[str]:
         """Check typography consistency across components"""
         issues = []
 
@@ -1073,9 +1041,7 @@ class UIUXAgent(BaseAgent):
 
         return issues
 
-    async def _check_spacing_consistency(
-        self, components: list[UIComponent]
-    ) -> list[str]:
+    async def _check_spacing_consistency(self, components: list[UIComponent]) -> list[str]:
         """Check spacing consistency across components"""
         issues = []
 
@@ -1087,15 +1053,11 @@ class UIUXAgent(BaseAgent):
                     spacing_values.add(component.styles[prop])
 
         if len(spacing_values) > 8:
-            issues.append(
-                "Inconsistent spacing values - consider using a spacing scale"
-            )
+            issues.append("Inconsistent spacing values - consider using a spacing scale")
 
         return issues
 
-    async def _generate_consistency_recommendations(
-        self, issues: list[str]
-    ) -> list[str]:
+    async def _generate_consistency_recommendations(self, issues: list[str]) -> list[str]:
         """Generate recommendations for consistency issues"""
         recommendations = []
 
@@ -1115,10 +1077,12 @@ class UIUXAgent(BaseAgent):
 
         return recommendations
 
+
 # Factory function for easy instantiation
 def create_ui_ux_agent() -> UIUXAgent:
     """Create and return a UIUXAgent instance"""
     return UIUXAgent()
+
 
 # Entry point for immediate execution
 async def main():
@@ -1153,6 +1117,7 @@ async def main():
 
     finally:
         await agent.shutdown()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

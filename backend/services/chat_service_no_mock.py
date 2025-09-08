@@ -3,37 +3,38 @@ Real API calls only - no mocks
 Chat service with graceful degradation
 """
 
-import os
 import asyncio
 import logging
-from typing import Dict, List, Optional
+import os
 from datetime import datetime
+from typing import Dict, List
 
-from backend.services.feature_flags import FeatureFlags, require_feature, get_available_models
+from backend.services.feature_flags import FeatureFlags, get_available_models, require_feature
 
 logger = logging.getLogger(__name__)
+
 
 class ChatService:
     """Chat service with graceful degradation - no mocks"""
 
     def __init__(self):
         self.flags = FeatureFlags()
-        logger.info(f"ChatService initialized with {len(self.get_available_models())} available models")
+        logger.info(
+            f"ChatService initialized with {len(self.get_available_models())} available models"
+        )
 
     def get_available_models(self) -> List[Dict]:
         """Get list of available models"""
         return get_available_models()
 
-    async def get_response(self, query: str, model_preference: str = None, context: Dict = None) -> Dict:
+    async def get_response(
+        self, query: str, model_preference: str = None, context: Dict = None
+    ) -> Dict:
         """Get chat response using available models"""
 
         # Validate input
         if not query or not query.strip():
-            return {
-                'error': 'Empty query provided',
-                'response': None,
-                'model': None
-            }
+            return {"error": "Empty query provided", "response": None, "model": None}
 
         query = query.strip()
         context = context or {}
@@ -41,16 +42,22 @@ class ChatService:
         # Try preferred model first
         if model_preference:
             result = await self._try_model(query, model_preference, context)
-            if not result.get('error'):
+            if not result.get("error"):
                 return result
 
         # Fall back to available models in priority order
-        priority_models = ['gpt-4', 'claude-3-opus', 'gpt-3.5-turbo', 'claude-3-sonnet', 'grok-beta']
+        priority_models = [
+            "gpt-4",
+            "claude-3-opus",
+            "gpt-3.5-turbo",
+            "claude-3-sonnet",
+            "grok-beta",
+        ]
 
         for model in priority_models:
             if self._is_model_available(model):
                 result = await self._try_model(query, model, context)
-                if not result.get('error'):
+                if not result.get("error"):
                     return result
 
         # Final fallback to local processing
@@ -59,11 +66,11 @@ class ChatService:
     def _is_model_available(self, model: str) -> bool:
         """Check if model is available"""
         model_map = {
-            'gpt-4': 'chat_gpt',
-            'gpt-3.5-turbo': 'chat_gpt',
-            'claude-3-opus': 'chat_claude',
-            'claude-3-sonnet': 'chat_claude',
-            'grok-beta': 'chat_grok'
+            "gpt-4": "chat_gpt",
+            "gpt-3.5-turbo": "chat_gpt",
+            "claude-3-opus": "chat_claude",
+            "claude-3-sonnet": "chat_claude",
+            "grok-beta": "chat_grok",
         }
 
         feature = model_map.get(model)
@@ -72,36 +79,37 @@ class ChatService:
     async def _try_model(self, query: str, model: str, context: Dict) -> Dict:
         """Try to get response from specific model"""
         try:
-            if model.startswith('gpt-'):
+            if model.startswith("gpt-"):
                 return await self._call_openai(query, model, context)
-            elif model.startswith('claude-'):
+            elif model.startswith("claude-"):
                 return await self._call_anthropic(query, model, context)
-            elif model.startswith('grok-'):
+            elif model.startswith("grok-"):
                 return await self._call_grok(query, model, context)
             else:
-                return {'error': f'Unknown model: {model}'}
+                return {"error": f"Unknown model: {model}"}
 
         except Exception as e:
             logger.error(f"Error calling {model}: {e}")
-            return {'error': f'API call failed: {str(e)}'}
+            return {"error": f"API call failed: {str(e)}"}
 
-    @require_feature('chat_gpt')
+    @require_feature("chat_gpt")
     async def _call_openai(self, query: str, model: str, context: Dict) -> Dict:
         """Real OpenAI API call"""
         try:
             import openai
-            client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+
+            client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
             # Build messages with context
             messages = []
 
             # Add system context if provided
-            if context.get('system_prompt'):
-                messages.append({"role": "system", "content": context['system_prompt']})
+            if context.get("system_prompt"):
+                messages.append({"role": "system", "content": context["system_prompt"]})
 
             # Add conversation history if provided
-            if context.get('history'):
-                messages.extend(context['history'])
+            if context.get("history"):
+                messages.extend(context["history"])
 
             # Add current query
             messages.append({"role": "user", "content": query})
@@ -111,39 +119,40 @@ class ChatService:
                 client.chat.completions.create,
                 model=model,
                 messages=messages,
-                max_tokens=context.get('max_tokens', 1000),
-                temperature=context.get('temperature', 0.7)
+                max_tokens=context.get("max_tokens", 1000),
+                temperature=context.get("temperature", 0.7),
             )
 
             return {
-                'response': response.choices[0].message.content,
-                'model': model,
-                'provider': 'openai',
-                'timestamp': datetime.utcnow().isoformat(),
-                'usage': {
-                    'prompt_tokens': response.usage.prompt_tokens,
-                    'completion_tokens': response.usage.completion_tokens,
-                    'total_tokens': response.usage.total_tokens
-                }
+                "response": response.choices[0].message.content,
+                "model": model,
+                "provider": "openai",
+                "timestamp": datetime.utcnow().isoformat(),
+                "usage": {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens,
+                },
             }
 
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
-            return {'error': f'OpenAI API error: {str(e)}'}
+            return {"error": f"OpenAI API error: {str(e)}"}
 
-    @require_feature('chat_claude')
+    @require_feature("chat_claude")
     async def _call_anthropic(self, query: str, model: str, context: Dict) -> Dict:
         """Real Anthropic API call"""
         try:
             import anthropic
-            client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+
+            client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
             # Build messages for Claude
             messages = []
 
             # Add conversation history if provided
-            if context.get('history'):
-                messages.extend(context['history'])
+            if context.get("history"):
+                messages.extend(context["history"])
 
             # Add current query
             messages.append({"role": "user", "content": query})
@@ -153,41 +162,41 @@ class ChatService:
                 client.messages.create,
                 model=model,
                 messages=messages,
-                max_tokens=context.get('max_tokens', 1000),
-                temperature=context.get('temperature', 0.7),
-                system=context.get('system_prompt', '')
+                max_tokens=context.get("max_tokens", 1000),
+                temperature=context.get("temperature", 0.7),
+                system=context.get("system_prompt", ""),
             )
 
             return {
-                'response': response.content[0].text,
-                'model': model,
-                'provider': 'anthropic',
-                'timestamp': datetime.utcnow().isoformat(),
-                'usage': {
-                    'input_tokens': response.usage.input_tokens,
-                    'output_tokens': response.usage.output_tokens,
-                    'total_tokens': response.usage.input_tokens + response.usage.output_tokens
-                }
+                "response": response.content[0].text,
+                "model": model,
+                "provider": "anthropic",
+                "timestamp": datetime.utcnow().isoformat(),
+                "usage": {
+                    "input_tokens": response.usage.input_tokens,
+                    "output_tokens": response.usage.output_tokens,
+                    "total_tokens": response.usage.input_tokens + response.usage.output_tokens,
+                },
             }
 
         except Exception as e:
             logger.error(f"Anthropic API error: {e}")
-            return {'error': f'Anthropic API error: {str(e)}'}
+            return {"error": f"Anthropic API error: {str(e)}"}
 
-    @require_feature('chat_grok')
+    @require_feature("chat_grok")
     async def _call_grok(self, query: str, model: str, context: Dict) -> Dict:
         """Real Grok API call"""
         try:
             # Grok API implementation would go here
             # For now, return placeholder since Grok API is not widely available
             return {
-                'error': 'Grok API not yet implemented',
-                'solution': 'Use OpenAI or Anthropic models instead'
+                "error": "Grok API not yet implemented",
+                "solution": "Use OpenAI or Anthropic models instead",
             }
 
         except Exception as e:
             logger.error(f"Grok API error: {e}")
-            return {'error': f'Grok API error: {str(e)}'}
+            return {"error": f"Grok API error: {str(e)}"}
 
     async def _local_response(self, query: str, context: Dict) -> Dict:
         """Local fallback - no API needed"""
@@ -197,7 +206,7 @@ class ChatService:
         query_lower = query.lower()
 
         # Help and guidance responses
-        if any(word in query_lower for word in ['help', 'how', 'what', 'guide']):
+        if any(word in query_lower for word in ["help", "how", "what", "guide"]):
             response = """I'm Sophia AI, your intelligent assistant. I can help with:
 
 • General questions and information
@@ -212,7 +221,7 @@ For advanced AI responses, please add API keys:
 Run `./scripts/setup_free_api_keys.sh` for setup guide."""
 
         # API setup queries
-        elif any(word in query_lower for word in ['api', 'key', 'setup', 'configure']):
+        elif any(word in query_lower for word in ["api", "key", "setup", "configure"]):
             response = """To enable AI features, you need API keys:
 
 1. **OpenAI** (Recommended - $5 free credit):
@@ -230,7 +239,7 @@ Run `./scripts/setup_free_api_keys.sh` for setup guide."""
 Run: `./scripts/setup_free_api_keys.sh` for detailed guide."""
 
         # Business/sales queries
-        elif any(word in query_lower for word in ['sales', 'revenue', 'business', 'crm']):
+        elif any(word in query_lower for word in ["sales", "revenue", "business", "crm"]):
             response = """Business analysis requires AI integration. Current status:
 
 • Basic business logic: ✅ Available
@@ -241,7 +250,7 @@ Run: `./scripts/setup_free_api_keys.sh` for detailed guide."""
 Add API keys to unlock advanced business features."""
 
         # Technical queries
-        elif any(word in query_lower for word in ['code', 'debug', 'error', 'technical']):
+        elif any(word in query_lower for word in ["code", "debug", "error", "technical"]):
             response = """Technical assistance available with limited functionality:
 
 • Basic code review: ✅ Available
@@ -264,11 +273,11 @@ I'm running in local mode with basic capabilities. For intelligent responses, pl
 I can still help with basic queries and guidance!"""
 
         return {
-            'response': response,
-            'model': 'local',
-            'provider': 'sophia',
-            'timestamp': datetime.utcnow().isoformat(),
-            'note': 'Local fallback - add API keys for AI responses'
+            "response": response,
+            "model": "local",
+            "provider": "sophia",
+            "timestamp": datetime.utcnow().isoformat(),
+            "note": "Local fallback - add API keys for AI responses",
         }
 
     async def get_chat_history(self, user_id: str, limit: int = 50) -> List[Dict]:

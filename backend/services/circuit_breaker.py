@@ -4,34 +4,40 @@ Intelligent circuit breaker for external services with smart recovery
 """
 
 import asyncio
-import time
+import json
 import logging
-from typing import Callable, Any, Optional, Dict
-from enum import Enum
+import time
 from collections import deque
 from dataclasses import dataclass, field
-import json
+from enum import Enum
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
+
 class CircuitState(Enum):
     """Circuit breaker states"""
-    CLOSED = "closed"      # Normal operation
-    OPEN = "open"          # Circuit is open, failing fast
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Circuit is open, failing fast
     HALF_OPEN = "half_open"  # Testing if service recovered
+
 
 @dataclass
 class CircuitBreakerConfig:
     """Circuit breaker configuration"""
+
     failure_threshold: int = 5
     recovery_timeout: int = 60
     success_threshold: int = 3  # For half-open state
     timeout: float = 30.0
     expected_exception: type = Exception
 
+
 @dataclass
 class CircuitBreakerStats:
     """Circuit breaker statistics"""
+
     total_calls: int = 0
     successful_calls: int = 0
     failed_calls: int = 0
@@ -40,20 +46,21 @@ class CircuitBreakerStats:
     current_state: CircuitState = CircuitState.CLOSED
     failures: deque = field(default_factory=lambda: deque(maxlen=10))
 
+
 class CircuitBreakerError(Exception):
     """Circuit breaker specific exception"""
 
+
 class CircuitOpenError(CircuitBreakerError):
     """Raised when circuit is open"""
+
 
 class CircuitBreaker:
     """
     Intelligent circuit breaker with adaptive recovery and comprehensive monitoring
     """
 
-    def __init__(self, 
-                 name: str = "default",
-                 config: Optional[CircuitBreakerConfig] = None):
+    def __init__(self, name: str = "default", config: Optional[CircuitBreakerConfig] = None):
         self.name = name
         self.config = config or CircuitBreakerConfig()
         self.stats = CircuitBreakerStats()
@@ -92,8 +99,7 @@ class CircuitBreaker:
             try:
                 # Execute function with timeout
                 result = await asyncio.wait_for(
-                    self._execute_function(func, *args, **kwargs),
-                    timeout=self.config.timeout
+                    self._execute_function(func, *args, **kwargs), timeout=self.config.timeout
                 )
 
                 # Handle success
@@ -136,18 +142,22 @@ class CircuitBreaker:
         """Handle failed function execution"""
         self.stats.failed_calls += 1
         self.stats.last_failure_time = time.time()
-        self.stats.failures.append({
-            'timestamp': time.time(),
-            'exception': str(exception),
-            'type': type(exception).__name__
-        })
+        self.stats.failures.append(
+            {
+                "timestamp": time.time(),
+                "exception": str(exception),
+                "type": type(exception).__name__,
+            }
+        )
 
         if self.stats.current_state == CircuitState.CLOSED:
             # Check if we should open the circuit
             if len(self.stats.failures) >= self.config.failure_threshold:
                 self.stats.current_state = CircuitState.OPEN
                 self.stats.circuit_opens += 1
-                logger.warning(f"🔴 Circuit '{self.name}' OPENED after {len(self.stats.failures)} failures")
+                logger.warning(
+                    f"🔴 Circuit '{self.name}' OPENED after {len(self.stats.failures)} failures"
+                )
 
         elif self.stats.current_state == CircuitState.HALF_OPEN:
             # Failure in half-open state, go back to open
@@ -171,17 +181,15 @@ class CircuitBreaker:
     def get_stats(self) -> Dict[str, Any]:
         """Get circuit breaker statistics"""
         return {
-            'name': self.name,
-            'state': self.stats.current_state.value,
-            'total_calls': self.stats.total_calls,
-            'successful_calls': self.stats.successful_calls,
-            'failed_calls': self.stats.failed_calls,
-            'circuit_opens': self.stats.circuit_opens,
-            'success_rate': (
-                self.stats.successful_calls / max(self.stats.total_calls, 1) * 100
-            ),
-            'last_failure_time': self.stats.last_failure_time,
-            'recent_failures': list(self.stats.failures)
+            "name": self.name,
+            "state": self.stats.current_state.value,
+            "total_calls": self.stats.total_calls,
+            "successful_calls": self.stats.successful_calls,
+            "failed_calls": self.stats.failed_calls,
+            "circuit_opens": self.stats.circuit_opens,
+            "success_rate": (self.stats.successful_calls / max(self.stats.total_calls, 1) * 100),
+            "last_failure_time": self.stats.last_failure_time,
+            "recent_failures": list(self.stats.failures),
         }
 
     def reset(self):
@@ -190,15 +198,16 @@ class CircuitBreaker:
         self.stats.failures.clear()
         logger.info(f"🔄 Circuit '{self.name}' manually reset")
 
+
 class CircuitBreakerRegistry:
     """Registry for managing multiple circuit breakers"""
 
     _instances: Dict[str, CircuitBreaker] = {}
 
     @classmethod
-    def get_circuit_breaker(cls, 
-                           name: str, 
-                           config: Optional[CircuitBreakerConfig] = None) -> CircuitBreaker:
+    def get_circuit_breaker(
+        cls, name: str, config: Optional[CircuitBreakerConfig] = None
+    ) -> CircuitBreaker:
         """Get or create circuit breaker instance"""
         if name not in cls._instances:
             cls._instances[name] = CircuitBreaker(name, config)
@@ -216,10 +225,11 @@ class CircuitBreakerRegistry:
             cb.reset()
         logger.info("🔄 All circuit breakers reset")
 
+
 # Decorator for easy circuit breaker usage
-def circuit_breaker(name: str, 
-                   config: Optional[CircuitBreakerConfig] = None):
+def circuit_breaker(name: str, config: Optional[CircuitBreakerConfig] = None):
     """Decorator to add circuit breaker to a function"""
+
     def decorator(func):
         cb = CircuitBreakerRegistry.get_circuit_breaker(name, config)
 
@@ -228,7 +238,9 @@ def circuit_breaker(name: str,
 
         wrapper.circuit_breaker = cb
         return wrapper
+
     return decorator
+
 
 # Example usage
 if __name__ == "__main__":

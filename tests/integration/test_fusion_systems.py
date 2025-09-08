@@ -4,31 +4,32 @@ Integration tests for Sophia AI Fusion Systems
 Tests the 4 fusion systems working together in realistic scenarios
 """
 
-import asyncio
 import json
 import os
-import pytest
 import time
 from datetime import datetime
-from typing import Dict, Any
 
-import httpx
+import pytest
 import redis
 
 # Handle optional dependencies gracefully
 try:
     from qdrant_client import QdrantClient
+
     QDRANT_AVAILABLE = True
 except ImportError:
     QDRANT_AVAILABLE = False
+
     # Mock QdrantClient for when Qdrant is not available
     class QdrantClient:
         def __init__(self, *args, **kwargs):
             pass
 
+
 # Test configuration
-TEST_REDIS_URL = os.getenv('REDIS_URL', '${REDIS_URL}')
-TEST_QDRANT_URL = os.getenv('QDRANT_URL', 'http://localhost:6333')
+TEST_REDIS_URL = os.getenv("REDIS_URL", "${REDIS_URL}")
+TEST_QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
+
 
 class TestFusionSystemsIntegration:
     """Integration tests for all fusion systems"""
@@ -71,7 +72,8 @@ class TestFusionSystemsIntegration:
         """Test Redis optimization system functionality"""
         # Import the Redis optimization system
         import sys
-        sys.path.append('/home/ubuntu/sophia-main/swarms')
+
+        sys.path.append("/home/ubuntu/sophia-main/swarms")
 
         try:
             from mem0_agno_self_pruning import MemoryOptimizationSwarm
@@ -109,7 +111,8 @@ class TestFusionSystemsIntegration:
     async def test_edge_rag_system(self):
         """Test Edge RAG system functionality"""
         import sys
-        sys.path.append('/home/ubuntu/sophia-main/monitoring')
+
+        sys.path.append("/home/ubuntu/sophia-main/monitoring")
 
         try:
             from qdrant_edge_rag import QdrantEdgeRAG
@@ -136,7 +139,9 @@ class TestFusionSystemsIntegration:
             assert "suggestions" in assistant_result
             assert isinstance(assistant_result["suggestions"], list)
 
-            print(f"Edge RAG test passed: {len(results)} results, {len(assistant_result['suggestions'])} suggestions")
+            print(
+                f"Edge RAG test passed: {len(results)} results, {len(assistant_result['suggestions'])} suggestions"
+            )
 
         except ImportError as e:
             pytest.skip(f"Edge RAG system not available: {e}")
@@ -147,7 +152,8 @@ class TestFusionSystemsIntegration:
     async def test_hybrid_routing_system(self):
         """Test Hybrid Routing system functionality"""
         import sys
-        sys.path.append('/home/ubuntu/sophia-main/devops')
+
+        sys.path.append("/home/ubuntu/sophia-main/devops")
 
         try:
             from portkey_openrouter_hybrid import HybridModelRouter
@@ -167,7 +173,7 @@ class TestFusionSystemsIntegration:
                     "latency_ms": 250,
                     "cost": 0.01,
                     "success": True,
-                    "tokens_used": 100
+                    "tokens_used": 100,
                 }
 
             router._execute_request = mock_execute_request
@@ -193,10 +199,11 @@ class TestFusionSystemsIntegration:
     async def test_cross_db_analytics_system(self):
         """Test Cross-DB Analytics system functionality"""
         import sys
-        sys.path.append('/home/ubuntu/sophia-main/pipelines')
+
+        sys.path.append("/home/ubuntu/sophia-main/pipelines")
 
         try:
-            from neon_qdrant_analytics import CrossDatabaseAnalyticsMCP, AnalyticsQuery, DataDomain
+            from neon_qdrant_analytics import AnalyticsQuery, CrossDatabaseAnalyticsMCP, DataDomain
 
             # Initialize MCP system
             mcp = CrossDatabaseAnalyticsMCP()
@@ -207,7 +214,7 @@ class TestFusionSystemsIntegration:
                 domain=DataDomain.FINANCE,
                 query_type="revenue_forecast",
                 parameters={"months": 6},
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
             revenue_result = await mcp.handle_analytics_query(revenue_query)
@@ -226,9 +233,9 @@ class TestFusionSystemsIntegration:
                     "property_type": "apartment",
                     "square_feet": 1200,
                     "bedrooms": 2,
-                    "bathrooms": 2.0
+                    "bathrooms": 2.0,
                 },
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
             property_result = await mcp.handle_analytics_query(property_query)
@@ -238,7 +245,9 @@ class TestFusionSystemsIntegration:
             assert "confidence" in property_result
             assert property_result["prediction_type"] == "property_value"
 
-            print(f"Cross-DB analytics test passed: Revenue=${revenue_result['value']:,.2f}, Property=${property_result['value']:,.2f}")
+            print(
+                f"Cross-DB analytics test passed: Revenue=${revenue_result['value']:,.2f}, Property=${property_result['value']:,.2f}"
+            )
 
         except ImportError as e:
             pytest.skip(f"Cross-DB analytics system not available: {e}")
@@ -257,13 +266,11 @@ class TestFusionSystemsIntegration:
                 "cost_savings": 127.50,
                 "keys_pruned": 1847,
                 "status": "active",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
             self.redis_client.setex(
-                "fusion:redis_optimization:metrics",
-                3600,
-                json.dumps(redis_metrics)
+                "fusion:redis_optimization:metrics", 3600, json.dumps(redis_metrics)
             )
 
             # 2. Store Edge RAG metrics
@@ -272,14 +279,10 @@ class TestFusionSystemsIntegration:
                 "avg_latency": 245,
                 "success_rate": 98.7,
                 "status": "active",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
             }
 
-            self.redis_client.setex(
-                "fusion:edge_rag:metrics",
-                3600,
-                json.dumps(edge_metrics)
-            )
+            self.redis_client.setex("fusion:edge_rag:metrics", 3600, json.dumps(edge_metrics))
 
             # 3. Verify metrics can be retrieved
             stored_redis_metrics = self.redis_client.get("fusion:redis_optimization:metrics")
@@ -315,26 +318,26 @@ class TestFusionSystemsIntegration:
                     "memory_saved": 2.4,
                     "cost_savings": 127.50,
                     "keys_pruned": 1847,
-                    "status": "active"
+                    "status": "active",
                 },
                 "edge_rag": {
                     "query_count": 342,
                     "avg_latency": 245,
                     "success_rate": 98.7,
-                    "status": "active"
+                    "status": "active",
                 },
                 "hybrid_routing": {
                     "requests_routed": 15420,
                     "cost_optimization": 31.2,
                     "uptime": 99.94,
-                    "status": "active"
+                    "status": "active",
                 },
                 "cross_db_analytics": {
                     "predictions_made": 89,
                     "accuracy": 94.3,
                     "data_points": 12847,
-                    "status": "active"
-                }
+                    "status": "active",
+                },
             }
 
             # Verify structure
@@ -364,6 +367,7 @@ class TestFusionSystemsIntegration:
 
         except Exception as e:
             pytest.fail(f"Fusion metrics API integration test failed: {e}")
+
 
 class TestFusionSystemsPerformance:
     """Performance tests for fusion systems"""
@@ -402,7 +406,9 @@ class TestFusionSystemsPerformance:
             assert creation_time < 1.0, f"Redis creation too slow: {creation_time:.3f}s"
             assert retrieval_time < 0.5, f"Redis retrieval too slow: {retrieval_time:.3f}s"
 
-            print(f"Redis performance test passed: Create={creation_time:.3f}s, Retrieve={retrieval_time:.3f}s")
+            print(
+                f"Redis performance test passed: Create={creation_time:.3f}s, Retrieve={retrieval_time:.3f}s"
+            )
 
         except Exception as e:
             pytest.fail(f"Redis performance test failed: {e}")
@@ -428,6 +434,7 @@ class TestFusionSystemsPerformance:
 
         except Exception as e:
             pytest.fail(f"Qdrant performance test failed: {e}")
+
 
 if __name__ == "__main__":
     # Run tests directly

@@ -6,7 +6,6 @@ Verifies AlertManager can handle 500 alerts/second at peak load
 
 import argparse
 import asyncio
-import json
 import random
 import sys
 import time

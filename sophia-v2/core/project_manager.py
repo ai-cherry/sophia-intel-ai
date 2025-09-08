@@ -5,12 +5,11 @@ Project Manager Module
 Handles project management, sprint planning, task tracking, and resource allocation.
 """
 
-import json
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 
 class ProjectStatus(Enum):

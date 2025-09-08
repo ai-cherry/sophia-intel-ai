@@ -5,15 +5,11 @@ Tests KEDA, AlertManager, and ArgoCD working together as an integrated system
 """
 
 import asyncio
-import json
 import logging
 import time
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 
 import aiohttp
-import pytest
-import yaml
 from kubernetes import client, config
 
 # Configure logging

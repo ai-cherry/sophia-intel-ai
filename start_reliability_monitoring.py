@@ -9,6 +9,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
+
 async def main():
     try:
         from mcp_servers.reliability.distributed_reliability_monitor import (
@@ -22,9 +23,7 @@ async def main():
         await monitor.start_monitoring()
 
         print("✅ Reliability monitoring system active")
-        print(
-            "📊 Monitor available at: http://104.171.202.103:8080/api/reliability/dashboard"
-        )
+        print("📊 Monitor available at: http://104.171.202.103:8080/api/reliability/dashboard")
         print("🔍 Logs available in: logs/reliability/")
         print("⏹️  Press Ctrl+C to stop monitoring")
 
@@ -47,6 +46,7 @@ async def main():
     except Exception as e:
         print(f"❌ Failed to start reliability monitoring: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

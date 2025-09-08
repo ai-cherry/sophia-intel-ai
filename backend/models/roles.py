@@ -3,15 +3,18 @@ Sophia AI Platform v4.0 - Role-Based Access Control System
 Extensible role system with granular permissions and wildcard support
 """
 
-from enum import Enum
-from typing import Set, Dict, List, Optional
-from pydantic import BaseModel
 import logging
+from enum import Enum
+from typing import Dict, List, Set
+
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
+
 class Role(str, Enum):
     """User roles in the Sophia AI platform"""
+
     CEO = "ceo"
     MANAGER = "manager"
     ANALYST = "analyst"
@@ -20,8 +23,10 @@ class Role(str, Enum):
     DEVELOPER = "developer"
     GUEST = "guest"
 
+
 class Domain(str, Enum):
     """Available domains in the platform"""
+
     CHAT = "chat"
     SALES = "sales"
     MARKETING = "marketing"
@@ -37,13 +42,16 @@ class Domain(str, Enum):
     MONITORING = "monitoring"
     GITHUB = "github"
 
+
 class Permission(BaseModel):
     """Permission model with domain and action"""
+
     domain: str
     action: str
 
     def __str__(self) -> str:
         return f"{self.domain}.{self.action}"
+
 
 class RolePermissions:
     """Centralized role permission matrix with intelligent access control"""
@@ -55,39 +63,49 @@ class RolePermissions:
         },
         Role.MANAGER: {
             "domains.*",  # All domain access
-            "chat.*",     # All chat permissions
-            "training.view", "training.basic",
-            "users.view", "users.modify",
+            "chat.*",  # All chat permissions
+            "training.view",
+            "training.basic",
+            "users.view",
+            "users.modify",
             "analytics.*",
-            "reports.*"
+            "reports.*",
         },
         Role.ANALYST: {
-            "domains.sales", "domains.marketing", "domains.bi", "domains.finance",
-            "chat.view", "chat.basic",
+            "domains.sales",
+            "domains.marketing",
+            "domains.bi",
+            "domains.finance",
+            "chat.view",
+            "chat.basic",
             "training.view",
-            "analytics.view", "analytics.basic",
-            "reports.view", "reports.generate"
+            "analytics.view",
+            "analytics.basic",
+            "reports.view",
+            "reports.generate",
         },
         Role.TRAINER: {
-            "domains.training", "domains.support",
-            "chat.view", "chat.basic", "chat.train",
+            "domains.training",
+            "domains.support",
+            "chat.view",
+            "chat.basic",
+            "chat.train",
             "training.*",  # All training permissions
-            "analytics.view"
+            "analytics.view",
         },
         Role.SUPPORT: {
-            "domains.support", "domains.crm",
-            "chat.view", "chat.basic", "chat.support",
+            "domains.support",
+            "domains.crm",
+            "chat.view",
+            "chat.basic",
+            "chat.support",
             "training.view",
-            "users.view"
+            "users.view",
         },
         Role.DEVELOPER: {
             "*",  # Developers have all permissions for development
         },
-        Role.GUEST: {
-            "domains.sales",  # Limited access
-            "chat.view",
-            "training.view"
-        }
+        Role.GUEST: {"domains.sales", "chat.view", "training.view"},  # Limited access
     }
 
     # Domain groupings for UI organization
@@ -96,7 +114,7 @@ class RolePermissions:
         "Operations": ["devops", "monitoring", "github", "admin"],
         "Customer Success": ["support", "crm", "training"],
         "Human Resources": ["hr", "training"],
-        "Research & Development": ["research", "training", "devops"]
+        "Research & Development": ["research", "training", "devops"],
     }
 
     @classmethod
@@ -122,9 +140,9 @@ class RolePermissions:
             return True
 
         # Check wildcard permissions
-        permission_parts = permission.split('.')
+        permission_parts = permission.split(".")
         for perm in role_perms:
-            if perm.endswith('*'):
+            if perm.endswith("*"):
                 perm_prefix = perm[:-1]
                 if permission.startswith(perm_prefix):
                     return True
@@ -149,13 +167,13 @@ class RolePermissions:
         domains = set()
 
         for perm in role_perms:
-            if perm.startswith('domains.'):
-                if perm.endswith('*'):
+            if perm.startswith("domains."):
+                if perm.endswith("*"):
                     # Add all domains for wildcard
                     domains.update([d.value for d in Domain])
                 else:
                     # Add specific domain
-                    domain = perm.split('.', 1)[1]
+                    domain = perm.split(".", 1)[1]
                     domains.add(domain)
 
         return sorted(list(domains))
@@ -182,7 +200,9 @@ class RolePermissions:
         return filtered_groups
 
     @classmethod
-    def validate_role_permissions(cls, role: Role, required_permissions: List[str]) -> Dict[str, bool]:
+    def validate_role_permissions(
+        cls, role: Role, required_permissions: List[str]
+    ) -> Dict[str, bool]:
         """
         Validate multiple permissions for a role
 
@@ -216,27 +236,34 @@ class RolePermissions:
             "domain_groups": cls.get_domain_groups_for_role(role),
             "is_admin": role in [Role.CEO, Role.DEVELOPER],
             "can_train": cls.can_access(role, "training.modify"),
-            "can_manage_users": cls.can_access(role, "users.modify")
+            "can_manage_users": cls.can_access(role, "users.modify"),
         }
+
 
 # Authentication decorators for FastAPI
 from functools import wraps
-from fastapi import HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 security = HTTPBearer()
 
+
 def require_auth(func):
     """Decorator to require authentication"""
+
     @wraps(func)
     async def wrapper(*args, **kwargs):
         # Placeholder for actual authentication logic
         # In real implementation, validate JWT token here
         return await func(*args, **kwargs)
+
     return wrapper
+
 
 def require_permission(permission: str):
     """Decorator to require specific permission"""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -244,19 +271,26 @@ def require_permission(permission: str):
             # In real implementation, extract user role from token
             # and check permission using RolePermissions.can_access()
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 def require_role(required_role: Role):
     """Decorator to require specific role"""
+
     def decorator(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
             # Placeholder for role check
             # In real implementation, extract user role from token
             return await func(*args, **kwargs)
+
         return wrapper
+
     return decorator
+
 
 # FastAPI dependency for permission verification
 async def verify_permissions(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
@@ -294,7 +328,7 @@ async def verify_permissions(credentials: HTTPAuthorizationCredentials = Depends
                     "analytics": True,
                     "training": True,
                     "users": True,
-                    "reports": True
+                    "reports": True,
                 }
                 break
             elif "." in perm:
@@ -315,6 +349,7 @@ async def verify_permissions(credentials: HTTPAuthorizationCredentials = Depends
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
 
 # Example usage and testing
 if __name__ == "__main__":

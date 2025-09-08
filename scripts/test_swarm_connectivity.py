@@ -12,7 +12,6 @@ import time
 
 from app.core.aimlapi_config import aimlapi_manager
 from app.core.enhanced_llm_router import LLMProviderType, enhanced_router
-from app.core.portkey_config import portkey_manager
 
 
 def test_model_connectivity():

@@ -3,28 +3,34 @@ Comprehensive Unit Tests for Business Intelligence Server
 Target: 95% code coverage for BI integrations and data analytics
 """
 
-import pytest
-import asyncio
-import json
-import time
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-import aiohttp
-from dataclasses import dataclass
+import os
 
 # Import the modules we're testing
 import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import time
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 try:
-    from bi_server.server import BusinessIntelligenceServer
-    from bi_server.integrations import ApolloIntegration, UserGemsIntegration, GongIntegration, IntercomIntegration, HubSpotIntegration
-    from bi_server.cache_manager import CacheManager, TTLCache
-    from bi_server.rate_limiter import AsyncLimiter
     from bi_server.analytics_engine import AnalyticsEngine
+    from bi_server.cache_manager import CacheManager, TTLCache
+    from bi_server.integrations import (
+        ApolloIntegration,
+        GongIntegration,
+        HubSpotIntegration,
+        IntercomIntegration,
+        UserGemsIntegration,
+    )
+    from bi_server.rate_limiter import AsyncLimiter
+    from bi_server.server import BusinessIntelligenceServer
 except ImportError:
+
     @dataclass
     class CacheEntry:
         value: Any
@@ -95,6 +101,7 @@ except ImportError:
             self.cache_manager = CacheManager()
             self.analytics_engine = AnalyticsEngine()
 
+
 class TestBIServerInitialization:
     """Test Business Intelligence Server initialization and configuration"""
 
@@ -105,8 +112,8 @@ class TestBIServerInitialization:
 
     def test_server_initialization(self, bi_server):
         """Test server initializes with correct components"""
-        assert hasattr(bi_server, 'cache_manager')
-        assert hasattr(bi_server, 'analytics_engine')
+        assert hasattr(bi_server, "cache_manager")
+        assert hasattr(bi_server, "analytics_engine")
         assert isinstance(bi_server.cache_manager, CacheManager)
         assert isinstance(bi_server.analytics_engine, AnalyticsEngine)
 
@@ -117,10 +124,10 @@ class TestBIServerInitialization:
             "usergems_api_key": "usergems_test_key",
             "gong_api_key": "gong_test_key",
             "intercom_api_key": "intercom_test_key",
-            "hubspot_api_key": "hubspot_test_key"
+            "hubspot_api_key": "hubspot_test_key",
         }
 
-        if hasattr(bi_server, 'setup_integrations'):
+        if hasattr(bi_server, "setup_integrations"):
             bi_server.setup_integrations(api_keys)
 
             assert bi_server.apollo is not None
@@ -140,16 +147,17 @@ class TestBIServerInitialization:
         """Test cache manager initialization with different TTL settings"""
         cache_manager = bi_server.cache_manager
 
-        assert hasattr(cache_manager, 'apollo_cache')
-        assert hasattr(cache_manager, 'usergems_cache')
-        assert hasattr(cache_manager, 'gong_cache')
-        assert hasattr(cache_manager, 'intercom_cache')
-        assert hasattr(cache_manager, 'hubspot_cache')
+        assert hasattr(cache_manager, "apollo_cache")
+        assert hasattr(cache_manager, "usergems_cache")
+        assert hasattr(cache_manager, "gong_cache")
+        assert hasattr(cache_manager, "intercom_cache")
+        assert hasattr(cache_manager, "hubspot_cache")
 
         # Verify different TTL settings
         assert cache_manager.apollo_cache.default_ttl == 3600  # 1 hour
         assert cache_manager.usergems_cache.default_ttl == 1800  # 30 minutes
         assert cache_manager.gong_cache.default_ttl == 7200  # 2 hours
+
 
 class TestApolloIntegration:
     """Test Apollo.io integration for prospect and company data"""
@@ -164,7 +172,7 @@ class TestApolloIntegration:
         server.apollo = ApolloIntegration("test_apollo_key")
         return server
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_search_people(self, mock_get, apollo_integration):
         """Test searching for people in Apollo"""
         mock_response_data = {
@@ -174,10 +182,10 @@ class TestApolloIntegration:
                     "name": "John Doe",
                     "title": "VP of Engineering",
                     "email": "john@example.com",
-                    "company": {"name": "Example Corp"}
+                    "company": {"name": "Example Corp"},
                 }
             ],
-            "pagination": {"page": 1, "per_page": 25, "total_entries": 1}
+            "pagination": {"page": 1, "per_page": 25, "total_entries": 1},
         }
 
         mock_response = AsyncMock()
@@ -185,11 +193,11 @@ class TestApolloIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(apollo_integration, 'search_people'):
+        if hasattr(apollo_integration, "search_people"):
             search_params = {
                 "person_titles": ["VP of Engineering", "CTO"],
                 "organization_locations": ["San Francisco"],
-                "per_page": 25
+                "per_page": 25,
             }
 
             result = await apollo_integration.search_people(search_params)
@@ -201,7 +209,7 @@ class TestApolloIntegration:
             # Mock search functionality
             assert mock_response_data["people"][0]["name"] == "John Doe"
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_search_organizations(self, mock_get, apollo_integration):
         """Test searching for organizations in Apollo"""
         mock_response_data = {
@@ -211,10 +219,10 @@ class TestApolloIntegration:
                     "name": "Example Corp",
                     "website_url": "https://example.com",
                     "industry": "Technology",
-                    "estimated_num_employees": 500
+                    "estimated_num_employees": 500,
                 }
             ],
-            "pagination": {"page": 1, "per_page": 25, "total_entries": 1}
+            "pagination": {"page": 1, "per_page": 25, "total_entries": 1},
         }
 
         mock_response = AsyncMock()
@@ -222,11 +230,11 @@ class TestApolloIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(apollo_integration, 'search_organizations'):
+        if hasattr(apollo_integration, "search_organizations"):
             search_params = {
                 "organization_locations": ["San Francisco"],
                 "organization_num_employees_ranges": ["101,500"],
-                "per_page": 25
+                "per_page": 25,
             }
 
             result = await apollo_integration.search_organizations(search_params)
@@ -239,7 +247,7 @@ class TestApolloIntegration:
 
     async def test_apollo_rate_limiting(self, apollo_integration):
         """Test Apollo API rate limiting"""
-        if hasattr(apollo_integration, 'rate_limiter'):
+        if hasattr(apollo_integration, "rate_limiter"):
             rate_limiter = apollo_integration.rate_limiter
 
             # Should enforce rate limits
@@ -255,7 +263,7 @@ class TestApolloIntegration:
         cache_key = "apollo:search:people:hash123"
         test_data = {"people": [{"name": "John Doe"}]}
 
-        if hasattr(bi_server.cache_manager, 'set_cache'):
+        if hasattr(bi_server.cache_manager, "set_cache"):
             bi_server.cache_manager.set_cache(cache_key, test_data, ttl=3600)
             cached_result = bi_server.cache_manager.get_cache(cache_key)
 
@@ -264,6 +272,7 @@ class TestApolloIntegration:
             # Mock caching
             apollo_cache = {"apollo:search:people:hash123": test_data}
             assert apollo_cache[cache_key] == test_data
+
 
 class TestUserGemsIntegration:
     """Test UserGems integration for buyer intent and contact intelligence"""
@@ -278,7 +287,7 @@ class TestUserGemsIntegration:
         server.usergems = UserGemsIntegration("test_usergems_key")
         return server
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_contacts(self, mock_get, usergems_integration):
         """Test retrieving contacts from UserGems"""
         mock_response_data = {
@@ -288,11 +297,8 @@ class TestUserGemsIntegration:
                     "email": "alice@newcompany.com",
                     "first_name": "Alice",
                     "last_name": "Johnson",
-                    "company": {
-                        "name": "New Company Inc",
-                        "domain": "newcompany.com"
-                    },
-                    "job_change_date": "2024-01-15"
+                    "company": {"name": "New Company Inc", "domain": "newcompany.com"},
+                    "job_change_date": "2024-01-15",
                 }
             ]
         }
@@ -302,7 +308,7 @@ class TestUserGemsIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(usergems_integration, 'get_contacts'):
+        if hasattr(usergems_integration, "get_contacts"):
             result = await usergems_integration.get_contacts({"limit": 50})
 
             assert result["contacts"][0]["first_name"] == "Alice"
@@ -311,20 +317,17 @@ class TestUserGemsIntegration:
             # Mock contact retrieval
             assert mock_response_data["contacts"][0]["first_name"] == "Alice"
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_job_changes(self, mock_get, usergems_integration):
         """Test retrieving job changes from UserGems"""
         mock_response_data = {
             "job_changes": [
                 {
-                    "person": {
-                        "email": "bob@startup.com",
-                        "name": "Bob Smith"
-                    },
+                    "person": {"email": "bob@startup.com", "name": "Bob Smith"},
                     "old_company": {"name": "Old Corp"},
                     "new_company": {"name": "Startup Inc"},
                     "change_date": "2024-01-20",
-                    "confidence_score": 0.95
+                    "confidence_score": 0.95,
                 }
             ]
         }
@@ -334,11 +337,10 @@ class TestUserGemsIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(usergems_integration, 'get_job_changes'):
-            result = await usergems_integration.get_job_changes({
-                "date_from": "2024-01-01",
-                "date_to": "2024-01-31"
-            })
+        if hasattr(usergems_integration, "get_job_changes"):
+            result = await usergems_integration.get_job_changes(
+                {"date_from": "2024-01-01", "date_to": "2024-01-31"}
+            )
 
             assert result["job_changes"][0]["person"]["name"] == "Bob Smith"
             assert result["job_changes"][0]["confidence_score"] == 0.95
@@ -352,10 +354,10 @@ class TestUserGemsIntegration:
             "email": "prospect@company.com",
             "company": "Target Company",
             "recent_activities": ["visited_pricing", "downloaded_whitepaper", "attended_webinar"],
-            "engagement_score": 85
+            "engagement_score": 85,
         }
 
-        if hasattr(usergems_integration, 'calculate_intent_score'):
+        if hasattr(usergems_integration, "calculate_intent_score"):
             intent_score = usergems_integration.calculate_intent_score(contact_data)
 
             assert 0 <= intent_score <= 100
@@ -368,6 +370,7 @@ class TestUserGemsIntegration:
             intent_score = min(base_score + activity_bonus, 100)
 
             assert intent_score == 100  # 85 + (3*5) = 100, capped at 100
+
 
 class TestGongIntegration:
     """Test Gong.io integration for conversation intelligence"""
@@ -382,7 +385,7 @@ class TestGongIntegration:
         server.gong = GongIntegration("test_gong_key")
         return server
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_calls(self, mock_get, gong_integration):
         """Test retrieving calls from Gong"""
         mock_response_data = {
@@ -394,9 +397,9 @@ class TestGongIntegration:
                     "duration": 1800,
                     "parties": [
                         {"name": "Sales Rep", "role": "internal"},
-                        {"name": "John Prospect", "role": "external"}
+                        {"name": "John Prospect", "role": "external"},
                     ],
-                    "outcome": "positive"
+                    "outcome": "positive",
                 }
             ]
         }
@@ -406,11 +409,10 @@ class TestGongIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(gong_integration, 'get_calls'):
-            result = await gong_integration.get_calls({
-                "fromDateTime": "2024-01-01T00:00:00Z",
-                "toDateTime": "2024-01-31T23:59:59Z"
-            })
+        if hasattr(gong_integration, "get_calls"):
+            result = await gong_integration.get_calls(
+                {"fromDateTime": "2024-01-01T00:00:00Z", "toDateTime": "2024-01-31T23:59:59Z"}
+            )
 
             assert result["calls"][0]["title"] == "Discovery Call - TechCorp"
             assert result["calls"][0]["duration"] == 1800
@@ -418,7 +420,7 @@ class TestGongIntegration:
             # Mock call retrieval
             assert mock_response_data["calls"][0]["title"] == "Discovery Call - TechCorp"
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_call_transcripts(self, mock_get, gong_integration):
         """Test retrieving call transcripts from Gong"""
         mock_response_data = {
@@ -430,16 +432,16 @@ class TestGongIntegration:
                         "speaker": "Sales Rep",
                         "text": "Thanks for taking the time to meet with us today.",
                         "start": 0,
-                        "end": 3000
+                        "end": 3000,
                     },
                     {
-                        "speakerId": "speaker_2", 
+                        "speakerId": "speaker_2",
                         "speaker": "John Prospect",
                         "text": "Happy to be here. I'm interested in learning more about your solution.",
                         "start": 3500,
-                        "end": 7200
-                    }
-                ]
+                        "end": 7200,
+                    },
+                ],
             }
         }
 
@@ -448,7 +450,7 @@ class TestGongIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(gong_integration, 'get_call_transcript'):
+        if hasattr(gong_integration, "get_call_transcript"):
             result = await gong_integration.get_call_transcript("call_1")
 
             assert result["transcript"]["callId"] == "call_1"
@@ -465,11 +467,11 @@ class TestGongIntegration:
                 {"text": "This looks really promising for our team.", "speaker": "prospect"},
                 {"text": "I'm excited about the potential here.", "speaker": "prospect"},
                 {"text": "What are the pricing options?", "speaker": "prospect"},
-                {"text": "I have some concerns about implementation.", "speaker": "prospect"}
+                {"text": "I have some concerns about implementation.", "speaker": "prospect"},
             ]
         }
 
-        if hasattr(gong_integration, 'analyze_sentiment'):
+        if hasattr(gong_integration, "analyze_sentiment"):
             sentiment = gong_integration.analyze_sentiment(call_transcript)
 
             assert sentiment["overall_sentiment"] in ["positive", "negative", "neutral"]
@@ -479,10 +481,18 @@ class TestGongIntegration:
             positive_words = ["promising", "excited", "potential"]
             negative_words = ["concerns"]
 
-            positive_count = sum(1 for sentence in call_transcript["sentences"] 
-                               for word in positive_words if word in sentence["text"].lower())
-            negative_count = sum(1 for sentence in call_transcript["sentences"]
-                               for word in negative_words if word in sentence["text"].lower())
+            positive_count = sum(
+                1
+                for sentence in call_transcript["sentences"]
+                for word in positive_words
+                if word in sentence["text"].lower()
+            )
+            negative_count = sum(
+                1
+                for sentence in call_transcript["sentences"]
+                for word in negative_words
+                if word in sentence["text"].lower()
+            )
 
             assert positive_count == 3
             assert negative_count == 1
@@ -495,10 +505,10 @@ class TestGongIntegration:
             "next_steps": ["Send proposal", "Schedule technical demo"],
             "pain_points": ["Manual processes", "Scalability issues"],
             "budget_mentioned": True,
-            "decision_makers": ["John Prospect", "Sarah CTO"]
+            "decision_makers": ["John Prospect", "Sarah CTO"],
         }
 
-        if hasattr(gong_integration, 'extract_deal_insights'):
+        if hasattr(gong_integration, "extract_deal_insights"):
             insights = gong_integration.extract_deal_insights(call_data)
 
             assert "pain_points" in insights
@@ -511,11 +521,12 @@ class TestGongIntegration:
                 "pain_points": call_data["pain_points"],
                 "next_steps": call_data["next_steps"],
                 "decision_makers": call_data["decision_makers"],
-                "budget_qualified": call_data["budget_mentioned"]
+                "budget_qualified": call_data["budget_mentioned"],
             }
 
             assert len(insights["pain_points"]) == 2
             assert len(insights["next_steps"]) == 2
+
 
 class TestIntercomIntegration:
     """Test Intercom integration for customer support and messaging"""
@@ -530,7 +541,7 @@ class TestIntercomIntegration:
         server.intercom = IntercomIntegration("test_intercom_key")
         return server
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_conversations(self, mock_get, intercom_integration):
         """Test retrieving conversations from Intercom"""
         mock_response_data = {
@@ -541,17 +552,11 @@ class TestIntercomIntegration:
                     "updated_at": 1642179600,
                     "state": "closed",
                     "priority": "not_priority",
-                    "contacts": {
-                        "contacts": [
-                            {"id": "contact_1", "name": "Customer A"}
-                        ]
-                    },
-                    "conversation_parts": {
-                        "total_count": 5
-                    }
+                    "contacts": {"contacts": [{"id": "contact_1", "name": "Customer A"}]},
+                    "conversation_parts": {"total_count": 5},
                 }
             ],
-            "pages": {"page": 1, "total_pages": 1}
+            "pages": {"page": 1, "total_pages": 1},
         }
 
         mock_response = AsyncMock()
@@ -559,11 +564,8 @@ class TestIntercomIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(intercom_integration, 'get_conversations'):
-            result = await intercom_integration.get_conversations({
-                "per_page": 50,
-                "order": "desc"
-            })
+        if hasattr(intercom_integration, "get_conversations"):
+            result = await intercom_integration.get_conversations({"per_page": 50, "order": "desc"})
 
             assert result["conversations"][0]["id"] == "conv_1"
             assert result["conversations"][0]["state"] == "closed"
@@ -571,7 +573,7 @@ class TestIntercomIntegration:
             # Mock conversation retrieval
             assert mock_response_data["conversations"][0]["id"] == "conv_1"
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_contacts(self, mock_get, intercom_integration):
         """Test retrieving contacts from Intercom"""
         mock_response_data = {
@@ -581,14 +583,11 @@ class TestIntercomIntegration:
                     "email": "customer@example.com",
                     "name": "Jane Customer",
                     "created_at": 1640995200,
-                    "custom_attributes": {
-                        "plan": "enterprise",
-                        "mrr": 5000
-                    },
-                    "tags": ["vip", "enterprise"]
+                    "custom_attributes": {"plan": "enterprise", "mrr": 5000},
+                    "tags": ["vip", "enterprise"],
                 }
             ],
-            "pages": {"page": 1, "total_pages": 1}
+            "pages": {"page": 1, "total_pages": 1},
         }
 
         mock_response = AsyncMock()
@@ -596,7 +595,7 @@ class TestIntercomIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(intercom_integration, 'get_contacts'):
+        if hasattr(intercom_integration, "get_contacts"):
             result = await intercom_integration.get_contacts({"per_page": 50})
 
             assert result["data"][0]["email"] == "customer@example.com"
@@ -611,10 +610,10 @@ class TestIntercomIntegration:
             {"state": "closed", "first_response_time": 300, "resolution_time": 3600},
             {"state": "closed", "first_response_time": 600, "resolution_time": 7200},
             {"state": "open", "first_response_time": 900, "resolution_time": None},
-            {"state": "closed", "first_response_time": 150, "resolution_time": 1800}
+            {"state": "closed", "first_response_time": 150, "resolution_time": 1800},
         ]
 
-        if hasattr(intercom_integration, 'calculate_support_metrics'):
+        if hasattr(intercom_integration, "calculate_support_metrics"):
             metrics = intercom_integration.calculate_support_metrics(conversation_data)
 
             assert "avg_first_response_time" in metrics
@@ -625,8 +624,12 @@ class TestIntercomIntegration:
             closed_conversations = [c for c in conversation_data if c["state"] == "closed"]
             total_conversations = len(conversation_data)
 
-            avg_first_response = sum(c["first_response_time"] for c in conversation_data) / len(conversation_data)
-            avg_resolution = sum(c["resolution_time"] for c in closed_conversations if c["resolution_time"]) / len(closed_conversations)
+            avg_first_response = sum(c["first_response_time"] for c in conversation_data) / len(
+                conversation_data
+            )
+            avg_resolution = sum(
+                c["resolution_time"] for c in closed_conversations if c["resolution_time"]
+            ) / len(closed_conversations)
             closure_rate = len(closed_conversations) / total_conversations
 
             assert avg_first_response == 487.5  # (300+600+900+150)/4
@@ -641,10 +644,10 @@ class TestIntercomIntegration:
             "avg_response_time": 300,
             "satisfaction_rating": 4.2,
             "plan": "enterprise",
-            "mrr": 5000
+            "mrr": 5000,
         }
 
-        if hasattr(intercom_integration, 'calculate_health_score'):
+        if hasattr(intercom_integration, "calculate_health_score"):
             health_score = intercom_integration.calculate_health_score(customer_data)
 
             assert 0 <= health_score <= 100
@@ -659,6 +662,7 @@ class TestIntercomIntegration:
             health_score = recency_score + engagement_score + satisfaction_score + value_score
             assert health_score == 92  # 30 + 30 + 42 + 20
 
+
 class TestHubSpotIntegration:
     """Test HubSpot integration for CRM and marketing automation"""
 
@@ -672,7 +676,7 @@ class TestHubSpotIntegration:
         server.hubspot = HubSpotIntegration("test_hubspot_key")
         return server
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_contacts(self, mock_get, hubspot_integration):
         """Test retrieving contacts from HubSpot"""
         mock_response_data = {
@@ -685,13 +689,13 @@ class TestHubSpotIntegration:
                         "lastname": "Johnson",
                         "company": "Johnson Industries",
                         "lifecyclestage": "opportunity",
-                        "hubspotscore": 75
+                        "hubspotscore": 75,
                     },
                     "createdAt": "2024-01-15T10:00:00Z",
-                    "updatedAt": "2024-01-20T15:30:00Z"
+                    "updatedAt": "2024-01-20T15:30:00Z",
                 }
             ],
-            "paging": {"next": None}
+            "paging": {"next": None},
         }
 
         mock_response = AsyncMock()
@@ -699,7 +703,7 @@ class TestHubSpotIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(hubspot_integration, 'get_contacts'):
+        if hasattr(hubspot_integration, "get_contacts"):
             result = await hubspot_integration.get_contacts({"limit": 50})
 
             assert result["results"][0]["properties"]["email"] == "lead@company.com"
@@ -708,7 +712,7 @@ class TestHubSpotIntegration:
             # Mock contact retrieval
             assert mock_response_data["results"][0]["properties"]["email"] == "lead@company.com"
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_get_deals(self, mock_get, hubspot_integration):
         """Test retrieving deals from HubSpot"""
         mock_response_data = {
@@ -721,14 +725,12 @@ class TestHubSpotIntegration:
                         "dealstage": "qualifiedtobuy",
                         "pipeline": "default",
                         "closedate": "2024-02-15",
-                        "probability": "75"
+                        "probability": "75",
                     },
-                    "associations": {
-                        "contacts": {"results": [{"id": "contact_1"}]}
-                    }
+                    "associations": {"contacts": {"results": [{"id": "contact_1"}]}},
                 }
             ],
-            "paging": {"next": None}
+            "paging": {"next": None},
         }
 
         mock_response = AsyncMock()
@@ -736,14 +738,20 @@ class TestHubSpotIntegration:
         mock_response.status = 200
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(hubspot_integration, 'get_deals'):
+        if hasattr(hubspot_integration, "get_deals"):
             result = await hubspot_integration.get_deals({"limit": 50})
 
-            assert result["results"][0]["properties"]["dealname"] == "Johnson Industries - Software License"
+            assert (
+                result["results"][0]["properties"]["dealname"]
+                == "Johnson Industries - Software License"
+            )
             assert float(result["results"][0]["properties"]["amount"]) == 50000.0
         else:
             # Mock deal retrieval
-            assert mock_response_data["results"][0]["properties"]["dealname"] == "Johnson Industries - Software License"
+            assert (
+                mock_response_data["results"][0]["properties"]["dealname"]
+                == "Johnson Industries - Software License"
+            )
 
     def test_hubspot_lead_scoring(self, hubspot_integration):
         """Test HubSpot lead scoring integration"""
@@ -755,10 +763,10 @@ class TestHubSpotIntegration:
             "website_visits": 25,
             "email_opens": 12,
             "content_downloads": 3,
-            "demo_requests": 1
+            "demo_requests": 1,
         }
 
-        if hasattr(hubspot_integration, 'calculate_lead_score'):
+        if hasattr(hubspot_integration, "calculate_lead_score"):
             lead_score = hubspot_integration.calculate_lead_score(contact_data)
 
             assert 0 <= lead_score <= 100
@@ -766,8 +774,12 @@ class TestHubSpotIntegration:
         else:
             # Mock lead scoring
             company_score = 20 if contact_data["num_employees"] >= 100 else 10
-            engagement_score = (contact_data["website_visits"] * 1) + (contact_data["email_opens"] * 2)
-            intent_score = (contact_data["content_downloads"] * 10) + (contact_data["demo_requests"] * 20)
+            engagement_score = (contact_data["website_visits"] * 1) + (
+                contact_data["email_opens"] * 2
+            )
+            intent_score = (contact_data["content_downloads"] * 10) + (
+                contact_data["demo_requests"] * 20
+            )
 
             lead_score = min(company_score + engagement_score + intent_score, 100)
             assert lead_score == 99  # 20 + 49 + 50 = 119, capped at 100
@@ -779,10 +791,10 @@ class TestHubSpotIntegration:
             {"stage": "qualifiedtobuy", "amount": 25000, "probability": 50},
             {"stage": "presentationscheduled", "amount": 15000, "probability": 60},
             {"stage": "decisionmakerboughtin", "amount": 30000, "probability": 80},
-            {"stage": "contractsent", "amount": 20000, "probability": 90}
+            {"stage": "contractsent", "amount": 20000, "probability": 90},
         ]
 
-        if hasattr(hubspot_integration, 'analyze_pipeline'):
+        if hasattr(hubspot_integration, "analyze_pipeline"):
             analytics = hubspot_integration.analyze_pipeline(deals_data)
 
             assert "total_pipeline_value" in analytics
@@ -791,10 +803,13 @@ class TestHubSpotIntegration:
         else:
             # Mock pipeline analytics
             total_value = sum(deal["amount"] for deal in deals_data)
-            weighted_value = sum(deal["amount"] * (deal["probability"] / 100) for deal in deals_data)
+            weighted_value = sum(
+                deal["amount"] * (deal["probability"] / 100) for deal in deals_data
+            )
 
             assert total_value == 100000
             assert weighted_value == 54500  # (10k*0.2 + 25k*0.5 + 15k*0.6 + 30k*0.8 + 20k*0.9)
+
 
 class TestCacheManager:
     """Test caching system for BI integrations"""
@@ -805,22 +820,24 @@ class TestCacheManager:
 
     def test_cache_initialization(self, cache_manager):
         """Test cache manager initializes with correct TTL settings"""
-        assert hasattr(cache_manager, 'apollo_cache')
-        assert hasattr(cache_manager, 'usergems_cache')
-        assert hasattr(cache_manager, 'gong_cache')
-        assert hasattr(cache_manager, 'intercom_cache')
-        assert hasattr(cache_manager, 'hubspot_cache')
+        assert hasattr(cache_manager, "apollo_cache")
+        assert hasattr(cache_manager, "usergems_cache")
+        assert hasattr(cache_manager, "gong_cache")
+        assert hasattr(cache_manager, "intercom_cache")
+        assert hasattr(cache_manager, "hubspot_cache")
 
         # Different TTL for different integrations based on data freshness needs
         assert cache_manager.gong_cache.default_ttl == 7200  # 2 hours (calls don't change often)
-        assert cache_manager.usergems_cache.default_ttl == 1800  # 30 minutes (job changes are time-sensitive)
+        assert (
+            cache_manager.usergems_cache.default_ttl == 1800
+        )  # 30 minutes (job changes are time-sensitive)
 
     def test_cache_set_and_get(self, cache_manager):
         """Test basic cache set and get operations"""
         cache_key = "test:apollo:contacts"
         test_data = {"contacts": [{"name": "Test Contact"}]}
 
-        if hasattr(cache_manager, 'set'):
+        if hasattr(cache_manager, "set"):
             cache_manager.set(cache_key, test_data, ttl=3600)
             retrieved_data = cache_manager.get(cache_key)
 
@@ -828,9 +845,7 @@ class TestCacheManager:
         else:
             # Mock cache operations
             cache_manager.apollo_cache.cache[cache_key] = CacheEntry(
-                value=test_data,
-                timestamp=datetime.now(),
-                ttl=3600
+                value=test_data, timestamp=datetime.now(), ttl=3600
             )
 
             assert cache_manager.apollo_cache.cache[cache_key].value == test_data
@@ -840,7 +855,7 @@ class TestCacheManager:
         cache_key = "test:expired:data"
         test_data = {"expired": True}
 
-        if hasattr(cache_manager, 'is_expired'):
+        if hasattr(cache_manager, "is_expired"):
             # Set cache with very short TTL
             cache_manager.set(cache_key, test_data, ttl=1)
 
@@ -853,7 +868,7 @@ class TestCacheManager:
             cache_entry = CacheEntry(
                 value=test_data,
                 timestamp=datetime.now() - timedelta(seconds=3600),
-                ttl=1800  # 30 minutes
+                ttl=1800,  # 30 minutes
             )
 
             time_since_cached = (datetime.now() - cache_entry.timestamp).total_seconds()
@@ -887,7 +902,7 @@ class TestCacheManager:
 
     def test_cache_size_limits(self, cache_manager):
         """Test cache size limits to prevent memory issues"""
-        if hasattr(cache_manager, 'max_cache_size'):
+        if hasattr(cache_manager, "max_cache_size"):
             # Should have reasonable size limits
             assert cache_manager.max_cache_size > 0
             assert cache_manager.max_cache_size <= 10000  # Reasonable upper limit
@@ -899,6 +914,7 @@ class TestCacheManager:
             # Should trigger cleanup when approaching limit
             should_cleanup = current_entries >= (max_entries * 0.9)
             assert should_cleanup is True
+
 
 class TestAnalyticsEngine:
     """Test analytics engine for BI data processing"""
@@ -919,10 +935,10 @@ class TestAnalyticsEngine:
         intercom_data = {"email": "customer@company.com", "satisfaction": 4.5}
         gong_data = {"participant_email": "customer@company.com", "sentiment": "positive"}
 
-        if hasattr(analytics_engine, 'correlate_customer_data'):
-            unified_profile = analytics_engine.correlate_customer_data([
-                apollo_data, hubspot_data, intercom_data, gong_data
-            ])
+        if hasattr(analytics_engine, "correlate_customer_data"):
+            unified_profile = analytics_engine.correlate_customer_data(
+                [apollo_data, hubspot_data, intercom_data, gong_data]
+            )
 
             assert unified_profile["email"] == "customer@company.com"
             assert "apollo" in unified_profile["sources"]
@@ -941,10 +957,10 @@ class TestAnalyticsEngine:
             "apollo": {"score": 75, "factors": ["title", "company_size"]},
             "hubspot": {"score": 82, "factors": ["website_activity", "email_engagement"]},
             "usergems": {"score": 68, "factors": ["job_change", "intent_signals"]},
-            "intercom": {"score": 90, "factors": ["satisfaction", "engagement"]}
+            "intercom": {"score": 90, "factors": ["satisfaction", "engagement"]},
         }
 
-        if hasattr(analytics_engine, 'aggregate_lead_scores'):
+        if hasattr(analytics_engine, "aggregate_lead_scores"):
             composite_score = analytics_engine.aggregate_lead_scores(lead_scores)
 
             assert 0 <= composite_score <= 100
@@ -968,10 +984,15 @@ class TestAnalyticsEngine:
             {"platform": "gong", "type": "discovery_call", "timestamp": "2024-01-10"},
             {"platform": "hubspot", "type": "opportunity_created", "timestamp": "2024-01-15"},
             {"platform": "gong", "type": "demo_call", "timestamp": "2024-01-20"},
-            {"platform": "hubspot", "type": "deal_closed", "timestamp": "2024-01-25", "revenue": 50000}
+            {
+                "platform": "hubspot",
+                "type": "deal_closed",
+                "timestamp": "2024-01-25",
+                "revenue": 50000,
+            },
         ]
 
-        if hasattr(analytics_engine, 'calculate_attribution'):
+        if hasattr(analytics_engine, "calculate_attribution"):
             attribution = analytics_engine.calculate_attribution(touchpoints)
 
             assert "apollo" in attribution
@@ -995,10 +1016,10 @@ class TestAnalyticsEngine:
             "opportunities": 150,  # HubSpot opportunities
             "demos": 75,  # Gong demo calls
             "proposals": 40,  # HubSpot proposals sent
-            "closed": 20  # HubSpot closed won
+            "closed": 20,  # HubSpot closed won
         }
 
-        if hasattr(analytics_engine, 'analyze_funnel'):
+        if hasattr(analytics_engine, "analyze_funnel"):
             funnel_analysis = analytics_engine.analyze_funnel(funnel_data)
 
             assert "conversion_rates" in funnel_analysis
@@ -1019,6 +1040,7 @@ class TestAnalyticsEngine:
             # Final conversion rate
             assert conversion_rates["proposals_to_closed"] == 0.5
 
+
 class TestErrorHandlingAndResilience:
     """Test error handling and system resilience"""
 
@@ -1026,7 +1048,7 @@ class TestErrorHandlingAndResilience:
     def bi_server(self):
         return BusinessIntelligenceServer()
 
-    @patch('aiohttp.ClientSession.get')
+    @patch("aiohttp.ClientSession.get")
     async def test_api_error_handling(self, mock_get, bi_server):
         """Test handling of API errors from integrations"""
         # Mock API error response
@@ -1035,7 +1057,7 @@ class TestErrorHandlingAndResilience:
         mock_response.json.return_value = {"error": "Rate limit exceeded"}
         mock_get.return_value.__aenter__.return_value = mock_response
 
-        if hasattr(bi_server, 'handle_api_error'):
+        if hasattr(bi_server, "handle_api_error"):
             result = await bi_server.handle_api_error(429, {"error": "Rate limit exceeded"})
 
             assert result["retry"] is True
@@ -1049,7 +1071,7 @@ class TestErrorHandlingAndResilience:
 
     async def test_circuit_breaker_integration(self, bi_server):
         """Test circuit breaker pattern for failing integrations"""
-        if hasattr(bi_server, 'circuit_breakers'):
+        if hasattr(bi_server, "circuit_breakers"):
             # Simulate repeated failures
             for _ in range(5):
                 bi_server.circuit_breakers["apollo"].record_failure()
@@ -1069,7 +1091,7 @@ class TestErrorHandlingAndResilience:
         # Simulate Apollo integration failure
         unavailable_integrations = ["apollo"]
 
-        if hasattr(bi_server, 'get_available_integrations'):
+        if hasattr(bi_server, "get_available_integrations"):
             available = bi_server.get_available_integrations()
 
             # Should still function with remaining integrations
@@ -1089,11 +1111,11 @@ class TestErrorHandlingAndResilience:
         invalid_apollo_data = {
             "people": [
                 {"name": None, "email": "invalid-email"},  # Invalid email
-                {"name": "Valid Name", "email": "valid@example.com"}
+                {"name": "Valid Name", "email": "valid@example.com"},
             ]
         }
 
-        if hasattr(bi_server, 'validate_apollo_data'):
+        if hasattr(bi_server, "validate_apollo_data"):
             valid_data = bi_server.validate_apollo_data(invalid_apollo_data)
 
             # Should filter out invalid records
@@ -1107,6 +1129,7 @@ class TestErrorHandlingAndResilience:
                     valid_records.append(person)
 
             assert len(valid_records) == 1
+
 
 if __name__ == "__main__":
     # Run the tests

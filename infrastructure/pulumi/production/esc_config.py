@@ -21,10 +21,11 @@ Services Configured:
 """
 
 import json
-from typing import Any, Dict, List
+
+import pulumi_esc as esc
 
 import pulumi
-import pulumi_esc as esc
+
 
 class SophiaAIESCConfig:
     """
@@ -231,9 +232,7 @@ class SophiaAIESCConfig:
                     "tavily": {"api_key": "${github-secrets.TAVILY_API_KEY}"},
                     "twingly": {"api_key": "${github-secrets.TWINGLY_API_KEY}"},
                     "zenrows": {"api_key": "${github-secrets.ZENROWS_API_KEY}"},
-                    "phantombuster": {
-                        "api_key": "${github-secrets.PHANTOM_BUSTER_API_KEY}"
-                    },
+                    "phantombuster": {"api_key": "${github-secrets.PHANTOM_BUSTER_API_KEY}"},
                     "apify": {"token": "${github-secrets.APIFY_API_TOKEN}"},
                 },
             },
@@ -323,15 +322,11 @@ class SophiaAIESCConfig:
                         "N8N_WEBHOOK_URL": {"from_secret": "N8N_WEBHOOK_URL"},
                         "N8N_BASE_URL": {"from_secret": "N8N_BASE_URL"},
                         "ESTUARY_API_TOKEN": {"from_secret": "ESTUARY_API_TOKEN"},
-                        "ESTUARY_CLIENT_SECRET": {
-                            "from_secret": "ESTUARY_CLIENT_SECRET"
-                        },
+                        "ESTUARY_CLIENT_SECRET": {"from_secret": "ESTUARY_CLIENT_SECRET"},
                         # Monitoring
                         "ARIZE_SPACE_ID": {"from_secret": "ARIZE_SPACE_ID"},
                         "ARIZE_API_KEY": {"from_secret": "ARIZE_API_KEY"},
-                        "GRAFANA_ADMIN_PASSWORD": {
-                            "from_secret": "GRAFANA_ADMIN_PASSWORD"
-                        },
+                        "GRAFANA_ADMIN_PASSWORD": {"from_secret": "GRAFANA_ADMIN_PASSWORD"},
                         # Security
                         "JWT_SECRET_KEY": {"from_secret": "JWT_SECRET_KEY"},
                         "ENCRYPTION_KEY": {"from_secret": "ENCRYPTION_KEY"},
@@ -342,17 +337,13 @@ class SophiaAIESCConfig:
                         "DOCKER_PERSONAL_ACCESS_TOKEN": {
                             "from_secret": "DOCKER_PERSONAL_ACCESS_TOKEN"
                         },
-                        "HUGGINGFACE_API_TOKEN": {
-                            "from_secret": "HUGGINGFACE_API_TOKEN"
-                        },
+                        "HUGGINGFACE_API_TOKEN": {"from_secret": "HUGGINGFACE_API_TOKEN"},
                         # Additional Services
                         "TOGETHER_AI_API_KEY": {"from_secret": "TOGETHER_AI_API_KEY"},
                         "TAVILY_API_KEY": {"from_secret": "TAVILY_API_KEY"},
                         "TWINGLY_API_KEY": {"from_secret": "TWINGLY_API_KEY"},
                         "ZENROWS_API_KEY": {"from_secret": "ZENROWS_API_KEY"},
-                        "PHANTOM_BUSTER_API_KEY": {
-                            "from_secret": "PHANTOM_BUSTER_API_KEY"
-                        },
+                        "PHANTOM_BUSTER_API_KEY": {"from_secret": "PHANTOM_BUSTER_API_KEY"},
                         "APIFY_API_TOKEN": {"from_secret": "APIFY_API_TOKEN"},
                     },
                 }
@@ -367,6 +358,7 @@ class SophiaAIESCConfig:
                 lambda config: json.dumps(config, indent=2)
             ),
         )
+
 
 def main():
     """Main function to create all ESC environments"""
@@ -399,6 +391,7 @@ def main():
             "secrets_managed": 30,
         },
     )
+
 
 if __name__ == "__main__":
     main()

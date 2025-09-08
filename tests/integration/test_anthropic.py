@@ -3,20 +3,21 @@ Anthropic Integration Tests
 Tests Claude API connectivity and functionality
 """
 
-import pytest
 import os
-import asyncio
+
 import httpx
+import pytest
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv('.env.production')
+load_dotenv(".env.production")
+
 
 class TestAnthropicIntegration:
     @pytest.fixture
     def api_key(self):
         """Get Anthropic API key"""
-        api_key = os.getenv('ANTHROPIC_API_KEY')
+        api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             pytest.skip("ANTHROPIC_API_KEY not set")
         return api_key
@@ -24,10 +25,7 @@ class TestAnthropicIntegration:
     @pytest.fixture
     def client(self):
         """Create HTTP client for Anthropic API"""
-        return httpx.AsyncClient(
-            base_url="https://api.anthropic.com",
-            timeout=30.0
-        )
+        return httpx.AsyncClient(base_url="https://api.anthropic.com", timeout=30.0)
 
     @pytest.mark.asyncio
     async def test_connection(self, client, api_key):
@@ -38,21 +36,19 @@ class TestAnthropicIntegration:
                 headers={
                     "x-api-key": api_key,
                     "anthropic-version": "2023-06-01",
-                    "content-type": "application/json"
+                    "content-type": "application/json",
                 },
                 json={
                     "model": "claude-3-sonnet-20240229",
                     "max_tokens": 50,
-                    "messages": [
-                        {"role": "user", "content": "Hello, this is a connection test."}
-                    ]
-                }
+                    "messages": [{"role": "user", "content": "Hello, this is a connection test."}],
+                },
             )
 
             assert response.status_code == 200
             data = response.json()
             assert "content" in data
-            print(f"✅ Anthropic connection successful")
+            print("✅ Anthropic connection successful")
 
         except Exception as e:
             pytest.fail(f"Anthropic connection failed: {e}")
@@ -66,15 +62,18 @@ class TestAnthropicIntegration:
                 headers={
                     "x-api-key": api_key,
                     "anthropic-version": "2023-06-01",
-                    "content-type": "application/json"
+                    "content-type": "application/json",
                 },
                 json={
                     "model": "claude-3-opus-20240229",  # Latest available model
                     "max_tokens": 100,
                     "messages": [
-                        {"role": "user", "content": "Please respond with 'Claude Opus integration working' to confirm the integration."}
-                    ]
-                }
+                        {
+                            "role": "user",
+                            "content": "Please respond with 'Claude Opus integration working' to confirm the integration.",
+                        }
+                    ],
+                },
             )
 
             assert response.status_code == 200
@@ -96,16 +95,14 @@ class TestAnthropicIntegration:
                 headers={
                     "x-api-key": api_key,
                     "anthropic-version": "2023-06-01",
-                    "content-type": "application/json"
+                    "content-type": "application/json",
                 },
                 json={
                     "model": "claude-3-sonnet-20240229",
                     "max_tokens": 50,
                     "stream": True,
-                    "messages": [
-                        {"role": "user", "content": "Count to 5"}
-                    ]
-                }
+                    "messages": [{"role": "user", "content": "Count to 5"}],
+                },
             ) as response:
                 assert response.status_code == 200
 
@@ -130,15 +127,13 @@ class TestAnthropicIntegration:
                 headers={
                     "x-api-key": api_key,
                     "anthropic-version": "2023-06-01",
-                    "content-type": "application/json"
+                    "content-type": "application/json",
                 },
                 json={
                     "model": "invalid-model",
                     "max_tokens": 50,
-                    "messages": [
-                        {"role": "user", "content": "Test"}
-                    ]
-                }
+                    "messages": [{"role": "user", "content": "Test"}],
+                },
             )
 
             assert response.status_code == 400
@@ -146,6 +141,7 @@ class TestAnthropicIntegration:
 
         except Exception as e:
             pytest.fail(f"Anthropic error handling test failed: {e}")
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

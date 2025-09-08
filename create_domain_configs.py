@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 
+
 def create_domain_separation_config():
     """Create domain separation configuration files"""
     config_dir = Path("config")
@@ -104,6 +105,7 @@ def create_domain_separation_config():
     print("Sophia:", sophia_config["name"])
 
     return artemis_config, sophia_config
+
 
 if __name__ == "__main__":
     create_domain_separation_config()

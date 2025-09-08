@@ -7,6 +7,7 @@ from typing import Any
 
 import psutil
 
+
 @dataclass
 class PerformanceMetrics:
     """Performance metrics data structure"""
@@ -18,6 +19,7 @@ class PerformanceMetrics:
     operation: str
     success: bool = True
     error: str | None = None
+
 
 class PerformanceOptimizer:
     """Performance optimization utilities for MCP servers"""
@@ -77,9 +79,7 @@ class PerformanceOptimizer:
 
             logger = logging.getLogger(f"mcp.{self.server_name}.performance")
             for warning in warnings:
-                logger.warning(
-                    f"⚠️ Performance Warning [{metrics.operation}]: {warning}"
-                )
+                logger.warning(f"⚠️ Performance Warning [{metrics.operation}]: {warning}")
 
     def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary statistics"""
@@ -127,6 +127,7 @@ class PerformanceOptimizer:
         index = int(len(sorted_data) * percentile / 100)
         return sorted_data[min(index, len(sorted_data) - 1)]
 
+
 class PerformanceMonitor:
     """Context manager for monitoring performance"""
 
@@ -162,6 +163,7 @@ class PerformanceMonitor:
             error=self.error,
         )
         self.optimizer.record_metrics(metrics)
+
 
 class CacheManager:
     """Simple in-memory cache with TTL support"""
@@ -199,9 +201,7 @@ class CacheManager:
     def cleanup_expired(self) -> int:
         """Remove expired entries and return count of removed items"""
         current_time = time.time()
-        expired_keys = [
-            key for key, entry in self.cache.items() if current_time > entry["expires"]
-        ]
+        expired_keys = [key for key, entry in self.cache.items() if current_time > entry["expires"]]
         for key in expired_keys:
             del self.cache[key]
         return len(expired_keys)
@@ -210,15 +210,14 @@ class CacheManager:
         """Get cache statistics"""
         total_entries = len(self.cache)
         current_time = time.time()
-        expired_entries = sum(
-            1 for entry in self.cache.values() if current_time > entry["expires"]
-        )
+        expired_entries = sum(1 for entry in self.cache.values() if current_time > entry["expires"])
         return {
             "total_entries": total_entries,
             "active_entries": total_entries - expired_entries,
             "expired_entries": expired_entries,
             "memory_usage_estimate": len(str(self.cache)),
         }
+
 
 class RateLimiter:
     """Simple rate limiter for API calls"""
@@ -232,9 +231,7 @@ class RateLimiter:
         """Check if a call is allowed under rate limit"""
         current_time = time.time()
         self.calls = [
-            call_time
-            for call_time in self.calls
-            if current_time - call_time < self.time_window
+            call_time for call_time in self.calls if current_time - call_time < self.time_window
         ]
         if len(self.calls) < self.max_calls:
             self.calls.append(current_time)
@@ -248,10 +245,10 @@ class RateLimiter:
         oldest_call = min(self.calls)
         return max(0.0, self.time_window - (time.time() - oldest_call))
 
+
 _global_cache_manager = None
 _global_rate_limiters: dict[str, RateLimiter] = {}
 """
 performance.py - Syntax errors fixed
 This file had severe syntax errors and was replaced with a minimal valid structure.
 """
-

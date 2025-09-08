@@ -3,21 +3,23 @@ MCP Servers Integration Tests
 Tests all 8 unified MCP servers for functionality and health
 """
 
-import pytest
-import os
 import asyncio
+import os
+
 import httpx
+import pytest
 from dotenv import load_dotenv
 
 # Load environment variables
-load_dotenv('.env.production')
+load_dotenv(".env.production")
+
 
 class TestMCPServersIntegration:
 
     @pytest.fixture
     def mcp_base_url(self):
         """Get MCP base URL"""
-        return os.getenv('MCP_URL', 'http://localhost:8001')
+        return os.getenv("MCP_URL", "http://localhost:8001")
 
     @pytest.fixture
     def client(self):
@@ -53,13 +55,13 @@ class TestMCPServersIntegration:
 
             expected_servers = [
                 "sophia-core",
-                "github-integration", 
+                "github-integration",
                 "gong-crm",
                 "hubspot-integration",
                 "knowledge-base",
                 "monitoring",
                 "super-memory",
-                "enterprise-tools"
+                "enterprise-tools",
             ]
 
             server_names = [server["name"] for server in servers]
@@ -82,10 +84,7 @@ class TestMCPServersIntegration:
             # Test chat functionality
             chat_response = await client.post(
                 f"{mcp_base_url}/servers/sophia-core/chat",
-                json={
-                    "message": "Hello Sophia Core",
-                    "context": {"test": True}
-                }
+                json={"message": "Hello Sophia Core", "context": {"test": True}},
             )
             assert chat_response.status_code == 200
             chat_data = chat_response.json()
@@ -105,11 +104,11 @@ class TestMCPServersIntegration:
             assert response.status_code == 200
 
             # Test repository listing (if GitHub token is available)
-            github_token = os.getenv('GITHUB_TOKEN')
+            github_token = os.getenv("GITHUB_TOKEN")
             if github_token:
                 repos_response = await client.get(
                     f"{mcp_base_url}/servers/github-integration/repositories",
-                    headers={"Authorization": f"Bearer {github_token}"}
+                    headers={"Authorization": f"Bearer {github_token}"},
                 )
                 assert repos_response.status_code == 200
                 repos_data = repos_response.json()
@@ -129,16 +128,13 @@ class TestMCPServersIntegration:
             assert response.status_code == 200
 
             # Test Gong connection (if credentials are available)
-            gong_key = os.getenv('GONG_ACCESS_KEY')
-            gong_secret = os.getenv('GONG_CLIENT_SECRET')
+            gong_key = os.getenv("GONG_ACCESS_KEY")
+            gong_secret = os.getenv("GONG_CLIENT_SECRET")
 
             if gong_key and gong_secret:
                 connection_response = await client.post(
                     f"{mcp_base_url}/servers/gong-crm/test-connection",
-                    json={
-                        "access_key": gong_key,
-                        "client_secret": gong_secret
-                    }
+                    json={"access_key": gong_key, "client_secret": gong_secret},
                 )
                 # May return 200 or 401 depending on credentials
                 assert connection_response.status_code in [200, 401]
@@ -157,12 +153,12 @@ class TestMCPServersIntegration:
             assert response.status_code == 200
 
             # Test HubSpot connection (if API key is available)
-            hubspot_key = os.getenv('HUBSPOT_API_KEY')
+            hubspot_key = os.getenv("HUBSPOT_API_KEY")
 
             if hubspot_key:
                 connection_response = await client.post(
                     f"{mcp_base_url}/servers/hubspot-integration/test-connection",
-                    json={"api_key": hubspot_key}
+                    json={"api_key": hubspot_key},
                 )
                 # May return 200 or 401 depending on credentials
                 assert connection_response.status_code in [200, 401]
@@ -183,10 +179,7 @@ class TestMCPServersIntegration:
             # Test knowledge search
             search_response = await client.post(
                 f"{mcp_base_url}/servers/knowledge-base/search",
-                json={
-                    "query": "test search",
-                    "limit": 5
-                }
+                json={"query": "test search", "limit": 5},
             )
             assert search_response.status_code == 200
             search_data = search_response.json()
@@ -228,11 +221,7 @@ class TestMCPServersIntegration:
             # Test memory storage
             store_response = await client.post(
                 f"{mcp_base_url}/servers/super-memory/store",
-                json={
-                    "key": "test_memory",
-                    "value": "integration test data",
-                    "ttl": 300
-                }
+                json={"key": "test_memory", "value": "integration test data", "ttl": 300},
             )
             assert store_response.status_code == 200
 
@@ -279,8 +268,14 @@ class TestMCPServersIntegration:
             start_time = time.time()
 
             servers = [
-                "sophia-core", "github-integration", "gong-crm", "hubspot-integration",
-                "knowledge-base", "monitoring", "super-memory", "enterprise-tools"
+                "sophia-core",
+                "github-integration",
+                "gong-crm",
+                "hubspot-integration",
+                "knowledge-base",
+                "monitoring",
+                "super-memory",
+                "enterprise-tools",
             ]
 
             tasks = []
@@ -292,12 +287,16 @@ class TestMCPServersIntegration:
             total_time = time.time() - start_time
 
             # Check that most servers responded successfully
-            successful_responses = [r for r in responses if not isinstance(r, Exception) and r.status_code == 200]
+            successful_responses = [
+                r for r in responses if not isinstance(r, Exception) and r.status_code == 200
+            ]
             success_rate = len(successful_responses) / len(servers)
 
-            print(f"✅ MCP Servers performance test completed:")
+            print("✅ MCP Servers performance test completed:")
             print(f"   Total time: {total_time:.3f}s for {len(servers)} servers")
-            print(f"   Success rate: {success_rate:.1%} ({len(successful_responses)}/{len(servers)})")
+            print(
+                f"   Success rate: {success_rate:.1%} ({len(successful_responses)}/{len(servers)})"
+            )
             print(f"   Average response time: {total_time/len(servers):.3f}s per server")
 
             # Assert reasonable performance
@@ -328,6 +327,7 @@ class TestMCPServersIntegration:
 
         except Exception as e:
             pytest.fail(f"MCP heartbeat monitoring failed: {e}")
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

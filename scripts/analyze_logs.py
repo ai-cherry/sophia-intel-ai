@@ -7,50 +7,43 @@ Analyzes logs for errors, performance issues, and usage patterns.
 Generates summaries and metrics for the dashboard.
 """
 
-import os
-import re
-import json
-import time
-import logging
 import argparse
 import datetime
+import json
+import logging
+import os
+import re
+from collections import defaultdict
 from pathlib import Path
-from typing import Dict, List, Any, Optional
-from collections import defaultdict, Counter
+from typing import Any, Dict
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    filename='logs/analyze_logs.log',
-    filemode='a'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    filename="logs/analyze_logs.log",
+    filemode="a",
 )
-logger = logging.getLogger('analyze_logs')
+logger = logging.getLogger("analyze_logs")
 
 # Constants
 LOG_FILES = {
     "mcp": "logs/mcp_server.log",
     "update_models": "logs/update_models.log",
     "memory_prune": "logs/memory_prune.log",
-    "system_monitor": "logs/system_monitor.log"
+    "system_monitor": "logs/system_monitor.log",
 }
-ERROR_PATTERNS = [
-    r'ERROR',
-    r'Error:',
-    r'Exception',
-    r'Failed',
-    r'Traceback',
-    r'ConnectionError'
-]
+ERROR_PATTERNS = [r"ERROR", r"Error:", r"Exception", r"Failed", r"Traceback", r"ConnectionError"]
 PERFORMANCE_PATTERNS = [
-    r'latency=(\d+)',
-    r'took (\d+)ms',
-    r'(\d+)ms to process',
-    r'response time: (\d+)'
+    r"latency=(\d+)",
+    r"took (\d+)ms",
+    r"(\d+)ms to process",
+    r"response time: (\d+)",
 ]
-API_CALL_PATTERN = r'POST /api/([a-zA-Z_]+)'
-TOKEN_USAGE_PATTERN = r'used (\d+) tokens'
+API_CALL_PATTERN = r"POST /api/([a-zA-Z_]+)"
+TOKEN_USAGE_PATTERN = r"used (\d+) tokens"
 MAX_LOG_SIZE = 10 * 1024 * 1024  # 10 MB, truncate logs larger than this
+
 
 def analyze_log_file(log_path: str) -> Dict[str, Any]:
     """
@@ -62,20 +55,22 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
             "message": f"Log file not found: {log_path}",
             "errors": 0,
             "api_calls": {},
-            "performance": {}
+            "performance": {},
         }
 
     try:
         # Check if log file is too large
         file_size = os.path.getsize(log_path)
         if file_size > MAX_LOG_SIZE:
-            logger.warning(f"Log file {log_path} is too large ({file_size} bytes), analyzing only the last {MAX_LOG_SIZE} bytes")
+            logger.warning(
+                f"Log file {log_path} is too large ({file_size} bytes), analyzing only the last {MAX_LOG_SIZE} bytes"
+            )
 
-            with open(log_path, 'rb') as f:
+            with open(log_path, "rb") as f:
                 f.seek(-min(file_size, MAX_LOG_SIZE), 2)
-                log_content = f.read().decode('utf-8', errors='ignore')
+                log_content = f.read().decode("utf-8", errors="ignore")
         else:
-            with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+            with open(log_path, encoding="utf-8", errors="ignore") as f:
                 log_content = f.read()
 
         # Initialize counters
@@ -85,7 +80,7 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
         token_usages = defaultdict(list)
 
         # Process line by line
-        lines = log_content.split('\n')
+        lines = log_content.split("\n")
         for line in lines:
             # Check for errors
             if any(re.search(pattern, line) for pattern in ERROR_PATTERNS):
@@ -109,7 +104,7 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
             if token_match:
                 # Try to determine which model was used
                 model = "unknown"
-                model_patterns = [r'model=([a-zA-Z0-9-/]+)', r'using ([a-zA-Z0-9-/]+) model']
+                model_patterns = [r"model=([a-zA-Z0-9-/]+)", r"using ([a-zA-Z0-9-/]+) model"]
                 for pattern in model_patterns:
                     model_match = re.search(pattern, line)
                     if model_match:
@@ -127,7 +122,11 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
                     "avg_latency_ms": sum(latency_values) / len(latency_values),
                     "max_latency_ms": max(latency_values),
                     "min_latency_ms": min(latency_values),
-                    "p95_latency_ms": sorted(latency_values)[int(len(latency_values) * 0.95)] if len(latency_values) >= 20 else None
+                    "p95_latency_ms": (
+                        sorted(latency_values)[int(len(latency_values) * 0.95)]
+                        if len(latency_values) >= 20
+                        else None
+                    ),
                 }
 
         # Calculate token usage metrics
@@ -138,7 +137,7 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
                     "total_tokens": sum(token_values),
                     "avg_tokens": sum(token_values) / len(token_values),
                     "max_tokens": max(token_values),
-                    "calls": len(token_values)
+                    "calls": len(token_values),
                 }
 
         return {
@@ -147,7 +146,7 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
             "api_calls": dict(api_calls),
             "performance": performance,
             "token_usage": token_metrics,
-            "lines_processed": len(lines)
+            "lines_processed": len(lines),
         }
     except Exception as e:
         logger.error(f"Error analyzing log file {log_path}: {e}")
@@ -156,8 +155,9 @@ def analyze_log_file(log_path: str) -> Dict[str, Any]:
             "message": str(e),
             "errors": 0,
             "api_calls": {},
-            "performance": {}
+            "performance": {},
         }
+
 
 def analyze_all_logs() -> Dict[str, Any]:
     """
@@ -174,10 +174,7 @@ def analyze_all_logs() -> Dict[str, Any]:
             total_errors += log_results.get("errors", 0)
         else:
             logger.warning(f"Log file not found: {log_path}")
-            results[log_name] = {
-                "status": "error",
-                "message": "Log file not found"
-            }
+            results[log_name] = {"status": "error", "message": "Log file not found"}
 
     # Combine API call data if multiple logs have it
     combined_api_calls = defaultdict(int)
@@ -194,12 +191,11 @@ def analyze_all_logs() -> Dict[str, Any]:
                 combined_token_usage[model]["total_tokens"] += metrics.get("total_tokens", 0)
                 combined_token_usage[model]["calls"] += metrics.get("calls", 0)
                 combined_token_usage[model]["avg_tokens"] = (
-                    combined_token_usage[model]["total_tokens"] / 
-                    combined_token_usage[model]["calls"]
+                    combined_token_usage[model]["total_tokens"]
+                    / combined_token_usage[model]["calls"]
                 )
                 combined_token_usage[model]["max_tokens"] = max(
-                    combined_token_usage[model]["max_tokens"],
-                    metrics.get("max_tokens", 0)
+                    combined_token_usage[model]["max_tokens"], metrics.get("max_tokens", 0)
                 )
 
     # Calculate cost estimates if we have token usage data
@@ -209,7 +205,7 @@ def analyze_all_logs() -> Dict[str, Any]:
         "qwen3-coder": 5.0,
         "deepseek": 0.0,
         "codellama": 0.0,
-        "unknown": 6.5  # average cost
+        "unknown": 6.5,  # average cost
     }
 
     for model, metrics in combined_token_usage.items():
@@ -223,7 +219,7 @@ def analyze_all_logs() -> Dict[str, Any]:
         cost_estimates[model] = {
             "cost_per_million": cost_per_million,
             "total_tokens": total_tokens,
-            "estimated_cost": cost
+            "estimated_cost": cost,
         }
 
     return {
@@ -232,8 +228,9 @@ def analyze_all_logs() -> Dict[str, Any]:
         "logs": results,
         "combined_api_calls": dict(combined_api_calls),
         "combined_token_usage": combined_token_usage,
-        "cost_estimates": cost_estimates
+        "cost_estimates": cost_estimates,
     }
+
 
 def generate_summary(analysis: Dict[str, Any]) -> str:
     """
@@ -287,6 +284,7 @@ Top API Endpoints:
 
     return summary
 
+
 def save_analysis(analysis: Dict[str, Any], summary: str):
     """
     Save analysis results and summary to files
@@ -315,9 +313,14 @@ def save_analysis(analysis: Dict[str, Any], summary: str):
 
     logger.info(f"Saved analysis results to {analysis_dir}")
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Analyze logs for errors, performance, and usage patterns")
-    parser.add_argument("--no-save", action="store_true", help="Don't save analysis results to file")
+    parser = argparse.ArgumentParser(
+        description="Analyze logs for errors, performance, and usage patterns"
+    )
+    parser.add_argument(
+        "--no-save", action="store_true", help="Don't save analysis results to file"
+    )
     args = parser.parse_args()
 
     logger.info("Starting log analysis")
@@ -336,6 +339,7 @@ def main():
         save_analysis(analysis, summary)
 
     logger.info("Log analysis completed")
+
 
 if __name__ == "__main__":
     # Create logs directory if it doesn't exist

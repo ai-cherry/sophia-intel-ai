@@ -3,18 +3,18 @@ Comprehensive Integration Test Suite for Sophia AI v7.0
 Tests all components including Opus 4.1, MCP services, and production features
 """
 
-import pytest
 import asyncio
-import httpx
-import json
 import os
 import time
-from typing import Dict, Any
-from unittest.mock import Mock, patch
+from typing import Dict
+
+import httpx
+import pytest
 
 # Test configuration
 TEST_BASE_URL = "http://localhost:8000"
 TEST_API_KEY = "test-key-12345"
+
 
 class TestSophiaIntegration:
     """Integration tests for Sophia AI platform"""
@@ -28,10 +28,7 @@ class TestSophiaIntegration:
     @pytest.fixture(scope="class")
     def auth_headers(self):
         """Authentication headers for testing"""
-        return {
-            "Authorization": f"Bearer {TEST_API_KEY}",
-            "Content-Type": "application/json"
-        }
+        return {"Authorization": f"Bearer {TEST_API_KEY}", "Content-Type": "application/json"}
 
     async def test_health_check(self, client: httpx.AsyncClient):
         """Test basic health check endpoint"""
@@ -60,14 +57,17 @@ class TestSophiaIntegration:
         """Test basic Opus 4.1 chat functionality"""
         chat_request = {
             "messages": [
-                {"role": "user", "content": "Hello! Please respond with exactly: 'Integration test successful'"}
+                {
+                    "role": "user",
+                    "content": "Hello! Please respond with exactly: 'Integration test successful'",
+                }
             ],
             "config": {
                 "model": "anthropic/claude-opus-4-1-20250805",
                 "provider": "openrouter",
                 "temperature": 0.1,
-                "max_tokens": 100
-            }
+                "max_tokens": 100,
+            },
         }
 
         response = await client.post("/api/chat/opus", json=chat_request, headers=auth_headers)
@@ -89,18 +89,14 @@ class TestSophiaIntegration:
         assert metadata["cost"] >= 0
         assert metadata["responseTime"] > 0
 
-    async def test_opus_provider_fallback(self, client: httpx.AsyncClient, auth_headers: Dict[str, str]):
+    async def test_opus_provider_fallback(
+        self, client: httpx.AsyncClient, auth_headers: Dict[str, str]
+    ):
         """Test provider fallback mechanism"""
         # Test with invalid provider first, should fallback
         chat_request = {
-            "messages": [
-                {"role": "user", "content": "Test fallback"}
-            ],
-            "config": {
-                "provider": "invalid_provider",
-                "temperature": 0.1,
-                "max_tokens": 50
-            }
+            "messages": [{"role": "user", "content": "Test fallback"}],
+            "config": {"provider": "invalid_provider", "temperature": 0.1, "max_tokens": 50},
         }
 
         response = await client.post("/api/chat/opus", json=chat_request, headers=auth_headers)
@@ -219,7 +215,9 @@ class TestSophiaIntegration:
 
         # Check for security headers
         headers = response.headers
-        assert "x-content-type-options" in headers.keys() or "X-Content-Type-Options" in headers.keys()
+        assert (
+            "x-content-type-options" in headers.keys() or "X-Content-Type-Options" in headers.keys()
+        )
 
         # CORS should be configured
         options_response = await client.options("/api/chat/opus")
@@ -236,11 +234,15 @@ class TestSophiaIntegration:
         responses = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Should have some successful responses
-        successful_responses = [r for r in responses if isinstance(r, httpx.Response) and r.status_code == 200]
+        successful_responses = [
+            r for r in responses if isinstance(r, httpx.Response) and r.status_code == 200
+        ]
         assert len(successful_responses) > 0
 
         # Check if rate limiting is working (some requests might be limited)
-        rate_limited = [r for r in responses if isinstance(r, httpx.Response) and r.status_code == 429]
+        rate_limited = [
+            r for r in responses if isinstance(r, httpx.Response) and r.status_code == 429
+        ]
         # Rate limiting might not be enabled in test environment, so this is optional
 
     async def test_error_handling(self, client: httpx.AsyncClient):
@@ -301,6 +303,7 @@ class TestSophiaIntegration:
         total_time = end_time - start_time
         assert total_time < 5.0  # Should complete within 5 seconds
 
+
 class TestProductionReadiness:
     """Tests for production readiness"""
 
@@ -311,54 +314,46 @@ class TestProductionReadiness:
             "ANTHROPIC_API_KEY",
             "PORTKEY_API_KEY",
             "DATABASE_URL",
-            "REDIS_URL"
+            "REDIS_URL",
         ]
 
         # Check if .env.template exists and contains required variables
         env_template_path = "/.env.template"
         if os.path.exists(env_template_path):
-            with open(env_template_path, 'r') as f:
+            with open(env_template_path) as f:
                 template_content = f.read()
 
             for var in required_vars:
-                assert var in template_content, f"Required environment variable {var} not in .env.template"
+                assert (
+                    var in template_content
+                ), f"Required environment variable {var} not in .env.template"
 
     async def test_docker_configuration(self):
         """Test Docker configuration exists"""
-        docker_files = [
-            "/backend/Dockerfile",
-            "/docker-compose.yml",
-            "/.dockerignore"
-        ]
+        docker_files = ["/backend/Dockerfile", "/docker-compose.yml", "/.dockerignore"]
 
         for docker_file in docker_files:
             if os.path.exists(docker_file):
                 # File exists, check it's not empty
-                with open(docker_file, 'r') as f:
+                with open(docker_file) as f:
                     content = f.read().strip()
                 assert len(content) > 0, f"{docker_file} exists but is empty"
 
     async def test_deployment_scripts(self):
         """Test deployment scripts exist and are executable"""
-        deployment_scripts = [
-            "/scripts/deploy_production.sh",
-            "/scripts/sophia.sh"
-        ]
+        deployment_scripts = ["/scripts/deploy_production.sh", "/scripts/sophia.sh"]
 
         for script in deployment_scripts:
             if os.path.exists(script):
                 # Check if executable
                 import stat
+
                 file_stat = os.stat(script)
                 is_executable = file_stat.st_mode & stat.S_IEXEC
                 assert is_executable, f"{script} exists but is not executable"
 
+
 # Test runner configuration
 if __name__ == "__main__":
     # Run tests with pytest
-    pytest.main([
-        __file__,
-        "-v",
-        "--tb=short",
-        "--asyncio-mode=auto"
-    ])
+    pytest.main([__file__, "-v", "--tb=short", "--asyncio-mode=auto"])

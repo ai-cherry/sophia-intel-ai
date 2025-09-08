@@ -25,6 +25,7 @@ class DummyQdrant:
             def __init__(self, pid: str) -> None:
                 self.id = pid
                 self.score = 1.0
+
         return [Result(pid) for pid in list(self.points.keys())[:limit]]
 
 

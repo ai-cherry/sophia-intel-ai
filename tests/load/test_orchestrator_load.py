@@ -6,8 +6,6 @@ Tests system performance under high load conditions
 import asyncio
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -366,7 +364,6 @@ class TestOrchestratorStress:
     async def test_memory_leak_detection(self, artemis_orchestrator, sophia_orchestrator):
         """Test for memory leaks during extended operation"""
         import gc
-        import sys
 
         # Arrange
         iterations = 10

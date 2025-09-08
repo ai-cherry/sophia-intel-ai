@@ -3,39 +3,46 @@ ASIP Chat Bridge - Natural Language Interface for Sophia AI
 Bridges Open WebUI and other chat interfaces with the ASIP Orchestrator
 """
 
-import asyncio
 import hashlib
 import json
+
+# Import existing ASIP components
+import sys
 from datetime import datetime
 from enum import Enum
-from typing import Any, AsyncGenerator, Dict, List, Optional
+from typing import Any, Dict, Optional
+from collections.abc import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Import existing ASIP components
-import sys
-sys.path.append('/workspace')
+sys.path.append("/workspace")
 from asip.orchestrator import UltimateAdaptiveOrchestrator
+
 
 class ChatRequest(BaseModel):
     """Chat request model"""
+
     message: str
     context: Dict[str, Any] = {}
     user_id: Optional[str] = None
     session_id: Optional[str] = None
 
+
 class ChatResponse(BaseModel):
     """Chat response model"""
+
     response: str
     metadata: Dict[str, Any] = {}
     execution_mode: Optional[str] = None
     gpu_instance: Optional[str] = None
     processing_time: Optional[float] = None
 
+
 class IntentType(Enum):
     """Intent types for routing"""
+
     CODE_GENERATION = "code_generation"
     ANALYSIS = "analysis"
     RESEARCH = "research"
@@ -43,17 +50,50 @@ class IntentType(Enum):
     GENERAL = "general"
     SYSTEM = "system"
 
+
 class NaturalLanguageProcessor:
     """Process natural language and extract intents"""
 
     def __init__(self):
         self.intent_patterns = {
-            IntentType.CODE_GENERATION: ["write", "create", "generate", "build", "code", "implement", "develop"],
-            IntentType.ANALYSIS: ["analyze", "review", "check", "audit", "examine", "inspect", "evaluate"],
-            IntentType.RESEARCH: ["research", "find", "search", "lookup", "investigate", "explore", "discover"],
-            IntentType.BUSINESS: ["revenue", "sales", "metrics", "kpi", "profit", "customer", "market"],
+            IntentType.CODE_GENERATION: [
+                "write",
+                "create",
+                "generate",
+                "build",
+                "code",
+                "implement",
+                "develop",
+            ],
+            IntentType.ANALYSIS: [
+                "analyze",
+                "review",
+                "check",
+                "audit",
+                "examine",
+                "inspect",
+                "evaluate",
+            ],
+            IntentType.RESEARCH: [
+                "research",
+                "find",
+                "search",
+                "lookup",
+                "investigate",
+                "explore",
+                "discover",
+            ],
+            IntentType.BUSINESS: [
+                "revenue",
+                "sales",
+                "metrics",
+                "kpi",
+                "profit",
+                "customer",
+                "market",
+            ],
             IntentType.SYSTEM: ["status", "health", "performance", "monitor", "debug", "log"],
-            IntentType.GENERAL: ["help", "what", "how", "why", "when", "who", "tell"]
+            IntentType.GENERAL: ["help", "what", "how", "why", "when", "who", "tell"],
         }
 
     async def extract_intent(self, message: str) -> Dict[str, Any]:
@@ -68,14 +108,17 @@ class NaturalLanguageProcessor:
                 intent_scores[intent_type] = score
 
         # Get primary intent
-        primary_intent = max(intent_scores, key=intent_scores.get) if intent_scores else IntentType.GENERAL
+        primary_intent = (
+            max(intent_scores, key=intent_scores.get) if intent_scores else IntentType.GENERAL
+        )
 
         return {
             "primary_intent": primary_intent.value,
             "intent_scores": {k.value: v for k, v in intent_scores.items()},
             "original_message": message,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
+
 
 class ContextManager:
     """Manage conversation context and memory"""
@@ -87,11 +130,7 @@ class ContextManager:
 
     async def enrich(self, intent: Dict[str, Any], context: Dict[str, Any]) -> Dict[str, Any]:
         """Enrich intent with contextual information"""
-        enriched = {
-            **intent,
-            **context,
-            "enrichment_timestamp": datetime.now().isoformat()
-        }
+        enriched = {**intent, **context, "enrichment_timestamp": datetime.now().isoformat()}
 
         # Add session context if available
         session_id = context.get("session_id")
@@ -108,7 +147,7 @@ class ContextManager:
             history = self.conversation_history[session_id]
             enriched["conversation_summary"] = {
                 "message_count": len(history),
-                "last_messages": history[-3:] if len(history) >= 3 else history
+                "last_messages": history[-3:] if len(history) >= 3 else history,
             }
 
         return enriched
@@ -118,15 +157,14 @@ class ContextManager:
         if session_id not in self.conversation_history:
             self.conversation_history[session_id] = []
 
-        self.conversation_history[session_id].append({
-            "message": message,
-            "response": response,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.conversation_history[session_id].append(
+            {"message": message, "response": response, "timestamp": datetime.now().isoformat()}
+        )
 
         # Keep only last 20 messages per session
         if len(self.conversation_history[session_id]) > 20:
             self.conversation_history[session_id] = self.conversation_history[session_id][-20:]
+
 
 class ResponseFormatter:
     """Format responses for different chat interfaces"""
@@ -153,6 +191,7 @@ class ResponseFormatter:
         """Format chunk for streaming response"""
         return json.dumps({"chunk": chunk, "timestamp": datetime.now().isoformat()})
 
+
 class GPUAwareRouter:
     """Route requests to appropriate Lambda Labs GPU instances"""
 
@@ -162,7 +201,7 @@ class GPUAwareRouter:
             "ml_pipeline": {"ip": "104.171.202.134", "name": "A100", "memory": "80GB"},
             "api_services": {"ip": "104.171.202.103", "name": "RTX6000", "memory": "24GB"},
             "mcp_hub": {"ip": "104.171.202.117", "name": "A6000", "memory": "48GB"},
-            "development": {"ip": "155.248.194.183", "name": "A10", "memory": "24GB"}
+            "development": {"ip": "155.248.194.183", "name": "A10", "memory": "24GB"},
         }
         self.current_loads = {key: 0 for key in self.gpu_instances}
 
@@ -183,14 +222,12 @@ class GPUAwareRouter:
         # Update load tracking
         self.current_loads[selected] += 1
 
-        return {
-            "instance": selected,
-            **self.gpu_instances[selected]
-        }
+        return {"instance": selected, **self.gpu_instances[selected]}
 
     async def get_best_gpu(self) -> str:
         """Get GPU with lowest current load"""
         return min(self.current_loads, key=self.current_loads.get)
+
 
 class ASIPChatBridge:
     """
@@ -205,7 +242,9 @@ class ASIPChatBridge:
         self.gpu_router = GPUAwareRouter()
         self.cache = {}
 
-    async def process_chat_message(self, message: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def process_chat_message(
+        self, message: str, context: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """
         Process natural language message through ASIP system
         """
@@ -213,7 +252,9 @@ class ASIPChatBridge:
         context = context or {}
 
         # Check cache
-        cache_key = hashlib.md5(f"{message}{json.dumps(context, sort_keys=True)}".encode()).hexdigest()
+        cache_key = hashlib.md5(
+            f"{message}{json.dumps(context, sort_keys=True)}".encode()
+        ).hexdigest()
         if cache_key in self.cache:
             cached_response = self.cache[cache_key]
             cached_response["from_cache"] = True
@@ -231,7 +272,7 @@ class ASIPChatBridge:
             "type": intent["primary_intent"],
             "content": message,
             "context": enriched_context,
-            "priority": context.get("priority", "normal")
+            "priority": context.get("priority", "normal"),
         }
 
         # 4. Process through orchestrator
@@ -242,10 +283,7 @@ class ASIPChatBridge:
         complexity = result.get("complexity_score", 0)
 
         # 6. Route to GPU if needed
-        gpu_info = await self.gpu_router.route_to_gpu(
-            intent["primary_intent"], 
-            complexity
-        )
+        gpu_info = await self.gpu_router.route_to_gpu(intent["primary_intent"], complexity)
 
         # 7. Format response
         formatted_response = self.response_formatter.format_for_chat(result)
@@ -267,8 +305,8 @@ class ASIPChatBridge:
                 "gpu_ip": gpu_info["ip"],
                 "processing_time": processing_time,
                 "intent": intent["primary_intent"],
-                "timestamp": datetime.now().isoformat()
-            }
+                "timestamp": datetime.now().isoformat(),
+            },
         }
 
         # Cache the response
@@ -283,7 +321,9 @@ class ASIPChatBridge:
 
         return response
 
-    async def process_streaming(self, message: str, context: Dict[str, Any] = None) -> AsyncGenerator[str, None]:
+    async def process_streaming(
+        self, message: str, context: Dict[str, Any] = None
+    ) -> AsyncGenerator[str, None]:
         """
         Process message with streaming response
         """
@@ -291,6 +331,7 @@ class ASIPChatBridge:
         # In production, this would stream tokens as they're generated
         result = await self.process_chat_message(message, context)
         yield self.response_formatter.format_for_streaming(result["response"])
+
 
 # FastAPI Application
 app = FastAPI(title="ASIP Chat Bridge API", version="1.0.0")
@@ -307,6 +348,7 @@ app.add_middleware(
 # Initialize bridge
 bridge = ASIPChatBridge()
 
+
 @app.get("/")
 async def root():
     """Health check endpoint"""
@@ -314,8 +356,9 @@ async def root():
         "status": "healthy",
         "service": "ASIP Chat Bridge",
         "version": "1.0.0",
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 @app.post("/chat")
 async def chat(request: ChatRequest) -> ChatResponse:
@@ -323,11 +366,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
     try:
         result = await bridge.process_chat_message(
             request.message,
-            {
-                **request.context,
-                "user_id": request.user_id,
-                "session_id": request.session_id
-            }
+            {**request.context, "user_id": request.user_id, "session_id": request.session_id},
         )
 
         return ChatResponse(
@@ -335,10 +374,11 @@ async def chat(request: ChatRequest) -> ChatResponse:
             metadata=result["metadata"],
             execution_mode=result["metadata"].get("execution_mode"),
             gpu_instance=result["metadata"].get("gpu_instance"),
-            processing_time=result["metadata"].get("processing_time")
+            processing_time=result["metadata"].get("processing_time"),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/chat/openai")
 async def openai_compatible_chat(request: Dict[str, Any]):
@@ -361,22 +401,22 @@ async def openai_compatible_chat(request: Dict[str, Any]):
             "object": "chat.completion",
             "created": int(datetime.now().timestamp()),
             "model": "sophia-asip",
-            "choices": [{
-                "index": 0,
-                "message": {
-                    "role": "assistant",
-                    "content": result["response"]
-                },
-                "finish_reason": "stop"
-            }],
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": result["response"]},
+                    "finish_reason": "stop",
+                }
+            ],
             "usage": {
                 "prompt_tokens": len(user_message.split()),
                 "completion_tokens": len(result["response"].split()),
-                "total_tokens": len(user_message.split()) + len(result["response"].split())
-            }
+                "total_tokens": len(user_message.split()) + len(result["response"].split()),
+            },
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.websocket("/ws/chat")
 async def websocket_chat(websocket: WebSocket):
@@ -402,6 +442,7 @@ async def websocket_chat(websocket: WebSocket):
     finally:
         await websocket.close()
 
+
 @app.get("/metrics")
 async def get_metrics():
     """Get chat bridge metrics"""
@@ -409,9 +450,11 @@ async def get_metrics():
         "cache_size": len(bridge.cache),
         "gpu_loads": bridge.gpu_router.current_loads,
         "active_sessions": len(bridge.context_manager.conversation_history),
-        "timestamp": datetime.now().isoformat()
+        "timestamp": datetime.now().isoformat(),
     }
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="${BIND_IP}", port=8100)

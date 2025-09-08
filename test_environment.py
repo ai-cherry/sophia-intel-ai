@@ -3,8 +3,8 @@
 Test script to demonstrate environment enforcer
 """
 
-import sys
 import os
+import sys
 
 # First, print the current Python interpreter
 print(f"Initial Python interpreter: {sys.executable}")
@@ -12,6 +12,7 @@ print(f"Initial Python interpreter: {sys.executable}")
 try:
     sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
     from core.environment_enforcer import enforce_environment
+
     # This will switch interpreters if needed
     if enforce_environment():
         print(f"After enforcement: {sys.executable}")

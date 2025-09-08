@@ -7,12 +7,10 @@ Tests the integration between ArgoCD GitOps deployments and AlertManager configu
 import asyncio
 import json
 import logging
-import time
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict
 
 import aiohttp
-import pytest
 import yaml
 from kubernetes import client, config
 
@@ -699,7 +697,6 @@ data:
 
 async def main():
     """Run integration tests"""
-    from datetime import timedelta
 
     test = ArgoCDAlertManagerIntegration()
 

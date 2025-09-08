@@ -4,14 +4,12 @@ AlertManager Alert Routing Test
 Verifies that alerts are routed to correct receivers based on labels
 """
 
-import json
 import sys
 import time
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Dict
 
 import requests
-import yaml
 
 
 class AlertRoutingTest:

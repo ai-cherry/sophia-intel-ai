@@ -11,7 +11,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import httpx
 
@@ -20,13 +20,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import Artemis military factory
 from app.artemis.agent_factory import (
     ArtemisAgentFactory,
-    ArtemisAgentTemplate,
-    TechnicalAgentRole,
-    TechnicalPersonality,
 )
 from app.core.aimlapi_config import aimlapi_manager
 from app.core.enhanced_llm_router import LLMProviderType, enhanced_router
-from app.core.portkey_config import portkey_manager
 
 
 class ArtemisMilitarySwarm:

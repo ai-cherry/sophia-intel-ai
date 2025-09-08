@@ -1,8 +1,7 @@
 import ast
-import os
-import sys
-from collections import defaultdict, deque
+from collections import defaultdict
 from pathlib import Path
+
 
 class CircularImportAnalyzer:
     def __init__(self, root_dir):
@@ -86,6 +85,7 @@ class CircularImportAnalyzer:
                 dfs(module, [])
 
         return cycles
+
 
 # Analyze the current directory
 analyzer = CircularImportAnalyzer(".")

@@ -12,15 +12,15 @@ import os
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import aiohttp
 import asyncpg
 import redis.asyncio as redis
 import uvicorn
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse
 from prometheus_client import CollectorRegistry, Counter, Gauge, generate_latest
 

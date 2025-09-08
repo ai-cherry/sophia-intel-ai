@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Test script for Sophia-Intel-AI components"""
 import asyncio
-import json
 import sys
 
 sys.path.insert(0, ".")

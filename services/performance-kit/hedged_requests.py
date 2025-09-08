@@ -4,17 +4,18 @@ Combines custom asyncio hedging with Tenacity retry fallback for maximum perform
 """
 
 import asyncio
-import aiohttp
-from typing import Optional, List, Any, Callable, Dict, Tuple
-from dataclasses import dataclass
 import hashlib
-from tenacity import retry, stop_after_attempt, wait_exponential
-import time
-import logging
 import json
-from contextlib import asynccontextmanager
+import logging
+import time
+from dataclasses import dataclass
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import aiohttp
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class HedgeConfig:
@@ -27,6 +28,7 @@ class HedgeConfig:
     ewma_alpha: float = 0.2  # For latency smoothing
     hedge_success_threshold: float = 0.3  # Hedge if >30% chance of improvement
 
+
 @dataclass
 class HedgeMetrics:
     total_requests: int = 0
@@ -38,6 +40,7 @@ class HedgeMetrics:
     def __post_init__(self):
         if self.provider_latencies is None:
             self.provider_latencies = {}
+
 
 class AdaptiveHedgedRequestManager:
     """
@@ -68,7 +71,7 @@ class AdaptiveHedgedRequestManager:
         query_key: str,
         circuit_breaker_fn: Optional[Callable] = None,
         *args,
-        **kwargs
+        **kwargs,
     ) -> Tuple[Any, str, Dict[str, Any]]:
         """
         Execute hedged request with adaptive delays and circuit breaker integration
@@ -100,10 +103,7 @@ class AdaptiveHedgedRequestManager:
             # Filter providers through circuit breaker if provided
             available_providers = providers
             if circuit_breaker_fn:
-                available_providers = [
-                    p for p in providers 
-                    if await circuit_breaker_fn(p)
-                ]
+                available_providers = [p for p in providers if await circuit_breaker_fn(p)]
 
                 if not available_providers:
                     raise Exception("All providers are circuit broken")
@@ -138,7 +138,7 @@ class AdaptiveHedgedRequestManager:
         providers: List[str],
         hedge_delays: List[float],
         args: tuple,
-        kwargs: dict
+        kwargs: dict,
     ) -> Tuple[Any, str, Dict[str, Any]]:
         """Internal hedged execution with comprehensive metrics"""
 
@@ -150,10 +150,10 @@ class AdaptiveHedgedRequestManager:
 
         try:
             # Launch requests with adaptive delays
-            for i, provider in enumerate(providers[:self.config.max_hedges]):
+            for i, provider in enumerate(providers[: self.config.max_hedges]):
                 if i > 0:
                     # Wait for adaptive delay
-                    await asyncio.sleep(hedge_delays[i-1] / 1000)
+                    await asyncio.sleep(hedge_delays[i - 1] / 1000)
 
                 start_time = time.time()
                 start_times.append(start_time)
@@ -171,7 +171,7 @@ class AdaptiveHedgedRequestManager:
                 done, pending = await asyncio.wait(
                     [t[0] for t in tasks],
                     return_when=asyncio.FIRST_COMPLETED,
-                    timeout=self.config.timeout_ms / 1000
+                    timeout=self.config.timeout_ms / 1000,
                 )
 
                 # Check for successful completion
@@ -201,19 +201,21 @@ class AdaptiveHedgedRequestManager:
                             if task_index > 0:
                                 self._metrics.hedge_wins += 1
                                 # Estimate latency saved
-                                estimated_original_latency = self._latency_ewma.get(providers[0], latency)
+                                estimated_original_latency = self._latency_ewma.get(
+                                    providers[0], latency
+                                )
                                 latency_saved = max(0, estimated_original_latency - latency)
                                 self._metrics.total_latency_saved_ms += latency_saved
                             else:
                                 self._metrics.hedge_losses += 1
 
                         metrics = {
-                            'latency_ms': latency,
-                            'total_latency_ms': total_latency,
-                            'hedge_activated': hedge_activated,
-                            'providers_tried': len(done),
-                            'winning_provider': provider,
-                            'hedge_effectiveness': self._calculate_hedge_effectiveness()
+                            "latency_ms": latency,
+                            "total_latency_ms": total_latency,
+                            "hedge_activated": hedge_activated,
+                            "providers_tried": len(done),
+                            "winning_provider": provider,
+                            "hedge_effectiveness": self._calculate_hedge_effectiveness(),
                         }
 
                         logger.info(f"Hedged request completed: {provider} in {latency:.1f}ms")
@@ -235,28 +237,17 @@ class AdaptiveHedgedRequestManager:
             logger.error(f"Hedged request failed completely: {e}")
             raise
 
-    @retry(
-        stop=stop_after_attempt(2),
-        wait=wait_exponential(min=0.1, max=1),
-        reraise=True
-    )
+    @retry(stop=stop_after_attempt(2), wait=wait_exponential(min=0.1, max=1), reraise=True)
     async def _create_resilient_request(
-        self,
-        request_fn: Callable,
-        provider: str,
-        args: tuple,
-        kwargs: dict
+        self, request_fn: Callable, provider: str, args: tuple, kwargs: dict
     ) -> Any:
         """Create request with Tenacity retry wrapper"""
 
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=self.config.timeout_ms / 1000),
             connector=aiohttp.TCPConnector(
-                limit=100,
-                limit_per_host=30,
-                keepalive_timeout=30,
-                enable_cleanup_closed=True
-            )
+                limit=100, limit_per_host=30, keepalive_timeout=30, enable_cleanup_closed=True
+            ),
         ) as session:
             return await request_fn(session, provider, *args, **kwargs)
 
@@ -277,9 +268,11 @@ class AdaptiveHedgedRequestManager:
 
         for i in range(1, len(providers)):
             # Use EWMA latency if available
-            if providers[i-1] in self._latency_ewma:
+            if providers[i - 1] in self._latency_ewma:
                 # Hedge at percentage of typical latency based on success threshold
-                adaptive_delay = self._latency_ewma[providers[i-1]] * self.config.hedge_success_threshold
+                adaptive_delay = (
+                    self._latency_ewma[providers[i - 1]] * self.config.hedge_success_threshold
+                )
                 delays.append(min(adaptive_delay, base_delay * 2))
             else:
                 delays.append(base_delay)
@@ -341,30 +334,28 @@ class AdaptiveHedgedRequestManager:
 
         # Create deterministic hash from query key and parameters
         content = {
-            'query_key': query_key,
-            'args': str(args),
-            'kwargs': json.dumps(kwargs, sort_keys=True, default=str)
+            "query_key": query_key,
+            "args": str(args),
+            "kwargs": json.dumps(kwargs, sort_keys=True, default=str),
         }
 
-        return hashlib.sha256(
-            json.dumps(content, sort_keys=True).encode()
-        ).hexdigest()[:16]
+        return hashlib.sha256(json.dumps(content, sort_keys=True).encode()).hexdigest()[:16]
 
     def get_metrics(self) -> Dict[str, Any]:
         """Get comprehensive hedging metrics"""
 
         return {
-            'total_requests': self._metrics.total_requests,
-            'hedge_wins': self._metrics.hedge_wins,
-            'hedge_losses': self._metrics.hedge_losses,
-            'hedge_effectiveness': self._calculate_hedge_effectiveness(),
-            'total_latency_saved_ms': self._metrics.total_latency_saved_ms,
-            'avg_latency_saved_per_request': (
+            "total_requests": self._metrics.total_requests,
+            "hedge_wins": self._metrics.hedge_wins,
+            "hedge_losses": self._metrics.hedge_losses,
+            "hedge_effectiveness": self._calculate_hedge_effectiveness(),
+            "total_latency_saved_ms": self._metrics.total_latency_saved_ms,
+            "avg_latency_saved_per_request": (
                 self._metrics.total_latency_saved_ms / max(1, self._metrics.total_requests)
             ),
-            'provider_latencies': dict(self._latency_ewma),
-            'provider_success_rates': dict(self._provider_success_rates),
-            'in_flight_requests': len(self._in_flight)
+            "provider_latencies": dict(self._latency_ewma),
+            "provider_success_rates": dict(self._provider_success_rates),
+            "in_flight_requests": len(self._in_flight),
         }
 
     def reset_metrics(self):
@@ -373,12 +364,13 @@ class AdaptiveHedgedRequestManager:
         self._latency_ewma.clear()
         self._provider_success_rates.clear()
 
+
 # Factory function for easy integration
 def create_hedged_request_manager(
     initial_delay_ms: int = 200,
     max_hedges: int = 3,
     timeout_ms: int = 2000,
-    provider_weights: Optional[Dict[str, float]] = None
+    provider_weights: Optional[Dict[str, float]] = None,
 ) -> AdaptiveHedgedRequestManager:
     """Factory function to create configured hedged request manager"""
 
@@ -386,7 +378,7 @@ def create_hedged_request_manager(
         initial_delay_ms=initial_delay_ms,
         max_hedges=max_hedges,
         timeout_ms=timeout_ms,
-        provider_weights=provider_weights or {}
+        provider_weights=provider_weights or {},
     )
 
     return AdaptiveHedgedRequestManager(config)

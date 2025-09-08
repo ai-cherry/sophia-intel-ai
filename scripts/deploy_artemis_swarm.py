@@ -10,13 +10,13 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.artemis.artemis_orchestrator import ArtemisOrchestrator, CodeContext
-from app.core.portkey_manager import PortkeyManager, TaskType, get_portkey_manager
+from app.core.portkey_manager import get_portkey_manager
 from app.core.secrets_manager import get_secrets_manager
 
 # Configure logging

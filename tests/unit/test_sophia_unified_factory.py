@@ -4,10 +4,7 @@ Tests business agent creation, mythology swarm patterns, KPI tracking, and wisdo
 """
 
 import asyncio
-import json
-from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import pytest
 from fastapi import WebSocket
@@ -17,13 +14,10 @@ from app.sophia.unified_factory import (
     BusinessAgentRole,
     BusinessDomain,
     BusinessPersonality,
-    BusinessTeamConfig,
     MemoryDomain,
     MythologyArchetype,
-    OKRMetrics,
     SophiaUnifiedFactory,
     SwarmType,
-    UnifiedSophiaConfig,
 )
 
 

@@ -6,14 +6,13 @@ Combines dependency-aware service management with rich health checks.
 """
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
-import subprocess
 import time
-import contextlib
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 
 import aiohttp
 import httpx
@@ -138,7 +137,7 @@ class ServiceOrchestrator:
         return {
             "cpu_percent": psutil.cpu_percent(interval=1),
             "memory_percent": psutil.virtual_memory().percent,
-            "disk_percent": psutil.disk_usage('/').percent,
+            "disk_percent": psutil.disk_usage("/").percent,
         }
 
 

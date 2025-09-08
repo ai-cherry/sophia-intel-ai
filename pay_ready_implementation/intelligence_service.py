@@ -1,9 +1,8 @@
 """Pay Ready Intelligence Service for Predictive Analytics"""
 
-import asyncio
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 

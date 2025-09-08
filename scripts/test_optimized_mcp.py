@@ -15,7 +15,6 @@ import json
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict
 
 import httpx
 

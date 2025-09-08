@@ -6,9 +6,7 @@ Tests connection pool performance and resilience under load
 import asyncio
 import random
 import time
-from datetime import datetime, timedelta
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime
 
 import pytest
 

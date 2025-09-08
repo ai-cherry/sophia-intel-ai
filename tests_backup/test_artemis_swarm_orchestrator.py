@@ -3,27 +3,28 @@ Comprehensive Unit Tests for Artemis Swarm Orchestrator
 Target: 95% code coverage for 5-agent orchestration system
 """
 
-import pytest
-import asyncio
-import json
 import hashlib
-import time
-from unittest.mock import Mock, AsyncMock, patch, MagicMock
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-from enum import Enum
+import json
+import os
 
 # Import the modules we're testing
 import sys
-import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+import time
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
+
+import pytest
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 try:
-    from artemis.orchestrator import ArtemisSwarmOrchestrator, AgentType, TaskPriority
-    from artemis.agents import PlannrAgent, CoderAgent, TesterAgent, DeployerAgent, EvolverAgent
+    from artemis.agents import CoderAgent, DeployerAgent, EvolverAgent, PlannrAgent, TesterAgent
     from artemis.memory_graph import MemoryGraph, MemoryNode
+    from artemis.orchestrator import AgentType, ArtemisSwarmOrchestrator, TaskPriority
     from artemis.zk_proofs import ZKProofSystem
 except ImportError:
+
     class AgentType(Enum):
         PLANNR = "plannr"
         CODER = "coder"
@@ -93,6 +94,7 @@ except ImportError:
             self.metrics = {}
             self.active_workflows = {}
 
+
 class TestAgentManagement:
     """Test agent creation, management, and lifecycle"""
 
@@ -103,9 +105,9 @@ class TestAgentManagement:
 
     def test_orchestrator_initialization(self, orchestrator):
         """Test orchestrator initializes with correct components"""
-        assert hasattr(orchestrator, 'agents')
-        assert hasattr(orchestrator, 'memory_graph')
-        assert hasattr(orchestrator, 'zk_system')
+        assert hasattr(orchestrator, "agents")
+        assert hasattr(orchestrator, "memory_graph")
+        assert hasattr(orchestrator, "zk_system")
         assert isinstance(orchestrator.agents, dict)
 
     async def test_plannr_agent_creation(self, orchestrator):
@@ -166,7 +168,7 @@ class TestAgentManagement:
             CoderAgent("coder_001"),
             TesterAgent("tester_001"),
             DeployerAgent("deployer_001"),
-            EvolverAgent("evolver_001")
+            EvolverAgent("evolver_001"),
         ]
 
         for agent in agents:
@@ -195,6 +197,7 @@ class TestAgentManagement:
         assert "coding" in coder.capabilities
         assert "debugging" in coder.capabilities
 
+
 class TestWorkflowOrchestration:
     """Test workflow orchestration across multiple agents"""
 
@@ -208,7 +211,7 @@ class TestWorkflowOrchestration:
             "coder_001": CoderAgent("coder_001"),
             "tester_001": TesterAgent("tester_001"),
             "deployer_001": DeployerAgent("deployer_001"),
-            "evolver_001": EvolverAgent("evolver_001")
+            "evolver_001": EvolverAgent("evolver_001"),
         }
 
         return orchestrator
@@ -222,12 +225,12 @@ class TestWorkflowOrchestration:
                     "task_id": "task_001",
                     "type": "coding",
                     "requirements": ["debugging"],
-                    "input": "Fix the login bug"
+                    "input": "Fix the login bug",
                 }
-            ]
+            ],
         }
 
-        if hasattr(orchestrator, 'execute_workflow'):
+        if hasattr(orchestrator, "execute_workflow"):
             result = await orchestrator.execute_workflow(simple_workflow)
             assert result.get("success") is not False
             assert result.get("workflow_id") == "simple_001"
@@ -246,33 +249,33 @@ class TestWorkflowOrchestration:
                     "type": "planning",
                     "agent_type": "plannr",
                     "input": "Plan the feature implementation",
-                    "dependencies": []
+                    "dependencies": [],
                 },
                 {
                     "task_id": "code_001",
                     "type": "coding",
                     "agent_type": "coder",
                     "input": "Implement the planned feature",
-                    "dependencies": ["plan_001"]
+                    "dependencies": ["plan_001"],
                 },
                 {
                     "task_id": "test_001",
                     "type": "testing",
                     "agent_type": "tester",
                     "input": "Test the implemented feature",
-                    "dependencies": ["code_001"]
+                    "dependencies": ["code_001"],
                 },
                 {
                     "task_id": "deploy_001",
                     "type": "deployment",
                     "agent_type": "deployer",
                     "input": "Deploy the tested feature",
-                    "dependencies": ["test_001"]
-                }
-            ]
+                    "dependencies": ["test_001"],
+                },
+            ],
         }
 
-        if hasattr(orchestrator, 'execute_workflow'):
+        if hasattr(orchestrator, "execute_workflow"):
             result = await orchestrator.execute_workflow(complex_workflow)
             assert result.get("success") is not False
             assert len(result.get("task_results", [])) == 4
@@ -290,11 +293,11 @@ class TestWorkflowOrchestration:
             "B": {"dependencies": ["A"]},
             "C": {"dependencies": ["A"]},
             "D": {"dependencies": ["B", "C"]},
-            "E": {"dependencies": ["D"]}
+            "E": {"dependencies": ["D"]},
         }
 
         # Topological sort should give valid execution order
-        if hasattr(orchestrator, '_resolve_dependencies'):
+        if hasattr(orchestrator, "_resolve_dependencies"):
             execution_order = orchestrator._resolve_dependencies(workflow_tasks)
 
             # A should come first (no dependencies)
@@ -319,13 +322,13 @@ class TestWorkflowOrchestration:
             "tasks": [
                 {"task_id": "parallel_a", "type": "coding", "dependencies": []},
                 {"task_id": "parallel_b", "type": "testing", "dependencies": []},
-                {"task_id": "parallel_c", "type": "deployment", "dependencies": []}
-            ]
+                {"task_id": "parallel_c", "type": "deployment", "dependencies": []},
+            ],
         }
 
         start_time = time.perf_counter()
 
-        if hasattr(orchestrator, 'execute_workflow'):
+        if hasattr(orchestrator, "execute_workflow"):
             result = await orchestrator.execute_workflow(parallel_workflow)
             execution_time = time.perf_counter() - start_time
 
@@ -345,17 +348,13 @@ class TestWorkflowOrchestration:
                 {
                     "task_id": "failing_task",
                     "type": "invalid_type",  # This should fail
-                    "input": "This will fail"
+                    "input": "This will fail",
                 },
-                {
-                    "task_id": "dependent_task",
-                    "type": "coding",
-                    "dependencies": ["failing_task"]
-                }
-            ]
+                {"task_id": "dependent_task", "type": "coding", "dependencies": ["failing_task"]},
+            ],
         }
 
-        if hasattr(orchestrator, 'execute_workflow'):
+        if hasattr(orchestrator, "execute_workflow"):
             result = await orchestrator.execute_workflow(error_workflow)
 
             # Should handle failure gracefully
@@ -364,6 +363,7 @@ class TestWorkflowOrchestration:
             # Verify error scenario structure
             assert error_workflow["tasks"][0]["type"] == "invalid_type"
             assert error_workflow["tasks"][1]["dependencies"] == ["failing_task"]
+
 
 class TestMemoryGraphIntegration:
     """Test memory graph functionality for context persistence"""
@@ -391,7 +391,7 @@ class TestMemoryGraphIntegration:
         node1 = MemoryNode("node_001", {"task": "planning"})
         node2 = MemoryNode("node_002", {"task": "coding"})
 
-        if hasattr(memory_graph, 'add_node'):
+        if hasattr(memory_graph, "add_node"):
             memory_graph.add_node(node1)
             memory_graph.add_node(node2)
 
@@ -412,7 +412,7 @@ class TestMemoryGraphIntegration:
         memory_graph.nodes["planning"] = node1
         memory_graph.nodes["coding"] = node2
 
-        if hasattr(memory_graph, 'add_connection'):
+        if hasattr(memory_graph, "add_connection"):
             memory_graph.add_connection("planning", "coding", "leads_to")
 
             assert "coding" in memory_graph.edges.get("planning", [])
@@ -427,11 +427,11 @@ class TestMemoryGraphIntegration:
             "workflow_id": "memory_test_001",
             "tasks": [
                 {"task_id": "plan", "result": "Planning complete"},
-                {"task_id": "code", "result": "Coding complete"}
-            ]
+                {"task_id": "code", "result": "Coding complete"},
+            ],
         }
 
-        if hasattr(orchestrator, 'persist_workflow_memory'):
+        if hasattr(orchestrator, "persist_workflow_memory"):
             await orchestrator.persist_workflow_memory(workflow_result)
 
             # Should create memory nodes for each task result
@@ -447,13 +447,13 @@ class TestMemoryGraphIntegration:
         # Add some historical context
         historical_context = [
             MemoryNode("hist_001", {"type": "similar_task", "content": "Previous implementation"}),
-            MemoryNode("hist_002", {"type": "learned_pattern", "content": "Best practice pattern"})
+            MemoryNode("hist_002", {"type": "learned_pattern", "content": "Best practice pattern"}),
         ]
 
         for node in historical_context:
             orchestrator.memory_graph.nodes[node.node_id] = node
 
-        if hasattr(orchestrator, 'get_relevant_context'):
+        if hasattr(orchestrator, "get_relevant_context"):
             context = orchestrator.get_relevant_context("implementation_task")
             assert len(context) >= 0  # Should return some context
         else:
@@ -469,7 +469,7 @@ class TestMemoryGraphIntegration:
             node.timestamp = old_date
             orchestrator.memory_graph.nodes[f"old_node_{i}"] = node
 
-        if hasattr(orchestrator, 'prune_memory_graph'):
+        if hasattr(orchestrator, "prune_memory_graph"):
             initial_size = len(orchestrator.memory_graph.nodes)
             orchestrator.prune_memory_graph(max_age_days=30)
 
@@ -478,6 +478,7 @@ class TestMemoryGraphIntegration:
         else:
             # Verify nodes were added (pruning mechanism would be implementation-specific)
             assert len(orchestrator.memory_graph.nodes) == 100
+
 
 class TestZeroKnowledgeProofs:
     """Test Zero-Knowledge proof system for task verification"""
@@ -497,10 +498,10 @@ class TestZeroKnowledgeProofs:
             "agent_id": "coder_001",
             "input": "Implement function",
             "output": "Function implemented successfully",
-            "execution_trace": ["step1", "step2", "step3"]
+            "execution_trace": ["step1", "step2", "step3"],
         }
 
-        if hasattr(zk_system, 'generate_proof'):
+        if hasattr(zk_system, "generate_proof"):
             proof = zk_system.generate_proof(task_data)
 
             assert proof is not None
@@ -513,12 +514,9 @@ class TestZeroKnowledgeProofs:
 
     def test_zk_proof_verification(self, zk_system):
         """Test verifying zero-knowledge proofs"""
-        task_data = {
-            "task_id": "zk_verify_001",
-            "result": "Task completed"
-        }
+        task_data = {"task_id": "zk_verify_001", "result": "Task completed"}
 
-        if hasattr(zk_system, 'generate_proof') and hasattr(zk_system, 'verify_proof'):
+        if hasattr(zk_system, "generate_proof") and hasattr(zk_system, "verify_proof"):
             proof = zk_system.generate_proof(task_data)
             is_valid = zk_system.verify_proof(proof, task_data)
 
@@ -526,7 +524,9 @@ class TestZeroKnowledgeProofs:
         else:
             # Mock verification
             proof_hash = hashlib.sha256(json.dumps(task_data, sort_keys=True).encode()).hexdigest()
-            verification_hash = hashlib.sha256(json.dumps(task_data, sort_keys=True).encode()).hexdigest()
+            verification_hash = hashlib.sha256(
+                json.dumps(task_data, sort_keys=True).encode()
+            ).hexdigest()
             assert proof_hash == verification_hash
 
     def test_zk_proof_tampering_detection(self, zk_system):
@@ -534,15 +534,19 @@ class TestZeroKnowledgeProofs:
         original_data = {"task_id": "tamper_test", "result": "original"}
         tampered_data = {"task_id": "tamper_test", "result": "modified"}
 
-        if hasattr(zk_system, 'generate_proof') and hasattr(zk_system, 'verify_proof'):
+        if hasattr(zk_system, "generate_proof") and hasattr(zk_system, "verify_proof"):
             proof = zk_system.generate_proof(original_data)
             is_valid = zk_system.verify_proof(proof, tampered_data)
 
             assert is_valid is False  # Should detect tampering
         else:
             # Mock tampering detection
-            original_hash = hashlib.sha256(json.dumps(original_data, sort_keys=True).encode()).hexdigest()
-            tampered_hash = hashlib.sha256(json.dumps(tampered_data, sort_keys=True).encode()).hexdigest()
+            original_hash = hashlib.sha256(
+                json.dumps(original_data, sort_keys=True).encode()
+            ).hexdigest()
+            tampered_hash = hashlib.sha256(
+                json.dumps(tampered_data, sort_keys=True).encode()
+            ).hexdigest()
             assert original_hash != tampered_hash
 
     async def test_workflow_proof_chain(self, orchestrator):
@@ -550,10 +554,10 @@ class TestZeroKnowledgeProofs:
         workflow_tasks = [
             {"task_id": "chain_001", "result": "Planning done"},
             {"task_id": "chain_002", "result": "Coding done"},
-            {"task_id": "chain_003", "result": "Testing done"}
+            {"task_id": "chain_003", "result": "Testing done"},
         ]
 
-        if hasattr(orchestrator.zk_system, 'create_proof_chain'):
+        if hasattr(orchestrator.zk_system, "create_proof_chain"):
             proof_chain = orchestrator.zk_system.create_proof_chain(workflow_tasks)
 
             assert len(proof_chain) == 3
@@ -569,12 +573,9 @@ class TestZeroKnowledgeProofs:
 
     def test_batch_proof_verification(self, orchestrator):
         """Test batch verification of multiple proofs"""
-        batch_tasks = [
-            {"task_id": f"batch_{i}", "result": f"Result {i}"}
-            for i in range(10)
-        ]
+        batch_tasks = [{"task_id": f"batch_{i}", "result": f"Result {i}"} for i in range(10)]
 
-        if hasattr(orchestrator.zk_system, 'batch_verify_proofs'):
+        if hasattr(orchestrator.zk_system, "batch_verify_proofs"):
             proofs = [orchestrator.zk_system.generate_proof(task) for task in batch_tasks]
             verification_results = orchestrator.zk_system.batch_verify_proofs(proofs, batch_tasks)
 
@@ -584,6 +585,7 @@ class TestZeroKnowledgeProofs:
             # Mock batch verification
             for i, task in enumerate(batch_tasks):
                 assert task["task_id"] == f"batch_{i}"
+
 
 class TestCostOptimization:
     """Test cost optimization features using Portkey integration"""
@@ -597,7 +599,7 @@ class TestCostOptimization:
         simple_task = {"complexity": "low", "token_count": 100}
         complex_task = {"complexity": "high", "token_count": 5000}
 
-        if hasattr(orchestrator, '_select_optimal_model'):
+        if hasattr(orchestrator, "_select_optimal_model"):
             simple_model = orchestrator._select_optimal_model(simple_task)
             complex_model = orchestrator._select_optimal_model(complex_task)
 
@@ -614,7 +616,7 @@ class TestCostOptimization:
         """Test cost tracking for workflow execution"""
         workflow_id = "cost_test_001"
 
-        if hasattr(orchestrator, 'track_workflow_cost'):
+        if hasattr(orchestrator, "track_workflow_cost"):
             initial_cost = orchestrator.track_workflow_cost(workflow_id)
 
             # Simulate some operations
@@ -632,13 +634,9 @@ class TestCostOptimization:
 
     def test_budget_limit_enforcement(self, orchestrator):
         """Test budget limit enforcement"""
-        budget_config = {
-            "daily_limit": 10.0,
-            "workflow_limit": 5.0,
-            "agent_limit": 2.0
-        }
+        budget_config = {"daily_limit": 10.0, "workflow_limit": 5.0, "agent_limit": 2.0}
 
-        if hasattr(orchestrator, 'set_budget_limits'):
+        if hasattr(orchestrator, "set_budget_limits"):
             orchestrator.set_budget_limits(budget_config)
 
             # Should enforce budget limits
@@ -655,15 +653,15 @@ class TestCostOptimization:
         cost_sensitive_task = {
             "task_id": "cost_opt_001",
             "type": "simple_coding",
-            "budget_priority": "low_cost"
+            "budget_priority": "low_cost",
         }
 
-        if hasattr(orchestrator, 'select_cost_optimal_agent'):
+        if hasattr(orchestrator, "select_cost_optimal_agent"):
             selected_agent = await orchestrator.select_cost_optimal_agent(cost_sensitive_task)
 
             # Should select most cost-effective agent for the task
             assert selected_agent is not None
-            assert hasattr(selected_agent, 'agent_type')
+            assert hasattr(selected_agent, "agent_type")
         else:
             # Mock cost-optimal selection
             available_agents = ["junior_coder", "senior_coder", "expert_coder"]
@@ -671,6 +669,7 @@ class TestCostOptimization:
             if cost_sensitive_task["budget_priority"] == "low_cost":
                 selected = "junior_coder"
                 assert selected == "junior_coder"
+
 
 class TestPerformanceMetrics:
     """Test performance metrics collection and optimization"""
@@ -681,7 +680,7 @@ class TestPerformanceMetrics:
 
     def test_workflow_execution_time_tracking(self, orchestrator):
         """Test tracking workflow execution times"""
-        if hasattr(orchestrator, 'metrics'):
+        if hasattr(orchestrator, "metrics"):
             orchestrator.metrics["execution_times"] = []
         else:
             orchestrator.metrics = {"execution_times": []}
@@ -691,7 +690,9 @@ class TestPerformanceMetrics:
         orchestrator.metrics["execution_times"].extend(workflow_times)
 
         # Calculate performance metrics
-        avg_time = sum(orchestrator.metrics["execution_times"]) / len(orchestrator.metrics["execution_times"])
+        avg_time = sum(orchestrator.metrics["execution_times"]) / len(
+            orchestrator.metrics["execution_times"]
+        )
         max_time = max(orchestrator.metrics["execution_times"])
         min_time = min(orchestrator.metrics["execution_times"])
 
@@ -707,7 +708,7 @@ class TestPerformanceMetrics:
             "tester_001": {"busy_time": 200, "idle_time": 300},
         }
 
-        if hasattr(orchestrator, 'track_agent_utilization'):
+        if hasattr(orchestrator, "track_agent_utilization"):
             orchestrator.track_agent_utilization(agent_utilization)
         else:
             orchestrator.metrics["agent_utilization"] = agent_utilization
@@ -735,7 +736,7 @@ class TestPerformanceMetrics:
             {"timestamp": datetime.now(), "workflow_id": "w5"},
         ]
 
-        if hasattr(orchestrator, 'calculate_throughput'):
+        if hasattr(orchestrator, "calculate_throughput"):
             throughput = orchestrator.calculate_throughput(completed_workflows, hours=4)
             assert throughput == 1.25  # 5 workflows in 4 hours
         else:
@@ -746,13 +747,19 @@ class TestPerformanceMetrics:
     def test_error_rate_tracking(self, orchestrator):
         """Test error rate tracking and alerting"""
         workflow_results = [
-            {"success": True}, {"success": True}, {"success": False},
-            {"success": True}, {"success": False}, {"success": True},
-            {"success": False}, {"success": True}, {"success": True},
-            {"success": True}
+            {"success": True},
+            {"success": True},
+            {"success": False},
+            {"success": True},
+            {"success": False},
+            {"success": True},
+            {"success": False},
+            {"success": True},
+            {"success": True},
+            {"success": True},
         ]
 
-        if hasattr(orchestrator, 'calculate_error_rate'):
+        if hasattr(orchestrator, "calculate_error_rate"):
             error_rate = orchestrator.calculate_error_rate(workflow_results)
             assert error_rate == 0.3  # 3 failures out of 10
         else:
@@ -763,7 +770,7 @@ class TestPerformanceMetrics:
 
     async def test_real_time_performance_monitoring(self, orchestrator):
         """Test real-time performance monitoring"""
-        if hasattr(orchestrator, 'get_real_time_metrics'):
+        if hasattr(orchestrator, "get_real_time_metrics"):
             metrics = await orchestrator.get_real_time_metrics()
 
             # Should include key performance indicators
@@ -775,11 +782,12 @@ class TestPerformanceMetrics:
             mock_metrics = {
                 "active_workflows": 5,
                 "agent_status": {"available": 3, "busy": 2},
-                "system_load": {"cpu": 45.2, "memory": 67.8}
+                "system_load": {"cpu": 45.2, "memory": 67.8},
             }
 
             assert mock_metrics["active_workflows"] == 5
             assert mock_metrics["agent_status"]["available"] == 3
+
 
 class TestScalabilityAndResilience:
     """Test system scalability and resilience features"""
@@ -792,12 +800,13 @@ class TestScalabilityAndResilience:
         """Test system behavior under high load"""
         # Simulate high load scenario
         concurrent_workflows = [
-            {"workflow_id": f"load_test_{i}", "priority": "medium"}
-            for i in range(50)
+            {"workflow_id": f"load_test_{i}", "priority": "medium"} for i in range(50)
         ]
 
-        if hasattr(orchestrator, 'process_concurrent_workflows'):
-            results = await orchestrator.process_concurrent_workflows(concurrent_workflows[:10])  # Test subset
+        if hasattr(orchestrator, "process_concurrent_workflows"):
+            results = await orchestrator.process_concurrent_workflows(
+                concurrent_workflows[:10]
+            )  # Test subset
 
             # Should handle concurrent workflows
             assert len(results) <= 10
@@ -809,7 +818,7 @@ class TestScalabilityAndResilience:
 
     def test_agent_pool_scaling(self, orchestrator):
         """Test dynamic agent pool scaling"""
-        if hasattr(orchestrator, 'scale_agent_pool'):
+        if hasattr(orchestrator, "scale_agent_pool"):
             # Start with base pool
             initial_agent_count = len(orchestrator.agents)
 
@@ -817,7 +826,9 @@ class TestScalabilityAndResilience:
             orchestrator.scale_agent_pool("coder", target_count=5)
 
             # Should have more agents
-            coder_agents = [a for a in orchestrator.agents.values() if a.agent_type == AgentType.CODER]
+            coder_agents = [
+                a for a in orchestrator.agents.values() if a.agent_type == AgentType.CODER
+            ]
             assert len(coder_agents) >= 1
         else:
             # Mock scaling behavior
@@ -825,7 +836,7 @@ class TestScalabilityAndResilience:
             scaled_agents = {
                 "coder_001": CoderAgent("coder_001"),
                 "coder_002": CoderAgent("coder_002"),
-                "coder_003": CoderAgent("coder_003")
+                "coder_003": CoderAgent("coder_003"),
             }
 
             assert len(scaled_agents) > len(base_agents)
@@ -837,13 +848,15 @@ class TestScalabilityAndResilience:
             "workflow_id": "fault_test_001",
             "tasks": [
                 {"task_id": "task_001", "agent_id": "failing_agent"},
-                {"task_id": "task_002", "dependencies": ["task_001"]}
-            ]
+                {"task_id": "task_002", "dependencies": ["task_001"]},
+            ],
         }
 
-        if hasattr(orchestrator, 'handle_agent_failure'):
+        if hasattr(orchestrator, "handle_agent_failure"):
             # Should recover from agent failure
-            recovery_result = await orchestrator.handle_agent_failure("failing_agent", failing_workflow)
+            recovery_result = await orchestrator.handle_agent_failure(
+                "failing_agent", failing_workflow
+            )
 
             assert recovery_result.get("recovery_action") is not None
             assert recovery_result.get("replacement_agent") is not None
@@ -856,7 +869,7 @@ class TestScalabilityAndResilience:
 
     def test_circuit_breaker_pattern(self, orchestrator):
         """Test circuit breaker for external service failures"""
-        if hasattr(orchestrator, 'circuit_breaker'):
+        if hasattr(orchestrator, "circuit_breaker"):
             # Simulate repeated failures
             for _ in range(5):
                 orchestrator.circuit_breaker.record_failure("external_api")
@@ -876,10 +889,10 @@ class TestScalabilityAndResilience:
         resource_limits = {
             "max_concurrent_workflows": 2,
             "max_memory_usage": "80%",
-            "max_cpu_usage": "90%"
+            "max_cpu_usage": "90%",
         }
 
-        if hasattr(orchestrator, 'apply_resource_limits'):
+        if hasattr(orchestrator, "apply_resource_limits"):
             orchestrator.apply_resource_limits(resource_limits)
 
             # Should still function with reduced capacity
@@ -891,6 +904,7 @@ class TestScalabilityAndResilience:
             # Verify resource limit structure
             assert resource_limits["max_concurrent_workflows"] == 2
             assert resource_limits["max_memory_usage"] == "80%"
+
 
 if __name__ == "__main__":
     # Run the tests

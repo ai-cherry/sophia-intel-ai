@@ -4,7 +4,6 @@ Test Memory Server for Sophia Intel AI
 Minimal server to test memory endpoints functionality
 """
 
-import json
 from datetime import datetime
 from typing import Dict, List, Optional
 

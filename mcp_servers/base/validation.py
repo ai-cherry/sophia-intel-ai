@@ -12,6 +12,7 @@ from typing import Any
 
 from .error_handling import MCPValidationError
 
+
 @dataclass
 class ValidationRule:
     """Validation rule definition"""
@@ -28,6 +29,7 @@ class ValidationRule:
     custom_validator: Callable[[Any], bool] | None = None
     error_message: str | None = None
 
+
 class MCPToolValidator:
     """Validator for MCP tool inputs"""
 
@@ -40,22 +42,14 @@ class MCPToolValidator:
         self.rules.append(rule)
         return self
 
-    def require_field(
-        self, field: str, field_type: type = str, **kwargs
-    ) -> "MCPToolValidator":
+    def require_field(self, field: str, field_type: type = str, **kwargs) -> "MCPToolValidator":
         """Add required field rule"""
-        rule = ValidationRule(
-            field=field, required=True, type_check=field_type, **kwargs
-        )
+        rule = ValidationRule(field=field, required=True, type_check=field_type, **kwargs)
         return self.add_rule(rule)
 
-    def optional_field(
-        self, field: str, field_type: type = str, **kwargs
-    ) -> "MCPToolValidator":
+    def optional_field(self, field: str, field_type: type = str, **kwargs) -> "MCPToolValidator":
         """Add optional field rule"""
-        rule = ValidationRule(
-            field=field, required=False, type_check=field_type, **kwargs
-        )
+        rule = ValidationRule(field=field, required=False, type_check=field_type, **kwargs)
         return self.add_rule(rule)
 
     def validate(self, data: dict[str, Any]) -> None:
@@ -92,8 +86,7 @@ class MCPToolValidator:
             and (value < rule.min_value)
         ):
             raise MCPValidationError(
-                rule.error_message
-                or f"Field '{field_name}' must be >= {rule.min_value}",
+                rule.error_message or f"Field '{field_name}' must be >= {rule.min_value}",
                 field=field_name,
                 value=value,
             )
@@ -103,8 +96,7 @@ class MCPToolValidator:
             and (value > rule.max_value)
         ):
             raise MCPValidationError(
-                rule.error_message
-                or f"Field '{field_name}' must be <= {rule.max_value}",
+                rule.error_message or f"Field '{field_name}' must be <= {rule.max_value}",
                 field=field_name,
                 value=value,
             )
@@ -133,8 +125,7 @@ class MCPToolValidator:
         if rule.pattern and isinstance(value, str):
             if not re.match(rule.pattern, value):
                 raise MCPValidationError(
-                    rule.error_message
-                    or f"Field '{field_name}' does not match required pattern",
+                    rule.error_message or f"Field '{field_name}' does not match required pattern",
                     field=field_name,
                     value=value,
                 )
@@ -149,8 +140,7 @@ class MCPToolValidator:
             try:
                 if not rule.custom_validator(value):
                     raise MCPValidationError(
-                        rule.error_message
-                        or f"Field '{field_name}' failed custom validation",
+                        rule.error_message or f"Field '{field_name}' failed custom validation",
                         field=field_name,
                         value=value,
                     )
@@ -162,6 +152,7 @@ class MCPToolValidator:
                     field=field_name,
                     value=value,
                 )
+
 
 class CommonValidators:
     """Collection of common validators for MCP tools"""
@@ -214,9 +205,7 @@ class CommonValidators:
                 max_length=500,
                 custom_validator=validate_url,
             )
-            .optional_field(
-                "method", str, choices=["GET", "POST", "PUT", "DELETE", "PATCH"]
-            )
+            .optional_field("method", str, choices=["GET", "POST", "PUT", "DELETE", "PATCH"])
             .optional_field("headers", dict)
             .optional_field("timeout", int, min_value=1, max_value=300)
         )
@@ -242,8 +231,8 @@ class CommonValidators:
             .optional_field("path", str, max_length=500)
         )
 
+
 """
 validation.py - Syntax errors fixed
 This file had severe syntax errors and was replaced with a minimal valid structure.
 """
-

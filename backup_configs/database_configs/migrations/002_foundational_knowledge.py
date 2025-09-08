@@ -4,13 +4,8 @@ Adds tables for foundational knowledge management, versioning, and sync tracking
 """
 from __future__ import annotations
 
-import os
-from dataclasses import dataclass
-from typing import Any
-
 from backup_configs.database_configs.migrations.migration_base import (
     DatabaseMigrator,
-    MigrationConfig,
 )
 
 
@@ -168,7 +163,7 @@ def migrate_up(migrator: DatabaseMigrator):
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (id) DO NOTHING
                 """
-            
+
             import json
             migrator.execute_sql(
                 conn,
@@ -244,6 +239,7 @@ def migrate_down(migrator: DatabaseMigrator):
 
 if __name__ == "__main__":
     import sys
+
     from backup_configs.database_configs.migrations.migration_base import (
         get_config_from_env,
     )

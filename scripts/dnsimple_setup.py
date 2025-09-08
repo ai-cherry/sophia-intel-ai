@@ -4,31 +4,24 @@ DNSimple DNS Setup for Sophia AI
 The DNS solution that doesn't suck
 """
 
-import requests
-import json
 import time
-import sys
+
+import requests
+
 
 class DNSimpleSetup:
     def __init__(self, api_token, account_id):
         self.api_token = api_token
         self.account_id = account_id
         self.base_url = "https://api.dnsimple.com/v2"
-        self.headers = {
-            'Authorization': f'Bearer {api_token}',
-            'Content-Type': 'application/json'
-        }
+        self.headers = {"Authorization": f"Bearer {api_token}", "Content-Type": "application/json"}
         self.domain = "sophia-intel.ai"
         self.lambda_ip = "192.222.58.232"
 
     def sophia_api_connection(self):
         """Test DNSimple API connection"""
         try:
-            response = requests.get(
-                f"{self.base_url}/whoami",
-                headers=self.headers,
-                timeout=10
-            )
+            response = requests.get(f"{self.base_url}/whoami", headers=self.headers, timeout=10)
 
             if response.status_code == 200:
                 data = response.json()
@@ -48,7 +41,7 @@ class DNSimpleSetup:
             response = requests.get(
                 f"{self.base_url}/{self.account_id}/zones/{self.domain}",
                 headers=self.headers,
-                timeout=10
+                timeout=10,
             )
 
             if response.status_code == 200:
@@ -68,35 +61,30 @@ class DNSimpleSetup:
 
     def create_dns_record(self, name, record_type, content, ttl=300):
         """Create a DNS record"""
-        data = {
-            'name': name,
-            'type': record_type,
-            'content': content,
-            'ttl': ttl
-        }
+        data = {"name": name, "type": record_type, "content": content, "ttl": ttl}
 
         try:
             response = requests.post(
                 f"{self.base_url}/{self.account_id}/zones/{self.domain}/records",
                 headers=self.headers,
                 json=data,
-                timeout=10
+                timeout=10,
             )
 
             if response.status_code == 201:
-                record_data = response.json()['data']
-                display_name = name if name else '@'
+                record_data = response.json()["data"]
+                display_name = name if name else "@"
                 print(f"✅ Created {record_type} record: {display_name} → {content}")
                 return True
             else:
                 error_data = response.json()
-                display_name = name if name else '@'
+                display_name = name if name else "@"
                 print(f"❌ Failed to create {record_type} record: {display_name}")
                 print(f"   Error: {error_data}")
                 return False
 
         except Exception as e:
-            display_name = name if name else '@'
+            display_name = name if name else "@"
             print(f"❌ Error creating {record_type} record {display_name}: {e}")
             return False
 
@@ -106,11 +94,11 @@ class DNSimpleSetup:
             response = requests.get(
                 f"{self.base_url}/{self.account_id}/zones/{self.domain}/records",
                 headers=self.headers,
-                timeout=10
+                timeout=10,
             )
 
             if response.status_code == 200:
-                records = response.json()['data']
+                records = response.json()["data"]
                 print(f"📋 Found {len(records)} existing DNS records")
                 return records
             else:
@@ -142,16 +130,16 @@ class DNSimpleSetup:
 
         # DNS records for Sophia AI
         records_to_create = [
-            ("", "A", self.lambda_ip),           # Root domain
-            ("www", "A", self.lambda_ip),        # www
-            ("api", "A", self.lambda_ip),        # API endpoint
-            ("chat", "A", self.lambda_ip),       # Chat interface
+            ("", "A", self.lambda_ip),  # Root domain
+            ("www", "A", self.lambda_ip),  # www
+            ("api", "A", self.lambda_ip),  # API endpoint
+            ("chat", "A", self.lambda_ip),  # Chat interface
             ("dashboard", "A", self.lambda_ip),  # Dashboard
-            ("agents", "A", self.lambda_ip),     # AI agents
-            ("docs", "A", self.lambda_ip),       # Documentation
-            ("status", "A", self.lambda_ip),     # Status page
-            ("api-lb", "A", self.lambda_ip),     # API load balancer
-            ("chat-lb", "A", self.lambda_ip),    # Chat load balancer
+            ("agents", "A", self.lambda_ip),  # AI agents
+            ("docs", "A", self.lambda_ip),  # Documentation
+            ("status", "A", self.lambda_ip),  # Status page
+            ("api-lb", "A", self.lambda_ip),  # API load balancer
+            ("chat-lb", "A", self.lambda_ip),  # Chat load balancer
         ]
 
         print(f"📝 Creating {len(records_to_create)} DNS records...")
@@ -164,7 +152,7 @@ class DNSimpleSetup:
             time.sleep(0.5)  # Rate limiting
 
         print()
-        print(f"🎉 DNS Setup Complete!")
+        print("🎉 DNS Setup Complete!")
         print(f"✅ {success_count}/{len(records_to_create)} records created successfully")
 
         if success_count == len(records_to_create):
@@ -195,12 +183,12 @@ class DNSimpleSetup:
             response = requests.get(
                 f"{self.base_url}/{self.account_id}/zones/{self.domain}",
                 headers=self.headers,
-                timeout=10
+                timeout=10,
             )
 
             if response.status_code == 200:
-                zone_data = response.json()['data']
-                nameservers = zone_data.get('name_servers', [])
+                zone_data = response.json()["data"]
+                nameservers = zone_data.get("name_servers", [])
 
                 print("📡 DNSimple Nameservers:")
                 for i, ns in enumerate(nameservers, 1):
@@ -224,6 +212,7 @@ class DNSimpleSetup:
         except Exception as e:
             print(f"❌ Error getting nameservers: {e}")
             return []
+
 
 def main():
     """Main execution"""
@@ -254,7 +243,7 @@ def main():
     if nameservers:
         print()
         proceed = input("Have you updated nameservers at NameCheap? (y/n): ").strip().lower()
-        if proceed != 'y':
+        if proceed != "y":
             print("⚠️  Update nameservers at NameCheap first, then run this script again.")
             return
 
@@ -266,6 +255,7 @@ def main():
         print("🚀 Your enhanced AI platform will be live in 2-5 minutes!")
     else:
         print("\n❌ Setup failed. Check the errors above and try again.")
+
 
 if __name__ == "__main__":
     main()

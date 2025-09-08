@@ -462,6 +462,7 @@ async def single_flight_context(group_name: str = "default"):
         yield group
     finally:
         # Group cleanup is handled by the manager
+        pass
 
 # Decorator for automatic single-flight deduplication
 def single_flight(

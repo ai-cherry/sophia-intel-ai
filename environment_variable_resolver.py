@@ -9,7 +9,8 @@ import logging
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, Set
+from typing import Any
+
 
 class EnvironmentTier(Enum):
     """Environment tiers for proper resolution hierarchy"""
@@ -18,6 +19,7 @@ class EnvironmentTier(Enum):
     STAGING = "staging"
     DEVELOPMENT = "development"
     LOCAL = "local"
+
 
 class CircularReferenceError(Exception):
     """Raised when circular reference is detected in environment variables"""
@@ -72,9 +74,7 @@ class EnvironmentVariableResolver:
                         self.logger.info(f"Loaded ESC config from {config_path}")
                         return config
                 except Exception as e:
-                    self.logger.warning(
-                        f"Failed to load ESC config from {config_path}: {e}"
-                    )
+                    self.logger.warning(f"Failed to load ESC config from {config_path}: {e}")
 
         self.logger.info("No ESC config found, using local environment only")
         return {}
@@ -103,9 +103,7 @@ class EnvironmentVariableResolver:
             f"{self.tier.value.upper()}_POSTGRES_HOST": "localhost",
         }
 
-    def resolve(
-        self, key: str, default: str | None = None, namespace: str | None = None
-    ) -> str:
+    def resolve(self, key: str, default: str | None = None, namespace: str | None = None) -> str:
         """
         Resolve environment variable with circular reference detection
 
@@ -123,9 +121,7 @@ class EnvironmentVariableResolver:
         # Check for circular reference
         if key in self.resolution_stack:
             circular_chain = " -> ".join(list(self.resolution_stack) + [key])
-            raise CircularReferenceError(
-                f"Circular reference detected: {circular_chain}"
-            )
+            raise CircularReferenceError(f"Circular reference detected: {circular_chain}")
 
         # Check cache first
         cache_key = f"{namespace}:{key}" if namespace else key
@@ -147,9 +143,7 @@ class EnvironmentVariableResolver:
             # Remove from resolution stack
             self.resolution_stack.remove(key)
 
-    def _resolve_variable(
-        self, key: str, default: str | None, namespace: str | None
-    ) -> str:
+    def _resolve_variable(self, key: str, default: str | None, namespace: str | None) -> str:
         """Internal method to resolve variable with proper hierarchy"""
 
         # 1. Try namespace-specific variable first
@@ -157,9 +151,7 @@ class EnvironmentVariableResolver:
             namespaced_key = f"{namespace.upper()}_{key}"
             value = self._get_from_sources(namespaced_key)
             if value:
-                self.logger.debug(
-                    f"Resolved {key} from namespace {namespace}: {namespaced_key}"
-                )
+                self.logger.debug(f"Resolved {key} from namespace {namespace}: {namespaced_key}")
                 return value
 
         # 2. Try tier-specific variable
@@ -298,9 +290,7 @@ class EnvironmentVariableResolver:
                 )
 
             except CircularReferenceError as e:
-                validation_results["circular_references"].append(
-                    {"variable": var, "error": str(e)}
-                )
+                validation_results["circular_references"].append({"variable": var, "error": str(e)})
                 validation_results["problematic_variables"].append(var)
 
             except Exception as e:
@@ -368,8 +358,10 @@ class EnvironmentVariableResolver:
 
         return fix_results
 
+
 # Global resolver instance
 _global_resolver = None
+
 
 def get_resolver(
     tier: EnvironmentTier = EnvironmentTier.LOCAL,
@@ -380,26 +372,27 @@ def get_resolver(
         _global_resolver = EnvironmentVariableResolver(tier)
     return _global_resolver
 
-def resolve_env(
-    key: str, default: str | None = None, namespace: str | None = None
-) -> str:
+
+def resolve_env(key: str, default: str | None = None, namespace: str | None = None) -> str:
     """Convenience function to resolve environment variable"""
     resolver = get_resolver()
     return resolver.resolve(key, default, namespace)
+
 
 def validate_environment() -> dict[str, Any]:
     """Convenience function to validate environment"""
     resolver = get_resolver()
     return resolver.validate_no_circular_references()
 
+
 def fix_environment() -> dict[str, Any]:
     """Convenience function to fix environment issues"""
     resolver = get_resolver()
     return resolver.fix_circular_references()
 
+
 # Main execution for testing
 if __name__ == "__main__":
-    import sys
 
     def main():
         print("🔍 Environment Variable Resolver - Circular Reference Fixer")
@@ -426,9 +419,7 @@ if __name__ == "__main__":
             fix_results = resolver.fix_circular_references()
 
             print(f"   - Fixes applied: {len(fix_results['fixes_applied'])}")
-            print(
-                f"   - Manual fixes needed: {len(fix_results['manual_fixes_needed'])}"
-            )
+            print(f"   - Manual fixes needed: {len(fix_results['manual_fixes_needed'])}")
             print(f"   - Backup created: {fix_results['backup_created']}")
 
             if fix_results["fixes_applied"]:
@@ -439,9 +430,7 @@ if __name__ == "__main__":
             if fix_results["manual_fixes_needed"]:
                 print("\n⚠️ Manual fixes needed:")
                 for fix in fix_results["manual_fixes_needed"]:
-                    print(
-                        f"   - {fix['variable']}: {fix['reason']} - {fix['suggestion']}"
-                    )
+                    print(f"   - {fix['variable']}: {fix['reason']} - {fix['suggestion']}")
 
         else:
             print("\n✅ No circular references detected - environment is healthy!")

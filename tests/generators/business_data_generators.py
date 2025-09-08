@@ -147,8 +147,9 @@ class BusinessDataGenerator:
             "description": fake.text(max_nb_chars=300),
             "state": {
                 "id": str(uuid.uuid4()),
-                "name": secrets.choice(
-                    ["Backlog", "                ),
+                "name": secrets.choice([
+                    "Backlog", "In Progress", "Done", "Blocked"
+                ]),
                 "type": secrets.choice(
                     ["unstarted", "started", "completed", "canceled"]
                 ),

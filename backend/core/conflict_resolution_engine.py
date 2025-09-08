@@ -13,6 +13,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class ConflictType(Enum):
     """Types of conflicts we handle"""
 
@@ -32,6 +33,7 @@ class ConflictType(Enum):
     DATA_VALIDATION = "data_validation"
     AUTHENTICATION_FAILURE = "authentication_failure"
 
+
 class ResolutionStrategy(Enum):
     """Conflict resolution strategies"""
 
@@ -48,6 +50,7 @@ class ResolutionStrategy(Enum):
     ROLLBACK = "rollback"
     IGNORE_AND_LOG = "ignore_and_log"
 
+
 @dataclass
 class ConflictContext:
     """Context for conflict resolution"""
@@ -62,6 +65,7 @@ class ConflictContext:
     metadata: dict[str, Any] = field(default_factory=dict)
     resolution_history: list[dict[str, Any]] = field(default_factory=list)
 
+
 @dataclass
 class ResolutionResult:
     """Result of conflict resolution"""
@@ -73,6 +77,7 @@ class ResolutionResult:
     metadata: dict[str, Any] = field(default_factory=dict)
     duration_ms: float = 0
     should_retry: bool = False
+
 
 class CircuitBreaker:
     """Circuit breaker for preventing cascading failures"""
@@ -101,10 +106,7 @@ class CircuitBreaker:
                     self.half_open_calls = 0
                 else:
                     raise Exception("Circuit breaker is OPEN. Service unavailable.")
-            if (
-                self.state == "HALF_OPEN"
-                and self.half_open_calls >= self.half_open_max_calls
-            ):
+            if self.state == "HALF_OPEN" and self.half_open_calls >= self.half_open_max_calls:
                 if self.failure_count > 0:
                     self.state = "OPEN"
                     raise Exception("Circuit breaker is OPEN after half-open test.")
@@ -139,10 +141,8 @@ class CircuitBreaker:
 
     def _should_attempt_reset(self) -> bool:
         """Check if we should attempt to reset the circuit"""
-        return (
-            self.last_failure_time
-            and time.time() - self.last_failure_time >= self.timeout
-        )
+        return self.last_failure_time and time.time() - self.last_failure_time >= self.timeout
+
 
 class ExponentialBackoff:
     """Exponential backoff for retry logic"""
@@ -168,6 +168,7 @@ class ExponentialBackoff:
             delay = delay * (0.5 + random.random() * 0.5)
         return delay
 
+
 class DeadLetterQueue:
     """Dead letter queue for unrecoverable errors"""
 
@@ -185,9 +186,7 @@ class DeadLetterQueue:
         }
         self.queue.append(entry)
         self.stats[context.error_type.value] += 1
-        logger.error(
-            f"Added to dead letter queue: {context.error_type.value} - {error}"
-        )
+        logger.error(f"Added to dead letter queue: {context.error_type.value} - {error}")
 
     async def process_batch(self, batch_size: int = 100) -> list[dict[str, Any]]:
         """Process a batch from dead letter queue"""
@@ -200,6 +199,7 @@ class DeadLetterQueue:
     def get_stats(self) -> dict[str, int]:
         """Get dead letter queue statistics"""
         return dict(self.stats)
+
 
 class ConflictResolutionEngine:
     """Master conflict resolution engine"""
@@ -228,9 +228,7 @@ class ConflictResolutionEngine:
         self.handlers[ConflictType.API_RATE_LIMIT] = self._handle_rate_limit
         self.handlers[ConflictType.NETWORK_TIMEOUT] = self._handle_timeout
         self.handlers[ConflictType.DATABASE_DEADLOCK] = self._handle_deadlock
-        self.handlers[ConflictType.QDRANT_UPSERT_CONFLICT] = (
-            self._handle_qdrant_conflict
-        )
+        self.handlers[ConflictType.QDRANT_UPSERT_CONFLICT] = self._handle_qdrant_conflict
         self.handlers[ConflictType.PULUMI_STACK_MERGE] = self._handle_pulumi_merge
         self.handlers[ConflictType.LAMBDA_LABS_RESOURCE] = self._handle_lambda_resource
 
@@ -369,9 +367,7 @@ class ConflictResolutionEngine:
                         strategy_used=ResolutionStrategy.COMPENSATING_TRANSACTION,
                         error=e,
                     )
-        return ResolutionResult(
-            success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION
-        )
+        return ResolutionResult(success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION)
 
     async def _handle_qdrant_conflict(
         self, context: ConflictContext, operation: Callable
@@ -391,9 +387,7 @@ class ConflictResolutionEngine:
                 )
             except Exception:
                 return await self._deduplicate_and_merge(context, operation)
-        return ResolutionResult(
-            success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION
-        )
+        return ResolutionResult(success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION)
 
     async def _handle_pulumi_merge(
         self, context: ConflictContext, operation: Callable
@@ -474,9 +468,7 @@ class ConflictResolutionEngine:
                 )
             except Exception as e:
                 logger.error(f"Merge failed: {e}")
-        return ResolutionResult(
-            success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION
-        )
+        return ResolutionResult(success=False, strategy_used=ResolutionStrategy.MANUAL_INTERVENTION)
 
     async def _three_way_merge(self, base: dict, ours: dict, theirs: dict) -> dict:
         """Perform three-way merge for configurations"""
@@ -556,5 +548,6 @@ class ConflictResolutionEngine:
             "target_error_reduction": 15,
             "current_vs_target": f"{error_reduction:.1f}% / 15%",
         }
+
 
 conflict_resolver = ConflictResolutionEngine()

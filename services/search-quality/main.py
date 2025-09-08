@@ -3,38 +3,26 @@ Search Quality Service - Main FastAPI Application
 Provides contextual bandit, RRF fusion, and cross-encoder reranking
 """
 
-import asyncio
-import logging
 import time
 from contextlib import asynccontextmanager
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
 
 import redis.asyncio as redis
 import structlog
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTENT_TYPE_LATEST
-from fastapi.responses import Response
 
 # Import our search quality components
-from contextual_bandit import (
-    ProductionContextualBandit,
-    ProviderContext,
-    BanditConfig,
-    create_contextual_bandit
-)
+from contextual_bandit import ProductionContextualBandit, ProviderContext, create_contextual_bandit
+from cross_encoder_reranking import OptimizedCrossEncoderReranker, create_cross_encoder_reranker
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
+from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+from pydantic import BaseModel, Field
 from reciprocal_rank_fusion import (
     OptimizedReciprocalRankFusion,
-    SearchResult,
     ProviderResults,
-    RRFConfig,
-    create_rrf_fusion
-)
-from cross_encoder_reranking import (
-    OptimizedCrossEncoderReranker,
-    RerankingConfig,
-    create_cross_encoder_reranker
+    SearchResult,
+    create_rrf_fusion,
 )
 
 # Configure structured logging
@@ -48,7 +36,7 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ],
     context_class=dict,
     logger_factory=structlog.stdlib.LoggerFactory(),
@@ -59,18 +47,21 @@ structlog.configure(
 logger = structlog.get_logger()
 
 # Prometheus metrics
-REQUEST_COUNT = Counter('search_quality_requests_total', 'Total requests', ['endpoint', 'method'])
-REQUEST_DURATION = Histogram('search_quality_request_duration_seconds', 'Request duration', ['endpoint'])
-ACTIVE_REQUESTS = Gauge('search_quality_active_requests', 'Active requests')
-BANDIT_SELECTIONS = Counter('bandit_selections_total', 'Bandit selections', ['provider'])
-RRF_FUSIONS = Counter('rrf_fusions_total', 'RRF fusions')
-RERANKING_OPERATIONS = Counter('reranking_operations_total', 'Reranking operations')
+REQUEST_COUNT = Counter("search_quality_requests_total", "Total requests", ["endpoint", "method"])
+REQUEST_DURATION = Histogram(
+    "search_quality_request_duration_seconds", "Request duration", ["endpoint"]
+)
+ACTIVE_REQUESTS = Gauge("search_quality_active_requests", "Active requests")
+BANDIT_SELECTIONS = Counter("bandit_selections_total", "Bandit selections", ["provider"])
+RRF_FUSIONS = Counter("rrf_fusions_total", "RRF fusions")
+RERANKING_OPERATIONS = Counter("reranking_operations_total", "Reranking operations")
 
 # Global components
 bandit: Optional[ProductionContextualBandit] = None
 rrf_fusion: Optional[OptimizedReciprocalRankFusion] = None
 reranker: Optional[OptimizedCrossEncoderReranker] = None
 redis_client: Optional[redis.Redis] = None
+
 
 # Pydantic models
 class ProviderContextRequest(BaseModel):
@@ -85,10 +76,12 @@ class ProviderContextRequest(BaseModel):
     user_context: str = Field(default="general")
     urgency_level: float = Field(default=0.5, ge=0, le=1)
 
+
 class BanditSelectionRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000)
     context: ProviderContextRequest
     force_exploration: bool = Field(default=False)
+
 
 class BanditRewardRequest(BaseModel):
     provider: str = Field(..., min_length=1)
@@ -97,6 +90,7 @@ class BanditRewardRequest(BaseModel):
     success: bool
     cost_cents: float = Field(default=0, ge=0)
     quality_score: Optional[float] = Field(default=None, ge=0, le=1)
+
 
 class SearchResultRequest(BaseModel):
     id: str = Field(default="")
@@ -108,6 +102,7 @@ class SearchResultRequest(BaseModel):
     rank: int = Field(..., ge=1)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+
 class ProviderResultsRequest(BaseModel):
     provider: str = Field(..., min_length=1)
     results: List[SearchResultRequest]
@@ -117,16 +112,19 @@ class ProviderResultsRequest(BaseModel):
     quality_score: float = Field(default=1.0, ge=0, le=1)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
+
 class RRFFusionRequest(BaseModel):
     provider_results: List[ProviderResultsRequest]
     query: str = Field(default="")
     boost_recent: bool = Field(default=True)
     boost_quality: bool = Field(default=True)
 
+
 class RerankingRequest(BaseModel):
     query: str = Field(..., min_length=1, max_length=1000)
     results: List[Dict[str, Any]]
     preserve_top_k: int = Field(default=10, ge=0, le=100)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -144,7 +142,7 @@ async def lifespan(app: FastAPI):
             socket_connect_timeout=5,
             socket_timeout=5,
             retry_on_timeout=True,
-            health_check_interval=30
+            health_check_interval=30,
         )
 
         # Test Redis connection
@@ -156,17 +154,13 @@ async def lifespan(app: FastAPI):
 
         # Initialize contextual bandit
         bandit = create_contextual_bandit(
-            providers=providers,
-            redis_client=redis_client,
-            exploration_decay_rate=0.01
+            providers=providers, redis_client=redis_client, exploration_decay_rate=0.01
         )
         logger.info("Contextual bandit initialized")
 
         # Initialize RRF fusion
         rrf_fusion = create_rrf_fusion(
-            k_value=60.0,
-            max_results=50,
-            enable_content_deduplication=True
+            k_value=60.0, max_results=50, enable_content_deduplication=True
         )
         logger.info("RRF fusion initialized")
 
@@ -175,7 +169,7 @@ async def lifespan(app: FastAPI):
             redis_client=redis_client,
             model_name="cross-encoder/ms-marco-MiniLM-L-6-v2",
             batch_size=32,
-            enable_caching=True
+            enable_caching=True,
         )
         logger.info("Cross-encoder reranker initialized")
 
@@ -206,12 +200,13 @@ async def lifespan(app: FastAPI):
 
         logger.info("Search Quality Service shutdown complete")
 
+
 # Create FastAPI app
 app = FastAPI(
     title="Sophia AI Search Quality Service",
     description="Advanced search optimization with contextual bandit, RRF fusion, and cross-encoder reranking",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -223,11 +218,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Dependency to get Redis client
 async def get_redis() -> redis.Redis:
     if not redis_client:
         raise HTTPException(status_code=503, detail="Redis not available")
     return redis_client
+
 
 # Health check endpoint
 @app.get("/health")
@@ -243,7 +240,7 @@ async def health_check():
             "bandit": bandit is not None,
             "rrf_fusion": rrf_fusion is not None,
             "reranker": reranker is not None and reranker.model is not None,
-            "redis": redis_client is not None
+            "redis": redis_client is not None,
         }
 
         all_healthy = all(components_status.values())
@@ -251,12 +248,13 @@ async def health_check():
         return {
             "status": "healthy" if all_healthy else "degraded",
             "components": components_status,
-            "timestamp": time.time()
+            "timestamp": time.time(),
         }
 
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=503, detail=f"Service unhealthy: {e}")
+
 
 # Contextual Bandit endpoints
 @app.post("/bandit/select")
@@ -275,8 +273,7 @@ async def select_provider(request: BanditSelectionRequest):
 
             # Select provider
             provider, confidence, metadata = await bandit.select_provider(
-                context=context,
-                force_exploration=request.force_exploration
+                context=context, force_exploration=request.force_exploration
             )
 
             # Update metrics
@@ -286,7 +283,7 @@ async def select_provider(request: BanditSelectionRequest):
                 "provider": provider,
                 "confidence": confidence,
                 "metadata": metadata,
-                "query": request.query
+                "query": request.query,
             }
 
     except Exception as e:
@@ -294,6 +291,7 @@ async def select_provider(request: BanditSelectionRequest):
         raise HTTPException(status_code=500, detail=f"Selection failed: {e}")
     finally:
         ACTIVE_REQUESTS.dec()
+
 
 @app.post("/bandit/reward")
 async def update_reward(request: BanditRewardRequest):
@@ -314,7 +312,7 @@ async def update_reward(request: BanditRewardRequest):
             latency_ms=request.latency_ms,
             success=request.success,
             cost_cents=request.cost_cents,
-            quality_score=request.quality_score
+            quality_score=request.quality_score,
         )
 
         return {"status": "success", "provider": request.provider}
@@ -322,6 +320,7 @@ async def update_reward(request: BanditRewardRequest):
     except Exception as e:
         logger.error(f"Reward update failed: {e}")
         raise HTTPException(status_code=500, detail=f"Reward update failed: {e}")
+
 
 @app.get("/bandit/metrics")
 async def get_bandit_metrics():
@@ -336,6 +335,7 @@ async def get_bandit_metrics():
     except Exception as e:
         logger.error(f"Failed to get bandit metrics: {e}")
         raise HTTPException(status_code=500, detail=f"Metrics retrieval failed: {e}")
+
 
 # RRF Fusion endpoints
 @app.post("/rrf/fuse")
@@ -365,7 +365,7 @@ async def fuse_results(request: RRFFusionRequest):
                     latency_ms=pr.latency_ms,
                     cost_cents=pr.cost_cents,
                     quality_score=pr.quality_score,
-                    metadata=pr.metadata
+                    metadata=pr.metadata,
                 )
                 provider_results.append(provider_result)
 
@@ -374,7 +374,7 @@ async def fuse_results(request: RRFFusionRequest):
                 provider_results=provider_results,
                 query=request.query,
                 boost_recent=request.boost_recent,
-                boost_quality=request.boost_quality
+                boost_quality=request.boost_quality,
             )
 
             # Update metrics
@@ -391,20 +391,18 @@ async def fuse_results(request: RRFFusionRequest):
                     "score": result.score,
                     "provider": result.provider,
                     "rank": result.rank,
-                    "metadata": result.metadata
+                    "metadata": result.metadata,
                 }
                 results_dict.append(result_dict)
 
-            return {
-                "results": results_dict,
-                "metadata": fusion_metadata
-            }
+            return {"results": results_dict, "metadata": fusion_metadata}
 
     except Exception as e:
         logger.error(f"RRF fusion failed: {e}")
         raise HTTPException(status_code=500, detail=f"Fusion failed: {e}")
     finally:
         ACTIVE_REQUESTS.dec()
+
 
 @app.get("/rrf/metrics")
 async def get_rrf_metrics():
@@ -420,6 +418,7 @@ async def get_rrf_metrics():
         logger.error(f"Failed to get RRF metrics: {e}")
         raise HTTPException(status_code=500, detail=f"Metrics retrieval failed: {e}")
 
+
 # Cross-Encoder Reranking endpoints
 @app.post("/rerank")
 async def rerank_results(request: RerankingRequest):
@@ -434,9 +433,7 @@ async def rerank_results(request: RerankingRequest):
         with REQUEST_DURATION.labels(endpoint="rerank").time():
             # Perform reranking
             reranked_results, reranking_metadata = await reranker.rerank_results(
-                query=request.query,
-                results=request.results,
-                preserve_top_k=request.preserve_top_k
+                query=request.query, results=request.results, preserve_top_k=request.preserve_top_k
             )
 
             # Update metrics
@@ -454,20 +451,18 @@ async def rerank_results(request: RerankingRequest):
                     "rerank_score": result.rerank_score,
                     "final_rank": result.final_rank,
                     "provider": result.provider,
-                    "metadata": result.metadata
+                    "metadata": result.metadata,
                 }
                 results_dict.append(result_dict)
 
-            return {
-                "results": results_dict,
-                "metadata": reranking_metadata
-            }
+            return {"results": results_dict, "metadata": reranking_metadata}
 
     except Exception as e:
         logger.error(f"Reranking failed: {e}")
         raise HTTPException(status_code=500, detail=f"Reranking failed: {e}")
     finally:
         ACTIVE_REQUESTS.dec()
+
 
 @app.get("/rerank/metrics")
 async def get_reranking_metrics():
@@ -483,11 +478,13 @@ async def get_reranking_metrics():
         logger.error(f"Failed to get reranking metrics: {e}")
         raise HTTPException(status_code=500, detail=f"Metrics retrieval failed: {e}")
 
+
 # Prometheus metrics endpoint
 @app.get("/metrics")
 async def get_prometheus_metrics():
     """Prometheus metrics endpoint"""
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
 
 # Combined pipeline endpoint
 @app.post("/pipeline/search")
@@ -496,7 +493,7 @@ async def search_pipeline(
     providers: List[str],
     context: ProviderContextRequest,
     enable_reranking: bool = True,
-    preserve_top_k: int = 10
+    preserve_top_k: int = 10,
 ):
     """Complete search quality pipeline: bandit selection + RRF fusion + reranking"""
     if not all([bandit, rrf_fusion, reranker]):
@@ -529,22 +526,19 @@ async def search_pipeline(
                             url=f"https://example.com/{provider}/{j}",
                             score=0.9 - (j * 0.1),
                             provider=provider,
-                            rank=j + 1
+                            rank=j + 1,
                         )
                         for j in range(5)
                     ],
                     total_results=5,
                     latency_ms=100 + (i * 50),
-                    quality_score=0.8 + (i * 0.05)
+                    quality_score=0.8 + (i * 0.05),
                 )
                 actual_results.append(provider_result)
 
             # Step 3: RRF Fusion
             fused_results, fusion_metadata = rrf_fusion.fuse_results(
-                provider_results=actual_results,
-                query=query,
-                boost_recent=True,
-                boost_quality=True
+                provider_results=actual_results, query=query, boost_recent=True, boost_quality=True
             )
 
             # Step 4: Cross-encoder reranking (if enabled)
@@ -560,14 +554,12 @@ async def search_pipeline(
                         "score": result.score,
                         "provider": result.provider,
                         "rank": result.rank,
-                        "metadata": result.metadata
+                        "metadata": result.metadata,
                     }
                     results_for_reranking.append(result_dict)
 
                 reranked_results, reranking_metadata = await reranker.rerank_results(
-                    query=query,
-                    results=results_for_reranking,
-                    preserve_top_k=preserve_top_k
+                    query=query, results=results_for_reranking, preserve_top_k=preserve_top_k
                 )
 
                 # Convert back to dict format
@@ -582,14 +574,14 @@ async def search_pipeline(
                         "rerank_score": result.rerank_score,
                         "final_rank": result.final_rank,
                         "provider": result.provider,
-                        "metadata": result.metadata
+                        "metadata": result.metadata,
                     }
                     final_results.append(result_dict)
 
                 pipeline_metadata = {
                     "fusion_metadata": fusion_metadata,
                     "reranking_metadata": reranking_metadata,
-                    "reranking_enabled": True
+                    "reranking_enabled": True,
                 }
             else:
                 # Convert fused results to dict format
@@ -603,20 +595,13 @@ async def search_pipeline(
                         "score": result.score,
                         "provider": result.provider,
                         "rank": result.rank,
-                        "metadata": result.metadata
+                        "metadata": result.metadata,
                     }
                     final_results.append(result_dict)
 
-                pipeline_metadata = {
-                    "fusion_metadata": fusion_metadata,
-                    "reranking_enabled": False
-                }
+                pipeline_metadata = {"fusion_metadata": fusion_metadata, "reranking_enabled": False}
 
-            return {
-                "query": query,
-                "results": final_results,
-                "metadata": pipeline_metadata
-            }
+            return {"query": query, "results": final_results, "metadata": pipeline_metadata}
 
     except Exception as e:
         logger.error(f"Search pipeline failed: {e}")
@@ -624,6 +609,8 @@ async def search_pipeline(
     finally:
         ACTIVE_REQUESTS.dec()
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="${BIND_IP}", port=8200)

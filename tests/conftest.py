@@ -5,15 +5,12 @@ Provides common fixtures and configuration for all tests
 
 import asyncio
 import logging
-import os
 import sys
-from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-import pytest_asyncio
 
 # Add project root to path
 project_root = Path(__file__).parent.parent

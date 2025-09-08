@@ -7,6 +7,7 @@ Identifies and fixes problematic dependencies in pyproject.toml
 import re
 from pathlib import Path
 
+
 def fix_dependencies():
     """Fix all problematic dependencies"""
     pyproject_file = Path("pyproject.toml")
@@ -15,17 +16,17 @@ def fix_dependencies():
         print("❌ pyproject.toml not found")
         return False
 
-    with open(pyproject_file, 'r') as f:
+    with open(pyproject_file) as f:
         content = f.read()
 
     # List of problematic dependencies to comment out
     problematic_deps = [
         "circomlib",
-        "n8n-python", 
+        "n8n-python",
         "resemble-ai",
         "temporal-sdk",
         "elevenlabs",
-        "py-ecc"
+        "py-ecc",
     ]
 
     print("🔧 Fixing problematic dependencies...")
@@ -54,11 +55,12 @@ def fix_dependencies():
             print(f"✅ Fixed version: {old_version} → {new_version}")
 
     # Write fixed content
-    with open(pyproject_file, 'w') as f:
+    with open(pyproject_file, "w") as f:
         f.write(content)
 
     print("✅ Dependencies fixed successfully")
     return True
+
 
 if __name__ == "__main__":
     fix_dependencies()

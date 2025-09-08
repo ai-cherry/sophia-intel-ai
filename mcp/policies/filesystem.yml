@@ -1,9 +1,20 @@
 filesystem_policies:
   sophia:
-    write_allowed_paths: ["/workspace/sophia/app", "/workspace/sophia/scripts", "/workspace/sophia/mcp"]
-    write_denied_paths: ["/workspace/sophia/.env", "/workspace/sophia/.env*", "/workspace/sophia/docker-compose*", "/workspace/sophia/secrets"]
+    write_allowed_paths:
+      - "/workspace/sophia/app"
+      - "/workspace/sophia/scripts"
+      - "/workspace/sophia/mcp"
+    write_denied_paths:
+      - "/workspace/sophia/.env"
+      - "/workspace/sophia/.env*"
+      - "/workspace/sophia/docker-compose*"
     backup_on_write: true
   artemis:
-    write_allowed_paths: ["/workspace/artemis/agents", "/workspace/artemis/tools", "/workspace/artemis/cli"]
-    write_denied_paths: ["/workspace/artemis/.env", "/workspace/artemis/.env*", "/workspace/artemis/config"]
+    write_allowed_paths:
+      - "/workspace/artemis/agents"
+      - "/workspace/artemis/tools"
+    write_denied_paths:
+      - "/workspace/artemis/.env"
+      - "/workspace/artemis/.env*"
+      - "/workspace/artemis/docker-compose*"
     backup_on_write: true

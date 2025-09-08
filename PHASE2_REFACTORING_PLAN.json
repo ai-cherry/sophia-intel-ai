@@ -1,0 +1,376 @@
+{
+  "meta": {
+    "title": "Phase 2 Safe Refactoring Plan",
+    "version": "1.0.0",
+    "created": "2024-09-08",
+    "author": "AI Agent",
+    "risk_level": "LOW_TO_MEDIUM",
+    "estimated_duration": "3-4 days",
+    "dependencies": ["Phase 1 completed", "Git backup recommended"]
+  },
+  
+  "agent_prompt": {
+    "role": "You are an expert software architect tasked with implementing Phase 2 of the safe refactoring plan for the sophia-intel-ai codebase.",
+    "context": {
+      "current_state": "Phase 1 complete - archives consolidated, requirements cleaned, scripts organized",
+      "codebase_scale": "968 Python files, 432K+ LOC, 142 JS/TS files",
+      "environment": "Python 3.11+, Docker, multi-agent architecture",
+      "security": "API keys secured at ~/.config/artemis/env"
+    },
+    "instructions": "Review this Phase 2 plan, identify improvements, and implement the refactoring tasks. Maintain backward compatibility and minimize risk. Document all changes."
+  },
+
+  "phase2_objectives": [
+    {
+      "id": "OBJ-001",
+      "title": "Docker Compose Consolidation",
+      "priority": "HIGH",
+      "risk": "LOW",
+      "description": "Clean up 7 overlapping Docker compose files to establish clear hierarchy"
+    },
+    {
+      "id": "OBJ-002", 
+      "title": "Large File Refactoring",
+      "priority": "MEDIUM",
+      "risk": "MEDIUM",
+      "description": "Split files >50KB into logical modules for better maintainability"
+    },
+    {
+      "id": "OBJ-003",
+      "title": "HTTP Client Standardization",
+      "priority": "LOW",
+      "risk": "LOW",
+      "description": "Standardize on httpx for all HTTP operations"
+    },
+    {
+      "id": "OBJ-004",
+      "title": "Package Structure Enhancement",
+      "priority": "MEDIUM",
+      "risk": "LOW",
+      "description": "Improve packages/sophia_core organization and exports"
+    }
+  ],
+
+  "detailed_tasks": {
+    "docker_cleanup": {
+      "priority": 1,
+      "tasks": [
+        {
+          "id": "DC-001",
+          "action": "ANALYZE",
+          "description": "Compare all Docker compose files to identify overlaps",
+          "files": [
+            "docker-compose.yml",
+            "docker-compose.dev.yml",
+            "docker-compose.multi-agent.yml",
+            "docker-compose.enhanced.yml",
+            "archive/docker-compose/*.yml"
+          ],
+          "output": "Docker service comparison matrix"
+        },
+        {
+          "id": "DC-002",
+          "action": "ESTABLISH",
+          "description": "Set docker-compose.multi-agent.yml as canonical base",
+          "rationale": "Most comprehensive and recently updated",
+          "backup_first": true
+        },
+        {
+          "id": "DC-003",
+          "action": "CREATE",
+          "description": "Create docker-compose.override.yml for local development overrides",
+          "template": {
+            "version": "3.8",
+            "services": {
+              "_comment": "Local development overrides only"
+            }
+          }
+        },
+        {
+          "id": "DC-004",
+          "action": "ARCHIVE",
+          "description": "Move deprecated compose files to archive/docker-compose/",
+          "files_to_archive": [
+            "docker-compose.yml",
+            "docker-compose.enhanced.yml"
+          ],
+          "keep_active": ["docker-compose.multi-agent.yml", "docker-compose.dev.yml"]
+        },
+        {
+          "id": "DC-005",
+          "action": "DOCUMENT",
+          "description": "Update README with compose file usage guide",
+          "sections": [
+            "Primary: docker-compose.multi-agent.yml",
+            "Override: docker-compose.override.yml",
+            "Legacy: docker-compose.dev.yml (for backward compatibility)"
+          ]
+        }
+      ]
+    },
+
+    "large_file_refactoring": {
+      "priority": 2,
+      "files_to_refactor": [
+        {
+          "path": "app/artemis/agent_factory.py",
+          "size": ">50KB",
+          "proposed_split": {
+            "app/artemis/factories/base_factory.py": "Base factory classes",
+            "app/artemis/factories/agent_factory.py": "Agent creation logic",
+            "app/artemis/factories/config_factory.py": "Configuration factories",
+            "app/artemis/factories/__init__.py": "Maintain backward compatibility imports"
+          }
+        },
+        {
+          "path": "app/sophia/unified_factory.py",
+          "size": ">50KB",
+          "proposed_split": {
+            "app/sophia/factories/base.py": "Base factory patterns",
+            "app/sophia/factories/model_factory.py": "Model creation",
+            "app/sophia/factories/service_factory.py": "Service instantiation",
+            "app/sophia/factories/__init__.py": "Compatibility layer"
+          }
+        },
+        {
+          "path": "app/mcp/revenue_ops_gateway.py",
+          "size": ">50KB",
+          "proposed_split": {
+            "app/mcp/gateways/base_gateway.py": "Gateway base classes",
+            "app/mcp/gateways/revenue_ops.py": "Revenue operations logic",
+            "app/mcp/gateways/integrations.py": "External integrations",
+            "app/mcp/gateways/__init__.py": "Export original interface"
+          }
+        }
+      ],
+      "refactoring_strategy": {
+        "step1": "Analyze file dependencies and imports",
+        "step2": "Create new directory structure",
+        "step3": "Split code by logical boundaries",
+        "step4": "Maintain original file as import proxy",
+        "step5": "Test all imports still work",
+        "step6": "Update documentation"
+      }
+    },
+
+    "http_standardization": {
+      "priority": 3,
+      "current_state_analysis": {
+        "requests_usage": ["Count files using requests"],
+        "httpx_usage": ["Count files using httpx"],
+        "aiohttp_usage": ["Count files using aiohttp"]
+      },
+      "implementation_plan": [
+        {
+          "id": "HTTP-001",
+          "action": "CREATE",
+          "description": "Create standardized HTTP client factory",
+          "location": "app/core/http_client.py",
+          "features": [
+            "Async/sync support",
+            "Retry logic",
+            "Rate limiting",
+            "Error handling",
+            "Logging"
+          ]
+        },
+        {
+          "id": "HTTP-002",
+          "action": "GRADUAL_REPLACE",
+          "description": "Replace imports during regular maintenance",
+          "strategy": "When touching a file for other reasons, update HTTP client",
+          "priority_files": ["Files with TODO/FIXME comments first"]
+        },
+        {
+          "id": "HTTP-003",
+          "action": "TEST",
+          "description": "Ensure all HTTP operations still work",
+          "test_coverage": ["Unit tests", "Integration tests", "E2E tests"]
+        }
+      ]
+    },
+
+    "package_structure": {
+      "priority": 4,
+      "current_issues": [
+        "Missing proper __init__.py exports",
+        "Inconsistent base class patterns",
+        "Lack of package documentation"
+      ],
+      "improvements": [
+        {
+          "id": "PKG-001",
+          "action": "ENHANCE",
+          "description": "Improve packages/sophia_core/__init__.py",
+          "exports": [
+            "from .agents.base import BaseAgent",
+            "from .memory.base import BaseMemory",
+            "from .swarms.base import BaseSwarm",
+            "from .config.env import Settings",
+            "__all__ = ['BaseAgent', 'BaseMemory', 'BaseSwarm', 'Settings']"
+          ]
+        },
+        {
+          "id": "PKG-002",
+          "action": "STANDARDIZE",
+          "description": "Create consistent base class patterns",
+          "pattern": {
+            "abstract_base": "Use ABC for all base classes",
+            "type_hints": "Full type annotations",
+            "docstrings": "Google-style docstrings"
+          }
+        },
+        {
+          "id": "PKG-003",
+          "action": "DOCUMENT",
+          "description": "Add package-level documentation",
+          "files": [
+            "packages/sophia_core/README.md",
+            "packages/sophia_core/ARCHITECTURE.md"
+          ]
+        }
+      ]
+    }
+  },
+
+  "implementation_sequence": [
+    {
+      "day": 1,
+      "tasks": ["Docker cleanup (DC-001 to DC-005)"],
+      "validation": "All services start with new compose structure"
+    },
+    {
+      "day": 2,
+      "tasks": ["Large file analysis and first refactor (agent_factory.py)"],
+      "validation": "Import tests pass, no breaking changes"
+    },
+    {
+      "day": 3,
+      "tasks": ["Continue large file refactoring (remaining files)"],
+      "validation": "All imports work, tests pass"
+    },
+    {
+      "day": 4,
+      "tasks": ["HTTP standardization", "Package structure improvements"],
+      "validation": "Full test suite passes, documentation updated"
+    }
+  ],
+
+  "risk_mitigation": {
+    "backup_strategy": {
+      "before_start": "Create git branch 'refactor/phase2-safe-cleanup'",
+      "checkpoint_commits": "Commit after each major task",
+      "rollback_plan": "Git reset to previous commit if issues"
+    },
+    "testing_requirements": {
+      "after_each_task": ["Run make env.check", "Run core unit tests"],
+      "after_each_day": ["Run full test suite", "Manual smoke test"],
+      "final_validation": ["Complete E2E tests", "Performance benchmarks"]
+    },
+    "compatibility_maintenance": {
+      "import_proxies": "Keep original files as import proxies",
+      "__init___exports": "Maintain all public APIs",
+      "deprecation_warnings": "Add warnings for truly deprecated patterns"
+    }
+  },
+
+  "success_metrics": {
+    "quantitative": {
+      "docker_files_reduced": "From 7 to 3 active compose files",
+      "large_files_split": "6 files refactored to <30KB each",
+      "http_clients_standardized": "Progressive migration started",
+      "package_exports_improved": "100% of public APIs exported properly"
+    },
+    "qualitative": {
+      "maintainability": "Easier to navigate and modify",
+      "developer_experience": "Clearer structure and patterns",
+      "documentation": "Comprehensive guides for all changes",
+      "risk_level": "Zero breaking changes to external APIs"
+    }
+  },
+
+  "validation_checklist": {
+    "pre_implementation": [
+      "✓ Git branch created",
+      "✓ Current tests passing",
+      "✓ Backup of critical files"
+    ],
+    "during_implementation": [
+      "✓ Each task has tests",
+      "✓ Documentation updated",
+      "✓ Commits are atomic"
+    ],
+    "post_implementation": [
+      "✓ All tests passing",
+      "✓ make env.check passes",
+      "✓ Docker services start",
+      "✓ No import errors",
+      "✓ Documentation complete"
+    ]
+  },
+
+  "agent_instructions": {
+    "review_requirements": [
+      "1. Examine this plan thoroughly",
+      "2. Identify any risks or improvements",
+      "3. Suggest optimizations or alternatives",
+      "4. Create detailed implementation steps"
+    ],
+    "implementation_guidelines": [
+      "- Start with lowest risk tasks (Docker cleanup)",
+      "- Test after every change",
+      "- Maintain backward compatibility",
+      "- Document everything",
+      "- Commit frequently with clear messages"
+    ],
+    "expected_deliverables": [
+      "1. Improved version of this plan",
+      "2. Implementation of approved tasks",
+      "3. Comprehensive test results",
+      "4. Documentation of all changes",
+      "5. Final report with metrics"
+    ]
+  },
+
+  "example_commands": {
+    "docker_cleanup": [
+      "mkdir -p archive/docker-compose/$(date +%Y%m%d)",
+      "mv docker-compose.yml archive/docker-compose/$(date +%Y%m%d)/",
+      "cp docker-compose.multi-agent.yml docker-compose.yml",
+      "touch docker-compose.override.yml"
+    ],
+    "large_file_split": [
+      "mkdir -p app/artemis/factories",
+      "# Split agent_factory.py into modules",
+      "# Update imports in __init__.py",
+      "python -m pytest tests/test_artemis/"
+    ],
+    "validation": [
+      "make env.check",
+      "python -m pytest",
+      "docker-compose up -d",
+      "curl http://localhost:8000/health"
+    ]
+  },
+
+  "notes_for_reviewing_agent": {
+    "critical_areas": [
+      "Docker service dependencies must be preserved",
+      "Import paths must remain backward compatible",
+      "Test coverage should not decrease",
+      "Performance should not degrade"
+    ],
+    "improvement_opportunities": [
+      "Consider adding automated refactoring scripts",
+      "Evaluate if more aggressive refactoring is safe",
+      "Suggest additional cleanup opportunities",
+      "Identify potential automation tools"
+    ],
+    "success_criteria": [
+      "Zero production issues",
+      "Improved code metrics",
+      "Positive developer feedback",
+      "Easier onboarding for new developers"
+    ]
+  }
+}

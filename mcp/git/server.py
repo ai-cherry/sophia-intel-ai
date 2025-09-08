@@ -4,6 +4,7 @@ import os
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+import yaml
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -33,6 +34,17 @@ REPOS = {
 SSH_AUTH_SOCK = os.getenv("SSH_AUTH_SOCK", "")
 
 app = FastAPI(title="MCP Git Server")
+
+# Load git policy
+_git_policy = {"protected_branches": ["main", "production"], "force_push_allowed": False}
+try:
+    policy_path = Path(__file__).resolve().parent.parent / "policies" / "git.yml"
+    if policy_path.exists():
+        with open(policy_path) as f:
+            loaded = yaml.safe_load(f) or {}
+            _git_policy.update(loaded)
+except Exception:
+    pass
 
 
 def run(cmd: List[str], cwd: Path) -> str:
@@ -68,17 +80,26 @@ async def git_commit(req: GitCommitRequest) -> Dict[str, Any]:
         raise HTTPException(400, detail="unknown repo")
     if req.add_all:
         run(["git", "add", "-A"], repo)
-    out = run(["git", "commit", "-m", req.message], repo)
+    tpl = _git_policy.get("commit_template")
+    message = tpl.replace("{message}", req.message) if tpl else req.message
+    out = run(["git", "commit", "-m", message], repo)
     return {"ok": True, "output": out}
 
 
 @app.post("/git/push")
 async def git_push(req: GitPushRequest) -> Dict[str, Any]:
-    if req.force:
-        # Policy: disallow force-push by default
-        raise HTTPException(403, detail="force push disabled by policy")
+    # Policy: handle protected branches and force push
+    if req.branch in _git_policy.get("protected_branches", []):
+        if req.force and not _git_policy.get("force_push_allowed", False):
+            raise HTTPException(403, detail="force push to protected branch disabled by policy")
+    else:
+        if req.force and not _git_policy.get("force_push_allowed", False):
+            raise HTTPException(403, detail="force push disabled by policy")
     repo = REPOS.get(req.repo)
     if not repo or not repo.exists():
         raise HTTPException(400, detail="unknown repo")
-    out = run(["git", "push", "origin", req.branch], repo)
+    args = ["git", "push", "origin", req.branch]
+    if req.force and _git_policy.get("force_push_allowed", False):
+        args.insert(2, "--force")
+    out = run(args, repo)
     return {"ok": True, "output": out}

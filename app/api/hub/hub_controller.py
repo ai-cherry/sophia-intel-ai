@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from app.core.ai_logger import logger
+from app.utils.http_client import HttpClient
 
 router = APIRouter(tags=["hub"])
 templates = Jinja2Templates(directory="app/templates")
@@ -22,14 +23,16 @@ SERVICE_MAP = {
 
 async def check_service_health(service_name: str, url: str, timeout: float = 2.0) -> dict:
     """Check health of a single service"""
+    # Use shared HTTP client with retries/timeouts
+    client = HttpClient(timeout=timeout, max_retries=1)
+    target = f"{url}/health" if service_name != "streamlit" else url
     try:
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.get(f"{url}/health" if service_name != "streamlit" else url)
-            return {
-                "status": "healthy" if response.status_code < 400 else "unhealthy",
-                "latency": response.elapsed.total_seconds() * 1000,
-                "status_code": response.status_code,
-            }
+        resp = await client.get(target)
+        return {
+            "status": "healthy" if resp.status_code < 400 else "unhealthy",
+            "latency": getattr(resp, "elapsed", 0) and resp.elapsed.total_seconds() * 1000,
+            "status_code": resp.status_code,
+        }
     except Exception as e:
         return {"status": "down", "error": str(e), "latency": 0}
 

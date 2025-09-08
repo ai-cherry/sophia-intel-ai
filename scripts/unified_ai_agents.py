@@ -19,7 +19,12 @@ from app.llm.multi_transport import MultiTransportLLM
 
 
 def load_env() -> None:
-    # Load .env from repo root
+    # Preferred: secure env file mounted from host (read-only)
+    secure_env = os.getenv("AGENT_ENV_FILE") or os.getenv("ARTEMIS_ENV_FILE")
+    if load_dotenv and secure_env and Path(secure_env).exists():
+        load_dotenv(dotenv_path=secure_env, override=True)
+        return
+    # Fallback: .env in repo root (for local quick tests only)
     root = Path(__file__).resolve().parents[1]
     env_path = root / ".env"
     if load_dotenv and env_path.exists():

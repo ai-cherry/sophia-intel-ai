@@ -1,0 +1,290 @@
+{
+  "meta": {
+    "title": "Phase 2 Safe Refactoring Plan (v2)",
+    "version": "1.1.0",
+    "created": "2025-09-08",
+    "author": "AI Agent",
+    "risk_level": "LOW_TO_MEDIUM",
+    "estimated_duration": "3-4 days",
+    "dependencies": ["Phase 1 completed", "Git backup recommended"]
+  },
+  "agent_prompt": {
+    "role": "You are an expert software architect responsible for implementing Phase 2 for the sophia-intel-ai codebase.",
+    "context": {
+      "current_state": "Phase 1 complete - archives consolidated, requirements cleaned, scripts organized",
+      "codebase_scale": "Large Python monorepo with multi-agent services",
+      "environment": "Python 3.11+, Docker Compose, Makefile-driven workflows",
+      "security": "API keys located at ${HOME}/.config/artemis/env (Make target: artemis-setup)"
+    },
+    "instructions": "Review this plan, improve where needed, and implement changes incrementally with tests and documentation. Maintain backward compatibility throughout."
+  },
+  "phase2_objectives": [
+    {
+      "id": "OBJ-001",
+      "title": "Docker Compose Consolidation",
+      "priority": "HIGH",
+      "risk": "LOW",
+      "description": "Consolidate compose usage with a canonical base file and profiles; align docs with Makefile and helper scripts."
+    },
+    {
+      "id": "OBJ-002",
+      "title": "Large File Refactoring (Prioritized)",
+      "priority": "MEDIUM",
+      "risk": "MEDIUM",
+      "description": "Refactor a prioritized subset of >50KB modules (5 high-churn/core files) with proxy shims to preserve imports."
+    },
+    {
+      "id": "OBJ-003",
+      "title": "HTTP Client Standardization",
+      "priority": "LOW",
+      "risk": "LOW",
+      "description": "Standardize on app/core/async_http_client.py (httpx) as the canonical client; add minimal adapters as needed."
+    },
+    {
+      "id": "OBJ-004",
+      "title": "Package Structure Enhancement",
+      "priority": "LOW",
+      "risk": "LOW",
+      "description": "Improve packages/sophia_core exports and documentation; ship typing markers."
+    }
+  ],
+  "detailed_tasks": {
+    "docker_cleanup": {
+      "priority": 1,
+      "tasks": [
+        {
+          "id": "DC-001",
+          "action": "ANALYZE",
+          "description": "Inventory compose files and services; produce services parity matrix.",
+          "files": [
+            "docker-compose.yml",
+            "docker-compose.dev.yml",
+            "docker-compose.multi-agent.yml",
+            "docker-compose.enhanced.yml",
+            "archive/docker-compose/*.yml"
+          ],
+          "output": "docs/DOCKER_SERVICES_MATRIX.md"
+        },
+        {
+          "id": "DC-002",
+          "action": "ESTABLISH",
+          "description": "Keep docker-compose.yml as canonical base for compatibility; use profiles for optional stacks.",
+          "rationale": "Many tools default to docker-compose.yml; Makefile and scripts expect it."
+        },
+        {
+          "id": "DC-003",
+          "action": "OVERRIDE",
+          "description": "Create docker-compose.override.yml for local overrides only.",
+          "template": {
+            "version": "3.8",
+            "services": {
+              "_comment": "Local development overrides only"
+            }
+          }
+        },
+        {
+          "id": "DC-004",
+          "action": "ALIGN",
+          "description": "Align Makefile targets and scripts with the canonical file and profiles; prefer scripts/multi-agent-docker-env.sh.",
+          "validate": ["make dev-up", "make status", "make mcp-status"]
+        },
+        {
+          "id": "DC-005",
+          "action": "ARCHIVE",
+          "description": "Archive redundant compose files after parity is achieved (keep dev.yml if profiles cannot fully replace it).",
+          "candidates": ["docker-compose.enhanced.yml", "docker-compose.dev.yml"],
+          "destination": "archive/docker-compose/${DATE}/"
+        },
+        {
+          "id": "DC-006",
+          "action": "DOCUMENT",
+          "description": "Update README with compose usage via Makefile and script helper; document profiles and overrides.",
+          "sections": [
+            "Use make dev-up / dev-down",
+            "How docker-compose.override.yml is applied",
+            "Profiles for optional services",
+            "Legacy notes on dev.yml if retained"
+          ]
+        }
+      ]
+    },
+    "large_file_refactoring": {
+      "priority": 2,
+      "discovery": {
+        "id": "LF-000",
+        "action": "DISCOVER",
+        "description": "Programmatically list >50KB Python files to select a prioritized subset (5).",
+        "command": "python3 scripts/development/refactor_tools.py discover --path app --min-kb 50",
+        "decision_criteria": [
+          "High-churn modules",
+          "Core import hubs",
+          "Tangled responsibilities that split cleanly"
+        ]
+      },
+      "candidates": [
+        "app/artemis/agent_factory.py",
+        "app/sophia/unified_factory.py",
+        "app/mcp/revenue_ops_gateway.py",
+        "app/orchestrators/artemis_unified.py",
+        "app/orchestrators/sophia_unified.py"
+      ],
+      "strategy": {
+        "step1": "Analyze dependencies and define module boundaries",
+        "step2": "git mv to new package paths to preserve history",
+        "step3": "Create proxy shim at original path re-exporting symbols (emit DeprecationWarning)",
+        "step4": "Add/init __init__.py exports in new packages",
+        "step5": "Run import probes and targeted tests",
+        "step6": "Update docs"
+      },
+      "proxy_shim_template": "from warnings import warn\nwarn(\"Module moved to {new_module}; this path is deprecated\", DeprecationWarning, stacklevel=2)\nfrom {new_module} import *\n",
+      "validation": [
+        "python -c 'from app.artemis.agent_factory import *'",
+        "python -m pytest -q tests/changed_subtree || true"
+      ]
+    },
+    "http_standardization": {
+      "priority": 3,
+      "analysis": {
+        "id": "HTTP-ANALYZE",
+        "description": "Scan for requests/aiohttp/httpx usage and categorize quick wins.",
+        "command": "python3 scripts/development/refactor_tools.py scan-http --path app"
+      },
+      "implementation": [
+        {
+          "id": "HTTP-001",
+          "action": "CANONICALIZE",
+          "description": "Use app/core/async_http_client.py as the single HTTP client entry point (httpx). Add optional sync wrapper and logging hooks.",
+          "notes": "Do not create a new http_client.py with duplicated logic."
+        },
+        {
+          "id": "HTTP-002",
+          "action": "MIGRATE_GRADUALLY",
+          "description": "Update imports on touch; convert simple requests.get/post to AsyncHTTPClient methods; retain aiohttp for websocket/streaming paths for now.",
+          "quick_wins": "Replace direct requests usage in orchestration and integrations where trivial"
+        },
+        {
+          "id": "HTTP-003",
+          "action": "TEST",
+          "description": "Run targeted tests for impacted modules, then full suite.",
+          "validate": ["make env.check", "python -m pytest -q", "python -m pytest"]
+        }
+      ]
+    },
+    "package_structure": {
+      "priority": 4,
+      "current_issues": [
+        "Explicit exports for key base classes not guaranteed",
+        "Lack of package-level docs",
+        "Typing marker not shipped"
+      ],
+      "improvements": [
+        {
+          "id": "PKG-001",
+          "action": "EXPORTS",
+          "description": "Ensure packages/sophia_core/__init__.py exports BaseAgent, BaseMemory, BaseSwarm, Settings and defines __all__."
+        },
+        {
+          "id": "PKG-002",
+          "action": "TYPING",
+          "description": "Add py.typed to include typing information in distributions."
+        },
+        {
+          "id": "PKG-003",
+          "action": "DOCS",
+          "description": "Add README.md and ARCHITECTURE.md describing subpackages and usage."
+        }
+      ]
+    }
+  },
+  "implementation_sequence": [
+    {"day": 1, "tasks": ["Docker cleanup (DC-001..DC-006)", "HTTP usage scan"], "validation": "make dev-up; services parity documented; tests green"},
+    {"day": 2, "tasks": ["Large-file discovery and first refactor (agent_factory.py)"], "validation": "Import probes succeed; targeted tests pass"},
+    {"day": 3, "tasks": ["Continue refactors (2–3 modules)"], "validation": "No import errors; docs updated"},
+    {"day": 4, "tasks": ["HTTP client enhancements; package exports & typing"], "validation": "Full suite green; env.check OK"}
+  ],
+  "risk_mitigation": {
+    "backup_strategy": {
+      "before_start": "Create git branch 'refactor/phase2-safe-cleanup'",
+      "checkpoint_commits": "Commit after each major task",
+      "rollback_plan": "Git reset to previous commit if issues"
+    },
+    "testing_requirements": {
+      "after_each_task": ["Run make env.check", "Run targeted pytest for changed modules"],
+      "after_each_day": ["Run full test suite", "Manual smoke test (make status, make mcp-status)"],
+      "final_validation": ["E2E checks", "Performance sanity"]
+    },
+    "compatibility_maintenance": {
+      "import_proxies": "Keep original file paths as import proxies with DeprecationWarning",
+      "__init___exports": "Maintain all public APIs",
+      "deprecation_warnings": "Warn on old import paths only after verifying proxies"
+    }
+  },
+  "success_metrics": {
+    "quantitative": {
+      "docker_files_reduced": "Active compose usage consolidated to base + override (profiles for options)",
+      "large_files_refactored": "Top 5 large modules split to <30KB each",
+      "http_calls_standardized": "New changes use AsyncHTTPClient; requests usage reduced",
+      "package_exports_improved": "Explicit exports + py.typed present"
+    },
+    "qualitative": {
+      "maintainability": "Simpler navigation and clear boundaries",
+      "developer_experience": "Consistent patterns and commands",
+      "documentation": "Current and actionable",
+      "risk_level": "Zero breaking changes to external APIs"
+    }
+  },
+  "validation_checklist": {
+    "pre_implementation": [
+      "✓ Branch created",
+      "✓ Baseline tests passing",
+      "✓ Compose health check understood"
+    ],
+    "during_implementation": [
+      "✓ Import probes succeed after each split",
+      "✓ Proxies in place with warnings",
+      "✓ Docs updated with each change"
+    ],
+    "post_implementation": [
+      "✓ All tests passing",
+      "✓ make env.check passes",
+      "✓ make status/mcp-status healthy",
+      "✓ No import errors in refactored areas"
+    ]
+  },
+  "example_commands": {
+    "compose": [
+      "make dev-up",
+      "make status",
+      "make mcp-status"
+    ],
+    "discovery": [
+      "python3 scripts/development/refactor_tools.py discover --path app --min-kb 50"
+    ],
+    "http_scan": [
+      "python3 scripts/development/refactor_tools.py scan-http --path app"
+    ],
+    "import_probe": [
+      "python3 scripts/development/refactor_tools.py probe-import --module app.artemis.agent_factory"
+    ]
+  },
+  "notes_for_reviewing_agent": {
+    "critical_areas": [
+      "Compose service parity must be preserved",
+      "Import paths must remain backward compatible",
+      "Test coverage should not decrease",
+      "Performance should not degrade"
+    ],
+    "improvement_opportunities": [
+      "Automate proxy shim generation",
+      "Expand refactor scope if ahead of schedule",
+      "Propose additional cleanups that are low risk"
+    ],
+    "success_criteria": [
+      "Zero production issues",
+      "Improved code metrics",
+      "Positive developer feedback",
+      "Easier onboarding for new developers"
+    ]
+  }
+}
+

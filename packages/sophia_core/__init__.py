@@ -33,6 +33,11 @@ __all__ = [
     "obs",
     "utils",
     "exceptions",
+    # Explicit base class exports (available at package level)
+    "BaseAgent",
+    "BaseMemory",
+    "BaseSwarm",
+    "Settings",
 ]
 
 
@@ -78,3 +83,13 @@ def __getattr__(name: str) -> Any:
             return exceptions
 
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+# Explicit exports for key base classes
+try:
+    from .agents.base import BaseAgent  # type: ignore
+    from .memory.base import BaseMemory  # type: ignore
+    from .swarms.base import BaseSwarm  # type: ignore
+    from .config.env import Settings  # type: ignore
+except Exception:  # pragma: no cover
+    # Keep import-time failures non-fatal for environments missing optional deps
+    pass

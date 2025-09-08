@@ -14,6 +14,7 @@ except Exception as e:  # pragma: no cover
 
 
 SCAN_EXTS = {".py", ".md", ".txt", ".json", ".yml", ".yaml"}
+IGNORE_DIRS = {".git", "node_modules", ".venv", "__pycache__", "dist", "build"}
 CLASS_NAME = "CodeFile"
 
 
@@ -25,6 +26,8 @@ class Repo:
 
 def iter_files(root: Path) -> Iterable[Path]:
     for p in root.rglob("*"):
+        if any(part in IGNORE_DIRS for part in p.parts):
+            continue
         if p.is_file() and p.suffix.lower() in SCAN_EXTS:
             yield p
 
@@ -92,4 +95,3 @@ async def run() -> None:
 
 if __name__ == "__main__":
     asyncio.run(run())
-

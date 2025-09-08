@@ -1,0 +1,40 @@
+name: CI Smoke
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Compose lint
+        run: |
+          docker compose -f docker-compose.multi-agent.yml config -q
+
+      - name: Compile key packages
+        run: |
+          python - <<'PY'
+          import compileall, sys
+          ok=True
+          for p in ('app','backend','mcp'):
+              ok = compileall.compile_dir(p, quiet=1) and ok
+          sys.exit(0 if ok else 1)
+          PY
+
+      - name: Build MCP images (quick)
+        run: |
+          docker build -f automation/docker/Dockerfile.mcp-filesystem -t sophia-mcp-fs .
+          docker build -f automation/docker/Dockerfile.mcp-git -t sophia-mcp-git .
+          docker build -f automation/docker/Dockerfile.mcp-memory -t sophia-mcp-memory .
+

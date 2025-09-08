@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
 from fastapi.staticfiles import StaticFiles
+from app.llm.provider_router import EnhancedProviderRouter
 import httpx
 import os
 
@@ -66,6 +67,7 @@ class WebUIServer:
             "git": os.getenv("MCP_GIT_URL", "http://mcp-git:8000"),
             "memory": os.getenv("MCP_MEMORY_URL", "http://mcp-memory:8000"),
         }
+        self.router = EnhancedProviderRouter()
         self._routes()
 
     def _routes(self) -> None:
@@ -124,6 +126,27 @@ class WebUIServer:
                 r = await client.post(url, json=params)
                 r.raise_for_status()
                 return r.json()
+
+        @app.post("/agents/complete")
+        async def agent_complete(payload: Dict[str, Any]) -> Dict[str, Any]:
+            """Agent completion with simple streaming behavior.
+            Payload:
+              {session_id?, task_type, messages, provider?, model?}
+            """
+            sid = payload.get("session_id")
+            task_type = payload.get("task_type", "generation")
+            messages = payload.get("messages", [])
+            provider = payload.get("provider")
+            model = payload.get("model")
+
+            text = await self.router.complete(
+                task_type=task_type,
+                messages=messages,
+                provider_override=provider,
+                model_override=model,
+            )
+            # Future: stream tokens via per-session queue; for now, return full text
+            return {"text": text}
 
         @app.post("/sessions/{session_id}/proposals")
         async def create_proposal(session_id: str, req: CreateProposalRequest) -> Dict[str, Any]:

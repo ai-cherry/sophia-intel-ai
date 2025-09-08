@@ -1,0 +1,25 @@
+tasks:
+  planning:
+    provider: openrouter
+    model: anthropic/claude-opus-4.1
+    fallback:
+      provider: openrouter
+      model: anthropic/claude-sonnet-4
+  generation:
+    provider: openrouter
+    model: x-ai/grok-code-fast-1
+    fallback:
+      provider: openrouter
+      model: deepseek/deepseek-v3
+  validation:
+    provider: openrouter
+    model: anthropic/claude-3.5-sonnet
+    fallback:
+      provider: openrouter
+      model: openai/gpt-4o-mini
+  indexing:
+    provider: aimlapi
+    model: z-ai/glm-4.5
+  vision:
+    provider: aimlapi
+    model: flux-pro/v1.1

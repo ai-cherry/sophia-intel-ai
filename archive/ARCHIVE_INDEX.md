@@ -35,6 +35,12 @@ archive/
 - **Date Archived**: 2024-09-08 (originally created 2024-09-05)
 - **Reason**: Consolidation cleanup - moved to centralized archive
 
+### Requirements Files (2024-09-08)
+- **requirements_root_20240908.txt** - Original root requirements.txt (87 lines)
+- **requirements-lock_20240908.txt** - Locked version file
+- **requirements-dev-lock_20240908.txt** - Development locked versions
+- **Reason**: Consolidated to requirements/ directory structure
+
 ## 🔄 Retention Policy
 
 - **Active Archives**: Keep for 6 months minimum

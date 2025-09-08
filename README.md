@@ -76,10 +76,14 @@ make env.check
 
 **IMPORTANT**: All API keys are now stored securely at `~/.config/artemis/env` (outside git repository). See `ENVIRONMENT_GUIDE.md` for complete setup instructions.
 
-3. Install Python dependencies (system Python; no virtualenvs in repo):
+3. Install Python dependencies:
 
 ```bash
+# Basic installation
 pip3 install -r requirements.txt
+
+# Development setup (includes testing, linting tools)
+pip3 install -r requirements.txt -r requirements/dev.txt
 ```
 
 4. Install Node.js dependencies (for UI):

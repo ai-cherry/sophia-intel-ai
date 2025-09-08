@@ -319,8 +319,69 @@ networks:
 volumes:
   redis-data:
   weaviate-data:
+  postgres-data:
   neo4j-data:
   neo4j-logs:
+  neo4j-data:
+  neo4j-logs:
+  # Optional: PostgreSQL with pgvector (profile: db)
+  postgres:
+    image: postgres:15-alpine
+    container_name: sophia-postgres
+    environment:
+      POSTGRES_DB: sophia
+      POSTGRES_USER: sophia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sophia_secure_password_2024}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - multi-agent-net
+    profiles:
+      - db
+
+  # Optional: Neo4j (profile: graph)
+  neo4j:
+    image: neo4j:5-community
+    container_name: sophia-neo4j
+    environment:
+      - NEO4J_AUTH=${NEO4J_USERNAME:-neo4j}/${NEO4J_PASSWORD:-password}
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4J_PLUGINS=["apoc"]
+    ports:
+      - "${NEO4J_HTTP_PORT:-7474}:7474"
+      - "${NEO4J_BOLT_PORT:-7687}:7687"
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    networks:
+      - multi-agent-net
+    profiles:
+      - graph
+
+  # Code Indexer (profile: indexer)
+  indexer:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.indexer
+    container_name: sophia-indexer
+    environment:
+      - WEAVIATE_URL=http://weaviate:8080
+      - SOPHIA_PATH=/workspace/sophia
+      - ARTEMIS_PATH=/workspace/artemis
+      - INDEX_SCAN_INTERVAL=${INDEX_SCAN_INTERVAL:-15}
+    volumes:
+      - ./:/workspace/sophia:ro
+      - ../artemis-cli:/workspace/artemis:ro
+    depends_on:
+      - weaviate
+    networks:
+      - multi-agent-net
+    profiles:
+      - indexer
   neo4j-import:
   neo4j-plugins:
   postgres-data:

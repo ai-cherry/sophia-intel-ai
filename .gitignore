@@ -80,11 +80,19 @@ cache/
 tmp/
 temp/
 
-# Database
+# Database and dumps
 *.db
 *.sqlite
 *.sqlite3
+*.dump
+dump.rdb
 data/
+# MCP server databases
+tmp/*.db
+tmp/*.dump
+embedding_cache.db
+knowledge_graph.db
+supermemory.db
 
 # Test
 .coverage

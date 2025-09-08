@@ -255,4 +255,5 @@ async def get_github_repo(owner: str, repo: str):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8001))
-    uvicorn.run("server:app", host="${BIND_IP}", port=port, reload=True)
+    host = os.environ.get("BIND_IP", "0.0.0.0")
+    uvicorn.run("server:app", host=host, port=port, reload=True)

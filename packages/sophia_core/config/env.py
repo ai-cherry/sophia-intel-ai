@@ -19,10 +19,10 @@ logger = logging.getLogger(__name__)
 def load_dotenv_safe(dotenv_path: Optional[Union[str, Path]] = None) -> bool:
     """
     Safely load environment variables from .env file.
-    
+
     Args:
         dotenv_path: Path to .env file. If None, looks for .env in current directory.
-        
+
     Returns:
         bool: True if .env file was loaded successfully, False otherwise.
     """
@@ -62,7 +62,9 @@ class LLMSettings(BaseSettings):
 
     # OpenRouter
     openrouter_api_key: Optional[SecretStr] = Field(None, env="OPENROUTER_API_KEY")
-    openrouter_base_url: Optional[str] = Field("https://openrouter.ai/api/v1", env="OPENROUTER_BASE_URL")
+    openrouter_base_url: Optional[str] = Field(
+        "https://openrouter.ai/api/v1", env="OPENROUTER_BASE_URL"
+    )
 
     # Together AI
     together_api_key: Optional[SecretStr] = Field(None, env="TOGETHER_API_KEY")
@@ -70,7 +72,9 @@ class LLMSettings(BaseSettings):
 
     # Gemini
     gemini_api_key: Optional[SecretStr] = Field(None, env="GEMINI_API_KEY")
-    gemini_base_url: Optional[str] = Field("https://generativelanguage.googleapis.com/v1", env="GEMINI_BASE_URL")
+    gemini_base_url: Optional[str] = Field(
+        "https://generativelanguage.googleapis.com/v1", env="GEMINI_BASE_URL"
+    )
 
     # Default model configurations
     default_model: str = Field("gpt-3.5-turbo", env="DEFAULT_LLM_MODEL")
@@ -166,8 +170,7 @@ class FeatureFlagSettings(BaseSettings):
 
     # Providers
     enabled_llm_providers: List[str] = Field(
-        default=["openai", "anthropic"],
-        env="ENABLED_LLM_PROVIDERS"
+        default=["openai", "anthropic"], env="ENABLED_LLM_PROVIDERS"
     )
 
     @validator("enabled_llm_providers", pre=True)
@@ -256,7 +259,7 @@ _settings: Optional[Settings] = None
 def get_settings() -> Settings:
     """
     Get cached application settings instance.
-    
+
     Returns:
         Settings: Validated application settings.
     """
@@ -279,7 +282,7 @@ def get_settings() -> Settings:
 def reload_settings() -> Settings:
     """
     Force reload of settings (clears cache).
-    
+
     Returns:
         Settings: Newly loaded settings instance.
     """

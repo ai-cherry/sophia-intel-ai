@@ -41,7 +41,16 @@ def get_text_files(root: Path) -> List[Path]:
 
 
 def purge_archives(root: Path) -> None:
-    for pattern in ["*.old", "*.bak", "*.archive", "*.deprecated", "*.backup", "*.orig", "*.tmp", "*.temp"]:
+    for pattern in [
+        "*.old",
+        "*.bak",
+        "*.archive",
+        "*.deprecated",
+        "*.backup",
+        "*.orig",
+        "*.tmp",
+        "*.temp",
+    ]:
         for fp in root.rglob(pattern):
             if any(d in fp.parts for d in EXCLUDE_DIRS):
                 continue
@@ -68,7 +77,7 @@ def scan_placeholders(root: Path) -> int:
 
 
 def main() -> int:
-    root = Path('.')
+    root = Path(".")
     purge_archives(root)
     issues = scan_placeholders(root)
     logger.info(f"Sanitizer completed. Issues found: {issues}")
@@ -77,4 +86,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

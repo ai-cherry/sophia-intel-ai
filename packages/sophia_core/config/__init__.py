@@ -29,11 +29,10 @@ __all__ = [
     "FeatureFlagSettings",
     "get_settings",
     "load_dotenv_safe",
-
     # Helper functions
     "is_provider_enabled",
     "select_vector_store",
     "redact_sensitive_data",
     "get_config_value",
-    "validate_config"
+    "validate_config",
 ]

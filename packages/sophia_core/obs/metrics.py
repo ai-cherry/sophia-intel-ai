@@ -16,10 +16,11 @@ from typing import Any, Dict, List, Optional, Union
 
 class MetricType(str, Enum):
     """Types of metrics."""
-    COUNTER = "counter"        # Monotonically increasing value
-    GAUGE = "gauge"           # Arbitrary value that can go up or down
-    HISTOGRAM = "histogram"   # Distribution of values with buckets
-    SUMMARY = "summary"       # Distribution with quantiles
+
+    COUNTER = "counter"  # Monotonically increasing value
+    GAUGE = "gauge"  # Arbitrary value that can go up or down
+    HISTOGRAM = "histogram"  # Distribution of values with buckets
+    SUMMARY = "summary"  # Distribution with quantiles
 
 
 @dataclass
@@ -27,6 +28,7 @@ class MetricValue:
     """
     Represents a metric value with timestamp and labels.
     """
+
     value: Union[int, float]
     timestamp: float
     labels: Dict[str, str]
@@ -42,15 +44,10 @@ class BaseMetric(ABC):
     Abstract base class for metrics.
     """
 
-    def __init__(
-        self,
-        name: str,
-        description: str = "",
-        labels: Optional[List[str]] = None
-    ):
+    def __init__(self, name: str, description: str = "", labels: Optional[List[str]] = None):
         """
         Initialize metric.
-        
+
         Args:
             name: Metric name
             description: Metric description
@@ -63,14 +60,14 @@ class BaseMetric(ABC):
         self._samples: Dict[str, Any] = {}
 
         # Validate metric name
-        if not self.name.replace('_', '').replace(':', '').isalnum():
+        if not self.name.replace("_", "").replace(":", "").isalnum():
             raise ValueError(f"Invalid metric name: {name}")
 
     @abstractmethod
     def collect(self) -> List[MetricValue]:
         """
         Collect current metric values.
-        
+
         Returns:
             List[MetricValue]: Current metric values
         """
@@ -85,7 +82,7 @@ class BaseMetric(ABC):
 
         # Create sorted key
         sorted_labels = sorted(labels.items())
-        return ','.join(f"{k}={v}" for k, v in sorted_labels)
+        return ",".join(f"{k}={v}" for k, v in sorted_labels)
 
     def get_prometheus_type(self) -> str:
         """Get Prometheus metric type."""
@@ -93,7 +90,7 @@ class BaseMetric(ABC):
             MetricType.COUNTER: "counter",
             MetricType.GAUGE: "gauge",
             MetricType.HISTOGRAM: "histogram",
-            MetricType.SUMMARY: "summary"
+            MetricType.SUMMARY: "summary",
         }
         return type_mapping.get(self.metric_type, "gauge")
 
@@ -112,7 +109,7 @@ class Counter(BaseMetric):
     def inc(self, amount: float = 1.0, labels: Optional[Dict[str, str]] = None) -> None:
         """
         Increment counter.
-        
+
         Args:
             amount: Amount to increment by
             labels: Label values
@@ -129,10 +126,10 @@ class Counter(BaseMetric):
     def get(self, labels: Optional[Dict[str, str]] = None) -> float:
         """
         Get current counter value.
-        
+
         Args:
             labels: Label values
-            
+
         Returns:
             float: Current value
         """
@@ -150,15 +147,11 @@ class Counter(BaseMetric):
                 # Parse labels back from key
                 labels = {}
                 if label_key:
-                    for pair in label_key.split(','):
-                        k, v = pair.split('=', 1)
+                    for pair in label_key.split(","):
+                        k, v = pair.split("=", 1)
                         labels[k] = v
 
-                values.append(MetricValue(
-                    value=value,
-                    timestamp=time.time(),
-                    labels=labels
-                ))
+                values.append(MetricValue(value=value, timestamp=time.time(), labels=labels))
 
             return values
 
@@ -177,7 +170,7 @@ class Gauge(BaseMetric):
     def set(self, value: float, labels: Optional[Dict[str, str]] = None) -> None:
         """
         Set gauge value.
-        
+
         Args:
             value: Value to set
             labels: Label values
@@ -191,7 +184,7 @@ class Gauge(BaseMetric):
     def inc(self, amount: float = 1.0, labels: Optional[Dict[str, str]] = None) -> None:
         """
         Increment gauge value.
-        
+
         Args:
             amount: Amount to increment by
             labels: Label values
@@ -205,7 +198,7 @@ class Gauge(BaseMetric):
     def dec(self, amount: float = 1.0, labels: Optional[Dict[str, str]] = None) -> None:
         """
         Decrement gauge value.
-        
+
         Args:
             amount: Amount to decrement by
             labels: Label values
@@ -215,10 +208,10 @@ class Gauge(BaseMetric):
     def get(self, labels: Optional[Dict[str, str]] = None) -> float:
         """
         Get current gauge value.
-        
+
         Args:
             labels: Label values
-            
+
         Returns:
             float: Current value
         """
@@ -236,15 +229,11 @@ class Gauge(BaseMetric):
                 # Parse labels back from key
                 labels = {}
                 if label_key:
-                    for pair in label_key.split(','):
-                        k, v = pair.split('=', 1)
+                    for pair in label_key.split(","):
+                        k, v = pair.split("=", 1)
                         labels[k] = v
 
-                values.append(MetricValue(
-                    value=value,
-                    timestamp=time.time(),
-                    labels=labels
-                ))
+                values.append(MetricValue(value=value, timestamp=time.time(), labels=labels))
 
             return values
 
@@ -256,32 +245,38 @@ class Histogram(BaseMetric):
 
     metric_type = MetricType.HISTOGRAM
 
-    def __init__(
-        self,
-        *args,
-        buckets: Optional[List[float]] = None,
-        **kwargs
-    ):
+    def __init__(self, *args, buckets: Optional[List[float]] = None, **kwargs):
         super().__init__(*args, **kwargs)
 
         # Default buckets for response times (in seconds)
         self.buckets = buckets or [
-            0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5,
-            0.75, 1.0, 2.5, 5.0, 7.5, 10.0, float('inf')
+            0.005,
+            0.01,
+            0.025,
+            0.05,
+            0.075,
+            0.1,
+            0.25,
+            0.5,
+            0.75,
+            1.0,
+            2.5,
+            5.0,
+            7.5,
+            10.0,
+            float("inf"),
         ]
         self.buckets = sorted(self.buckets)
 
         # Track bucket counts and total
-        self._bucket_counts: Dict[str, Dict[float, int]] = defaultdict(
-            lambda: defaultdict(int)
-        )
+        self._bucket_counts: Dict[str, Dict[float, int]] = defaultdict(lambda: defaultdict(int))
         self._counts: Dict[str, int] = defaultdict(int)
         self._sums: Dict[str, float] = defaultdict(float)
 
     def observe(self, value: float, labels: Optional[Dict[str, str]] = None) -> None:
         """
         Observe a value.
-        
+
         Args:
             value: Value to observe
             labels: Label values
@@ -301,10 +296,10 @@ class Histogram(BaseMetric):
     def get_count(self, labels: Optional[Dict[str, str]] = None) -> int:
         """
         Get total count of observations.
-        
+
         Args:
             labels: Label values
-            
+
         Returns:
             int: Total count
         """
@@ -317,10 +312,10 @@ class Histogram(BaseMetric):
     def get_sum(self, labels: Optional[Dict[str, str]] = None) -> float:
         """
         Get sum of all observed values.
-        
+
         Args:
             labels: Label values
-            
+
         Returns:
             float: Sum of values
         """
@@ -339,42 +334,41 @@ class Histogram(BaseMetric):
                 # Parse labels back from key
                 labels = {}
                 if label_key:
-                    for pair in label_key.split(','):
-                        k, v = pair.split('=', 1)
+                    for pair in label_key.split(","):
+                        k, v = pair.split("=", 1)
                         labels[k] = v
 
                 # Add bucket counts
                 for bucket in self.buckets:
                     bucket_labels = labels.copy()
-                    bucket_labels['le'] = str(bucket) if bucket != float('inf') else '+Inf'
+                    bucket_labels["le"] = str(bucket) if bucket != float("inf") else "+Inf"
 
                     cumulative_count = sum(
-                        count for b, count in self._bucket_counts[label_key].items()
-                        if b <= bucket
+                        count for b, count in self._bucket_counts[label_key].items() if b <= bucket
                     )
 
-                    values.append(MetricValue(
-                        value=cumulative_count,
-                        timestamp=time.time(),
-                        labels=bucket_labels
-                    ))
+                    values.append(
+                        MetricValue(
+                            value=cumulative_count, timestamp=time.time(), labels=bucket_labels
+                        )
+                    )
 
                 # Add count and sum
                 count_labels = labels.copy()
-                count_labels['__name__'] = f"{self.name}_count"
-                values.append(MetricValue(
-                    value=self._counts[label_key],
-                    timestamp=time.time(),
-                    labels=count_labels
-                ))
+                count_labels["__name__"] = f"{self.name}_count"
+                values.append(
+                    MetricValue(
+                        value=self._counts[label_key], timestamp=time.time(), labels=count_labels
+                    )
+                )
 
                 sum_labels = labels.copy()
-                sum_labels['__name__'] = f"{self.name}_sum"
-                values.append(MetricValue(
-                    value=self._sums[label_key],
-                    timestamp=time.time(),
-                    labels=sum_labels
-                ))
+                sum_labels["__name__"] = f"{self.name}_sum"
+                values.append(
+                    MetricValue(
+                        value=self._sums[label_key], timestamp=time.time(), labels=sum_labels
+                    )
+                )
 
             return values
 
@@ -384,14 +378,10 @@ class Timer:
     Timer utility for measuring execution time with automatic metric recording.
     """
 
-    def __init__(
-        self,
-        histogram: Histogram,
-        labels: Optional[Dict[str, str]] = None
-    ):
+    def __init__(self, histogram: Histogram, labels: Optional[Dict[str, str]] = None):
         """
         Initialize timer.
-        
+
         Args:
             histogram: Histogram to record timing to
             labels: Label values
@@ -400,7 +390,7 @@ class Timer:
         self.labels = labels or {}
         self.start_time: Optional[float] = None
 
-    def start(self) -> 'Timer':
+    def start(self) -> "Timer":
         """Start timing."""
         self.start_time = time.time()
         return self
@@ -408,7 +398,7 @@ class Timer:
     def stop(self) -> float:
         """
         Stop timing and record duration.
-        
+
         Returns:
             float: Elapsed time in seconds
         """
@@ -421,7 +411,7 @@ class Timer:
 
         return duration
 
-    def __enter__(self) -> 'Timer':
+    def __enter__(self) -> "Timer":
         """Context manager entry."""
         return self.start()
 
@@ -443,13 +433,13 @@ class MetricsCollector:
     def register(self, metric: BaseMetric) -> BaseMetric:
         """
         Register a metric.
-        
+
         Args:
             metric: Metric to register
-            
+
         Returns:
             BaseMetric: The registered metric
-            
+
         Raises:
             ValueError: If metric name already exists
         """
@@ -461,19 +451,16 @@ class MetricsCollector:
             return metric
 
     def counter(
-        self,
-        name: str,
-        description: str = "",
-        labels: Optional[List[str]] = None
+        self, name: str, description: str = "", labels: Optional[List[str]] = None
     ) -> Counter:
         """
         Create or get counter metric.
-        
+
         Args:
             name: Metric name
             description: Metric description
             labels: Label names
-            
+
         Returns:
             Counter: Counter metric
         """
@@ -486,20 +473,15 @@ class MetricsCollector:
         counter = Counter(name, description, labels)
         return self.register(counter)
 
-    def gauge(
-        self,
-        name: str,
-        description: str = "",
-        labels: Optional[List[str]] = None
-    ) -> Gauge:
+    def gauge(self, name: str, description: str = "", labels: Optional[List[str]] = None) -> Gauge:
         """
         Create or get gauge metric.
-        
+
         Args:
             name: Metric name
             description: Metric description
             labels: Label names
-            
+
         Returns:
             Gauge: Gauge metric
         """
@@ -517,17 +499,17 @@ class MetricsCollector:
         name: str,
         description: str = "",
         labels: Optional[List[str]] = None,
-        buckets: Optional[List[float]] = None
+        buckets: Optional[List[float]] = None,
     ) -> Histogram:
         """
         Create or get histogram metric.
-        
+
         Args:
             name: Metric name
             description: Metric description
             labels: Label names
             buckets: Histogram buckets
-            
+
         Returns:
             Histogram: Histogram metric
         """
@@ -540,18 +522,14 @@ class MetricsCollector:
         histogram = Histogram(name, description, labels, buckets=buckets)
         return self.register(histogram)
 
-    def timer(
-        self,
-        histogram: Histogram,
-        labels: Optional[Dict[str, str]] = None
-    ) -> Timer:
+    def timer(self, histogram: Histogram, labels: Optional[Dict[str, str]] = None) -> Timer:
         """
         Create timer for histogram.
-        
+
         Args:
             histogram: Histogram to record to
             labels: Label values
-            
+
         Returns:
             Timer: Timer instance
         """
@@ -560,7 +538,7 @@ class MetricsCollector:
     def collect_all(self) -> Dict[str, List[MetricValue]]:
         """
         Collect all metric values.
-        
+
         Returns:
             Dict[str, List[MetricValue]]: All metric values by name
         """
@@ -573,10 +551,10 @@ class MetricsCollector:
     def get_metric(self, name: str) -> Optional[BaseMetric]:
         """
         Get metric by name.
-        
+
         Args:
             name: Metric name
-            
+
         Returns:
             Optional[BaseMetric]: Metric if found
         """
@@ -586,7 +564,7 @@ class MetricsCollector:
     def list_metrics(self) -> List[str]:
         """
         List all metric names.
-        
+
         Returns:
             List[str]: Metric names
         """
@@ -607,7 +585,7 @@ class PrometheusExporter:
     def __init__(self, collector: MetricsCollector):
         """
         Initialize Prometheus exporter.
-        
+
         Args:
             collector: Metrics collector
         """
@@ -616,7 +594,7 @@ class PrometheusExporter:
     def export(self) -> str:
         """
         Export metrics in Prometheus text format.
-        
+
         Returns:
             str: Prometheus format metrics
         """
@@ -640,7 +618,7 @@ class PrometheusExporter:
             # Add metric values
             for value in values:
                 if value.labels:
-                    label_str = ','.join(f'{k}="{v}"' for k, v in value.labels.items())
+                    label_str = ",".join(f'{k}="{v}"' for k, v in value.labels.items())
                     line = f"{metric_name}{{{label_str}}} {value.value}"
                 else:
                     line = f"{metric_name} {value.value}"
@@ -649,12 +627,12 @@ class PrometheusExporter:
 
             output_lines.append("")  # Empty line between metrics
 
-        return '\n'.join(output_lines)
+        return "\n".join(output_lines)
 
     async def serve_http(self, host: str = "0.0.0.0", port: int = 9090) -> None:
         """
         Serve metrics over HTTP.
-        
+
         Args:
             host: Host to bind to
             port: Port to bind to
@@ -667,10 +645,10 @@ class PrometheusExporter:
         async def metrics_handler(request):
             """Handle metrics request."""
             metrics_text = self.export()
-            return web.Response(text=metrics_text, content_type='text/plain')
+            return web.Response(text=metrics_text, content_type="text/plain")
 
         app = web.Application()
-        app.router.add_get('/metrics', metrics_handler)
+        app.router.add_get("/metrics", metrics_handler)
 
         runner = web.AppRunner(app)
         await runner.setup()
@@ -688,7 +666,7 @@ _metrics_collector: Optional[MetricsCollector] = None
 def setup_metrics() -> MetricsCollector:
     """
     Set up global metrics collector.
-    
+
     Returns:
         MetricsCollector: Global metrics collector
     """
@@ -703,7 +681,7 @@ def setup_metrics() -> MetricsCollector:
 def get_metrics_collector() -> MetricsCollector:
     """
     Get global metrics collector.
-    
+
     Returns:
         MetricsCollector: Global metrics collector
     """
@@ -715,6 +693,7 @@ def get_metrics_collector() -> MetricsCollector:
 
 # Pre-defined metric sets for common components
 
+
 class AgentMetrics:
     """Metrics for AI agents."""
 
@@ -723,49 +702,43 @@ class AgentMetrics:
 
         # Agent lifecycle metrics
         self.agents_total = collector.counter(
-            "sophia_agents_total",
-            "Total number of agents created",
-            ["agent_type"]
+            "sophia_agents_total", "Total number of agents created", ["agent_type"]
         )
 
         self.agents_active = collector.gauge(
-            "sophia_agents_active",
-            "Number of currently active agents",
-            ["agent_type", "state"]
+            "sophia_agents_active", "Number of currently active agents", ["agent_type", "state"]
         )
 
         # Message processing metrics
         self.messages_processed_total = collector.counter(
             "sophia_agent_messages_processed_total",
             "Total messages processed by agents",
-            ["agent_id", "message_type", "status"]
+            ["agent_id", "message_type", "status"],
         )
 
         self.message_processing_duration = collector.histogram(
             "sophia_agent_message_processing_seconds",
             "Time spent processing messages",
             ["agent_id", "message_type"],
-            buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, float('inf')]
+            buckets=[0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0, 5.0, 10.0, float("inf")],
         )
 
         # Task execution metrics
         self.tasks_executed_total = collector.counter(
             "sophia_agent_tasks_executed_total",
             "Total tasks executed by agents",
-            ["agent_id", "task_type", "status"]
+            ["agent_id", "task_type", "status"],
         )
 
         self.task_execution_duration = collector.histogram(
             "sophia_agent_task_execution_seconds",
             "Time spent executing tasks",
-            ["agent_id", "task_type"]
+            ["agent_id", "task_type"],
         )
 
         # Error metrics
         self.errors_total = collector.counter(
-            "sophia_agent_errors_total",
-            "Total agent errors",
-            ["agent_id", "error_type"]
+            "sophia_agent_errors_total", "Total agent errors", ["agent_id", "error_type"]
         )
 
 
@@ -777,48 +750,38 @@ class SwarmMetrics:
 
         # Swarm lifecycle metrics
         self.swarms_total = collector.counter(
-            "sophia_swarms_total",
-            "Total number of swarms created",
-            ["topology"]
+            "sophia_swarms_total", "Total number of swarms created", ["topology"]
         )
 
         self.swarms_active = collector.gauge(
-            "sophia_swarms_active",
-            "Number of currently active swarms",
-            ["topology", "state"]
+            "sophia_swarms_active", "Number of currently active swarms", ["topology", "state"]
         )
 
         # Member metrics
         self.swarm_members = collector.gauge(
-            "sophia_swarm_members",
-            "Number of members in swarms",
-            ["swarm_id", "role", "status"]
+            "sophia_swarm_members", "Number of members in swarms", ["swarm_id", "role", "status"]
         )
 
         # Task distribution metrics
         self.tasks_distributed_total = collector.counter(
             "sophia_swarm_tasks_distributed_total",
             "Total tasks distributed in swarms",
-            ["swarm_id", "task_type", "status"]
+            ["swarm_id", "task_type", "status"],
         )
 
         self.task_distribution_duration = collector.histogram(
-            "sophia_swarm_task_distribution_seconds",
-            "Time spent distributing tasks",
-            ["swarm_id"]
+            "sophia_swarm_task_distribution_seconds", "Time spent distributing tasks", ["swarm_id"]
         )
 
         # Coordination metrics
         self.coordination_cycles_total = collector.counter(
             "sophia_swarm_coordination_cycles_total",
             "Total coordination cycles executed",
-            ["swarm_id"]
+            ["swarm_id"],
         )
 
         self.coordination_duration = collector.histogram(
-            "sophia_swarm_coordination_seconds",
-            "Time spent in coordination",
-            ["swarm_id"]
+            "sophia_swarm_coordination_seconds", "Time spent in coordination", ["swarm_id"]
         )
 
 
@@ -830,29 +793,23 @@ class ToolMetrics:
 
         # Tool execution metrics
         self.executions_total = collector.counter(
-            "sophia_tool_executions_total",
-            "Total tool executions",
-            ["tool_name", "status"]
+            "sophia_tool_executions_total", "Total tool executions", ["tool_name", "status"]
         )
 
         self.execution_duration = collector.histogram(
-            "sophia_tool_execution_seconds",
-            "Tool execution duration",
-            ["tool_name"]
+            "sophia_tool_execution_seconds", "Tool execution duration", ["tool_name"]
         )
 
         # Tool registry metrics
         self.tools_registered = collector.gauge(
-            "sophia_tools_registered",
-            "Number of registered tools",
-            ["category"]
+            "sophia_tools_registered", "Number of registered tools", ["category"]
         )
 
         # Error metrics
         self.execution_errors_total = collector.counter(
             "sophia_tool_execution_errors_total",
             "Total tool execution errors",
-            ["tool_name", "error_type"]
+            ["tool_name", "error_type"],
         )
 
 
@@ -864,42 +821,36 @@ class MemoryMetrics:
 
         # Memory storage metrics
         self.entries_total = collector.gauge(
-            "sophia_memory_entries_total",
-            "Total memory entries",
-            ["memory_type"]
+            "sophia_memory_entries_total", "Total memory entries", ["memory_type"]
         )
 
         self.memory_usage_bytes = collector.gauge(
-            "sophia_memory_usage_bytes",
-            "Memory usage in bytes",
-            ["memory_type"]
+            "sophia_memory_usage_bytes", "Memory usage in bytes", ["memory_type"]
         )
 
         # Memory operations
         self.operations_total = collector.counter(
             "sophia_memory_operations_total",
             "Total memory operations",
-            ["memory_type", "operation", "status"]
+            ["memory_type", "operation", "status"],
         )
 
         self.operation_duration = collector.histogram(
             "sophia_memory_operation_seconds",
             "Memory operation duration",
-            ["memory_type", "operation"]
+            ["memory_type", "operation"],
         )
 
         # Query metrics
         self.queries_total = collector.counter(
-            "sophia_memory_queries_total",
-            "Total memory queries",
-            ["memory_type", "strategy"]
+            "sophia_memory_queries_total", "Total memory queries", ["memory_type", "strategy"]
         )
 
         self.query_results = collector.histogram(
             "sophia_memory_query_results",
             "Number of results per query",
             ["memory_type", "strategy"],
-            buckets=[0, 1, 5, 10, 25, 50, 100, float('inf')]
+            buckets=[0, 1, 5, 10, 25, 50, 100, float("inf")],
         )
 
 

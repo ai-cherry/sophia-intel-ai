@@ -128,7 +128,6 @@ class UnifiedOrchestrator:
                     "priority": 3,
                     "required": True,
                 },
-
                 # Optional: Grok MCP server for local development
                 "grok_agent": {
                     "domain": ServiceDomain.ARTEMIS.value,

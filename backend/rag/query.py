@@ -10,6 +10,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class SearchResult:
     """Search result with metadata and scoring"""
@@ -19,6 +20,7 @@ class SearchResult:
     metadata: dict[str, Any]
     score: float
     source: str
+
 
 class HybridRAGRetriever:
     """Hybrid retriever combining semantic and structured search"""
@@ -100,9 +102,7 @@ class HybridRAGRetriever:
 
         try:
             # Perform both searches concurrently
-            semantic_task = asyncio.create_task(
-                self.semantic_search(query, limit=limit)
-            )
+            semantic_task = asyncio.create_task(self.semantic_search(query, limit=limit))
 
             structured_task = (
                 asyncio.create_task(self.structured_search(filters or {}, limit=limit))
@@ -141,9 +141,7 @@ class HybridRAGRetriever:
             logger.error(f"Hybrid search failed: {e}")
             return []
 
-    async def get_similar_documents(
-        self, document_id: str, limit: int = 5
-    ) -> list[SearchResult]:
+    async def get_similar_documents(self, document_id: str, limit: int = 5) -> list[SearchResult]:
         """Find documents similar to a given document"""
         try:
             # Mock similar document search

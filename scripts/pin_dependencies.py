@@ -62,10 +62,10 @@ class DependencyManager:
             package_part = dependency.split("[")[0]
             version_part = dependency.split("]")[-1]
         else:
-            parts = re.split(r'[><=!~]', dependency, 1)
+            parts = re.split(r"[><=!~]", dependency, 1)
             if len(parts) < 2:
                 return False
-            version_part = dependency[len(parts[0]):]
+            version_part = dependency[len(parts[0]) :]
 
         # Check for exact version pinning
         return version_part.startswith("==")
@@ -74,11 +74,7 @@ class DependencyManager:
         """Generate lock files using pip-compile"""
         try:
             # Check if pip-tools is installed
-            result = subprocess.run(
-                ["pip-compile", "--version"],
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(["pip-compile", "--version"], capture_output=True, text=True)
             if result.returncode != 0:
                 return False, "pip-tools not installed. Run: pip install pip-tools"
 
@@ -89,11 +85,12 @@ class DependencyManager:
                     "pip-compile",
                     "--generate-hashes",
                     "--resolver=backtracking",
-                    "-o", str(self.requirements_lock),
-                    str(self.pyproject_path)
+                    "-o",
+                    str(self.requirements_lock),
+                    str(self.pyproject_path),
                 ],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode != 0:
@@ -108,11 +105,12 @@ class DependencyManager:
                     "--extra=test",
                     "--generate-hashes",
                     "--resolver=backtracking",
-                    "-o", str(self.requirements_dev_lock),
-                    str(self.pyproject_path)
+                    "-o",
+                    str(self.requirements_dev_lock),
+                    str(self.pyproject_path),
                 ],
                 capture_output=True,
-                text=True
+                text=True,
             )
 
             if result.returncode != 0:
@@ -129,22 +127,20 @@ class DependencyManager:
 
         try:
             # Run safety check
-            result = subprocess.run(
-                ["safety", "check", "--json"],
-                capture_output=True,
-                text=True
-            )
+            result = subprocess.run(["safety", "check", "--json"], capture_output=True, text=True)
 
             if result.stdout:
                 data = json.loads(result.stdout)
                 for vuln in data.get("vulnerabilities", []):
-                    vulnerabilities.append({
-                        "package": vuln.get("package_name"),
-                        "installed": vuln.get("analyzed_version"),
-                        "affected": vuln.get("vulnerable_spec"),
-                        "vulnerability": vuln.get("advisory"),
-                        "severity": vuln.get("severity", "unknown")
-                    })
+                    vulnerabilities.append(
+                        {
+                            "package": vuln.get("package_name"),
+                            "installed": vuln.get("analyzed_version"),
+                            "affected": vuln.get("vulnerable_spec"),
+                            "vulnerability": vuln.get("advisory"),
+                            "severity": vuln.get("severity", "unknown"),
+                        }
+                    )
         except subprocess.CalledProcessError:
             print(f"{YELLOW}Warning: safety not installed. Run: pip install safety{RESET}")
         except json.JSONDecodeError:
@@ -158,20 +154,20 @@ class DependencyManager:
 
         try:
             result = subprocess.run(
-                ["pip", "list", "--outdated", "--format=json"],
-                capture_output=True,
-                text=True
+                ["pip", "list", "--outdated", "--format=json"], capture_output=True, text=True
             )
 
             if result.stdout:
                 packages = json.loads(result.stdout)
                 for pkg in packages:
-                    outdated.append({
-                        "name": pkg["name"],
-                        "current": pkg["version"],
-                        "latest": pkg["latest_version"],
-                        "type": pkg.get("latest_filetype", "wheel")
-                    })
+                    outdated.append(
+                        {
+                            "name": pkg["name"],
+                            "current": pkg["version"],
+                            "latest": pkg["latest_version"],
+                            "type": pkg.get("latest_filetype", "wheel"),
+                        }
+                    )
         except Exception as e:
             print(f"{YELLOW}Warning: Could not check outdated packages: {e}{RESET}")
 
@@ -180,10 +176,20 @@ class DependencyManager:
     def verify_no_virtualenv(self) -> List[Path]:
         """Check for virtualenv directories in repo"""
         venv_patterns = [
-            "venv", "env", ".venv", ".env",
-            "virtualenv", "pyenv", ".pyenv",
-            "__pycache__", ".pytest_cache", ".mypy_cache",
-            "*.pyc", "*.pyo", "*.pyd", ".Python"
+            "venv",
+            "env",
+            ".venv",
+            ".env",
+            "virtualenv",
+            "pyenv",
+            ".pyenv",
+            "__pycache__",
+            ".pytest_cache",
+            ".mypy_cache",
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
+            ".Python",
         ]
 
         found_venvs = []

@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sophia WebUI Minimal</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+      .row { display: flex; gap: 16px; margin-bottom: 16px; }
+      .col { flex: 1; }
+      textarea, input { width: 100%; }
+      pre { background: #f5f5f5; padding: 8px; overflow: auto; }
+      .messages { height: 200px; overflow: auto; border: 1px solid #ddd; padding: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Sophia WebUI (Minimal)</h1>
+    <div class="row">
+      <div class="col">
+        <h3>Create Session</h3>
+        <label>Agent <input id="agent" value="grok" /></label>
+        <label>Repo Scope <input id="repo" value="sophia" /></label>
+        <button id="create">Create</button>
+        <p>Session ID: <code id="sid">-</code></p>
+      </div>
+      <div class="col">
+        <h3>WebSocket</h3>
+        <button id="connect">Connect</button>
+        <button id="send">Send Hello</button>
+        <div class="messages" id="msgs"></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <h3>FS List (Sophia)</h3>
+        <label>Path <input id="fsPath" value="." /></label>
+        <button id="fsList">List</button>
+        <pre id="fsOut"></pre>
+      </div>
+      <div class="col">
+        <h3>Create Proposal</h3>
+        <label>Path <input id="pPath" value="sandbox/demo.txt" /></label>
+        <label>Content <textarea id="pContent">Hello from WebUI</textarea></label>
+        <label>Commit Message <input id="pMsg" value="chore: demo" /></label>
+        <label><input type="checkbox" id="pAuto" /> Auto-commit</label>
+        <button id="pCreate">Create Proposal</button>
+        <pre id="pOut"></pre>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <h3>Proposals</h3>
+        <button id="pList">List Proposals</button>
+        <label>Proposal ID <input id="pId" /></label>
+        <button id="pApprove">Approve</button>
+        <button id="pReject">Reject</button>
+        <pre id="pListOut"></pre>
+      </div>
+    </div>
+
+    <script>
+      const sidEl = document.getElementById('sid');
+      const msgs = document.getElementById('msgs');
+      let ws;
+
+      document.getElementById('create').onclick = async () => {
+        const res = await fetch('/sessions', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agent: agent.value, repo_scope: repo.value })
+        });
+        const data = await res.json();
+        sidEl.textContent = data.session_id;
+      };
+
+      document.getElementById('connect').onclick = () => {
+        const sid = sidEl.textContent;
+        ws = new WebSocket(`ws://${location.host}/ws?session_id=${sid}`);
+        ws.onmessage = (e) => {
+          const d = JSON.parse(e.data);
+          const div = document.createElement('div');
+          div.textContent = JSON.stringify(d);
+          msgs.appendChild(div);
+        };
+      };
+
+      document.getElementById('send').onclick = () => {
+        ws && ws.send('Hello from client');
+      };
+
+      document.getElementById('fsList').onclick = async () => {
+        const res = await fetch('/tools/invoke', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ capability: 'fs', scope: 'sophia', action: 'list', params: { path: fsPath.value } })
+        });
+        fsOut.textContent = JSON.stringify(await res.json(), null, 2);
+      };
+
+      document.getElementById('pCreate').onclick = async () => {
+        const sid = sidEl.textContent;
+        const res = await fetch(`/sessions/${sid}/proposals`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            changes: [{ capability: 'fs', scope: repo.value, path: pPath.value, content: pContent.value }],
+            commit_message: pMsg.value, auto_commit: pAuto.checked
+          })
+        });
+        pOut.textContent = JSON.stringify(await res.json(), null, 2);
+      };
+
+      document.getElementById('pList').onclick = async () => {
+        const sid = sidEl.textContent;
+        const res = await fetch(`/sessions/${sid}/proposals`);
+        pListOut.textContent = JSON.stringify(await res.json(), null, 2);
+      };
+
+      document.getElementById('pApprove').onclick = async () => {
+        const sid = sidEl.textContent;
+        const res = await fetch(`/sessions/${sid}/proposals/${pId.value}/approve`, { method: 'POST' });
+        pListOut.textContent = JSON.stringify(await res.json(), null, 2);
+      };
+
+      document.getElementById('pReject').onclick = async () => {
+        const sid = sidEl.textContent;
+        const res = await fetch(`/sessions/${sid}/proposals/${pId.value}/reject`, { method: 'POST' });
+        pListOut.textContent = JSON.stringify(await res.json(), null, 2);
+      };
+    </script>
+  </body>
+  </html>
+

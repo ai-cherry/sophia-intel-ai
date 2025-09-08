@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
 import httpx
 import os
 
@@ -55,8 +57,12 @@ class WebUIServer:
 
         self.sessions: Dict[str, ChatSession] = {}
         self.mcp_urls = {
-            "fs_sophia": os.getenv("MCP_FILESYSTEM_SOPHIA_URL", "http://mcp-filesystem-sophia:8000"),
-            "fs_artemis": os.getenv("MCP_FILESYSTEM_ARTEMIS_URL", "http://mcp-filesystem-artemis:8000"),
+            "fs_sophia": os.getenv(
+                "MCP_FILESYSTEM_SOPHIA_URL", "http://mcp-filesystem-sophia:8000"
+            ),
+            "fs_artemis": os.getenv(
+                "MCP_FILESYSTEM_ARTEMIS_URL", "http://mcp-filesystem-artemis:8000"
+            ),
             "git": os.getenv("MCP_GIT_URL", "http://mcp-git:8000"),
             "memory": os.getenv("MCP_MEMORY_URL", "http://mcp-memory:8000"),
         }
@@ -68,6 +74,11 @@ class WebUIServer:
         @app.get("/health")
         async def health() -> Dict[str, Any]:
             return {"status": "ok", "sessions": len(self.sessions)}
+
+        # Serve minimal frontend
+        static_dir = Path(__file__).resolve().parents[1] / "frontend"
+        if static_dir.exists():
+            app.mount("/ui", StaticFiles(directory=static_dir, html=True), name="ui")
 
         @app.post("/sessions")
         async def create_session(req: CreateSessionRequest) -> Dict[str, str]:
@@ -148,7 +159,9 @@ class WebUIServer:
                 for ch in prop["changes"]:
                     if ch["capability"] != "fs":
                         raise HTTPException(400, detail="only fs changes supported")
-                    base = self.mcp_urls["fs_sophia" if ch.get("scope", "sophia") == "sophia" else "fs_artemis"]
+                    base = self.mcp_urls[
+                        "fs_sophia" if ch.get("scope", "sophia") == "sophia" else "fs_artemis"
+                    ]
                     url = f"{base}/fs/write"
                     payload = {"path": ch["path"], "content": ch["content"], "create_dirs": True}
                     r = await client.post(url, json=payload)
@@ -181,7 +194,9 @@ class WebUIServer:
                 while True:
                     data = await ws.receive_text()
                     # Echo back as a minimal placeholder for streaming
-                    await ws.send_json({"type": "message", "agent": self.sessions[sid].agent, "text": data})
+                    await ws.send_json(
+                        {"type": "message", "agent": self.sessions[sid].agent, "text": data}
+                    )
                     await asyncio.sleep(0.01)
             except WebSocketDisconnect:
                 return

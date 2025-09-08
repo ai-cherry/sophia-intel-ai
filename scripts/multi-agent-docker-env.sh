@@ -36,7 +36,7 @@ check_compose_file() {
 show_help() {
     echo -e "${CYAN}Multi-Agent Development Environment Manager${NC}"
     echo ""
-    echo "Usage: $0 {up|down|logs|shell|status|restart|clean}"
+    echo "Usage: $0 {up|down|logs|shell|status|restart|clean} [--no-prompt] [--with-mcp] [--with-ui] [--with-indexer] [--with-observability]"
     echo ""
     echo "Commands:"
     echo "  up        Start multi-agent environment"
@@ -86,39 +86,58 @@ start_environment() {
     echo -e "${CYAN}⏳ Waiting for infrastructure to be healthy...${NC}"
     sleep 10
     
-    # Check if we want MCP services
-    read -p "Start MCP servers? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+    WANT_MCP=""
+    WANT_UI=""
+    WANT_INDEXER=""
+    WANT_OBS=""
+    NO_PROMPT=""
+    for arg in "$@"; do
+        case "$arg" in
+            --with-mcp) WANT_MCP=1;;
+            --with-ui) WANT_UI=1;;
+            --with-indexer) WANT_INDEXER=1;;
+            --with-observability) WANT_OBS=1;;
+            --no-prompt) NO_PROMPT=1;;
+        esac
+    done
+
+    # MCP
+    if [[ -z "$NO_PROMPT" && -z "$WANT_MCP" ]]; then
+        read -p "Start MCP servers? (y/N): " -n 1 -r; echo; [[ $REPLY =~ ^[Yy]$ ]] && WANT_MCP=1
+    fi
+    if [[ -n "$WANT_MCP" ]]; then
         echo -e "${CYAN}🔧 Building and starting MCP servers...${NC}"
         docker compose -f "$COMPOSE_FILE" build mcp-memory mcp-filesystem-sophia mcp-filesystem-artemis mcp-git >/dev/null 2>&1 || true
         docker compose -f "$COMPOSE_FILE" up -d mcp-memory mcp-filesystem-sophia mcp-filesystem-artemis mcp-git
         sleep 5
     fi
-    
-    # Check if we want Web UI
-    read -p "Start Web UI? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+    # UI
+    if [[ -z "$NO_PROMPT" && -z "$WANT_UI" ]]; then
+        read -p "Start Web UI? (y/N): " -n 1 -r; echo; [[ $REPLY =~ ^[Yy]$ ]] && WANT_UI=1
+    fi
+    if [[ -n "$WANT_UI" ]]; then
         echo -e "${CYAN}🌐 Building and starting Web UI...${NC}"
         docker compose -f "$COMPOSE_FILE" build swarm-orchestrator webui >/dev/null 2>&1 || true
         docker compose -f "$COMPOSE_FILE" up -d swarm-orchestrator webui
         sleep 3
     fi
-    
-    # Check if we want indexer
-    read -p "Start code indexer? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+    # Indexer
+    if [[ -z "$NO_PROMPT" && -z "$WANT_INDEXER" ]]; then
+        read -p "Start code indexer? (y/N): " -n 1 -r; echo; [[ $REPLY =~ ^[Yy]$ ]] && WANT_INDEXER=1
+    fi
+    if [[ -n "$WANT_INDEXER" ]]; then
         echo -e "${CYAN}🔍 Building and starting code indexer...${NC}"
         docker compose -f "$COMPOSE_FILE" build indexer >/dev/null 2>&1 || true
         docker compose -f "$COMPOSE_FILE" up -d indexer
     fi
-    
-    # Check if we want observability
-    read -p "Start observability (Prometheus/Grafana)? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
+
+    # Observability
+    if [[ -z "$NO_PROMPT" && -z "$WANT_OBS" ]]; then
+        read -p "Start observability (Prometheus/Grafana)? (y/N): " -n 1 -r; echo; [[ $REPLY =~ ^[Yy]$ ]] && WANT_OBS=1
+    fi
+    if [[ -n "$WANT_OBS" ]]; then
         echo -e "${CYAN}📊 Building and starting observability stack...${NC}"
         docker compose -f "$COMPOSE_FILE" build prometheus grafana >/dev/null 2>&1 || true
         docker compose -f "$COMPOSE_FILE" up -d prometheus grafana
@@ -246,7 +265,7 @@ clean_resources() {
 # Main script logic
 case "${1:-help}" in
     "up"|"start")
-        start_environment
+        shift || true; start_environment "$@"
         ;;
         
     "down"|"stop")

@@ -5,6 +5,7 @@ import sys
 try:
     sys.path.insert(0, os.path.abspath(os.path.dirname(os.path.dirname(__file__))))
     from core.environment_enforcer import enforce_environment
+
     enforce_environment()
 except ImportError:
     pass  # Environment enforcer not available
@@ -36,5 +37,5 @@ __all__ = [
     "CoderAgent",
     "TesterAgent",
     "DeployerAgent",
-    "EvolverAgent"
+    "EvolverAgent",
 ]

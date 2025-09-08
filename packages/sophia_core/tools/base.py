@@ -25,11 +25,12 @@ from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class ToolParameterType(str, Enum):
     """Supported tool parameter types."""
+
     STRING = "string"
     INTEGER = "integer"
     FLOAT = "number"
@@ -43,6 +44,7 @@ class ToolParameter(BaseModel):
     """
     Defines a tool parameter with validation rules.
     """
+
     name: str
     type: ToolParameterType
     description: str
@@ -58,16 +60,16 @@ class ToolParameter(BaseModel):
     enum_values: Optional[List[Any]] = None
 
     # Array/object specific
-    items: Optional['ToolParameter'] = None  # For arrays
-    properties: Optional[Dict[str, 'ToolParameter']] = None  # For objects
+    items: Optional["ToolParameter"] = None  # For arrays
+    properties: Optional[Dict[str, "ToolParameter"]] = None  # For objects
 
-    @validator('default')
+    @validator("default")
     def validate_default(cls, v, values):
         """Validate default value matches parameter type."""
         if v is None:
             return v
 
-        param_type = values.get('type')
+        param_type = values.get("type")
         if param_type == ToolParameterType.STRING and not isinstance(v, str):
             raise ValueError("Default value must be string")
         elif param_type == ToolParameterType.INTEGER and not isinstance(v, int):
@@ -86,13 +88,13 @@ class ToolParameter(BaseModel):
     def validate_value(self, value: Any) -> Any:
         """
         Validate a parameter value against constraints.
-        
+
         Args:
             value: Value to validate
-            
+
         Returns:
             Any: Validated value
-            
+
         Raises:
             ValueError: If validation fails
         """
@@ -113,6 +115,7 @@ class ToolParameter(BaseModel):
 
             if self.pattern:
                 import re
+
                 if not re.match(self.pattern, value):
                     raise ValueError(f"String does not match pattern: {self.pattern}")
 
@@ -137,7 +140,7 @@ class ToolParameter(BaseModel):
         elif self.type == ToolParameterType.BOOLEAN:
             if not isinstance(value, bool):
                 if isinstance(value, str):
-                    value = value.lower() in ('true', '1', 'yes', 'on')
+                    value = value.lower() in ("true", "1", "yes", "on")
                 else:
                     value = bool(value)
 
@@ -192,6 +195,7 @@ class ToolSchema(BaseModel):
     """
     Complete tool schema definition.
     """
+
     name: str
     description: str
     parameters: List[ToolParameter] = Field(default_factory=list)
@@ -206,7 +210,7 @@ class ToolSchema(BaseModel):
     def to_openai_schema(self) -> Dict[str, Any]:
         """
         Convert to OpenAI function calling schema format.
-        
+
         Returns:
             Dict[str, Any]: OpenAI compatible schema
         """
@@ -214,10 +218,7 @@ class ToolSchema(BaseModel):
         required = []
 
         for param in self.parameters:
-            param_schema = {
-                "type": param.type.value,
-                "description": param.description
-            }
+            param_schema = {"type": param.type.value, "description": param.description}
 
             # Add constraints
             if param.min_value is not None:
@@ -237,7 +238,7 @@ class ToolSchema(BaseModel):
             if param.items and param.type == ToolParameterType.ARRAY:
                 param_schema["items"] = {
                     "type": param.items.type.value,
-                    "description": param.items.description
+                    "description": param.items.description,
                 }
 
             # Object properties
@@ -248,7 +249,7 @@ class ToolSchema(BaseModel):
                 for prop_name, prop_param in param.properties.items():
                     param_schema["properties"][prop_name] = {
                         "type": prop_param.type.value,
-                        "description": prop_param.description
+                        "description": prop_param.description,
                     }
 
                     if prop_param.required:
@@ -264,24 +265,20 @@ class ToolSchema(BaseModel):
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": {
-                    "type": "object",
-                    "properties": properties,
-                    "required": required
-                }
-            }
+                "parameters": {"type": "object", "properties": properties, "required": required},
+            },
         }
 
     def validate_parameters(self, parameters: Dict[str, Any]) -> Dict[str, Any]:
         """
         Validate parameters against schema.
-        
+
         Args:
             parameters: Parameters to validate
-            
+
         Returns:
             Dict[str, Any]: Validated parameters
-            
+
         Raises:
             ValueError: If validation fails
         """
@@ -306,6 +303,7 @@ class ToolExecutionContext(BaseModel):
     """
     Context information for tool execution.
     """
+
     execution_id: str = Field(default_factory=lambda: str(uuid4()))
     agent_id: Optional[str] = None
     session_id: Optional[str] = None
@@ -345,6 +343,7 @@ class ToolResult(BaseModel):
     """
     Result from tool execution.
     """
+
     success: bool
     result: Optional[Any] = None
     error: Optional[str] = None
@@ -358,59 +357,45 @@ class ToolResult(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
     @classmethod
-    def success_result(
-        cls,
-        result: Any,
-        execution_time: float = 0.0,
-        **metadata
-    ) -> 'ToolResult':
+    def success_result(cls, result: Any, execution_time: float = 0.0, **metadata) -> "ToolResult":
         """Create successful result."""
-        return cls(
-            success=True,
-            result=result,
-            execution_time=execution_time,
-            metadata=metadata
-        )
+        return cls(success=True, result=result, execution_time=execution_time, metadata=metadata)
 
     @classmethod
-    def error_result(
-        cls,
-        error: str,
-        execution_time: float = 0.0,
-        **metadata
-    ) -> 'ToolResult':
+    def error_result(cls, error: str, execution_time: float = 0.0, **metadata) -> "ToolResult":
         """Create error result."""
-        return cls(
-            success=False,
-            error=error,
-            execution_time=execution_time,
-            metadata=metadata
-        )
+        return cls(success=False, error=error, execution_time=execution_time, metadata=metadata)
 
     def to_json(self) -> str:
         """Convert result to JSON string."""
-        return json.dumps({
-            "success": self.success,
-            "result": self.result,
-            "error": self.error,
-            "execution_time": self.execution_time,
-            "metadata": self.metadata
-        }, default=str)
+        return json.dumps(
+            {
+                "success": self.success,
+                "result": self.result,
+                "error": self.error,
+                "execution_time": self.execution_time,
+                "metadata": self.metadata,
+            },
+            default=str,
+        )
 
 
 # Exception classes
 class ToolError(Exception):
     """Base class for tool errors."""
+
     pass
 
 
 class ToolValidationError(ToolError):
     """Raised when tool parameter validation fails."""
+
     pass
 
 
 class ToolExecutionError(ToolError):
     """Raised when tool execution fails."""
+
     pass
 
 
@@ -422,7 +407,7 @@ class BaseTool(ABC):
     def __init__(self, schema: ToolSchema):
         """
         Initialize tool with schema.
-        
+
         Args:
             schema: Tool schema definition
         """
@@ -434,37 +419,33 @@ class BaseTool(ABC):
 
     @abstractmethod
     async def execute(
-        self,
-        parameters: Dict[str, Any],
-        context: ToolExecutionContext
+        self, parameters: Dict[str, Any], context: ToolExecutionContext
     ) -> ToolResult:
         """
         Execute the tool with given parameters.
-        
+
         Args:
             parameters: Tool parameters
             context: Execution context
-            
+
         Returns:
             ToolResult: Execution result
-            
+
         Raises:
             ToolError: If execution fails
         """
         pass
 
     async def validate_and_execute(
-        self,
-        parameters: Dict[str, Any],
-        context: ToolExecutionContext
+        self, parameters: Dict[str, Any], context: ToolExecutionContext
     ) -> ToolResult:
         """
         Validate parameters and execute tool.
-        
+
         Args:
             parameters: Tool parameters
             context: Execution context
-            
+
         Returns:
             ToolResult: Execution result
         """
@@ -477,8 +458,7 @@ class BaseTool(ABC):
             # Check execution timeout
             if context.is_expired():
                 return ToolResult.error_result(
-                    "Tool execution timed out before starting",
-                    execution_time=0.0
+                    "Tool execution timed out before starting", execution_time=0.0
                 )
 
             # Execute tool
@@ -498,31 +478,23 @@ class BaseTool(ABC):
             execution_time = (datetime.utcnow() - start_time).total_seconds()
             logger.error(f"Tool {self.schema.name} validation error: {e}")
             return ToolResult.error_result(
-                f"Parameter validation failed: {e}",
-                execution_time=execution_time
+                f"Parameter validation failed: {e}", execution_time=execution_time
             )
 
         except ToolExecutionError as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds()
             logger.error(f"Tool {self.schema.name} execution error: {e}")
-            return ToolResult.error_result(
-                f"Execution failed: {e}",
-                execution_time=execution_time
-            )
+            return ToolResult.error_result(f"Execution failed: {e}", execution_time=execution_time)
 
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds()
             logger.error(f"Tool {self.schema.name} unexpected error: {e}")
-            return ToolResult.error_result(
-                f"Unexpected error: {e}",
-                execution_time=execution_time
-            )
+            return ToolResult.error_result(f"Unexpected error: {e}", execution_time=execution_time)
 
     def get_statistics(self) -> Dict[str, Any]:
         """Get tool execution statistics."""
         avg_time = (
-            self._total_execution_time / self._execution_count
-            if self._execution_count > 0 else 0.0
+            self._total_execution_time / self._execution_count if self._execution_count > 0 else 0.0
         )
 
         return {
@@ -530,7 +502,7 @@ class BaseTool(ABC):
             "execution_count": self._execution_count,
             "total_execution_time": self._total_execution_time,
             "average_execution_time": avg_time,
-            "version": self.schema.version
+            "version": self.schema.version,
         }
 
     def to_openai_schema(self) -> Dict[str, Any]:
@@ -545,26 +517,22 @@ class AsyncTool(BaseTool):
 
     @abstractmethod
     async def _execute_async(
-        self,
-        parameters: Dict[str, Any],
-        context: ToolExecutionContext
+        self, parameters: Dict[str, Any], context: ToolExecutionContext
     ) -> Any:
         """
         Async implementation of tool execution.
-        
+
         Args:
             parameters: Validated parameters
             context: Execution context
-            
+
         Returns:
             Any: Tool result
         """
         pass
 
     async def execute(
-        self,
-        parameters: Dict[str, Any],
-        context: ToolExecutionContext
+        self, parameters: Dict[str, Any], context: ToolExecutionContext
     ) -> ToolResult:
         """Execute async tool with timeout handling."""
         try:
@@ -573,8 +541,7 @@ class AsyncTool(BaseTool):
 
             if timeout and timeout > 0:
                 result = await asyncio.wait_for(
-                    self._execute_async(parameters, context),
-                    timeout=timeout
+                    self._execute_async(parameters, context), timeout=timeout
                 )
             else:
                 result = await self._execute_async(parameters, context)
@@ -593,34 +560,27 @@ class SyncTool(BaseTool):
     """
 
     @abstractmethod
-    def _execute_sync(
-        self,
-        parameters: Dict[str, Any],
-        context: ToolExecutionContext
-    ) -> Any:
+    def _execute_sync(self, parameters: Dict[str, Any], context: ToolExecutionContext) -> Any:
         """
         Synchronous implementation of tool execution.
-        
+
         Args:
             parameters: Validated parameters
             context: Execution context
-            
+
         Returns:
             Any: Tool result
         """
         pass
 
     async def execute(
-        self,
-        parameters: Dict[str, Any],
-        context: ToolExecutionContext
+        self, parameters: Dict[str, Any], context: ToolExecutionContext
     ) -> ToolResult:
         """Execute sync tool in thread pool."""
         try:
             loop = asyncio.get_event_loop()
             result = await loop.run_in_executor(
-                None,
-                lambda: self._execute_sync(parameters, context)
+                None, lambda: self._execute_sync(parameters, context)
             )
 
             return ToolResult.success_result(result)
@@ -640,19 +600,16 @@ class ToolRegistry:
         logger.info("Initialized tool registry")
 
     def register(
-        self,
-        tool: BaseTool,
-        category: Optional[str] = None,
-        replace_existing: bool = False
+        self, tool: BaseTool, category: Optional[str] = None, replace_existing: bool = False
     ) -> None:
         """
         Register a tool in the registry.
-        
+
         Args:
             tool: Tool to register
             category: Optional category for organization
             replace_existing: Whether to replace existing tool with same name
-            
+
         Raises:
             ValueError: If tool name already exists and replace_existing is False
         """
@@ -675,10 +632,10 @@ class ToolRegistry:
     def unregister(self, name: str) -> bool:
         """
         Unregister a tool.
-        
+
         Args:
             name: Tool name to unregister
-            
+
         Returns:
             bool: True if tool was unregistered
         """
@@ -698,10 +655,10 @@ class ToolRegistry:
     def get_tool(self, name: str) -> Optional[BaseTool]:
         """
         Get tool by name.
-        
+
         Args:
             name: Tool name
-            
+
         Returns:
             Optional[BaseTool]: Tool if found
         """
@@ -710,10 +667,10 @@ class ToolRegistry:
     def list_tools(self, category: Optional[str] = None) -> List[str]:
         """
         List available tools.
-        
+
         Args:
             category: Optional category filter
-            
+
         Returns:
             List[str]: Tool names
         """
@@ -725,10 +682,10 @@ class ToolRegistry:
     def get_schemas(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Get OpenAI schemas for tools.
-        
+
         Args:
             category: Optional category filter
-            
+
         Returns:
             List[Dict[str, Any]]: OpenAI compatible schemas
         """
@@ -747,32 +704,24 @@ class ToolRegistry:
         return {
             "total_tools": len(self._tools),
             "categories": list(self._categories.keys()),
-            "tools_by_category": {
-                cat: len(tools) for cat, tools in self._categories.items()
-            },
-            "tool_stats": {
-                name: tool.get_statistics()
-                for name, tool in self._tools.items()
-            }
+            "tools_by_category": {cat: len(tools) for cat, tools in self._categories.items()},
+            "tool_stats": {name: tool.get_statistics() for name, tool in self._tools.items()},
         }
 
     async def execute_tool(
-        self,
-        name: str,
-        parameters: Dict[str, Any],
-        context: ToolExecutionContext
+        self, name: str, parameters: Dict[str, Any], context: ToolExecutionContext
     ) -> ToolResult:
         """
         Execute a tool by name.
-        
+
         Args:
             name: Tool name
             parameters: Tool parameters
             context: Execution context
-            
+
         Returns:
             ToolResult: Execution result
-            
+
         Raises:
             ValueError: If tool not found
         """

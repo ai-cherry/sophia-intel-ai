@@ -5,6 +5,7 @@ from typing import Any, TypeVar
 
 T = TypeVar("T")
 
+
 class ServiceContainer:
     """Simple dependency injection container"""
 
@@ -41,5 +42,6 @@ class ServiceContainer:
             self._services[service_name] = instance
             return instance
         raise KeyError(f"Service {service_name} not registered")
+
 
 container = ServiceContainer()

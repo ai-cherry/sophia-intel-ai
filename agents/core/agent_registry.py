@@ -16,6 +16,7 @@ from .base_agent import AgentCapability, BaseAgent
 
 logger = logging.getLogger(__name__)
 
+
 class RegistrationStatus(Enum):
     """Agent registration status"""
 
@@ -23,6 +24,7 @@ class RegistrationStatus(Enum):
     UNREGISTERED = "unregistered"
     SUSPENDED = "suspended"
     MAINTENANCE = "maintenance"
+
 
 @dataclass
 class AgentRegistration:
@@ -62,6 +64,7 @@ class AgentRegistration:
     def uptime_seconds(self) -> float:
         """Calculate agent uptime in seconds"""
         return (datetime.now() - self.registered_at).total_seconds()
+
 
 class AgentRegistry:
     """
@@ -172,18 +175,14 @@ class AgentRegistry:
             if agent_id in self.agent_instances:
                 del self.agent_instances[agent_id]
 
-            logger.info(
-                f"Unregistered agent {registration.agent_name} [{agent_id[:8]}]"
-            )
+            logger.info(f"Unregistered agent {registration.agent_name} [{agent_id[:8]}]")
             return True
 
         except Exception as e:
             logger.error(f"Failed to unregister agent {agent_id}: {str(e)}")
             return False
 
-    def heartbeat(
-        self, agent_id: str, status_data: dict[str, Any] | None = None
-    ) -> bool:
+    def heartbeat(self, agent_id: str, status_data: dict[str, Any] | None = None) -> bool:
         """Record a heartbeat from an agent"""
         try:
             if agent_id not in self.agents:
@@ -208,9 +207,7 @@ class AgentRegistry:
             logger.error(f"Failed to process heartbeat from agent {agent_id}: {str(e)}")
             return False
 
-    def find_agents_by_capability(
-        self, capability: AgentCapability
-    ) -> list[AgentRegistration]:
+    def find_agents_by_capability(self, capability: AgentCapability) -> list[AgentRegistration]:
         """Find all agents with a specific capability"""
         return [
             registration
@@ -261,9 +258,7 @@ class AgentRegistry:
                 continue
 
             # Check required capabilities
-            if not all(
-                cap in registration.capabilities for cap in required_capabilities
-            ):
+            if not all(cap in registration.capabilities for cap in required_capabilities):
                 continue
 
             # Check agent type if specified
@@ -284,9 +279,7 @@ class AgentRegistry:
             score = 0.0
 
             # Capability match score (higher is better)
-            capability_match = len(
-                registration.capabilities.intersection(required_capabilities)
-            )
+            capability_match = len(registration.capabilities.intersection(required_capabilities))
             score += capability_match * 10
 
             # Load score (lower concurrent tasks is better)
@@ -299,9 +292,7 @@ class AgentRegistry:
 
             # Health score (more recent heartbeat is better)
             if registration.last_heartbeat:
-                heartbeat_age = (
-                    datetime.now() - registration.last_heartbeat
-                ).total_seconds()
+                heartbeat_age = (datetime.now() - registration.last_heartbeat).total_seconds()
                 health_score = max(0, 1.0 - (heartbeat_age / 300))  # 5 minute decay
                 score += health_score * 3
 
@@ -309,8 +300,7 @@ class AgentRegistry:
             try:
                 version_parts = registration.version.split(".")
                 version_score = sum(
-                    int(part) * (10 ** (2 - i))
-                    for i, part in enumerate(version_parts[:3])
+                    int(part) * (10 ** (2 - i)) for i, part in enumerate(version_parts[:3])
                 )
                 score += version_score * 0.01
             except:
@@ -336,9 +326,7 @@ class AgentRegistry:
             "registration_status": registration.registration_status.value,
             "registered_at": registration.registered_at.isoformat(),
             "last_heartbeat": (
-                registration.last_heartbeat.isoformat()
-                if registration.last_heartbeat
-                else None
+                registration.last_heartbeat.isoformat() if registration.last_heartbeat else None
             ),
             "is_healthy": registration.is_healthy,
             "uptime_seconds": registration.uptime_seconds,
@@ -354,9 +342,7 @@ class AgentRegistry:
                 live_status = agent.get_status()
                 info["live_status"] = live_status
             except Exception as e:
-                logger.error(
-                    f"Failed to get live status for agent {agent_id}: {str(e)}"
-                )
+                logger.error(f"Failed to get live status for agent {agent_id}: {str(e)}")
 
         return info
 
@@ -377,16 +363,12 @@ class AgentRegistry:
         capability_counts = {}
         for registration in self.agents.values():
             for capability in registration.capabilities:
-                capability_counts[capability.value] = (
-                    capability_counts.get(capability.value, 0) + 1
-                )
+                capability_counts[capability.value] = capability_counts.get(capability.value, 0) + 1
 
         # Agent type distribution
         type_counts = {}
         for registration in self.agents.values():
-            type_counts[registration.agent_type] = (
-                type_counts.get(registration.agent_type, 0) + 1
-            )
+            type_counts[registration.agent_type] = type_counts.get(registration.agent_type, 0) + 1
 
         return {
             "registry_id": self.registry_id,
@@ -421,9 +403,7 @@ class AgentRegistry:
         """Update agent metadata"""
         try:
             if agent_id not in self.agents:
-                logger.warning(
-                    f"Cannot update metadata for unregistered agent {agent_id}"
-                )
+                logger.warning(f"Cannot update metadata for unregistered agent {agent_id}")
                 return False
 
             registration = self.agents[agent_id]
@@ -448,9 +428,7 @@ class AgentRegistry:
             registration.metadata["suspension_reason"] = reason
             registration.metadata["suspended_at"] = datetime.now().isoformat()
 
-            logger.info(
-                f"Suspended agent {registration.agent_name} [{agent_id[:8]}]: {reason}"
-            )
+            logger.info(f"Suspended agent {registration.agent_name} [{agent_id[:8]}]: {reason}")
             return True
 
         except Exception as e:

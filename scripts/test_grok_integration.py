@@ -37,7 +37,9 @@ async def run(task: str, provider: str | None):
         {"role": "system", "content": "You are a helpful coding assistant."},
         {"role": "user", "content": task},
     ]
-    resp = await llm.complete(provider=prov, model=model, messages=messages, max_tokens=256, temperature=0.2)
+    resp = await llm.complete(
+        provider=prov, model=model, messages=messages, max_tokens=256, temperature=0.2
+    )
     print("\n=== Response ===\n")
     print(resp.text)
 
@@ -53,4 +55,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

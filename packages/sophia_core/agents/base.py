@@ -21,11 +21,12 @@ from ..tools.base import ToolExecutionContext, ToolRegistry
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class AgentState(str, Enum):
     """Agent lifecycle states."""
+
     INITIALIZING = "initializing"
     IDLE = "idle"
     THINKING = "thinking"
@@ -39,6 +40,7 @@ class AgentState(str, Enum):
 
 class TaskStatus(str, Enum):
     """Task execution status."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -51,6 +53,7 @@ class AgentCapabilities(BaseModel):
     """
     Defines agent capabilities and limitations.
     """
+
     # Communication capabilities
     can_communicate: bool = True
     supported_languages: List[str] = Field(default_factory=lambda: ["en"])
@@ -94,7 +97,7 @@ class AgentCapabilities(BaseModel):
             "learning": self.can_learn,
             "file_modification": self.can_modify_files,
             "code_execution": self.can_execute_code,
-            "web_access": self.can_access_internet
+            "web_access": self.can_access_internet,
         }
 
         return task_capabilities.get(task_type, False)
@@ -104,6 +107,7 @@ class AgentConfig(BaseModel):
     """
     Agent configuration and initialization parameters.
     """
+
     agent_id: str = Field(default_factory=lambda: str(uuid4()))
     name: str
     description: str = ""
@@ -142,7 +146,7 @@ class AgentConfig(BaseModel):
     def validate_configuration(self) -> List[str]:
         """
         Validate agent configuration and return issues.
-        
+
         Returns:
             List[str]: List of validation issues
         """
@@ -167,6 +171,7 @@ class AgentMessage(BaseModel):
     """
     Message sent to or from an agent.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     sender_id: str
     recipient_id: str
@@ -185,10 +190,7 @@ class AgentMessage(BaseModel):
     @property
     def is_expired(self) -> bool:
         """Check if message has expired."""
-        return (
-            self.expires_at is not None and
-            datetime.utcnow() > self.expires_at
-        )
+        return self.expires_at is not None and datetime.utcnow() > self.expires_at
 
     def set_expiration(self, seconds: int) -> None:
         """Set message expiration time."""
@@ -199,6 +201,7 @@ class AgentResponse(BaseModel):
     """
     Response from an agent.
     """
+
     agent_id: str
     response_to: Optional[str] = None  # Message ID being responded to
     content: str
@@ -224,6 +227,7 @@ class AgentGoal(BaseModel):
     """
     High-level goal for an agent.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     title: str
     description: str
@@ -251,9 +255,9 @@ class AgentGoal(BaseModel):
     def is_overdue(self) -> bool:
         """Check if goal is overdue."""
         return (
-            self.deadline is not None and
-            self.status != "completed" and
-            datetime.utcnow() > self.deadline
+            self.deadline is not None
+            and self.status != "completed"
+            and datetime.utcnow() > self.deadline
         )
 
     def mark_completed(self) -> None:
@@ -266,6 +270,7 @@ class AgentTask(BaseModel):
     """
     Specific task for an agent to execute.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     title: str
     description: str
@@ -326,6 +331,7 @@ class AgentContext(BaseModel):
     """
     Context information for agent operation.
     """
+
     session_id: str = Field(default_factory=lambda: str(uuid4()))
     user_id: Optional[str] = None
 
@@ -367,16 +373,19 @@ class AgentContext(BaseModel):
 # Exception classes
 class AgentError(Exception):
     """Base class for agent errors."""
+
     pass
 
 
 class AgentInitializationError(AgentError):
     """Raised when agent initialization fails."""
+
     pass
 
 
 class AgentExecutionError(AgentError):
     """Raised when agent execution fails."""
+
     pass
 
 
@@ -390,11 +399,11 @@ class BaseAgent(ABC):
         config: AgentConfig,
         model: Optional[LLMModel] = None,
         memory_manager: Optional[MemoryManager] = None,
-        tool_registry: Optional[ToolRegistry] = None
+        tool_registry: Optional[ToolRegistry] = None,
     ):
         """
         Initialize agent with configuration and dependencies.
-        
+
         Args:
             config: Agent configuration
             model: Language model instance
@@ -427,21 +436,17 @@ class BaseAgent(ABC):
         logger.info(f"Initialized agent {config.name} ({config.agent_id})")
 
     @abstractmethod
-    async def process_message(
-        self,
-        message: AgentMessage,
-        context: AgentContext
-    ) -> AgentResponse:
+    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
         """
         Process an incoming message and generate response.
-        
+
         Args:
             message: Incoming message
             context: Current agent context
-            
+
         Returns:
             AgentResponse: Generated response
-            
+
         Raises:
             AgentExecutionError: If processing fails
         """
@@ -450,7 +455,7 @@ class BaseAgent(ABC):
     async def initialize(self) -> None:
         """
         Initialize the agent and prepare for operation.
-        
+
         Raises:
             AgentInitializationError: If initialization fails
         """
@@ -501,7 +506,7 @@ class BaseAgent(ABC):
     async def add_goal(self, goal: AgentGoal) -> None:
         """
         Add a goal to the agent.
-        
+
         Args:
             goal: Goal to add
         """
@@ -515,10 +520,10 @@ class BaseAgent(ABC):
     async def complete_goal(self, goal_id: str) -> bool:
         """
         Mark a goal as completed.
-        
+
         Args:
             goal_id: Goal ID to complete
-            
+
         Returns:
             bool: True if goal was completed
         """
@@ -536,7 +541,7 @@ class BaseAgent(ABC):
     async def add_task(self, task: AgentTask) -> None:
         """
         Add a task to the agent.
-        
+
         Args:
             task: Task to add
         """
@@ -550,10 +555,10 @@ class BaseAgent(ABC):
     async def execute_task(self, task_id: str) -> bool:
         """
         Execute a specific task.
-        
+
         Args:
             task_id: Task ID to execute
-            
+
         Returns:
             bool: True if task execution started successfully
         """
@@ -581,10 +586,10 @@ class BaseAgent(ABC):
     async def _execute_task_implementation(self, task: AgentTask) -> Any:
         """
         Execute task implementation (to be overridden by subclasses).
-        
+
         Args:
             task: Task to execute
-            
+
         Returns:
             Any: Task result
         """
@@ -606,8 +611,8 @@ class BaseAgent(ABC):
         if not self.tool_registry:
             raise AgentExecutionError("Tool registry not available")
 
-        tool_name = task.parameters.get('tool_name')
-        tool_params = task.parameters.get('parameters', {})
+        tool_name = task.parameters.get("tool_name")
+        tool_params = task.parameters.get("parameters", {})
 
         if not tool_name:
             raise AgentExecutionError("Tool name not specified")
@@ -615,13 +620,11 @@ class BaseAgent(ABC):
         # Create execution context
         exec_context = ToolExecutionContext(
             agent_id=self.config.agent_id,
-            session_id=self.context.session_id if self.context else None
+            session_id=self.context.session_id if self.context else None,
         )
 
         # Execute tool
-        result = await self.tool_registry.execute_tool(
-            tool_name, tool_params, exec_context
-        )
+        result = await self.tool_registry.execute_tool(tool_name, tool_params, exec_context)
 
         return result
 
@@ -634,14 +637,17 @@ class BaseAgent(ABC):
         for memory_type in self.config.memory_types:
             if memory_type == "working":
                 from ..memory.base import WorkingMemory
+
                 working_memory = WorkingMemory(max_entries=100)
                 self.memory_manager.register_memory(working_memory)
             elif memory_type == "episodic":
                 from ..memory.base import EpisodicMemory
+
                 episodic_memory = EpisodicMemory(max_entries=500)
                 self.memory_manager.register_memory(episodic_memory)
             elif memory_type == "semantic":
                 from ..memory.base import SemanticMemory
+
                 semantic_memory = SemanticMemory(max_entries=1000)
                 self.memory_manager.register_memory(semantic_memory)
 
@@ -673,13 +679,12 @@ class BaseAgent(ABC):
     def get_status(self) -> Dict[str, Any]:
         """
         Get current agent status.
-        
+
         Returns:
             Dict[str, Any]: Agent status information
         """
         avg_response_time = (
-            self._total_response_time / self._message_count
-            if self._message_count > 0 else 0.0
+            self._total_response_time / self._message_count if self._message_count > 0 else 0.0
         )
 
         return {
@@ -690,19 +695,21 @@ class BaseAgent(ABC):
             "goals": {
                 "total": len(self._goals),
                 "active": len([g for g in self._goals.values() if g.status == "active"]),
-                "completed": len([g for g in self._goals.values() if g.status == "completed"])
+                "completed": len([g for g in self._goals.values() if g.status == "completed"]),
             },
             "tasks": {
                 "total": len(self._tasks),
                 "pending": len([t for t in self._tasks.values() if t.status == TaskStatus.PENDING]),
                 "running": len([t for t in self._tasks.values() if t.status == TaskStatus.RUNNING]),
-                "completed": len([t for t in self._tasks.values() if t.status == TaskStatus.COMPLETED])
+                "completed": len(
+                    [t for t in self._tasks.values() if t.status == TaskStatus.COMPLETED]
+                ),
             },
             "performance": {
                 "message_count": self._message_count,
                 "average_response_time": avg_response_time,
-                "error_count": self._error_count
-            }
+                "error_count": self._error_count,
+            },
         }
 
 
@@ -715,11 +722,7 @@ class ConversationalAgent(BaseAgent):
         super().__init__(**kwargs)
         self._conversation_history = ConversationHistory()
 
-    async def process_message(
-        self,
-        message: AgentMessage,
-        context: AgentContext
-    ) -> AgentResponse:
+    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
         """Process conversational message."""
         start_time = datetime.utcnow()
         self.state = AgentState.COMMUNICATING
@@ -731,10 +734,9 @@ class ConversationalAgent(BaseAgent):
 
             # Store message in conversation history
             from ..models.base import Message, MessageRole
+
             user_message = Message(
-                role=MessageRole.USER,
-                content=message.content,
-                metadata={"message_id": message.id}
+                role=MessageRole.USER, content=message.content, metadata={"message_id": message.id}
             )
             self._conversation_history.add_message(user_message)
 
@@ -756,7 +758,7 @@ class ConversationalAgent(BaseAgent):
                 agent_id=self.config.agent_id,
                 response_to=message.id,
                 content=response_content,
-                response_time=response_time
+                response_time=response_time,
             )
 
             # Update performance metrics
@@ -777,7 +779,7 @@ class ConversationalAgent(BaseAgent):
                 response_to=message.id,
                 content=f"I encountered an error: {str(e)}",
                 confidence=0.0,
-                response_time=(datetime.utcnow() - start_time).total_seconds()
+                response_time=(datetime.utcnow() - start_time).total_seconds(),
             )
 
 
@@ -786,11 +788,7 @@ class ReactiveTool(BaseAgent):
     Agent that reacts to messages by using tools.
     """
 
-    async def process_message(
-        self,
-        message: AgentMessage,
-        context: AgentContext
-    ) -> AgentResponse:
+    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
         """Process message by determining and using appropriate tools."""
         start_time = datetime.utcnow()
         self.state = AgentState.ACTING
@@ -803,16 +801,17 @@ class ReactiveTool(BaseAgent):
             for tool_name, params in tools_to_use:
                 if self.tool_registry:
                     exec_context = ToolExecutionContext(
-                        agent_id=self.config.agent_id,
-                        session_id=context.session_id
+                        agent_id=self.config.agent_id, session_id=context.session_id
                     )
 
-                    result = await self.tool_registry.execute_tool(
-                        tool_name, params, exec_context
+                    result = await self.tool_registry.execute_tool(tool_name, params, exec_context)
+                    results.append(
+                        f"{tool_name}: {result.result if result.success else result.error}"
                     )
-                    results.append(f"{tool_name}: {result.result if result.success else result.error}")
 
-            response_content = "Tool results:\n" + "\n".join(results) if results else "No tools were used."
+            response_content = (
+                "Tool results:\n" + "\n".join(results) if results else "No tools were used."
+            )
 
             response_time = (datetime.utcnow() - start_time).total_seconds()
             self.state = AgentState.IDLE
@@ -822,7 +821,7 @@ class ReactiveTool(BaseAgent):
                 response_to=message.id,
                 content=response_content,
                 response_time=response_time,
-                tool_calls=[{"tool": tool, "params": params} for tool, params in tools_to_use]
+                tool_calls=[{"tool": tool, "params": params} for tool, params in tools_to_use],
             )
 
         except Exception as e:
@@ -834,19 +833,18 @@ class ReactiveTool(BaseAgent):
                 response_to=message.id,
                 content=f"Tool execution failed: {str(e)}",
                 confidence=0.0,
-                response_time=(datetime.utcnow() - start_time).total_seconds()
+                response_time=(datetime.utcnow() - start_time).total_seconds(),
             )
 
     async def _analyze_message_for_tools(
-        self,
-        message: AgentMessage
+        self, message: AgentMessage
     ) -> List[tuple[str, Dict[str, Any]]]:
         """
         Analyze message to determine which tools to use.
-        
+
         Args:
             message: Message to analyze
-            
+
         Returns:
             List[tuple[str, Dict[str, Any]]]: Tools and parameters to use
         """
@@ -876,11 +874,7 @@ class ProactiveAgent(BaseAgent):
         self._planning_interval = 60  # seconds
         self._last_planning = None
 
-    async def process_message(
-        self,
-        message: AgentMessage,
-        context: AgentContext
-    ) -> AgentResponse:
+    async def process_message(self, message: AgentMessage, context: AgentContext) -> AgentResponse:
         """Process message and potentially trigger proactive planning."""
         # First handle the immediate message
         response = await self._handle_immediate_response(message, context)
@@ -891,16 +885,14 @@ class ProactiveAgent(BaseAgent):
         return response
 
     async def _handle_immediate_response(
-        self,
-        message: AgentMessage,
-        context: AgentContext
+        self, message: AgentMessage, context: AgentContext
     ) -> AgentResponse:
         """Handle immediate response to message."""
         # Simple acknowledgment for base implementation
         return AgentResponse(
             agent_id=self.config.agent_id,
             response_to=message.id,
-            content=f"I've received your message: {message.content[:100]}..."
+            content=f"I've received your message: {message.content[:100]}...",
         )
 
     async def _consider_proactive_actions(self, context: AgentContext) -> None:
@@ -908,8 +900,10 @@ class ProactiveAgent(BaseAgent):
         current_time = datetime.utcnow()
 
         # Check if it's time for planning
-        if (self._last_planning is None or
-            (current_time - self._last_planning).total_seconds() > self._planning_interval):
+        if (
+            self._last_planning is None
+            or (current_time - self._last_planning).total_seconds() > self._planning_interval
+        ):
 
             await self._proactive_planning(context)
             self._last_planning = current_time
@@ -948,7 +942,7 @@ class ProactiveAgent(BaseAgent):
             title=f"Work on goal: {goal.title}",
             description=f"Task to make progress on goal: {goal.description}",
             task_type="reasoning",
-            parent_goal_id=goal.id
+            parent_goal_id=goal.id,
         )
 
         await self.add_task(task)
@@ -967,7 +961,7 @@ class AgentRegistry:
     def register_agent(self, agent: BaseAgent) -> None:
         """
         Register an agent.
-        
+
         Args:
             agent: Agent to register
         """
@@ -978,10 +972,10 @@ class AgentRegistry:
     def unregister_agent(self, agent_id: str) -> bool:
         """
         Unregister an agent.
-        
+
         Args:
             agent_id: Agent ID to unregister
-            
+
         Returns:
             bool: True if agent was unregistered
         """
@@ -994,10 +988,10 @@ class AgentRegistry:
     def get_agent(self, agent_id: str) -> Optional[BaseAgent]:
         """
         Get agent by ID.
-        
+
         Args:
             agent_id: Agent ID
-            
+
         Returns:
             Optional[BaseAgent]: Agent if found
         """
@@ -1006,7 +1000,7 @@ class AgentRegistry:
     def list_agents(self) -> List[str]:
         """
         List all registered agent IDs.
-        
+
         Returns:
             List[str]: Agent IDs
         """
@@ -1015,10 +1009,10 @@ class AgentRegistry:
     def get_agents_by_capability(self, capability: str) -> List[BaseAgent]:
         """
         Get agents that have a specific capability.
-        
+
         Args:
             capability: Capability to search for
-            
+
         Returns:
             List[BaseAgent]: Agents with the capability
         """
@@ -1033,10 +1027,10 @@ class AgentRegistry:
     async def broadcast_message(self, message: AgentMessage) -> Dict[str, AgentResponse]:
         """
         Broadcast message to all agents.
-        
+
         Args:
             message: Message to broadcast
-            
+
         Returns:
             Dict[str, AgentResponse]: Responses by agent ID
         """
@@ -1056,7 +1050,7 @@ class AgentRegistry:
     def get_registry_status(self) -> Dict[str, Any]:
         """
         Get registry status information.
-        
+
         Returns:
             Dict[str, Any]: Registry status
         """
@@ -1069,7 +1063,6 @@ class AgentRegistry:
             "total_agents": len(self._agents),
             "agents_by_state": agents_by_state,
             "agent_details": {
-                agent_id: agent.get_status()
-                for agent_id, agent in self._agents.items()
-            }
+                agent_id: agent.get_status() for agent_id, agent in self._agents.items()
+            },
         }

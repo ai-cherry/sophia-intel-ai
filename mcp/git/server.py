@@ -82,4 +82,3 @@ async def git_push(req: GitPushRequest) -> Dict[str, Any]:
         raise HTTPException(400, detail="unknown repo")
     out = run(["git", "push", "origin", req.branch], repo)
     return {"ok": True, "output": out}
-

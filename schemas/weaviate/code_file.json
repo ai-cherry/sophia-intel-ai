@@ -1,0 +1,155 @@
+{
+  "class": "CodeFile",
+  "description": "Represents a source code file with metadata and content",
+  "vectorizer": "none",
+  "moduleConfig": {
+    "text2vec-openai": {
+      "vectorizeClassName": false
+    }
+  },
+  "properties": [
+    {
+      "name": "id",
+      "dataType": ["string"],
+      "description": "Unique identifier for the file",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "repo",
+      "dataType": ["string"],
+      "description": "Repository name (sophia or artemis)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "path",
+      "dataType": ["string"],
+      "description": "File path relative to repository root",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "sha",
+      "dataType": ["string"],
+      "description": "Git commit SHA when file was indexed",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "content_sha",
+      "dataType": ["string"],
+      "description": "SHA256 hash of file content for change detection",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "language",
+      "dataType": ["string"],
+      "description": "Programming language (python, javascript, typescript, etc.)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "service",
+      "dataType": ["string"],
+      "description": "Business service or domain (auth, billing, analytics, etc.)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "tags",
+      "dataType": ["string[]"],
+      "description": "Hierarchical ontology tags for filtering",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "size",
+      "dataType": ["int"],
+      "description": "File size in bytes",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "mtime",
+      "dataType": ["date"],
+      "description": "Last modification time",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "content",
+      "dataType": ["text"],
+      "description": "Full file content for BM25 keyword search",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "summary",
+      "dataType": ["text"],
+      "description": "AI-generated summary of file purpose and functionality",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    }
+  ],
+  "invertedIndexConfig": {
+    "bm25": {
+      "enabled": true,
+      "b": 0.75,
+      "k1": 1.2
+    },
+    "stopwords": {
+      "preset": "en",
+      "additions": ["TODO", "FIXME", "NOTE"]
+    }
+  },
+  "shardingConfig": {
+    "virtualPerPhysical": 128,
+    "desiredCount": 1,
+    "actualCount": 1,
+    "desiredVirtualCount": 128,
+    "actualVirtualCount": 128,
+    "key": "_id",
+    "strategy": "hash",
+    "function": "murmur3"
+  }
+}

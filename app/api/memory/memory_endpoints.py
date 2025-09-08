@@ -10,8 +10,7 @@ from app.mcp.memory_adapter import UnifiedMemoryAdapter
 
 # OpenAPI Security Scheme
 security = HTTPBearer(
-    scheme_name="Bearer Token",
-    description="Bearer token authentication for memory API access"
+    scheme_name="Bearer Token", description="Bearer token authentication for memory API access"
 )
 
 router = APIRouter(
@@ -22,9 +21,9 @@ router = APIRouter(
             "description": "Too Many Requests - Rate limit exceeded",
             "headers": {
                 "Retry-After": {"description": "Number of seconds to wait before retrying"}
-            }
+            },
         }
-    }
+    },
 )
 
 memory_adapter = UnifiedMemoryAdapter()
@@ -42,8 +41,11 @@ rate_limit_store: Dict[str, Dict[str, List[float]]] = {}
 
 class StandardErrorResponse(BaseModel):
     """Standardized JSON error envelope"""
+
     error: bool = True
-    error_type: str = Field(..., description="Type of error (validation, rate_limit, server_error, etc.)")
+    error_type: str = Field(
+        ..., description="Type of error (validation, rate_limit, server_error, etc.)"
+    )
     message: str = Field(..., description="Human-readable error message")
     details: Optional[Dict[str, Any]] = Field(None, description="Additional error details")
     request_id: Optional[str] = Field(None, description="Unique request identifier for tracking")
@@ -81,8 +83,7 @@ def check_rate_limit(client_id: str, endpoint: str, response: Response) -> bool:
     # Clean old requests outside window
     requests = rate_limit_store[client_id][endpoint]
     rate_limit_store[client_id][endpoint] = [
-        req_time for req_time in requests
-        if current_time - req_time < window
+        req_time for req_time in requests if current_time - req_time < window
     ]
 
     # Check if over limit
@@ -106,17 +107,14 @@ def get_client_id(authorization: Optional[HTTPAuthorizationCredentials] = Depend
 
 
 def create_error_response(
-    error_type: str,
-    message: str,
-    details: Optional[Dict[str, Any]] = None,
-    status_code: int = 500
+    error_type: str, message: str, details: Optional[Dict[str, Any]] = None, status_code: int = 500
 ) -> HTTPException:
     """Create standardized error response"""
     error_data = StandardErrorResponse(
         error_type=error_type,
         message=message,
         details=details,
-        request_id=f"req_{int(time.time() * 1000)}"
+        request_id=f"req_{int(time.time() * 1000)}",
     )
     return HTTPException(status_code=status_code, detail=error_data.dict())
 
@@ -126,7 +124,9 @@ async def memory_health():
     """Memory service health check"""
     try:
         # Test memory adapter connectivity
-        health_status = await memory_adapter.health_check() if hasattr(memory_adapter, 'health_check') else True
+        health_status = (
+            await memory_adapter.health_check() if hasattr(memory_adapter, "health_check") else True
+        )
 
         return {
             "status": "healthy" if health_status else "degraded",
@@ -135,15 +135,15 @@ async def memory_health():
             "version": "1.0.0",
             "checks": {
                 "memory_adapter": "healthy" if health_status else "failed",
-                "rate_limiting": "operational"
-            }
+                "rate_limiting": "operational",
+            },
         }
     except Exception as e:
         return {
             "status": "unhealthy",
             "timestamp": datetime.now().isoformat(),
             "service": "memory_api",
-            "error": str(e)
+            "error": str(e),
         }
 
 
@@ -152,18 +152,18 @@ async def memory_readiness():
     """Memory service readiness check"""
     try:
         # Check if service is ready to accept requests
-        is_ready = hasattr(memory_adapter, 'store_conversation')
+        is_ready = hasattr(memory_adapter, "store_conversation")
 
         return {
             "ready": is_ready,
             "timestamp": datetime.now().isoformat(),
             "service": "memory_api",
-            "dependencies": {
-                "memory_adapter": "ready" if is_ready else "not_ready"
-            }
+            "dependencies": {"memory_adapter": "ready" if is_ready else "not_ready"},
         }
     except Exception as e:
-        raise create_error_response("service_error", f"Readiness check failed: {str(e)}", status_code=503)
+        raise create_error_response(
+            "service_error", f"Readiness check failed: {str(e)}", status_code=503
+        )
 
 
 @router.get("/live")
@@ -173,7 +173,7 @@ async def memory_liveness():
         "alive": True,
         "timestamp": datetime.now().isoformat(),
         "service": "memory_api",
-        "uptime_check": "passed"
+        "uptime_check": "passed",
     }
 
 
@@ -190,16 +190,14 @@ async def memory_version():
             "memory_retrieval",
             "rate_limiting",
             "standardized_errors",
-            "health_monitoring"
-        ]
+            "health_monitoring",
+        ],
     }
 
 
 @router.post("/store")
 async def store_memory(
-    request: MemoryStoreRequest,
-    response: Response,
-    client_id: str = Depends(get_client_id)
+    request: MemoryStoreRequest, response: Response, client_id: str = Depends(get_client_id)
 ):
     """Store conversation memory with rate limiting and error handling"""
     try:
@@ -208,8 +206,11 @@ async def store_memory(
             raise create_error_response(
                 "rate_limit",
                 "Too many store requests. Please try again later.",
-                {"limit": RATE_LIMITS["store"]["requests"], "window": RATE_LIMITS["store"]["window"]},
-                status_code=429
+                {
+                    "limit": RATE_LIMITS["store"]["requests"],
+                    "window": RATE_LIMITS["store"]["window"],
+                },
+                status_code=429,
             )
 
         # Validate request
@@ -218,11 +219,13 @@ async def store_memory(
                 "validation_error",
                 "Messages cannot be empty",
                 {"field": "messages"},
-                status_code=400
+                status_code=400,
             )
 
         metadata = request.metadata or {}
-        result = await memory_adapter.store_conversation(request.session_id, request.messages, metadata)
+        result = await memory_adapter.store_conversation(
+            request.session_id, request.messages, metadata
+        )
 
         return {
             "success": True,
@@ -230,17 +233,14 @@ async def store_memory(
             "session_id": request.session_id,
             "stored_count": len(request.messages),
             "result": result,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except HTTPException:
         raise
     except Exception as e:
         raise create_error_response(
-            "server_error",
-            "Failed to store memory",
-            {"original_error": str(e)},
-            status_code=500
+            "server_error", "Failed to store memory", {"original_error": str(e)}, status_code=500
         )
 
 
@@ -250,7 +250,7 @@ async def retrieve_memory(
     last_n: int = 10,
     include_system: bool = False,
     response: Response = Response(),
-    client_id: str = Depends(get_client_id)
+    client_id: str = Depends(get_client_id),
 ):
     """Retrieve conversation memory with rate limiting"""
     try:
@@ -259,8 +259,11 @@ async def retrieve_memory(
             raise create_error_response(
                 "rate_limit",
                 "Too many retrieve requests. Please try again later.",
-                {"limit": RATE_LIMITS["retrieve"]["requests"], "window": RATE_LIMITS["retrieve"]["window"]},
-                status_code=429
+                {
+                    "limit": RATE_LIMITS["retrieve"]["requests"],
+                    "window": RATE_LIMITS["retrieve"]["window"],
+                },
+                status_code=429,
             )
 
         # Validate parameters
@@ -269,7 +272,7 @@ async def retrieve_memory(
                 "validation_error",
                 "last_n must be between 1 and 1000",
                 {"field": "last_n", "value": last_n},
-                status_code=400
+                status_code=400,
             )
 
         result = await memory_adapter.retrieve_context(session_id, last_n, include_system)
@@ -279,11 +282,8 @@ async def retrieve_memory(
             "session_id": session_id,
             "retrieved_count": len(result) if isinstance(result, list) else 1,
             "data": result,
-            "parameters": {
-                "last_n": last_n,
-                "include_system": include_system
-            },
-            "timestamp": datetime.now().isoformat()
+            "parameters": {"last_n": last_n, "include_system": include_system},
+            "timestamp": datetime.now().isoformat(),
         }
 
     except HTTPException:
@@ -293,15 +293,13 @@ async def retrieve_memory(
             "server_error",
             "Failed to retrieve memory",
             {"session_id": session_id, "original_error": str(e)},
-            status_code=500
+            status_code=500,
         )
 
 
 @router.post("/search")
 async def search_memory(
-    request: MemorySearchRequest,
-    response: Response,
-    client_id: str = Depends(get_client_id)
+    request: MemorySearchRequest, response: Response, client_id: str = Depends(get_client_id)
 ):
     """Search memory content with advanced filtering"""
     try:
@@ -310,8 +308,11 @@ async def search_memory(
             raise create_error_response(
                 "rate_limit",
                 "Too many search requests. Please try again later.",
-                {"limit": RATE_LIMITS["search"]["requests"], "window": RATE_LIMITS["search"]["window"]},
-                status_code=429
+                {
+                    "limit": RATE_LIMITS["search"]["requests"],
+                    "window": RATE_LIMITS["search"]["window"],
+                },
+                status_code=429,
             )
 
         # Validate query
@@ -320,7 +321,7 @@ async def search_memory(
                 "validation_error",
                 "Search query must be at least 2 characters long",
                 {"field": "query", "min_length": 2},
-                status_code=400
+                status_code=400,
             )
 
         # Execute search (mock implementation for now)
@@ -335,9 +336,9 @@ async def search_memory(
             "search_parameters": {
                 "session_ids": request.session_ids,
                 "max_results": request.max_results,
-                "include_metadata": request.include_metadata
+                "include_metadata": request.include_metadata,
             },
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except HTTPException:
@@ -347,15 +348,12 @@ async def search_memory(
             "server_error",
             "Memory search failed",
             {"query": request.query, "original_error": str(e)},
-            status_code=500
+            status_code=500,
         )
 
 
 @router.delete("/session/{session_id}")
-async def delete_session_memory(
-    session_id: str,
-    client_id: str = Depends(get_client_id)
-):
+async def delete_session_memory(session_id: str, client_id: str = Depends(get_client_id)):
     """Delete all memory for a specific session"""
     try:
         # Mock implementation - would integrate with actual memory deletion
@@ -363,7 +361,7 @@ async def delete_session_memory(
             "success": True,
             "message": f"Memory for session {session_id} deleted successfully",
             "session_id": session_id,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
         }
 
     except Exception as e:
@@ -371,7 +369,7 @@ async def delete_session_memory(
             "server_error",
             "Failed to delete session memory",
             {"session_id": session_id, "original_error": str(e)},
-            status_code=500
+            status_code=500,
         )
 
 
@@ -396,14 +394,19 @@ async def get_memory_stats():
             "rate_limiting": {
                 "total_clients_tracked": total_clients,
                 "active_clients_1h": active_clients,
-                "limits": RATE_LIMITS
+                "limits": RATE_LIMITS,
             },
             "endpoints": {
                 "store": "/api/memory/store",
                 "retrieve": "/api/memory/retrieve/{session_id}",
                 "search": "/api/memory/search",
-                "health_checks": ["/api/memory/health", "/api/memory/ready", "/api/memory/live", "/api/memory/version"]
-            }
+                "health_checks": [
+                    "/api/memory/health",
+                    "/api/memory/ready",
+                    "/api/memory/live",
+                    "/api/memory/version",
+                ],
+            },
         }
 
     except Exception as e:
@@ -411,5 +414,5 @@ async def get_memory_stats():
             "server_error",
             "Failed to retrieve memory statistics",
             {"original_error": str(e)},
-            status_code=500
+            status_code=500,
         )

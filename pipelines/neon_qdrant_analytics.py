@@ -25,9 +25,11 @@ import redis
 try:
     from qdrant_client import QdrantClient
     from qdrant_client.http.models import Distance, VectorParams, PointStruct
+
     QDRANT_AVAILABLE = True
 except ImportError:
     QDRANT_AVAILABLE = False
+
     # Mock classes for when Qdrant is not available
     class QdrantClient:
         def __init__(self, *args, **kwargs):
@@ -56,9 +58,11 @@ except ImportError:
         def __init__(self, *args, **kwargs):
             pass
 
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
 
 class DataDomain(Enum):
     PROPTECH = "proptech"
@@ -66,12 +70,14 @@ class DataDomain(Enum):
     FINANCE = "finance"
     OPERATIONS = "operations"
 
+
 @dataclass
 class AnalyticsQuery:
     domain: DataDomain
     query_type: str
     parameters: Dict[str, Any]
     timestamp: datetime
+
 
 @dataclass
 class PredictionResult:
@@ -82,11 +88,12 @@ class PredictionResult:
     factors: List[str]
     timestamp: datetime
 
+
 class NeonPostgreSQLManager:
     """Manage Neon PostgreSQL for structured data"""
 
     def __init__(self):
-        self.connection_string = os.getenv('NEON_DATABASE_URL')
+        self.connection_string = os.getenv("NEON_DATABASE_URL")
         self.pool = None
 
     async def initialize(self):
@@ -97,10 +104,7 @@ class NeonPostgreSQLManager:
 
         try:
             self.pool = await asyncpg.create_pool(
-                self.connection_string,
-                min_size=2,
-                max_size=10,
-                command_timeout=60
+                self.connection_string, min_size=2, max_size=10, command_timeout=60
             )
 
             # Create domain-specific schemas
@@ -116,7 +120,7 @@ class NeonPostgreSQLManager:
     async def _create_schemas(self):
         """Create domain-specific schemas and tables"""
         schemas = {
-            'proptech': [
+            "proptech": [
                 """
                 CREATE TABLE IF NOT EXISTS proptech.properties (
                     id SERIAL PRIMARY KEY,
@@ -143,9 +147,9 @@ class NeonPostgreSQLManager:
                     risk_score DECIMAL(3,2),
                     created_at TIMESTAMP DEFAULT NOW()
                 );
-                """
+                """,
             ],
-            'sales': [
+            "sales": [
                 """
                 CREATE TABLE IF NOT EXISTS sales.leads (
                     id SERIAL PRIMARY KEY,
@@ -170,9 +174,9 @@ class NeonPostgreSQLManager:
                     sentiment_score DECIMAL(3,2),
                     created_at TIMESTAMP DEFAULT NOW()
                 );
-                """
+                """,
             ],
-            'finance': [
+            "finance": [
                 """
                 CREATE TABLE IF NOT EXISTS finance.revenue (
                     id SERIAL PRIMARY KEY,
@@ -195,8 +199,8 @@ class NeonPostgreSQLManager:
                     model_version VARCHAR(20),
                     created_at TIMESTAMP DEFAULT NOW()
                 );
-                """
-            ]
+                """,
+            ],
         }
 
         async with self.pool.acquire() as conn:
@@ -219,13 +223,20 @@ class NeonPostgreSQLManager:
         async with self.pool.acquire() as conn:
             for prop in properties:
                 try:
-                    await conn.execute("""
+                    await conn.execute(
+                        """
                         INSERT INTO proptech.properties 
                         (address, property_type, square_feet, bedrooms, bathrooms, rent_amount, market_value)
                         VALUES ($1, $2, $3, $4, $5, $6, $7)
-                    """, 
-                    prop['address'], prop['property_type'], prop['square_feet'],
-                    prop['bedrooms'], prop['bathrooms'], prop['rent_amount'], prop['market_value'])
+                    """,
+                        prop["address"],
+                        prop["property_type"],
+                        prop["square_feet"],
+                        prop["bedrooms"],
+                        prop["bathrooms"],
+                        prop["rent_amount"],
+                        prop["market_value"],
+                    )
                     inserted += 1
                 except Exception as e:
                     logger.error(f"Error inserting property data: {e}")
@@ -272,12 +283,13 @@ class NeonPostgreSQLManager:
                 return {
                     "revenue_by_month": [dict(row) for row in revenue_data],
                     "recurring_breakdown": [dict(row) for row in recurring_data],
-                    "analysis_period": {"start": start_date, "end": end_date}
+                    "analysis_period": {"start": start_date, "end": end_date},
                 }
 
         except Exception as e:
             logger.error(f"Error getting revenue analytics: {e}")
             return {}
+
 
 class QdrantVectorManager:
     """Manage Qdrant for vector embeddings and semantic search"""
@@ -285,15 +297,15 @@ class QdrantVectorManager:
     def __init__(self):
         self.client = self._init_qdrant()
         self.collections = {
-            'proptech_embeddings': 'proptech-vectors',
-            'sales_embeddings': 'sales-vectors',
-            'finance_embeddings': 'finance-vectors'
+            "proptech_embeddings": "proptech-vectors",
+            "sales_embeddings": "sales-vectors",
+            "finance_embeddings": "finance-vectors",
         }
 
     def _init_qdrant(self) -> QdrantClient:
         """Initialize Qdrant client"""
-        qdrant_url = os.getenv('QDRANT_URL', 'http://localhost:6333')
-        qdrant_api_key = os.getenv('QDRANT_API_KEY')
+        qdrant_url = os.getenv("QDRANT_URL", "http://localhost:6333")
+        qdrant_api_key = os.getenv("QDRANT_API_KEY")
 
         if qdrant_api_key:
             return QdrantClient(url=qdrant_url, api_key=qdrant_api_key)
@@ -312,9 +324,8 @@ class QdrantVectorManager:
                     self.client.create_collection(
                         collection_name=collection_name,
                         vectors_config=VectorParams(
-                            size=768,  # HuggingFace BERT embeddings
-                            distance=Distance.COSINE
-                        )
+                            size=768, distance=Distance.COSINE  # HuggingFace BERT embeddings
+                        ),
                     )
                     logger.info(f"Created Qdrant collection: {collection_name}")
 
@@ -338,23 +349,22 @@ class QdrantVectorManager:
 
                 # Create point
                 point = PointStruct(
-                    id=hash(prop['address']) % (2**63),  # Ensure positive ID
+                    id=hash(prop["address"]) % (2**63),  # Ensure positive ID
                     vector=embedding,
                     payload={
                         "domain": "proptech",
-                        "property_type": prop['property_type'],
-                        "address": prop['address'],
-                        "rent_amount": prop['rent_amount'],
-                        "market_value": prop['market_value'],
+                        "property_type": prop["property_type"],
+                        "address": prop["address"],
+                        "rent_amount": prop["rent_amount"],
+                        "market_value": prop["market_value"],
                         "text_representation": text,
-                        "indexed_at": datetime.now().isoformat()
-                    }
+                        "indexed_at": datetime.now().isoformat(),
+                    },
                 )
 
                 # Insert into Qdrant
                 self.client.upsert(
-                    collection_name=self.collections['proptech_embeddings'],
-                    points=[point]
+                    collection_name=self.collections["proptech_embeddings"], points=[point]
                 )
 
                 embedded += 1
@@ -376,9 +386,9 @@ class QdrantVectorManager:
         """Perform semantic search across domain data"""
         try:
             collection_map = {
-                'proptech': self.collections['proptech_embeddings'],
-                'sales': self.collections['sales_embeddings'],
-                'finance': self.collections['finance_embeddings']
+                "proptech": self.collections["proptech_embeddings"],
+                "sales": self.collections["sales_embeddings"],
+                "finance": self.collections["finance_embeddings"],
             }
 
             collection_name = collection_map.get(domain)
@@ -393,17 +403,13 @@ class QdrantVectorManager:
                 collection_name=collection_name,
                 query_vector=query_embedding,
                 limit=limit,
-                with_payload=True
+                with_payload=True,
             )
 
             # Format results
             results = []
             for result in search_results:
-                results.append({
-                    "score": result.score,
-                    "payload": result.payload,
-                    "domain": domain
-                })
+                results.append({"score": result.score, "payload": result.payload, "domain": domain})
 
             return results
 
@@ -411,11 +417,12 @@ class QdrantVectorManager:
             logger.error(f"Error in semantic search: {e}")
             return []
 
+
 class EstuaryDataPipeline:
     """Manage Estuary data pipelines for real-time sync"""
 
     def __init__(self):
-        self.api_token = os.getenv('ESTUARY_API_TOKEN')
+        self.api_token = os.getenv("ESTUARY_API_TOKEN")
         self.base_url = "https://api.estuary.dev"
 
     async def create_sync_pipeline(self, source_config: Dict, destination_config: Dict) -> Dict:
@@ -431,8 +438,8 @@ class EstuaryDataPipeline:
                 "destination": destination_config,
                 "transform": {
                     "type": "embedding_generation",
-                    "model": "sentence-transformers/all-MiniLM-L6-v2"
-                }
+                    "model": "sentence-transformers/all-MiniLM-L6-v2",
+                },
             }
 
             async with httpx.AsyncClient() as client:
@@ -440,10 +447,10 @@ class EstuaryDataPipeline:
                     f"{self.base_url}/v1/captures",
                     headers={
                         "Authorization": f"Bearer {self.api_token}",
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
                     json=pipeline_config,
-                    timeout=30.0
+                    timeout=30.0,
                 )
 
                 if response.status_code == 201:
@@ -458,6 +465,7 @@ class EstuaryDataPipeline:
             logger.error(f"Error creating Estuary pipeline: {e}")
             return {"error": str(e)}
 
+
 class PredictiveAnalyticsEngine:
     """AI-powered predictive analytics using cross-database insights"""
 
@@ -465,34 +473,34 @@ class PredictiveAnalyticsEngine:
         self.neon = neon_manager
         self.qdrant = qdrant_manager
         self.redis_client = self._init_redis()
-        self.huggingface_token = os.getenv('HUGGINGFACE_API_TOKEN')
+        self.huggingface_token = os.getenv("HUGGINGFACE_API_TOKEN")
 
     def _init_redis(self) -> redis.Redis:
         """Initialize Redis for caching predictions"""
-        redis_url = os.getenv('REDIS_URL', '${REDIS_URL}')
+        redis_url = os.getenv("REDIS_URL", "${REDIS_URL}")
         return redis.from_url(redis_url, decode_responses=True)
 
     async def forecast_revenue(self, forecast_months: int = 6) -> PredictionResult:
         """Forecast revenue using historical data and market trends"""
         try:
             # Get historical revenue data
-            end_date = datetime.now().strftime('%Y-%m-%d')
-            start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+            end_date = datetime.now().strftime("%Y-%m-%d")
+            start_date = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
 
             revenue_data = await self.neon.get_revenue_analytics(start_date, end_date)
 
-            if not revenue_data.get('revenue_by_month'):
+            if not revenue_data.get("revenue_by_month"):
                 return PredictionResult(
                     domain=DataDomain.FINANCE,
                     prediction_type="revenue_forecast",
                     value=0.0,
                     confidence=0.0,
                     factors=["insufficient_data"],
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
                 )
 
             # Simple trend analysis (in production, use ML models)
-            monthly_revenues = [row['total_revenue'] for row in revenue_data['revenue_by_month']]
+            monthly_revenues = [row["total_revenue"] for row in revenue_data["revenue_by_month"]]
 
             # Calculate trend
             if len(monthly_revenues) >= 3:
@@ -508,7 +516,7 @@ class PredictiveAnalyticsEngine:
 
             # Calculate confidence based on data consistency
             revenue_variance = np.var(monthly_revenues) if len(monthly_revenues) > 1 else 0
-            confidence = max(0.5, 1.0 - (revenue_variance / (last_revenue ** 2)))
+            confidence = max(0.5, 1.0 - (revenue_variance / (last_revenue**2)))
 
             # Identify key factors
             factors = ["historical_trend", "seasonal_patterns"]
@@ -523,13 +531,15 @@ class PredictiveAnalyticsEngine:
                 value=float(projected_revenue),
                 confidence=float(confidence),
                 factors=factors,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
             # Cache result
             await self._cache_prediction(result)
 
-            logger.info(f"Revenue forecast: ${projected_revenue:,.2f} (confidence: {confidence:.2%})")
+            logger.info(
+                f"Revenue forecast: ${projected_revenue:,.2f} (confidence: {confidence:.2%})"
+            )
             return result
 
         except Exception as e:
@@ -540,7 +550,7 @@ class PredictiveAnalyticsEngine:
                 value=0.0,
                 confidence=0.0,
                 factors=["error"],
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
     async def predict_property_value(self, property_features: Dict) -> PredictionResult:
@@ -550,9 +560,7 @@ class PredictiveAnalyticsEngine:
             query = f"{property_features['property_type']} {property_features['bedrooms']} bedroom {property_features['square_feet']} sqft"
 
             similar_properties = await self.qdrant.semantic_search(
-                query=query,
-                domain="proptech",
-                limit=10
+                query=query, domain="proptech", limit=10
             )
 
             if not similar_properties:
@@ -562,24 +570,24 @@ class PredictiveAnalyticsEngine:
                     value=0.0,
                     confidence=0.0,
                     factors=["no_comparable_data"],
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(),
                 )
 
             # Calculate average market value of similar properties
             market_values = []
             for prop in similar_properties:
-                if prop['payload'].get('market_value'):
-                    market_values.append(float(prop['payload']['market_value']))
+                if prop["payload"].get("market_value"):
+                    market_values.append(float(prop["payload"]["market_value"]))
 
             if not market_values:
-                estimated_value = property_features['square_feet'] * 200  # $200/sqft default
+                estimated_value = property_features["square_feet"] * 200  # $200/sqft default
                 confidence = 0.3
             else:
                 estimated_value = sum(market_values) / len(market_values)
                 confidence = min(0.9, len(market_values) / 10.0)  # More data = higher confidence
 
             # Adjust for property-specific features
-            if property_features.get('bedrooms', 0) > 3:
+            if property_features.get("bedrooms", 0) > 3:
                 estimated_value *= 1.1  # Premium for larger properties
 
             factors = ["comparable_properties", "market_trends"]
@@ -592,12 +600,14 @@ class PredictiveAnalyticsEngine:
                 value=float(estimated_value),
                 confidence=float(confidence),
                 factors=factors,
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
             await self._cache_prediction(result)
 
-            logger.info(f"Property value prediction: ${estimated_value:,.2f} (confidence: {confidence:.2%})")
+            logger.info(
+                f"Property value prediction: ${estimated_value:,.2f} (confidence: {confidence:.2%})"
+            )
             return result
 
         except Exception as e:
@@ -608,7 +618,7 @@ class PredictiveAnalyticsEngine:
                 value=0.0,
                 confidence=0.0,
                 factors=["error"],
-                timestamp=datetime.now()
+                timestamp=datetime.now(),
             )
 
     async def _cache_prediction(self, result: PredictionResult):
@@ -622,13 +632,14 @@ class PredictiveAnalyticsEngine:
                 "value": result.value,
                 "confidence": result.confidence,
                 "factors": result.factors,
-                "timestamp": result.timestamp.isoformat()
+                "timestamp": result.timestamp.isoformat(),
             }
 
             self.redis_client.setex(cache_key, 3600, json.dumps(cache_data))  # 1 hour TTL
 
         except Exception as e:
             logger.error(f"Error caching prediction: {e}")
+
 
 class CrossDatabaseAnalyticsMCP:
     """Main MCP server for cross-database analytics"""
@@ -653,8 +664,7 @@ class CrossDatabaseAnalyticsMCP:
         if neon_success and qdrant_success:
             # Initialize analytics engine
             self.analytics_engine = PredictiveAnalyticsEngine(
-                self.neon_manager,
-                self.qdrant_manager
+                self.neon_manager, self.qdrant_manager
             )
 
             # Load sample data for testing
@@ -676,7 +686,7 @@ class CrossDatabaseAnalyticsMCP:
                 "bedrooms": 2,
                 "bathrooms": 2.0,
                 "rent_amount": 4500.00,
-                "market_value": 850000.00
+                "market_value": 850000.00,
             },
             {
                 "address": "456 Oak Ave, Austin, TX",
@@ -685,7 +695,7 @@ class CrossDatabaseAnalyticsMCP:
                 "bedrooms": 3,
                 "bathrooms": 2.5,
                 "rent_amount": 2800.00,
-                "market_value": 450000.00
+                "market_value": 450000.00,
             },
             {
                 "address": "789 Pine St, Denver, CO",
@@ -694,8 +704,8 @@ class CrossDatabaseAnalyticsMCP:
                 "bedrooms": 1,
                 "bathrooms": 1.0,
                 "rent_amount": 2200.00,
-                "market_value": 320000.00
-            }
+                "market_value": 320000.00,
+            },
         ]
 
         # Insert into Neon
@@ -712,12 +722,10 @@ class CrossDatabaseAnalyticsMCP:
         try:
             if query.query_type == "revenue_forecast":
                 result = await self.analytics_engine.forecast_revenue(
-                    forecast_months=query.parameters.get('months', 6)
+                    forecast_months=query.parameters.get("months", 6)
                 )
             elif query.query_type == "property_value_prediction":
-                result = await self.analytics_engine.predict_property_value(
-                    query.parameters
-                )
+                result = await self.analytics_engine.predict_property_value(query.parameters)
             else:
                 return {"error": f"Unsupported query type: {query.query_type}"}
 
@@ -727,12 +735,13 @@ class CrossDatabaseAnalyticsMCP:
                 "value": result.value,
                 "confidence": result.confidence,
                 "factors": result.factors,
-                "timestamp": result.timestamp.isoformat()
+                "timestamp": result.timestamp.isoformat(),
             }
 
         except Exception as e:
             logger.error(f"Error handling analytics query: {e}")
             return {"error": str(e)}
+
 
 async def main():
     """Main function for testing"""
@@ -746,7 +755,7 @@ async def main():
         domain=DataDomain.FINANCE,
         query_type="revenue_forecast",
         parameters={"months": 6},
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )
 
     result = await mcp.handle_analytics_query(revenue_query)
@@ -760,13 +769,14 @@ async def main():
             "property_type": "apartment",
             "square_feet": 1100,
             "bedrooms": 2,
-            "bathrooms": 1.5
+            "bathrooms": 1.5,
         },
-        timestamp=datetime.now()
+        timestamp=datetime.now(),
     )
 
     result = await mcp.handle_analytics_query(property_query)
     print(f"Property value prediction result: {result}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

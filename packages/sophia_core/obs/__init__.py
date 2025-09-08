@@ -46,7 +46,6 @@ __all__ = [
     "log_swarm_activity",
     "log_tool_execution",
     "log_memory_operation",
-
     # Metrics
     "MetricsCollector",
     "Counter",
@@ -61,5 +60,5 @@ __all__ = [
     "agent_metrics",
     "swarm_metrics",
     "tool_metrics",
-    "memory_metrics"
+    "memory_metrics",
 ]

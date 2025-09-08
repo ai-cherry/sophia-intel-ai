@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class SwarmState(str, Enum):
     """Swarm lifecycle states."""
+
     INITIALIZING = "initializing"
     IDLE = "idle"
     PLANNING = "planning"
@@ -37,29 +38,32 @@ class SwarmState(str, Enum):
 
 class SwarmTopology(str, Enum):
     """Swarm organization topology patterns."""
-    HIERARCHICAL = "hierarchical"      # Tree structure with leader/followers
-    PEER_TO_PEER = "peer_to_peer"      # Flat network, all agents equal
-    RING = "ring"                      # Circular communication pattern
-    STAR = "star"                      # Central coordinator with spokes
-    MESH = "mesh"                      # Fully connected network
-    HYBRID = "hybrid"                  # Combination of patterns
+
+    HIERARCHICAL = "hierarchical"  # Tree structure with leader/followers
+    PEER_TO_PEER = "peer_to_peer"  # Flat network, all agents equal
+    RING = "ring"  # Circular communication pattern
+    STAR = "star"  # Central coordinator with spokes
+    MESH = "mesh"  # Fully connected network
+    HYBRID = "hybrid"  # Combination of patterns
 
 
 class SwarmRole(str, Enum):
     """Roles agents can play in swarms."""
-    COORDINATOR = "coordinator"        # Manages and coordinates other agents
-    EXECUTOR = "executor"             # Executes assigned tasks
-    SPECIALIST = "specialist"         # Domain expert for specific tasks
-    COMMUNICATOR = "communicator"     # Handles external communications
-    ANALYST = "analyst"               # Analyzes data and provides insights
-    MONITOR = "monitor"               # Monitors swarm performance and health
-    LEARNER = "learner"               # Focuses on learning and adaptation
+
+    COORDINATOR = "coordinator"  # Manages and coordinates other agents
+    EXECUTOR = "executor"  # Executes assigned tasks
+    SPECIALIST = "specialist"  # Domain expert for specific tasks
+    COMMUNICATOR = "communicator"  # Handles external communications
+    ANALYST = "analyst"  # Analyzes data and provides insights
+    MONITOR = "monitor"  # Monitors swarm performance and health
+    LEARNER = "learner"  # Focuses on learning and adaptation
 
 
 class SwarmMember(BaseModel):
     """
     Represents an agent's membership in a swarm.
     """
+
     agent_id: str
     role: SwarmRole
     capabilities: List[str] = Field(default_factory=list)
@@ -83,7 +87,7 @@ class SwarmMember(BaseModel):
     max_concurrent_tasks: int = 3
     current_task_count: int = 0
 
-    @validator('collaborates_with', pre=True)
+    @validator("collaborates_with", pre=True)
     def convert_collaborates_to_set(cls, v):
         if isinstance(v, list):
             return set(v)
@@ -95,10 +99,7 @@ class SwarmMember(BaseModel):
 
     def can_accept_task(self) -> bool:
         """Check if member can accept additional tasks."""
-        return (
-            self.status == "active" and
-            self.current_task_count < self.max_concurrent_tasks
-        )
+        return self.status == "active" and self.current_task_count < self.max_concurrent_tasks
 
     def assign_task(self) -> None:
         """Record task assignment."""
@@ -118,8 +119,8 @@ class SwarmMember(BaseModel):
         total_tasks = self.tasks_completed + self.tasks_failed
         if total_tasks > 1:
             self.average_response_time = (
-                (self.average_response_time * (total_tasks - 1) + response_time) / total_tasks
-            )
+                self.average_response_time * (total_tasks - 1) + response_time
+            ) / total_tasks
         else:
             self.average_response_time = response_time
 
@@ -141,6 +142,7 @@ class SwarmTask(BaseModel):
     """
     Task to be executed by the swarm.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     title: str
     description: str
@@ -211,18 +213,15 @@ class SwarmTask(BaseModel):
     @property
     def can_retry(self) -> bool:
         """Check if task can be retried."""
-        return (
-            self.status == TaskStatus.FAILED and
-            self.retry_count < self.max_retries
-        )
+        return self.status == TaskStatus.FAILED and self.retry_count < self.max_retries
 
     @property
     def is_overdue(self) -> bool:
         """Check if task is overdue."""
         return (
-            self.deadline is not None and
-            self.status not in [TaskStatus.COMPLETED, TaskStatus.CANCELLED] and
-            datetime.utcnow() > self.deadline
+            self.deadline is not None
+            and self.status not in [TaskStatus.COMPLETED, TaskStatus.CANCELLED]
+            and datetime.utcnow() > self.deadline
         )
 
     def can_be_executed_by(self, member: SwarmMember) -> bool:
@@ -245,6 +244,7 @@ class SwarmMessage(BaseModel):
     """
     Message for communication within swarm.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     sender_id: str
     recipient_id: Optional[str] = None  # None for broadcast
@@ -276,10 +276,7 @@ class SwarmMessage(BaseModel):
     @property
     def is_expired(self) -> bool:
         """Check if message has expired."""
-        return (
-            self.expires_at is not None and
-            datetime.utcnow() > self.expires_at
-        )
+        return self.expires_at is not None and datetime.utcnow() > self.expires_at
 
     @property
     def is_broadcast(self) -> bool:
@@ -291,6 +288,7 @@ class SwarmConfig(BaseModel):
     """
     Configuration for swarm initialization and operation.
     """
+
     swarm_id: str = Field(default_factory=lambda: str(uuid4()))
     name: str
     description: str = ""
@@ -332,7 +330,7 @@ class SwarmConfig(BaseModel):
     def validate_config(self) -> List[str]:
         """
         Validate swarm configuration.
-        
+
         Returns:
             List[str]: List of validation issues
         """
@@ -359,16 +357,19 @@ class SwarmConfig(BaseModel):
 # Exception classes
 class SwarmError(Exception):
     """Base class for swarm errors."""
+
     pass
 
 
 class SwarmInitializationError(SwarmError):
     """Raised when swarm initialization fails."""
+
     pass
 
 
 class SwarmCoordinationError(SwarmError):
     """Raised when swarm coordination fails."""
+
     pass
 
 
@@ -377,14 +378,10 @@ class BaseSwarm(ABC):
     Abstract base class for AI agent swarms.
     """
 
-    def __init__(
-        self,
-        config: SwarmConfig,
-        memory_manager: Optional[MemoryManager] = None
-    ):
+    def __init__(self, config: SwarmConfig, memory_manager: Optional[MemoryManager] = None):
         """
         Initialize swarm with configuration.
-        
+
         Args:
             config: Swarm configuration
             memory_manager: Optional shared memory manager
@@ -414,7 +411,7 @@ class BaseSwarm(ABC):
             "tasks_failed": 0,
             "messages_sent": 0,
             "coordination_cycles": 0,
-            "uptime_seconds": 0
+            "uptime_seconds": 0,
         }
 
         # Coordination state
@@ -428,7 +425,7 @@ class BaseSwarm(ABC):
     async def coordinate(self) -> None:
         """
         Execute coordination cycle for the swarm.
-        
+
         This method should be overridden by specific swarm implementations
         to define their coordination behavior.
         """
@@ -438,10 +435,10 @@ class BaseSwarm(ABC):
     async def distribute_task(self, task: SwarmTask) -> bool:
         """
         Distribute task to appropriate agent(s).
-        
+
         Args:
             task: Task to distribute
-            
+
         Returns:
             bool: True if task was successfully distributed
         """
@@ -450,7 +447,7 @@ class BaseSwarm(ABC):
     async def initialize(self) -> None:
         """
         Initialize the swarm and prepare for operation.
-        
+
         Raises:
             SwarmInitializationError: If initialization fails
         """
@@ -510,11 +507,11 @@ class BaseSwarm(ABC):
     async def add_member(self, agent: BaseAgent, role: SwarmRole) -> bool:
         """
         Add agent as swarm member.
-        
+
         Args:
             agent: Agent to add
             role: Role for the agent in swarm
-            
+
         Returns:
             bool: True if agent was added successfully
         """
@@ -532,7 +529,7 @@ class BaseSwarm(ABC):
         member = SwarmMember(
             agent_id=agent_id,
             role=role,
-            capabilities=list(agent.config.available_tools)  # Use tools as capabilities
+            capabilities=list(agent.config.available_tools),  # Use tools as capabilities
         )
 
         self.members[agent_id] = member
@@ -544,10 +541,10 @@ class BaseSwarm(ABC):
     async def remove_member(self, agent_id: str) -> bool:
         """
         Remove agent from swarm.
-        
+
         Args:
             agent_id: Agent ID to remove
-            
+
         Returns:
             bool: True if agent was removed successfully
         """
@@ -570,7 +567,7 @@ class BaseSwarm(ABC):
     async def submit_task(self, task: SwarmTask) -> None:
         """
         Submit task to swarm for execution.
-        
+
         Args:
             task: Task to submit
         """
@@ -587,7 +584,7 @@ class BaseSwarm(ABC):
     async def send_message(self, message: SwarmMessage) -> None:
         """
         Send message within swarm.
-        
+
         Args:
             message: Message to send
         """
@@ -604,7 +601,7 @@ class BaseSwarm(ABC):
     async def broadcast_message(self, message: SwarmMessage) -> None:
         """
         Broadcast message to all appropriate members.
-        
+
         Args:
             message: Message to broadcast
         """
@@ -630,22 +627,20 @@ class BaseSwarm(ABC):
                     recipient_id=recipient_id,
                     message_type=message.message_type,
                     content=message.content,
-                    context=message.context.copy()
+                    context=message.context.copy(),
                 )
                 await self.send_message(recipient_message)
 
     def get_available_members(
-        self,
-        required_capabilities: List[str] = None,
-        preferred_roles: List[SwarmRole] = None
+        self, required_capabilities: List[str] = None, preferred_roles: List[SwarmRole] = None
     ) -> List[SwarmMember]:
         """
         Get available members matching criteria.
-        
+
         Args:
             required_capabilities: Required capabilities
             preferred_roles: Preferred roles
-            
+
         Returns:
             List[SwarmMember]: Available members
         """
@@ -669,11 +664,13 @@ class BaseSwarm(ABC):
             available.append(member)
 
         # Sort by availability and performance
-        available.sort(key=lambda m: (
-            m.current_task_count,  # Prefer less busy members
-            -m.success_rate,       # Prefer higher success rate
-            m.average_response_time  # Prefer faster members
-        ))
+        available.sort(
+            key=lambda m: (
+                m.current_task_count,  # Prefer less busy members
+                -m.success_rate,  # Prefer higher success rate
+                m.average_response_time,  # Prefer faster members
+            )
+        )
 
         return available
 
@@ -725,10 +722,7 @@ class BaseSwarm(ABC):
             logger.warning(f"Found {len(inactive_members)} inactive members")
 
         # Check for overdue tasks
-        overdue_tasks = [
-            task for task in self.active_tasks.values()
-            if task.is_overdue
-        ]
+        overdue_tasks = [task for task in self.active_tasks.values() if task.is_overdue]
 
         if overdue_tasks:
             logger.warning(f"Found {len(overdue_tasks)} overdue tasks")
@@ -750,7 +744,7 @@ class BaseSwarm(ABC):
                     recipient_id=recipient_id,
                     content=message.content,
                     message_type=message.message_type,
-                    context=message.context
+                    context=message.context,
                 )
 
                 # This would integrate with agent messaging system
@@ -760,7 +754,7 @@ class BaseSwarm(ABC):
     def get_swarm_status(self) -> Dict[str, Any]:
         """
         Get current swarm status.
-        
+
         Returns:
             Dict[str, Any]: Swarm status information
         """
@@ -784,17 +778,15 @@ class BaseSwarm(ABC):
             "members": {
                 "total": len(self.members),
                 "by_role": members_by_role,
-                "by_status": members_by_status
+                "by_status": members_by_status,
             },
             "tasks": {
                 "queued": len(self.task_queue),
                 "active": len(self.active_tasks),
-                "completed": len(self.completed_tasks)
+                "completed": len(self.completed_tasks),
             },
-            "messages": {
-                "queued": len(self.message_queue)
-            },
-            "metrics": self.metrics.copy()
+            "messages": {"queued": len(self.message_queue)},
+            "metrics": self.metrics.copy(),
         }
 
 
@@ -841,8 +833,7 @@ class SwarmCoordinator(BaseSwarm):
 
         # Find best member for task
         available_members = self.get_available_members(
-            task.required_capabilities,
-            task.preferred_roles
+            task.required_capabilities, task.preferred_roles
         )
 
         if not available_members:
@@ -870,7 +861,8 @@ class SwarmCoordinator(BaseSwarm):
 
         # Find new coordinator
         coordinators = [
-            m for m in self.members.values()
+            m
+            for m in self.members.values()
             if m.role == SwarmRole.COORDINATOR and m.status == "active"
         ]
 
@@ -927,13 +919,11 @@ class SwarmCoordinator(BaseSwarm):
 
         # Simple load balancing: reassign tasks from overloaded members
         overloaded_members = [
-            m for m in self.members.values()
-            if m.current_task_count > m.max_concurrent_tasks
+            m for m in self.members.values() if m.current_task_count > m.max_concurrent_tasks
         ]
 
         underloaded_members = [
-            m for m in self.members.values()
-            if m.can_accept_task() and m.current_task_count == 0
+            m for m in self.members.values() if m.can_accept_task() and m.current_task_count == 0
         ]
 
         if overloaded_members and underloaded_members:
@@ -965,8 +955,7 @@ class SwarmExecutor(BaseSwarm):
     async def distribute_task(self, task: SwarmTask) -> bool:
         """Fast task distribution with minimal overhead."""
         available_members = self.get_available_members(
-            task.required_capabilities,
-            task.preferred_roles
+            task.required_capabilities, task.preferred_roles
         )
 
         if not available_members:
@@ -985,8 +974,7 @@ class SwarmExecutor(BaseSwarm):
         """Distribute tasks with minimal processing."""
         distributed = 0
         max_to_distribute = min(
-            len(self.task_queue),
-            self.config.max_concurrent_tasks - len(self.active_tasks)
+            len(self.task_queue), self.config.max_concurrent_tasks - len(self.active_tasks)
         )
 
         while distributed < max_to_distribute and self.task_queue:
@@ -1073,8 +1061,7 @@ class PeerToPeerSwarm(BaseSwarm):
     async def distribute_task(self, task: SwarmTask) -> bool:
         """Distribute task using peer consensus."""
         available_members = self.get_available_members(
-            task.required_capabilities,
-            task.preferred_roles
+            task.required_capabilities, task.preferred_roles
         )
 
         if not available_members:
@@ -1082,6 +1069,7 @@ class PeerToPeerSwarm(BaseSwarm):
 
         # Use simple random selection for P2P
         import random
+
         selected_member = random.choice(available_members)
 
         task.assign_to_agent(selected_member.agent_id)
@@ -1094,8 +1082,7 @@ class PeerToPeerSwarm(BaseSwarm):
         """Distribute task assignment across peers."""
         # Each active member can claim tasks
         active_members = [
-            m for m in self.members.values()
-            if m.status == "active" and m.can_accept_task()
+            m for m in self.members.values() if m.status == "active" and m.can_accept_task()
         ]
 
         for i, task in enumerate(list(self.task_queue)):
@@ -1115,7 +1102,7 @@ class PeerToPeerSwarm(BaseSwarm):
         status_message = SwarmMessage(
             sender_id="swarm_system",
             message_type="status_update",
-            content=json.dumps(self.get_swarm_status())
+            content=json.dumps(self.get_swarm_status()),
         )
 
         await self.broadcast_message(status_message)
@@ -1133,7 +1120,7 @@ class SwarmRegistry:
     def register_swarm(self, swarm: BaseSwarm) -> None:
         """
         Register a swarm.
-        
+
         Args:
             swarm: Swarm to register
         """
@@ -1144,10 +1131,10 @@ class SwarmRegistry:
     def unregister_swarm(self, swarm_id: str) -> bool:
         """
         Unregister a swarm.
-        
+
         Args:
             swarm_id: Swarm ID to unregister
-            
+
         Returns:
             bool: True if swarm was unregistered
         """
@@ -1160,10 +1147,10 @@ class SwarmRegistry:
     def get_swarm(self, swarm_id: str) -> Optional[BaseSwarm]:
         """
         Get swarm by ID.
-        
+
         Args:
             swarm_id: Swarm ID
-            
+
         Returns:
             Optional[BaseSwarm]: Swarm if found
         """
@@ -1172,7 +1159,7 @@ class SwarmRegistry:
     def list_swarms(self) -> List[str]:
         """
         List all registered swarm IDs.
-        
+
         Returns:
             List[str]: Swarm IDs
         """
@@ -1189,7 +1176,7 @@ class SwarmRegistry:
     def get_registry_status(self) -> Dict[str, Any]:
         """
         Get registry status.
-        
+
         Returns:
             Dict[str, Any]: Registry status information
         """
@@ -1210,7 +1197,6 @@ class SwarmRegistry:
             "swarms_by_state": swarms_by_state,
             "swarms_by_topology": swarms_by_topology,
             "swarm_details": {
-                swarm_id: swarm.get_swarm_status()
-                for swarm_id, swarm in self._swarms.items()
-            }
+                swarm_id: swarm.get_swarm_status() for swarm_id, swarm in self._swarms.items()
+            },
         }

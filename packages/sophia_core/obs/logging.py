@@ -23,6 +23,7 @@ from ..config.helpers import redact_sensitive_data
 
 class LogLevel(str, Enum):
     """Log levels for structured logging."""
+
     DEBUG = "DEBUG"
     INFO = "INFO"
     WARNING = "WARNING"
@@ -34,6 +35,7 @@ class LogRecord(BaseModel):
     """
     Structured log record with automatic redaction.
     """
+
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     level: LogLevel
     message: str
@@ -60,10 +62,10 @@ class LogRecord(BaseModel):
     def to_dict(self, redact: bool = True) -> Dict[str, Any]:
         """
         Convert log record to dictionary.
-        
+
         Args:
             redact: Whether to redact sensitive information
-            
+
         Returns:
             Dict[str, Any]: Log record as dictionary
         """
@@ -71,7 +73,7 @@ class LogRecord(BaseModel):
             "timestamp": self.timestamp.isoformat(),
             "level": self.level.value,
             "message": self.message,
-            "component": self.component
+            "component": self.component,
         }
 
         # Add optional fields
@@ -111,14 +113,14 @@ class LogRecord(BaseModel):
     def to_json(self, redact: bool = True) -> str:
         """
         Convert log record to JSON string.
-        
+
         Args:
             redact: Whether to redact sensitive information
-            
+
         Returns:
             str: JSON representation of log record
         """
-        return json.dumps(self.to_dict(redact), default=str, separators=(',', ':'))
+        return json.dumps(self.to_dict(redact), default=str, separators=(",", ":"))
 
 
 class RedactingFormatter(logging.Formatter):
@@ -130,11 +132,11 @@ class RedactingFormatter(logging.Formatter):
         self,
         redact_patterns: Optional[Dict[str, re.Pattern]] = None,
         include_traceback: bool = True,
-        redact_enabled: bool = True
+        redact_enabled: bool = True,
     ):
         """
         Initialize redacting formatter.
-        
+
         Args:
             redact_patterns: Custom redaction patterns
             include_traceback: Whether to include tracebacks
@@ -148,15 +150,15 @@ class RedactingFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """
         Format log record as structured JSON with redaction.
-        
+
         Args:
             record: Python log record
-            
+
         Returns:
             str: Formatted JSON string
         """
         # Extract component from logger name
-        component = record.name.split('.')[-1] if '.' in record.name else record.name
+        component = record.name.split(".")[-1] if "." in record.name else record.name
 
         # Map Python log level to our enum
         level_mapping = {
@@ -164,41 +166,58 @@ class RedactingFormatter(logging.Formatter):
             logging.INFO: LogLevel.INFO,
             logging.WARNING: LogLevel.WARNING,
             logging.ERROR: LogLevel.ERROR,
-            logging.CRITICAL: LogLevel.CRITICAL
+            logging.CRITICAL: LogLevel.CRITICAL,
         }
         level = level_mapping.get(record.levelno, LogLevel.INFO)
 
         # Create structured log record
-        log_record = LogRecord(
-            level=level,
-            message=record.getMessage(),
-            component=component
-        )
+        log_record = LogRecord(level=level, message=record.getMessage(), component=component)
 
         # Extract context from record attributes
-        if hasattr(record, 'session_id'):
+        if hasattr(record, "session_id"):
             log_record.session_id = record.session_id
-        if hasattr(record, 'agent_id'):
+        if hasattr(record, "agent_id"):
             log_record.agent_id = record.agent_id
-        if hasattr(record, 'swarm_id'):
+        if hasattr(record, "swarm_id"):
             log_record.swarm_id = record.swarm_id
-        if hasattr(record, 'task_id'):
+        if hasattr(record, "task_id"):
             log_record.task_id = record.task_id
-        if hasattr(record, 'duration_ms'):
+        if hasattr(record, "duration_ms"):
             log_record.duration_ms = record.duration_ms
-        if hasattr(record, 'memory_mb'):
+        if hasattr(record, "memory_mb"):
             log_record.memory_mb = record.memory_mb
 
         # Add custom fields from extra
         custom_fields = {}
         for key, value in record.__dict__.items():
             if key not in [
-                'name', 'msg', 'args', 'levelname', 'levelno', 'pathname',
-                'filename', 'module', 'exc_info', 'exc_text', 'stack_info',
-                'lineno', 'funcName', 'created', 'msecs', 'relativeCreated',
-                'thread', 'threadName', 'processName', 'process', 'message',
-                'session_id', 'agent_id', 'swarm_id', 'task_id', 'duration_ms',
-                'memory_mb'
+                "name",
+                "msg",
+                "args",
+                "levelname",
+                "levelno",
+                "pathname",
+                "filename",
+                "module",
+                "exc_info",
+                "exc_text",
+                "stack_info",
+                "lineno",
+                "funcName",
+                "created",
+                "msecs",
+                "relativeCreated",
+                "thread",
+                "threadName",
+                "processName",
+                "process",
+                "message",
+                "session_id",
+                "agent_id",
+                "swarm_id",
+                "task_id",
+                "duration_ms",
+                "memory_mb",
             ]:
                 custom_fields[key] = value
 
@@ -211,7 +230,7 @@ class RedactingFormatter(logging.Formatter):
             log_record.error = str(record.exc_info[1])
 
             if self.include_traceback:
-                log_record.traceback = ''.join(traceback.format_exception(*record.exc_info))
+                log_record.traceback = "".join(traceback.format_exception(*record.exc_info))
 
         # Format as JSON
         return log_record.to_json(redact=self.redact_enabled)
@@ -222,15 +241,10 @@ class StructuredLogger:
     Structured logger with automatic redaction and context tracking.
     """
 
-    def __init__(
-        self,
-        name: str,
-        level: LogLevel = LogLevel.INFO,
-        redact_enabled: bool = True
-    ):
+    def __init__(self, name: str, level: LogLevel = LogLevel.INFO, redact_enabled: bool = True):
         """
         Initialize structured logger.
-        
+
         Args:
             name: Logger name
             level: Log level
@@ -255,7 +269,7 @@ class StructuredLogger:
     def push_context(self, **kwargs) -> None:
         """
         Push context onto stack.
-        
+
         Args:
             **kwargs: Context fields to add
         """
@@ -264,7 +278,7 @@ class StructuredLogger:
     def pop_context(self) -> Dict[str, Any]:
         """
         Pop context from stack.
-        
+
         Returns:
             Dict[str, Any]: Popped context
         """
@@ -283,11 +297,11 @@ class StructuredLogger:
         message: str,
         error: Optional[Exception] = None,
         duration_ms: Optional[float] = None,
-        **fields
+        **fields,
     ) -> None:
         """
         Log structured message.
-        
+
         Args:
             level: Log level
             message: Log message
@@ -303,7 +317,7 @@ class StructuredLogger:
         extra.update(fields)
 
         if duration_ms is not None:
-            extra['duration_ms'] = duration_ms
+            extra["duration_ms"] = duration_ms
 
         # Log with exception if provided
         exc_info = error is not None
@@ -339,11 +353,11 @@ class StructuredLogger:
         component: str,
         status: str = "completed",
         duration_ms: Optional[float] = None,
-        **fields
+        **fields,
     ) -> None:
         """
         Log activity with structured format.
-        
+
         Args:
             activity: Activity name
             component: Component performing activity
@@ -353,11 +367,7 @@ class StructuredLogger:
         """
         message = f"{component} {activity} {status}"
 
-        activity_fields = {
-            "activity": activity,
-            "activity_status": status,
-            **fields
-        }
+        activity_fields = {"activity": activity, "activity_status": status, **fields}
 
         level = LogLevel.ERROR if status == "failed" else LogLevel.INFO
         self.log(level, message, duration_ms=duration_ms, **activity_fields)
@@ -371,11 +381,11 @@ def setup_logging(
     level: LogLevel = LogLevel.INFO,
     log_file: Optional[Path] = None,
     redact_enabled: bool = True,
-    json_format: bool = True
+    json_format: bool = True,
 ) -> None:
     """
     Set up global logging configuration.
-    
+
     Args:
         level: Default log level
         log_file: Optional log file path
@@ -394,9 +404,7 @@ def setup_logging(
     if json_format:
         formatter = RedactingFormatter(redact_enabled=redact_enabled)
     else:
-        formatter = logging.Formatter(
-            '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-        )
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
     # Console handler
     console_handler = logging.StreamHandler(sys.stdout)
@@ -417,11 +425,11 @@ def setup_logging(
 def get_logger(name: str, redact_enabled: bool = True) -> StructuredLogger:
     """
     Get or create structured logger.
-    
+
     Args:
         name: Logger name
         redact_enabled: Whether to enable redaction
-        
+
     Returns:
         StructuredLogger: Logger instance
     """
@@ -433,17 +441,18 @@ def get_logger(name: str, redact_enabled: bool = True) -> StructuredLogger:
 
 # Convenience functions for common logging patterns
 
+
 def log_agent_activity(
     agent_id: str,
     activity: str,
     status: str = "completed",
     duration_ms: Optional[float] = None,
     session_id: Optional[str] = None,
-    **fields
+    **fields,
 ) -> None:
     """
     Log agent activity.
-    
+
     Args:
         agent_id: Agent ID
         activity: Activity name
@@ -454,10 +463,7 @@ def log_agent_activity(
     """
     logger = get_logger("sophia_core.agents")
 
-    activity_fields = {
-        "agent_id": agent_id,
-        **fields
-    }
+    activity_fields = {"agent_id": agent_id, **fields}
 
     if session_id:
         activity_fields["session_id"] = session_id
@@ -471,11 +477,11 @@ def log_swarm_activity(
     status: str = "completed",
     duration_ms: Optional[float] = None,
     member_count: Optional[int] = None,
-    **fields
+    **fields,
 ) -> None:
     """
     Log swarm activity.
-    
+
     Args:
         swarm_id: Swarm ID
         activity: Activity name
@@ -486,10 +492,7 @@ def log_swarm_activity(
     """
     logger = get_logger("sophia_core.swarms")
 
-    activity_fields = {
-        "swarm_id": swarm_id,
-        **fields
-    }
+    activity_fields = {"swarm_id": swarm_id, **fields}
 
     if member_count is not None:
         activity_fields["member_count"] = member_count
@@ -504,11 +507,11 @@ def log_tool_execution(
     agent_id: Optional[str] = None,
     parameters: Optional[Dict[str, Any]] = None,
     result: Optional[Any] = None,
-    error: Optional[str] = None
+    error: Optional[str] = None,
 ) -> None:
     """
     Log tool execution.
-    
+
     Args:
         tool_name: Tool name
         status: Execution status
@@ -520,9 +523,7 @@ def log_tool_execution(
     """
     logger = get_logger("sophia_core.tools")
 
-    activity_fields = {
-        "tool_name": tool_name
-    }
+    activity_fields = {"tool_name": tool_name}
 
     if agent_id:
         activity_fields["agent_id"] = agent_id
@@ -544,11 +545,11 @@ def log_memory_operation(
     duration_ms: Optional[float] = None,
     entry_count: Optional[int] = None,
     agent_id: Optional[str] = None,
-    **fields
+    **fields,
 ) -> None:
     """
     Log memory operation.
-    
+
     Args:
         operation: Memory operation (store, retrieve, delete, etc.)
         memory_type: Type of memory (episodic, semantic, working)
@@ -560,11 +561,7 @@ def log_memory_operation(
     """
     logger = get_logger("sophia_core.memory")
 
-    activity_fields = {
-        "memory_type": memory_type,
-        "operation": operation,
-        **fields
-    }
+    activity_fields = {"memory_type": memory_type, "operation": operation, **fields}
 
     if entry_count is not None:
         activity_fields["entry_count"] = entry_count

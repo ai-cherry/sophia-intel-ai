@@ -16,6 +16,7 @@ from .base_agent import AgentCapability, AgentStatus, BaseAgent
 
 logger = logging.getLogger(__name__)
 
+
 class TaskPriority(Enum):
     """Task priority levels"""
 
@@ -23,6 +24,7 @@ class TaskPriority(Enum):
     NORMAL = 2
     HIGH = 3
     CRITICAL = 4
+
 
 class TaskStatus(Enum):
     """Task execution status"""
@@ -33,6 +35,7 @@ class TaskStatus(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
 
 @dataclass
 class Task:
@@ -56,6 +59,7 @@ class Task:
     def __post_init__(self):
         if not self.task_id:
             self.task_id = str(uuid.uuid4())
+
 
 @dataclass
 class AgentInfo:
@@ -84,6 +88,7 @@ class AgentInfo:
         if self.max_concurrent_tasks == 0:
             return 1.0
         return self.current_task_count / self.max_concurrent_tasks
+
 
 class AgentCoordinator:
     """
@@ -146,9 +151,7 @@ class AgentCoordinator:
             )
 
             self.agents[agent.agent_id] = agent_info
-            logger.info(
-                f"Registered agent {agent.config.agent_name} [{agent.agent_id[:8]}]"
-            )
+            logger.info(f"Registered agent {agent.config.agent_name} [{agent.agent_id[:8]}]")
             return True
 
         except Exception as e:
@@ -166,9 +169,7 @@ class AgentCoordinator:
 
             # Cancel any active tasks for this agent
             tasks_to_cancel = [
-                task
-                for task in self.active_tasks.values()
-                if task.assigned_agent_id == agent_id
+                task for task in self.active_tasks.values() if task.assigned_agent_id == agent_id
             ]
 
             for task in tasks_to_cancel:
@@ -178,9 +179,7 @@ class AgentCoordinator:
                 self.completed_tasks[task.task_id] = task
 
             del self.agents[agent_id]
-            logger.info(
-                f"Unregistered agent {agent_info.agent.config.agent_name} [{agent_id[:8]}]"
-            )
+            logger.info(f"Unregistered agent {agent_info.agent.config.agent_name} [{agent_id[:8]}]")
             return True
 
         except Exception as e:
@@ -197,9 +196,7 @@ class AgentCoordinator:
             self.task_queue.append(task)
             self.task_queue.sort(key=lambda t: t.priority.value, reverse=True)
 
-            logger.info(
-                f"Task {task.task_id} submitted (priority: {task.priority.value})"
-            )
+            logger.info(f"Task {task.task_id} submitted (priority: {task.priority.value})")
             return task.task_id
 
         except Exception as e:
@@ -302,21 +299,17 @@ class AgentCoordinator:
             # Update task with result
             task.result = result
             task.status = (
-                TaskStatus.COMPLETED
-                if result.get("status") == "success"
-                else TaskStatus.FAILED
+                TaskStatus.COMPLETED if result.get("status") == "success" else TaskStatus.FAILED
             )
             task.error = result.get("error")
             task.processing_end = datetime.now()
 
             # Update agent info
             if task.processing_start and task.processing_end:
-                processing_time = (
-                    task.processing_end - task.processing_start
-                ).total_seconds()
-                agent_info.average_processing_time = (
-                    agent_info.average_processing_time * 0.8
-                ) + (processing_time * 0.2)
+                processing_time = (task.processing_end - task.processing_start).total_seconds()
+                agent_info.average_processing_time = (agent_info.average_processing_time * 0.8) + (
+                    processing_time * 0.2
+                )
 
             agent_info.last_activity = datetime.now()
 
@@ -351,17 +344,13 @@ class AgentCoordinator:
             # Update agent info
             if task.assigned_agent_id and task.assigned_agent_id in self.agents:
                 agent_info = self.agents[task.assigned_agent_id]
-                agent_info.current_task_count = max(
-                    0, agent_info.current_task_count - 1
-                )
+                agent_info.current_task_count = max(0, agent_info.current_task_count - 1)
                 agent_info.health_score *= 0.9  # Reduce health score for timeout
 
             self.active_tasks.pop(task.task_id, None)
             self.completed_tasks[task.task_id] = task
 
-            logger.warning(
-                f"Task {task.task_id} timed out after {task.timeout_seconds}s"
-            )
+            logger.warning(f"Task {task.task_id} timed out after {task.timeout_seconds}s")
 
     async def _update_agent_health(self) -> None:
         """Update agent health scores based on performance"""
@@ -380,9 +369,7 @@ class AgentCoordinator:
                     health_score *= 0.5
 
                 # Smooth health score changes
-                agent_info.health_score = (agent_info.health_score * 0.8) + (
-                    health_score * 0.2
-                )
+                agent_info.health_score = (agent_info.health_score * 0.8) + (health_score * 0.2)
 
             except Exception as e:
                 logger.error(
@@ -408,9 +395,7 @@ class AgentCoordinator:
         def agent_score(agent_info: AgentInfo) -> float:
             load_score = 1.0 - agent_info.load_factor  # Lower load is better
             health_score = agent_info.health_score
-            performance_score = 1.0 / (
-                1.0 + agent_info.average_processing_time
-            )  # Faster is better
+            performance_score = 1.0 / (1.0 + agent_info.average_processing_time)  # Faster is better
 
             return (load_score * 0.4) + (health_score * 0.4) + (performance_score * 0.2)
 
@@ -429,9 +414,7 @@ class AgentCoordinator:
             "processing_start": (
                 task.processing_start.isoformat() if task.processing_start else None
             ),
-            "processing_end": (
-                task.processing_end.isoformat() if task.processing_end else None
-            ),
+            "processing_end": (task.processing_end.isoformat() if task.processing_end else None),
             "result": task.result,
             "error": task.error,
             "required_capabilities": [cap.value for cap in task.required_capabilities],

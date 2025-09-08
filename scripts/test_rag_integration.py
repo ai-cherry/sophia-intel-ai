@@ -23,9 +23,12 @@ class RAGIntegrationTester:
 
         try:
             # Test help output includes --with-rag
-            result = subprocess.run([
-                sys.executable, "scripts/unified_orchestrator.py", "--help"
-            ], capture_output=True, text=True, cwd=self.base_dir)
+            result = subprocess.run(
+                [sys.executable, "scripts/unified_orchestrator.py", "--help"],
+                capture_output=True,
+                text=True,
+                cwd=self.base_dir,
+            )
 
             if "--with-rag" in result.stdout:
                 self.test_results["rag_flag_recognized"] = "✅ PASS"
@@ -58,7 +61,7 @@ class RAGIntegrationTester:
                     "domain": sophia_service.get("domain") == "rag",
                     "port": sophia_service.get("port") == 8767,
                     "command": "sophia_memory" in sophia_service.get("command", ""),
-                    "health_endpoint": sophia_service.get("health_endpoint") == "/health"
+                    "health_endpoint": sophia_service.get("health_endpoint") == "/health",
                 }
 
                 if all(checks.values()):
@@ -78,7 +81,7 @@ class RAGIntegrationTester:
                     "domain": artemis_service.get("domain") == "rag",
                     "port": artemis_service.get("port") == 8768,
                     "command": "artemis_memory" in artemis_service.get("command", ""),
-                    "health_endpoint": artemis_service.get("health_endpoint") == "/health"
+                    "health_endpoint": artemis_service.get("health_endpoint") == "/health",
                 }
 
                 if all(checks.values()):
@@ -101,7 +104,7 @@ class RAGIntegrationTester:
 
         rag_files = {
             "sophia_memory": self.base_dir / "app" / "memory" / "sophia_memory.py",
-            "artemis_memory": self.base_dir / "app" / "memory" / "artemis_memory.py"
+            "artemis_memory": self.base_dir / "app" / "memory" / "artemis_memory.py",
         }
 
         for service_name, file_path in rag_files.items():
@@ -127,22 +130,27 @@ class RAGIntegrationTester:
         print("\n🧪 Testing --with-rag dry run...")
 
         try:
-            result = subprocess.run([
-                sys.executable, "scripts/unified_orchestrator.py",
-                "--with-rag", "--dry-run"
-            ], capture_output=True, text=True, cwd=self.base_dir, timeout=30)
+            result = subprocess.run(
+                [sys.executable, "scripts/unified_orchestrator.py", "--with-rag", "--dry-run"],
+                capture_output=True,
+                text=True,
+                cwd=self.base_dir,
+                timeout=30,
+            )
 
             output = result.stdout + result.stderr
 
             # Check if RAG services are mentioned in dry run output
-            rag_mentioned = ("sophia_memory" in output or "artemis_memory" in output)
+            rag_mentioned = "sophia_memory" in output or "artemis_memory" in output
 
             if result.returncode == 0 and rag_mentioned:
                 self.test_results["dry_run_with_rag"] = "✅ PASS"
                 print("  ✅ Dry run with --with-rag completed successfully")
                 print(f"    └─ Output contained RAG services: {rag_mentioned}")
             else:
-                self.test_results["dry_run_with_rag"] = f"❌ FAIL: rc={result.returncode}, rag_mentioned={rag_mentioned}"
+                self.test_results["dry_run_with_rag"] = (
+                    f"❌ FAIL: rc={result.returncode}, rag_mentioned={rag_mentioned}"
+                )
                 print(f"  ❌ Dry run failed: return code {result.returncode}")
                 print(f"    └─ RAG services mentioned: {rag_mentioned}")
                 if result.stderr:
@@ -174,7 +182,9 @@ class RAGIntegrationTester:
                 print("  ✅ --with-rag properly enables both RAG services")
                 self.test_results["rag_startup_logic_with"] = "✅ PASS"
             else:
-                print(f"  ❌ --with-rag logic failed: sophia={sophia_should_start}, artemis={artemis_should_start}")
+                print(
+                    f"  ❌ --with-rag logic failed: sophia={sophia_should_start}, artemis={artemis_should_start}"
+                )
                 self.test_results["rag_startup_logic_with"] = "❌ FAIL"
 
             # Test --no-rag
@@ -186,7 +196,9 @@ class RAGIntegrationTester:
                 print("  ✅ --no-rag properly disables both RAG services")
                 self.test_results["rag_startup_logic_no"] = "✅ PASS"
             else:
-                print(f"  ❌ --no-rag logic failed: sophia_disabled={sophia_should_not_start}, artemis_disabled={artemis_should_not_start}")
+                print(
+                    f"  ❌ --no-rag logic failed: sophia_disabled={sophia_should_not_start}, artemis_disabled={artemis_should_not_start}"
+                )
                 self.test_results["rag_startup_logic_no"] = "❌ FAIL"
 
             # Restore original argv
@@ -198,9 +210,9 @@ class RAGIntegrationTester:
 
     def print_summary(self):
         """Print test results summary"""
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("🧪 RAG INTEGRATION TEST SUMMARY")
-        print("="*60)
+        print("=" * 60)
 
         passed = sum(1 for result in self.test_results.values() if result.startswith("✅"))
         total = len(self.test_results)
@@ -216,7 +228,7 @@ class RAGIntegrationTester:
         else:
             print("⚠️  Some tests failed - review implementation")
 
-        print("="*60)
+        print("=" * 60)
 
 
 async def main():

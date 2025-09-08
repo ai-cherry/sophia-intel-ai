@@ -14,6 +14,7 @@ from qdrant_client import AsyncQdrantClient
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class DatabaseConfig:
     """Database connection configuration"""
@@ -29,6 +30,7 @@ class DatabaseConfig:
     command_timeout: float = 60.0
     ssl_mode: str = "require"
 
+
 @dataclass
 class RedisConfig:
     """Redis cluster configuration"""
@@ -39,6 +41,7 @@ class RedisConfig:
     retry_on_timeout: bool = True
     health_check_interval: int = 30
 
+
 @dataclass
 class QdrantConfig:
     """Qdrant configuration"""
@@ -48,6 +51,7 @@ class QdrantConfig:
     api_key: str | None = None
     https: bool = False
     timeout: float = 30.0
+
 
 class CircuitBreaker:
     """Circuit breaker pattern for database connections"""
@@ -82,6 +86,7 @@ class CircuitBreaker:
                 raise e
 
         return wrapper
+
 
 class ConnectionPoolManager:
     """Manages all database connections with circuit breakers and health checks"""
@@ -135,9 +140,7 @@ class ConnectionPoolManager:
     async def _init_redis(self, config: RedisConfig):
         """Initialize Redis cluster connection"""
         try:
-            startup_nodes = [
-                {"host": node["host"], "port": node["port"]} for node in config.nodes
-            ]
+            startup_nodes = [{"host": node["host"], "port": node["port"]} for node in config.nodes]
             self.redis_client = aioredis.RedisCluster(
                 startup_nodes=startup_nodes,
                 password=config.password,
@@ -281,7 +284,9 @@ class ConnectionPoolManager:
             await self.qdrant_client.close()
         logger.info("All database connections closed")
 
+
 connection_manager = ConnectionPoolManager()
+
 
 async def init_database_connections(
     postgres_config: DatabaseConfig,
@@ -291,17 +296,21 @@ async def init_database_connections(
     """Initialize the global connection manager"""
     await connection_manager.initialize(postgres_config, redis_config, qdrant_config)
 
+
 async def get_postgres() -> AsyncContextManager[asyncpg.Connection]:
     """Get PostgreSQL connection"""
     return connection_manager.get_postgres_connection()
+
 
 async def get_redis() -> AsyncContextManager[aioredis.Redis]:
     """Get Redis connection"""
     return connection_manager.get_redis_connection()
 
+
 async def get_qdrant() -> AsyncContextManager[AsyncQdrantClient]:
     """Get Qdrant connection"""
     return connection_manager.get_qdrant_connection()
+
 
 async def close_database_connections():
     """Close all database connections"""

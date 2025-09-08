@@ -49,7 +49,6 @@ __all__ = [
     "retry",
     "async_retry",
     "RetryContext",
-
     # Circuit breakers
     "CircuitBreakerConfig",
     "CircuitBreakerState",
@@ -57,7 +56,6 @@ __all__ = [
     "CircuitBreakerOpenError",
     "circuit_breaker",
     "async_circuit_breaker",
-
     # Data redaction
     "RedactionConfig",
     "SensitivePattern",
@@ -67,5 +65,5 @@ __all__ = [
     "redact_dict",
     "redact_json",
     "create_redaction_patterns",
-    "is_sensitive_field"
+    "is_sensitive_field",
 ]

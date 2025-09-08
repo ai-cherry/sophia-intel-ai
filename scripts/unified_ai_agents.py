@@ -77,7 +77,9 @@ def summarize_env(llm: MultiTransportLLM) -> str:
     return "\n".join(lines)
 
 
-async def run_task(agent: str, mode: str, task: str, dry_run: bool = False, provider_override: str | None = None) -> None:
+async def run_task(
+    agent: str, mode: str, task: str, dry_run: bool = False, provider_override: str | None = None
+) -> None:
     llm = MultiTransportLLM()
     provider, model = pick_model(agent, mode, llm.keys)
     if provider_override:
@@ -117,7 +119,11 @@ def main():
         "--dry-run", action="store_true", help="Print configuration without calling LLM"
     )
     parser.add_argument("--whoami", action="store_true", help="Show environment and routing info")
-    parser.add_argument("--provider", choices=["xai", "openrouter", "anthropic", "openai", "groq"], help="Force provider override")
+    parser.add_argument(
+        "--provider",
+        choices=["xai", "openrouter", "anthropic", "openai", "groq"],
+        help="Force provider override",
+    )
 
     args = parser.parse_args()
 

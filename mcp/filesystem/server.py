@@ -157,4 +157,3 @@ async def fs_delete(req: FSDeleteRequest) -> Dict[str, Any]:
     else:
         target.unlink(missing_ok=True)
     return {"ok": True}
-

@@ -26,6 +26,7 @@ from pydantic import BaseModel, EmailStr
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class SecurityConfig:
     """Enterprise security configuration"""
 
@@ -45,14 +46,18 @@ class SecurityConfig:
     MAX_LOGIN_ATTEMPTS = 5
     LOCKOUT_DURATION_MINUTES = 30
 
+
 class UserRole(BaseModel):
     """User role definition"""
+
     name: str
     permissions: List[str]
     description: str
 
+
 class User(BaseModel):
     """User model"""
+
     id: str
     email: EmailStr
     username: str
@@ -65,13 +70,14 @@ class User(BaseModel):
     failed_login_attempts: int = 0
     locked_until: Optional[datetime] = None
 
+
 class EnterpriseSecurityService:
     """Enterprise-grade security service for Sophia AI"""
 
     def __init__(self):
         self.pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
         self.oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
-        self.redis_client = redis.Redis(host='localhost', port=6379, db=0)
+        self.redis_client = redis.Redis(host="localhost", port=6379, db=0)
 
         # Initialize encryption
         self._init_encryption()
@@ -103,31 +109,41 @@ class EnterpriseSecurityService:
             "admin": UserRole(
                 name="admin",
                 permissions=[
-                    "read", "write", "delete", "manage_users", "manage_system",
-                    "view_analytics", "manage_security", "deploy", "configure"
+                    "read",
+                    "write",
+                    "delete",
+                    "manage_users",
+                    "manage_system",
+                    "view_analytics",
+                    "manage_security",
+                    "deploy",
+                    "configure",
                 ],
-                description="Full system administrator"
+                description="Full system administrator",
             ),
             "developer": UserRole(
-                name="developer", 
+                name="developer",
                 permissions=[
-                    "read", "write", "deploy", "view_analytics", "debug",
-                    "manage_code", "access_logs"
+                    "read",
+                    "write",
+                    "deploy",
+                    "view_analytics",
+                    "debug",
+                    "manage_code",
+                    "access_logs",
                 ],
-                description="Software developer with deployment rights"
+                description="Software developer with deployment rights",
             ),
             "analyst": UserRole(
                 name="analyst",
-                permissions=[
-                    "read", "query", "export", "view_analytics", "create_reports"
-                ],
-                description="Data analyst with read and analytics access"
+                permissions=["read", "query", "export", "view_analytics", "create_reports"],
+                description="Data analyst with read and analytics access",
             ),
             "viewer": UserRole(
                 name="viewer",
                 permissions=["read", "view_analytics"],
-                description="Read-only access to system"
-            )
+                description="Read-only access to system",
+            ),
         }
 
     def _init_security_monitoring(self):
@@ -136,18 +152,22 @@ class EnterpriseSecurityService:
         self.threat_indicators = {
             "failed_logins": {},
             "suspicious_ips": set(),
-            "unusual_access_patterns": {}
+            "unusual_access_patterns": {},
         }
 
     # Authentication Methods
 
-    async def authenticate_user(self, username: str, password: str, mfa_token: Optional[str] = None) -> Optional[User]:
+    async def authenticate_user(
+        self, username: str, password: str, mfa_token: Optional[str] = None
+    ) -> Optional[User]:
         """Authenticate user with optional MFA"""
         try:
             # Get user from database
             user = await self.get_user_by_username(username)
             if not user:
-                await self._log_security_event("failed_login", {"username": username, "reason": "user_not_found"})
+                await self._log_security_event(
+                    "failed_login", {"username": username, "reason": "user_not_found"}
+                )
                 return None
 
             # Check if account is locked
@@ -155,7 +175,7 @@ class EnterpriseSecurityService:
                 await self._log_security_event("login_attempt_locked", {"username": username})
                 raise HTTPException(
                     status_code=status.HTTP_423_LOCKED,
-                    detail=f"Account locked until {user.locked_until}"
+                    detail=f"Account locked until {user.locked_until}",
                 )
 
             # Verify password
@@ -167,8 +187,7 @@ class EnterpriseSecurityService:
             if user.mfa_enabled:
                 if not mfa_token:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="MFA token required"
+                        status_code=status.HTTP_400_BAD_REQUEST, detail="MFA token required"
                     )
 
                 if not self.verify_mfa_token(user.mfa_secret, mfa_token):
@@ -187,7 +206,9 @@ class EnterpriseSecurityService:
 
         except Exception as e:
             logger.error(f"Authentication error: {e}")
-            await self._log_security_event("authentication_error", {"username": username, "error": str(e)})
+            await self._log_security_event(
+                "authentication_error", {"username": username, "error": str(e)}
+            )
             return None
 
     async def _handle_failed_login(self, user: User):
@@ -195,11 +216,15 @@ class EnterpriseSecurityService:
         user.failed_login_attempts += 1
 
         if user.failed_login_attempts >= SecurityConfig.MAX_LOGIN_ATTEMPTS:
-            user.locked_until = datetime.utcnow() + timedelta(minutes=SecurityConfig.LOCKOUT_DURATION_MINUTES)
+            user.locked_until = datetime.utcnow() + timedelta(
+                minutes=SecurityConfig.LOCKOUT_DURATION_MINUTES
+            )
             await self._log_security_event("account_locked", {"username": user.username})
 
         await self.update_user(user)
-        await self._log_security_event("failed_login", {"username": user.username, "attempts": user.failed_login_attempts})
+        await self._log_security_event(
+            "failed_login", {"username": user.username, "attempts": user.failed_login_attempts}
+        )
 
     async def _reset_failed_attempts(self, user: User):
         """Reset failed login attempts"""
@@ -220,7 +245,9 @@ class EnterpriseSecurityService:
         issues = []
 
         if len(password) < SecurityConfig.PASSWORD_MIN_LENGTH:
-            issues.append(f"Password must be at least {SecurityConfig.PASSWORD_MIN_LENGTH} characters")
+            issues.append(
+                f"Password must be at least {SecurityConfig.PASSWORD_MIN_LENGTH} characters"
+            )
 
         if SecurityConfig.PASSWORD_REQUIRE_UPPERCASE and not any(c.isupper() for c in password):
             issues.append("Password must contain at least one uppercase letter")
@@ -228,13 +255,15 @@ class EnterpriseSecurityService:
         if SecurityConfig.PASSWORD_REQUIRE_NUMBERS and not any(c.isdigit() for c in password):
             issues.append("Password must contain at least one number")
 
-        if SecurityConfig.PASSWORD_REQUIRE_SPECIAL and not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+        if SecurityConfig.PASSWORD_REQUIRE_SPECIAL and not any(
+            c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password
+        ):
             issues.append("Password must contain at least one special character")
 
         return {
             "valid": len(issues) == 0,
             "issues": issues,
-            "strength_score": self._calculate_password_strength(password)
+            "strength_score": self._calculate_password_strength(password),
         }
 
     def _calculate_password_strength(self, password: str) -> float:
@@ -270,8 +299,7 @@ class EnterpriseSecurityService:
 
             # Generate QR code
             totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
-                name=user.email,
-                issuer_name=SecurityConfig.MFA_ISSUER
+                name=user.email, issuer_name=SecurityConfig.MFA_ISSUER
             )
 
             qr = qrcode.QRCode(version=1, box_size=10, border=5)
@@ -282,7 +310,7 @@ class EnterpriseSecurityService:
 
             # Convert to base64
             buffer = BytesIO()
-            img.save(buffer, format='PNG')
+            img.save(buffer, format="PNG")
             qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
 
             # Store secret (encrypted)
@@ -295,7 +323,7 @@ class EnterpriseSecurityService:
             return {
                 "secret": secret,
                 "qr_code": f"data:image/png;base64,{qr_code_base64}",
-                "backup_codes": self._generate_backup_codes(user)
+                "backup_codes": self._generate_backup_codes(user),
             }
 
         except Exception as e:
@@ -354,23 +382,29 @@ class EnterpriseSecurityService:
 
     async def require_permission(self, permission: str):
         """Decorator to require specific permission"""
+
         def decorator(func):
             async def wrapper(*args, **kwargs):
                 # Get current user from context
-                current_user = kwargs.get('current_user')
+                current_user = kwargs.get("current_user")
                 if not current_user:
                     raise HTTPException(status_code=401, detail="Authentication required")
 
                 if not self.check_permission(current_user.role, permission):
-                    await self._log_security_event("unauthorized_access", {
-                        "username": current_user.username,
-                        "required_permission": permission,
-                        "user_role": current_user.role
-                    })
+                    await self._log_security_event(
+                        "unauthorized_access",
+                        {
+                            "username": current_user.username,
+                            "required_permission": permission,
+                            "user_role": current_user.role,
+                        },
+                    )
                     raise HTTPException(status_code=403, detail="Insufficient permissions")
 
                 return await func(*args, **kwargs)
+
             return wrapper
+
         return decorator
 
     # JWT Token Management
@@ -382,11 +416,15 @@ class EnterpriseSecurityService:
         if expires_delta:
             expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(minutes=SecurityConfig.ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.utcnow() + timedelta(
+                minutes=SecurityConfig.ACCESS_TOKEN_EXPIRE_MINUTES
+            )
 
         to_encode.update({"exp": expire, "type": "access"})
 
-        encoded_jwt = jwt.encode(to_encode, SecurityConfig.SECRET_KEY, algorithm=SecurityConfig.ALGORITHM)
+        encoded_jwt = jwt.encode(
+            to_encode, SecurityConfig.SECRET_KEY, algorithm=SecurityConfig.ALGORITHM
+        )
         return encoded_jwt
 
     def create_refresh_token(self, data: dict) -> str:
@@ -395,13 +433,17 @@ class EnterpriseSecurityService:
         expire = datetime.utcnow() + timedelta(days=SecurityConfig.REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire, "type": "refresh"})
 
-        encoded_jwt = jwt.encode(to_encode, SecurityConfig.SECRET_KEY, algorithm=SecurityConfig.ALGORITHM)
+        encoded_jwt = jwt.encode(
+            to_encode, SecurityConfig.SECRET_KEY, algorithm=SecurityConfig.ALGORITHM
+        )
         return encoded_jwt
 
     async def verify_token(self, token: str) -> Optional[Dict[str, Any]]:
         """Verify JWT token"""
         try:
-            payload = jwt.decode(token, SecurityConfig.SECRET_KEY, algorithms=[SecurityConfig.ALGORITHM])
+            payload = jwt.decode(
+                token, SecurityConfig.SECRET_KEY, algorithms=[SecurityConfig.ALGORITHM]
+            )
 
             # Check if token is blacklisted
             if await self._is_token_blacklisted(token):
@@ -416,7 +458,9 @@ class EnterpriseSecurityService:
     async def blacklist_token(self, token: str):
         """Blacklist a token"""
         try:
-            payload = jwt.decode(token, SecurityConfig.SECRET_KEY, algorithms=[SecurityConfig.ALGORITHM])
+            payload = jwt.decode(
+                token, SecurityConfig.SECRET_KEY, algorithms=[SecurityConfig.ALGORITHM]
+            )
             exp = payload.get("exp")
 
             if exp:
@@ -427,6 +471,7 @@ class EnterpriseSecurityService:
 
         except JWTError:
             pass
+
     async def _is_token_blacklisted(self, token: str) -> bool:
         """Check if token is blacklisted"""
         return bool(self.redis_client.get(f"blacklist:{token}"))
@@ -452,7 +497,7 @@ class EnterpriseSecurityService:
             "timestamp": datetime.utcnow().isoformat(),
             "event_type": event_type,
             "details": details,
-            "severity": self._get_event_severity(event_type)
+            "severity": self._get_event_severity(event_type),
         }
 
         self.security_events.append(event)
@@ -492,10 +537,9 @@ class EnterpriseSecurityService:
                 self.redis_client.expire(key, 3600)  # 1 hour window
 
                 if count >= 10:  # 10 failed attempts in 1 hour
-                    await self._trigger_security_alert("brute_force_detected", {
-                        "username": username,
-                        "failed_attempts": count
-                    })
+                    await self._trigger_security_alert(
+                        "brute_force_detected", {"username": username, "failed_attempts": count}
+                    )
 
         # Detect unusual access patterns
         if event_type == "successful_login":
@@ -508,7 +552,7 @@ class EnterpriseSecurityService:
             "timestamp": datetime.utcnow().isoformat(),
             "alert_type": alert_type,
             "details": details,
-            "severity": "CRITICAL"
+            "severity": "CRITICAL",
         }
 
         # Send to monitoring system
@@ -546,18 +590,20 @@ class EnterpriseSecurityService:
                 "redis_connection": redis_status,
                 "encryption_service": encryption_status,
                 "security_events_count": len(self.security_events),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
             return {
                 "status": "unhealthy",
                 "error": str(e),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
+
 
 # Initialize global security service
 security_service = EnterpriseSecurityService()
+
 
 # FastAPI dependencies
 async def get_current_user(token: str = Depends(security_service.oauth2_scheme)) -> User:
@@ -581,6 +627,7 @@ async def get_current_user(token: str = Depends(security_service.oauth2_scheme))
         raise credentials_exception
 
     return user
+
 
 async def require_admin(current_user: User = Depends(get_current_user)) -> User:
     """Require admin role"""

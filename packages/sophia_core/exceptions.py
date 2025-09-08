@@ -14,7 +14,7 @@ class SophiaException(Exception):
         self,
         message: str,
         error_code: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None
+        context: Optional[Dict[str, Any]] = None,
     ):
         super().__init__(message)
         self.message = message
@@ -47,12 +47,7 @@ class ProviderUnavailableError(ModelError):
 class RateLimitError(ModelError):
     """Raised when rate limits are exceeded."""
 
-    def __init__(
-        self,
-        provider: str,
-        retry_after: Optional[int] = None,
-        **kwargs
-    ):
+    def __init__(self, provider: str, retry_after: Optional[int] = None, **kwargs):
         message = f"Rate limit exceeded for {provider}"
         if retry_after:
             message += f" (retry after {retry_after}s)"

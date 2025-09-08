@@ -19,16 +19,18 @@ async def swarm_start(task: str, agents: List[str]) -> int:
     exit_code = 0
     for agent in agents:
         print(f"\n=== Running agent: {agent} ===\n")
-        code = run_subprocess([
-            sys.executable,
-            "scripts/unified_ai_agents.py",
-            "--agent",
-            agent,
-            "--mode",
-            "code",
-            "--task",
-            task,
-        ])
+        code = run_subprocess(
+            [
+                sys.executable,
+                "scripts/unified_ai_agents.py",
+                "--agent",
+                agent,
+                "--mode",
+                "code",
+                "--task",
+                task,
+            ]
+        )
         exit_code = exit_code or code
     return exit_code
 
@@ -78,4 +80,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

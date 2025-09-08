@@ -18,11 +18,12 @@ from pydantic import Field, validator
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class MessageRole(str, Enum):
     """Message roles in a conversation."""
+
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
@@ -34,27 +35,28 @@ class Message(PydanticBaseModel):
     """
     Represents a single message in a conversation.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     role: MessageRole
     content: Optional[str] = None
     name: Optional[str] = None  # For function/tool messages
-    tool_calls: Optional[List['ToolCall']] = None
+    tool_calls: Optional[List["ToolCall"]] = None
     tool_call_id: Optional[str] = None  # For tool response messages
     metadata: Dict[str, Any] = Field(default_factory=dict)
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
-    @validator('tool_calls', pre=True)
+    @validator("tool_calls", pre=True)
     def validate_tool_calls(cls, v, values):
         """Ensure tool_calls is only present for assistant messages."""
-        role = values.get('role')
+        role = values.get("role")
         if v is not None and role != MessageRole.ASSISTANT:
             raise ValueError("tool_calls can only be present for assistant messages")
         return v
 
-    @validator('tool_call_id', pre=True)
+    @validator("tool_call_id", pre=True)
     def validate_tool_call_id(cls, v, values):
         """Ensure tool_call_id is only present for tool messages."""
-        role = values.get('role')
+        role = values.get("role")
         if v is not None and role != MessageRole.TOOL:
             raise ValueError("tool_call_id can only be present for tool messages")
         return v
@@ -68,6 +70,7 @@ class ToolCall(PydanticBaseModel):
     """
     Represents a tool/function call made by the model.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     type: str = Field(default="function")
     function: Dict[str, Any]  # Contains 'name' and 'arguments'
@@ -75,13 +78,14 @@ class ToolCall(PydanticBaseModel):
     @property
     def name(self) -> str:
         """Get the function name."""
-        return self.function.get('name', '')
+        return self.function.get("name", "")
 
     @property
     def arguments(self) -> Dict[str, Any]:
         """Get parsed function arguments."""
         import json
-        args_str = self.function.get('arguments', '{}')
+
+        args_str = self.function.get("arguments", "{}")
         try:
             return json.loads(args_str) if isinstance(args_str, str) else args_str
         except json.JSONDecodeError:
@@ -93,6 +97,7 @@ class ToolResult(PydanticBaseModel):
     """
     Represents the result of a tool/function call.
     """
+
     tool_call_id: str
     name: str
     content: str
@@ -106,15 +111,16 @@ class ModelUsage(PydanticBaseModel):
     """
     Token usage information from model response.
     """
+
     prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
 
-    @validator('total_tokens', always=True)
+    @validator("total_tokens", always=True)
     def calculate_total_tokens(cls, v, values):
         """Auto-calculate total tokens if not provided."""
         if v == 0:
-            return values.get('prompt_tokens', 0) + values.get('completion_tokens', 0)
+            return values.get("prompt_tokens", 0) + values.get("completion_tokens", 0)
         return v
 
 
@@ -122,6 +128,7 @@ class ModelParameters(PydanticBaseModel):
     """
     Parameters for model inference.
     """
+
     model: str
     temperature: float = Field(0.7, ge=0.0, le=2.0)
     max_tokens: Optional[int] = Field(None, gt=0)
@@ -144,6 +151,7 @@ class ModelCapabilities(PydanticBaseModel):
     """
     Model capabilities and limitations.
     """
+
     supports_streaming: bool = True
     supports_tools: bool = False
     supports_vision: bool = False
@@ -162,6 +170,7 @@ class ModelResponse(PydanticBaseModel):
     """
     Response from a language model.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     model: str
     content: Optional[str] = None
@@ -182,6 +191,7 @@ class StreamingResponse(PydanticBaseModel):
     """
     Streaming response chunk from a language model.
     """
+
     id: str
     model: str
     delta: Dict[str, Any]  # Contains the incremental content
@@ -191,7 +201,7 @@ class StreamingResponse(PydanticBaseModel):
     @property
     def content_delta(self) -> Optional[str]:
         """Get content delta from the chunk."""
-        return self.delta.get('content')
+        return self.delta.get("content")
 
     @property
     def is_complete(self) -> bool:
@@ -203,6 +213,7 @@ class ConversationHistory(PydanticBaseModel):
     """
     Manages conversation history with message ordering and limits.
     """
+
     messages: List[Message] = Field(default_factory=list)
     max_messages: Optional[int] = None
     max_tokens: Optional[int] = None
@@ -210,7 +221,7 @@ class ConversationHistory(PydanticBaseModel):
     def add_message(self, message: Message) -> None:
         """
         Add a message to the conversation history.
-        
+
         Args:
             message: Message to add
         """
@@ -231,7 +242,7 @@ class ConversationHistory(PydanticBaseModel):
     def get_messages_for_model(self) -> List[Dict[str, Any]]:
         """
         Get messages formatted for model API.
-        
+
         Returns:
             List[Dict[str, Any]]: Messages in API format
         """
@@ -260,10 +271,10 @@ class ConversationHistory(PydanticBaseModel):
     def count_tokens(self, tokenizer_func: Optional[Callable[[str], int]] = None) -> int:
         """
         Estimate token count for the conversation.
-        
+
         Args:
             tokenizer_func: Optional function to count tokens
-            
+
         Returns:
             int: Estimated token count
         """
@@ -284,15 +295,10 @@ class BaseModel(ABC):
     Abstract base class for language model implementations.
     """
 
-    def __init__(
-        self,
-        model_name: str,
-        capabilities: Optional[ModelCapabilities] = None,
-        **kwargs
-    ):
+    def __init__(self, model_name: str, capabilities: Optional[ModelCapabilities] = None, **kwargs):
         """
         Initialize the model.
-        
+
         Args:
             model_name: Name/identifier of the model
             capabilities: Model capabilities
@@ -305,22 +311,19 @@ class BaseModel(ABC):
 
     @abstractmethod
     async def generate(
-        self,
-        messages: List[Message],
-        parameters: Optional[ModelParameters] = None,
-        **kwargs
+        self, messages: List[Message], parameters: Optional[ModelParameters] = None, **kwargs
     ) -> ModelResponse:
         """
         Generate a response from the model.
-        
+
         Args:
             messages: List of conversation messages
             parameters: Generation parameters
             **kwargs: Additional arguments
-            
+
         Returns:
             ModelResponse: Model response
-            
+
         Raises:
             NotImplementedError: Must be implemented by subclasses
         """
@@ -328,22 +331,19 @@ class BaseModel(ABC):
 
     @abstractmethod
     async def stream(
-        self,
-        messages: List[Message],
-        parameters: Optional[ModelParameters] = None,
-        **kwargs
+        self, messages: List[Message], parameters: Optional[ModelParameters] = None, **kwargs
     ) -> AsyncGenerator[StreamingResponse, None]:
         """
         Stream responses from the model.
-        
+
         Args:
-            messages: List of conversation messages  
+            messages: List of conversation messages
             parameters: Generation parameters
             **kwargs: Additional arguments
-            
+
         Yields:
             StreamingResponse: Streaming response chunks
-            
+
         Raises:
             NotImplementedError: Must be implemented by subclasses
         """
@@ -353,16 +353,16 @@ class BaseModel(ABC):
         self,
         conversation: ConversationHistory,
         parameters: Optional[ModelParameters] = None,
-        **kwargs
+        **kwargs,
     ) -> ModelResponse:
         """
         High-level chat interface using conversation history.
-        
+
         Args:
             conversation: Conversation history
             parameters: Generation parameters
             **kwargs: Additional arguments
-            
+
         Returns:
             ModelResponse: Model response
         """
@@ -374,7 +374,7 @@ class BaseModel(ABC):
             role=MessageRole.ASSISTANT,
             content=response.content,
             tool_calls=response.tool_calls,
-            metadata={"model_response_id": response.id}
+            metadata={"model_response_id": response.id},
         )
         conversation.add_message(assistant_message)
 
@@ -383,10 +383,10 @@ class BaseModel(ABC):
     def validate_parameters(self, parameters: ModelParameters) -> ModelParameters:
         """
         Validate and adjust parameters based on model capabilities.
-        
+
         Args:
             parameters: Input parameters
-            
+
         Returns:
             ModelParameters: Validated parameters
         """
@@ -402,7 +402,9 @@ class BaseModel(ABC):
 
         # Validate tool support
         if parameters.tools and not self.capabilities.supports_tools:
-            logger.warning(f"Model {self.model_name} does not support tools, ignoring tool parameters")
+            logger.warning(
+                f"Model {self.model_name} does not support tools, ignoring tool parameters"
+            )
             parameters.tools = None
             parameters.tool_choice = None
 
@@ -411,7 +413,7 @@ class BaseModel(ABC):
     def get_system_info(self) -> Dict[str, Any]:
         """
         Get model system information.
-        
+
         Returns:
             Dict[str, Any]: System information
         """
@@ -419,7 +421,7 @@ class BaseModel(ABC):
             "model_name": self.model_name,
             "capabilities": self.capabilities.dict(),
             "class": self.__class__.__name__,
-            "config": self._config
+            "config": self._config,
         }
 
 

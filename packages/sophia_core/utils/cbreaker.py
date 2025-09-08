@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 class CircuitState(Enum):
     """Circuit breaker states."""
+
     CLOSED = "closed"  # Normal operation
     OPEN = "open"  # Failing, reject calls
     HALF_OPEN = "half_open"  # Testing if service recovered
@@ -19,7 +20,7 @@ class CircuitState(Enum):
 
 class CircuitBreaker:
     """Circuit breaker for fault tolerance.
-    
+
     Prevents cascading failures by temporarily blocking calls to a failing service.
     """
 
@@ -29,10 +30,10 @@ class CircuitBreaker:
         failure_threshold: int = 5,
         success_threshold: int = 2,
         timeout: float = 60.0,
-        expected_exception: type = Exception
+        expected_exception: type = Exception,
     ):
         """Initialize circuit breaker.
-        
+
         Args:
             name: Name of the circuit breaker (for logging)
             failure_threshold: Number of failures before opening circuit
@@ -74,10 +75,7 @@ class CircuitBreaker:
 
     def _should_attempt_reset(self) -> bool:
         """Check if enough time has passed to attempt reset."""
-        return (
-            self._last_failure_time and
-            time.time() - self._last_failure_time >= self.timeout
-        )
+        return self._last_failure_time and time.time() - self._last_failure_time >= self.timeout
 
     async def _record_success(self):
         """Record a successful call."""
@@ -120,9 +118,7 @@ class CircuitBreaker:
 
         # Reject call if circuit is open
         if self.is_open:
-            raise CircuitBreakerOpenError(
-                f"Circuit breaker '{self.name}' is open"
-            )
+            raise CircuitBreakerOpenError(f"Circuit breaker '{self.name}' is open")
 
         # Attempt the call
         try:
@@ -146,9 +142,7 @@ class CircuitBreaker:
 
         # Reject call if circuit is open
         if self.is_open:
-            raise CircuitBreakerOpenError(
-                f"Circuit breaker '{self.name}' is open"
-            )
+            raise CircuitBreakerOpenError(f"Circuit breaker '{self.name}' is open")
 
         # Attempt the call
         try:
@@ -189,6 +183,7 @@ class CircuitBreaker:
 
 class CircuitBreakerOpenError(Exception):
     """Raised when circuit breaker is open."""
+
     pass
 
 
@@ -197,18 +192,14 @@ def circuit_breaker(
     failure_threshold: int = 5,
     success_threshold: int = 2,
     timeout: float = 60.0,
-    expected_exception: type = Exception
+    expected_exception: type = Exception,
 ):
     """Decorator to add circuit breaker to a function."""
 
     def decorator(func: Callable) -> Callable:
         breaker_name = name or func.__name__
         breaker = CircuitBreaker(
-            breaker_name,
-            failure_threshold,
-            success_threshold,
-            timeout,
-            expected_exception
+            breaker_name, failure_threshold, success_threshold, timeout, expected_exception
         )
 
         @wraps(func)

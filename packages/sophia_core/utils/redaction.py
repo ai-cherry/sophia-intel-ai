@@ -12,37 +12,43 @@ class RedactionPatterns:
     """Common patterns for sensitive data redaction."""
 
     # API Keys and tokens
-    API_KEY = re.compile(r'(api[_-]?key|apikey|api_secret|access[_-]?token)["\']?\s*[:=]\s*["\']?([A-Za-z0-9\-_]{20,})["\']?', re.IGNORECASE)
-    BEARER_TOKEN = re.compile(r'Bearer\s+([A-Za-z0-9\-_\.]+)', re.IGNORECASE)
+    API_KEY = re.compile(
+        r'(api[_-]?key|apikey|api_secret|access[_-]?token)["\']?\s*[:=]\s*["\']?([A-Za-z0-9\-_]{20,})["\']?',
+        re.IGNORECASE,
+    )
+    BEARER_TOKEN = re.compile(r"Bearer\s+([A-Za-z0-9\-_\.]+)", re.IGNORECASE)
 
     # AWS
-    AWS_ACCESS_KEY = re.compile(r'AKIA[0-9A-Z]{16}')
-    AWS_SECRET_KEY = re.compile(r'aws[_-]?secret[_-]?access[_-]?key["\']?\s*[:=]\s*["\']?([A-Za-z0-9/+=]{40})["\']?', re.IGNORECASE)
+    AWS_ACCESS_KEY = re.compile(r"AKIA[0-9A-Z]{16}")
+    AWS_SECRET_KEY = re.compile(
+        r'aws[_-]?secret[_-]?access[_-]?key["\']?\s*[:=]\s*["\']?([A-Za-z0-9/+=]{40})["\']?',
+        re.IGNORECASE,
+    )
 
     # Emails
-    EMAIL = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
+    EMAIL = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
 
     # Phone numbers (US format)
-    PHONE_US = re.compile(r'\b(?:\+?1[-.]?)?\(?([0-9]{3})\)?[-.]?([0-9]{3})[-.]?([0-9]{4})\b')
+    PHONE_US = re.compile(r"\b(?:\+?1[-.]?)?\(?([0-9]{3})\)?[-.]?([0-9]{3})[-.]?([0-9]{4})\b")
 
     # Credit cards
-    CREDIT_CARD = re.compile(r'\b(?:\d[ -]*?){13,16}\b')
+    CREDIT_CARD = re.compile(r"\b(?:\d[ -]*?){13,16}\b")
 
     # SSN
-    SSN = re.compile(r'\b\d{3}-\d{2}-\d{4}\b')
+    SSN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
 
     # IP Addresses
-    IPV4 = re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b')
-    IPV6 = re.compile(r'(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::)')
+    IPV4 = re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")
+    IPV6 = re.compile(r"(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|::)")
 
     # URLs with credentials
-    URL_CREDS = re.compile(r'(https?|ftp)://[^:]+:[^@]+@[^\s]+')
+    URL_CREDS = re.compile(r"(https?|ftp)://[^:]+:[^@]+@[^\s]+")
 
     # Database connection strings
-    DB_CONN = re.compile(r'(postgresql|mysql|mongodb|redis)://[^:]+:[^@]+@[^\s]+')
+    DB_CONN = re.compile(r"(postgresql|mysql|mongodb|redis)://[^:]+:[^@]+@[^\s]+")
 
     # JWT tokens
-    JWT = re.compile(r'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+')
+    JWT = re.compile(r"eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+")
 
 
 class Redactor:
@@ -52,10 +58,10 @@ class Redactor:
         self,
         patterns: Optional[Dict[str, Pattern]] = None,
         custom_patterns: Optional[Dict[str, Pattern]] = None,
-        replacement: str = "[REDACTED]"
+        replacement: str = "[REDACTED]",
     ):
         """Initialize redactor.
-        
+
         Args:
             patterns: Dictionary of pattern name to regex pattern
             custom_patterns: Additional custom patterns to use
@@ -88,10 +94,10 @@ class Redactor:
 
     def redact_text(self, text: str) -> str:
         """Redact sensitive information from text.
-        
+
         Args:
             text: Text to redact
-            
+
         Returns:
             Redacted text
         """
@@ -106,7 +112,7 @@ class Redactor:
                 if pattern.groups > 0:
                     redacted = pattern.sub(
                         lambda m: m.group(0).replace(m.group(pattern.groups), self.replacement),
-                        redacted
+                        redacted,
                     )
                 else:
                     redacted = pattern.sub(self.replacement, redacted)
@@ -115,13 +121,15 @@ class Redactor:
 
         return redacted
 
-    def redact_dict(self, data: Dict[str, Any], sensitive_keys: Optional[List[str]] = None) -> Dict[str, Any]:
+    def redact_dict(
+        self, data: Dict[str, Any], sensitive_keys: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
         """Redact sensitive information from dictionary.
-        
+
         Args:
             data: Dictionary to redact
             sensitive_keys: Additional keys to redact entirely
-            
+
         Returns:
             Redacted dictionary
         """
@@ -131,8 +139,17 @@ class Redactor:
         # Default sensitive keys
         if sensitive_keys is None:
             sensitive_keys = [
-                "password", "passwd", "pwd", "secret", "token", "key",
-                "api_key", "apikey", "auth", "authorization", "credential"
+                "password",
+                "passwd",
+                "pwd",
+                "secret",
+                "token",
+                "key",
+                "api_key",
+                "apikey",
+                "auth",
+                "authorization",
+                "credential",
             ]
 
         redacted = {}
@@ -154,11 +171,11 @@ class Redactor:
 
     def redact_list(self, data: List[Any], sensitive_keys: Optional[List[str]] = None) -> List[Any]:
         """Redact sensitive information from list.
-        
+
         Args:
             data: List to redact
             sensitive_keys: Keys to consider sensitive in nested dicts
-            
+
         Returns:
             Redacted list
         """
@@ -181,16 +198,20 @@ class Redactor:
 
     def redact_headers(self, headers: Dict[str, str]) -> Dict[str, str]:
         """Redact sensitive HTTP headers.
-        
+
         Args:
             headers: HTTP headers dictionary
-            
+
         Returns:
             Redacted headers
         """
         sensitive_headers = [
-            "authorization", "x-api-key", "x-auth-token",
-            "cookie", "set-cookie", "x-csrf-token"
+            "authorization",
+            "x-api-key",
+            "x-auth-token",
+            "cookie",
+            "set-cookie",
+            "x-csrf-token",
         ]
 
         redacted = {}
@@ -210,10 +231,10 @@ default_redactor = Redactor()
 
 def redact(data: Union[str, Dict, List]) -> Union[str, Dict, List]:
     """Convenience function to redact data using default redactor.
-    
+
     Args:
         data: Data to redact (string, dict, or list)
-        
+
     Returns:
         Redacted data
     """

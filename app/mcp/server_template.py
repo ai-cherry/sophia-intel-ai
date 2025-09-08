@@ -26,23 +26,28 @@ from app.observability.otel import trace_async
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class MCPToolCall:
     """Standard MCP tool call structure"""
+
     tool: str
     params: Dict[str, Any]
     call_id: str = Field(default_factory=lambda: str(uuid4()))
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
+
 @dataclass
 class MCPToolResult:
     """Standard MCP tool result structure"""
+
     call_id: str
     success: bool
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
     latency_ms: Optional[float] = None
     cache_hit: bool = False
+
 
 class MCPServerBase(ABC):
     """
@@ -55,7 +60,7 @@ class MCPServerBase(ABC):
         domain: str,
         capabilities: List[str],
         memory_bus: UnifiedMemoryBus,
-        metrics: MetricsCollector
+        metrics: MetricsCollector,
     ):
         self.domain = domain
         self.capabilities = capabilities
@@ -85,7 +90,7 @@ class MCPServerBase(ABC):
                 "status": "healthy",
                 "domain": self.domain,
                 "capabilities": self.capabilities,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         @self.app.get("/capabilities")
@@ -93,7 +98,7 @@ class MCPServerBase(ABC):
             return {
                 "domain": self.domain,
                 "tools": list(self.tools.keys()),
-                "capabilities": self.capabilities
+                "capabilities": self.capabilities,
             }
 
         @self.app.post("/tools/call")
@@ -110,9 +115,7 @@ class MCPServerBase(ABC):
 
                     if message.get("type") == "tool_call":
                         result = await self.handle_tool_call(
-                            message["tool"],
-                            message["params"],
-                            message.get("call_id", str(uuid4()))
+                            message["tool"], message["params"], message.get("call_id", str(uuid4()))
                         )
                         await websocket.send_text(json.dumps(asdict(result)))
 
@@ -121,7 +124,9 @@ class MCPServerBase(ABC):
                 await websocket.close()
 
     @trace_async("mcp_tool_call")
-    async def handle_tool_call(self, tool: str, params: Dict[str, Any], call_id: str) -> MCPToolResult:
+    async def handle_tool_call(
+        self, tool: str, params: Dict[str, Any], call_id: str
+    ) -> MCPToolResult:
         """
         Handle MCP tool call with caching, metrics, and SLO tracking
         Target: P95 < 180ms, Cache hit rate > 97%
@@ -134,7 +139,7 @@ class MCPServerBase(ABC):
                 return MCPToolResult(
                     call_id=call_id,
                     success=False,
-                    error=f"Tool '{tool}' not found in domain '{self.domain}'"
+                    error=f"Tool '{tool}' not found in domain '{self.domain}'",
                 )
 
             # Generate cache key
@@ -151,7 +156,7 @@ class MCPServerBase(ABC):
                     success=True,
                     result=cached_result,
                     latency_ms=latency_ms,
-                    cache_hit=True
+                    cache_hit=True,
                 )
 
             # Execute tool
@@ -173,11 +178,7 @@ class MCPServerBase(ABC):
                 self.metrics.slo_violation(self.domain, tool, latency_ms)
 
             return MCPToolResult(
-                call_id=call_id,
-                success=True,
-                result=result,
-                latency_ms=latency_ms,
-                cache_hit=False
+                call_id=call_id, success=True, result=result, latency_ms=latency_ms, cache_hit=False
             )
 
         except Exception as e:
@@ -186,10 +187,7 @@ class MCPServerBase(ABC):
             self.metrics.tool_call_error(self.domain, tool, str(e))
 
             return MCPToolResult(
-                call_id=call_id,
-                success=False,
-                error=str(e),
-                latency_ms=latency_ms
+                call_id=call_id, success=False, error=str(e), latency_ms=latency_ms
             )
 
     def _generate_cache_key(self, tool: str, params: Dict[str, Any]) -> str:
@@ -203,11 +201,11 @@ class MCPServerBase(ABC):
         """Get appropriate cache TTL based on tool and result characteristics"""
         # Default TTLs by tool type
         ttl_map = {
-            "search": 300,      # 5 minutes for search results
-            "get": 600,         # 10 minutes for entity fetches
-            "list": 180,        # 3 minutes for list operations
-            "analytics": 900,   # 15 minutes for analytics
-            "health": 300,      # 5 minutes for health scores
+            "search": 300,  # 5 minutes for search results
+            "get": 600,  # 10 minutes for entity fetches
+            "list": 180,  # 3 minutes for list operations
+            "analytics": 900,  # 15 minutes for analytics
+            "health": 300,  # 5 minutes for health scores
         }
 
         # Determine tool type from name
@@ -225,9 +223,11 @@ class MCPServerBase(ABC):
 
     def mcp_tool(self, name: str):
         """Decorator to register MCP tools"""
+
         def decorator(func: Callable):
             self.register_tool(name, func)
             return func
+
         return decorator
 
     @abstractmethod
@@ -237,6 +237,7 @@ class MCPServerBase(ABC):
     @abstractmethod
     async def shutdown(self):
         """Cleanup domain-specific resources"""
+
 
 class MCPServerManager:
     """
@@ -266,9 +267,13 @@ class MCPServerManager:
                     server_health[domain] = {"status": "unhealthy", "error": str(e)}
 
             return {
-                "status": "healthy" if all(h.get("status") == "healthy" for h in server_health.values()) else "degraded",
+                "status": (
+                    "healthy"
+                    if all(h.get("status") == "healthy" for h in server_health.values())
+                    else "degraded"
+                ),
                 "servers": server_health,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         @self.app.get("/servers")
@@ -277,7 +282,7 @@ class MCPServerManager:
                 "servers": {
                     domain: {
                         "capabilities": server.capabilities,
-                        "tools": list(server.tools.keys())
+                        "tools": list(server.tools.keys()),
                     }
                     for domain, server in self.servers.items()
                 }
@@ -289,7 +294,9 @@ class MCPServerManager:
                 raise HTTPException(status_code=404, detail=f"Domain '{domain}' not found")
 
             server = self.servers[domain]
-            return await server.handle_tool_call(tool_call.tool, tool_call.params, tool_call.call_id)
+            return await server.handle_tool_call(
+                tool_call.tool, tool_call.params, tool_call.call_id
+            )
 
     def register_server(self, server: MCPServerBase):
         """Register an MCP server"""
@@ -315,6 +322,7 @@ class MCPServerManager:
             except Exception as e:
                 logger.error(f"Failed to shutdown server for domain '{domain}': {e}")
 
+
 class SophiaMCPServer(MCPServerBase):
     """
     Unified Sophia MCP Server
@@ -324,13 +332,14 @@ class SophiaMCPServer(MCPServerBase):
     def __init__(self, memory_bus=None):
         # Initialize metrics collector
         from app.observability.metrics import MetricsCollector
+
         metrics = MetricsCollector()
 
         super().__init__(
             domain="sophia_unified",
             capabilities=["memory", "system", "utility"],
             memory_bus=memory_bus,
-            metrics=metrics
+            metrics=metrics,
         )
 
         self.request_count = 0
@@ -381,7 +390,7 @@ class SophiaMCPServer(MCPServerBase):
                 "stored": True,
                 "key": key,
                 "ttl": ttl,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         @self.mcp_tool("memory.retrieve")
@@ -396,7 +405,7 @@ class SophiaMCPServer(MCPServerBase):
                 "found": value is not None,
                 "key": key,
                 "value": value,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         @self.mcp_tool("memory.search")
@@ -412,7 +421,7 @@ class SophiaMCPServer(MCPServerBase):
                 "results": results,
                 "count": len(results),
                 "limit": limit,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         @self.mcp_tool("system.status")
@@ -425,7 +434,7 @@ class SophiaMCPServer(MCPServerBase):
                 "requests_processed": self.request_count,
                 "errors_encountered": self.error_count,
                 "memory_bus_connected": self.memory_bus is not None,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         @self.mcp_tool("system.metrics")
@@ -437,7 +446,7 @@ class SophiaMCPServer(MCPServerBase):
                     "request_count": self.request_count,
                     "error_count": self.error_count,
                     "error_rate": self.error_count / max(self.request_count, 1),
-                    "tools_registered": len(self.tools)
+                    "tools_registered": len(self.tools),
                 }
             }
 
@@ -458,40 +467,32 @@ class SophiaMCPServer(MCPServerBase):
             """Generate unique identifier"""
             unique_id = f"{prefix}_{uuid4().hex[:8]}"
 
-            return {
-                "id": unique_id,
-                "prefix": prefix,
-                "timestamp": datetime.utcnow().isoformat()
-            }
+            return {"id": unique_id, "prefix": prefix, "timestamp": datetime.utcnow().isoformat()}
 
         @self.mcp_tool("util.timestamp")
         async def get_timestamp(format_type: str = "iso") -> Dict[str, Any]:
             """Get current timestamp"""
             now = datetime.utcnow()
 
-            if format_type == 'iso':
+            if format_type == "iso":
                 timestamp = now.isoformat()
-            elif format_type == 'unix':
+            elif format_type == "unix":
                 timestamp = int(now.timestamp())
-            elif format_type == 'readable':
-                timestamp = now.strftime('%Y-%m-%d %H:%M:%S')
+            elif format_type == "readable":
+                timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
             else:
                 timestamp = now.isoformat()
 
-            return {
-                "timestamp": timestamp,
-                "format": format_type,
-                "timezone": "UTC"
-            }
+            return {"timestamp": timestamp, "format": format_type, "timezone": "UTC"}
 
     async def call_tool(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Compatibility method for main_unified.py"""
         self.request_count += 1
 
         try:
-            tool_name = request.get('tool')
-            params = request.get('params', {})
-            call_id = request.get('call_id', str(uuid4()))
+            tool_name = request.get("tool")
+            params = request.get("params", {})
+            call_id = request.get("call_id", str(uuid4()))
 
             result = await self.handle_tool_call(tool_name, params, call_id)
 
@@ -501,7 +502,7 @@ class SophiaMCPServer(MCPServerBase):
                 "error": result.error,
                 "execution_time": result.latency_ms / 1000 if result.latency_ms else 0,
                 "cache_hit": result.cache_hit,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -513,7 +514,7 @@ class SophiaMCPServer(MCPServerBase):
                 "error": str(e),
                 "execution_time": 0,
                 "cache_hit": False,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
     async def list_tools(self) -> Dict[str, Any]:
@@ -524,11 +525,13 @@ class SophiaMCPServer(MCPServerBase):
             # Extract tool info from function
             func = self.tools[tool_name]
 
-            tools_list.append({
-                "name": tool_name,
-                "description": func.__doc__ or f"{tool_name} tool",
-                "category": tool_name.split('.')[0] if '.' in tool_name else "general"
-            })
+            tools_list.append(
+                {
+                    "name": tool_name,
+                    "description": func.__doc__ or f"{tool_name} tool",
+                    "category": tool_name.split(".")[0] if "." in tool_name else "general",
+                }
+            )
 
         return {
             "tools": tools_list,
@@ -538,8 +541,8 @@ class SophiaMCPServer(MCPServerBase):
                 "uptime_seconds": (datetime.utcnow() - self.start_time).total_seconds(),
                 "total_requests": self.request_count,
                 "total_errors": self.error_count,
-                "error_rate": self.error_count / max(self.request_count, 1)
-            }
+                "error_rate": self.error_count / max(self.request_count, 1),
+            },
         }
 
     async def health_check(self) -> Dict[str, Any]:
@@ -551,7 +554,7 @@ class SophiaMCPServer(MCPServerBase):
             "tools_count": len(self.tools),
             "request_count": self.request_count,
             "error_count": self.error_count,
-            "error_rate": self.error_count / max(self.request_count, 1)
+            "error_rate": self.error_count / max(self.request_count, 1),
         }
 
         # Check memory bus health
@@ -559,22 +562,12 @@ class SophiaMCPServer(MCPServerBase):
             try:
                 # Simple health check - try to get a test key
                 sophia_result = await self.memory_bus.get("health_check_test")
-                health["memory_bus"] = {
-                    "status": "healthy",
-                    "connected": True
-                }
+                health["memory_bus"] = {"status": "healthy", "connected": True}
             except Exception as e:
-                health["memory_bus"] = {
-                    "status": "unhealthy",
-                    "error": str(e),
-                    "connected": False
-                }
+                health["memory_bus"] = {"status": "unhealthy", "error": str(e), "connected": False}
                 health["status"] = "degraded"
         else:
-            health["memory_bus"] = {
-                "status": "not_configured",
-                "connected": False
-            }
+            health["memory_bus"] = {"status": "not_configured", "connected": False}
 
         return health
 
@@ -585,6 +578,7 @@ def validate_required_params(params: Dict[str, Any], required: List[str]) -> Non
     missing = [param for param in required if param not in params]
     if missing:
         raise ValueError(f"Missing required parameters: {missing}")
+
 
 def sanitize_params(params: Dict[str, Any]) -> Dict[str, Any]:
     """Sanitize parameters for safe processing"""
@@ -598,6 +592,7 @@ def sanitize_params(params: Dict[str, Any]) -> Dict[str, Any]:
 
     return sanitized
 
+
 async def with_retry(func: Callable, max_retries: int = 3, delay: float = 1.0):
     """Execute function with exponential backoff retry"""
     for attempt in range(max_retries):
@@ -607,9 +602,10 @@ async def with_retry(func: Callable, max_retries: int = 3, delay: float = 1.0):
             if attempt == max_retries - 1:
                 raise
 
-            wait_time = delay * (2 ** attempt)
+            wait_time = delay * (2**attempt)
             logger.warning(f"Attempt {attempt + 1} failed: {e}. Retrying in {wait_time}s")
             await asyncio.sleep(wait_time)
+
 
 # Example usage and testing
 if __name__ == "__main__":

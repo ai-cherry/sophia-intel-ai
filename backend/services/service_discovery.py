@@ -9,6 +9,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
 class ServiceStatus(Enum):
     """Service status enumeration"""
 
@@ -17,6 +18,7 @@ class ServiceStatus(Enum):
     STARTING = "starting"
     STOPPING = "stopping"
     UNKNOWN = "unknown"
+
 
 @dataclass
 class ServiceInfo:
@@ -37,6 +39,7 @@ class ServiceInfo:
         if self.last_heartbeat is None:
             return False
         return datetime.now() - self.last_heartbeat < timedelta(seconds=60)
+
 
 class ServiceDiscovery:
     """Service discovery and health management"""
@@ -185,7 +188,9 @@ class ServiceDiscovery:
             "last_check": datetime.now().isoformat(),
         }
 
+
 _service_discovery: ServiceDiscovery | None = None
+
 
 async def get_service_discovery() -> ServiceDiscovery:
     """Get or create the global service discovery instance"""
@@ -194,6 +199,7 @@ async def get_service_discovery() -> ServiceDiscovery:
         _service_discovery = ServiceDiscovery()
         await _service_discovery.start()
     return _service_discovery
+
 
 async def register_mcp_server(
     name: str, host: str, port: int, metadata: dict[str, Any] = None
@@ -208,12 +214,9 @@ async def register_mcp_server(
     )
     return await service_discovery.register_service(service_info)
 
+
 async def get_mcp_servers() -> list[ServiceInfo]:
     """Get all registered MCP servers"""
     service_discovery = await get_service_discovery()
     all_services = await service_discovery.get_healthy_services()
-    return [
-        service
-        for service in all_services
-        if service.metadata.get("type") == "mcp_server"
-    ]
+    return [service for service in all_services if service.metadata.get("type") == "mcp_server"]

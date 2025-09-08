@@ -10,6 +10,7 @@ from faker import Faker
 
 fake = Faker()
 
+
 class BusinessDataGenerator:
     """Generate realistic business data for testing integrations."""
 
@@ -75,17 +76,11 @@ class BusinessDataGenerator:
             "properties": {
                 "Name": {
                     "type": "title",
-                    "title": [
-                        {"type": "text", "text": {"content": fake.catch_phrase()}}
-                    ],
+                    "title": [{"type": "text", "text": {"content": fake.catch_phrase()}}],
                 },
                 "Status": {
                     "type": "select",
-                    "select": {
-                        "name": secrets.choice(
-                            ["Not Started", "In Progress", "Completed"]
-                        )
-                    },
+                    "select": {"name": secrets.choice(["Not Started", "In Progress", "Completed"])},
                 },
                 "Priority": {
                     "type": "select",
@@ -147,12 +142,8 @@ class BusinessDataGenerator:
             "description": fake.text(max_nb_chars=300),
             "state": {
                 "id": str(uuid.uuid4()),
-                "name": secrets.choice([
-                    "Backlog", "In Progress", "Done", "Blocked"
-                ]),
-                "type": secrets.choice(
-                    ["unstarted", "started", "completed", "canceled"]
-                ),
+                "name": secrets.choice(["Backlog", "In Progress", "Done", "Blocked"]),
+                "type": secrets.choice(["unstarted", "started", "completed", "canceled"]),
             },
             "priority": secrets.SystemRandom().randint(1, 5),
             "assignee": (
@@ -219,8 +210,7 @@ class BusinessDataGenerator:
             "Amount": secrets.SystemRandom().randint(10000, 500000),
             "Probability": secrets.SystemRandom().randint(10, 100),
             "CloseDate": (
-                datetime.utcnow()
-                + timedelta(days=secrets.SystemRandom().randint(30, 180))
+                datetime.utcnow() + timedelta(days=secrets.SystemRandom().randint(30, 180))
             ).isoformat(),
             "CreatedDate": datetime.utcnow().isoformat(),
             "LastModifiedDate": datetime.utcnow().isoformat(),
@@ -243,8 +233,7 @@ class BusinessDataGenerator:
                 else None
             ),
             "due_on": (
-                datetime.utcnow()
-                + timedelta(days=secrets.SystemRandom().randint(1, 60))
+                datetime.utcnow() + timedelta(days=secrets.SystemRandom().randint(1, 60))
             ).strftime("%Y-%m-%d"),
             "created_at": datetime.utcnow().isoformat(),
             "modified_at": datetime.utcnow().isoformat(),
@@ -277,14 +266,10 @@ class BusinessDataGenerator:
         }
 
     @classmethod
-    def generate_batch_data(
-        cls, integration: str, count: int = 10
-    ) -> list[dict[str, Any]]:
+    def generate_batch_data(cls, integration: str, count: int = 10) -> list[dict[str, Any]]:
         """Generate batch data for specified integration."""
         generators = {
-            "notion": lambda: cls.generate_notion_page(
-                str(uuid.uuid4()).replace("-", "")
-            ),
+            "notion": lambda: cls.generate_notion_page(str(uuid.uuid4()).replace("-", "")),
             "slack": lambda: cls.generate_slack_message(f"#{fake.word()}"),
             "linear": cls.generate_linear_issue,
             "hubspot": cls.generate_hubspot_contact,

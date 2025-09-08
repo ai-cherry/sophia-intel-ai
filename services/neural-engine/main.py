@@ -24,8 +24,10 @@ logger = logging.getLogger(__name__)
 neural_engine: Optional[AsyncLLMEngine] = None
 cache_client: Optional[redis.Redis] = None
 
+
 class NeuralInferenceRequest(BaseModel):
     """Request model for neural inference"""
+
     query: str = Field(..., description="Input query for neural reasoning")
     context: Optional[List[str]] = Field(None, description="Additional context documents")
     max_tokens: int = Field(4096, ge=1, le=32768, description="Maximum tokens to generate")
@@ -35,8 +37,10 @@ class NeuralInferenceRequest(BaseModel):
     output_format: str = Field("text", description="Output format: text, json, code")
     use_cache: bool = Field(True, description="Whether to use caching")
 
+
 class NeuralInferenceResponse(BaseModel):
     """Response model for neural inference"""
+
     response: str
     reasoning_trace: Optional[List[str]] = None
     latency_ms: float
@@ -45,14 +49,17 @@ class NeuralInferenceResponse(BaseModel):
     cache_hit: bool
     cost_estimate: float
 
+
 class HealthResponse(BaseModel):
     """Health check response"""
+
     status: str
     gpu_memory_used: float
     gpu_memory_total: float
     model_loaded: bool
     cache_connected: bool
     uptime_seconds: float
+
 
 class NeuralEngineManager:
     """Production-ready DeepSeek-R1-0528 engine manager"""
@@ -88,16 +95,13 @@ class NeuralEngineManager:
             enable_chunked_prefill=True,  # For long contexts
             max_num_batched_tokens=32768,  # Batch size optimization
             max_num_seqs=256,  # Concurrent sequences
-
             # DeepSeek-specific optimizations
             trust_remote_code=True,
             revision="main",
-
             # Performance optimizations
             use_v2_block_manager=True,
             enable_lora=False,  # Disable LoRA for base model
             max_loras=0,
-
             # Memory optimizations
             block_size=16,
             max_num_blocks_per_seq=8192,
@@ -114,7 +118,7 @@ class NeuralEngineManager:
                 db=0,
                 decode_responses=True,
                 socket_timeout=5.0,
-                socket_connect_timeout=5.0
+                socket_connect_timeout=5.0,
             )
             await cache_client.ping()
             logger.info("Connected to Redis cache")
@@ -150,7 +154,7 @@ class NeuralEngineManager:
             "temperature": request.temperature,
             "top_p": request.top_p,
             "reasoning_depth": request.reasoning_depth,
-            "output_format": request.output_format
+            "output_format": request.output_format,
         }
 
         cache_str = str(sorted(cache_data.items()))
@@ -165,6 +169,7 @@ class NeuralEngineManager:
             cached_data = await cache_client.get(cache_key)
             if cached_data:
                 import json
+
                 return json.loads(cached_data)
         except Exception as e:
             logger.warning(f"Cache read error: {e}")
@@ -178,11 +183,8 @@ class NeuralEngineManager:
 
         try:
             import json
-            await cache_client.setex(
-                cache_key,
-                ttl,
-                json.dumps(response_data)
-            )
+
+            await cache_client.setex(cache_key, ttl, json.dumps(response_data))
         except Exception as e:
             logger.warning(f"Cache write error: {e}")
 
@@ -240,7 +242,6 @@ class NeuralEngineManager:
             presence_penalty=0.1,
             use_beam_search=False,
             best_of=1,
-
             # DeepSeek-specific optimizations
             skip_special_tokens=True,
             spaces_between_special_tokens=False,
@@ -250,9 +251,7 @@ class NeuralEngineManager:
         try:
             with torch.cuda.nvtx.range("deepseek_inference"):
                 results = await neural_engine.generate(
-                    prompt,
-                    sampling_params,
-                    request_id=f"req_{int(time.time() * 1000)}"
+                    prompt, sampling_params, request_id=f"req_{int(time.time() * 1000)}"
                 )
 
             # Extract response
@@ -283,7 +282,7 @@ class NeuralEngineManager:
             "tokens_generated": tokens_generated,
             "gpu_utilization": gpu_utilization,
             "cache_hit": cache_hit,
-            "cost_estimate": cost_estimate
+            "cost_estimate": cost_estimate,
         }
 
         # Cache response
@@ -320,11 +319,13 @@ class NeuralEngineManager:
             gpu_memory_total=gpu_memory_total,
             model_loaded=neural_engine is not None,
             cache_connected=cache_connected,
-            uptime_seconds=uptime_seconds
+            uptime_seconds=uptime_seconds,
         )
+
 
 # Initialize engine manager
 engine_manager = NeuralEngineManager()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -335,23 +336,27 @@ async def lifespan(app: FastAPI):
     # Shutdown
     await engine_manager.shutdown_engine()
 
+
 # Create FastAPI application
 app = FastAPI(
     title="Sophia AI Neural Engine",
     description="DeepSeek-R1-0528 Neural Inference Service",
     version="3.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
+
 
 @app.post("/neural/inference", response_model=NeuralInferenceResponse)
 async def neural_inference(request: NeuralInferenceRequest) -> NeuralInferenceResponse:
     """Execute neural inference with DeepSeek-R1-0528"""
     return await engine_manager.infer(request)
 
+
 @app.get("/health", response_model=HealthResponse)
 async def health_check() -> HealthResponse:
     """Health check endpoint"""
     return await engine_manager.health_check()
+
 
 @app.get("/metrics")
 async def metrics():
@@ -373,6 +378,7 @@ neural_gpu_memory_used {torch.cuda.memory_allocated() / 1024**3 if torch.cuda.is
 
     return metrics_text
 
+
 @app.get("/")
 async def root():
     """Root endpoint"""
@@ -380,8 +386,9 @@ async def root():
         "service": "Sophia AI Neural Engine",
         "model": "DeepSeek-R1-0528",
         "version": "3.0.0",
-        "status": "operational"
+        "status": "operational",
     }
+
 
 if __name__ == "__main__":
     import uvicorn
@@ -392,5 +399,5 @@ if __name__ == "__main__":
         port=8001,
         workers=1,  # Single worker for GPU model
         log_level="info",
-        access_log=True
+        access_log=True,
     )

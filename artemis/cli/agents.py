@@ -2,6 +2,7 @@
 Artemis CLI aggregator for local agent entry.
 Provides a minimal AgentCLI wrapper to unify agent invocation.
 """
+
 from __future__ import annotations
 
 import subprocess
@@ -29,4 +30,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

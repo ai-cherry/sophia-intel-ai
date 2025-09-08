@@ -20,7 +20,7 @@ class RetryConfig:
         max_delay: float = 60.0,
         exponential_base: float = 2.0,
         jitter: bool = True,
-        exceptions: Tuple[Type[Exception], ...] = (Exception,)
+        exceptions: Tuple[Type[Exception], ...] = (Exception,),
     ):
         self.max_attempts = max_attempts
         self.initial_delay = initial_delay
@@ -31,14 +31,10 @@ class RetryConfig:
 
 
 def calculate_backoff(
-    attempt: int,
-    initial_delay: float,
-    exponential_base: float,
-    max_delay: float,
-    jitter: bool
+    attempt: int, initial_delay: float, exponential_base: float, max_delay: float, jitter: bool
 ) -> float:
     """Calculate the backoff delay for a given attempt."""
-    delay = min(initial_delay * (exponential_base ** attempt), max_delay)
+    delay = min(initial_delay * (exponential_base**attempt), max_delay)
 
     if jitter:
         # Add jitter: random value between 0 and delay
@@ -70,7 +66,7 @@ def retry(config: Optional[RetryConfig] = None):
                             config.initial_delay,
                             config.exponential_base,
                             config.max_delay,
-                            config.jitter
+                            config.jitter,
                         )
 
                         logger.warning(
@@ -102,7 +98,7 @@ def retry(config: Optional[RetryConfig] = None):
                             config.initial_delay,
                             config.exponential_base,
                             config.max_delay,
-                            config.jitter
+                            config.jitter,
                         )
 
                         logger.warning(
@@ -153,7 +149,7 @@ class RetryManager:
                         self.config.initial_delay,
                         self.config.exponential_base,
                         self.config.max_delay,
-                        self.config.jitter
+                        self.config.jitter,
                     )
 
                     logger.warning(
@@ -163,9 +159,7 @@ class RetryManager:
 
                     await asyncio.sleep(delay)
                 else:
-                    logger.error(
-                        f"All {self.config.max_attempts} attempts failed: {e}"
-                    )
+                    logger.error(f"All {self.config.max_attempts} attempts failed: {e}")
 
         raise last_exception
 
@@ -188,7 +182,7 @@ class RetryManager:
                         self.config.initial_delay,
                         self.config.exponential_base,
                         self.config.max_delay,
-                        self.config.jitter
+                        self.config.jitter,
                     )
 
                     logger.warning(
@@ -198,8 +192,6 @@ class RetryManager:
 
                     time.sleep(delay)
                 else:
-                    logger.error(
-                        f"All {self.config.max_attempts} attempts failed: {e}"
-                    )
+                    logger.error(f"All {self.config.max_attempts} attempts failed: {e}")
 
         raise last_exception

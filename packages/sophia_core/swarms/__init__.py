@@ -29,27 +29,22 @@ __all__ = [
     "BaseSwarm",
     "SwarmCoordinator",
     "SwarmExecutor",
-
     # Swarm types
     "HierarchicalSwarm",
     "PeerToPeerSwarm",
-
     # Swarm configuration
     "SwarmState",
     "SwarmConfig",
     "SwarmTopology",
     "SwarmRole",
-
     # Swarm components
     "SwarmMember",
     "SwarmTask",
     "SwarmMessage",
-
     # Swarm management
     "SwarmRegistry",
-
     # Exceptions
     "SwarmError",
     "SwarmInitializationError",
-    "SwarmCoordinationError"
+    "SwarmCoordinationError",
 ]

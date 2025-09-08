@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class VectorStoreType(Enum):
     """Supported vector store types."""
+
     WEAVIATE = "weaviate"
     CHROMADB = "chromadb"
     PINECONE = "pinecone"
@@ -25,6 +26,7 @@ class VectorStoreType(Enum):
 
 class LLMProvider(Enum):
     """Supported LLM providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     OPENROUTER = "openrouter"
@@ -35,16 +37,18 @@ class LLMProvider(Enum):
 def is_provider_enabled(provider: Union[str, LLMProvider]) -> bool:
     """
     Check if an LLM provider is enabled and properly configured.
-    
+
     Args:
         provider: Provider name or enum value
-        
+
     Returns:
         bool: True if provider is enabled and has valid configuration
     """
     try:
         # Convert to string if enum
-        provider_name = provider.value if isinstance(provider, LLMProvider) else str(provider).lower()
+        provider_name = (
+            provider.value if isinstance(provider, LLMProvider) else str(provider).lower()
+        )
 
         # Check if provider is in enabled list
         feature_flags = get_feature_flags()
@@ -63,7 +67,9 @@ def is_provider_enabled(provider: Union[str, LLMProvider]) -> bool:
                 return False
 
             # Check if key is not empty
-            key_value = api_key.get_secret_value() if hasattr(api_key, 'get_secret_value') else api_key
+            key_value = (
+                api_key.get_secret_value() if hasattr(api_key, "get_secret_value") else api_key
+            )
             if not key_value or key_value.strip() == "":
                 logger.warning(f"Provider {provider_name} has empty API key")
                 return False
@@ -81,10 +87,10 @@ def is_provider_enabled(provider: Union[str, LLMProvider]) -> bool:
 def select_vector_store() -> VectorStoreType:
     """
     Select and validate the configured vector store.
-    
+
     Returns:
         VectorStoreType: The configured vector store type
-        
+
     Raises:
         ValueError: If vector store type is invalid or not configured
     """
@@ -110,7 +116,7 @@ def select_vector_store() -> VectorStoreType:
 def get_enabled_providers() -> List[LLMProvider]:
     """
     Get list of enabled and properly configured LLM providers.
-    
+
     Returns:
         List[LLMProvider]: List of available providers
     """
@@ -127,7 +133,7 @@ def get_enabled_providers() -> List[LLMProvider]:
 def get_primary_provider() -> Optional[LLMProvider]:
     """
     Get the primary (first available) LLM provider.
-    
+
     Returns:
         Optional[LLMProvider]: Primary provider or None if none available
     """
@@ -143,30 +149,34 @@ def get_primary_provider() -> Optional[LLMProvider]:
 
 # Sensitive data patterns for redaction
 SENSITIVE_PATTERNS = {
-    'api_key': re.compile(r'(api[_-]?key|token|secret)["\']?\s*[:=]\s*["\']?([a-zA-Z0-9_\-]{20,})', re.IGNORECASE),
-    'password': re.compile(r'(password|passwd|pwd)["\']?\s*[:=]\s*["\']?([^"\'\s]{3,})', re.IGNORECASE),
-    'email': re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
-    'credit_card': re.compile(r'\b(?:\d{4}[-\s]?){3}\d{4}\b'),
-    'ssn': re.compile(r'\b\d{3}-\d{2}-\d{4}\b'),
-    'phone': re.compile(r'\b\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b'),
-    'ip_address': re.compile(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'),
-    'jwt': re.compile(r'eyJ[A-Za-z0-9_=-]+\.eyJ[A-Za-z0-9_=-]+\.[A-Za-z0-9_=-]+'),
+    "api_key": re.compile(
+        r'(api[_-]?key|token|secret)["\']?\s*[:=]\s*["\']?([a-zA-Z0-9_\-]{20,})', re.IGNORECASE
+    ),
+    "password": re.compile(
+        r'(password|passwd|pwd)["\']?\s*[:=]\s*["\']?([^"\'\s]{3,})', re.IGNORECASE
+    ),
+    "email": re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"),
+    "credit_card": re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b"),
+    "ssn": re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
+    "phone": re.compile(r"\b\+?1?[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"),
+    "ip_address": re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"),
+    "jwt": re.compile(r"eyJ[A-Za-z0-9_=-]+\.eyJ[A-Za-z0-9_=-]+\.[A-Za-z0-9_=-]+"),
 }
 
 
 def redact_sensitive_data(
     data: Union[str, Dict[str, Any]],
     patterns: Optional[Dict[str, re.Pattern]] = None,
-    replacement: str = "[REDACTED]"
+    replacement: str = "[REDACTED]",
 ) -> Union[str, Dict[str, Any]]:
     """
     Redact sensitive information from strings or dictionaries.
-    
+
     Args:
         data: String or dictionary to redact
         patterns: Custom regex patterns for redaction
         replacement: Replacement string for sensitive data
-        
+
     Returns:
         Union[str, Dict[str, Any]]: Data with sensitive information redacted
     """
@@ -190,7 +200,7 @@ def redact_sensitive_data(
 def _redact_string(text: str, patterns: Dict[str, re.Pattern], replacement: str) -> str:
     """Redact sensitive patterns from a string."""
     for pattern_name, pattern in patterns.items():
-        if pattern_name in ['api_key', 'password']:
+        if pattern_name in ["api_key", "password"]:
             # For key-value patterns, only redact the value part
             text = pattern.sub(lambda m: f"{m.group(1)}={replacement}", text)
         else:
@@ -200,21 +210,27 @@ def _redact_string(text: str, patterns: Dict[str, re.Pattern], replacement: str)
     return text
 
 
-def _redact_dict(data: Dict[str, Any], patterns: Dict[str, re.Pattern], replacement: str) -> Dict[str, Any]:
+def _redact_dict(
+    data: Dict[str, Any], patterns: Dict[str, re.Pattern], replacement: str
+) -> Dict[str, Any]:
     """Redact sensitive patterns from a dictionary."""
     redacted = {}
 
     for key, value in data.items():
         # Check if key name suggests sensitive data
         key_lower = key.lower()
-        if any(sensitive in key_lower for sensitive in ['key', 'token', 'secret', 'password', 'passwd']):
+        if any(
+            sensitive in key_lower for sensitive in ["key", "token", "secret", "password", "passwd"]
+        ):
             redacted[key] = replacement
         elif isinstance(value, str):
             redacted[key] = _redact_string(value, patterns, replacement)
         elif isinstance(value, dict):
             redacted[key] = _redact_dict(value, patterns, replacement)
         elif isinstance(value, (list, tuple)):
-            redacted[key] = type(value)([redact_sensitive_data(item, patterns, replacement) for item in value])
+            redacted[key] = type(value)(
+                [redact_sensitive_data(item, patterns, replacement) for item in value]
+            )
         else:
             redacted[key] = value
 
@@ -225,20 +241,20 @@ def get_config_value(
     key: str,
     default: Any = None,
     required: bool = False,
-    validator: Optional[Callable[[Any], bool]] = None
+    validator: Optional[Callable[[Any], bool]] = None,
 ) -> Any:
     """
     Get a configuration value with validation.
-    
+
     Args:
         key: Configuration key (dot-separated for nested values)
         default: Default value if key not found
         required: Whether the key is required
         validator: Optional validation function
-        
+
     Returns:
         Any: Configuration value
-        
+
     Raises:
         ValueError: If required key is missing or validation fails
     """
@@ -246,7 +262,7 @@ def get_config_value(
         settings = get_settings()
 
         # Handle dot-separated keys for nested access
-        keys = key.split('.')
+        keys = key.split(".")
         value = settings
 
         for k in keys:
@@ -275,7 +291,7 @@ def get_config_value(
 def validate_config() -> List[str]:
     """
     Validate the current configuration and return list of issues.
-    
+
     Returns:
         List[str]: List of validation issues (empty if all valid)
     """
@@ -331,13 +347,13 @@ def validate_config() -> List[str]:
 def get_provider_config(provider: Union[str, LLMProvider]) -> Dict[str, Any]:
     """
     Get configuration for a specific LLM provider.
-    
+
     Args:
         provider: Provider name or enum
-        
+
     Returns:
         Dict[str, Any]: Provider configuration
-        
+
     Raises:
         ValueError: If provider is not enabled or configured
     """
@@ -349,16 +365,16 @@ def get_provider_config(provider: Union[str, LLMProvider]) -> Dict[str, Any]:
     llm_settings = get_llm_settings()
 
     config = {
-        'name': provider_name,
-        'api_key': getattr(llm_settings, f"{provider_name}_api_key"),
-        'base_url': getattr(llm_settings, f"{provider_name}_base_url"),
-        'timeout': llm_settings.default_timeout,
-        'max_tokens': llm_settings.default_max_tokens,
-        'temperature': llm_settings.default_temperature,
+        "name": provider_name,
+        "api_key": getattr(llm_settings, f"{provider_name}_api_key"),
+        "base_url": getattr(llm_settings, f"{provider_name}_base_url"),
+        "timeout": llm_settings.default_timeout,
+        "max_tokens": llm_settings.default_max_tokens,
+        "temperature": llm_settings.default_temperature,
     }
 
     # Add provider-specific configurations
     if provider_name == LLMProvider.OPENAI.value:
-        config['organization'] = llm_settings.openai_org_id
+        config["organization"] = llm_settings.openai_org_id
 
     return config

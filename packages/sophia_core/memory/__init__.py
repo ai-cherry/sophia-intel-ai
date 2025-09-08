@@ -28,12 +28,10 @@ __all__ = [
     "MemoryResult",
     "MemoryStats",
     "MemorySearchStrategy",
-
     # Specific memory types
     "EpisodicMemory",
     "SemanticMemory",
     "WorkingMemory",
-
     # Memory management
-    "MemoryManager"
+    "MemoryManager",
 ]

@@ -122,10 +122,16 @@ class BaseMemoryService(ABC):
                     # Compute remaining seconds in the window for Retry-After header
                     try:
                         ttl = self.redis_client.ttl(key)
-                        retry_after = max(int(ttl), 1) if ttl and ttl > 0 else self.config.rate_limit_period
+                        retry_after = (
+                            max(int(ttl), 1) if ttl and ttl > 0 else self.config.rate_limit_period
+                        )
                     except Exception:
                         retry_after = self.config.rate_limit_period
-                    raise HTTPException(status_code=429, detail="Rate limit exceeded", headers={"Retry-After": str(retry_after)})
+                    raise HTTPException(
+                        status_code=429,
+                        detail="Rate limit exceeded",
+                        headers={"Retry-After": str(retry_after)},
+                    )
             except Exception:
                 # Fail-open on limiter errors
                 return None
@@ -323,7 +329,10 @@ class BaseMemoryService(ABC):
 
         @self.app.get("/version")
         async def version():
-            return {"version": getattr(self, "_version", "unknown"), "service": f"{self.domain}-memory"}
+            return {
+                "version": getattr(self, "_version", "unknown"),
+                "service": f"{self.domain}-memory",
+            }
 
         @self.app.post(
             "/query",
@@ -501,7 +510,9 @@ class BaseMemoryService(ABC):
 
     def _compute_version(self) -> str:
         try:
-            out = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL)
+            out = subprocess.check_output(
+                ["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.DEVNULL
+            )
             return out.decode().strip()
         except Exception:
             return "unknown"
@@ -513,10 +524,13 @@ class BaseMemoryService(ABC):
         async def http_exception_handler(request: Request, exc: HTTPException):
             # Build standardized error envelope
             err_type = (
-                "rate_limit" if exc.status_code == 429 else
-                "auth" if exc.status_code in (401, 403) else
-                "validation" if exc.status_code in (400, 404) else
-                "server"
+                "rate_limit"
+                if exc.status_code == 429
+                else (
+                    "auth"
+                    if exc.status_code in (401, 403)
+                    else "validation" if exc.status_code in (400, 404) else "server"
+                )
             )
             payload = {
                 "error": {

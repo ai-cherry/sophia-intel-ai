@@ -16,31 +16,34 @@ from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class MemoryType(str, Enum):
     """Types of memory systems."""
-    EPISODIC = "episodic"      # Specific experiences and events
-    SEMANTIC = "semantic"      # General knowledge and facts
-    WORKING = "working"        # Temporary, active information
+
+    EPISODIC = "episodic"  # Specific experiences and events
+    SEMANTIC = "semantic"  # General knowledge and facts
+    WORKING = "working"  # Temporary, active information
     PROCEDURAL = "procedural"  # Skills and procedures
-    META = "meta"             # Memory about memory
+    META = "meta"  # Memory about memory
 
 
 class MemorySearchStrategy(str, Enum):
     """Memory search strategies."""
-    SIMILARITY = "similarity"        # Vector similarity search
-    KEYWORD = "keyword"             # Keyword/text search
-    TEMPORAL = "temporal"           # Time-based search
-    CONTEXTUAL = "contextual"       # Context-aware search
-    HYBRID = "hybrid"               # Combined strategies
+
+    SIMILARITY = "similarity"  # Vector similarity search
+    KEYWORD = "keyword"  # Keyword/text search
+    TEMPORAL = "temporal"  # Time-based search
+    CONTEXTUAL = "contextual"  # Context-aware search
+    HYBRID = "hybrid"  # Combined strategies
 
 
 class MemoryEntry(BaseModel):
     """
     Represents a single memory entry.
     """
+
     id: str = Field(default_factory=lambda: str(uuid4()))
     content: str
     memory_type: MemoryType
@@ -64,7 +67,7 @@ class MemoryEntry(BaseModel):
     context_window: Optional[Dict[str, Any]] = None
     source: Optional[str] = None
 
-    @validator('tags', pre=True)
+    @validator("tags", pre=True)
     def convert_tags_to_set(cls, v):
         if isinstance(v, list):
             return set(v)
@@ -78,10 +81,10 @@ class MemoryEntry(BaseModel):
     def calculate_current_relevance(self, decay_factor: Optional[float] = None) -> float:
         """
         Calculate current relevance based on time decay.
-        
+
         Args:
             decay_factor: Optional custom decay factor
-            
+
         Returns:
             float: Current relevance score
         """
@@ -91,7 +94,7 @@ class MemoryEntry(BaseModel):
             age = (datetime.utcnow() - self.accessed_at).total_seconds() / 3600
 
         decay = decay_factor or self.relevance_decay
-        return self.importance_score * (decay ** age)
+        return self.importance_score * (decay**age)
 
     def add_relationship(self, entry_id: str) -> None:
         """Add relationship to another entry."""
@@ -104,16 +107,14 @@ class MemoryEntry(BaseModel):
 
     class Config:
         validate_assignment = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            set: lambda v: list(v)
-        }
+        json_encoders = {datetime: lambda v: v.isoformat(), set: lambda v: list(v)}
 
 
 class MemoryQuery(BaseModel):
     """
     Query for retrieving memories.
     """
+
     query_text: Optional[str] = None
     query_embedding: Optional[List[float]] = None
     memory_types: Optional[List[MemoryType]] = None
@@ -134,7 +135,7 @@ class MemoryQuery(BaseModel):
     context_filter: Optional[Dict[str, Any]] = None
     source_filter: Optional[str] = None
 
-    @validator('tags', pre=True)
+    @validator("tags", pre=True)
     def convert_tags_to_set(cls, v):
         if isinstance(v, list):
             return set(v)
@@ -149,18 +150,19 @@ class MemoryResult(BaseModel):
     """
     Result from memory query.
     """
+
     entry: MemoryEntry
     similarity_score: float = 0.0
     relevance_score: float = 0.0
     combined_score: float = 0.0
     match_reason: str = ""
 
-    @validator('combined_score', always=True)
+    @validator("combined_score", always=True)
     def calculate_combined_score(cls, v, values):
         """Calculate combined score if not provided."""
         if v == 0.0:
-            similarity = values.get('similarity_score', 0.0)
-            relevance = values.get('relevance_score', 0.0)
+            similarity = values.get("similarity_score", 0.0)
+            relevance = values.get("relevance_score", 0.0)
             return (similarity * 0.7) + (relevance * 0.3)
         return v
 
@@ -169,6 +171,7 @@ class MemoryStats(BaseModel):
     """
     Memory system statistics.
     """
+
     total_entries: int = 0
     entries_by_type: Dict[str, int] = Field(default_factory=dict)
     memory_usage_bytes: int = 0
@@ -194,11 +197,11 @@ class BaseMemory(ABC):
         memory_type: MemoryType,
         max_entries: Optional[int] = None,
         embedding_dim: int = 384,
-        **kwargs
+        **kwargs,
     ):
         """
         Initialize memory system.
-        
+
         Args:
             memory_type: Type of memory system
             max_entries: Maximum number of entries (None for unlimited)
@@ -218,10 +221,10 @@ class BaseMemory(ABC):
     async def store(self, entry: MemoryEntry) -> bool:
         """
         Store a memory entry.
-        
+
         Args:
             entry: Memory entry to store
-            
+
         Returns:
             bool: True if stored successfully
         """
@@ -231,10 +234,10 @@ class BaseMemory(ABC):
     async def retrieve(self, query: MemoryQuery) -> List[MemoryResult]:
         """
         Retrieve memory entries based on query.
-        
+
         Args:
             query: Memory query
-            
+
         Returns:
             List[MemoryResult]: Retrieved memory results
         """
@@ -244,10 +247,10 @@ class BaseMemory(ABC):
     async def delete(self, entry_id: str) -> bool:
         """
         Delete a memory entry.
-        
+
         Args:
             entry_id: ID of entry to delete
-            
+
         Returns:
             bool: True if deleted successfully
         """
@@ -256,10 +259,10 @@ class BaseMemory(ABC):
     async def get_by_id(self, entry_id: str) -> Optional[MemoryEntry]:
         """
         Get entry by ID.
-        
+
         Args:
             entry_id: Entry ID
-            
+
         Returns:
             Optional[MemoryEntry]: Entry if found
         """
@@ -271,10 +274,10 @@ class BaseMemory(ABC):
     async def update(self, entry: MemoryEntry) -> bool:
         """
         Update an existing memory entry.
-        
+
         Args:
             entry: Updated memory entry
-            
+
         Returns:
             bool: True if updated successfully
         """
@@ -294,10 +297,10 @@ class BaseMemory(ABC):
     async def cleanup_old_entries(self, max_age: timedelta) -> int:
         """
         Clean up entries older than max_age.
-        
+
         Args:
             max_age: Maximum age for entries
-            
+
         Returns:
             int: Number of entries removed
         """
@@ -338,8 +341,7 @@ class BaseMemory(ABC):
         if self.max_entries and len(self._entries) > self.max_entries:
             # Remove least recently used entries
             entries_by_access = sorted(
-                self._entries.values(),
-                key=lambda e: e.accessed_at or e.created_at
+                self._entries.values(), key=lambda e: e.accessed_at or e.created_at
             )
 
             excess_count = len(self._entries) - self.max_entries
@@ -425,11 +427,9 @@ class EpisodicMemory(BaseMemory):
             if relevance < query.min_relevance:
                 continue
 
-            results.append(MemoryResult(
-                entry=entry,
-                relevance_score=relevance,
-                match_reason="temporal_order"
-            ))
+            results.append(
+                MemoryResult(entry=entry, relevance_score=relevance, match_reason="temporal_order")
+            )
 
         return results
 
@@ -453,16 +453,18 @@ class EpisodicMemory(BaseMemory):
                 if similarity < query.min_similarity:
                     continue
 
-            results.append(MemoryResult(
-                entry=entry,
-                similarity_score=similarity,
-                relevance_score=relevance,
-                match_reason="content_match" if similarity > 0 else "tag_match"
-            ))
+            results.append(
+                MemoryResult(
+                    entry=entry,
+                    similarity_score=similarity,
+                    relevance_score=relevance,
+                    match_reason="content_match" if similarity > 0 else "tag_match",
+                )
+            )
 
         # Sort by combined score
         results.sort(key=lambda r: r.combined_score, reverse=True)
-        return results[:query.limit]
+        return results[: query.limit]
 
     def _calculate_text_similarity(self, query_text: str, content: str) -> float:
         """Simple text similarity calculation (to be enhanced with embeddings)."""
@@ -564,15 +566,17 @@ class SemanticMemory(BaseMemory):
             if relevance < query.min_relevance:
                 continue
 
-            results.append(MemoryResult(
-                entry=entry,
-                similarity_score=combined_similarity,
-                relevance_score=relevance,
-                match_reason="semantic_similarity"
-            ))
+            results.append(
+                MemoryResult(
+                    entry=entry,
+                    similarity_score=combined_similarity,
+                    relevance_score=relevance,
+                    match_reason="semantic_similarity",
+                )
+            )
 
         results.sort(key=lambda r: r.combined_score, reverse=True)
-        return results[:query.limit]
+        return results[: query.limit]
 
     async def _contextual_search(self, query: MemoryQuery) -> List[MemoryResult]:
         """Search based on contextual relationships."""
@@ -581,21 +585,23 @@ class SemanticMemory(BaseMemory):
 
         # Expand results with related entries
         related_entry_ids = set()
-        for result in results[:query.limit // 2]:  # Use half the limit for initial results
+        for result in results[: query.limit // 2]:  # Use half the limit for initial results
             related_entry_ids.update(result.entry.related_entries)
 
         # Add related entries
         for entry_id in related_entry_ids:
             if entry_id in self._entries and len(results) < query.limit:
                 entry = self._entries[entry_id]
-                results.append(MemoryResult(
-                    entry=entry,
-                    similarity_score=0.5,  # Lower similarity for related entries
-                    relevance_score=entry.calculate_current_relevance(),
-                    match_reason="contextual_relation"
-                ))
+                results.append(
+                    MemoryResult(
+                        entry=entry,
+                        similarity_score=0.5,  # Lower similarity for related entries
+                        relevance_score=entry.calculate_current_relevance(),
+                        match_reason="contextual_relation",
+                    )
+                )
 
-        return results[:query.limit]
+        return results[: query.limit]
 
     def _calculate_text_similarity(self, query_text: str, content: str) -> float:
         """Enhanced text similarity for semantic content."""
@@ -621,7 +627,7 @@ class WorkingMemory(BaseMemory):
     def __init__(self, max_entries: int = 50, **kwargs):
         super().__init__(MemoryType.WORKING, max_entries=max_entries, **kwargs)
         self._activation_levels: Dict[str, float] = {}
-        self._decay_rate = kwargs.get('decay_rate', 0.1)
+        self._decay_rate = kwargs.get("decay_rate", 0.1)
 
     async def store(self, entry: MemoryEntry) -> bool:
         """Store working memory entry."""
@@ -661,16 +667,18 @@ class WorkingMemory(BaseMemory):
             # Working memory prioritizes activation level
             combined_score = (similarity * 0.3) + (activation * 0.7)
 
-            results.append(MemoryResult(
-                entry=entry,
-                similarity_score=similarity,
-                relevance_score=activation,
-                combined_score=combined_score,
-                match_reason="working_memory_activation"
-            ))
+            results.append(
+                MemoryResult(
+                    entry=entry,
+                    similarity_score=similarity,
+                    relevance_score=activation,
+                    combined_score=combined_score,
+                    match_reason="working_memory_activation",
+                )
+            )
 
         results.sort(key=lambda r: r.combined_score, reverse=True)
-        return results[:query.limit]
+        return results[: query.limit]
 
     async def delete(self, entry_id: str) -> bool:
         """Delete working memory entry."""
@@ -683,8 +691,7 @@ class WorkingMemory(BaseMemory):
     async def activate(self, entry_id: str, boost: float = 0.2) -> None:
         """Boost activation level of an entry."""
         if entry_id in self._activation_levels:
-            self._activation_levels[entry_id] = min(1.0,
-                self._activation_levels[entry_id] + boost)
+            self._activation_levels[entry_id] = min(1.0, self._activation_levels[entry_id] + boost)
             logger.debug(f"Boosted activation for entry {entry_id}")
 
     async def _decay_activations(self) -> None:
@@ -692,7 +699,7 @@ class WorkingMemory(BaseMemory):
         to_remove = []
 
         for entry_id in self._activation_levels:
-            self._activation_levels[entry_id] *= (1 - self._decay_rate)
+            self._activation_levels[entry_id] *= 1 - self._decay_rate
 
             # Mark for removal if activation is too low
             if self._activation_levels[entry_id] < 0.01:
@@ -726,7 +733,7 @@ class MemoryManager:
     def register_memory(self, memory: BaseMemory) -> None:
         """
         Register a memory system.
-        
+
         Args:
             memory: Memory system to register
         """
@@ -734,19 +741,16 @@ class MemoryManager:
         logger.info(f"Registered {memory.memory_type.value} memory system")
 
     async def store_across_memories(
-        self,
-        content: str,
-        memory_types: List[MemoryType],
-        **metadata
+        self, content: str, memory_types: List[MemoryType], **metadata
     ) -> List[str]:
         """
         Store entry across multiple memory systems.
-        
+
         Args:
             content: Content to store
             memory_types: Types of memory to store in
             **metadata: Additional metadata
-            
+
         Returns:
             List[str]: Entry IDs created
         """
@@ -754,11 +758,7 @@ class MemoryManager:
 
         for memory_type in memory_types:
             if memory_type in self.memories:
-                entry = MemoryEntry(
-                    content=content,
-                    memory_type=memory_type,
-                    metadata=metadata
-                )
+                entry = MemoryEntry(content=content, memory_type=memory_type, metadata=metadata)
 
                 if await self.memories[memory_type].store(entry):
                     entry_ids.append(entry.id)
@@ -767,17 +767,15 @@ class MemoryManager:
         return entry_ids
 
     async def unified_retrieve(
-        self,
-        query: MemoryQuery,
-        memory_types: Optional[List[MemoryType]] = None
+        self, query: MemoryQuery, memory_types: Optional[List[MemoryType]] = None
     ) -> List[MemoryResult]:
         """
         Retrieve from multiple memory systems and combine results.
-        
+
         Args:
             query: Memory query
             memory_types: Memory types to search (all if None)
-            
+
         Returns:
             List[MemoryResult]: Combined results
         """
@@ -807,15 +805,15 @@ class MemoryManager:
         final_results = list(unique_results.values())
         final_results.sort(key=lambda r: r.combined_score, reverse=True)
 
-        return final_results[:query.limit]
+        return final_results[: query.limit]
 
     async def cleanup_all_memories(self, max_age: timedelta) -> Dict[str, int]:
         """
         Clean up old entries from all memory systems.
-        
+
         Args:
             max_age: Maximum age for entries
-            
+
         Returns:
             Dict[str, int]: Cleanup statistics by memory type
         """
@@ -834,6 +832,5 @@ class MemoryManager:
     def get_all_stats(self) -> Dict[str, MemoryStats]:
         """Get statistics from all memory systems."""
         return {
-            memory_type.value: memory.get_stats()
-            for memory_type, memory in self.memories.items()
+            memory_type.value: memory.get_stats() for memory_type, memory in self.memories.items()
         }

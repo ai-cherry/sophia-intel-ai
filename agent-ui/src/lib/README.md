@@ -1,16 +1,19 @@
-This folder contains small, reusable primitives to unify the UI:
+# UI Library Primitives (Migration Guide)
 
-- realtime/RealtimeManager.ts
-  Centralizes WebSocket/SSE connections, reconnection, and event pub/sub.
+This folder collects new primitives to unify streaming, API calls, and state management without breaking existing views.
 
-- api/client.ts
-  Typed fetch wrapper with JSON parsing and normalized ApiError.
+- `api/client.ts` — Typed API client wrapping `fetch` with JSON parsing and error normalization. Use for new endpoints and to gradually replace ad-hoc `fetch`.
+- `realtime/RealtimeManager.ts` — Centralized WS/SSE manager (reconnect + pub/sub). Wire into hotspots incrementally.
+- `state/unifiedStore.ts` — Unified Zustand store with small slices (`chat`, `swarm`, `metrics`). Coexists with `src/store.ts` during migration.
 
-- state/unifiedStore.ts
-  Zustand slices for chat, swarm, and metrics. Non-breaking: migrate gradually.
+Recommended adoption path
+- Start with non-invasive wrappers (e.g., `useUnifiedStream`) that proxy existing hooks while updating unified store state.
+- Convert top API hotspots to `ApiClient` where it adds error handling value.
+- Introduce `RealtimeManager` for live widgets; keep it behind feature flags initially.
 
-Usage guidance
-- Start new realtime features via RealtimeManager; adapt legacy WS/SSE callers incrementally.
-- Prefer ApiClient for new HTTP calls; migrate hotspots from analysis report first.
-- Read/write to unifiedStore for new chat/swarm features; keep existing store.ts until all views migrate.
+Environment
+- `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8003`
+- `NEXT_PUBLIC_ENABLE_AGNO_BRIDGE` toggles the bridge status indicator
+
+No secrets in repo. Configure runtime via env or your local config manager.
 

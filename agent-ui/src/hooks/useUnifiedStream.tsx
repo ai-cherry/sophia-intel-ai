@@ -1,25 +1,30 @@
-import useAIChatStreamHandler from '@/hooks/useAIStreamHandler'
-import { useUnifiedStore } from '@/lib/state/unifiedStore'
+"use client";
+import { useCallback } from 'react';
+import useAIStreamHandler from '@/hooks/useAIStreamHandler';
+import { useUnifiedStore } from '@/lib/state/unifiedStore';
 
-/**
- * Transitional streaming hook that proxies the existing AI stream handler
- * while starting to synchronize high-level state into the unified store.
- *
- * Swap-in point for migrating to RealtimeManager-backed streaming later.
- */
+/*
+  useUnifiedStream
+  - Transitional wrapper around existing useAIStreamHandler
+  - Mirrors sending state into unified store for future convergence
+  - Non-breaking: delegates the actual streaming logic unchanged
+*/
 export default function useUnifiedStream() {
-  const { handleStreamResponse } = useAIChatStreamHandler()
-  const setSending = useUnifiedStore((s) => s.setSending)
+  const { handleStreamResponse: handleAIStream } = useAIStreamHandler();
+  const setSending = useUnifiedStore((s) => s.setSending);
 
-  const handle = async (input: string | FormData) => {
-    try {
-      setSending(true)
-      await handleStreamResponse(input)
-    } finally {
-      setSending(false)
-    }
-  }
+  const handleStreamResponse = useCallback(
+    async (input: string | FormData) => {
+      setSending(true);
+      try {
+        await handleAIStream(input);
+      } finally {
+        setSending(false);
+      }
+    },
+    [handleAIStream, setSending]
+  );
 
-  return { handleStreamResponse: handle }
+  return { handleStreamResponse };
 }
 

@@ -1,95 +1,174 @@
-version: "3.8"
+version: "3.9"
+
+name: sophia-intel-ai
 
 services:
-  # Redis for L1 cache and ephemeral storage
-  redis:
-    image: redis:7-alpine
-    container_name: sophia-redis
-    profiles: ["mcp"]
-    ports:
-      - "6380:6379"
-    volumes:
-      - redis-data:/data
-    command: redis-server --appendonly yes
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-
-  # Unified API for MCP checks (dev)
   api:
-    image: python:3.11-slim
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
     container_name: sophia-api
-    profiles: ["mcp"]
-    working_dir: /app
-    volumes:
-      - ./:/app
     env_file:
-      - .env
-      - .env.local
+      - docker.env
     environment:
-      AGENT_API_PORT: "8003"
-      LOCAL_DEV_MODE: "true"
-      REDIS_URL: "redis://redis:6379/0"
-    command: >-
-      bash -lc "apt-get update && apt-get install -y gcc python3-dev \
-      && pip install --no-cache-dir -r requirements.txt \
-      && python -m app.api.unified_server"
+      # Internal port inside container; host maps to 8003
+      - AGENT_API_PORT=8000
+      - WEAVIATE_URL=${WEAVIATE_URL:-http://weaviate:8080}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
     ports:
-      - "8003:8003"
+      - "8003:8000"
+    volumes:
+      - ./:/workspace:delegated
+    working_dir: /workspace
+    command: sh -c "uvicorn app.api.production_server:create_production_app --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || curl -sf http://localhost:8000/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sophia_net
+
+  ui:
+    image: node:18-alpine
+    container_name: sophia-ui
+    env_file:
+      - docker.env
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8003}
+      - NEXT_PUBLIC_DARK_DEFAULT=${NEXT_PUBLIC_DARK_DEFAULT:-1}
+    working_dir: /workspace/agent-ui
+    volumes:
+      - ./agent-ui:/workspace/agent-ui:delegated
+      - ui_node_modules:/workspace/agent-ui/node_modules
+    command: sh -c "npm ci && npm run dev -- -p 3000"
+    ports:
+      - "3000:3000"
     depends_on:
-      redis:
-        condition: service_healthy
-
-  # Weaviate for L2 vector storage
-  weaviate:
-    image: semitechnologies/weaviate:latest
-    container_name: sophia-weaviate
-    ports:
-      - "8081:8080"
-    volumes:
-      - weaviate-data:/var/lib/weaviate
-    environment:
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
-      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
-      DEFAULT_VECTORIZER_MODULE: "text2vec-openai"
-      ENABLE_MODULES: "text2vec-openai,generative-openai"
-      CLUSTER_HOSTNAME: "node1"
-    restart: unless-stopped
+      api:
+        condition: service_started
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
-      interval: 10s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 >/dev/null 2>&1 || exit 1"]
+      interval: 20s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - sophia_net
 
-  # PostgreSQL for L3 structured storage
-  postgres:
-    image: postgres:15-alpine
-    container_name: sophia-postgres
+  telemetry:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.telemetry
+    container_name: sophia-telemetry
+    env_file:
+      - docker.env
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-    environment:
-      POSTGRES_DB: sophia
-      POSTGRES_USER: sophia
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sophia123}
-    restart: unless-stopped
+      - "5003:5003"
+    command: ["python", "webui/telemetry_endpoint.py"]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U sophia"]
-      interval: 10s
+      test: ["CMD-SHELL", "curl -sf http://localhost:5003/api/telemetry/health >/dev/null"]
+      interval: 15s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - sophia_net
 
-volumes:
-  redis-data:
-  weaviate-data:
-  postgres-data:
+  # MCP Servers (required): Memory, Filesystem (Sophia), Git
+  mcp-memory:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-memory
+    container_name: sophia-mcp-memory
+    ports:
+      - "8081:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sophia_net
+
+  mcp-fs-sophia:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-filesystem
+    container_name: sophia-mcp-fs-sophia
+    ports:
+      - "8082:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sophia_net
+
+  mcp-git:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-git
+    container_name: sophia-mcp-git
+    ports:
+      - "8084:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sophia_net
+
+  # Optional MCP services
+  mcp-fs-artemis:
+    build:
+      context: .
+      dockerfile: automation/docker/Dockerfile.mcp-filesystem
+    container_name: sophia-mcp-fs-artemis
+    profiles: [artextra]
+    ports:
+      - "8083:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sophia_net
+
+  mcp-vector:
+    image: nginx:alpine
+    container_name: sophia-mcp-vector
+    profiles: [vector]
+    ports:
+      - "8085:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exit 0"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - sophia_net
+
+  mcp-graph:
+    image: nginx:alpine
+    container_name: sophia-mcp-graph
+    profiles: [graph]
+    ports:
+      - "8086:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "exit 0"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    networks:
+      - sophia_net
 
 networks:
-  default:
-    name: sophia-network
+  sophia_net:
     driver: bridge
+
+volumes:
+  ui_node_modules:
+    driver: local
+

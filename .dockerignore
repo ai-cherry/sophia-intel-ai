@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+**/node_modules/
+.npm/
+.next/
+
+# VCS
+.git/
+.gitignore
+
+# OS/Editor
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Env
+.env
+.env.*
+!.env.template
+
+# Caches
+.cache/
+**/.ruff_cache/
+**/.pytest_cache/
+
+# Artifacts
+build/
+dist/
+coverage/
+

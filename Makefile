@@ -133,7 +133,7 @@ dev-all: ## Start infra+MCP and Next.js UI; auto-enable FS Artemis if present
 	 echo "Memory MCP:      http://localhost:$${MCP_MEMORY_PORT:-8081}/health"; \\
 	 echo "FS (Sophia) MCP: http://localhost:$${MCP_FS_SOPHIA_PORT:-8082}/health"; \\
 	 echo "Git MCP:         http://localhost:$${MCP_GIT_PORT:-8084}/health"; \\
-	 echo "Sophia UI:       http://localhost:3000/dashboard"; \\
+	 echo "Sophia UI:       http://localhost:3000/sophia"; \\
 	 echo "Sophia Chat:     http://localhost:3000/chat"; \\
 	 if [ -d "$$HOME/artemis-cli" ]; then echo "FS (Artemis) MCP: http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health"; fi; \\
 	 echo "\n(Next.js will print \"ready on http://localhost:3000\" when up.)"

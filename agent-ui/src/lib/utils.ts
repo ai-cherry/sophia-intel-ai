@@ -19,3 +19,7 @@ export function formatTime(date: Date | string): string {
     minute: '2-digit'
   })
 }
+
+export function getJsonMarkdown(json: unknown): string {
+  return '```json\n' + JSON.stringify(json, null, 2) + '\n```'
+}

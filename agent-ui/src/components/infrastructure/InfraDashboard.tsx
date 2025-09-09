@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import React, { useState } from 'react';
+import { useDashboardData } from '@/hooks/useDashboardData';
 import {
   Shield,
   Server,
@@ -112,47 +112,37 @@ export const InfraDashboard: React.FC = () => {
   const [selectedService, setSelectedService] = useState<string | null>(null);
   const [showEmergencyRotation, setShowEmergencyRotation] = useState(false);
 
-  // Fetch infrastructure metrics
-  const { data: metrics, isLoading, error, refetch } = useQuery<InfrastructureMetrics>({
-    queryKey: ['infrastructure-metrics', selectedTimeRange],
-    queryFn: () => fetch(`/api/infrastructure/metrics?range=${selectedTimeRange}`).then(r => r.json()),
-    refetchInterval: 30000, // Refresh every 30 seconds
-  });
+  // Fetch infrastructure metrics via shared hook (30s refresh handled by UI actions)
+  const { data: metrics, loading: isLoading, error, refetch } = useDashboardData<InfrastructureMetrics>(
+    `/api/infrastructure/metrics?range=${selectedTimeRange}`,
+    [selectedTimeRange],
+    { category: 'api.infra.metrics' }
+  );
 
-  // Emergency secret rotation mutation
-  const emergencyRotation = useMutation({
-    mutationFn: ({ service, reason }: { service: string; reason: string }) =>
-      fetch('/api/infrastructure/emergency-rotation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ service, reason }),
-      }).then(r => r.json()),
-    onSuccess: () => {
-      refetch();
-      setShowEmergencyRotation(false);
-    }
-  });
+  // Mutations implemented with simple fetch helpers
+  const emergencyRotate = async ({ service, reason }: { service: string; reason: string }) => {
+    await fetch('/api/infrastructure/emergency-rotation', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ service, reason }),
+    });
+    refetch();
+    setShowEmergencyRotation(false);
+  };
 
-  // Pulumi stack operation mutation
-  const stackOperation = useMutation({
-    mutationFn: ({ stack, operation }: { stack: string; operation: string }) =>
-      fetch('/api/infrastructure/stack-operation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stack, operation }),
-      }).then(r => r.json()),
-    onSuccess: () => refetch()
-  });
+  const stackOperation = async ({ stack, operation }: { stack: string; operation: string }) => {
+    await fetch('/api/infrastructure/stack-operation', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stack, operation }),
+    });
+    refetch();
+  };
 
-  // InfraOps Swarm task execution
-  const swarmTask = useMutation({
-    mutationFn: ({ type, description, context }: unknown) =>
-      fetch('/api/infrastructure/swarm-task', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, description, context, require_approval: true }),
-      }).then(r => r.json()),
-  });
+  const swarmTask = async ({ type, description, context }: any) => {
+    await fetch('/api/infrastructure/swarm-task', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, description, context, require_approval: true }),
+    });
+  };
 
   if (isLoading) {
     return (
@@ -265,10 +255,7 @@ export const InfraDashboard: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    emergencyRotation.mutate({
-                      service: service.name,
-                      reason: 'Service degradation detected'
-                    });
+                    emergencyRotate({ service: service.name, reason: 'Service degradation detected' });
                   }}
                   className="w-full mt-2 px-3 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 text-sm"
                 >
@@ -359,7 +346,7 @@ export const InfraDashboard: React.FC = () => {
         {/* Swarm Task Executor */}
         <div className="mt-4 flex space-x-2">
           <button
-            onClick={() => swarmTask.mutate({
+            onClick={() => swarmTask({
               type: 'health_check',
               description: 'System-wide health check',
               context: { scope: 'all' }
@@ -369,7 +356,7 @@ export const InfraDashboard: React.FC = () => {
             Run Health Check
           </button>
           <button
-            onClick={() => swarmTask.mutate({
+            onClick={() => swarmTask({
               type: 'security_scan',
               description: 'Security vulnerability scan',
               context: { severity_threshold: 'medium' }
@@ -379,7 +366,7 @@ export const InfraDashboard: React.FC = () => {
             Security Scan
           </button>
           <button
-            onClick={() => swarmTask.mutate({
+            onClick={() => swarmTask({
               type: 'backup',
               description: 'Create system backup',
               context: { include: ['databases', 'configs'] }
@@ -421,19 +408,19 @@ export const InfraDashboard: React.FC = () => {
 
               <div className="flex space-x-2">
                 <button
-                  onClick={() => stackOperation.mutate({ stack: stack.name, operation: 'preview' })}
+                  onClick={() => stackOperation({ stack: stack.name, operation: 'preview' })}
                   className="flex-1 px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm"
                 >
                   Preview
                 </button>
                 <button
-                  onClick={() => stackOperation.mutate({ stack: stack.name, operation: 'up' })}
+                  onClick={() => stackOperation({ stack: stack.name, operation: 'up' })}
                   className="flex-1 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
                 >
                   Deploy
                 </button>
                 <button
-                  onClick={() => stackOperation.mutate({ stack: stack.name, operation: 'refresh' })}
+                  onClick={() => stackOperation({ stack: stack.name, operation: 'refresh' })}
                   className="flex-1 px-2 py-1 border border-gray-300 rounded hover:bg-gray-50 text-sm"
                 >
                   Refresh

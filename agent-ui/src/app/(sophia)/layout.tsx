@@ -25,6 +25,13 @@ export default function SophiaLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="h-screen flex">
+      {/* Skip to content for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 rounded bg-blue-600 px-3 py-2 text-white"
+      >
+        Skip to content
+      </a>
       {/* Sidebar */}
       <div className="w-64 bg-gray-900 text-white flex flex-col">
         <div className="p-4 border-b border-gray-800">
@@ -34,8 +41,7 @@ export default function SophiaLayout({ children }: { children: ReactNode }) {
           </h1>
           <p className="text-xs text-gray-400 mt-1">Business Intelligence Suite</p>
         </div>
-        
-        <nav className="flex-1 p-4">
+        <nav className="flex-1 p-4" aria-label="Sophia navigation">
           <ul className="space-y-1">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
@@ -43,7 +49,8 @@ export default function SophiaLayout({ children }: { children: ReactNode }) {
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
                       isActive
                         ? "bg-blue-600 text-white"
                         : "hover:bg-gray-800 text-gray-300"
@@ -72,7 +79,19 @@ export default function SophiaLayout({ children }: { children: ReactNode }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 bg-gray-50 overflow-auto">
+      <div id="main-content" role="main" className="flex-1 bg-gray-50 dark:bg-gray-950 overflow-auto">
+        {/* Top utility bar (placeholder for search / actions) */}
+        <div className="sticky top-0 z-10 border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur px-4 py-2 flex items-center justify-between">
+          <div className="text-sm font-medium text-gray-700 dark:text-gray-200">Command Center</div>
+          <div className="flex items-center gap-2">
+            <input
+              type="search"
+              placeholder="Quick search…"
+              className="hidden md:block text-sm rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-blue-400"
+              aria-label="Quick search"
+            />
+          </div>
+        </div>
         {children}
       </div>
     </div>

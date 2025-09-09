@@ -10,13 +10,7 @@ const navItems = [
   { href: "/unified", label: "Unified", icon: "🧭" },
   { href: "/chat", label: "Chat", icon: "💬" },
   ...(unifiedMode ? [] : [
-    { href: "/dashboard", label: "Dashboard", icon: "📊" },
-    { href: "/insights", label: "Insights", icon: "💡" },
-    { href: "/pipeline", label: "Pipeline", icon: "🔄" },
-    { href: "/teams", label: "Teams", icon: "👥" },
-    { href: "/integrations", label: "Integrations", icon: "🔌" },
-    { href: "/analytics", label: "Analytics", icon: "📈" },
-    { href: "/notifications", label: "Alerts", icon: "🔔" },
+    { href: "/legacy", label: "Legacy", icon: "🗂️" },
   ]),
 ];
 

@@ -1,13 +1,16 @@
 "use client";
 import React from 'react';
+import dynamic from 'next/dynamic';
 import AgnoBridgeStatus from '@/components/sophia/AgnoBridgeStatus';
-import CostDashboard from '@/components/analytics/CostDashboard';
-import ClientHealthDashboard from '@/components/dashboards/ClientHealthDashboard';
-import SalesPerformanceDashboard from '@/components/dashboards/SalesPerformanceDashboard';
-import ProjectManagementDashboard from '@/components/dashboards/ProjectManagementDashboard';
-import MCPBusinessIntelligence from '@/components/sophia/MCPBusinessIntelligence';
-import { InfraDashboard } from '@/components/infrastructure/InfraDashboard';
 import ChatArea from '@/components/playground/ChatArea/ChatArea';
+import Section from '@/components/widgets/Section';
+
+const CostDashboard = dynamic(() => import('@/components/analytics/CostDashboard'), { ssr: false, loading: () => <div className="h-32" /> });
+const ClientHealthDashboard = dynamic(() => import('@/components/dashboards/ClientHealthDashboard'), { ssr: false, loading: () => <div className="h-32" /> });
+const SalesPerformanceDashboard = dynamic(() => import('@/components/dashboards/SalesPerformanceDashboard'), { ssr: false, loading: () => <div className="h-32" /> });
+const ProjectManagementDashboard = dynamic(() => import('@/components/dashboards/ProjectManagementDashboard'), { ssr: false, loading: () => <div className="h-32" /> });
+const MCPBusinessIntelligence = dynamic(() => import('@/components/sophia/MCPBusinessIntelligence'), { ssr: false, loading: () => <div className="h-32" /> });
+const InfraDashboard = dynamic(() => import('@/components/infrastructure/InfraDashboard').then(m => m.InfraDashboard), { ssr: false, loading: () => <div className="h-32" /> });
 
 export default function UnifiedCommandCenter() {
   return (
@@ -24,28 +27,28 @@ export default function UnifiedCommandCenter() {
 
         {/* Quick KPIs (Costs + Infra) */}
         <div className="max-w-[1600px] mx-auto grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2 md:p-3">
+          <Section title="Costs & Usage" subtitle="LLM spend, tokens, and trends">
             <CostDashboard />
-          </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2 md:p-3">
+          </Section>
+          <Section title="Infrastructure" subtitle="Service health and operations">
             <InfraDashboard />
-          </div>
+          </Section>
         </div>
 
         {/* Deep-dive dashboards */}
         <div className="max-w-[1600px] mx-auto grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2 md:p-3">
+          <Section title="Sales Performance" subtitle="Pipeline and rep performance">
             <SalesPerformanceDashboard />
-          </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2 md:p-3">
+          </Section>
+          <Section title="Client Health" subtitle="Retention and risk">
             <ClientHealthDashboard />
-          </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2 md:p-3">
+          </Section>
+          <Section title="Project Management" subtitle="Workstreams and throughput">
             <ProjectManagementDashboard />
-          </div>
-          <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2 md:p-3">
+          </Section>
+          <Section title="MCP Intelligence" subtitle="Server status and insight">
             <MCPBusinessIntelligence />
-          </div>
+          </Section>
         </div>
       </div>
 

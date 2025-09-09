@@ -23,7 +23,7 @@ from app.orchestrators.base_orchestrator import (
     Result,
     Task,
 )
-from app.swarms.artemis.technical_agents import ArtemisSwarmFactory
+# Artemis import removed
 from app.swarms.core.intelligent_router import get_intelligent_router
 from app.swarms.core.message_braider import create_message_braider
 from app.swarms.core.micro_swarm_base import MicroSwarmCoordinator, SwarmResult
@@ -99,7 +99,7 @@ class IntegratedSwarmOrchestrator(BaseOrchestrator):
 
         # Micro-swarm factories
         self.sophia_factory = SophiaMythologySwarmFactory()
-        self.artemis_factory = ArtemisSwarmFactory()
+        self.artemis_factory = None  # ArtemisSwarmFactory removed
 
         # Core services
         self.intelligent_router = get_intelligent_router()
@@ -897,7 +897,7 @@ def get_sophia_orchestrator() -> IntegratedSwarmOrchestrator:
     return _sophia_orchestrator
 
 
-def get_artemis_orchestrator() -> IntegratedSwarmOrchestrator:
+def None  # get_artemis_orchestrator removed -> IntegratedSwarmOrchestrator:
     """Get global Artemis orchestrator instance"""
     global _artemis_orchestrator
     if _artemis_orchestrator is None:

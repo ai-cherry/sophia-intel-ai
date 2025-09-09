@@ -10,7 +10,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
-from app.artemis.agent_factory import artemis_factory
+# Artemis import removed
 from app.swarms.orchestrator_research_swarm import (
     OrchestratorResearchSwarm,
     ResearchArea,

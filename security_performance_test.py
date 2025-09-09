@@ -131,7 +131,7 @@ async def test_error_handling():
 async def test_input_validation():
     """Test input validation and sanitization"""
     print("\n=== Input Validation Testing ===")
-    from app.bridges.sophia_artemis_bridge import SophiaArtemisBridge
+    # Artemis bridge removed
 
     bridge = SophiaArtemisBridge()
 
@@ -203,7 +203,7 @@ async def test_resource_cleanup():
 async def test_rate_limiting():
     """Test rate limiting and throttling"""
     print("\n=== Rate Limiting Testing ===")
-    from app.bridges.sophia_artemis_bridge import SophiaArtemisBridge
+    # Artemis bridge removed
 
     bridge = SophiaArtemisBridge()
 

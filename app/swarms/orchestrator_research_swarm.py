@@ -23,7 +23,7 @@ from typing import Any, Optional
 from agno.agent import Agent
 from agno.team import Team
 
-from app.artemis.agent_factory import ArtemisAgentFactory
+# Artemis import removed
 from app.sophia.agent_factory import SophiaBusinessAgentFactory
 from app.swarms.agno_teams import AGNOTeamConfig, ExecutionStrategy, SophiaAGNOTeam
 
@@ -102,7 +102,7 @@ class OrchestratorResearchSwarm(SophiaAGNOTeam):
         self.research_findings: list[ResearchFindings] = []
         self.improvement_plans: dict[str, ImprovementPlan] = {}
         self.sophia_factory = SophiaBusinessAgentFactory()
-        self.artemis_factory = ArtemisAgentFactory()
+        self.artemis_factory = None  # ArtemisAgentFactory removed
 
     async def initialize(self):
         """Initialize the research swarm with specialized agents"""
@@ -732,7 +732,7 @@ async def deploy_orchestrator_research_swarm() -> OrchestratorResearchSwarm:
 
 
 # Integration with Artemis Factory
-async def create_in_artemis_factory(factory: ArtemisAgentFactory) -> dict[str, Any]:
+async def create_in_None  # artemis_factory removed -> dict[str, Any]:
     """
     Create the research swarm in Artemis factory
     """

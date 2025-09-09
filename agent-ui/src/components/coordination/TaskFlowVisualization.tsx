@@ -51,7 +51,7 @@ interface TaskFlowVisualizationProps {
 
 interface TaskNode {
   id: string;
-  type: 'sophia' | 'artemis' | 'bridge';
+  type: 'sophia' | 'bridge';
   x: number;
   y: number;
   width: number;

@@ -13,7 +13,7 @@ from uuid import uuid4
 from app.core.portkey_manager import get_portkey_manager
 from app.factory.agent_factory import AgentFactory
 from app.memory.unified_memory_router import MemoryDomain
-from app.swarms.artemis.military_swarm_config import (
+# Artemis import removed
     ARTEMIS_MILITARY_UNITS,
     MilitaryAgentFactory,
 )

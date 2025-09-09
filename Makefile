@@ -20,7 +20,7 @@ env.clean-deprecated: ## Remove deprecated env examples (keeps .env.template aut
 	@for f in .env.example .env.mcp.example .env.sophia.example; do \
 		if [ -f $$f ]; then echo "Removing $$f" && rm -f $$f; fi; \
 	done; \
-	echo "Deprecated env examples removed. Use .env.template + ~/.config/artemis/env"
+	echo "Deprecated env examples removed. Use .env.template for configuration"
 
 env.source: ## Source unified environment in current shell (bash/zsh: `source <(make env.source)`)
 	@cat scripts/env.sh
@@ -68,7 +68,7 @@ full-start: ## Start everything in correct order
 dev-mcp-up: ## Start only MCP servers (dev)
 	@docker compose -f docker-compose.dev.yml up -d mcp-memory mcp-filesystem-sophia mcp-git
 
-dev-artemis-up:
+# Artemis targets removed - use external sidecar via artemis.sidecar-setup
 	@echo "Deprecated: Artemis sidecar support removed."
 
 api-build: ## Build API image (prod compose)
@@ -146,8 +146,12 @@ doctor-all: ## Verify keys, infra, MCP, Next.js UI, and telemetry
 	 echo "\n[doctor] docker compose status (dev)..."; \\
 	 docker compose -f docker-compose.dev.yml ps || true
 
-artemis.sidecar-setup: ## One-time: clone Artemis sidecar repo to ~/artemis-cli via SSH
-	@bash scripts/setup_artemis_sidecar.sh
+artemis.sidecar-setup: ## Optional: Setup external Artemis sidecar integration
+	@echo "Artemis sidecar setup:"
+	@echo "1. Clone https://github.com/ai-cherry/artemis-cli to ~/artemis-cli"
+	@echo "2. Set ARTEMIS_PATH=~/artemis-cli"
+	@echo "3. Enable compose profile 'artemis' for MCP FS Artemis at port 8083"
+	@bash scripts/setup_artemis_sidecar.sh 2>/dev/null || echo "Note: External sidecar script available"
 
 api-dev: ## Run Sophia production server locally on port 8003
 	uvicorn app.api.production_server:create_production_app --host 0.0.0.0 --port 8003
@@ -264,8 +268,8 @@ env-docs: ## Show environment guide for SSH agent and env files
 	@echo "Environment Guide (ENVIRONMENT_GUIDE.md)" && echo "------------------------------"
 	@sed -n '1,200p' ENVIRONMENT_GUIDE.md | sed -e 's/^/  /'
 
-artemis-setup:
-	@echo "Deprecated: Artemis setup removed. Use scripts/env.sh and ~/.config/artemis/env if present."
+# Artemis code removed from this repository
+# For Artemis functionality, use external sidecar via artemis.sidecar-setup
 
 # --- Phase 2 refactor helpers ---
 refactor.discovery: ## List Python files >50KB in app/

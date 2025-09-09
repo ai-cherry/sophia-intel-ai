@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from app.artemis.artemis_orchestrator import ArtemisOrchestrator
+# Artemis import removed
 from app.orchestrators.base_orchestrator import (
     ExecutionPriority,
     Result,
@@ -165,7 +165,7 @@ class TestArtemisOrchestrator:
     @pytest.mark.asyncio
     async def test_initialization(self, mock_portkey_manager, mock_memory_router):
         """Test Artemis orchestrator initialization"""
-        orchestrator = ArtemisOrchestrator()
+        orchestrator = None  # ArtemisOrchestrator removed
 
         assert orchestrator.domain == "code_excellence"
         assert orchestrator._circuit_breaker is not None
@@ -173,7 +173,7 @@ class TestArtemisOrchestrator:
     @pytest.mark.asyncio
     async def test_code_generation(self, mock_portkey_manager, mock_memory_router):
         """Test code generation"""
-        orchestrator = ArtemisOrchestrator()
+        orchestrator = None  # ArtemisOrchestrator removed
 
         mock_portkey_manager.execute_with_fallback.return_value = {
             "choices": [
@@ -198,7 +198,7 @@ class TestArtemisOrchestrator:
     @pytest.mark.asyncio
     async def test_code_review(self, mock_portkey_manager, mock_memory_router):
         """Test code review"""
-        orchestrator = ArtemisOrchestrator()
+        orchestrator = None  # ArtemisOrchestrator removed
 
         code = """
         def bad_function():
@@ -234,7 +234,7 @@ class TestArtemisOrchestrator:
     @pytest.mark.asyncio
     async def test_code_refactor(self, mock_portkey_manager, mock_memory_router):
         """Test code refactoring"""
-        orchestrator = ArtemisOrchestrator()
+        orchestrator = None  # ArtemisOrchestrator removed
 
         original_code = """
         def messy_function():
@@ -272,7 +272,7 @@ class TestArtemisOrchestrator:
     @pytest.mark.asyncio
     async def test_generate_tests(self, mock_portkey_manager, mock_memory_router):
         """Test test generation"""
-        orchestrator = ArtemisOrchestrator()
+        orchestrator = None  # ArtemisOrchestrator removed
 
         code = """
         def add(a, b):
@@ -306,7 +306,7 @@ class TestIntegration:
     ):
         """Test collaboration between Sophia and Artemis"""
         sophia = SophiaOrchestrator()
-        artemis = ArtemisOrchestrator()
+        artemis = None  # ArtemisOrchestrator removed
 
         # Sophia generates requirements from BI analysis
         bi_task = Task(
@@ -350,7 +350,7 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_caching(self, mock_portkey_manager, mock_memory_router):
         """Test result caching"""
-        orchestrator = ArtemisOrchestrator()
+        orchestrator = None  # ArtemisOrchestrator removed
 
         # First call should execute
         task = Task(id="cache-test", type="code_review", description="Review code")

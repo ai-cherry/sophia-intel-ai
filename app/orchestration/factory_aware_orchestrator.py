@@ -17,7 +17,7 @@ from uuid import uuid4
 import redis.asyncio as redis
 from fastapi import WebSocket
 
-from app.artemis.agent_factory import ArtemisAgentFactory
+# Artemis import removed
 from app.core.circuit_breaker import with_circuit_breaker
 from app.memory.unified_memory_router import UnifiedMemoryRouter
 from app.sophia.agent_factory import SophiaBusinessAgentFactory
@@ -237,7 +237,7 @@ class FactoryAwareOrchestrator:
 
     def __init__(self):
         self.sophia_factory = SophiaBusinessAgentFactory()
-        self.artemis_factory = ArtemisAgentFactory()
+        self.artemis_factory = None  # ArtemisAgentFactory removed
         self.event_broadcaster = EventBroadcaster()
         self.memory_router = UnifiedMemoryRouter()
         self.complexity_analyzer = ComplexityAnalyzer()

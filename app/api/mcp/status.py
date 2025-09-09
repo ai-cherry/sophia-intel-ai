@@ -9,7 +9,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException
 
-from app.artemis.artemis_orchestrator import ArtemisOrchestrator
+# Artemis import removed
 from app.core.shared_services import shared_services
 from app.mcp.enhanced_registry import MCPServerRegistry, MemoryDomain
 from app.sophia.sophia_orchestrator import SophiaOrchestrator
@@ -35,7 +35,7 @@ class MCPStatusAPI:
         if not self.sophia:
             self.sophia = SophiaOrchestrator()
         if not self.artemis:
-            self.artemis = ArtemisOrchestrator()
+            self.artemis = None  # ArtemisOrchestrator removed
 
     async def get_domain_server_status(self, domain: str) -> dict[str, Any]:
         """Get comprehensive server status for a domain"""

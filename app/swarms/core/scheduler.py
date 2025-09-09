@@ -14,7 +14,7 @@ from typing import Any, Optional
 
 # Slack hooks removed
 from app.memory.unified_memory_router import get_memory_router
-from app.swarms.artemis.technical_agents import ArtemisSwarmFactory
+# Artemis import removed
 from app.swarms.core.micro_swarm_base import MicroSwarmCoordinator, SwarmResult
 from app.swarms.sophia.mythology_agents import SophiaMythologySwarmFactory
 
@@ -147,7 +147,7 @@ class MicroSwarmScheduler:
 
         # Swarm factories
         self.sophia_factory = SophiaMythologySwarmFactory()
-        self.artemis_factory = ArtemisSwarmFactory()
+        self.artemis_factory = None  # ArtemisSwarmFactory removed
 
         # Notifications
         self.slack = None  # Slack disabled

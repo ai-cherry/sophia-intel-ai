@@ -31,15 +31,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .artemis_persona import (
-    ARTEMIS_CONFIG,
-    ArtemisPersonaFactory,
-    create_artemis_persona,
-    customize_artemis_for_context,
-    get_artemis_code_quality_standards,
-    get_artemis_evolution_patterns,
-    get_artemis_specialized_prompts,
-)
+# Artemis imports removed - sidecar integration only
 
 # Evolution engine
 from .evolution_engine import (
@@ -106,10 +98,7 @@ __all__ = [
     "create_sophia_persona",
     "SophiaPersonaFactory",
     "customize_sophia_for_context",
-    # Artemis persona
-    "create_artemis_persona",
-    "ArtemisPersonaFactory",
-    "customize_artemis_for_context",
+    # Artemis persona removed - available via external sidecar
     # Prompt templates
     "PromptTemplateManager",
     "PromptTemplate",
@@ -126,7 +115,6 @@ __all__ = [
     "get_evolution_engine",
     # Configuration
     "SOPHIA_CONFIG",
-    "ARTEMIS_CONFIG",
     # Main initialization function
     "initialize_persona_system",
 ]
@@ -154,11 +142,11 @@ async def initialize_persona_system(
 
         # Create base personas
         sophia = create_sophia_persona()
-        artemis = create_artemis_persona()
+        # Artemis persona creation removed - use external sidecar
 
         # Save personas
         sophia_saved = await persona_manager.save_persona(sophia)
-        artemis_saved = await persona_manager.save_persona(artemis)
+        artemis_saved = False  # Artemis handled by external sidecar
 
         # Load default prompt templates
         default_templates = get_default_templates()
@@ -227,19 +215,7 @@ def get_persona_system_info() -> dict[str, Any]:
                 ],
                 "variants": list(SophiaPersonaFactory.get_all_sophia_variants().keys()),
             },
-            "artemis": {
-                "type": "code_excellence",
-                "capabilities": [
-                    "Code review and quality assurance",
-                    "Software architecture design",
-                    "Debugging and problem solving",
-                    "Testing strategies and implementation",
-                    "Technical documentation",
-                ],
-                "variants": list(
-                    ArtemisPersonaFactory.get_all_artemis_variants().keys()
-                ),
-            },
+            # Artemis persona available via external sidecar integration
         },
         "features": {
             "dynamic_prompts": "Dynamic prompt generation with context injection",
@@ -267,7 +243,7 @@ async def create_custom_persona(
 
     Args:
         name: Persona name
-        persona_type: Type of persona (SOPHIA, ARTEMIS, or HYBRID)
+        persona_type: Type of persona (SOPHIA or HYBRID)
         traits: Dictionary of trait names and values (0.0 to 1.0)
         knowledge_areas: Dictionary of knowledge domain names and expertise levels
         **kwargs: Additional persona parameters
@@ -423,12 +399,7 @@ async def integrate_with_portkey(portkey_manager) -> bool:
                     return "claude-3-opus-20240229"  # High reasoning capability
                 else:
                     return "claude-3-sonnet-20240229"  # Balanced performance
-            elif persona_type == PersonaType.ARTEMIS:
-                # Code tasks benefit from code-specialized models
-                if task_domain in [TaskDomain.CODE_REVIEW, TaskDomain.DEBUGGING]:
-                    return "claude-3-opus-20240229"  # Best code understanding
-                else:
-                    return "claude-3-sonnet-20240229"
+            # Artemis persona handled by external sidecar
             else:
                 return "claude-3-haiku-20240307"  # Fast for general tasks
 

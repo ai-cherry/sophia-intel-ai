@@ -84,7 +84,7 @@ total_services=5
 check_service $MCP_PORT "MCP Unified Server" "/docs" && ((services_ok++))
 check_service $API_PORT "Unified API Server" "/health" && ((services_ok++))
 check_service $SOPHIA_PORT "Sophia Business Server" "/health" && ((services_ok++))
-check_service $ARTEMIS_PORT "Artemis Technical Server" "/health" && ((services_ok++))
+# Artemis removed
 check_service $PERSONA_PORT "Persona Server" "/health" && ((services_ok++)) || echo "  (Optional service)"
 
 echo ""
@@ -115,12 +115,7 @@ if lsof -Pi :$SOPHIA_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
 fi
 
 # Test Artemis endpoints
-if lsof -Pi :$ARTEMIS_PORT -sTCP:LISTEN -t >/dev/null 2>&1; then
-    echo ""
-    echo "Artemis Server Endpoints:"
-    test_api $ARTEMIS_PORT "/health" "GET" "" "Health Check"
-    test_api $ARTEMIS_PORT "/api/orchestrate" "POST" '{"command":"status","context":{}}' "Orchestration"
-fi
+# Artemis removed
 
 # Check UI availability
 echo ""
@@ -134,19 +129,14 @@ else
     echo "❌ Not available"
 fi
 
-printf "%-30s: " "Artemis Command Center"
-if curl -s "http://localhost:$ARTEMIS_PORT/static/command-center.html" | grep -q "<html" 2>/dev/null; then
-    echo "✅ Available at http://localhost:$ARTEMIS_PORT/static/command-center.html"
-else
-    echo "❌ Not available"
-fi
+# Artemis removed
 
 # Process Check
 echo ""
 echo "Process Status:"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-for process in "mcp_server" "unified_server" "sophia_server" "artemis_server" "persona_server"; do
+for process in "mcp_server" "unified_server" "sophia_server" "persona_server"; do
     printf "%-30s: " "$process"
     if pgrep -f "$process" > /dev/null 2>&1; then
         pid=$(pgrep -f "$process" | head -1)
@@ -165,7 +155,7 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 total_mem=0
 process_count=0
 
-for process in "mcp_server" "unified_server" "sophia_server" "artemis_server" "persona_server"; do
+for process in "mcp_server" "unified_server" "sophia_server" "persona_server"; do
     if pgrep -f "$process" > /dev/null 2>&1; then
         pid=$(pgrep -f "$process" | head -1)
         if [ ! -z "$pid" ]; then

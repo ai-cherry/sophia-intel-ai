@@ -12,7 +12,7 @@ from typing import Any
 from app.core.ai_logger import logger
 from app.integrations.connectors.base_connector import BaseServiceConnector
 from app.memory.unified_memory_router import MemoryDomain, get_memory_router
-from app.swarms.artemis.military_orchestrator import ArtemisMillitaryOrchestrator
+# Artemis import removed
 from app.swarms.core.message_braider import MessageBraider
 
 # Leverage existing patterns
@@ -107,7 +107,7 @@ class GongSophiaContextProcessor(MicroSwarmBase):
 
         # Leverage existing infrastructure
         self.memory_router = get_memory_router()
-        self.artemis_orchestrator = ArtemisMillitaryOrchestrator()
+        self.artemis_orchestrator = None  # ArtemisMillitaryOrchestrator removed
         self.swarm_integration = SwarmIntegrationLayer()
         self.message_braider = MessageBraider()
         self.agent_mapper = GongAgentMapper()

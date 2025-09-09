@@ -51,13 +51,11 @@ DEFAULT_TIMEOUT = 10  # seconds
 DEFAULT_CACHE_TTL = 60  # seconds
 DASHBOARD_URLS = {
     "main": "http://localhost:8501",
-    "artemis": "${SOPHIA_API_ENDPOINT}",
     "business": "http://localhost:8502",
     "monitoring": "http://localhost:3001",
 }
 API_URLS = {
     "sophia": "http://localhost:8000",
-    "artemis": "http://localhost:5010",
 }
 
 # In-memory cache
@@ -113,11 +111,7 @@ async def root():
                     <a href="/redirect/main" class="dashboard-link">Open</a>
                 </div>
 
-                <div class="dashboard-card">
-                    <h3>🤖 Artemis Dashboard</h3>
-                    <p>Technical infrastructure and AI agent details</p>
-                    <a href="/redirect/artemis" class="dashboard-link">Open</a>
-                </div>
+
 
                 <div class="dashboard-card">
                     <h3>📊 Business Dashboard</h3>
@@ -170,14 +164,7 @@ async def health_check():
                     components["sophia_api"] = "degraded"
         except Exception:components["sophia_api"] = "unhealthy"
 
-        # Check Artemis API
-        try:
-            async with session.get(f"{API_URLS['artemis']}/status") as response:
-                if response.status == 200:
-                    components["artemis_api"] = "healthy"
-                else:
-                    components["artemis_api"] = "degraded"
-        except Exception:components["artemis_api"] = "unhealthy"
+        # Artemis removed
 
         # Check dashboards
         for name, url in DASHBOARD_URLS.items():

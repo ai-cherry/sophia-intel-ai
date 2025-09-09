@@ -93,7 +93,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.sophia.unified_factory import sophia_unified_factory
-from app.artemis.unified_factory import artemis_unified_factory
+# Artemis import removed
 
 logger = logging.getLogger(__name__)
 
@@ -370,7 +370,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.sophia.unified_factory import sophia_unified_factory
-from app.artemis.unified_factory import artemis_unified_factory
+# Artemis import removed
 
 logger = logging.getLogger(__name__)
 
@@ -629,7 +629,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.sophia.unified_factory import sophia_unified_factory
-from app.artemis.unified_factory import artemis_unified_factory
+# Artemis import removed
 
 logger = logging.getLogger(__name__)
 
@@ -938,7 +938,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from app.sophia.unified_factory import sophia_unified_factory
-from app.artemis.unified_factory import artemis_unified_factory
+# Artemis import removed
 
 logger = logging.getLogger(__name__)
 

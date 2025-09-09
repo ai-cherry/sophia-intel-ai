@@ -16,7 +16,7 @@ import {
 interface OrchestratorStatus {
   id: string;
   name: string;
-  type: 'sophia' | 'artemis';
+  type: 'sophia';
   status: 'active' | 'idle' | 'overloaded' | 'error';
   activeTasks: number;
   maxTasks: number;
@@ -75,26 +75,13 @@ const OrchestratorCoordinationView: React.FC = () => {
       icon: Crown,
       color: 'text-purple-600'
     },
-    {
-      id: 'artemis-001',
-      name: 'Artemis Code Excellence',
-      type: 'artemis',
-      status: 'active',
-      activeTasks: 4,
-      maxTasks: 8,
-      queueSize: 7,
-      performance: 87,
-      uptime: 99.6,
-      domain: 'Software Development & Technical Excellence',
-      icon: Code,
-      color: 'text-green-600'
-    }
+    // Additional orchestrators can be added here
   ];
 
   const mockTaskBridges: TaskBridge[] = [
     {
       sourceOrchestrator: 'sophia-001',
-      targetOrchestrator: 'artemis-001',
+      targetOrchestrator: 'sophia-002',
       taskType: 'Pay Ready Implementation',
       priority: 'high',
       status: 'in_transit',
@@ -102,7 +89,7 @@ const OrchestratorCoordinationView: React.FC = () => {
       payReadyContext: true
     },
     {
-      sourceOrchestrator: 'artemis-001',
+      sourceOrchestrator: 'sophia-002',
       targetOrchestrator: 'sophia-001',
       taskType: 'Performance Analytics',
       priority: 'medium',

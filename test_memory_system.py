@@ -44,19 +44,19 @@ async def test_memory_bridge():
     # Test adding memories with different relevance scores
     memories = [
         {
-            "agent_id": "artemis_test",
+            "agent_id": "sophia_test",
             "content": "Fixed a critical bug in the authentication system related to token expiration.",
             "relevance": 0.95,
             "metadata": {"type": "bugfix", "priority": "high"},
         },
         {
-            "agent_id": "artemis_test",
+            "agent_id": "sophia_test",
             "content": "Added documentation for the memory system explaining how to configure Mem0 and LangChain integration.",
             "relevance": 0.85,
             "metadata": {"type": "documentation", "priority": "medium"},
         },
         {
-            "agent_id": "artemis_test",
+            "agent_id": "sophia_test",
             "content": "Team meeting discussed project timeline and next sprint priorities.",
             "relevance": 0.65,
             "metadata": {"type": "meeting", "priority": "low"},
@@ -88,7 +88,7 @@ async def test_memory_bridge():
     for query in queries:
         try:
             results = await bridge.retrieve(
-                agent_id="artemis_test", query=query, limit=5, include_entities=True
+                agent_id="sophia_test", query=query, limit=5, include_entities=True
             )
 
             logger.info(
@@ -117,21 +117,21 @@ async def test_memory_bridge():
 
     # Test memory stats
     try:
-        stats = await bridge.get_stats("artemis_test")
+        stats = await bridge.get_stats("sophia_test")
         logger.info(f"✅ Memory stats: {json.dumps(stats, indent=2)}")
     except Exception as e:
         logger.error(f"❌ Error getting memory stats: {str(e)}")
 
     # Test pruning memories
     try:
-        pruned = await bridge.prune("artemis_test", max_relevance=0.7)
+        pruned = await bridge.prune("sophia_test", max_relevance=0.7)
         logger.info(f"✅ Pruned {pruned} memories with relevance < 0.7")
     except Exception as e:
         logger.error(f"❌ Error pruning memories: {str(e)}")
 
     # Cleanup - clear test memories
     try:
-        success = await bridge.clear("artemis_test")
+        success = await bridge.clear("sophia_test")
         if success:
             logger.info("✅ Cleared test memories")
         else:

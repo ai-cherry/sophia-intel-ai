@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
 const navItems = [
+  { href: "/unified", label: "Unified", icon: "🧭" },
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/chat", label: "Chat", icon: "💬" },
   { href: "/insights", label: "Insights", icon: "💡" },

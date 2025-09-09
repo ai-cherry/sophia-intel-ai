@@ -90,9 +90,9 @@ mcp-rebuild: ## Rebuild and start MCP services (memory, fs-sophia, git)
 	@curl -sf http://localhost:${MCP_FS_SOPHIA_PORT:-8082}/health >/dev/null && echo "✓ FS MCP (Sophia)" || echo "✗ FS MCP (Sophia)"
 	@curl -sf http://localhost:${MCP_GIT_PORT:-8084}/health >/dev/null && echo "✓ Git MCP" || echo "✗ Git MCP"
 
-ui-up: ## Start UI backend locally (http://localhost:8000)
-	@echo "Starting UI backend on http://localhost:8000"
-	@python3 -m uvicorn webui.backend.main:app --host 0.0.0.0 --port 8000
+ui-up: ## Start UI backend locally (http://localhost:${AGENT_API_PORT:-8003})
+	@echo "Starting UI backend on http://localhost:${AGENT_API_PORT:-8003}"
+	@python3 -m uvicorn webui.backend.main:app --host 0.0.0.0 --port ${AGENT_API_PORT:-8003}
 
 next-ui-up: ## Start Next.js UI (agent-ui) on http://localhost:3000
 	@echo "🔗 Ensure NEXT_PUBLIC_API_URL=http://localhost:8003 in agent-ui/.env.local"
@@ -110,11 +110,11 @@ next-ui-up: ## Start Next.js UI (agent-ui) on http://localhost:3000
 		)
 
 ui-health: ## Check UI backend health
-	@echo "UI backend health:" && (curl -sf http://localhost:8000/health | sed -e 's/^/  /' || (echo "  not responding" && exit 1))
+	@echo "UI backend health:" && (curl -sf http://localhost:${AGENT_API_PORT:-8003}/health | sed -e 's/^/  /' || (echo "  not responding" && exit 1))
 
 ui-smoke: ## Basic UI tools proxy smoke (FS list in repo root)
 	@echo "Invoking FS list via UI backend /tools/invoke..."
-	@curl -s -X POST http://localhost:8000/tools/invoke \
+	@curl -s -X POST http://localhost:${AGENT_API_PORT:-8003}/tools/invoke \
 		-H 'Content-Type: application/json' \
 		-d '{"capability":"fs","scope":"sophia","action":"list","params":{"path":"."}}' || echo "Smoke failed"
 

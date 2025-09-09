@@ -14,7 +14,7 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration with v7.0 enhancements
-BACKEND_PORT=8000
+BACKEND_PORT=${AGENT_API_PORT:-8003}
 FRONTEND_PORT=3000
 MCP_GATEWAY_PORT=8100
 GRAFANA_PORT=3002
@@ -1059,4 +1059,3 @@ main() {
 
 # Run main function with all arguments
 main "$@"
-

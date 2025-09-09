@@ -219,7 +219,7 @@ class SophiaV7TestSuite:
         # Test domain configuration
         assert len(brain.domains) > 0
         assert "gong" in brain.domains
-        assert "artemis" in brain.domains
+        assert "sophia" in brain.domains  # Artemis removed
 
         # Test agent initialization
         assert len(brain.agents) > 0

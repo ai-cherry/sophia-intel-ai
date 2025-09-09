@@ -653,8 +653,8 @@ if __name__ == "__main__":
         logger.info(f"Confidence: {report.total_confidence:.2%}")
 
         # Test Artemis research
-        artemis_team = ArtemisResearchTeam()
-        report = await artemis_team.api_research("OpenAI", "v1")
+        # ArtemisResearchTeam removed - use SophiaResearchTeam
+        # report = await sophia_team.api_research("OpenAI", "v1")
         logger.info(f"Artemis Research: {report.summary}")
         logger.info(f"Confidence: {report.total_confidence:.2%}")
 

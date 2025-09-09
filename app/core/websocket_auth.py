@@ -24,7 +24,7 @@ class UserRole(str, Enum):
     ADMIN = "admin"
     SOPHIA_OPERATOR = "sophia_operator"
     PAY_READY_ANALYST = "pay_ready_analyst"
-    ARTEMIS_OPERATOR = "artemis_operator"
+    # ARTEMIS_OPERATOR removed - external sidecar only
     VIEWER = "viewer"
     GUEST = "guest"
 

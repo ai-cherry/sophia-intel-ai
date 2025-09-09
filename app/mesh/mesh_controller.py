@@ -48,7 +48,7 @@ class MeshService:
 
     name: str
     namespace: str
-    domain: str  # artemis, sophia, or shared
+    domain: str  # sophia or shared
     endpoints: list[ServiceEndpoint] = field(default_factory=list)
     virtual_service: Optional[str] = None
     destination_rule: Optional[str] = None
@@ -131,7 +131,7 @@ class MeshController:
         """Discover all services in the mesh"""
         logger.info("Discovering services in mesh")
 
-        namespaces = ["artemis-mesh", "sophia-mesh", "shared-services"]
+        namespaces = ["sophia-mesh", "shared-services"]
 
         for namespace in namespaces:
             try:
@@ -320,7 +320,7 @@ class MeshController:
 
     async def start_watchers(self):
         """Start Kubernetes watchers for service changes"""
-        namespaces = ["artemis-mesh", "sophia-mesh", "shared-services"]
+        namespaces = ["sophia-mesh", "shared-services"]
 
         for namespace in namespaces:
             # Watch services
@@ -482,8 +482,7 @@ class MeshController:
 
     def _get_domain_from_namespace(self, namespace: str) -> str:
         """Get domain from namespace"""
-        if namespace == "artemis-mesh":
-            return "artemis"
+        # Artemis namespace removed
         elif namespace == "sophia-mesh":
             return "sophia"
         elif namespace == "shared-services":

@@ -301,7 +301,7 @@ services:
       - ./logs:/app/logs
     environment:
       - SOPHIA_ENVIRONMENT=${SOPHIA_ENVIRONMENT:-development}
-      - SERVICES_TO_MONITOR=redis,postgres,weaviate,unified-api,sophia-orchestrator,artemis-orchestrator
+      - SERVICES_TO_MONITOR=redis,postgres,weaviate,unified-api,sophia-orchestrator
       - CHECK_INTERVAL=30
     depends_on:
       - redis

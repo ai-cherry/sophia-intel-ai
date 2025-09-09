@@ -68,7 +68,7 @@ full-start: ## Start everything in correct order
 dev-mcp-up: ## Start only MCP servers (dev)
 	@docker compose -f docker-compose.dev.yml up -d mcp-memory mcp-filesystem-sophia mcp-git
 
-# Artemis targets removed - use external sidecar via artemis.sidecar-setup
+# Artemis is dead - all references removed
 	@echo "Deprecated: Artemis sidecar support removed."
 
 api-build: ## Build API image (prod compose)
@@ -146,12 +146,7 @@ doctor-all: ## Verify keys, infra, MCP, Next.js UI, and telemetry
 	 echo "\n[doctor] docker compose status (dev)..."; \\
 	 docker compose -f docker-compose.dev.yml ps || true
 
-artemis.sidecar-setup: ## Optional: Setup external Artemis sidecar integration
-	@echo "Artemis sidecar setup:"
-	@echo "1. Clone https://github.com/ai-cherry/artemis-cli to ~/artemis-cli"
-	@echo "2. Set ARTEMIS_PATH=~/artemis-cli"
-	@echo "3. Enable compose profile 'artemis' for MCP FS Artemis at port 8083"
-	@bash scripts/setup_artemis_sidecar.sh 2>/dev/null || echo "Note: External sidecar script available"
+# Artemis is completely removed - no integration available
 
 api-dev: ## Run Sophia production server locally on port 8003
 	uvicorn app.api.production_server:create_production_app --host 0.0.0.0 --port 8003
@@ -268,8 +263,7 @@ env-docs: ## Show environment guide for SSH agent and env files
 	@echo "Environment Guide (ENVIRONMENT_GUIDE.md)" && echo "------------------------------"
 	@sed -n '1,200p' ENVIRONMENT_GUIDE.md | sed -e 's/^/  /'
 
-# Artemis code removed from this repository
-# For Artemis functionality, use external sidecar via artemis.sidecar-setup
+# Artemis is dead - no longer part of this system
 
 # --- Phase 2 refactor helpers ---
 refactor.discovery: ## List Python files >50KB in app/

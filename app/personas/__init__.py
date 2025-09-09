@@ -31,7 +31,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-# Artemis imports removed - sidecar integration only
+# Removed - no longer supported
 
 # Evolution engine
 from .evolution_engine import (
@@ -98,7 +98,7 @@ __all__ = [
     "create_sophia_persona",
     "SophiaPersonaFactory",
     "customize_sophia_for_context",
-    # Artemis persona removed - available via external sidecar
+    # Removed from system
     # Prompt templates
     "PromptTemplateManager",
     "PromptTemplate",
@@ -142,11 +142,11 @@ async def initialize_persona_system(
 
         # Create base personas
         sophia = create_sophia_persona()
-        # Artemis persona creation removed - use external sidecar
+        # Removed completely
 
         # Save personas
         sophia_saved = await persona_manager.save_persona(sophia)
-        artemis_saved = False  # Artemis handled by external sidecar
+        # Not applicable
 
         # Load default prompt templates
         default_templates = get_default_templates()
@@ -215,7 +215,7 @@ def get_persona_system_info() -> dict[str, Any]:
                 ],
                 "variants": list(SophiaPersonaFactory.get_all_sophia_variants().keys()),
             },
-            # Artemis persona available via external sidecar integration
+            # No longer part of system
         },
         "features": {
             "dynamic_prompts": "Dynamic prompt generation with context injection",
@@ -399,7 +399,7 @@ async def integrate_with_portkey(portkey_manager) -> bool:
                     return "claude-3-opus-20240229"  # High reasoning capability
                 else:
                     return "claude-3-sonnet-20240229"  # Balanced performance
-            # Artemis persona handled by external sidecar
+            # Removed
             else:
                 return "claude-3-haiku-20240307"  # Fast for general tasks
 

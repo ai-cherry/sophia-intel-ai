@@ -38,7 +38,7 @@ components:
       ENVIRONMENT: "development"
     
   # Artemis MCP
-  artemis:
+  # All agent functionality now in Sophia
     type: mcp
     enabled: true
     depends_on:

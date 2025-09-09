@@ -15,7 +15,7 @@
       "current_state": "Phase 1 complete - archives consolidated, requirements cleaned, scripts organized",
       "codebase_scale": "968 Python files, 432K+ LOC, 142 JS/TS files",
       "environment": "Python 3.11+, Docker, multi-agent architecture",
-      "security": "API keys secured at ~/.config/artemis/env"
+      "security": "API keys secured via environment variables"
     },
     "instructions": "Review this Phase 2 plan, identify improvements, and implement the refactoring tasks. Maintain backward compatibility and minimize risk. Document all changes."
   },
@@ -113,13 +113,13 @@
       "priority": 2,
       "files_to_refactor": [
         {
-          "path": "app/artemis/agent_factory.py",
+          "path": "app/sophia/agent_factory.py",
           "size": ">50KB",
           "proposed_split": {
-            "app/artemis/factories/base_factory.py": "Base factory classes",
-            "app/artemis/factories/agent_factory.py": "Agent creation logic",
-            "app/artemis/factories/config_factory.py": "Configuration factories",
-            "app/artemis/factories/__init__.py": "Maintain backward compatibility imports"
+            "app/sophia/factories/base_factory.py": "Base factory classes",
+            "app/sophia/factories/agent_factory.py": "Agent creation logic",
+            "app/sophia/factories/config_factory.py": "Configuration factories",
+            "app/sophia/factories/__init__.py": "Maintain backward compatibility imports"
           }
         },
         {
@@ -340,10 +340,10 @@
       "touch docker-compose.override.yml"
     ],
     "large_file_split": [
-      "mkdir -p app/artemis/factories",
+      "mkdir -p app/sophia/factories",
       "# Split agent_factory.py into modules",
       "# Update imports in __init__.py",
-      "python -m pytest tests/test_artemis/"
+      "python -m pytest tests/test_sophia/"
     ],
     "validation": [
       "make env.check",

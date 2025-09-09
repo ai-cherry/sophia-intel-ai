@@ -3,15 +3,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
-const unifiedOnly = (process.env.NEXT_PUBLIC_UNIFIED_ONLY ?? 'true');
-const unifiedMode = unifiedOnly === '1' || unifiedOnly === 'true';
-
 const navItems = [
   { href: "/unified", label: "Unified", icon: "🧭" },
   { href: "/chat", label: "Chat", icon: "💬" },
-  ...(unifiedMode ? [] : [
-    { href: "/legacy", label: "Legacy", icon: "🗂️" },
-  ]),
 ];
 
 export default function SophiaLayout({ children }: { children: ReactNode }) {

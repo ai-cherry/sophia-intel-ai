@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import AgnoBridgeStatus from '@/components/sophia/AgnoBridgeStatus';
 import ChatArea from '@/components/playground/ChatArea/ChatArea';
 import Section from '@/components/widgets/Section';
+import IntegrationStatusPanel from '@/components/sophia/IntegrationStatusPanel';
 
 const CostDashboard = dynamic(() => import('@/components/analytics/CostDashboard'), { ssr: false, loading: () => <div className="h-32" /> });
 const ClientHealthDashboard = dynamic(() => import('@/components/dashboards/ClientHealthDashboard'), { ssr: false, loading: () => <div className="h-32" /> });
@@ -23,6 +24,13 @@ export default function UnifiedCommandCenter() {
             <p className="text-sm text-gray-500 dark:text-gray-400">Unified view of business intelligence and operations</p>
           </div>
           <AgnoBridgeStatus />
+        </div>
+
+        {/* Integration Status */}
+        <div className="max-w-[1600px] mx-auto">
+          <Section title="Integrations" subtitle="Connected systems and health">
+            <IntegrationStatusPanel />
+          </Section>
         </div>
 
         {/* Quick KPIs (Costs + Infra) */}

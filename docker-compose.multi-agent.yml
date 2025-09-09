@@ -209,7 +209,7 @@ services:
       - API_URL=http://swarm-orchestrator:8000
       - WEBSOCKET_URL=ws://swarm-orchestrator:8000/ws
       - MCP_FILESYSTEM_SOPHIA_URL=http://mcp-filesystem-sophia:8000
-      - MCP_FILESYSTEM_ARTEMIS_URL=http://mcp-filesystem-artemis:8000
+      
       - MCP_GIT_URL=http://mcp-git:8000
       - MCP_MEMORY_URL=http://mcp-memory:8000
       - NODE_ENV=development
@@ -237,14 +237,14 @@ services:
       - REDIS_URL=redis://redis:6379
       - MCP_MEMORY_URL=http://mcp-memory:8000
       - MCP_FS_SOPHIA_URL=http://mcp-filesystem-sophia:8000
-      - MCP_FS_ARTEMIS_URL=http://mcp-filesystem-artemis:8000
+      
       - MCP_GIT_URL=http://mcp-git:8000
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     depends_on:
       - redis
       - mcp-memory
       - mcp-filesystem-sophia
-      - mcp-filesystem-artemis
+      
       - mcp-git
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -270,13 +270,13 @@ services:
       - NEO4J_PASSWORD=${NEO4J_PASSWORD:-dev-password-123}
       - POSTGRES_URL=postgresql://${POSTGRES_USER:-sophia}:${POSTGRES_PASSWORD:-dev-password-123}@postgres:5432/${POSTGRES_DB:-sophia}
       - WORKSPACE_SOPHIA=/workspace/sophia
-      - WORKSPACE_ARTEMIS=/workspace/artemis
+      
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - EMBEDDING_MODEL=${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
       - INDEXER_QUEUE=sophia-indexer
     volumes:
       - ./:/workspace/sophia:ro
-      - ../artemis-cli:/workspace/artemis:ro
+      
     depends_on:
       - redis
       - weaviate

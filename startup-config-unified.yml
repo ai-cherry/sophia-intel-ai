@@ -45,7 +45,7 @@ components:
       - redis
       - qdrant
     startup_script: start_artemis.sh
-    health_check_url: http://localhost:5010/status
+    # Artemis removed
     timeout_seconds: 120
     retry_attempts: 3
     env_vars:

@@ -1,5 +1,5 @@
 """
-Security Manager for Sophia-Artemis Service Mesh
+Security Manager for Sophia Service Mesh
 Manages mTLS certificates, RBAC updates, and security policies
 """
 
@@ -201,7 +201,7 @@ class SecurityManager:
         subject = x509.Name(
             [
                 x509.NameAttribute(NameOID.COMMON_NAME, common_name),
-                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Sophia-Artemis"),
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Sophia"),
                 x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME, namespace),
             ]
         )

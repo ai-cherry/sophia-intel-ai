@@ -1183,7 +1183,7 @@ class TestComprehensiveSecurityAssessment:
 
         # Generate comprehensive reports
         reports = {}
-        for component in ["unified_mcp", "artemis", "bi_server", "mem0", "base_mcp"]:
+        for component in ["unified_mcp", "bi_server", "mem0", "base_mcp"]:
             reports[component] = security_tester.generate_report(component)
 
         # Print summary

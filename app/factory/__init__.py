@@ -179,7 +179,7 @@ def get_factory_info():
 def print_factory_banner():
     """Print factory banner with system information"""
     print("=" * 70)
-    print("🏭 SOPHIA-ARTEMIS INTELLIGENT SWARM FACTORY")
+    print("🏭 SOPHIA INTELLIGENT SWARM FACTORY")
     print("=" * 70)
     print(f"Version: {__version__}")
     print(f"Description: {FACTORY_INFO['description']}")

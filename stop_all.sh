@@ -1,9 +1,9 @@
 #!/bin/bash
-# Stop all Sophia-Artemis services
+# Stop all Sophia services
 
 echo "
 ╔════════════════════════════════════════════════════════════════╗
-║          🛑 Stopping Sophia-Artemis Platform 🛑                ║
+║          🛑 Stopping Sophia Platform 🛑                         ║
 ╚════════════════════════════════════════════════════════════════╝
 "
 
@@ -39,7 +39,7 @@ if [ -f .pids ]; then
     stop_by_pid "$MCP_PID" "MCP Server"
     stop_by_pid "$API_PID" "API Server"
     stop_by_pid "$SOPHIA_PID" "Sophia Server"
-    stop_by_pid "$ARTEMIS_PID" "Artemis Server"
+    : # Artemis removed
     stop_by_pid "$PERSONA_PID" "Persona Server"
 
     rm -f .pids

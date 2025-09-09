@@ -13,14 +13,29 @@ import {
   BarChart3, PieChart, Calendar, MessageCircle
 } from 'lucide-react';
 
-// WebSocket hook for real-time updates;
-const useWebSocketConnection = (url: string) => {
+// Feature flags
+const ENABLE_ARTEMIS = (process.env.NEXT_PUBLIC_ENABLE_ARTEMIS === '1' || process.env.NEXT_PUBLIC_ENABLE_ARTEMIS === 'true');
+
+// Resolve WS base from NEXT_PUBLIC_API_URL (http -> ws)
+const getWsBase = (): string => {
+  const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8003';
+  try {
+    const u = new URL(api);
+    u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+    return u.origin;
+  } catch {
+    return 'ws://localhost:8003';
+  }
+};
+
+// WebSocket hook for real-time updates
+const useWebSocketConnection = (path: string) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    const wsUrl = `ws://localhost:8000/ws/sophia_dashboard/${Date.now()}`;
+    const wsUrl = `${getWsBase()}${path}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -80,7 +95,7 @@ interface OperationalIntelligence {
 }
 
 const PayReadyDashboard: React.FC = () => {
-  const { connected, data } = useWebSocketConnection('ws://localhost:8000/ws');
+  const { connected, data } = useWebSocketConnection(`/ws/sophia_dashboard/${Date.now()}`);
   const [stuckAccounts, setStuckAccounts] = useState<StuckAccount[]>([]);
   const [teamMetrics, setTeamMetrics] = useState<TeamMetrics[]>([]);
   const [operationalIntelligence, setOperationalIntelligence] = useState<OperationalIntelligence[]>([]);
@@ -150,6 +165,7 @@ const PayReadyDashboard: React.FC = () => {
     setSwarmStatus('running');
 
     try {
+      if (!ENABLE_ARTEMIS) { setSwarmStatus('idle'); return; }
       const response = await fetch('/api/swarms/artemis/deploy-sophia-enhancements', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -192,7 +208,9 @@ const PayReadyDashboard: React.FC = () => {
             <Brain className="w-8 h-8 text-blue-500" />
             Sophia Pay Ready Intelligence
           </h1>
-          <p className="text-muted-foreground">Real-time operational intelligence powered by Artemis agent swarm</p>
+          <p className="text-muted-foreground">
+            {ENABLE_ARTEMIS ? 'Real-time operational intelligence powered by Artemis agent swarm' : 'Real-time operational intelligence powered by Sophia agents'}
+          </p>
         </div>
 
         <div className="flex items-center gap-4">
@@ -201,6 +219,7 @@ const PayReadyDashboard: React.FC = () => {
             {connected ? 'Live' : 'Disconnected'}
           </Badge>
 
+          {ENABLE_ARTEMIS && (
           <Button onClick={deploySwarmEnhancements} disabled={swarmStatus === 'running'}>
             {swarmStatus === 'running' ? (
               <>
@@ -214,6 +233,7 @@ const PayReadyDashboard: React.FC = () => {
               </>
             )}
           </Button>
+          )}
         </div>
       </div>
 

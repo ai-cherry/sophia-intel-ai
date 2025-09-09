@@ -104,14 +104,14 @@ sys.path.append('/path/to/sophia-intel-ai')
 def health_check():
     try:
         # Check API health
-        response = requests.get('http://localhost:8000/api/slack/health', timeout=10)
+        response = requests.get(f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/slack/health", timeout=10)
         health_data = response.json()
 
         if not health_data.get('integration_enabled'):
             print("WARNING: Slack integration disabled")
 
         # Check Looker connection
-        looker_response = requests.get('http://localhost:8000/api/business/looker/health', timeout=10)
+        looker_response = requests.get(f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/business/looker/health", timeout=10)
         if looker_response.status_code != 200:
             print("WARNING: Looker connection issues")
 
@@ -173,7 +173,7 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/api/slack/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${AGENT_API_PORT:-8003}/api/slack/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -249,7 +249,7 @@ def print_deployment_instructions():
         "   docker-compose logs -f sophia-ai",
         "",
         "**4. Test Deployment:**",
-        "   curl http://localhost:8000/api/slack/health",
+        "   curl http://localhost:${AGENT_API_PORT:-8003}/api/slack/health",
         "   python3 scripts/run_bi_check.py --priority=high",
         "",
         "**5. Configure Slack Webhook:**",

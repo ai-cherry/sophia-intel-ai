@@ -30,7 +30,7 @@ declare -A SERVICES=(
     ["redis"]="docker exec sophia-redis redis-cli ping"
     ["qdrant"]="curl -f -m 5 http://localhost:6333/health"
     ["neo4j"]="docker exec sophia-neo4j cypher-shell -u neo4j -p password 'RETURN 1'"
-    ["backend-api"]="curl -f -m 5 http://localhost:8000/health"
+    ["backend-api"]="curl -f -m 5 http://localhost:${AGENT_API_PORT:-8003}/health"
     ["mcp-server"]="curl -f -m 5 http://localhost:8001/health"
     ["lambda-manager"]="curl -f -m 5 http://localhost:8002/health"
     ["frontend"]="curl -f -m 5 ${SOPHIA_FRONTEND_ENDPOINT}"
@@ -493,4 +493,3 @@ trap 'log "INFO" "Health monitoring stopped by user"; exit 0' INT TERM
 
 # Execute main function
 main "$@"
-

@@ -110,7 +110,7 @@ except:
     
     # 7. Port availability
     echo -e "\n${YELLOW}7️⃣ PORT AVAILABILITY:${NC}"
-    API_PORT_CHECK="${AGENT_API_PORT:-8000}"
+    API_PORT_CHECK="${AGENT_API_PORT:-8003}"
     for port in "$API_PORT_CHECK" 8001 3000; do
         if ! lsof -Pi :$port -sTCP:LISTEN -t >/dev/null 2>&1; then
             check_item "Port $port available" "true"

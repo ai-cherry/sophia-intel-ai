@@ -671,10 +671,10 @@ logfile {self.log_dir / 'redis.log'}
 
         print("🎯 Next Steps:")
         print(
-            '  1. Test filesystem operations: curl -X POST http://localhost:8000/mcp/filesystem -d \'{"method":"list_directory","params":{"path":"."}}\''
+            f"  1. Test filesystem operations: curl -X POST http://localhost:{os.getenv('AGENT_API_PORT','8003')}/mcp/filesystem -d '{{\"method\":\"list_directory\",\"params\":{\"path\":\".\"}}}'"
         )
         print(
-            '  2. Test git operations: curl -X POST http://localhost:8000/mcp/git -d \'{"method":"git_status","params":{"repository":"."}}\''
+            f"  2. Test git operations: curl -X POST http://localhost:{os.getenv('AGENT_API_PORT','8003')}/mcp/git -d '{{\"method\":\"git_status\",\"params\":{\"repository\":\".\"}}}'"
         )
         print("  3. Monitor system health at /healthz endpoint")
         print("=" * 70)

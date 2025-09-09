@@ -29,7 +29,7 @@ This is the single source of truth for starting, validating, and using Sophia lo
   - `make ui-up`
   - Health: `make ui-health`
   - Smoke: `make ui-smoke`
-- Open: http://localhost:8000/ui
+- Open: http://localhost:3000/unified
 
 ## Optional: Artemis Filesystem
 - `export ARTEMIS_PATH=~/artemis-cli`
@@ -49,4 +49,3 @@ This is the single source of truth for starting, validating, and using Sophia lo
 ## Production-ish API
 - Rebuild and start: `make api-restart`
 - Verify: `sleep 15 && curl http://localhost:8003/openapi.json`
-

@@ -20,7 +20,7 @@ info:
     name: Proprietary
 
 servers:
-  - url: http://localhost:8000
+  - url: http://localhost:8003
     description: Local development server
   - url: https://api.sophia-intel.ai
     description: Production server

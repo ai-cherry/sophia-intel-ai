@@ -339,8 +339,9 @@ async def generate_embeddings(texts: list[str]):
     """Generate embeddings via API"""
 
     async with httpx.AsyncClient() as client:
+        import os
         response = await client.post(
-            "http://localhost:8000/embeddings/create",
+            f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/embeddings/create",
             json={
                 "text": texts,
                 "use_case": "rag",
@@ -352,7 +353,7 @@ async def generate_embeddings(texts: list[str]):
         return result["data"]["embeddings"]
 
 # Using curl
-# curl -X POST http://localhost:8000/embeddings/create \\
+# curl -X POST http://localhost:${AGENT_API_PORT:-8003}/embeddings/create \\
 #   -H "Content-Type: application/json" \\
 #   -d '{"text": "Hello world", "use_case": "search"}'
 '''

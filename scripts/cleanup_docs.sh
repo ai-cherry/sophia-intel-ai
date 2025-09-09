@@ -97,7 +97,7 @@ pulumi up
 ```
 
 ## ✅ Validation
-- Health check: http://localhost:8000/health
+- Health check: http://localhost:${AGENT_API_PORT:-8003}/health
 - Metrics: http://localhost:9090
 - UI: http://localhost:3000
 
@@ -252,7 +252,7 @@ auto_update: true
 ## Active Services
 
 ### API Endpoints
-- **Unified API**: http://localhost:8000
+- **Unified API**: http://localhost:${AGENT_API_PORT:-8003}
   - Health: `/health`
   - Swarms: `/teams/run`
   - NL Interface: `/api/nl/process`

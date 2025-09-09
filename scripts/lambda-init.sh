@@ -309,7 +309,7 @@ main() {
     
     log "✅ Sophia AI Lambda Labs initialization complete!"
     log "📊 Services running:"
-    log "   - Backend API: http://localhost:8000"
+    log "   - Backend API: http://localhost:${AGENT_API_PORT:-8003}"
     log "   - MCP Server: http://localhost:8001"
     log "   - Lambda Manager: http://localhost:8002"
     log "   - Qdrant Vector DB: http://localhost:6333"
@@ -319,4 +319,3 @@ main() {
 
 # Execute main function
 main "$@"
-

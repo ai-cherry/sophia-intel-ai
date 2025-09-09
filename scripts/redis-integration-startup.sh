@@ -265,16 +265,16 @@ show_final_status() {
 
     # API endpoints
     echo "Health Monitoring API:"
-    echo "- Health: http://localhost:8000/redis/health"
-    echo "- Metrics: http://localhost:8000/redis/metrics"
-    echo "- Alerts: http://localhost:8000/redis/alerts"
+    echo "- Health: http://localhost:${AGENT_API_PORT:-8003}/redis/health"
+    echo "- Metrics: http://localhost:${AGENT_API_PORT:-8003}/redis/metrics"
+    echo "- Alerts: http://localhost:${AGENT_API_PORT:-8003}/redis/alerts"
     echo ""
 
     success "Redis integration setup completed successfully!"
 
     echo ""
     echo "Next Steps:"
-    echo "1. Monitor health: curl http://localhost:8000/redis/health/summary"
+    echo "1. Monitor health: curl http://localhost:${AGENT_API_PORT:-8003}/redis/health/summary"
     echo "2. Create backups: $REDIS_BACKUP_SCRIPT backup manual"
     echo "3. Check logs: tail -f /opt/homebrew/var/log/redis/sophia-intel-ai.log"
     echo "=================================="

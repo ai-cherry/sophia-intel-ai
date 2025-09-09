@@ -71,7 +71,8 @@ async def test_mcp_connectivity():
         import httpx
 
         async with httpx.AsyncClient() as client:
-            response = await client.get("http://localhost:8000/health")
+            import os
+            response = await client.get(f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/health")
             if response.status_code == 200:
                 health_data = response.json()
                 results["simple_server"] = {

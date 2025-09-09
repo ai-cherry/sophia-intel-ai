@@ -501,10 +501,11 @@ REDIS_URL=redis://localhost:6379
 
         print(f"\n⏱️  Startup time: {duration:.2f} seconds")
         print("\n📋 Quick Commands:")
-        print("  • Sophia Backend: http://localhost:8000")
+        api_port = os.getenv("AGENT_API_PORT", "8003")
+        print(f"  • Sophia Backend: http://localhost:{api_port}")
         print("  • MCP Memory: http://localhost:8765")
         print("  • MCP Bridge: http://localhost:8766")
-        print("  • Health Check: curl http://localhost:8000/health")
+        print(f"  • Health Check: curl http://localhost:{api_port}/health")
         print("\n✨ All systems operational!")
         print("=" * 60)
 

@@ -270,7 +270,7 @@ health_check() {
     log_info "Running health checks..."
 
     # Check API endpoint
-    if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+    if curl -s http://localhost:${AGENT_API_PORT:-8003}/health > /dev/null 2>&1; then
         log_info "✓ API is healthy"
     else
         log_warn "✗ API is not responding"

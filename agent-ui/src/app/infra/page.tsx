@@ -17,7 +17,7 @@ export default function InfraPage() {
             </h1>
           </div>
           <nav className="flex gap-6">
-            <a href="/dashboard" className="hover:text-[#00e0ff] transition-colors">Dashboard</a>
+            <a href="/unified" className="hover:text-[#00e0ff] transition-colors">Dashboard</a>
             <a href="/memory" className="hover:text-[#00e0ff] transition-colors">Memory Explorer</a>
             <a href="/infra" className="text-[#00e0ff] hover:text-white transition-colors">InfraOps</a>
           </nav>

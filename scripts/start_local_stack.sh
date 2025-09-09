@@ -32,6 +32,5 @@ echo "\n=== Next steps ==="
 echo "1) Start MCP servers:       make dev-mcp-up"
 echo "2) Check MCP health:         make mcp-test"
 echo "3) Start API (dev):          make api-dev      # http://localhost:${AGENT_API_PORT}"
-echo "4) Start Next.js UI:         make next-ui-up   # http://localhost:3000/sophia"
+echo "4) Start Next.js UI:         make next-ui-up   # http://localhost:3000/unified"
 echo "\nTelemetry: http://localhost:5003/api/telemetry/health (optional)"
-

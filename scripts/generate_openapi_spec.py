@@ -57,7 +57,7 @@ def generate_openapi_spec():
     # Add additional information
     openapi_schema["servers"] = [
         {
-            "url": "http://localhost:8000",
+            "url": f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}",
             "description": "Local development server",
         },
         {

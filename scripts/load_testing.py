@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class LoadTestConfig:
     """Configuration for load tests"""
 
-    base_url: str = "http://localhost:8000"
+    base_url: str = f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}"
     concurrent_users: int = 10
     requests_per_user: int = 100
     ramp_up_time: int = 30  # seconds
@@ -454,7 +454,7 @@ async def main():
     """Main load testing function"""
     parser = argparse.ArgumentParser(description="Sophia Intel AI Load Testing")
     parser.add_argument(
-        "--url", default="http://localhost:8000", help="Base URL to test"
+        "--url", default=f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}", help="Base URL to test"
     )
     parser.add_argument("--users", type=int, default=10, help="Concurrent users")
     parser.add_argument("--requests", type=int, default=100, help="Requests per user")

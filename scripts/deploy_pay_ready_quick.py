@@ -395,7 +395,7 @@ export const PayReadyDashboard: React.FC = () => {
 
   useEffect(() => {
     // Initialize WebSocket connection
-    const websocket = new WebSocket('ws://localhost:8000/ws/pay-ready');
+    const websocket = new WebSocket(`ws://localhost:${process.env.AGENT_API_PORT || 8003}/ws/pay-ready`);
 
     websocket.onmessage = (event) => {
       const data = JSON.parse(event.data);

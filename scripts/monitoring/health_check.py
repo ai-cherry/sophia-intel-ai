@@ -9,7 +9,7 @@ sys.path.append("/path/to/sophia-intel-ai")
 def health_check():
     try:
         # Check API health
-        response = requests.get("http://localhost:8000/api/slack/health", timeout=10)
+        response = requests.get(f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/slack/health", timeout=10)
         health_data = response.json()
 
         if not health_data.get("integration_enabled"):
@@ -17,7 +17,7 @@ def health_check():
 
         # Check Looker connection
         looker_response = requests.get(
-            "http://localhost:8000/api/business/looker/health", timeout=10
+            f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/business/looker/health", timeout=10
         )
         if looker_response.status_code != 200:
             print("WARNING: Looker connection issues")

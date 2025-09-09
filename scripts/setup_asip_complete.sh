@@ -272,7 +272,7 @@ if [ "$ENVIRONMENT" = "codespaces" ]; then
     cat > .vscode/settings.json << 'EOF'
 {
     "sophia-ai.enabled": true,
-    "sophia-ai.api.endpoint": "http://localhost:8000",
+    "sophia-ai.api.endpoint": "http://localhost:${AGENT_API_PORT:-8003}",
     "sophia-ai.shortcuts.assist": "alt+a",
     "sophia-ai.shortcuts.review": "alt+r",
     "sophia-ai.shortcuts.optimize": "alt+o",
@@ -327,7 +327,7 @@ print("Testing API endpoints...")
 
 try:
     # Test health endpoint
-    response = requests.get("http://localhost:8000/health", timeout=5)
+    response = requests.get(f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/health", timeout=5)
     if response.status_code == 200:
         print("✅ Health check passed")
         data = response.json()
@@ -357,10 +357,10 @@ echo "=============================================="
 echo ""
 echo "📊 Status Summary:"
 echo "   • Environment: $ENVIRONMENT"
-echo "   • Backend: http://localhost:8000"
-echo "   • API Docs: http://localhost:8000/docs"
-echo "   • Health: http://localhost:8000/health"
-echo "   • Metrics: http://localhost:8000/metrics"
+echo "   • Backend: http://localhost:${AGENT_API_PORT:-8003}"
+echo "   • API Docs: http://localhost:${AGENT_API_PORT:-8003}/docs"
+echo "   • Health: http://localhost:${AGENT_API_PORT:-8003}/health"
+echo "   • Metrics: http://localhost:${AGENT_API_PORT:-8003}/metrics"
 echo ""
 
 if [ "$ENVIRONMENT" = "codespaces" ]; then
@@ -387,7 +387,7 @@ echo ""
 echo "📝 Next Steps:"
 echo "   1. Update .env with your API keys"
 echo "   2. Configure Portkey virtual keys"
-echo "   3. Test API: curl http://localhost:8000/health"
+echo "   3. Test API: curl http://localhost:${AGENT_API_PORT:-8003}/health"
 echo "   4. View logs: tail -f logs/backend.log"
 echo ""
 

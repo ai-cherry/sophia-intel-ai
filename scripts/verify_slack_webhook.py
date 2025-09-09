@@ -11,7 +11,10 @@ from datetime import datetime
 import requests
 
 
-def test_webhook_endpoint(base_url: str = "http://localhost:8000"):
+def test_webhook_endpoint(base_url: str | None = None):
+    if not base_url:
+        import os
+        base_url = f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}"
     """Test the webhook endpoint is accessible"""
     print("🔍 TESTING SLACK WEBHOOK CONFIGURATION")
     print("=" * 50)
@@ -140,7 +143,7 @@ python3 scripts/verify_slack_webhook.py
 if __name__ == "__main__":
     import sys
 
-    base_url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
+    base_url = sys.argv[1] if len(sys.argv) > 1 else None
 
     test_webhook_endpoint(base_url)
 

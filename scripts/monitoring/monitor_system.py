@@ -104,7 +104,7 @@ def check_api_health() -> Dict[str, Any]:
     endpoints = [
         {
             "name": "MCP Server",
-            "url": "http://localhost:8000/health",
+            "url": f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/health",
             "expected_status": 200,
         },
         {

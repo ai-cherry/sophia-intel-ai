@@ -339,7 +339,7 @@ print(f"Semantic role: {meta_tag.semantic_role.value}")
 
 ```javascript
 // JavaScript/TypeScript client example
-const API_BASE = 'http://localhost:8000/api/knowledge';
+const API_BASE = `http://localhost:${process.env.AGENT_API_PORT || 8003}/api/knowledge`;
 const token = 'your_jwt_token';
 
 // Create knowledge

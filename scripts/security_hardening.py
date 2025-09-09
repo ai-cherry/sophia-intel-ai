@@ -362,7 +362,7 @@ async def sophia_endpoint_performance(url, num_requests=100):
 
 async def main():
     endpoints = [
-        "http://localhost:8000/health",
+        f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/health",
         "http://localhost:8001/health"
     ]
 
@@ -501,7 +501,7 @@ def main():
         print_status("Next steps:")
         print_status("1. Review SECURITY_CHECKLIST.md")
         print_status("2. Run performance tests: python tests/performance_test.py")
-        print_status("3. Test security headers: curl -I http://localhost:8000/health")
+        print_status(f"3. Test security headers: curl -I http://localhost:{os.getenv('AGENT_API_PORT','8003')}/health")
         print_status("4. Monitor logs for security events")
 
     except Exception as e:

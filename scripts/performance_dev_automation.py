@@ -150,7 +150,8 @@ class PerformanceDevAutomator:
 
         # Wait for server startup
         await asyncio.sleep(2)
-        console.print("✅ API server started on http://localhost:8000", style="green")
+        import os
+        console.print(f"✅ API server started on http://localhost:{os.getenv('AGENT_API_PORT','8003')}", style="green")
 
     async def start_performance_dashboard(self) -> None:
         """Start dashboard with performance monitoring"""
@@ -277,7 +278,8 @@ class PerformanceDevAutomator:
         try:
             import httpx
             async with httpx.AsyncClient() as client:
-                response = await client.get("http://localhost:8000/health")
+                import os
+                response = await client.get(f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/health")
                 if response.status_code == 200:
                     response_time = (time.time() - start_time) * 1000
                     sophia_results["api_response_time"] = f"{response_time:.1f}ms"
@@ -409,7 +411,8 @@ async def start(full: bool, api_only: bool, monitoring: bool):
 
             console.print("\n🎉 Full development environment running!", style="bold green")
             console.print("📊 Dashboard: http://localhost:8501", style="blue")
-            console.print("🔗 API: http://localhost:8000", style="blue")
+            import os
+            console.print(f"🔗 API: http://localhost:{os.getenv('AGENT_API_PORT','8003')}", style="blue")
             console.print("🤖 MCP Servers: ports 8080-8081", style="blue")
 
         if monitoring:

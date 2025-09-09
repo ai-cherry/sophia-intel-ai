@@ -14,6 +14,7 @@ _Updated for Phase 3 Implementation - September 2025_
 ## 🚀 Quick Start
 
 - [README](../README.md) - Project overview
+- [Ports Reference](PORTS.md) - Standard local ports and flags
 - [Environment Setup](SECURE_ENV_AND_TOOLS.md) - Configure API keys and tools
 - [Phase 3 Agent Architecture](PHASE_3_AGENT_WIRING_PLAN.md) - Current implementation
 - [SOPHIA Runbook](RUNBOOK_SOPHIA.md) - Operational guide

@@ -17,7 +17,8 @@ class FrontendConnectivityTester:
     """Tests frontend dashboard connectivity to backend APIs"""
 
     def __init__(self):
-        self.backend_url = "http://localhost:8000"
+        import os
+        self.backend_url = f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}"
         self.test_results = {
             "timestamp": datetime.now().isoformat(),
             "total_tests": 0,

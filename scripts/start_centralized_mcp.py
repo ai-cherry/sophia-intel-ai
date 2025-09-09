@@ -244,25 +244,25 @@ class CentralizedMCPController(MCPMasterController):
 
         self.log("\n📡 Central Registry API:")
         self.log(
-            "  • Registry Status: GET http://localhost:8000/api/mcp/registry/status"
+            f"  • Registry Status: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/mcp/registry/status"
         )
         self.log(
-            "  • Discover Servers: GET http://localhost:8000/api/mcp/registry/servers"
+            f"  • Discover Servers: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/mcp/registry/servers"
         )
         self.log(
-            "  • Server Details: GET http://localhost:8000/api/mcp/registry/servers/{server_id}"
+            f"  • Server Details: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/mcp/registry/servers/{{server_id}}"
         )
         self.log(
-            "  • Load Balancing: GET http://localhost:8000/api/mcp/registry/load-balance/{domain}/{capability}"
+            f"  • Load Balancing: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/mcp/registry/load-balance/{{domain}}/{{capability}}"
         )
 
         self.log("\n🌉 Bridge Integration:")
-        self.log("  • Bridge Status: GET http://localhost:8000/api/mcp/bridge/status")
+        self.log(f"  • Bridge Status: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/mcp/bridge/status")
 
         self.log("\n📊 Enhanced Monitoring:")
-        self.log("  • MCP Status: GET http://localhost:8000/api/mcp/status")
-        self.log("  • Cache Stats: GET http://localhost:8000/api/cache/stats")
-        self.log("  • WebSocket Stats: GET http://localhost:8000/api/websocket/stats")
+        self.log(f"  • MCP Status: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/mcp/status")
+        self.log(f"  • Cache Stats: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/cache/stats")
+        self.log(f"  • WebSocket Stats: GET http://localhost:{os.getenv('AGENT_API_PORT','8003')}/api/websocket/stats")
 
     async def run_centralized(self):
         """Main execution with centralized features"""

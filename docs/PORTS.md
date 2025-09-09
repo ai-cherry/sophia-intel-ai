@@ -36,5 +36,5 @@ Health and checks
 - `Makefile mcp-test` checks 8081/8082/8084; vector/graph are optional.
 
 Notes
-- `sophia.sh` now respects `AGENT_API_PORT` (defaults to `8000` for backward compatibility) to avoid breaking existing deployments. Set `AGENT_API_PORT=8003` to align with the unified API default.
+- `sophia.sh` respects `AGENT_API_PORT` (defaults to `8003`) for a consistent local experience. Override if needed: `AGENT_API_PORT=8000`.
 - For docker-based dev, host `8003` proxies container `8000` for the API.

@@ -344,7 +344,7 @@ class StartupValidator:
         start_time = time.time()
 
         endpoints = {
-            'Backend API': 'http://localhost:8000/health',
+            'Backend API': f"http://localhost:{os.getenv('AGENT_API_PORT','8003')}/health",
             'MCP Server': 'http://localhost:8001/health',
             'Lambda Manager': 'http://localhost:8002/health',
             'Frontend': '${SOPHIA_FRONTEND_ENDPOINT}'

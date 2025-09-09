@@ -24,6 +24,7 @@ MCP servers
 
 UI defaults and env
 - `NEXT_PUBLIC_API_URL`: defaults to `http://localhost:8003`
+- Default route: `http://localhost:3000/unified` (UnifiedCommandCenter)
 - Debug flags:
   - `NEXT_PUBLIC_SHOW_METRICS_DEBUG=1|true`
   - `NEXT_PUBLIC_USE_REALTIME_MANAGER=1|true`
@@ -37,4 +38,3 @@ Health and checks
 Notes
 - `sophia.sh` now respects `AGENT_API_PORT` (defaults to `8000` for backward compatibility) to avoid breaking existing deployments. Set `AGENT_API_PORT=8003` to align with the unified API default.
 - For docker-based dev, host `8003` proxies container `8000` for the API.
-

@@ -6,7 +6,7 @@ export default function Home() {
   const router = useRouter();
   
   useEffect(() => {
-    router.push('/sophia');
+    router.push('/unified');
   }, [router]);
   
   return (

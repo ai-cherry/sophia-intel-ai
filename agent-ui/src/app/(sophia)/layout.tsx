@@ -3,16 +3,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
+const unifiedOnly = (process.env.NEXT_PUBLIC_UNIFIED_ONLY ?? 'true');
+const unifiedMode = unifiedOnly === '1' || unifiedOnly === 'true';
+
 const navItems = [
   { href: "/unified", label: "Unified", icon: "🧭" },
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
   { href: "/chat", label: "Chat", icon: "💬" },
-  { href: "/insights", label: "Insights", icon: "💡" },
-  { href: "/pipeline", label: "Pipeline", icon: "🔄" },
-  { href: "/teams", label: "Teams", icon: "👥" },
-  { href: "/integrations", label: "Integrations", icon: "🔌" },
-  { href: "/analytics", label: "Analytics", icon: "📈" },
-  { href: "/notifications", label: "Alerts", icon: "🔔" },
+  ...(unifiedMode ? [] : [
+    { href: "/dashboard", label: "Dashboard", icon: "📊" },
+    { href: "/insights", label: "Insights", icon: "💡" },
+    { href: "/pipeline", label: "Pipeline", icon: "🔄" },
+    { href: "/teams", label: "Teams", icon: "👥" },
+    { href: "/integrations", label: "Integrations", icon: "🔌" },
+    { href: "/analytics", label: "Analytics", icon: "📈" },
+    { href: "/notifications", label: "Alerts", icon: "🔔" },
+  ]),
 ];
 
 export default function SophiaLayout({ children }: { children: ReactNode }) {

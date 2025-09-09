@@ -21,13 +21,15 @@ export const metadata: Metadata = {
     'A modern chat interface for AI agents built with Next.js, Tailwind CSS, and TypeScript. This template provides a ready-to-use UI for interacting with Agno agents.'
 }
 
+const darkDefault = (process.env.NEXT_PUBLIC_DARK_DEFAULT === '1' || process.env.NEXT_PUBLIC_DARK_DEFAULT === 'true');
+
 export default function RootLayout({
   children
 }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={darkDefault ? 'dark' : ''}>
       <body className={`${geistSans.variable} ${dmMono.variable} antialiased`}>
         <NuqsAdapter>{children}</NuqsAdapter>
         <Toaster />

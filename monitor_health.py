@@ -1,40 +1,31 @@
 #!/usr/bin/env python3
-import asyncio
-import httpx
-from datetime import datetime
+import time, sys
+import urllib.request
 
+targets = [
+    ("API", "http://localhost:8003/health"),
+    ("UI", "http://localhost:3000"),
+    ("Telemetry", "http://localhost:5003/api/telemetry/health"),
+    ("MCP Memory", "http://localhost:8081/health"),
+    ("MCP FS", "http://localhost:8082/health"),
+    ("MCP Git", "http://localhost:8084/health"),
+]
 
-async def monitor():
-    """Monitor system health"""
-    services = {
-        "UI": "http://localhost:3000",
-        "API": "http://localhost:8000/api/agents",
-        "Telemetry": "http://localhost:5003/api/telemetry/health",
-        "MCP Memory": "http://localhost:8081/health",
-        "MCP Vector": "http://localhost:8085/health",
-    }
-
-    while True:
-        print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Health Check")
-        print("-" * 40)
-
-        for name, url in services.items():
-            try:
-                async with httpx.AsyncClient(timeout=2.0) as client:
-                    resp = await client.get(url)
-                    if resp.status_code == 200:
-                        print(f"✅ {name:<15} OK")
-                    else:
-                        print(f"⚠️  {name:<15} Status {resp.status_code}")
-            except Exception:
-                print(f"❌ {name:<15} DOWN")
-
-        await asyncio.sleep(10)
-
+def check(name, url):
+    try:
+        with urllib.request.urlopen(url, timeout=3) as r:
+            ok = r.status == 200
+            print(f"{name:12s} {url:45s} {'OK' if ok else r.status}")
+    except Exception as e:
+        print(f"{name:12s} {url:45s} FAIL - {e}")
 
 if __name__ == "__main__":
     try:
-        asyncio.run(monitor())
+        while True:
+            print("\n=== Health ===")
+            for n, u in targets:
+                check(n, u)
+            time.sleep(10)
     except KeyboardInterrupt:
-        print("\nMonitoring stopped")
+        sys.exit(0)
 

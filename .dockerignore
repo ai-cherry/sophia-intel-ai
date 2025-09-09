@@ -1,38 +1,18 @@
-# Python
-__pycache__/
-*.py[cod]
+agent-ui/.next
+agent-ui/node_modules
+node_modules
+__pycache__
+.venv
+.git
+.DS_Store
 *.pyc
 *.pyo
-
-# Node
-node_modules/
-**/node_modules/
-.npm/
-.next/
-
-# VCS
-.git/
-.gitignore
-
-# OS/Editor
-.DS_Store
+*.pyd
 *.swp
 *.swo
-.idea/
-.vscode/
-
-# Env
-.env
-.env.*
-!.env.template
-
-# Caches
-.cache/
-**/.ruff_cache/
-**/.pytest_cache/
-
-# Artifacts
-build/
-dist/
-coverage/
+*.log
+tmp*
+dist
+build
+coverage
 

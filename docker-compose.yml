@@ -12,6 +12,7 @@ services:
       - docker.env
     environment:
       - AGENT_API_PORT=${AGENT_API_PORT:-8003}
+      - TELEMETRY_URL=http://telemetry:5003
     ports:
       - "${AGENT_API_PORT:-8003}:8003"
     restart: unless-stopped
@@ -178,4 +179,3 @@ services:
 networks:
   sophia_net:
     driver: bridge
-

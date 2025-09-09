@@ -45,7 +45,10 @@ class TelemetryWire:
         if not self.events:
             return
         try:
-            resp = httpx.post("http://localhost:5003/api/telemetry/events", json=self.events, timeout=5.0)
+            import os
+            base = os.environ.get("TELEMETRY_URL") or "http://localhost:5003"
+            url = f"{base.rstrip('/')}/api/telemetry/events"
+            resp = httpx.post(url, json=self.events, timeout=5.0)
             if resp.status_code < 300:
                 self.events = []  # Clear after sending
         except Exception:
@@ -54,4 +57,3 @@ class TelemetryWire:
 
 
 telemetry = TelemetryWire()
-

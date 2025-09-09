@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+
+COPY requirements-docker.txt ./
+RUN pip install --no-cache-dir -r requirements-docker.txt
+
+# Copy only what we need at runtime (api, app modules). Use full copy for now to avoid missing deps.
+COPY . .
+
+EXPOSE 8003
+
+HEALTHCHECK --interval=15s --timeout=3s --retries=10 CMD curl -f http://localhost:8003/health || curl -f http://localhost:8003/healthz || exit 1
+
+ENV AGENT_API_PORT=8003
+
+CMD ["uvicorn", "app.api.unified_server:app", "--host", "0.0.0.0", "--port", "8003"]
+

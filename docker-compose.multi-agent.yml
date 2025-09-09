@@ -8,16 +8,14 @@ services:
     stdin_open: true
     tty: true
     command: /bin/bash
-    env_file:
-      - ${HOME}/.config/artemis/env  # Secure API keys
+    # Secure API keys are loaded via host env when present
     environment:
       - SSH_AUTH_SOCK=${SSH_AUTH_SOCK}
       - PYTHONUNBUFFERED=1
-      - PYTHONPATH=/workspace/sophia:/workspace/artemis
-      - ARTEMIS_CONFIG_PATH=${HOME}/.config/artemis
+      - PYTHONPATH=/workspace/sophia
     volumes:
       - ./:/workspace/sophia
-      - ../artemis-cli:/workspace/artemis
+      
       - ~/.ssh:/root/.ssh:ro
       - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
     depends_on:
@@ -167,30 +165,7 @@ services:
     networks:
       - multi-agent-net
 
-  # MCP Filesystem server for Artemis repo
-  mcp-filesystem-artemis:
-    build:
-      context: .
-      dockerfile: automation/docker/Dockerfile.mcp-filesystem
-      args:
-        - PYTHON_VERSION=3.11
-    container_name: sophia-mcp-fs-artemis
-    environment:
-      - WORKSPACE_PATH=/workspace/artemis
-      - WORKSPACE_NAME=artemis
-      - READ_ONLY=false
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    volumes:
-      - ../artemis-cli:/workspace/artemis
-    ports:
-      - "${MCP_FS_ARTEMIS_PORT:-8083}:8000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-    networks:
-      - multi-agent-net
+  
 
   # MCP Git server with SSH agent forwarding
   mcp-git:
@@ -207,7 +182,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     volumes:
       - ./:/workspace/sophia
-      - ../artemis-cli:/workspace/artemis
+      
       - ~/.ssh:/root/.ssh:ro
       - ${SSH_AUTH_SOCK}:${SSH_AUTH_SOCK}
     ports:

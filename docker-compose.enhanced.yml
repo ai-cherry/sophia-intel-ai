@@ -199,35 +199,6 @@ services:
           memory: 512M
           cpus: "0.5"
 
-  # Artemis Orchestrator
-  artemis-orchestrator:
-    build:
-      context: .
-      dockerfile: automation/docker/Dockerfile.artemis
-      args:
-        BUILD_ENV: ${BUILD_ENV:-development}
-    container_name: artemis-orchestrator
-    ports:
-      - "${ARTEMIS_PORT:-8007}:8000"
-    volumes:
-      - ./logs:/app/logs
-      - ./.env:/app/.env:ro
-    environment:
-      - SOPHIA_ENVIRONMENT=${SOPHIA_ENVIRONMENT:-development}
-      - REDIS_URL=redis://redis:6379
-      - POSTGRES_URL=postgresql://sophia:${POSTGRES_PASSWORD:-sophia_secure_password_2024}@postgres:5432/sophia
-      - UNIFIED_API_URL=http://unified-api:8000
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
-    depends_on:
-      unified-api:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - sophia-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
       retries: 3
       start_period: 60s
     deploy:

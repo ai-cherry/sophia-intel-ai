@@ -75,6 +75,9 @@ _Updated for Phase 3 Implementation - September 2025_
 - [Implementation Plan](guides/development/IMPLEMENTATION_PLAN.md)
 - [Orchestration Plan](guides/development/COMPREHENSIVE_ORCHESTRATION_PLAN.md)
 - [Phase 2 Implementation](guides/development/PHASE_2_IMPLEMENTATION_PLAN.md)
+ - Deployment Prompts:
+   - [Docker Deployment Specialist](../docs/prompts/DOCKER_DEPLOYMENT_SPECIALIST.md)
+   - [Agno Multi‑Agent Specialist](../docs/prompts/AGNO_MULTI_AGENT_SPECIALIST.md)
 
 ### Integration Guides
 - [Portkey Integration](guides/integrations/portkey.md) - LLM gateway

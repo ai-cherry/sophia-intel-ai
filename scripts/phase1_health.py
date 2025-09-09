@@ -84,7 +84,7 @@ def check_mcp():
     checks = [
         ("Memory", int(os.getenv("MCP_MEMORY_PORT", "8081"))),
         ("Filesystem (Sophia)", int(os.getenv("MCP_FS_SOPHIA_PORT", os.getenv("MCP_FS_PORT", "8082")))),
-        ("Filesystem (Artemis)", int(os.getenv("MCP_FS_ARTEMIS_PORT", "8083"))),
+        ("Filesystem (Aux)", int(os.getenv("MCP_FS_ARTEMIS_PORT", "8083"))),
         ("Git", int(os.getenv("MCP_GIT_PORT", "8084"))),
         ("Vector", int(os.getenv("MCP_VECTOR_PORT", "8085"))),
         ("Graph", int(os.getenv("MCP_GRAPH_PORT", "8086"))),

@@ -17,7 +17,7 @@ Core services
 MCP servers
 - Memory MCP: `8081`
 - Filesystem (Sophia) MCP: `8082`
-- Filesystem (Artemis) MCP: `8083` (optional, requires sidecar)
+- Filesystem (Aux) MCP: `8083` (optional)
 - Git MCP: `8084`
 - Vector MCP: `8085` (optional)
 - Graph MCP: `8086` (optional)

@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up dev-artemis-up mcp-rebuild ui-up ui-health ui-smoke dev-all nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs artemis-setup refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations next-ui-up doctor-all artemis.sidecar-setup api-dev phase1.setup phase1.health phase1.verify
+.PHONY: help env.check env.doctor env.doctor.merge env.clean-deprecated env.source keys-check health health-infra mcp-test full-start api-build api-up api-restart dev-mcp-up mcp-rebuild ui-up ui-health ui-smoke dev-all nuke-fragmentation rag.start rag.test lint dev-up dev-down dev-shell logs status grok-test swarm-start memory-search mcp-status env-docs refactor.discovery refactor.scan-http refactor.probe refactor.check webui-health router-smoke sophia sophia-start sophia-stop sophia-health sophia-logs sophia-clean sophia-test-integrations next-ui-up doctor-all api-dev phase1.setup phase1.health phase1.verify
 
 help:
 	@echo "\033[0;36mMulti-Agent Development Environment\033[0m"
@@ -68,9 +68,8 @@ full-start: ## Start everything in correct order
 dev-mcp-up: ## Start only MCP servers (dev)
 	@docker compose -f docker-compose.dev.yml up -d mcp-memory mcp-filesystem-sophia mcp-git
 
-dev-artemis-up: ## Enable Artemis profile (requires ARTEMIS_PATH)
-	@if [ -z "$(ARTEMIS_PATH)" ]; then echo "ARTEMIS_PATH not set"; exit 1; fi
-	@docker compose -f docker-compose.dev.yml --profile artemis up -d
+dev-artemis-up:
+	@echo "Deprecated: Artemis sidecar support removed."
 
 api-build: ## Build API image (prod compose)
 	@docker compose -f docker-compose.yml build api --no-cache
@@ -118,28 +117,21 @@ ui-smoke: ## Basic UI tools proxy smoke (FS list in repo root)
 		-H 'Content-Type: application/json' \
 		-d '{"capability":"fs","scope":"sophia","action":"list","params":{"path":"."}}' || echo "Smoke failed"
 
-dev-all: ## Start infra+MCP and Next.js UI; auto-enable FS Artemis if present
+dev-all: ## Start infra+MCP and Next.js UI
 	@echo "Starting Sophia dev environment (infra + MCP + UI)..."
 	@bash scripts/dev.sh all
-	@if [ -d "$$HOME/artemis-cli" ]; then \\
-		echo "Detected $$HOME/artemis-cli — enabling FS Artemis (profile)"; \\
-		export ARTEMIS_PATH="$$HOME/artemis-cli"; \\
-		docker compose -f docker-compose.dev.yml --profile artemis up -d mcp-filesystem-artemis; \\
-		echo "FS Artemis up at http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health"; \\
-	else \\
-		echo "No ~/artemis-cli detected. Skipping FS Artemis."; \\
-	fi
+	@echo "FS Aux (8083) optional; not started by default"
 	@echo "\n=== Endpoints ==="; \\
 	 echo "Memory MCP:      http://localhost:$${MCP_MEMORY_PORT:-8081}/health"; \\
 	 echo "FS (Sophia) MCP: http://localhost:$${MCP_FS_SOPHIA_PORT:-8082}/health"; \\
 	 echo "Git MCP:         http://localhost:$${MCP_GIT_PORT:-8084}/health"; \\
 	 echo "Sophia UI:       http://localhost:3000/unified"; \\
 	 echo "Sophia Chat:     http://localhost:3000/chat"; \\
-	 if [ -d "$$HOME/artemis-cli" ]; then echo "FS (Artemis) MCP: http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health"; fi; \\
+	 echo "FS (Aux) MCP:  http://localhost:$${MCP_FS_ARTEMIS_PORT:-8083}/health (optional)"; \\
 	 echo "\n(Next.js will print \"ready on http://localhost:3000\" when up.)"
 	@$(MAKE) next-ui-up
 
-doctor-all: ## Verify keys, infra, MCP, Next.js UI, and optional Artemis chat
+doctor-all: ## Verify keys, infra, MCP, Next.js UI, and telemetry
 	@echo "\n[doctor] Verifying keys..."; \\
 	 $(MAKE) -s keys-check || true; \\
 	 echo "\n[doctor] Infra health..."; \\
@@ -148,10 +140,7 @@ doctor-all: ## Verify keys, infra, MCP, Next.js UI, and optional Artemis chat
 	 $(MAKE) -s mcp-test || true; \\
 	 echo "\n[doctor] API health..."; \\
 	 (curl -sf http://localhost:8003/health | sed -e 's/^/  /' || echo "  API not responding") ; \\
-	 if [ -d "$$HOME/artemis-cli" ]; then \\
-	   echo "\n[doctor] Artemis chat (optional)..."; \\
-	   (curl -sf http://localhost:8095/health >/dev/null && echo "✓ Artemis chat: http://localhost:8095/health") || echo "! Artemis chat not responding on 8095"; \\
-	 fi; \\
+
 	 echo "\n[doctor] Telemetry (optional)..."; \\
 	 (curl -sf http://localhost:5003/api/telemetry/health | sed -e 's/^/  /' || echo "  Telemetry service not responding on 5003") ; \\
 	 echo "\n[doctor] docker compose status (dev)..."; \\
@@ -275,19 +264,8 @@ env-docs: ## Show environment guide for SSH agent and env files
 	@echo "Environment Guide (ENVIRONMENT_GUIDE.md)" && echo "------------------------------"
 	@sed -n '1,200p' ENVIRONMENT_GUIDE.md | sed -e 's/^/  /'
 
-artemis-setup: ## Set up artemis agent secure environment
-	@echo "🔐 Setting up Artemis agent environment..."
-	@mkdir -p ~/.config/artemis
-	@chmod 700 ~/.config/artemis
-	@if [ ! -f ~/.config/artemis/env ]; then \
-		echo "✅ Created ~/.config/artemis/env"; \
-		echo "📝 Edit this file and add your API keys"; \
-		echo "   Run: vi ~/.config/artemis/env"; \
-	else \
-		echo "✅ Config already exists: ~/.config/artemis/env"; \
-		echo "🔑 $(shell grep -c 'API_KEY=' ~/.config/artemis/env) API keys configured"; \
-	fi
-	@chmod 600 ~/.config/artemis/env 2>/dev/null || true
+artemis-setup:
+	@echo "Deprecated: Artemis setup removed. Use scripts/env.sh and ~/.config/artemis/env if present."
 
 # --- Phase 2 refactor helpers ---
 refactor.discovery: ## List Python files >50KB in app/
@@ -297,7 +275,7 @@ refactor.scan-http: ## Scan for requests/httpx/aiohttp imports in app/
 	@python3 scripts/development/refactor_tools.py scan-http --path app
 
 refactor.probe: ## Probe import (use: make refactor.probe MODULE=app.pkg.mod)
-	@if [[ -z "$(MODULE)" ]]; then echo "MODULE required: make refactor.probe MODULE=app.artemis.agent_factory"; exit 1; fi
+	@if [[ -z "$(MODULE)" ]]; then echo "MODULE required: make refactor.probe MODULE=app.pkg.mod"; exit 1; fi
 	@python3 scripts/development/refactor_tools.py probe-import --module $(MODULE)
 
 refactor.check: ## Quick refactor sanity (env.check + sample probes)
@@ -353,5 +331,5 @@ sophia-clean: sophia-stop ## Clean Sophia data and logs
 sophia-test-integrations: ## Test Sophia integration connections
 	@echo "🧪 Testing Sophia integrations..."
 	@python3 -c "from app.api.routers.health_integrations import *; import asyncio; asyncio.run(get_integration_health())" | jq '.' 2>/dev/null || echo "Test failed - make sure API is running"
-	@python3 scripts/development/refactor_tools.py probe-import --module app.artemis.agent_factory || true
+	@true
 	@python3 scripts/development/refactor_tools.py scan-http --path app | head -n 40

@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 name: sophia-intel-ai
 
@@ -6,169 +6,176 @@ services:
   api:
     build:
       context: .
-      dockerfile: docker/Dockerfile.api
+      dockerfile: Dockerfile.api
     container_name: sophia-api
     env_file:
       - docker.env
     environment:
-      # Internal port inside container; host maps to 8003
-      - AGENT_API_PORT=8000
-      - WEAVIATE_URL=${WEAVIATE_URL:-http://weaviate:8080}
-      - REDIS_URL=${REDIS_URL:-redis://redis:6379}
+      - AGENT_API_PORT=${AGENT_API_PORT:-8003}
     ports:
-      - "8003:8000"
-    volumes:
-      - ./:/workspace:delegated
-    working_dir: /workspace
-    command: sh -c "uvicorn app.api.production_server:create_production_app --host 0.0.0.0 --port 8000 --reload"
+      - "${AGENT_API_PORT:-8003}:8003"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health || curl -sf http://localhost:8000/healthz"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8003/health || curl -f http://localhost:8003/healthz || exit 1"]
       interval: 15s
-      timeout: 5s
+      timeout: 3s
       retries: 10
-    networks:
-      - sophia_net
+      start_period: 10s
+    networks: [sophia_net]
+
+  telemetry:
+    image: python:3.11-slim
+    container_name: sophia-telemetry
+    env_file:
+      - docker.env
+    working_dir: /app
+    volumes:
+      - ./:/app
+    command: ["python", "webui/telemetry_endpoint.py"]
+    ports:
+      - "${TELEMETRY_PORT:-5003}:5003"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5003/api/telemetry/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks: [sophia_net]
 
   ui:
     image: node:18-alpine
     container_name: sophia-ui
     env_file:
       - docker.env
-    environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8003}
-      - NEXT_PUBLIC_DARK_DEFAULT=${NEXT_PUBLIC_DARK_DEFAULT:-1}
-    working_dir: /workspace/agent-ui
+    working_dir: /app/agent-ui
     volumes:
-      - ./agent-ui:/workspace/agent-ui:delegated
-      - ui_node_modules:/workspace/agent-ui/node_modules
-    command: sh -c "npm ci && npm run dev -- -p 3000"
+      - ./:/app
+    command: ["sh", "-lc", "npm ci && npm run dev -- -p 3000"]
     ports:
       - "3000:3000"
-    depends_on:
-      api:
-        condition: service_started
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 >/dev/null 2>&1 || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000 > /dev/null || exit 1"]
       interval: 20s
       timeout: 5s
-      retries: 10
-    networks:
-      - sophia_net
+      retries: 15
+      start_period: 20s
+    depends_on:
+      telemetry:
+        condition: service_healthy
+      api:
+        condition: service_started
+    networks: [sophia_net]
 
-  telemetry:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile.telemetry
-    container_name: sophia-telemetry
-    env_file:
-      - docker.env
-    ports:
-      - "5003:5003"
-    command: ["python", "webui/telemetry_endpoint.py"]
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:5003/api/telemetry/health >/dev/null"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-    networks:
-      - sophia_net
-
-  # MCP Servers (required): Memory, Filesystem (Sophia), Git
   mcp-memory:
     build:
       context: .
-      dockerfile: automation/docker/Dockerfile.mcp-memory
+      dockerfile: Dockerfile.mcp
     container_name: sophia-mcp-memory
+    env_file:
+      - docker.env
+    environment:
+      - MCP_TYPE=memory
+      - MCP_PORT=${MCP_MEMORY_PORT:-8081}
     ports:
-      - "8081:8000"
+      - "${MCP_MEMORY_PORT:-8081}:8081"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
-      interval: 15s
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/health || exit 1"]
+      interval: 20s
       timeout: 5s
       retries: 10
-    networks:
-      - sophia_net
+      start_period: 10s
+    networks: [sophia_net]
 
-  mcp-fs-sophia:
+  mcp-fs:
     build:
       context: .
-      dockerfile: automation/docker/Dockerfile.mcp-filesystem
-    container_name: sophia-mcp-fs-sophia
+      dockerfile: Dockerfile.mcp
+    container_name: sophia-mcp-fs
+    env_file:
+      - docker.env
+    environment:
+      - MCP_TYPE=fs
+      - MCP_PORT=${MCP_FS_PORT:-8082}
     ports:
-      - "8082:8000"
+      - "${MCP_FS_PORT:-8082}:8082"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
-      interval: 15s
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/health || exit 1"]
+      interval: 20s
       timeout: 5s
       retries: 10
-    networks:
-      - sophia_net
+      start_period: 10s
+    networks: [sophia_net]
 
   mcp-git:
     build:
       context: .
-      dockerfile: automation/docker/Dockerfile.mcp-git
+      dockerfile: Dockerfile.mcp
     container_name: sophia-mcp-git
+    env_file:
+      - docker.env
+    environment:
+      - MCP_TYPE=git
+      - MCP_PORT=${MCP_GIT_PORT:-8084}
     ports:
-      - "8084:8000"
+      - "${MCP_GIT_PORT:-8084}:8084"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
-      interval: 15s
+      test: ["CMD-SHELL", "curl -f http://localhost:8084/health || exit 1"]
+      interval: 20s
       timeout: 5s
       retries: 10
-    networks:
-      - sophia_net
-
-  # Optional MCP services
-  mcp-fs-artemis:
-    build:
-      context: .
-      dockerfile: automation/docker/Dockerfile.mcp-filesystem
-    container_name: sophia-mcp-fs-artemis
-    profiles: [artextra]
-    ports:
-      - "8083:8000"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8000/health >/dev/null"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-    networks:
-      - sophia_net
+      start_period: 10s
+    networks: [sophia_net]
 
   mcp-vector:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
     container_name: sophia-mcp-vector
-    profiles: [vector]
+    env_file:
+      - docker.env
+    environment:
+      - MCP_TYPE=vector
+      - MCP_PORT=${MCP_VECTOR_PORT:-8085}
     ports:
-      - "8085:8080"
+      - "${MCP_VECTOR_PORT:-8085}:8085"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "exit 0"]
-      interval: 30s
+      test: ["CMD-SHELL", "curl -f http://localhost:8085/health || exit 1"]
+      interval: 20s
       timeout: 5s
-      retries: 3
-    networks:
-      - sophia_net
+      retries: 10
+      start_period: 10s
+    networks: [sophia_net]
+    profiles: [optional]
 
   mcp-graph:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
     container_name: sophia-mcp-graph
-    profiles: [graph]
+    env_file:
+      - docker.env
+    environment:
+      - MCP_TYPE=graph
+      - MCP_PORT=${MCP_GRAPH_PORT:-8086}
     ports:
-      - "8086:8080"
+      - "${MCP_GRAPH_PORT:-8086}:8086"
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "exit 0"]
-      interval: 30s
+      test: ["CMD-SHELL", "curl -f http://localhost:8086/health || exit 1"]
+      interval: 20s
       timeout: 5s
-      retries: 3
-    networks:
-      - sophia_net
+      retries: 10
+      start_period: 10s
+    networks: [sophia_net]
+    profiles: [optional]
 
 networks:
   sophia_net:
     driver: bridge
-
-volumes:
-  ui_node_modules:
-    driver: local
 

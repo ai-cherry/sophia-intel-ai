@@ -1,4 +1,6 @@
-# Artemis UI Setup Guide
+# DEPRECATED: Artemis UI Setup Guide
+
+This document and any Artemis-related UI are deprecated and retained only for historical reference. Do not use Artemis components; the repository is consolidating on Sophia-only workflows. Use the Unified Command Center at `/unified`.
 
 ## 🎯 Overview
 

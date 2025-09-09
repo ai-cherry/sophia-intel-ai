@@ -199,6 +199,17 @@ SWARM_TASK_MAPPING = {
 }
 
 
+# Minimal agent registry endpoint for UI consumption
+@app.get("/api/agents")
+async def list_agents():
+    """Return a minimal agents structure for UI. Replace with real registry as available."""
+    agents = [
+        {"id": "coder", "name": "Code Generator", "status": "ready", "type": "development"},
+        {"id": "analyst", "name": "Data Analyst", "status": "ready", "type": "analysis"},
+    ]
+    return {"agents": agents, "count": len(agents)}
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize services on startup"""

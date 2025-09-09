@@ -93,6 +93,13 @@ cd ui && npm install
 cd ../agent-ui && npm install
 ```
 
+### Clean Builds and Caches
+
+- UI clean: `rm -rf agent-ui/.next agent-ui/node_modules && cd agent-ui && npm install && cd -`
+- API deps install (idempotent): `python3 -m pip install -r requirements.txt`
+- Clear Python bytecode: `find . -name __pycache__ -type d -exec rm -rf {} +`
+- Hard browser refresh: disable cache in devtools and reload to ensure fresh assets
+
 ### Quick Start
 
 1. Start core services (API + MCP memory):
@@ -110,7 +117,17 @@ python3 scripts/claude_coder_agent.py --mode code --task "refactor this function
 python3 scripts/codex_agent.py --mode code --task "write unit tests"
 ```
 
-3. Optional: Start UI development servers:
+3. UI development (Unified Command Center):
+
+```bash
+source scripts/env.sh --quiet
+bash scripts/start_local_stack.sh   # sets API=8003, starts telemetry on 5003
+make dev-mcp-up && make mcp-test    # MCP health: 8081/8082/8084
+make api-dev                        # API on http://localhost:8003
+make next-ui-up                     # UI on http://localhost:3000/unified (dark)
+```
+
+Open http://localhost:3000/unified to access the dark-themed UnifiedCommandCenter (Costs, Infra, Sales, Client Health, Projects, MCP Intelligence, and Chat dock).
 
 ```bash
 cd agent-ui && npm run dev
@@ -118,8 +135,11 @@ cd agent-ui && npm run dev
 
 4. Access:
 
-- Agent UI: <http://localhost:3002>
-- API Documentation: <http://localhost:8000/docs>
+- Unified Dashboard: http://localhost:3000/unified (default)
+- API (dev): http://localhost:8003 (docs at /docs)
+- Telemetry: http://localhost:5003 (health at /api/telemetry/health)
+
+See docs/PORTS.md for the standard port map and flags.
 
 ### Multi-Agent (Terminal-First) Dev Stack
 

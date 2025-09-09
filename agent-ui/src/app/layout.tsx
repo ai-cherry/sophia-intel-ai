@@ -21,7 +21,9 @@ export const metadata: Metadata = {
     'A modern chat interface for AI agents built with Next.js, Tailwind CSS, and TypeScript. This template provides a ready-to-use UI for interacting with Agno agents.'
 }
 
-const darkDefault = (process.env.NEXT_PUBLIC_DARK_DEFAULT === '1' || process.env.NEXT_PUBLIC_DARK_DEFAULT === 'true');
+// Default to dark theme unless explicitly disabled
+const darkVar = process.env.NEXT_PUBLIC_DARK_DEFAULT;
+const darkDefault = (darkVar === undefined || darkVar === '' || darkVar === '1' || darkVar === 'true');
 
 export default function RootLayout({
   children

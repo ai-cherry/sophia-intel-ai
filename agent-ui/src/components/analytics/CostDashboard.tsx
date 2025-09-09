@@ -133,6 +133,12 @@ const CostDashboard: React.FC = () => {
     )
   }
 
+  const handleRefresh = () => {
+    refetchSummary();
+    refetchDaily();
+    refetchModels();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -156,7 +162,7 @@ const CostDashboard: React.FC = () => {
             </SelectContent>
           </Select>
           <Button
-            onClick={fetchCostData}
+            onClick={handleRefresh}
             variant="outline"
             size="sm"
             className="shrink-0"

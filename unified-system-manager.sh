@@ -85,6 +85,7 @@ start_mcp_servers() {
     pkill -f "mcp.memory_server" 2>/dev/null || true
     pkill -f "mcp.filesystem.server" 2>/dev/null || true
     pkill -f "mcp.git.server" 2>/dev/null || true
+    pkill -f "mcp.vector.server" 2>/dev/null || true
     sleep 2
     
     # Ensure uvicorn available
@@ -120,6 +121,16 @@ start_mcp_servers() {
         echo $! > "$PID_DIR/mcp-git.pid"
         for i in {1..10}; do
           if check_port 8084; then log "✅ Git server started on port 8084"; break; fi
+          sleep 1
+        done
+    fi
+
+    # Start Vector Server
+    if ! check_port 8085; then
+        nohup python3 -m uvicorn mcp.vector.server:app --host 0.0.0.0 --port 8085 > "$LOG_DIR/mcp-vector.log" 2>&1 &
+        echo $! > "$PID_DIR/mcp-vector.pid"
+        for i in {1..10}; do
+          if check_port 8085; then log "✅ Vector server started on port 8085"; break; fi
           sleep 1
         done
     fi
@@ -160,8 +171,8 @@ health_check() {
     fi
     
     # Check MCP Servers
-    local mcp_ports=(8081 8082 8084)
-    local mcp_names=("Memory" "Filesystem" "Git")
+    local mcp_ports=(8081 8082 8084 8085)
+    local mcp_names=("Memory" "Filesystem" "Git" "Vector")
     
     for i in ${!mcp_ports[@]}; do
         if check_port ${mcp_ports[$i]}; then
@@ -224,6 +235,7 @@ start_all() {
     echo -e "• MCP Memory:       http://localhost:8081/health"
     echo -e "• MCP Filesystem:   http://localhost:8082/health"
     echo -e "• MCP Git:          http://localhost:8084/health"
+    echo -e "• MCP Vector:       http://localhost:8085/health"
     # No coding UI in this repo.
 }
 

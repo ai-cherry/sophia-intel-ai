@@ -1,4 +1,5 @@
 from __future__ import annotations
+# Canonical MCP Vector server (port 8085): endpoints /health, /index, /search
 import os
 import time
 import hashlib
@@ -6,8 +7,13 @@ import json
 from typing import Any, Dict, Optional, List
 
 import requests
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request
+from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel
+import time as _time
+from time import perf_counter
+from collections import deque
+from prometheus_client import Counter, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
 
 WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://localhost:8080")
@@ -15,6 +21,51 @@ WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "")
 CLASS_NAME = os.getenv("VECTOR_CLASS", "BusinessDocument")
 
 app = FastAPI(title="MCP Vector Server")
+_mcp_token = os.getenv("MCP_TOKEN")
+_dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
+_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_rate_buckets: dict[str, deque] = {}
+
+# Metrics
+REGISTRY = CollectorRegistry()
+REQ_COUNTER = Counter("mcp_requests_total", "Total HTTP requests", ["server", "method", "path", "status"], registry=REGISTRY)
+REQ_LATENCY = Histogram("mcp_request_latency_seconds", "Request latency seconds", ["server", "path"], registry=REGISTRY)
+
+@app.middleware("http")
+async def mcp_auth(request: Request, call_next):
+    if request.url.path in ("/health", "/metrics"):
+        return await call_next(request)
+    if not _mcp_token:
+        if _dev_bypass:
+            return await call_next(request)
+        return JSONResponse({"error": "MCP_TOKEN not set"}, status_code=401)
+    auth = request.headers.get("authorization", "")
+    if not auth.startswith("Bearer "):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    token = auth.split(" ", 1)[1]
+    if token != _mcp_token:
+        return JSONResponse({"error": "Invalid token"}, status_code=401)
+    # Rate limit
+    try:
+        if _rate_limit_rpm > 0 and request.url.path not in ("/health", "/metrics"):
+            ip = request.client.host if request.client else "unknown"
+            now = _time.time()
+            q = _rate_buckets.setdefault(ip, deque())
+            while q and now - q[0] > 60:
+                q.popleft()
+            if len(q) >= _rate_limit_rpm:
+                return JSONResponse({"error": "rate_limited"}, status_code=429)
+            q.append(now)
+    except Exception:
+        pass
+    start = perf_counter()
+    resp = await call_next(request)
+    try:
+        REQ_COUNTER.labels("vector", request.method, request.url.path, str(resp.status_code)).inc()
+        REQ_LATENCY.labels("vector", request.url.path).observe(perf_counter() - start)
+    except Exception:
+        pass
+    return resp
 
 
 def _headers() -> Dict[str, str]:
@@ -74,6 +125,11 @@ def health() -> Dict[str, Any]:
         "class": CLASS_NAME,
     }
 
+@app.get("/metrics")
+def metrics():
+    data = generate_latest(REGISTRY)
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
 
 @app.post("/index")
 def index_doc(req: IndexRequest) -> Dict[str, Any]:
@@ -120,4 +176,3 @@ def search(req: SearchRequest) -> Dict[str, Any]:
         raise HTTPException(502, f"Weaviate search failed: {r.text}")
     data = r.json().get("data", {}).get("Get", {}).get(CLASS_NAME, [])
     return {"results": data}
-

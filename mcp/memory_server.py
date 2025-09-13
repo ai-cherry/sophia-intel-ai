@@ -13,7 +13,10 @@ from pydantic import BaseModel
 
 import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from time import perf_counter
+from collections import deque
+from prometheus_client import Counter, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
 app = FastAPI(title="MCP Memory Server")
 
@@ -26,12 +29,19 @@ redis_client: Optional[redis.Redis] = None
 # If not set and MCP_DEV_BYPASS=true, allow unauthenticated (dev-friendly).
 _mcp_token = os.getenv("MCP_TOKEN")
 _dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
+_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_rate_buckets: dict[str, deque] = {}
+
+# Metrics
+REGISTRY = CollectorRegistry()
+REQ_COUNTER = Counter("mcp_requests_total", "Total HTTP requests", ["server", "method", "path", "status"], registry=REGISTRY)
+REQ_LATENCY = Histogram("mcp_request_latency_seconds", "Request latency seconds", ["server", "path"], registry=REGISTRY)
 
 
 @app.middleware("http")
 async def mcp_auth(request: Request, call_next):
     # Always allow health without auth
-    if request.url.path == "/health":
+    if request.url.path in ("/health", "/metrics"):
         return await call_next(request)
     if not _mcp_token:
         if _dev_bypass:
@@ -43,7 +53,29 @@ async def mcp_auth(request: Request, call_next):
     token = auth.split(" ", 1)[1]
     if token != _mcp_token:
         return JSONResponse({"error": "Invalid token"}, status_code=401)
-    return await call_next(request)
+    # Simple rate limiting per IP per minute (skip health/metrics)
+    try:
+        if _rate_limit_rpm > 0 and request.url.path not in ("/health", "/metrics"):
+            ip = request.client.host if request.client else "unknown"
+            now = time.time()
+            q = _rate_buckets.setdefault(ip, deque())
+            # prune older than 60s
+            while q and now - q[0] > 60:
+                q.popleft()
+            if len(q) >= _rate_limit_rpm:
+                return JSONResponse({"error": "rate_limited"}, status_code=429)
+            q.append(now)
+    except Exception:
+        pass
+    # Metrics timings
+    start = perf_counter()
+    resp = await call_next(request)
+    try:
+        REQ_COUNTER.labels("memory", request.method, request.url.path, str(resp.status_code)).inc()
+        REQ_LATENCY.labels("memory", request.url.path).observe(perf_counter() - start)
+    except Exception:
+        pass
+    return resp
 
 
 class MemoryEntry(BaseModel):
@@ -96,6 +128,12 @@ async def health():
         return {"status": "healthy", "server": "memory", "redis": "connected"}
     except Exception as e:
         return {"status": "unhealthy", "server": "memory", "error": str(e)}
+
+
+@app.get("/metrics")
+async def metrics():
+    data = generate_latest(REGISTRY)
+    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
 
 
 @app.post("/sessions/{session_id}/memory")

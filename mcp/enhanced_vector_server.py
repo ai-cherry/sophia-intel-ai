@@ -1,4 +1,6 @@
 """
+DEPRECATED: Use canonical vector MCP at mcp/vector/server.py (port 8085).
+
 Enhanced Vector Search with Redis Caching and Hybrid Search
 High-value improvements without overcomplication
 """

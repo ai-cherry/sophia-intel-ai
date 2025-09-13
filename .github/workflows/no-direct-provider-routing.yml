@@ -1,8 +1,6 @@
 name: no-direct-provider-routing
 
 on:
-  push:
-    branches: ["**"]
   pull_request:
     branches: ["**"]
 
@@ -27,4 +25,3 @@ jobs:
             exit 1
           fi
           echo "✅ No direct provider URLs in runtime code"
-

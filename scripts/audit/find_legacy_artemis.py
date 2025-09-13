@@ -6,6 +6,7 @@ Does not fail CI by default; prints a summary for manual migration tracking.
 from __future__ import annotations
 import re
 from pathlib import Path
+import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 IGNORE_DIRS = {'.git', 'node_modules', '__pycache__', '.next', 'dist', 'build', '.venv', 'logs', 'archives'}
@@ -16,6 +17,7 @@ def should_skip(p: Path) -> bool:
     return any(part in IGNORE_DIRS for part in p.parts)
 
 def main() -> int:
+    strict = '--strict' in sys.argv
     global COUNT
     for p in ROOT.rglob('*'):
         if p.is_dir() or should_skip(p):
@@ -30,8 +32,9 @@ def main() -> int:
             COUNT += 1
             print(str(p.relative_to(ROOT)))
     print(f"TOTAL_FILES_WITH_ARTEMIS: {COUNT}")
+    if strict and COUNT > 0:
+        return 1
     return 0
 
 if __name__ == '__main__':
     raise SystemExit(main())
-

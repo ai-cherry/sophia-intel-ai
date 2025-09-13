@@ -1,0 +1,14 @@
+name: No-Artemis Guard
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for legacy Artemis references (non-strict)
+        run: |
+          python3 scripts/audit/find_legacy_artemis.py || true
+          echo "Tip: run with --strict locally to fail on any matches."

@@ -76,68 +76,7 @@ check_port() {
     return 1
 }
 
-start_litellm() {
-    if [ "${PREFER_PORTKEY:-false}" = "true" ]; then
-        info "PREFER_PORTKEY=true set; skipping LiteLLM start"
-        return 0
-    fi
-    if check_port 4000; then
-        warning "LiteLLM already running on port 4000"
-        return 0
-    fi
-    
-    log "Starting LiteLLM proxy..."
-    cd "$SCRIPT_DIR"
-    # Prefer repo litellm-cli if available
-    if [ -x "$SCRIPT_DIR/bin/litellm-cli" ]; then
-        "$SCRIPT_DIR/bin/litellm-cli" start-proxy >/dev/null 2>&1 || true
-        # Wait for port up
-        for i in {1..10}; do
-          if check_port 4000; then log "✅ LiteLLM started successfully on port 4000"; return 0; fi
-          sleep 1
-        done
-        # fallthrough to direct start
-    fi
-    # Prefer repo venv if present, else python -m, else system binary
-    LIT_BIN=""
-    if [ -x "$SCRIPT_DIR/.venv-litellm/bin/litellm" ]; then
-        LIT_BIN="$SCRIPT_DIR/.venv-litellm/bin/litellm"
-    elif python3 -c "import litellm" >/dev/null 2>&1; then
-        LIT_BIN="python3 -m litellm"
-    elif command -v litellm >/dev/null 2>&1; then
-        LIT_BIN="litellm"
-    else
-        error "No litellm found (repo venv, python -m, or system). Run bin/litellm-cli start-proxy once to install."
-        return 1
-    fi
-    nohup $LIT_BIN --config "$LITELLM_CONFIG" --port 4000 > "$LOG_DIR/litellm.log" 2>&1 &
-    echo $! > "$PID_DIR/litellm.pid"
-    sleep 3
-    
-    if check_port 4000; then
-        log "✅ LiteLLM started successfully on port 4000"
-    else
-        error "Failed to start LiteLLM"
-        return 1
-    fi
-}
-
-stop_litellm() {
-    if [ -f "$PID_DIR/litellm.pid" ]; then
-        local pid=$(cat "$PID_DIR/litellm.pid")
-        if kill -0 $pid 2>/dev/null; then
-            log "Stopping LiteLLM (PID: $pid)..."
-            kill $pid
-            rm "$PID_DIR/litellm.pid"
-            log "✅ LiteLLM stopped"
-        else
-            warning "LiteLLM process not found, cleaning up PID file"
-            rm "$PID_DIR/litellm.pid"
-        fi
-    else
-        warning "LiteLLM PID file not found"
-    fi
-}
+// LiteLLM removed: Portkey is the preferred gateway; no local proxy management
 
 start_mcp_servers() {
     log "Starting MCP servers..."
@@ -209,18 +148,15 @@ stop_mcp_servers() {
 health_check() {
     echo -e "\n${BLUE}=== System Health Check ===${NC}\n"
     
-    # Check LiteLLM
-    if check_port 4000; then
-        echo -e "✅ LiteLLM: ${GREEN}Running${NC} on port 4000"
-        if curl -s --max-time 3 http://localhost:4000/v1/models ${LITELLM_MASTER_KEY:+-H "Authorization: Bearer ${LITELLM_MASTER_KEY}"} >/dev/null 2>&1; then
-            echo -e "   └─ API: ${GREEN}v1/models responding${NC}"
-        elif curl -s --max-time 2 http://localhost:4000/health >/dev/null 2>&1; then
-            echo -e "   └─ API: ${YELLOW}health responding, models unavailable${NC}"
+    # Check Portkey Gateway
+    if [ -n "${PORTKEY_API_KEY:-}" ]; then
+        if curl -s --max-time 3 https://api.portkey.ai/v1/health -H "x-portkey-api-key: ${PORTKEY_API_KEY}" >/dev/null 2>&1; then
+            echo -e "✅ Portkey: ${GREEN}Healthy${NC}"
         else
-            echo -e "   └─ API: ${YELLOW}No response${NC}"
+            echo -e "❌ Portkey: ${RED}Unreachable${NC}"
         fi
     else
-        echo -e "❌ LiteLLM: ${RED}Not running${NC}"
+        echo -e "⚠️  Portkey: ${YELLOW}PORTKEY_API_KEY not set${NC}"
     fi
     
     # Check MCP Servers

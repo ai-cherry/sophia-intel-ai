@@ -14,17 +14,15 @@ NC='\033[0m'
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-ENV_FILE="${SOPHIA_ENV_FILE:-$HOME/.config/sophia/env}"
+ENV_FILE="${SOPHIA_ENV_FILE:-}"
 CLOUD_PROVIDER="${CLOUD_PROVIDER:-fly}"
 
 # Load environment
 load_environment() {
-    if [ -f "$ENV_FILE" ]; then
+    echo -e "${YELLOW}⚠️  Cloud deploy expects env injected by CI/CD or SOPHIA_ENV_FILE explicitly set.${NC}"
+    if [ -n "$ENV_FILE" ] && [ -f "$ENV_FILE" ]; then
         export $(grep -v '^#' "$ENV_FILE" | xargs)
-        echo -e "${GREEN}✅ Environment loaded from $ENV_FILE${NC}"
-    else
-        echo -e "${RED}❌ Environment file not found: $ENV_FILE${NC}"
-        exit 1
+        echo -e "${GREEN}✅ Loaded env from $ENV_FILE${NC}"
     fi
 }
 

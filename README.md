@@ -10,6 +10,10 @@ tags: [overview, quickstart, architecture]
 
 # Sophia Intel AI - Production-Ready AI Coding Platform
 
+Note on naming (clear and final):
+- Sophia is the platform. There is no “Artemis” here — that legacy concept was removed and replaced with the Sophia‑native local coding setup (Portkey/OpenRouter + CLI + Studio UI).
+- Keys live in `<repo>/.env.master` and everything runs from `./sophia`.
+
 [![Quality Gate](https://img.shields.io/badge/Quality-Production%20Ready-brightgreen)]()
 [![AI Integration](https://img.shields.io/badge/AI-Real%20LLM%20Integration-blue)]()
 [![Tests](https://img.shields.io/badge/Tests-Comprehensive%20Coverage-green)]()

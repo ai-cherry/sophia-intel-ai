@@ -4,8 +4,7 @@
 
 set -euo pipefail
 
-# Load environment from centralized location
-[[ -f "$HOME/.config/sophia/env" ]] && source "$HOME/.config/sophia/env"
+# Environment is loaded by ./sophia; no local sourcing here to avoid drift.
 
 # Configuration
 REPO_ROOT="$HOME/sophia-intel-ai"

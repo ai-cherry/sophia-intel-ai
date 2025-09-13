@@ -373,3 +373,63 @@ primary_region = "sjc"
 EOF
 
 echo "✅ Forge UI scaffolded at ${TARGET_DIR}"
+
+# --- GitHub Actions CI (generated) ---
+mkdir -p "${TARGET_DIR}/.github/workflows"
+cat > "${TARGET_DIR}/.github/workflows/ci.yml" << 'EOF'
+name: forge-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-health:
+    runs-on: ubuntu-latest
+    env:
+      APP_PORT: 3100
+      AUTH_BYPASS_TOKEN: ci-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci || npm i --no-audit --no-fund
+      - run: npm run build
+      - name: Start server
+        run: |
+          nohup env NODE_ENV=production PORT=$APP_PORT AUTH_BYPASS_TOKEN=$AUTH_BYPASS_TOKEN node dist/server.js > server.log 2>&1 &
+          sleep 2
+          tail -n +1 server.log || true
+      - name: Health check
+        run: curl -fsS http://127.0.0.1:$APP_PORT/health
+
+  contract-smoke:
+    runs-on: ubuntu-latest
+    if: ${{ env.MCP_MEMORY_URL != '' && env.MCP_FS_URL != '' && env.MCP_GIT_URL != '' && env.MCP_TOKEN != '' }}
+    env:
+      APP_PORT: 3100
+      AUTH_BYPASS_TOKEN: ci-token
+      MCP_MEMORY_URL: ${{ secrets.MCP_MEMORY_URL }}
+      MCP_FS_URL: ${{ secrets.MCP_FS_URL }}
+      MCP_GIT_URL: ${{ secrets.MCP_GIT_URL }}
+      MCP_TOKEN: ${{ secrets.MCP_TOKEN }}
+      PORTKEY_API_KEY: ${{ secrets.PORTKEY_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci || npm i --no-audit --no-fund
+      - run: npm run build
+      - name: Start server
+        run: |
+          nohup env NODE_ENV=production PORT=$APP_PORT AUTH_BYPASS_TOKEN=$AUTH_BYPASS_TOKEN \
+            MCP_MEMORY_URL="$MCP_MEMORY_URL" MCP_FS_URL="$MCP_FS_URL" MCP_GIT_URL="$MCP_GIT_URL" MCP_TOKEN="$MCP_TOKEN" \
+            PORTKEY_API_KEY="$PORTKEY_API_KEY" \
+            node dist/server.js > server.log 2>&1 &
+          sleep 2
+      - name: Contract test
+        run: |
+          curl -fsS -X POST http://127.0.0.1:$APP_PORT/contract-test -H "authorization: Bearer $AUTH_BYPASS_TOKEN"
+EOF

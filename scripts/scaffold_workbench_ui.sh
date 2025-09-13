@@ -277,3 +277,59 @@ primary_region = "sjc"
 EOF
 
 echo "✅ Workbench scaffolded at ${TARGET_DIR}"
+
+# --- GitHub Actions CI (generated) ---
+mkdir -p "${TARGET_DIR}/.github/workflows"
+cat > "${TARGET_DIR}/.github/workflows/ci.yml" << 'EOF'
+name: workbench-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-health:
+    runs-on: ubuntu-latest
+    env:
+      APP_PORT: 3200
+      AUTH_BYPASS_TOKEN: ci-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci || npm i --no-audit --no-fund
+      - run: npm run build
+      - name: Start server
+        run: |
+          nohup env NODE_ENV=production PORT=$APP_PORT AUTH_BYPASS_TOKEN=$AUTH_BYPASS_TOKEN node dist/server.js > server.log 2>&1 &
+          sleep 2
+          tail -n +1 server.log || true
+      - name: Health check
+        run: curl -fsS http://127.0.0.1:$APP_PORT/health
+
+  portkey-smoke:
+    runs-on: ubuntu-latest
+    env:
+      APP_PORT: 3200
+      AUTH_BYPASS_TOKEN: ci-token
+      PORTKEY_API_KEY: ${{ secrets.PORTKEY_API_KEY }}
+    if: ${{ env.PORTKEY_API_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci || npm i --no-audit --no-fund
+      - run: npm run build
+      - name: Start server
+        run: |
+          nohup env NODE_ENV=production PORT=$APP_PORT AUTH_BYPASS_TOKEN=$AUTH_BYPASS_TOKEN PORTKEY_API_KEY="$PORTKEY_API_KEY" \
+            node dist/server.js > server.log 2>&1 &
+          sleep 2
+      - name: Console smoke (allowed model)
+        run: |
+          curl -fsS -X POST http://127.0.0.1:$APP_PORT/api/portkey/console \
+            -H "authorization: Bearer $AUTH_BYPASS_TOKEN" -H 'content-type: application/json' \
+            --data '{"prompt":"ping"}'
+EOF

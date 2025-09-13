@@ -145,7 +145,7 @@ class MultiTransportLLM:
             raise RuntimeError("OPENAI_API_KEY not set")
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
+                "https://api.portkey.ai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {self.keys['openai']}"},
                 json={
                     "model": model,
@@ -192,7 +192,7 @@ class MultiTransportLLM:
             if system_message:
                 request_body["system"] = system_message
             response = await client.post(
-                "https://api.anthropic.com/v1/messages",
+                "https://api.portkey.ai/v1/chat/completions",
                 headers={
                     "x-api-key": self.keys["anthropic"],
                     "anthropic-version": "2023-06-01",
@@ -231,7 +231,7 @@ class MultiTransportLLM:
             raise RuntimeError("OPENROUTER_API_KEY not set")
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
+                "https://api.portkey.ai/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self.keys['openrouter']}",
                     "HTTP-Referer": "https://github.com/sophia-intel-ai",
@@ -296,7 +296,7 @@ class MultiTransportLLM:
             raise RuntimeError("GROQ_API_KEY not set")
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
+                "https://api.portkey.ai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {self.keys['groq']}"},
                 json={
                     "model": model,

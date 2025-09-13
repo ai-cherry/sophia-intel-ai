@@ -199,11 +199,12 @@ class ExternalAPIValidator:
                     error_message="Rate limit exceeded",
                 )
             headers = {
-                "Authorization": f"Bearer {api_key}",
+                "x-portkey-api-key": api_key,
+                "x-portkey-provider": "openai",
                 "Content-Type": "application/json",
             }
-            # Use a lightweight endpoint
-            url = "https://api.openai.com/v1/models"
+            # Use Portkey models endpoint
+            url = "https://api.portkey.ai/v1/models"
             async with self._session.get(url, headers=headers) as response:
                 self._record_api_call(SecretType.OPENAI_API_KEY)
                 response_time = (time.time() - start_time) * 1000
@@ -276,12 +277,12 @@ class ExternalAPIValidator:
                     error_message="Rate limit exceeded",
                 )
             headers = {
-                "x-api-key": api_key,
+                "x-portkey-api-key": api_key,
+                "x-portkey-provider": "anthropic",
                 "Content-Type": "application/json",
-                "anthropic-version": "2023-06-01",
             }
-            # Use a minimal request to test the key
-            url = "https://api.anthropic.com/v1/messages"
+            # Use a minimal Portkey request to test the key
+            url = "https://api.portkey.ai/v1/chat/completions"
             payload = {
                 "model": "claude-3-haiku-20240307",
                 "max_tokens": 1,

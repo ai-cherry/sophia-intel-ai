@@ -38,6 +38,6 @@ repos:
         pass_filenames: false
       - id: allow-temporary-override
         name: Emergency override (use sparingly)
-        entry: bash -c 'echo "⚠️  Use: git commit --no-verify to bypass hooks (manual only)"'
+        entry: "bash -c 'echo \"Use: git commit --no-verify to bypass hooks (manual only)\"'"
         language: system
         stages: [manual]

@@ -3,11 +3,13 @@ OpenRouter Latest Model Integration (August 2025).
 Dynamic model management with automatic updates and fallbacks.
 """
 import logging
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any, Optional
 import httpx
+from app.core.portkey_manager import PortkeyManager
 logger = logging.getLogger(__name__)
 class ModelTier(Enum):
     """Model pricing tiers."""
@@ -172,13 +174,17 @@ class OpenRouterLatest:
         app_name: str = "Sophia-Intel-AI",
     ):
         """Initialize OpenRouter client with latest configuration."""
-        self.api_key = api_key
-        self.base_url = "https://openrouter.ai/api/v1"
+        # Note: api_key is ignored in Portkey-only mode. Use PORTKEY_API_KEY + VKs.
+        self._pk_manager = PortkeyManager()
+        self.api_key = os.getenv("PORTKEY_API_KEY", "")
+        self.base_url = "https://api.portkey.ai/v1"
         self.headers = {
-            "Authorization": f"Bearer {api_key}",
+            "Authorization": f"Bearer {self.api_key}",
             "HTTP-Referer": referer,
             "X-Title": app_name,
             "Content-Type": "application/json",
+            "x-portkey-provider": "openrouter",
+            "x-portkey-virtual-key": self._pk_manager.VIRTUAL_KEYS.get("openrouter", ""),
         }
         # Model cache
         self.model_cache: dict[str, ModelInfo] = {}

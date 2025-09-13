@@ -8,8 +8,8 @@ features:
     always_online: true
 oauth_config:
   redirect_urls:
-    - https://<API_HOST>/api/slack/oauth/callback
-    - http://localhost:8000/api/slack/oauth/callback
+    - "https://<API_HOST>/api/slack/oauth/callback"
+    - "http://localhost:8000/api/slack/oauth/callback"
   scopes:
     bot:
       # Reads for BI ingestion (requires bot in channels)
@@ -31,7 +31,7 @@ oauth_config:
       - app_mentions:read
 settings:
   event_subscriptions:
-    request_url: https://<API_HOST>/api/slack/webhook
+    request_url: "https://<API_HOST>/api/slack/webhook"
     bot_events:
       - app_mention
       - message.channels
@@ -41,29 +41,29 @@ settings:
       - reaction_added
   interactivity:
     is_enabled: true
-    request_url: https://<API_HOST>/api/slack/interactivity
+    request_url: "https://<API_HOST>/api/slack/interactivity"
   org_deploy_enabled: false
   socket_mode_enabled: false
   is_hosted: false
   token_rotation_enabled: false
 slash_commands:
   - command: /sophia
-    url: https://<API_HOST>/api/slack/commands
+    url: "https://<API_HOST>/api/slack/commands"
     description: Ask Sophia or open actions
     usage_hint: "ask <question> | help"
     should_escape: false
   - command: /bi
-    url: https://<API_HOST>/api/slack/commands
+    url: "https://<API_HOST>/api/slack/commands"
     description: Business Intelligence queries
     usage_hint: "pipeline | risks | okrs"
     should_escape: false
   - command: /ingest
-    url: https://<API_HOST>/api/slack/commands
-    description: Admin: trigger Slack ingest
+    url: "https://<API_HOST>/api/slack/commands"
+    description: "Admin: trigger Slack ingest"
     usage_hint: "channels all | reindex"
     should_escape: false
   - command: /sophia-settings
-    url: https://<API_HOST>/api/slack/commands
+    url: "https://<API_HOST>/api/slack/commands"
     description: Personal preferences
     usage_hint: "notifications daily|off; domains product,cs"
     should_escape: false

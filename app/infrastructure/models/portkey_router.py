@@ -103,8 +103,8 @@ class PortkeyRouterModel:
         if not self.enable_emergency_fallback:
             return
         try:
-            self.openrouter_base_url = "https://openrouter.ai/api/v1"
-            self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+            self.openrouter_base_url = "https://api.portkey.ai/v1"
+            self.openrouter_api_key = os.getenv("PORTKEY_API_KEY")
             if not self.openrouter_api_key:
                 logger.warning(
                     "OpenRouter API key not found - emergency fallback disabled"
@@ -191,13 +191,12 @@ class PortkeyRouterModel:
                     response = await client.post(
                         f"{self.openrouter_base_url}/chat/completions",
                         headers={
-                            "Authorization": f"Bearer {self.openrouter_api_key}",
+                            "x-portkey-api-key": self.openrouter_api_key,
+                            "x-portkey-provider": "xai",
                             "Content-Type": "application/json",
-                            "HTTP-Referer": "https://sophia-intel-ai.com",
-                            "X-Title": "Sophia Intel AI Agent",
                         },
                         json={
-                            "model": "xai/grok-4",
+                            "model": "grok-4",
                             "messages": messages,
                             "temperature": kwargs.get("temperature", 0.7),
                             "max_tokens": kwargs.get("max_tokens", 4096),
@@ -206,12 +205,12 @@ class PortkeyRouterModel:
                     if response.status_code == 200:
                         data = response.json()
                         # Track usage
-                        self._track_usage("grok-4-openrouter", data)
+                        self._track_usage("grok-4-portkey", data)
                         span.set_attribute("status", "success")
                         return {
                             "content": data["choices"][0]["message"]["content"],
                             "model_used": "grok-4",
-                            "provider": "openrouter_direct",
+                            "provider": "portkey_xai",
                             "usage": data.get("usage"),
                         }
                     else:

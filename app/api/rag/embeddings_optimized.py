@@ -29,9 +29,10 @@ class OptimizedEmbeddingService:
     def __init__(self):
         # Direct OpenAI API client for 25% latency reduction vs langchain
         self.client = httpx.AsyncClient(
-            base_url="https://api.openai.com/v1",
+            base_url="https://api.portkey.ai/v1",
             headers={
-                "Authorization": f"Bearer {get_config_value('openai_api_key')}",
+                "x-portkey-api-key": get_config_value('portkey_api_key'),
+                "x-portkey-provider": "openai",
                 "Content-Type": "application/json",
             },
             timeout=30.0,

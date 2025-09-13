@@ -5,9 +5,8 @@ Checks:
 - Multiple .env variants present
 - Conflicting key definitions across files
 - Missing high-priority keys
-Usage:
-  python3 scripts/env_doctor.py            # report only
-  python3 scripts/env_doctor.py --merge    # create/refresh .env.local from sources
+Deprecated: Central env is <repo>/.env.master only. Do not use env_doctor to
+merge .env files. Use scripts/start_all_and_validate.sh to verify environment.
 """
 from __future__ import annotations
 import argparse
@@ -73,10 +72,8 @@ def merge_to_env_local(sources: List[Tuple[str, Path, Dict[str, str]]]) -> str:
         lines.append(f"{k}={val}\n")
     return "".join(lines)
 def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--merge", action="store_true", help="Write merged .env.local from all sources")
-    ap.add_argument("--backup", action="store_true", help="Backup existing .env.local before writing")
-    args = ap.parse_args()
+    print("This script is deprecated. Use .env.master; do not merge .env files.")
+    return 2
     sources = collect_sources()
     present = [(lbl, p) for lbl, p, d in sources if d]
     deprecated_present = [(lbl, p) for lbl, p, d in sources if lbl.startswith("deprecated") and d]

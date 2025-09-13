@@ -264,7 +264,7 @@ class AdvancedAIGateway2025:
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(
-                    "https://openrouter.ai/api/v1/models",
+                    "https://api.portkey.ai/v1/models",
                     headers={
                         "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"
                     },

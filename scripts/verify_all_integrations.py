@@ -317,4 +317,7 @@ async def main():
         "\n[dim]Sophia now has unprecedented visibility across your entire business ecosystem![/dim]"
     )
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Deprecated entrypoint: this script references .env.local. Use .env.master and
+    # scripts/start_all_and_validate.sh for environment and service checks.
+    print("This script is deprecated. Use .env.master and scripts/start_all_and_validate.sh.", file=sys.stderr)
+    raise SystemExit(2)

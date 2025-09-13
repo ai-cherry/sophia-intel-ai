@@ -165,9 +165,9 @@ async def main():
     activator = N8NProductionActivator()
     print("🚀 N8N PRODUCTION WORKFLOW ACTIVATION")
     print("=" * 45)
-        print(f"Instance: {N8N_INSTANCE_URL}")
-        if WEBHOOK_URL:
-            print(f"Webhook URL: {WEBHOOK_URL}")
+    print(f"Instance: {N8N_INSTANCE_URL}")
+    if WEBHOOK_URL:
+        print(f"Webhook URL: {WEBHOOK_URL}")
     print(f"Timestamp: {datetime.now().isoformat()}")
     print("=" * 45)
     success = await activator.activate_gong_workflows()

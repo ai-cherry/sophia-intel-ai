@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Setup script to configure Portkey API keys and virtual keys
-This script helps set up the .env file with all necessary keys
+DEPRECATED – use .env.master only.
+
+This script predates the centralized `.env.master` policy and attempted to
+write `.env`/.env.local files. Do not use it. Configure keys in `<repo>/.env.master`
+and run `scripts/start_all_and_validate.sh` instead.
 """
 import os
 import sys
@@ -218,22 +221,8 @@ class PortkeySetup:
             print("✅ All keys appear valid")
             return True
 def main():
-    """Main setup execution"""
-    setup = PortkeySetup()
-    print("=" * 60)
-    print("🚀 PORTKEY CONFIGURATION SETUP")
-    print("=" * 60)
-    # Check if env file exists
-    if setup.env_file.exists():
-        response = input("\n⚠️ .env file already exists. Overwrite? (y/n): ")
-        if response.lower() != "y":
-            print("Setup cancelled")
-            return
-    # Run setup
-    setup.setup_development_env()
-    # Validate
-    print("\n🔍 Validating configuration...")
-    setup.validate_keys()
-    print("\n✨ Setup complete! You can now test the integration.")
+    print("This script is deprecated. Use .env.master and scripts/start_all_and_validate.sh.", file=sys.stderr)
+    sys.exit(2)
+
 if __name__ == "__main__":
     main()

@@ -232,18 +232,20 @@ class ModelRouter:
             ),
             # Tier 2: Quality models
             "grok-code-fast": ModelConfig(
-                provider="OpenRouter",
+                provider="Portkey",
                 model="x-ai/grok-code-fast-1",
-                api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-                endpoint="https://openrouter.ai/api/v1/chat/completions",
+                api_key=os.environ.get("PORTKEY_API_KEY", ""),
+                endpoint="https://api.portkey.ai/v1/chat/completions",
+                virtual_key="vkj-openrouter-cc4151",
                 cost_per_1k_tokens=0.05,
                 fallback_models=["gemini-2.0-flash", "gpt-4o"],
             ),
             "gemini-2.0-flash": ModelConfig(
-                provider="OpenRouter",
+                provider="Portkey",
                 model="google/gemini-2.0-flash-exp",
-                api_key=os.environ.get("OPENROUTER_API_KEY", ""),
-                endpoint="https://openrouter.ai/api/v1/chat/completions",
+                api_key=os.environ.get("PORTKEY_API_KEY", ""),
+                endpoint="https://api.portkey.ai/v1/chat/completions",
+                virtual_key="vkj-openrouter-cc4151",
                 cost_per_1k_tokens=0.04,
                 fallback_models=["grok-code-fast", "gpt-4o"],
             ),
@@ -309,17 +311,9 @@ class ModelRouter:
         if config.provider == "Portkey":
             headers.update(
                 {
-                    "x-portkey-api-key": config.api_key,
+                    "Authorization": f"Bearer {config.api_key}",
                     "x-portkey-virtual-key": config.virtual_key,
                     "x-portkey-provider": config.model.split("/")[0],
-                }
-            )
-        elif config.provider == "OpenRouter":
-            headers.update(
-                {
-                    "Authorization": f"Bearer {config.api_key}",
-                    "HTTP-Referer": "https://sophia-intel-ai.com",
-                    "X-Title": "Agent Factory",
                 }
             )
         else:

@@ -152,7 +152,7 @@ class UnifiedKeysManager:
                 key=os.getenv("OPENAI_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="openai",
-                base_url="https://api.openai.com/v1",
+                base_url=None,
                 models=["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-4o"],
             ),
             "ANTHROPIC": APIKeyConfig(
@@ -169,21 +169,21 @@ class UnifiedKeysManager:
                 key=os.getenv("DEEPSEEK_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="deepseek",
-                base_url="https://api.deepseek.com/v1",
+                base_url=None,
                 models=["deepseek-chat", "deepseek-coder"],
             ),
             "OPENROUTER": APIKeyConfig(
                 key=os.getenv("OPENROUTER_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="openrouter",
-                base_url="https://openrouter.ai/api/v1",
+                base_url=None,
                 models=["auto", "openai/gpt-3.5-turbo", "anthropic/claude-3-haiku"],
             ),
             "PERPLEXITY": APIKeyConfig(
                 key=os.getenv("PERPLEXITY_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="perplexity",
-                base_url="https://api.perplexity.ai",
+                base_url=None,
                 models=["sonar-pro", "sonar", "sonar-reasoning"],
             ),
             "GROQ": APIKeyConfig(
@@ -210,7 +210,7 @@ class UnifiedKeysManager:
                 key=os.getenv("TOGETHER_AI_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="together",
-                base_url="https://api.together.xyz/v1",
+                base_url=None,
                 models=[
                     "meta-llama/Llama-3.2-3B-Instruct-Turbo",
                     "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
@@ -220,7 +220,7 @@ class UnifiedKeysManager:
                 key=os.getenv("HUGGINGFACE_API_TOKEN", ""),
                 type=KeyType.DIRECT_API,
                 provider="huggingface",
-                base_url="https://api-inference.huggingface.co",
+                base_url=None,
                 models=[
                     "microsoft/Phi-3-mini-4k-instruct",
                     "meta-llama/Llama-2-7b-chat-hf",
@@ -231,14 +231,14 @@ class UnifiedKeysManager:
                 key=os.getenv("LLAMA_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="llama",
-                base_url="https://api.llama-api.com",
+                base_url=None,
                 models=["llama-13b-chat", "llama-70b-chat"],
             ),
             "AIMLAPI": APIKeyConfig(
                 key=os.getenv("AIMLAPI_API_KEY", ""),
                 type=KeyType.DIRECT_API,
                 provider="aimlapi",
-                base_url="https://api.aimlapi.com/v1",
+                base_url=None,
                 models=[
                     "openai/gpt-5-2025-08-07",
                     "openai/gpt-5-mini-2025-08-07",

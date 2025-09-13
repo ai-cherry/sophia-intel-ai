@@ -103,13 +103,12 @@ def calculate_cost(
     return input_cost + output_cost
 async def call_openrouter(messages: List[Dict], config: OpusConfig) -> Dict[str, Any]:
     """Call Claude Opus 4.1 via OpenRouter"""
-    if not OPENROUTER_API_KEY:
-        raise HTTPException(status_code=500, detail="OpenRouter API key not configured")
+    if not PORTKEY_API_KEY:
+        raise HTTPException(status_code=500, detail="Portkey API key not configured")
     headers = {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "x-portkey-api-key": PORTKEY_API_KEY,
+        "x-portkey-provider": "openrouter",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://www.sophia-intel.ai",
-        "X-Title": "Sophia AI Platform",
     }
     payload = {
         "model": config.model,
@@ -130,7 +129,7 @@ async def call_openrouter(messages: List[Dict], config: OpusConfig) -> Dict[str,
             )
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
-            "https://openrouter.ai/api/v1/chat/completions",
+            "https://api.portkey.ai/v1/chat/completions",
             headers=headers,
             json=payload,
         )
@@ -140,12 +139,12 @@ async def call_anthropic_direct(
     messages: List[Dict], config: OpusConfig
 ) -> Dict[str, Any]:
     """Call Claude Opus 4.1 directly via Anthropic API"""
-    if not ANTHROPIC_API_KEY:
-        raise HTTPException(status_code=500, detail="Anthropic API key not configured")
+    if not PORTKEY_API_KEY:
+        raise HTTPException(status_code=500, detail="Portkey API key not configured")
     headers = {
-        "Authorization": f"Bearer {ANTHROPIC_API_KEY}",
+        "x-portkey-api-key": PORTKEY_API_KEY,
+        "x-portkey-provider": "anthropic",
         "Content-Type": "application/json",
-        "anthropic-version": "2023-06-01",
     }
     # Convert messages format for Anthropic API
     system_message = ""
@@ -165,7 +164,7 @@ async def call_anthropic_direct(
         payload["system"] = system_message
     async with httpx.AsyncClient(timeout=60.0) as client:
         response = await client.post(
-            "https://api.anthropic.com/v1/messages", headers=headers, json=payload
+            "https://api.portkey.ai/v1/chat/completions", headers=headers, json=payload
         )
         response.raise_for_status()
         return response.json()

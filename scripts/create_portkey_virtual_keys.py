@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Automatically create all Portkey virtual keys programmatically.
-This will set up all 7 virtual keys with OpenRouter as the provider.
+DEPRECATED – central env is .env.master and VKs should be managed manually or via
+server-side provisioning. This script relied on .env.local and is retired.
 """
 import asyncio
 import os
@@ -10,7 +10,7 @@ import httpx
 from dotenv import load_dotenv
 from app.core.ai_logger import logger
 # Load environment
-load_dotenv(".env.local", override=True)
+# Deprecated: no longer load .env.local
 class PortkeyVirtualKeyCreator:
     """Create virtual keys in Portkey programmatically."""
     def __init__(self):
@@ -249,8 +249,8 @@ PORTKEY_VK_GROQ=<id>
             logger.info(f"❌ Test error: {e}")
 async def main():
     """Main function to create all virtual keys."""
-    logger.info("🔐 Portkey Virtual Key Automation")
-    logger.info("This will attempt to create all virtual keys programmatically.")
+    logger.info("This script is deprecated. Use .env.master and manage VKs via Portkey UI.")
+    return
     try:
         creator = PortkeyVirtualKeyCreator()
         await creator.create_all_virtual_keys()

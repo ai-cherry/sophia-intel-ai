@@ -100,6 +100,19 @@ def test_weaviate() -> None:
     except Exception as e:
         fail(f'Weaviate error {e}')
 
+def test_redis() -> None:
+    url = os.getenv('REDIS_URL', 'redis://localhost:6379/1')
+    try:
+        import redis  # type: ignore
+        r = redis.Redis.from_url(url)
+        pong = r.ping()
+        if pong:
+            ok(f'Redis reachable ({url})')
+        else:
+            fail('Redis ping returned false')
+    except Exception as e:
+        fail(f'Redis error {e}')
+
 def test_github_app() -> None:
     app_id = os.getenv('GITHUB_APP_ID')
     pem = os.getenv('GITHUB_APP_PRIVATE_KEY_PATH')
@@ -115,6 +128,30 @@ def test_github_app() -> None:
         return
     ok('GitHub App env present')
 
+def test_vector_roundtrip() -> None:
+    try:
+        port = int(os.getenv('MCP_VECTOR_PORT', '8085'))
+        url = f'http://localhost:{port}'
+        # health
+        hr = requests.get(f'{url}/health', timeout=3)
+        if hr.status_code != 200:
+            fail(f'Vector health status {hr.status_code}')
+            return
+        # index
+        payload = {'path': 'env_check.txt', 'content': 'env-check-token'}
+        ir = requests.post(f'{url}/index', json=payload, timeout=8)
+        if ir.status_code not in (200, 201):
+            fail(f'Vector index failed {ir.status_code}: {ir.text[:120]}')
+            return
+        # search
+        sr = requests.post(f'{url}/search', json={'query': 'env-check-token', 'limit': 1}, timeout=8)
+        if sr.status_code == 200:
+            ok('Vector index/search roundtrip')
+        else:
+            fail(f'Vector search failed {sr.status_code}: {sr.text[:120]}')
+    except Exception as e:
+        fail(f'Vector error {e}')
+
 def main():
     repo = Path.cwd()
     env_path = repo / '.env.master'
@@ -124,6 +161,8 @@ def main():
     test_mcp()
     test_redis()
     test_weaviate()
+    test_redis()
+    test_vector_roundtrip()
     test_github_app()
     test_vector_roundtrip()
     print('== Done ==')

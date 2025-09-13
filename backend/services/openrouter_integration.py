@@ -1,19 +1,23 @@
 """
-Sophia AI Fusion Systems - OpenRouter Integration
-Week 3: Essential Integrations Implementation
-Multi-model AI routing with cost optimization, intelligent model selection,
-and comprehensive usage tracking. Integrates with existing performance monitoring.
+Sophia AI Fusion Systems - Portkey-backed OpenRouter wrapper
+
+This module was migrated to route all traffic through Portkey with Virtual Keys (VKs).
+Any direct HTTP calls to OpenRouter are forbidden in runtime code.
 """
 import asyncio
 import logging
+import os
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
-import aiohttp
+
+import httpx
+
 from backend.services.intelligent_cache import cached
 from backend.services.performance_monitor import monitor_performance
+from app.core.portkey_manager import PortkeyManager
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,13 +50,13 @@ class UsageStats:
     models_used: Dict[str, int] = None
     last_request_time: str = ""
 class OpenRouterIntegration:
-    """
-    Advanced OpenRouter integration with intelligent model routing and cost optimization
-    """
-    def __init__(self, api_key: str, base_url: str = "https://openrouter.ai/api/v1"):
-        self.api_key = api_key
+    """Portkey-backed wrapper exposing an OpenRouter-like interface."""
+    def __init__(self, api_key: str, base_url: str = "https://api.portkey.ai/v1"):
+        # api_key here is the historical OpenRouter key; unused at runtime.
+        self.portkey_api_key = os.getenv("PORTKEY_API_KEY", "")
         self.base_url = base_url
-        self.session: Optional[aiohttp.ClientSession] = None
+        self.session: Optional[httpx.AsyncClient] = None
+        self._pk_manager = PortkeyManager()
         # Usage tracking
         self.usage_stats = UsageStats(models_used={})
         # Model configurations
@@ -425,26 +429,82 @@ class OpenRouterIntegration:
             ) * 100
         # Test API connectivity
         try:
-            if self.session:
-                async with self.session.get(
-                    f"{self.base_url}/models", timeout=aiohttp.ClientTimeout(total=5)
-                ) as response:
-                    if response.status == 200:
-                        health_status["api_connectivity"] = "success"
-                    else:
-                        health_status["api_connectivity"] = f"error_{response.status}"
-                        health_status["status"] = "degraded"
+            if not self.session:
+                self.session = httpx.AsyncClient(timeout=10.0)
+            # Portkey health probe via model list with provider header
+            headers = {
+                "Authorization": f"Bearer {self.portkey_api_key}",
+                "x-portkey-provider": "openrouter",
+                "x-portkey-virtual-key": self._pk_manager.VIRTUAL_KEYS.get("openrouter", ""),
+            }
+            response = await self.session.get(f"{self.base_url}/models", headers=headers)
+            if response.status_code == 200:
+                health_status["api_connectivity"] = "success"
             else:
-                health_status["api_connectivity"] = "no_session"
+                health_status["api_connectivity"] = f"error_{response.status_code}"
                 health_status["status"] = "degraded"
         except Exception as e:
             health_status["api_connectivity"] = f"failed: {e}"
             health_status["status"] = "unhealthy"
         return health_status
+    async def __aenter__(self):
+        if not self.session:
+            self.session = httpx.AsyncClient(timeout=60.0)
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        if self.session:
+            await self.session.aclose()
+            self.session = None
+
+    @cached(ttl=300, prefix="openrouter_models")
+    async def _list_models(self) -> Dict[str, Any]:
+        if not self.session:
+            self.session = httpx.AsyncClient(timeout=30.0)
+        headers = {
+            "Authorization": f"Bearer {self.portkey_api_key}",
+            "x-portkey-provider": "openrouter",
+            "x-portkey-virtual-key": self._pk_manager.VIRTUAL_KEYS.get("openrouter", ""),
+        }
+        resp = await self.session.get(f"{self.base_url}/models", headers=headers)
+        resp.raise_for_status()
+        return resp.json()
+
+    @monitor_performance("/openrouter/chat", "POST")
+    async def openrouter_chat_via_portkey(
+        self,
+        messages: List[Dict[str, Any]],
+        model: str,
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+        **kwargs: Any,
+    ) -> Dict[str, Any]:
+        """Chat completion routed through Portkey with OpenRouter as provider."""
+        if not self.session:
+            self.session = httpx.AsyncClient(timeout=60.0)
+        headers = {
+            "Authorization": f"Bearer {self.portkey_api_key}",
+            "x-portkey-provider": "openrouter",
+            "x-portkey-virtual-key": self._pk_manager.VIRTUAL_KEYS.get("openrouter", ""),
+            "Content-Type": "application/json",
+        }
+        payload = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+        payload.update(kwargs or {})
+        resp = await self.session.post(
+            f"{self.base_url}/chat/completions", headers=headers, json=payload
+        )
+        resp.raise_for_status()
+        return resp.json()
 # Global OpenRouter instance
 _openrouter_instance: Optional[OpenRouterIntegration] = None
+
 async def get_openrouter(api_key: str) -> OpenRouterIntegration:
-    """Get or create global OpenRouter instance"""
+    """Get or create global OpenRouter instance (Portkey-backed)."""
     global _openrouter_instance
     if _openrouter_instance is None:
         _openrouter_instance = OpenRouterIntegration(api_key)
@@ -455,7 +515,7 @@ async def sophia_openrouter_integration():
     """Test the OpenRouter integration"""
     print("🧪 Testing OpenRouter Integration...")
     # Note: This requires a valid API key
-    api_key = "your-openrouter-api-key"  # Replace with actual key
+    api_key = "ignored-in-portkey-mode"
     async with OpenRouterIntegration(api_key) as openrouter:
         # Test model selection
         model = openrouter.select_model(use_case="coding", prefer_speed=True)

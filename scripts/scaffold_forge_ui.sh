@@ -6,6 +6,7 @@ set -euo pipefail
 
 TARGET_DIR="${1:-"../worktrees/forge-ui"}"
 PORT="${PORT:-3100}"
+IMAGE_NAME="${IMAGE_NAME:-forge-ui}"
 
 echo "Scaffolding Forge UI at: ${TARGET_DIR} (port ${PORT})"
 mkdir -p "${TARGET_DIR}/src"
@@ -56,6 +57,9 @@ cat > "${TARGET_DIR}/package.json" << EOF
   },
   "dependencies": {
     "fastify": "^4.27.2",
+    "@fastify/helmet": "^11.2.1",
+    "@fastify/compress": "^7.0.2",
+    "@fastify/cors": "^9.0.1",
     "zod": "^3.23.8",
     "undici": "^6.19.8"
   },
@@ -187,7 +191,24 @@ import { fsWrite, gitCommit, memorySearch } from './mcp.js'
 loadEnvMaster(process.env.REPO_ENV_MASTER_PATH)
 
 const app = Fastify({ logger: true })
+await app.register((await import('@fastify/helmet')).default)
+await app.register((await import('@fastify/compress')).default, { global: true })
+await app.register((await import('@fastify/cors')).default, {
+  origin: (origin, cb) => cb(null, true), // tighten in prod
+  credentials: true
+})
 const PORT = Number(process.env.PORT || ${PORT})
+const AUTH_BYPASS_TOKEN = process.env.AUTH_BYPASS_TOKEN || ''
+
+app.addHook('onRequest', async (req, reply) => {
+  // Optional bearer token for quick protection in shared envs
+  if (AUTH_BYPASS_TOKEN) {
+    const auth = req.headers['authorization'] || ''
+    if (auth !== `Bearer ${AUTH_BYPASS_TOKEN}`) {
+      return reply.code(401).send({ error: 'unauthorized' })
+    }
+  }
+})
 
 app.get('/health', async () => ({ status: 'ok', service: 'forge-ui' }))
 
@@ -234,5 +255,43 @@ app.listen({ port: PORT, host: '0.0.0.0' }).then(() => {
 })
 EOF
 
-echo "✅ Forge UI scaffolded at ${TARGET_DIR}"
+cat > "${TARGET_DIR}/Dockerfile" << EOF
+# syntax=docker/dockerfile:1
+FROM node:20-alpine AS base
+WORKDIR /app
 
+FROM base AS deps
+COPY package.json tsconfig.json ./
+RUN npm i --no-audit --no-fund
+
+FROM deps AS build
+COPY src ./src
+RUN npm run build
+
+FROM base AS runner
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+EXPOSE ${PORT}
+CMD ["node","dist/server.js"]
+EOF
+
+cat > "${TARGET_DIR}/fly.toml" << EOF
+app = "${IMAGE_NAME}"
+primary_region = "sjc"
+
+[http_service]
+  auto_start_machines = true
+  auto_stop_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+  internal_port = ${PORT}
+
+[[http_service.checks]]
+  interval = "15s"
+  timeout = "3s"
+  grace_period = "5s"
+  method = "GET"
+  path = "/health"
+
+echo "✅ Forge UI scaffolded at ${TARGET_DIR}"

@@ -1,17 +1,9 @@
-Secure Env and API Tool Registry
+Secure Env and API Tool Registry (Deprecated)
 
-- Store secrets outside the repo in `~/.config/sophia/env` using KEY=VALUE lines. Example:
-  - PORTKEY_API_KEY=pk_live_...
-  - ELEVENLABS_API_KEY=...
-  - OPENAI_API_KEY=...
+- Deprecated: Use repo-local `.env.master` as the single source, server-side only. See `docs/CENTRAL_ENV_AND_GITHUB.md`.
 
-- Load order:
-  1) OS env vars
-  2) `~/.config/sophia/env`
+- Load order is now: `.env.master` only (server-side), then OS env overrides.
 
-- New modules:
-  - `app/core/security/secure_env.py`: `SecureEnvironmentManager` to retrieve required keys.
-  - `app/core/api_tool_registry.py`: `APIToolRegistry` centralizes external tools (env names, capabilities).
+- Centralized loader: `app/core/env.py` and `builder_cli/lib/env.py`.
 
 - Updated code now requires `PORTKEY_API_KEY` at runtime; no hardcoded defaults remain in core modules.
-

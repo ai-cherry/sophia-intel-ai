@@ -94,16 +94,16 @@ jobs:
           if [ -f safety-report.json ]; then
             echo "## Safety Security Report" >> $GITHUB_STEP_SUMMARY
             python -c "
-import json
-with open('safety-report.json') as f:
-    data = json.load(f)
-    vulns = data.get('vulnerabilities', [])
-    if vulns:
-        print(f'⚠️ Found {len(vulns)} vulnerabilities')
-        for v in vulns[:10]:
-            print(f\"- {v.get('package_name', 'unknown')}: {v.get('advisory', 'No details')}\")
-    else:
-        print('✅ No vulnerabilities found')
+            import json
+            with open('safety-report.json') as f:
+                data = json.load(f)
+                vulns = data.get('vulnerabilities', [])
+                if vulns:
+                    print(f'Found {len(vulns)} vulnerabilities')
+                    for v in vulns[:10]:
+                        print(f\"- {v.get('package_name', 'unknown')}: {v.get('advisory', 'No details')}\")
+                else:
+                    print('No vulnerabilities found')
             " >> $GITHUB_STEP_SUMMARY
           fi
       
@@ -113,16 +113,16 @@ with open('safety-report.json') as f:
           if [ -f pip-audit-report.json ]; then
             echo "## Pip Audit Report" >> $GITHUB_STEP_SUMMARY
             python -c "
-import json
-with open('pip-audit-report.json') as f:
-    data = json.load(f)
-    vulns = data.get('vulnerabilities', [])
-    if vulns:
-        print(f'⚠️ Found {len(vulns)} vulnerabilities')
-        for v in vulns[:10]:
-            print(f\"- {v.get('name', 'unknown')}: {v.get('description', 'No details')}\")
-    else:
-        print('✅ No vulnerabilities found')
+            import json
+            with open('pip-audit-report.json') as f:
+                data = json.load(f)
+                vulns = data.get('vulnerabilities', [])
+                if vulns:
+                    print(f'Found {len(vulns)} vulnerabilities')
+                    for v in vulns[:10]:
+                        print(f\"- {v.get('name', 'unknown')}: {v.get('description', 'No details')}\")
+                else:
+                    print('No vulnerabilities found')
             " >> $GITHUB_STEP_SUMMARY
           fi
       
@@ -132,16 +132,16 @@ with open('pip-audit-report.json') as f:
           if [ -f bandit-report.json ]; then
             echo "## Bandit Security Report" >> $GITHUB_STEP_SUMMARY
             python -c "
-import json
-with open('bandit-report.json') as f:
-    data = json.load(f)
-    issues = data.get('results', [])
-    if issues:
-        print(f'⚠️ Found {len(issues)} security issues')
-        for issue in issues[:5]:
-            print(f\"- {issue.get('issue_text', 'Unknown issue')} [{issue.get('issue_severity', 'unknown')}]\")
-    else:
-        print('✅ No security issues found')
+            import json
+            with open('bandit-report.json') as f:
+                data = json.load(f)
+                issues = data.get('results', [])
+                if issues:
+                    print(f'Found {len(issues)} security issues')
+                    for issue in issues[:5]:
+                        print(f\"- {issue.get('issue_text', 'Unknown issue')} [{issue.get('issue_severity', 'unknown')}]\")
+                else:
+                    print('No security issues found')
             " >> $GITHUB_STEP_SUMMARY
           fi
       
@@ -179,23 +179,23 @@ with open('bandit-report.json') as f:
           pip-licenses --format=json --output-file=licenses.json
           echo "## License Report" >> $GITHUB_STEP_SUMMARY
           python -c "
-import json
-with open('licenses.json') as f:
-    licenses = json.load(f)
-    # Check for problematic licenses
-    problematic = ['GPL', 'AGPL', 'LGPL', 'SSPL']
-    issues = []
-    for pkg in licenses:
-        license_name = pkg.get('License', '')
-        if any(prob in license_name for prob in problematic):
-            issues.append(f\"{pkg.get('Name')}: {license_name}\")
-    
-    if issues:
-        print(f'⚠️ Found {len(issues)} packages with restrictive licenses:')
-        for issue in issues:
-            print(f'  - {issue}')
-    else:
-        print('✅ All licenses are compatible')
+          import json
+          with open('licenses.json') as f:
+              licenses = json.load(f)
+              # Check for problematic licenses
+              problematic = ['GPL', 'AGPL', 'LGPL', 'SSPL']
+              issues = []
+              for pkg in licenses:
+                  license_name = pkg.get('License', '')
+                  if any(prob in license_name for prob in problematic):
+                      issues.append(f\"{pkg.get('Name')}: {license_name}\")
+              
+              if issues:
+                  print(f'Found {len(issues)} packages with restrictive licenses:')
+                  for issue in issues:
+                      print(f'  - {issue}')
+              else:
+                  print('All licenses are compatible')
           " >> $GITHUB_STEP_SUMMARY
       
       - name: Upload license report
@@ -229,17 +229,17 @@ with open('licenses.json') as f:
           pip list --outdated --format=json > outdated.json
           echo "## Outdated Packages Report" >> $GITHUB_STEP_SUMMARY
           python -c "
-import json
-with open('outdated.json') as f:
-    packages = json.load(f)
-    if packages:
-        print(f'📦 Found {len(packages)} outdated packages:')
-        for pkg in packages[:20]:
-            print(f\"  - {pkg['name']}: {pkg['version']} → {pkg['latest_version']}\")
-        if len(packages) > 20:
-            print(f'  ... and {len(packages) - 20} more')
-    else:
-        print('✅ All packages are up to date')
+          import json
+          with open('outdated.json') as f:
+              packages = json.load(f)
+              if packages:
+                  print(f'Found {len(packages)} outdated packages:')
+                  for pkg in packages[:20]:
+                      print(f\"  - {pkg['name']}: {pkg['version']} -> {pkg['latest_version']}\")
+                  if len(packages) > 20:
+                      print(f'  ... and {len(packages) - 20} more')
+              else:
+                  print('All packages are up to date')
           " >> $GITHUB_STEP_SUMMARY
       
       - name: Create issue for outdated packages
@@ -352,13 +352,13 @@ with open('outdated.json') as f:
       - name: Verify key packages
         run: |
           python -c "
-import sys
-print(f'Python: {sys.version}')
-import fastapi; print(f'FastAPI: {fastapi.__version__}')
-import pydantic; print(f'Pydantic: {pydantic.version.VERSION}')
-import redis; print(f'Redis: {redis.__version__}')
-import agno; print(f'Agno: {agno.__version__}')
-import structlog; print(f'Structlog: {structlog.__version__}')
+          import sys
+          print(f'Python: {sys.version}')
+          import fastapi; print(f'FastAPI: {fastapi.__version__}')
+          import pydantic; print(f'Pydantic: {pydantic.version.VERSION}')
+          import redis; print(f'Redis: {redis.__version__}')
+          import agno; print(f'Agno: {agno.__version__}')
+          import structlog; print(f'Structlog: {structlog.__version__}')
           "
 
   # ============================================

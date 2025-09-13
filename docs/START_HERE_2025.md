@@ -1,4 +1,4 @@
-> Deprecated: Start guide moved. Use START_HERE.md at repo root.
+> Deprecated: Start guide moved. Use START_HERE.md at repo root. For all-in-one local bringup and env validation, use `scripts/start_all_and_validate.sh`.
 
 ## Goal
 Fastest path to a productive, contextual AI coding + BI environment

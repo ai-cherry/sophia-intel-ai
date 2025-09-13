@@ -42,3 +42,19 @@ REPO_ENV_MASTER_PATH=$(pwd -P | sed 's|/worktrees/workbench-ui||')/.env.master \
 # Test
 curl -fsS http://localhost:3200/health
 ```
+
+Deploy to Fly.io
+```bash
+# Forge UI (from its worktree)
+flyctl apps create forge-ui-stg
+flyctl deploy -c fly.toml -a forge-ui-stg
+
+# Workbench UI (from its worktree)
+flyctl apps create workbench-ui-stg
+flyctl deploy -c fly.toml -a workbench-ui-stg
+```
+
+Production hardening
+- Set `AUTH_BYPASS_TOKEN` in both apps (Bearer token) until SSO is in front.
+- Prefer Cloudflare Access or GitHub OAuth at the edge (SSO) for desktop.
+- Tighten CORS to your domains only.

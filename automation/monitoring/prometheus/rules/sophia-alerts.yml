@@ -146,16 +146,6 @@ groups:
           summary: "Sophia Orchestrator is down"
           description: "Sophia Orchestrator service is not responding"
 
-  - alert: SophiaOrchestratorDown
-        expr: up{job="sophia-orchestrator"} == 0
-        for: 2m
-        labels:
-          severity: critical
-          team: application
-        annotations:
-          summary: "Sophia Orchestrator is down"
-          description: "Sophia Orchestrator service is not responding"
-
       - alert: HealthMonitorDown
         expr: up{job="health-monitor"} == 0
         for: 3m

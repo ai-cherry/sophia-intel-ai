@@ -916,3 +916,4 @@ This repository enforces strict guardrails to prevent sprawl:
   - `.github/workflows/anti-fragmentation.yml` enforces policy on every PR
 
 Run `make health` before commits to check env, docs policy, and quick linting.
+> Environment Policy Update (2025-09-13): Use a single `.env.master` at the repo root for all local secrets and config. `.env.local` and `~/.config/sophia/env` are deprecated and unsupported. See `docs/CENTRAL_ENV_AND_GITHUB.md` and run `scripts/start_all_and_validate.sh`.

@@ -28,7 +28,7 @@ app = FastAPI(title="Vector Search MCP Server")
 WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://localhost:8080")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 POSTGRES_URL = os.getenv("POSTGRES_URL", "postgresql://localhost/sophia_intel")
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+PORTKEY_API_KEY = os.getenv("PORTKEY_API_KEY")
 
 # Global clients
 weaviate_client = None
@@ -59,10 +59,7 @@ async def startup():
     
     try:
         # Initialize Weaviate
-        weaviate_client = weaviate.Client(
-            url=WEAVIATE_URL,
-            additional_headers={"X-OpenAI-Api-Key": OPENROUTER_API_KEY} if OPENROUTER_API_KEY else None
-        )
+        weaviate_client = weaviate.Client(url=WEAVIATE_URL)
         
         # Create schema if it doesn't exist
         await ensure_weaviate_schema()
@@ -189,20 +186,21 @@ def detect_language(file_path: str) -> str:
     return language_map.get(ext, 'text')
 
 async def generate_embedding(text: str) -> Optional[List[float]]:
-    """Generate embedding using OpenRouter API"""
-    if not OPENROUTER_API_KEY:
+    """Generate embedding using Portkey (OpenAI provider)"""
+    if not PORTKEY_API_KEY:
         return None
         
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://openrouter.ai/api/v1/embeddings",
+                "https://api.portkey.ai/v1/embeddings",
                 headers={
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                    "Content-Type": "application/json"
+                    "x-portkey-api-key": PORTKEY_API_KEY,
+                    "x-portkey-provider": "openai",
+                    "Content-Type": "application/json",
                 },
                 json={
-                    "model": "text-embedding-ada-002",
+                    "model": os.getenv("EMBED_MODEL", "text-embedding-3-small"),
                     "input": text[:8000]  # Limit input size
                 }
             )
@@ -215,20 +213,21 @@ async def generate_embedding(text: str) -> Optional[List[float]]:
     return None
 
 async def summarize_code(content: str, language: str) -> str:
-    """Generate AI summary of code file"""
-    if not OPENROUTER_API_KEY or len(content) < 100:
+    """Generate AI summary of code file via Portkey"""
+    if not PORTKEY_API_KEY or len(content) < 100:
         return f"A {language} file with {len(content)} characters"
     
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
+                "https://api.portkey.ai/v1/chat/completions",
                 headers={
-                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                    "Content-Type": "application/json"
+                    "x-portkey-api-key": PORTKEY_API_KEY,
+                    "x-portkey-provider": os.getenv("SUMMARY_PROVIDER", "openai"),
+                    "Content-Type": "application/json",
                 },
                 json={
-                    "model": "openai/gpt-4o-mini",
+                    "model": os.getenv("SUMMARY_MODEL", "gpt-4o-mini"),
                     "messages": [
                         {
                             "role": "system",

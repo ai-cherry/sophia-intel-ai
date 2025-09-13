@@ -1,5 +1,7 @@
 # Sophia Intel AI - System Architecture
 
+> Environment Policy (2025-09-13): The only supported local environment file is `<repo>/.env.master`. Any references to `.env.local` or `~/.config/sophia/env` in older sections are deprecated. See `docs/CENTRAL_ENV_AND_GITHUB.md` and use `scripts/start_all_and_validate.sh` to bring up and validate services.
+
 **Version:** 2.0.0  
 **Last Updated:** 2025-09-06  
 **Status:** Production Ready  

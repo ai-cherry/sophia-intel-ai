@@ -49,7 +49,7 @@ class OpenRouterIntegration:
     """
     Advanced OpenRouter integration with intelligent model routing and cost optimization
     """
-    def __init__(self, api_key: str, base_url: str = "https://openrouter.ai/api/v1"):
+    def __init__(self, api_key: str, base_url: str = "https://api.portkey.ai/v1"):
         self.api_key = api_key
         self.base_url = base_url
         self.session: Optional[aiohttp.ClientSession] = None
@@ -158,13 +158,12 @@ class OpenRouterIntegration:
             self.session = aiohttp.ClientSession(
                 timeout=timeout,
                 headers={
-                    "Authorization": f"Bearer {self.api_key}",
+                    "x-portkey-api-key": self.api_key,
+                    "x-portkey-provider": "openrouter",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "https://sophia-intel.ai",
-                    "X-Title": "Sophia AI Fusion Systems",
                 },
             )
-            logger.info("✅ OpenRouter session initialized")
+            logger.info("✅ OpenRouter via Portkey session initialized")
     async def disconnect(self):
         """Close HTTP session"""
         if self.session:

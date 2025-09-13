@@ -1,15 +1,15 @@
 filesystem_policies:
   sophia:
     write_allowed_paths:
-      - "/workspace/sophia/app"
-      - "/workspace/sophia/scripts"
-      - "/workspace/sophia/mcp"
-      - "/workspace/sophia/agents"
-      - "/workspace/sophia/tools"
+      - "/workspace/app"
+      - "/workspace/scripts"
+      - "/workspace/mcp"
+      - "/workspace/agents"
+      - "/workspace/tools"
     write_denied_paths:
-      - "/workspace/sophia/.env"
-      - "/workspace/sophia/.env*"
-      - "/workspace/sophia/docker-compose*"
+      - "/workspace/.env"
+      - "/workspace/.env*"
+      - "/workspace/docker-compose*"
     backup_on_write: true
   builder:
     write_allowed_paths:

@@ -19,6 +19,7 @@ try:
     _rq = redis.Redis.from_url(_redis_url)
 except Exception:
     _rq = None
+QUEUE_KEY = os.getenv("VECTOR_INDEX_QUEUE", "fs:index:queue")
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 class FSListRequest(BaseModel):
@@ -348,7 +349,7 @@ async def fs_write(req: FSWriteRequest) -> Dict[str, Any]:
     try:
         if _rq is not None:
             evt = {"path": str(target.relative_to(WORKSPACE_PATH)), "ts": time.time()}
-            _rq.lpush("fs:index:queue", json.dumps(evt))
+            _rq.lpush(QUEUE_KEY, json.dumps(evt))
     except Exception:
         pass
     return {"ok": True, "path": str(target.relative_to(WORKSPACE_PATH))}
@@ -372,7 +373,7 @@ async def fs_delete(req: FSDeleteRequest) -> Dict[str, Any]:
     try:
         if _rq is not None:
             evt = {"path": str(target.relative_to(WORKSPACE_PATH)), "ts": time.time(), "op": "delete"}
-            _rq.lpush("fs:index:queue", json.dumps(evt))
+            _rq.lpush(QUEUE_KEY, json.dumps(evt))
     except Exception:
         pass
     return {"ok": True}

@@ -60,6 +60,8 @@ cat > "${TARGET_DIR}/package.json" << EOF
     "@fastify/helmet": "^11.2.1",
     "@fastify/compress": "^7.0.2",
     "@fastify/cors": "^9.0.1",
+    "@fastify/rate-limit": "^10.3.0",
+    "prom-client": "^15.1.3",
     "zod": "^3.23.8",
     "undici": "^6.19.8"
   },
@@ -181,7 +183,7 @@ export async function planWithLLM(task: string) {
 }
 EOF
 
-cat > "${TARGET_DIR}/src/server.ts" << EOF
+cat > "${TARGET_DIR}/src/server.ts" << 'EOF'
 import Fastify from 'fastify'
 import { z } from 'zod'
 import { loadEnvMaster } from './env.js'
@@ -190,19 +192,47 @@ import { fsWrite, gitCommit, memorySearch } from './mcp.js'
 
 loadEnvMaster(process.env.REPO_ENV_MASTER_PATH)
 
-const app = Fastify({ logger: true })
+const app = Fastify({
+  trustProxy: true,
+  logger: {
+    level: 'info',
+    redact: { paths: ['req.headers.authorization', 'res.headers.authorization'], remove: true },
+    genReqId: () => Math.random().toString(36).slice(2)
+  }
+})
 await app.register((await import('@fastify/helmet')).default)
 await app.register((await import('@fastify/compress')).default, { global: true })
 await app.register((await import('@fastify/cors')).default, {
-  origin: (origin, cb) => cb(null, true), // tighten in prod
+  origin: (origin, cb) => {
+    const allowlist = (process.env.CORS_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean)
+    if (!origin) return cb(null, allowlist.length === 0 ? false : true)
+    if (allowlist.length === 0) return cb(null, false)
+    cb(null, allowlist.includes(origin))
+  },
   credentials: true
 })
-const PORT = Number(process.env.PORT || ${PORT})
+await app.register((await import('@fastify/rate-limit')).default, {
+  max: 60,
+  timeWindow: '1 minute',
+  allowList: [],
+  ban: 1
+})
+const PORT = Number(process.env.PORT || 3100)
 const AUTH_BYPASS_TOKEN = process.env.AUTH_BYPASS_TOKEN || ''
+const REQUIRED_ENVS = ['PORTKEY_API_KEY', 'MCP_MEMORY_URL', 'MCP_FS_URL', 'MCP_GIT_URL', 'MCP_TOKEN']
+
+// Fail fast in non-dev if critical envs are missing
+if (process.env.NODE_ENV !== 'development') {
+  const missing = REQUIRED_ENVS.filter(k => !process.env[k] || !String(process.env[k]).trim())
+  if (missing.length) {
+    console.error(`Missing required envs: ${missing.join(', ')}`)
+    process.exit(1)
+  }
+}
 
 app.addHook('onRequest', async (req, reply) => {
-  // Optional bearer token for quick protection in shared envs
-  if (AUTH_BYPASS_TOKEN) {
+  // Require bearer outside dev; optional in dev
+  if (process.env.NODE_ENV !== 'development' || AUTH_BYPASS_TOKEN) {
     const auth = req.headers['authorization'] || ''
     if (auth !== `Bearer ${AUTH_BYPASS_TOKEN}`) {
       return reply.code(401).send({ error: 'unauthorized' })
@@ -211,6 +241,25 @@ app.addHook('onRequest', async (req, reply) => {
 })
 
 app.get('/health', async () => ({ status: 'ok', service: 'forge-ui' }))
+
+// Metrics (protected by bearer via hook)
+const client = await import('prom-client')
+const register = new client.Registry()
+client.collectDefaultMetrics({ register })
+const httpHistogram = new client.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request latency',
+  labelNames: ['route', 'method', 'status_code']
+})
+register.registerMetric(httpHistogram)
+app.addHook('onResponse', async (req, res) => {
+  const route = req.routerPath || req.url || 'unknown'
+  httpHistogram.labels({ route, method: req.method, status_code: String(res.statusCode) }).observe((res as any).getResponseTime?.() / 1000 || 0)
+})
+app.get('/metrics', async (_req, reply) => {
+  reply.header('content-type', register.contentType)
+  return reply.send(await register.metrics())
+})
 
 app.post('/api/coding/plan', async (req, reply) => {
   const schema = z.object({ task: z.string().min(1), context: z.any().optional() })
@@ -227,6 +276,14 @@ app.post('/api/coding/patch', async (req, reply) => {
   })
   const body = schema.parse(req.body)
   const apply = (req.query as any)?.apply === 'true'
+  // Policy checks
+  const MAX_CHANGES = 10
+  const MAX_CONTENT = 200_000 // 200 KB
+  if ((body.changes?.length || 0) > MAX_CHANGES) return reply.code(400).send({ error: 'too_many_changes' })
+  if ((body.changes || []).some(c => c.path.startsWith('.') || c.path.includes('..') || c.path.includes('node_modules') || c.path.includes('.env'))) {
+    return reply.code(400).send({ error: 'invalid_paths' })
+  }
+  if ((body.changes || []).some(c => c.content.length > MAX_CONTENT)) return reply.code(400).send({ error: 'change_too_large' })
   const diff = (body.changes || []).map(c => `--- a/${c.path}\n+++ b/${c.path}\n@@\n${c.content}`)
   if (apply && body.changes?.length) {
     for (const c of body.changes) await fsWrite(c.path, c.content)
@@ -245,6 +302,25 @@ app.post('/api/coding/validate', async (req, reply) => {
   }
 })
 
+// Contract test: create dummy file, commit, validate
+app.post('/contract-test', async (_req, reply) => {
+  const path = 'CONTRACT_TEST.md'
+  const content = `# Contract Test\nTimestamp: ${new Date().toISOString()}\n`
+  try {
+    await fsWrite(path, content)
+    await gitCommit('forge contract test')
+    const r = await memorySearch('contract test')
+    return reply.send({ ok: true, path, result: 'pass', memory: Array.isArray(r) ? r.length : 0 })
+  } catch (e: any) {
+    return reply.code(500).send({ ok: false, error: String(e) })
+  }
+})
+
+// Swarm trigger placeholder
+app.post('/api/coding/swarm/trigger', async (_req, reply) => {
+  return reply.code(202).send({ accepted: true, status: 'queued' })
+})
+
 app.get('/api/providers/vk', async (_req, reply) => {
   const present = Object.keys(process.env).filter(k => k.startsWith('PORTKEY_VK_') && String(process.env[k]).trim())
   return reply.send({ present, count: present.length })
@@ -257,7 +333,7 @@ EOF
 
 cat > "${TARGET_DIR}/Dockerfile" << EOF
 # syntax=docker/dockerfile:1
-FROM node:20-alpine AS base
+FROM node:20.11-alpine AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -286,6 +362,7 @@ primary_region = "sjc"
   min_machines_running = 1
   processes = ["app"]
   internal_port = ${PORT}
+  force_https = true
 
 [[http_service.checks]]
   interval = "15s"
@@ -293,5 +370,6 @@ primary_region = "sjc"
   grace_period = "5s"
   method = "GET"
   path = "/health"
+EOF
 
 echo "✅ Forge UI scaffolded at ${TARGET_DIR}"

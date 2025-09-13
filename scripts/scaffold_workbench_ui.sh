@@ -54,6 +54,8 @@ cat > "${TARGET_DIR}/package.json" << EOF
     "@fastify/helmet": "^11.2.1",
     "@fastify/compress": "^7.0.2",
     "@fastify/cors": "^9.0.1",
+    "@fastify/rate-limit": "^10.3.0",
+    "prom-client": "^15.1.3",
     "undici": "^6.19.8"
   },
   "devDependencies": {
@@ -104,24 +106,44 @@ export function loadEnvMaster(absPath?: string) {
 }
 EOF
 
-cat > "${TARGET_DIR}/src/server.ts" << EOF
+cat > "${TARGET_DIR}/src/server.ts" << 'EOF'
 import Fastify from 'fastify'
 import { request } from 'undici'
 import { loadEnvMaster } from './env.js'
 
 loadEnvMaster(process.env.REPO_ENV_MASTER_PATH)
 
-const app = Fastify({ logger: true })
+const app = Fastify({
+  trustProxy: true,
+  logger: {
+    level: 'info',
+    redact: { paths: ['req.headers.authorization', 'res.headers.authorization'], remove: true },
+    genReqId: () => Math.random().toString(36).slice(2)
+  }
+})
 await app.register((await import('@fastify/helmet')).default)
 await app.register((await import('@fastify/compress')).default, { global: true })
 await app.register((await import('@fastify/cors')).default, {
-  origin: (origin, cb) => cb(null, true), // tighten in prod
+  origin: (origin, cb) => {
+    const allowlist = (process.env.CORS_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean)
+    if (!origin) return cb(null, allowlist.length === 0 ? false : true)
+    if (allowlist.length === 0) return cb(null, false)
+    cb(null, allowlist.includes(origin))
+  },
   credentials: true
 })
-const PORT = Number(process.env.PORT || ${PORT})
+await app.register((await import('@fastify/rate-limit')).default, { max: 60, timeWindow: '1 minute' })
+const PORT = Number(process.env.PORT || 3200)
 const PORTKEY_API_KEY = process.env.PORTKEY_API_KEY || ''
 const PORTKEY_BASE = process.env.PORTKEY_BASE_URL || 'https://api.portkey.ai/v1'
 const AUTH_BYPASS_TOKEN = process.env.AUTH_BYPASS_TOKEN || ''
+const MODEL_ALLOWLIST = (process.env.MODEL_ALLOWLIST || 'openai/gpt-4o,anthropic/claude-3-opus-20240229,google/gemini-2.5-flash').split(',').map(s => s.trim()).filter(Boolean)
+const MAX_TOKENS = Number(process.env.MAX_TOKENS || 1000)
+
+if (process.env.NODE_ENV !== 'development' && (!PORTKEY_API_KEY || !PORTKEY_API_KEY.trim())) {
+  console.error('PORTKEY_API_KEY is required')
+  process.exit(1)
+}
 
 app.addHook('onRequest', async (req, reply) => {
   if (AUTH_BYPASS_TOKEN) {
@@ -134,6 +156,15 @@ app.addHook('onRequest', async (req, reply) => {
 
 app.get('/health', async () => ({ status: 'ok', service: 'workbench' }))
 
+// Metrics (protected via bearer)
+const client = await import('prom-client')
+const register = new client.Registry()
+client.collectDefaultMetrics({ register })
+app.get('/metrics', async (_req, reply) => {
+  reply.header('content-type', register.contentType)
+  return reply.send(await register.metrics())
+})
+
 app.get('/api/portkey/health', async (_req, reply) => {
   if (!PORTKEY_API_KEY) return reply.code(400).send({ error: 'Missing PORTKEY_API_KEY' })
   try {
@@ -142,7 +173,8 @@ app.get('/api/portkey/health', async (_req, reply) => {
       headers: { 'x-portkey-api-key': PORTKEY_API_KEY }
     })
     const json = await res.body.json()
-    return reply.send({ ok: true, models: Array.isArray(json?.data) ? json.data.length : 0 })
+    const models = (Array.isArray(json?.data) ? json.data.map((m:any)=>m.id||m.name) : []).filter((m:string)=>MODEL_ALLOWLIST.includes(m)).length
+    return reply.send({ ok: true, models_allowed: models })
   } catch (e: any) {
     return reply.code(502).send({ ok: false, error: String(e) })
   }
@@ -158,6 +190,9 @@ app.post('/api/portkey/console', async (req, reply) => {
   const body: any = req.body || {}
   const content = String(body?.prompt || '')
   if (!content) return reply.code(400).send({ error: 'prompt required' })
+  const model = String(body?.model || 'openai/gpt-4o')
+  if (!MODEL_ALLOWLIST.includes(model)) return reply.code(400).send({ error: 'model_not_allowed' })
+  const max_tokens = Math.min(Number(body?.max_tokens || 512), MAX_TOKENS)
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     'x-portkey-api-key': PORTKEY_API_KEY
@@ -167,7 +202,7 @@ app.post('/api/portkey/console', async (req, reply) => {
   try {
     const res = await request(`${PORTKEY_BASE}/chat/completions`, {
       method: 'POST', headers,
-      body: JSON.stringify({ model: 'openai/gpt-4o', messages: [{ role: 'user', content }] })
+      body: JSON.stringify({ model, max_tokens, messages: [{ role: 'user', content }], tools: [], tool_choice: 'none' })
     })
     const json = await res.body.json()
     return reply.send({
@@ -179,6 +214,22 @@ app.post('/api/portkey/console', async (req, reply) => {
   }
 })
 
+// Contract smoke test: health + minimal console
+app.post('/contract-test', async (_req, reply) => {
+  try {
+    const ok = await (await fetch('http://127.0.0.1:'+PORT+'/api/portkey/health', { headers: { authorization: `Bearer ${AUTH_BYPASS_TOKEN}` } })).json()
+    if (!ok?.ok) return reply.code(500).send({ ok: false, step: 'health_failed' })
+    const res = await (await fetch('http://127.0.0.1:'+PORT+'/api/portkey/console', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${AUTH_BYPASS_TOKEN}` },
+      body: JSON.stringify({ prompt: 'ping', model: MODEL_ALLOWLIST[0] })
+    })).json()
+    return reply.send({ ok: true, output_len: (res?.output||'').length })
+  } catch (e:any) {
+    return reply.code(500).send({ ok: false, error: String(e) })
+  }
+})
+
 app.listen({ port: PORT, host: '0.0.0.0' }).then(() => {
   app.log.info(`Workbench listening on :${PORT}`)
 })
@@ -186,7 +237,7 @@ EOF
 
 cat > "${TARGET_DIR}/Dockerfile" << EOF
 # syntax=docker/dockerfile:1
-FROM node:20-alpine AS base
+FROM node:20.11-alpine AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -215,6 +266,7 @@ primary_region = "sjc"
   min_machines_running = 1
   processes = ["app"]
   internal_port = ${PORT}
+  force_https = true
 
 [[http_service.checks]]
   interval = "15s"

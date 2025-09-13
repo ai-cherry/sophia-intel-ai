@@ -8,8 +8,8 @@ primary_region = "iad"        # Choose a primary region close to your DB/users
   strategy = "bluegreen"      # Zero-downtime for stateless API
 
 [processes]
-  # Unified API server entrypoint
-  web = "uvicorn app.api.main:app --host 0.0.0.0 --port 8080"
+  # Unified API server entrypoint (shim -> app.api.main:app)
+  web = "uvicorn app.api.unified_server:app --host 0.0.0.0 --port 8080"
 
 [http_service]
   internal_port = 8080

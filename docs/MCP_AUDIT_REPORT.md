@@ -39,7 +39,7 @@ Redundancies and Fragmentation
   - Risk: Divergent behavior and maintenance burden; unclear which is authoritative.
 
 - Forge MCP control:
-  - builder-cli/forge.py imports MCPManager from builder_cli.lib.mcp, but builder_cli/lib contains no such module. Forge cannot manage MCP lifecycle as-is.
+  - builder_cli/forge.py imports MCPManager from builder_cli.lib.mcp.
   - Risk: Broken orchestration path from Forge to MCP.
 
 - Startup inconsistency:
@@ -203,4 +203,3 @@ Appendix: Notable Files
 - Clients/Services: app/services/mcp_context.py, tests/test_mcp_context.py
 - Portkey: app/core/portkey_manager.py, app/embeddings/portkey_integration.py
 - Startup: bin/sophia-cli-v2, scripts/start_all_mcp.sh, deploy_local_complete.sh
-

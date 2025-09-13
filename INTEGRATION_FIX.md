@@ -13,7 +13,7 @@ Found 3 main dashboards:
 ### Untracked Files Integrated
 1. **`bridge/api.py`** ✅ - Already created, FastAPI bridge with SSE
 2. **`router/top25.py`** ✅ - OpenRouter model management implemented
-3. **`builder-cli/forge.py`** ✅ - Builder CLI with full functionality
+3. **`builder_cli/forge.py`** ✅ - Builder CLI with full functionality
 4. **`test_all_integrations.py`** ❌ - Tests fail due to missing credentials
 5. **Integration clients** ✅ - All optimized clients in `app/integrations/`
 
@@ -74,7 +74,7 @@ The system now has:
 - **Bridge API** (`bridge/api.py`): Connects agents with SSE streaming
 - **Model Router** (`router/top25.py`): OpenRouter Top-25 management
 - **MCP Servers** (`mcp/filesystem/server.py`): Filesystem with allowlist
-- **Builder CLI** (`builder-cli/forge.py`): Complete CLI interface
+- **Builder CLI** (`builder_cli/forge.py`): Complete CLI interface
 
 ## 📊 Test Results
 

@@ -1,0 +1,119 @@
+name: deploy-fastapi-stack
+
+concurrency:
+  group: deploy-fastapi-stack
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      esc_env:
+        description: 'Pulumi ESC environment (e.g., sophia/prod)'
+        type: string
+        default: 'sophia/prod'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        app: [api, worker, mcp]
+        include:
+          - app: api
+            config: apps/api/fly.toml
+            fly_app: sophia-api
+            health_path: /health
+          - app: worker
+            config: apps/worker/fly.toml
+            fly_app: sophia-worker
+          - app: mcp
+            config: apps/mcp/fly.toml
+            fly_app: sophia-mcp
+    env:
+      # Pulumi ESC environment name (e.g., sophia/prod). Override via workflow inputs if needed.
+      ESC_ENV: ${{ inputs.esc_env || 'sophia/prod' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Guard deprecated env patterns (runtime only)
+        run: |
+          set -euo pipefail
+          # Exclude docs/**
+          if rg -n "\\.env\\.local|~/.config" app backend services mcp scripts || true; then
+            echo "Forbidden runtime env patterns detected (.env.local or ~/.config)." >&2
+            exit 1
+          fi
+
+      # Authenticate to Pulumi Cloud via OIDC and fetch ESC env as dotenv
+      - name: Pulumi OIDC Auth (Org Access Token)
+        uses: pulumi/auth-actions@v1
+        with:
+          organization: your-pulumi-org
+          requested-token-type: urn:pulumi:token-type:access_token:organization
+
+      - name: Export ESC env to dotenv
+        id: esc
+        uses: pulumi/esc-action@v0
+        with:
+          environment: ${{ env.ESC_ENV }}
+          outputs: dotenv
+          dotenv-file: .esc.env
+
+      - name: Upload ESC dotenv artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: esc-env
+          path: .esc.env
+          retention-days: 2
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Fly auth (token from ESC outputs or GitHub secret fallback)
+        env:
+          FLY_API_TOKEN_ESC: ${{ steps.esc.outputs.FLY_API_TOKEN }}
+          FLY_API_TOKEN_SECRET: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          TOKEN="${FLY_API_TOKEN_ESC:-}"
+          if [ -z "$TOKEN" ]; then TOKEN="${FLY_API_TOKEN_SECRET:-}"; fi
+          if [ -z "$TOKEN" ]; then echo "Missing FLY_API_TOKEN (ESC or repo secret)" && exit 1; fi
+          flyctl auth token "$TOKEN"
+
+      - name: Stage secrets (ESC -> Fly)
+        if: ${{ hashFiles(matrix.config) != '' }}
+        run: |
+          flyctl secrets import --stage --app ${{ matrix.fly_app }} < .esc.env
+          flyctl secrets deploy --app ${{ matrix.fly_app }}
+
+      - name: Skip deploy (placeholder entrypoint)
+        if: ${{ contains(needs, 'never') && false }}
+        run: echo "noop" # placeholder to satisfy syntax
+
+      - name: Conditionally deploy app
+        if: ${{ hashFiles(matrix.config) != '' && matrix.app == 'api' }}
+        run: flyctl deploy --config ${{ matrix.config }} --strategy bluegreen --app ${{ matrix.fly_app }}
+
+      - name: Skip worker deploy (not configured)
+        if: ${{ hashFiles(matrix.config) != '' && matrix.app == 'worker' }}
+        run: echo "Skipping worker deploy: entrypoint not finalized"
+
+      - name: Skip MCP deploy (gateway not implemented)
+        if: ${{ hashFiles(matrix.config) != '' && matrix.app == 'mcp' }}
+        run: echo "Skipping MCP deploy: unified gateway not implemented"
+
+      - name: Post-deploy health (API)
+        if: ${{ matrix.app == 'api' }}
+        env:
+          APP_URL: ${{ steps.esc.outputs.API_PUBLIC_URL || format('{0}.fly.dev', matrix.fly_app) }}
+        run: |
+          set -euo pipefail
+          curl -fsS "https://${APP_URL}${{ matrix.health_path }}" >/dev/null

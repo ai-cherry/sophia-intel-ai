@@ -95,3 +95,4 @@ MCP Integration Verification
 - Filesystem: `curl -sf http://localhost:8082/health`
 - Memory:     `curl -sf http://localhost:8081/health`
 - Git:        `curl -sf http://localhost:8084/health`
+> Environment Policy Update: Env is single-source via ESC → .env.master. `.env.local` and `~/.config` references in this doc are deprecated and retained only for historical context.

@@ -1,5 +1,7 @@
 """
-Vector Search MCP Server
+DEPRECATED: Use canonical MCP Vector server at mcp/vector/server.py (port 8085, endpoints /health, /index, /search).
+
+Vector Search MCP Server (legacy)
 Integrates Weaviate, Redis, and PostgreSQL for intelligent codebase indexing
 """
 

@@ -1,0 +1,35 @@
+app = "sophia-api"            # Fly app name (set this once via `fly launch -a sophia-api`)
+primary_region = "iad"        # Choose a primary region close to your DB/users
+
+[build]
+  dockerfile = "infra/Dockerfile.unified"
+
+[deploy]
+  strategy = "bluegreen"      # Zero-downtime for stateless API
+
+[processes]
+  # Unified API server entrypoint
+  web = "uvicorn app.api.main:app --host 0.0.0.0 --port 8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 2
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+  [[http_service.checks]]
+    interval = "10s"
+    timeout = "2s"
+    method = "GET"
+    path = "/health"
+    grace_period = "15s"
+
+# Notes:
+# - Secrets are injected via `fly secrets import --stage < .esc.env` then `fly secrets deploy` in CI.
+# - Ensure DATABASE_URL/REDIS_URL/etc exist in ESC with identical names to local .env.master.

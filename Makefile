@@ -1,29 +1,42 @@
-.PHONY: dev-docker dev-native stop logs status clean
+# Sophia Ops Makefile — operator shortcuts
 
-ROOT := $(shell pwd)
+.PHONY: help env:dev fly:sync-secrets deploy:api gpu:provision gpu:teardown
 
-dev-docker: ## Start full stack via Docker (API 8000, UI 3000, MCP 8081/8082/8084)
-	@bash scripts/ports/check_conflicts.sh || { echo "Resolve port conflicts in infra/ports.env, then retry."; exit 2; }
-	docker compose -f infra/docker-compose.yml --profile dev up -d
-	@echo "→ UI:  http://localhost:3000"
-	@echo "→ API: http://localhost:8000/api/health"
+help:
+	@echo "Targets:"
+	@echo "  env:dev                -> Export ESC sophia/dev to .env.master"
+	@echo "  fly:sync-secrets ENV=  -> ESC→dotenv→fly secrets import --stage + deploy"
+	@echo "  deploy:api ENV=        -> flyctl deploy apps/api/fly.toml (blue/green)"
+	@echo "  gpu:provision REGION= TYPE= -> Provision Lambda GPU (placeholder)"
+	@echo "  gpu:teardown ID=       -> Teardown Lambda GPU (placeholder)"
 
-dev-native: ## Start API+UI+MCP locally (no Docker)
-	@bash scripts/ports/check_conflicts.sh || { echo "Resolve port conflicts in infra/ports.env, then retry."; exit 2; }
-	bash scripts/dev/start_local_unified.sh
+env\:dev:
+	@echo "Exporting ESC sophia/dev → .env.master"
+	pulumi env select sophia/dev
+	pulumi env get --format=dotenv > .env.master
+	@echo "Wrote .env.master"
 
-stop: ## Stop Docker stack
-	docker compose -f infra/docker-compose.yml down || true
+fly\:sync-secrets:
+	@if [ -z "$(ENV)" ]; then echo "ENV is required (e.g., sophia/prod)"; exit 2; fi
+	@echo "Export ESC $(ENV) → .esc.env and import to Fly (staged)"
+	pulumi env select $(ENV)
+	pulumi env get --format=dotenv > .esc.env
+	@[ -z "$(APP)" ] && echo "APP not set; import only" || flyctl secrets import --stage --app $(APP) < .esc.env
+	@[ -z "$(APP)" ] && echo "APP not set; secrets deploy skipped" || flyctl secrets deploy --app $(APP)
 
-logs: ## Tail Docker logs
-	docker compose -f infra/docker-compose.yml logs -f --tail=200
+deploy\:api:
+	@if [ -z "$(ENV)" ]; then echo "ENV is required (e.g., sophia/prod)"; exit 2; fi
+	@echo "Deploy API with blue/green"
+	make fly:sync-secrets ENV=$(ENV) APP=sophia-api
+	flyctl deploy --config apps/api/fly.toml --strategy bluegreen --app sophia-api
 
-status: ## Quick health checks
-	@curl -sf http://localhost:8000/api/health >/dev/null 2>&1 && echo "API 8000: OK" || echo "API 8000: DOWN"
-	@curl -sf http://localhost:3000 >/dev/null 2>&1 && echo "UI 3000: OK" || echo "UI 3000: DOWN"
-	@curl -sf http://localhost:8081/health >/dev/null 2>&1 && echo "MCP Memory 8081: OK" || echo "MCP Memory 8081: DOWN"
-	@curl -sf http://localhost:8082/health >/dev/null 2>&1 && echo "MCP FS 8082: OK" || echo "MCP FS 8082: DOWN"
-	@curl -sf http://localhost:8084/health >/dev/null 2>&1 && echo "MCP Git 8084: OK" || echo "MCP Git 8084: DOWN"
+gpu\:provision:
+	@if [ -z "$(REGION)" ] || [ -z "$(TYPE)" ]; then echo "Provide REGION and TYPE"; exit 2; fi
+	@echo "Provisioning GPU (Lambda) REGION=$(REGION) TYPE=$(TYPE)"
+	@echo "curl -X POST https://cloud.lambdalabs.com/api/v1/instances ... (placeholder)"
 
-clean: stop ## Remove dangling resources
-	@echo "Clean complete"
+gpu\:teardown:
+	@if [ -z "$(ID)" ]; then echo "Provide ID"; exit 2; fi
+	@echo "Tearing down GPU ID=$(ID)"
+	@echo "curl -X DELETE https://cloud.lambdalabs.com/api/v1/instances/$(ID) (placeholder)"
+

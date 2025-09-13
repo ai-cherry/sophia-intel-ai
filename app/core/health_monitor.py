@@ -231,17 +231,18 @@ class HealthMonitor:
             health.error_message = str(e)
     
     async def _check_openrouter(self, health: ServiceHealth):
-        """Check OpenRouter API health"""
+        """Check OpenRouter via Portkey models endpoint"""
         if not self.http_client:
             health.status = HealthStatus.UNKNOWN
             return
-        
         try:
             response = await self.http_client.get(
-                "https://openrouter.ai/api/v1/models",
-                headers={"Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY', '')}"}
+                "https://api.portkey.ai/v1/models",
+                headers={
+                    "x-portkey-api-key": os.getenv("PORTKEY_API_KEY", ""),
+                    "x-portkey-provider": "openrouter",
+                },
             )
-            
             if response.status_code == 200:
                 health.status = HealthStatus.HEALTHY
                 health.error_message = None

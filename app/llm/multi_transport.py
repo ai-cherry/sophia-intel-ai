@@ -130,38 +130,9 @@ class MultiTransportLLM:
         max_tokens: int,
         temperature: float,
     ) -> LLMResponse:
-        """Complete via direct provider APIs."""
-        if provider == "openai":
-            return await self._complete_openai(model, messages, max_tokens, temperature)
-        elif provider == "anthropic":
-            return await self._complete_anthropic(
-                model, messages, max_tokens, temperature
-            )
-        elif provider == "openrouter":
-            return await self._complete_openrouter(
-                model, messages, max_tokens, temperature
-            )
-        elif provider == "together":
-            return await self._complete_together(
-                model, messages, max_tokens, temperature
-            )
-        elif provider == "groq":
-            return await self._complete_groq(model, messages, max_tokens, temperature)
-        # All x.ai usage must go through Portkey via virtual keys; no direct path
-        elif provider == "deepseek":
-            return await self._complete_deepseek(
-                model, messages, max_tokens, temperature
-            )
-        elif provider == "perplexity":
-            return await self._complete_perplexity(
-                model, messages, max_tokens, temperature
-            )
-        elif provider == "aimlapi":
-            return await self._complete_aimlapi(
-                model, messages, max_tokens, temperature
-            )
-        else:
-            raise ValueError(f"Unknown provider for direct transport: {provider}")
+        """Direct provider transport disabled — route via Portkey."""
+        # Prefer Portkey transport when direct is requested
+        return await self._complete_portkey(provider, model, messages, max_tokens, temperature)
     async def _complete_openai(
         self,
         model: str,

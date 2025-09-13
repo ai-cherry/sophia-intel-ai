@@ -11,6 +11,14 @@ import re
 import ast
 import yaml
 from fastapi import FastAPI, HTTPException, Request
+import json
+import time
+try:
+    import redis  # type: ignore
+    _redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+    _rq = redis.Redis.from_url(_redis_url)
+except Exception:
+    _rq = None
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 class FSListRequest(BaseModel):
@@ -336,6 +344,13 @@ async def fs_write(req: FSWriteRequest) -> Dict[str, Any]:
         backup = target.with_suffix(target.suffix + ".bak")
         shutil.copy2(target, backup)
     target.write_text(req.content)
+    # best-effort index event
+    try:
+        if _rq is not None:
+            evt = {"path": str(target.relative_to(WORKSPACE_PATH)), "ts": time.time()}
+            _rq.lpush("fs:index:queue", json.dumps(evt))
+    except Exception:
+        pass
     return {"ok": True, "path": str(target.relative_to(WORKSPACE_PATH))}
 @app.post("/fs/delete")
 async def fs_delete(req: FSDeleteRequest) -> Dict[str, Any]:
@@ -353,6 +368,13 @@ async def fs_delete(req: FSDeleteRequest) -> Dict[str, Any]:
             target.rmdir()
     else:
         target.unlink(missing_ok=True)
+    # best-effort index event (delete)
+    try:
+        if _rq is not None:
+            evt = {"path": str(target.relative_to(WORKSPACE_PATH)), "ts": time.time(), "op": "delete"}
+            _rq.lpush("fs:index:queue", json.dumps(evt))
+    except Exception:
+        pass
     return {"ok": True}
 # -----------------------------
 # Repo endpoints (unified)

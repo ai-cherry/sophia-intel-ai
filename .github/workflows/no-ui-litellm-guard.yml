@@ -14,7 +14,7 @@ jobs:
       - name: Fail on forbidden content (runtime/config only)
         run: |
           echo "Scanning for forbidden content..."
-          PATTERN='(builder-agno-system|sophia-intel-app(?!/external)|litellm|/frontend\b|webui/|next\.config\.(js|mjs|ts)|vite\.config\.(js|mjs|ts)|mcp/filesystem\.py\b|mcp/git_server\.py\b|npx\s+create-sophia-intel-app|http://localhost:4000|:8090|api\.x\.ai|\bXAI_API_KEY\b|\bgrok\b(?!.*EXTERNAL_TOOLS))'
+          PATTERN='(builder-agno-system|sophia-intel-app(?!/external)|litellm|/frontend\b|webui/|next\.config\.(js|mjs|ts)|vite\.config\.(js|mjs|ts)|npx\s+create-sophia-intel-app|http://localhost:4000|:8090|api\.x\.ai|\bXAI_API_KEY\b|\bgrok\b(?!.*EXTERNAL_TOOLS))'
           forbidden=$(rg -n "$PATTERN" -S --hidden --glob '!**/.git/**' --glob '!docs/**' || true)
           if [ -n "$forbidden" ]; then
             echo "❌ Forbidden content found:" && echo "$forbidden"

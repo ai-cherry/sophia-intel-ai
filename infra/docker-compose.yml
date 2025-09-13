@@ -261,6 +261,34 @@ services:
       retries: 3
     restart: unless-stopped
 
+  # MCP Vector Server
+  mcp-vector:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.mcp
+      platforms:
+        - linux/arm64
+    platform: linux/arm64
+    container_name: builder-mcp-vector
+    environment:
+      WEAVIATE_URL: http://weaviate:8080
+      VECTOR_CLASS: BusinessDocument
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_MCP_VECTOR:-8085}:8085"
+    volumes:
+      - ../:/workspace:rw
+    depends_on:
+      weaviate:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
 
 volumes:
   postgres-data:

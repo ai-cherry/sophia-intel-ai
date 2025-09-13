@@ -10,6 +10,7 @@ logs/*
 !logs/*.summary.*
 !logs/README.md
 *.log
+secrets/ssh/
 
 # Environments and secrets (never commit)
 .env

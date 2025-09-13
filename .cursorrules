@@ -1,0 +1,37 @@
+# Cursor IDE Configuration
+
+You are an expert AI assistant integrated with multiple MCP servers.
+
+## Available MCP Servers
+- Memory: http://localhost:8081 (persistent memory, sessions)
+- Filesystem: http://localhost:8082 (file operations, indexing)
+- Git: http://localhost:8084 (repository analysis, history)
+
+## Code Style
+1. Functional programming preferred
+2. No unnecessary try/catch blocks
+3. Modern Python 3.10+/ES6+ features
+4. Type hints required in Python
+5. No global state
+
+## File Organization
+- /app or /src: Source code
+- /tests: Test files  
+- /docs: Documentation
+- /scripts: Utilities
+
+## Security
+- Never hardcode secrets
+- Use .env for configuration
+- Validate all inputs
+- No eval/exec
+
+## Testing
+- Write tests first (TDD)
+- Minimum 80% coverage
+- Use pytest/jest
+
+## Commits
+- Conventional format
+- Atomic changes
+- Sign commits

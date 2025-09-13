@@ -1,0 +1,226 @@
+---
+# Pay Ready Data Environment Configuration
+# Optimized for 1M+ apartment records with Postgres/Qdrant sharding
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pay-ready-data-config
+  namespace: sophia-ai
+data:
+  # Data Source Configuration
+  data_source: "pay_ready_employees_2025_07_15.csv"
+  data_type: "apartment_listings"
+  record_count: "1000000+"
+  
+  # Database Sharding Configuration
+  postgres_shards: "3"
+  qdrant_shards: "5"
+  
+  # Postgres Shard Configuration
+  postgres_shard_1: |
+    host: postgres-shard-1.sophia-ai.svc.cluster.local
+    port: 5432
+    database: sophia_apartments_1
+    table: apartment_listings_1_333k
+    record_range: "1-333333"
+    
+  postgres_shard_2: |
+    host: postgres-shard-2.sophia-ai.svc.cluster.local
+    port: 5432
+    database: sophia_apartments_2
+    table: apartment_listings_334k_666k
+    record_range: "333334-666666"
+    
+  postgres_shard_3: |
+    host: postgres-shard-3.sophia-ai.svc.cluster.local
+    port: 5432
+    database: sophia_apartments_3
+    table: apartment_listings_667k_1m
+    record_range: "666667-1000000"
+  
+  # Qdrant Vector Shard Configuration
+  qdrant_shard_1: |
+    host: qdrant-shard-1.sophia-ai.svc.cluster.local
+    port: 6333
+    collection: apartment_vectors_1
+    vector_count: 200000
+    dimensions: 1536
+    
+  qdrant_shard_2: |
+    host: qdrant-shard-2.sophia-ai.svc.cluster.local
+    port: 6333
+    collection: apartment_vectors_2
+    vector_count: 200000
+    dimensions: 1536
+    
+  qdrant_shard_3: |
+    host: qdrant-shard-3.sophia-ai.svc.cluster.local
+    port: 6333
+    collection: apartment_vectors_3
+    vector_count: 200000
+    dimensions: 1536
+    
+  qdrant_shard_4: |
+    host: qdrant-shard-4.sophia-ai.svc.cluster.local
+    port: 6333
+    collection: apartment_vectors_4
+    vector_count: 200000
+    dimensions: 1536
+    
+  qdrant_shard_5: |
+    host: qdrant-shard-5.sophia-ai.svc.cluster.local
+    port: 6333
+    collection: apartment_vectors_5
+    vector_count: 200000
+    dimensions: 1536
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pay-ready-data-processor
+  namespace: sophia-ai
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: pay-ready-processor
+  template:
+    metadata:
+      labels:
+        app: pay-ready-processor
+    spec:
+      containers:
+      - name: data-processor
+        image: sophia-ai/pay-ready-processor:latest
+        env:
+        - name: DATA_SOURCE
+          valueFrom:
+            configMapKeyRef:
+              name: pay-ready-data-config
+              key: data_source
+        - name: POSTGRES_SHARDS
+          valueFrom:
+            configMapKeyRef:
+              name: pay-ready-data-config
+              key: postgres_shards
+        - name: QDRANT_SHARDS
+          valueFrom:
+            configMapKeyRef:
+              name: pay-ready-data-config
+              key: qdrant_shards
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: pay-ready-data-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pay-ready-data-pvc
+  namespace: sophia-ai
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: fast-ssd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pay-ready-data-service
+  namespace: sophia-ai
+spec:
+  selector:
+    app: pay-ready-processor
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  - name: grpc
+    port: 9090
+    targetPort: 9090
+  type: ClusterIP
+---
+# Data Processing Job for Initial Load
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pay-ready-initial-load
+  namespace: sophia-ai
+spec:
+  template:
+    spec:
+      containers:
+      - name: initial-loader
+        image: sophia-ai/pay-ready-loader:latest
+        command: ["python", "/app/load_apartment_data.py"]
+        env:
+        - name: SOURCE_FILE
+          value: "/data/pay_ready_employees_2025_07_15.csv"
+        - name: TARGET_RECORDS
+          value: "1000000"
+        - name: BATCH_SIZE
+          value: "10000"
+        - name: POSTGRES_PARALLEL_WORKERS
+          value: "3"
+        - name: QDRANT_PARALLEL_WORKERS
+          value: "5"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2000m"
+          limits:
+            memory: "8Gi"
+            cpu: "4000m"
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: pay-ready-data-pvc
+      restartPolicy: OnFailure
+  backoffLimit: 3
+---
+# Monitoring and Metrics
+apiVersion: v1
+kind: Service
+metadata:
+  name: pay-ready-metrics
+  namespace: sophia-ai
+  labels:
+    app: pay-ready-processor
+spec:
+  ports:
+  - name: metrics
+    port: 9091
+    targetPort: 9091
+  selector:
+    app: pay-ready-processor
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pay-ready-monitor
+  namespace: sophia-ai
+spec:
+  selector:
+    matchLabels:
+      app: pay-ready-processor
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics

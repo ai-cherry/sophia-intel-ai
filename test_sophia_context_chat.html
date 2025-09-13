@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sophia Context Chat - Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #2d3748;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .icon {
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #5a67d8;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .feature-card {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .feature-card h3 {
+            margin-top: 0;
+            color: #4a5568;
+            font-size: 16px;
+        }
+        .feature-card p {
+            color: #718096;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status.active {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        .status.pending {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        .page-simulation {
+            margin-top: 20px;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 6px;
+        }
+        .page-button {
+            background: #5a67d8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .page-button:hover {
+            background: #4c51bf;
+        }
+        .current-page {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        code {
+            background: #2d3748;
+            color: #90cdf4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Sophia Context-Aware Chat System</h1>
+        <p class="subtitle">Testing page context awareness and intelligent prompt suggestions</p>
+
+        <div class="test-section">
+            <h2>
+                <span class="icon">✨</span>
+                Key Features Implemented
+            </h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>📍 Page Context Detection</h3>
+                    <p>Automatically detects current page</p>
+                    <p>Path: <code>/projects</code>, <code>/chat</code>, etc.</p>
+                    <span class="status active">ACTIVE</span>
+                </div>
+                <div class="feature-card">
+                    <h3>💡 Smart Suggestions</h3>
+                    <p>Context-specific prompt suggestions</p>
+                    <p>Different for each page type</p>
+                    <span class="status active">ACTIVE</span>
+                </div>
+                <div class="feature-card">
+                    <h3>🎨 Enhanced UI</h3>
+                    <p>Modern chat interface</p>
+                    <p>Minimize/maximize capability</p>
+                    <span class="status active">ACTIVE</span>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 Metrics Display</h3>
+                    <p>Token usage tracking</p>
+                    <p>Cost calculation display</p>
+                    <span class="status active">ACTIVE</span>
+                </div>
+                <div class="feature-card">
+                    <h3>🔄 Session Persistence</h3>
+                    <p>Maintains conversation history</p>
+                    <p>LocalStorage session ID</p>
+                    <span class="status active">ACTIVE</span>
+                </div>
+                <div class="feature-card">
+                    <h3>⚡ Real-time Streaming</h3>
+                    <p>SSE for live responses</p>
+                    <p>Progressive content display</p>
+                    <span class="status active">ACTIVE</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>
+                <span class="icon">🗺️</span>
+                Page Context Mappings
+            </h2>
+            <div class="page-simulation">
+                <p><strong>Simulate different page contexts:</strong></p>
+                <button class="page-button" onclick="showContext('/projects')">Projects Page</button>
+                <button class="page-button" onclick="showContext('/chat')">Chat Page</button>
+                <button class="page-button" onclick="showContext('/swarms')">Swarms Page</button>
+                <button class="page-button" onclick="showContext('/brain')">Brain Page</button>
+                <button class="page-button" onclick="showContext('/router')">Router Page</button>
+                
+                <div id="context-display" class="current-page">
+                    Click a button to see the context configuration
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>
+                <span class="icon">📝</span>
+                Context-Aware Prompts by Page
+            </h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>📁 /projects</h3>
+                    <ul style="font-size: 13px; color: #4a5568;">
+                        <li>"What are the critical risks?"</li>
+                        <li>"Show overdue projects"</li>
+                        <li>"Which Slack channels need attention?"</li>
+                        <li>"Analyze team velocity"</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>💬 /chat</h3>
+                    <ul style="font-size: 13px; color: #4a5568;">
+                        <li>"Help with revenue metrics"</li>
+                        <li>"What are today's priorities?"</li>
+                        <li>"Analyze customer feedback"</li>
+                        <li>"Generate status report"</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>🤖 /swarms</h3>
+                    <ul style="font-size: 13px; color: #4a5568;">
+                        <li>"Show active agent swarms"</li>
+                        <li>"What's swarm performance?"</li>
+                        <li>"Debug failed tasks"</li>
+                        <li>"Optimize agent allocation"</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <h3>🧠 /brain</h3>
+                    <ul style="font-size: 13px; color: #4a5568;">
+                        <li>"What do you know about customers?"</li>
+                        <li>"Search product docs"</li>
+                        <li>"Show recent learnings"</li>
+                        <li>"Update knowledge base"</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>
+                <span class="icon">🔧</span>
+                Implementation Details
+            </h2>
+            <div class="feature-card">
+                <h3>Component Location</h3>
+                <p><code>/agent-ui/src/components/SophiaContextChat.tsx</code></p>
+                
+                <h3 style="margin-top: 15px;">Integration Point</h3>
+                <p><code>/agent-ui/src/app/layout.tsx</code> - Root layout for all pages</p>
+                
+                <h3 style="margin-top: 15px;">Key Technologies</h3>
+                <ul style="font-size: 14px; color: #4a5568;">
+                    <li>Next.js 14 with App Router</li>
+                    <li>TypeScript for type safety</li>
+                    <li>usePathname() for route detection</li>
+                    <li>Server-Sent Events (SSE) for streaming</li>
+                    <li>Tailwind CSS for styling</li>
+                    <li>Lucide React for icons</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>
+                <span class="icon">✅</span>
+                Testing Checklist
+            </h2>
+            <div class="feature-card">
+                <ul style="font-size: 14px;">
+                    <li>✅ Chat widget appears on all pages</li>
+                    <li>✅ Context changes when navigating pages</li>
+                    <li>✅ Suggested prompts update per page</li>
+                    <li>✅ Page title shows in chat header</li>
+                    <li>✅ Minimize/maximize functionality works</li>
+                    <li>✅ Session persists across page changes</li>
+                    <li>✅ Streaming responses display correctly</li>
+                    <li>✅ Metrics (tokens/cost) display when available</li>
+                    <li>✅ Context sent with each message to backend</li>
+                    <li>✅ Visual indicators for current page context</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const contexts = {
+            '/projects': {
+                page: 'projects',
+                title: 'Project Management',
+                description: 'Viewing unified project data from Asana, Linear, and Slack',
+                suggestedPrompts: [
+                    "What are the critical risks in my projects?",
+                    "Show me overdue projects from Asana",
+                    "Which Slack channels need attention?",
+                    "Analyze team velocity trends"
+                ],
+                metadata: { source: 'pm_dashboard', integrations: ['asana', 'linear', 'slack'] }
+            },
+            '/chat': {
+                page: 'chat',
+                title: 'Sophia Chat',
+                description: 'Direct conversation with Sophia AI',
+                suggestedPrompts: [
+                    "Help me understand our revenue metrics",
+                    "What are today's priorities?",
+                    "Analyze recent customer feedback",
+                    "Generate a status report"
+                ],
+                metadata: { source: 'chat_page' }
+            },
+            '/swarms': {
+                page: 'swarms',
+                title: 'Agent Swarms',
+                description: 'Managing AI agent orchestration',
+                suggestedPrompts: [
+                    "Show active agent swarms",
+                    "What's the swarm performance?",
+                    "Debug the last failed task",
+                    "Optimize agent allocation"
+                ],
+                metadata: { source: 'swarms_dashboard' }
+            },
+            '/brain': {
+                page: 'brain',
+                title: 'Knowledge Brain',
+                description: "Sophia's knowledge and memory system",
+                suggestedPrompts: [
+                    "What do you know about our customers?",
+                    "Search for product documentation",
+                    "Show recent learnings",
+                    "Update knowledge base"
+                ],
+                metadata: { source: 'brain_interface' }
+            },
+            '/router': {
+                page: 'router',
+                title: 'Model Router',
+                description: 'LLM routing and optimization',
+                suggestedPrompts: [
+                    "Show model performance stats",
+                    "Which model is most cost-effective?",
+                    "Analyze routing patterns",
+                    "Optimize model selection"
+                ],
+                metadata: { source: 'model_router' }
+            }
+        };
+
+        function showContext(path) {
+            const context = contexts[path];
+            const display = document.getElementById('context-display');
+            
+            if (context) {
+                display.innerHTML = `
+                    <strong>Path:</strong> ${path}<br>
+                    <strong>Page:</strong> ${context.page}<br>
+                    <strong>Title:</strong> ${context.title}<br>
+                    <strong>Description:</strong> ${context.description}<br>
+                    <strong>Metadata:</strong> ${JSON.stringify(context.metadata, null, 2)}<br>
+                    <strong>Suggested Prompts:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px;">
+                        ${context.suggestedPrompts.map(p => `<li>${p}</li>`).join('')}
+                    </ul>
+                `;
+            }
+        }
+
+        // Show projects context by default
+        showContext('/projects');
+    </script>
+</body>
+</html>

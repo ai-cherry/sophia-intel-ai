@@ -1,0 +1,99 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: sophia-ssd-storage
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: storage
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+  replication-type: regional-pd
+reclaimPolicy: Retain
+allowVolumeExpansion: true
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data-pvc
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: redis
+    app.kubernetes.io/part-of: infrastructure
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: sophia-ssd-storage
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data-pvc
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: postgres
+    app.kubernetes.io/part-of: infrastructure
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: sophia-ssd-storage
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weaviate-data-pvc
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: weaviate
+    app.kubernetes.io/part-of: infrastructure
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: sophia-ssd-storage
+  resources:
+    requests:
+      storage: 100Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-data-pvc
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: prometheus
+    app.kubernetes.io/part-of: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: sophia-ssd-storage
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-data-pvc
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: grafana
+    app.kubernetes.io/part-of: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: sophia-ssd-storage
+  resources:
+    requests:
+      storage: 5Gi

@@ -1,0 +1,245 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: sophia-sophia-control-plane
+  namespace: istio-system
+spec:
+  profile: production
+  tag: 1.20.0
+  hub: docker.io/istio
+
+  # Component configuration
+  components:
+    pilot:
+      k8s:
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2048Mi
+          limits:
+            cpu: 1000m
+            memory: 4096Mi
+        hpaSpec:
+          minReplicas: 2
+          maxReplicas: 5
+          metrics:
+            - type: Resource
+              resource:
+                name: cpu
+                target:
+                  type: Utilization
+                  averageUtilization: 60
+        env:
+          - name: PILOT_ENABLE_WORKLOAD_ENTRY_AUTOREGISTRATION
+            value: "true"
+          - name: PILOT_ENABLE_CROSS_CLUSTER_WORKLOAD_ENTRY
+            value: "true"
+
+    ingressGateways:
+      - name: istio-ingressgateway
+        namespace: istio-system
+        enabled: true
+        k8s:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          hpaSpec:
+            minReplicas: 2
+            maxReplicas: 10
+            metrics:
+              - type: Resource
+                resource:
+                  name: cpu
+                  target:
+                    type: Utilization
+                    averageUtilization: 80
+          service:
+            type: LoadBalancer
+            ports:
+              - port: 15021
+                targetPort: 15021
+                name: status-port
+                protocol: TCP
+              - port: 80
+                targetPort: 8080
+                name: http2
+                protocol: TCP
+              - port: 443
+                targetPort: 8443
+                name: https
+                protocol: TCP
+              - port: 15443
+                targetPort: 15443
+                name: tls
+                protocol: TCP
+
+    egressGateways:
+      - name: istio-egressgateway
+        namespace: istio-system
+        enabled: true
+        k8s:
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+  # Mesh configuration
+  meshConfig:
+    # Enable access logging
+    accessLogFile: /dev/stdout
+    accessLogFormat: |
+      [%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %PROTOCOL%"
+      %RESPONSE_CODE% %RESPONSE_FLAGS% %BYTES_RECEIVED% %BYTES_SENT%
+      "%DOWNSTREAM_REMOTE_ADDRESS%" "%REQ(X-FORWARDED-FOR)%" "%REQ(USER-AGENT)%"
+      "%REQ(X-REQUEST-ID)%" "%REQ(:AUTHORITY)%" "%UPSTREAM_HOST%"
+      traceID=%REQ(X-B3-TRACEID)% spanID=%REQ(X-B3-SPANID)%
+
+    # Default mTLS configuration
+    defaultConfig:
+      proxyStatsMatcher:
+        inclusionRegexps:
+          - ".*outlier_detection.*"
+          - ".*circuit_breakers.*"
+          - ".*upstream_rq_retry.*"
+          - ".*upstream_rq_pending.*"
+          - ".*downstream_rq_pending.*"
+          - ".*downstream_rq_active.*"
+          - ".*_cx_.*"
+          - ".*osconfig.*"
+          - ".*rbac.*"
+
+      # Enable distributed tracing
+      tracing:
+        sampling: 100.0
+        zipkin:
+          address: zipkin.istio-system:9411
+
+      # Concurrency configuration (respecting 8 task limit)
+      concurrency: 8
+
+    # Enable telemetry v2
+    defaultProviders:
+      metrics:
+        - prometheus
+      tracing:
+        - zipkin
+      accessLogging:
+        - otel
+
+    extensionProviders:
+      - name: prometheus
+        prometheus:
+          service: prometheus.istio-system.svc.cluster.local
+          port: 9090
+      - name: zipkin
+        zipkin:
+          service: zipkin.istio-system.svc.cluster.local
+          port: 9411
+      - name: otel
+        envoyOtelAls:
+          service: opentelemetry-collector.istio-system.svc.cluster.local
+          port: 4317
+      - name: rate-limit
+        envoyExtAuthzGrpc:
+          service: ratelimit.istio-system.svc.cluster.local
+          port: 8081
+
+    # Trust domain for SPIFFE identity
+    trustDomain: sophia-sophia.local
+
+    # Enable auto mTLS
+    mtls:
+      mode: STRICT
+
+    # Root namespace
+    rootNamespace: istio-system
+
+    # Default retry policy
+    defaultHttpRetryPolicy:
+      attempts: 3
+      perTryTimeout: 30s
+      retryOn: "5xx,reset,connect-failure,refused-stream"
+      retryRemoteLocalities: true
+
+  # Global values
+  values:
+    global:
+      # Enable Istio CNI for better security
+      istio_cni:
+        enabled: true
+
+      # Proxy configuration
+      proxy:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+        # Enable proxy protocol
+        enableCoreDump: true
+
+        # Set log level
+        logLevel: info
+
+        # Component log levels
+        componentLogLevel: "misc:error,rbac:debug,filter:debug"
+
+        # Enable protocol sniffing
+        protocolDetectionTimeout: 5s
+
+      # Telemetry configuration
+      telemetry:
+        v2:
+          enabled: true
+          prometheus:
+            configOverride:
+              inboundSidecar:
+                disable_host_header_fallback: false
+              outboundSidecar:
+                disable_host_header_fallback: false
+              gateway:
+                disable_host_header_fallback: true
+
+    # Pilot configuration
+    pilot:
+      autoscaleEnabled: true
+      autoscaleMin: 2
+      autoscaleMax: 5
+
+      # Enable protocol sniffing
+      env:
+        PILOT_ENABLE_PROTOCOL_SNIFFING_FOR_OUTBOUND: true
+        PILOT_ENABLE_PROTOCOL_SNIFFING_FOR_INBOUND: true
+        PILOT_TRACE_SAMPLING: "100"
+        PILOT_ENABLE_ANALYSIS: true
+        PILOT_ENABLE_STATUS: true
+
+    # Gateway configuration
+    gateways:
+      istio-ingressgateway:
+        autoscaleEnabled: true
+        autoscaleMin: 2
+        autoscaleMax: 10
+
+      istio-egressgateway:
+        autoscaleEnabled: true
+        autoscaleMin: 1
+        autoscaleMax: 5
+
+    # Telemetry addons
+    telemetry:
+      v2:
+        prometheus:
+          enabled: true
+        stackdriver:
+          enabled: false

@@ -1,0 +1,4 @@
+{
+  "enabled": false,
+  "notes": "Use HUBSPOT_ACCESS_TOKEN or HUBSPOT_API_KEY via env."
+}

@@ -1,0 +1,259 @@
+{
+  "timestamp": "2025-08-09T12:19:27.306267",
+  "summary": {
+    "total_checks": 12,
+    "passed_checks": 7,
+    "success_rate": "58.3%",
+    "fixes_applied": 6
+  },
+  "check_results": {
+    "devcontainer_structure": {
+      "status": "FIXED",
+      "result": {
+        "valid": false,
+        "existing_files": [
+          "devcontainer.json",
+          "Dockerfile"
+        ],
+        "missing_files": [
+          "post-create.sh",
+          "post-start.sh"
+        ],
+        "fix": "create_missing_files"
+      },
+      "timestamp": "2025-08-09T12:19:09.573432"
+    },
+    "devcontainer_config": {
+      "status": "FIXED",
+      "result": {
+        "valid": false,
+        "config": {
+          "name": "Sophia AI Platform",
+          "image": "mcr.microsoft.com/devcontainers/python:3.12-bullseye",
+          "features": {
+            "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+            "ghcr.io/devcontainers/features/python:1": {
+              "version": "3.12",
+              "installTools": true
+            },
+            "ghcr.io/devcontainers/features/node:1": {
+              "version": "20"
+            },
+            "ghcr.io/devcontainers/features/github-cli:1": {}
+          },
+          "postCreateCommand": "bash .devcontainer/setup.sh",
+          "forwardPorts": [
+            8000,
+            3000,
+            5432,
+            6379,
+            9090
+          ],
+          "portsAttributes": {
+            "8000": {
+              "label": "Backend API",
+              "onAutoForward": "notify"
+            },
+            "3000": {
+              "label": "Frontend",
+              "onAutoForward": "silent"
+            },
+            "5432": {
+              "label": "PostgreSQL",
+              "onAutoForward": "silent"
+            },
+            "6379": {
+              "label": "Redis",
+              "onAutoForward": "silent"
+            },
+            "9090": {
+              "label": "Prometheus",
+              "onAutoForward": "silent"
+            }
+          },
+          "customizations": {
+            "vscode": {
+              "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "charliermarsh.ruff",
+                "ms-azuretools.vscode-docker"
+              ],
+              "settings": {
+                "python.defaultInterpreterPath": "/workspaces/sophia-main/.venv/bin/python",
+                "python.terminal.activateEnvironment": true,
+                "terminal.integrated.defaultProfile.linux": "bash"
+              }
+            },
+            "codespaces": {
+              "openFiles": [
+                "README.md",
+                "backend/main.py"
+              ]
+            }
+          },
+          "remoteUser": "vscode"
+        },
+        "missing_keys": [],
+        "gpu_configured": false,
+        "python_configured": true,
+        "fix": "update_devcontainer_config"
+      },
+      "timestamp": "2025-08-09T12:19:09.573853"
+    },
+    "gpu_configuration": {
+      "status": "FAIL",
+      "result": {
+        "valid": false,
+        "nvidia_available": false,
+        "docker_gpu_support": false,
+        "gpu_info": {},
+        "fix": "setup_gpu_support"
+      },
+      "timestamp": "2025-08-09T12:19:09.782288"
+    },
+    "python_environment": {
+      "status": "FIXED",
+      "result": {
+        "valid": false,
+        "python_version": "3.11.0",
+        "python_valid": true,
+        "venv_active": false,
+        "installed_packages": [
+          "torch",
+          "fastapi",
+          "uvicorn",
+          "httpx",
+          "aiohttp",
+          "numpy",
+          "pandas"
+        ],
+        "missing_packages": [
+          "transformers"
+        ],
+        "fix": "setup_python_environment"
+      },
+      "timestamp": "2025-08-09T12:19:12.618993"
+    },
+    "docker_configuration": {
+      "status": "FAIL",
+      "result": {
+        "valid": false,
+        "docker_available": true,
+        "docker_running": false,
+        "docker_version": null,
+        "compose_available": true,
+        "fix": "setup_docker"
+      },
+      "timestamp": "2025-08-09T12:19:21.420114"
+    },
+    "mcp_components": {
+      "status": "FIXED",
+      "result": {
+        "valid": false,
+        "existing_dirs": [
+          "mcp_servers",
+          "mcp_memory_server",
+          "mcp_memory"
+        ],
+        "missing_dirs": [],
+        "mcp_importable": false,
+        "fix": "setup_mcp_components"
+      },
+      "timestamp": "2025-08-09T12:19:21.420600"
+    },
+    "network_configuration": {
+      "status": "FAIL",
+      "result": {
+        "valid": false,
+        "internet_available": true,
+        "dns_working": false,
+        "fix": "fix_network_configuration"
+      },
+      "timestamp": "2025-08-09T12:19:22.995089"
+    },
+    "file_permissions": {
+      "status": "FIXED",
+      "result": {
+        "valid": false,
+        "workspace_writable": true,
+        "non_executable_scripts": [
+          "/home/ubuntu/sophia-main/get-docker.sh",
+          "/home/ubuntu/sophia-main/.devcontainer/setup.sh"
+        ],
+        "permission_issues": [
+          "scripts_not_executable"
+        ],
+        "fix": "fix_file_permissions"
+      },
+      "timestamp": "2025-08-09T12:19:23.003628"
+    },
+    "environment_variables": {
+      "status": "FAIL",
+      "result": {
+        "valid": false,
+        "set_vars": [],
+        "missing_vars": [
+          "PULUMI_ACCESS_TOKEN",
+          "LAMBDA_API_KEY",
+          "EXA_API_KEY"
+        ],
+        "fix": "setup_environment_variables"
+      },
+      "timestamp": "2025-08-09T12:19:23.011218"
+    },
+    "development_tools": {
+      "status": "FIXED",
+      "result": {
+        "valid": false,
+        "available_tools": [
+          "git",
+          "curl",
+          "wget"
+        ],
+        "missing_tools": [
+          "htop",
+          "tmux"
+        ],
+        "fix": "install_development_tools"
+      },
+      "timestamp": "2025-08-09T12:19:23.011518"
+    },
+    "security_configuration": {
+      "status": "PASS",
+      "result": {
+        "valid": true,
+        "security_issues": [],
+        "fix": null
+      },
+      "timestamp": "2025-08-09T12:19:27.306033"
+    },
+    "performance_optimization": {
+      "status": "FAIL",
+      "result": {
+        "valid": false,
+        "optimization_issues": [
+          "insufficient_memory"
+        ],
+        "fix": "optimize_performance"
+      },
+      "timestamp": "2025-08-09T12:19:27.306241"
+    }
+  },
+  "fixes_applied": [
+    "created_missing_files: post-create.sh, post-start.sh",
+    "created_devcontainer_config",
+    "installed_packages: transformers",
+    "installed_mcp_server",
+    "fixed_script_permissions",
+    "installed_tools: htop, tmux"
+  ],
+  "status": "PARTIAL",
+  "next_actions": [
+    "Fix failed checks: gpu_configuration, docker_configuration, network_configuration, environment_variables, performance_optimization",
+    "Test DevContainer build and startup",
+    "Verify GPU access in container",
+    "Test MCP server functionality",
+    "Run comprehensive integration tests"
+  ]
+}

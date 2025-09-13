@@ -1,0 +1,192 @@
+name: Resilience Testing
+
+on:
+  push:
+    paths:
+      - 'services/neural-gateway/**'
+      - 'services/chat-service/**'
+      - 'tests/**resilience**'
+      - 'tests/**circuit**'
+      - 'tests/**websocket**'
+  pull_request:
+    paths:
+      - 'services/neural-gateway/**'
+      - 'services/chat-service/**'
+
+jobs:
+  circuit-breaker-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio httpx fastapi redis aiohttp
+          
+      - name: Start Redis for testing
+        run: |
+          docker run -d --name redis-test -p 6379:6379 redis:alpine
+          
+      - name: Run circuit breaker tests
+        run: |
+          pytest tests/test_neural_gateway_circuit_breaker.py -v
+          
+      - name: Verify circuit breaker metrics
+        run: |
+          python -c "
+          from services.neural_gateway.main import NeuralGateway
+          gw = NeuralGateway()
+          assert gw._cb_threshold == 3
+          assert gw._cb_open_seconds == 10.0
+          print('Circuit breaker config verified')
+          "
+          
+      - name: Cleanup
+        if: always()
+        run: |
+          docker stop redis-test || true
+          docker rm redis-test || true
+
+  websocket-envelope-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio fastapi websockets httpx redis asyncpg
+          
+      - name: Run WebSocket envelope tests
+        run: |
+          pytest tests/test_websocket_envelopes.py -v
+          
+  integration-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || pip install pytest pytest-asyncio httpx fastapi redis aiohttp asyncpg
+          
+      - name: Create test environment file
+        run: |
+          cat > .env.test <<EOF
+          REDIS_URL=redis://localhost:6379
+          CB_FAILURE_THRESHOLD=3
+          CB_TIMEOUT_SECONDS=10
+          CB_FAILURE_RATE=0.5
+          EOF
+          
+      - name: Run all resilience tests
+        env:
+          REDIS_URL: redis://localhost:6379
+        run: |
+          pytest tests/test_neural_gateway_circuit_breaker.py tests/test_websocket_envelopes.py -v
+          
+  synthetic-failure-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-asyncio httpx fastapi redis aiohttp
+          
+      - name: Create synthetic failure test
+        run: |
+          cat > tests/test_synthetic_failures.py <<'EOF'
+          import asyncio
+          import pytest
+          from unittest.mock import patch, AsyncMock
+          
+          @pytest.mark.asyncio
+          async def test_cascading_failure_recovery():
+              """Test system recovery from cascading failures"""
+              from services.neural_gateway.main import NeuralGateway
+              
+              gw = NeuralGateway()
+              
+              # Simulate cascading failures
+              with patch('services.neural_gateway.main.http_client') as mock_http:
+                  mock_http.post = AsyncMock(side_effect=Exception("Service down"))
+                  
+                  # Multiple failures should open circuit
+                  for _ in range(4):
+                      try:
+                          await gw._route_to_neural_engine({"message": "test"})
+                      except:
+                          pass
+                  
+                  # Circuit should be open
+                  assert gw._cb['neural_engine']['state'] == 1
+                  print("✓ Circuit opened after cascading failures")
+          
+          @pytest.mark.asyncio
+          async def test_slow_response_handling():
+              """Test timeout and slow response scenarios"""
+              import asyncio
+              from services.neural_gateway.main import NeuralGateway
+              
+              gw = NeuralGateway()
+              
+              async def slow_response(*args, **kwargs):
+                  await asyncio.sleep(0.1)
+                  class Response:
+                      status_code = 200
+                      def raise_for_status(self): pass
+                      def json(self): return {"response": "slow"}
+                  return Response()
+              
+              with patch('services.neural_gateway.main.http_client') as mock_http:
+                  mock_http.post = slow_response
+                  
+                  # Slow response should not open circuit
+                  result = await gw._route_to_neural_engine({"message": "test"})
+                  assert gw._cb['neural_engine']['state'] == 0
+                  print("✓ Circuit remains closed for slow responses")
+          EOF
+          
+      - name: Run synthetic failure tests
+        run: |
+          pytest tests/test_synthetic_failures.py -v

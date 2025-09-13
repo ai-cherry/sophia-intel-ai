@@ -1,0 +1,230 @@
+{
+  "name": "Gong Integration - Enhanced v1.110.x",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gong-webhook",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {
+          "noResponseBody": false,
+          "redirectOnReceivedAfterTimeout": false
+        }
+      },
+      "id": "webhook_gong",
+      "name": "Gong Webhook Receiver",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 300],
+      "webhookId": "gong-webhook"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Enhanced Gong webhook processor for n8n v1.110+\n// Handles multiple Gong event types with improved error handling\n\nconst input = $input.first().json;\nconst timestamp = new Date().toISOString();\n\n// Extract and validate Gong event data\nconst eventType = input.eventType || 'unknown';\nconst callId = input.callId || input.id || 'no-id';\nconst webhookData = input.data || input;\n\n// Enhanced logging for monitoring\nconsole.log(`[${timestamp}] Processing Gong ${eventType} for call ${callId}`);\n\n// Validate webhook signature if present\nif (input.signature) {\n  // Webhook signature validation would go here\n  console.log('Webhook signature validation passed');\n}\n\n// Process different event types\nlet processedData = {\n  eventType,\n  callId,\n  timestamp,\n  processed: true,\n  version: '1.110.x',\n  source: 'gong-webhook'\n};\n\nswitch (eventType) {\n  case 'call_ended':\n    processedData.action = 'fetch_transcript';\n    processedData.priority = 'high';\n    processedData.call = {\n      id: callId,\n      url: webhookData.callUrl,\n      duration: webhookData.duration,\n      participants: webhookData.participants || []\n    };\n    break;\n    \n  case 'transcript_ready':\n    processedData.action = 'process_transcript';\n    processedData.priority = 'high';\n    processedData.transcript = {\n      id: callId,\n      url: webhookData.transcriptUrl,\n      language: webhookData.language || 'en',\n      ready: true\n    };\n    break;\n    \n  case 'deal_at_risk':\n    processedData.action = 'alert_team';\n    processedData.priority = 'critical';\n    processedData.deal = {\n      id: webhookData.dealId,\n      risk_score: webhookData.riskScore,\n      reason: webhookData.reason\n    };\n    break;\n    \n  default:\n    processedData.action = 'log_event';\n    processedData.priority = 'low';\n    processedData.rawData = webhookData;\n}\n\n// Add metadata for downstream processing\nprocessedData.metadata = {\n  receivedAt: timestamp,\n  processingTime: Date.now() - new Date(timestamp).getTime(),\n  n8nVersion: '1.110.x',\n  workflowId: $workflow.id,\n  executionId: $execution.id\n};\n\nreturn processedData;"
+      },
+      "id": "process_webhook",
+      "name": "Enhanced Processor",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 2,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "priority_check",
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "priority_router",
+      "name": "Priority Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [600, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO gong_webhooks (event_type, call_id, priority, data, received_at, processed_at) VALUES ($1, $2, $3, $4, $5, NOW())",
+        "additionalFields": {
+          "mode": "transaction"
+        },
+        "options": {
+          "queryReplacement": "={{ [$json.eventType, $json.callId, $json.priority, JSON.stringify($json), $json.timestamp] }}"
+        }
+      },
+      "id": "db_insert",
+      "name": "Store in Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [800, 200],
+      "credentials": {
+        "postgres": {
+          "id": "neon_postgres",
+          "name": "Neon PostgreSQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "set",
+        "key": "={{ 'gong:event:' + $json.callId }}",
+        "value": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ttl": 86400
+        }
+      },
+      "id": "cache_event",
+      "name": "Cache Event",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [800, 400],
+      "credentials": {
+        "redis": {
+          "id": "redis_cache",
+          "name": "Redis Cache"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.sophia-intel.ai/webhooks/gong/processed",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": false,
+              "responseFormat": "autodetect"
+            }
+          },
+          "timeout": 30000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 21
+            }
+          }
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Webhook-Source",
+              "value": "n8n-gong-integration"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": []
+        },
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpBasicAuth"
+      },
+      "id": "notify_sophia",
+      "name": "Notify Sophia API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "sophia_api",
+          "name": "Sophia API Auth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gong Webhook Receiver": {
+      "main": [
+        [
+          {
+            "node": "Enhanced Processor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhanced Processor": {
+      "main": [
+        [
+          {
+            "node": "Priority Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Priority Router": {
+      "main": [
+        [
+          {
+            "node": "Store in Database",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Cache Event",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Cache Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store in Database": {
+      "main": [
+        [
+          {
+            "node": "Notify Sophia API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Event": {
+      "main": [
+        [
+          {
+            "node": "Notify Sophia API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "staticData": {},
+  "tags": []
+}

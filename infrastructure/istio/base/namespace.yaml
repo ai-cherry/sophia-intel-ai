@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-system
+  labels:
+    istio-injection: disabled
+    name: istio-system
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sophia-mesh
+  labels:
+    istio-injection: enabled
+    domain: sophia
+    mesh: sophia-sophia
+    monitoring: enabled
+  annotations:
+    description: "Sophia orchestrator domain namespace with automatic sidecar injection"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sophia-mesh
+  labels:
+    istio-injection: enabled
+    domain: sophia
+    mesh: sophia-sophia
+    monitoring: enabled
+  annotations:
+    description: "Sophia orchestrator domain namespace with automatic sidecar injection"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: shared-services
+  labels:
+    istio-injection: enabled
+    domain: shared
+    mesh: sophia-sophia
+    monitoring: enabled
+  annotations:
+    description: "Shared services namespace for cross-domain components"

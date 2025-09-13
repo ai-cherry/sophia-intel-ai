@@ -1,0 +1,19 @@
+# Access control and auth settings (non-secret).
+# Secrets live in .env.master; this file defines policy.
+
+auth:
+  mcp:
+    dev_bypass: true   # set MCP_DEV_BYPASS=false in .env.master for prod
+    token_env: MCP_TOKEN
+  litellm:
+    token_env: LITELLM_MASTER_KEY
+
+allowed_origins:
+  - http://localhost:3000
+  - http://127.0.0.1:3000
+
+headers:
+  security:
+    - X-Content-Type-Options: nosniff
+    - X-Frame-Options: DENY
+    - Referrer-Policy: no-referrer

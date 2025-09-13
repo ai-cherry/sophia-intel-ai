@@ -1,0 +1,487 @@
+# Sophia Domain MCP Server Configuration
+# Business intelligence and analytics-focused services
+
+version: "1.0.0"
+domain: sophia
+description: "MCP servers exclusive to Sophia for business operations and analytics"
+
+servers:
+  # Web Search Server - Exclusive to Sophia
+  sophia_web_search:
+    name: "Sophia Web Search Server"
+    type: web_search
+    exclusive: true
+    endpoint: "ws://localhost:8020/mcp"
+    description: "Market research, competitive intelligence, and web data gathering"
+
+    capabilities:
+      - web_search
+      - web_scraping
+      - trend_analysis
+      - news_monitoring
+      - competitor_tracking
+      - market_research
+      - social_media_monitoring
+      - review_aggregation
+      - pricing_intelligence
+      - regulatory_tracking
+
+    configuration:
+      search_engines:
+        - google
+        - bing
+        - duckduckgo
+        - industry_specific
+
+      search_parameters:
+        max_results_per_query: 100
+        default_results: 20
+        enable_deep_search: true
+        follow_links_depth: 2
+
+      scraping_config:
+        user_agents:
+          - "Mozilla/5.0 (compatible; SophiaBot/1.0)"
+        respect_robots_txt: true
+        rate_limiting:
+          requests_per_second: 2
+          burst_size: 10
+        retry_strategy:
+          max_attempts: 3
+          backoff_multiplier: 2
+
+      content_filters:
+        languages: ["en", "es", "fr", "de", "ja", "zh"]
+        domains_whitelist: []
+        domains_blacklist:
+          - "spam.com"
+          - "malware.site"
+        content_types:
+          - "text/html"
+          - "application/json"
+          - "application/xml"
+
+      data_extraction:
+        enable_nlp: true
+        extract_entities: true
+        sentiment_analysis: true
+        keyword_extraction: true
+        summary_generation: true
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 10
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+    rate_limiting:
+      global_limit: 1000
+      per_domain_limit: 100
+      time_window_seconds: 3600
+
+  # Business Analytics Server - Exclusive to Sophia
+  sophia_business_analytics:
+    name: "Sophia Business Analytics Server"
+    type: business_analytics
+    exclusive: true
+    endpoint: "ws://localhost:8021/mcp"
+    description: "Business metrics calculation, KPI tracking, and financial analysis"
+
+    capabilities:
+      - revenue_analytics
+      - customer_analytics
+      - sales_forecasting
+      - churn_analysis
+      - cohort_analysis
+      - funnel_analysis
+      - retention_metrics
+      - unit_economics
+      - financial_modeling
+      - dashboard_generation
+
+    configuration:
+      metrics_catalog:
+        revenue_metrics:
+          - arr # Annual Recurring Revenue
+          - mrr # Monthly Recurring Revenue
+          - arpu # Average Revenue Per User
+          - ltv # Lifetime Value
+          - acv # Annual Contract Value
+          - nrr # Net Revenue Retention
+          - grr # Gross Revenue Retention
+          - expansion_revenue
+          - contraction_revenue
+
+        customer_metrics:
+          - cac # Customer Acquisition Cost
+          - ltv_cac_ratio
+          - payback_period
+          - customer_health_score
+          - nps # Net Promoter Score
+          - csat # Customer Satisfaction
+          - engagement_score
+          - usage_metrics
+
+        sales_metrics:
+          - pipeline_velocity
+          - win_rate
+          - average_deal_size
+          - sales_cycle_length
+          - quota_attainment
+          - pipeline_coverage
+          - forecast_accuracy
+
+        operational_metrics:
+          - burn_rate
+          - runway
+          - gross_margin
+          - operating_margin
+          - ebitda
+          - rule_of_40
+          - magic_number
+
+      calculation_engine:
+        engine_type: "pandas"
+        parallel_processing: true
+        max_workers: 8
+        cache_calculations: true
+        cache_ttl_seconds: 1800
+
+      data_sources:
+        supported_databases:
+          - postgresql
+          - mysql
+          - redshift
+          - bigquery
+          - snowflake
+
+        supported_apis:
+          - salesforce
+          - hubspot
+          - stripe
+          - quickbooks
+          - netsuite
+
+      forecasting_models:
+        - linear_regression
+        - arima
+        - prophet
+        - lstm
+        - xgboost
+        - ensemble
+
+    connection_pool:
+      min_connections: 3
+      max_connections: 10
+      timeout_seconds: 45
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+    performance:
+      max_query_time_seconds: 120
+      max_result_size_mb: 100
+      enable_query_optimization: true
+
+  # Sales Intelligence Server - Exclusive to Sophia
+  sophia_sales_intelligence:
+    name: "Sophia Sales Intelligence Server"
+    type: sales_intelligence
+    exclusive: true
+    endpoint: "ws://localhost:8022/mcp"
+    description: "Sales insights, deal intelligence, and revenue optimization"
+
+    capabilities:
+      - deal_scoring
+      - opportunity_analysis
+      - account_intelligence
+      - contact_enrichment
+      - sales_signals_detection
+      - competitive_battlecards
+      - pricing_optimization
+      - territory_planning
+      - quota_setting
+      - commission_calculation
+
+    configuration:
+      scoring_models:
+        deal_scoring:
+          factors:
+            - company_size
+            - industry_fit
+            - engagement_level
+            - budget_authority
+            - timeline
+            - competition
+          weights:
+            company_size: 0.2
+            industry_fit: 0.25
+            engagement_level: 0.2
+            budget_authority: 0.15
+            timeline: 0.1
+            competition: 0.1
+
+        account_scoring:
+          factors:
+            - revenue_potential
+            - strategic_fit
+            - relationship_strength
+            - growth_rate
+            - market_position
+
+      enrichment_sources:
+        - clearbit
+        - zoominfo
+        - linkedin_sales_navigator
+        - crunchbase
+        - d&b
+
+      signal_detection:
+        buying_signals:
+          - website_visits
+          - content_downloads
+          - email_engagement
+          - meeting_attendance
+          - champion_change
+          - funding_events
+          - leadership_changes
+          - technology_adoption
+
+        risk_signals:
+          - engagement_decline
+          - champion_departure
+          - competitor_engagement
+          - budget_cuts
+          - merger_acquisition
+
+      intelligence_gathering:
+        update_frequency_hours: 24
+        data_retention_days: 365
+        enable_real_time_alerts: true
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 8
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+  # Business Memory - Exclusive to Sophia
+  sophia_business_memory:
+    name: "Sophia Business Memory"
+    type: memory
+    exclusive: true
+    endpoint: "ws://localhost:8023/mcp"
+    description: "Business context, customer knowledge, and market intelligence storage"
+
+    capabilities:
+      - customer_history
+      - deal_history
+      - market_intelligence
+      - competitive_intelligence
+      - business_insights
+      - executive_decisions
+      - strategic_initiatives
+      - industry_knowledge
+
+    configuration:
+      storage_backend: "postgresql"
+      database:
+        host: "localhost"
+        port: 5432
+        database: "sophia_memory"
+        schema: "business"
+
+      indexes:
+        - name: "customer_idx"
+          fields: ["customer_id", "account_name", "segment"]
+        - name: "deal_idx"
+          fields: ["deal_id", "opportunity_id", "close_date"]
+        - name: "intelligence_idx"
+          fields: ["category", "source", "relevance_score"]
+        - name: "timestamp_idx"
+          fields: ["created_at", "modified_at", "event_date"]
+
+      data_categories:
+        customer_data:
+          retention_days: -1 # Never expire
+          encryption: true
+          compliance: ["gdpr", "ccpa"]
+
+        market_intelligence:
+          retention_days: 365
+          auto_refresh: true
+          refresh_interval_days: 30
+
+        competitive_intelligence:
+          retention_days: 180
+          confidence_scoring: true
+          source_verification: true
+
+        financial_data:
+          retention_days: 2555 # 7 years for compliance
+          audit_trail: true
+          immutable: true
+
+      partitioning:
+        strategy: "by_date"
+        partition_size: "quarterly"
+
+    connection_pool:
+      min_connections: 2
+      max_connections: 10
+      timeout_seconds: 30
+      idle_timeout_seconds: 300
+
+    health_check:
+      enabled: true
+      interval_seconds: 30
+      endpoint: "/health"
+      timeout_seconds: 10
+
+monitoring:
+  enabled: true
+  metrics_endpoint: "http://localhost:9091/metrics"
+
+  kpis:
+    - name: "data_freshness"
+      target: "< 1 hour"
+      measurement: "p95"
+
+    - name: "forecast_accuracy"
+      target: "> 85%"
+      measurement: "monthly_average"
+
+    - name: "insight_generation_time"
+      target: "< 5 seconds"
+      measurement: "p99"
+
+  alerts:
+    - name: "stale_data"
+      condition: "data_age > 24h"
+      severity: "warning"
+      notification_channel: "slack"
+
+    - name: "analytics_failure"
+      condition: "error_rate > 0.01"
+      severity: "critical"
+      notification_channel: "pagerduty"
+
+    - name: "slow_queries"
+      condition: "query_time > 30s"
+      severity: "warning"
+      notification_channel: "email"
+
+  dashboards:
+    looker:
+      enabled: true
+      url: "http://localhost:3001"
+      dashboard_ids:
+        - "sophia-overview"
+        - "business-metrics"
+        - "sales-intelligence"
+
+security:
+  data_classification:
+    levels:
+      - public
+      - internal
+      - confidential
+      - restricted
+
+    handling_rules:
+      confidential:
+        encryption_required: true
+        access_logging: true
+        retention_limit_days: 365
+
+      restricted:
+        encryption_required: true
+        access_logging: true
+        approval_required: true
+        retention_limit_days: 90
+
+  compliance:
+    frameworks:
+      - gdpr
+      - ccpa
+      - sox
+      - hipaa
+
+    audit_requirements:
+      log_all_access: true
+      retain_logs_days: 2555
+      immutable_storage: true
+
+  access_control:
+    require_authentication: true
+    allowed_roles:
+      - business_analyst
+      - sales_ops
+      - revenue_ops
+      - executive
+      - admin
+
+    data_permissions:
+      business_analyst:
+        - read_analytics
+        - write_reports
+      sales_ops:
+        - read_all
+        - write_forecasts
+      executive:
+        - read_all
+      admin:
+        - all
+
+optimization:
+  caching:
+    enabled: true
+    redis_endpoint: "localhost:6379"
+    cache_strategies:
+      metrics:
+        ttl_seconds: 1800
+        invalidation: "time_based"
+
+      search_results:
+        ttl_seconds: 3600
+        invalidation: "event_based"
+
+      intelligence:
+        ttl_seconds: 86400
+        invalidation: "manual"
+
+  query_optimization:
+    enable_materialized_views: true
+    enable_query_caching: true
+    parallel_execution: true
+    max_parallel_queries: 10
+
+  data_pipeline:
+    batch_processing:
+      enabled: true
+      batch_size: 1000
+      processing_interval_seconds: 300
+
+    stream_processing:
+      enabled: true
+      kafka_endpoint: "localhost:9092"
+      topics:
+        - "sales_events"
+        - "customer_events"
+        - "market_signals"

@@ -1,0 +1,418 @@
+# Chaos Mesh test scenarios for KEDA autoscaling resilience
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: keda-chaos-workflow
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: chaos
+    component: resilience-testing
+spec:
+  entry: keda-chaos-tests
+  templates:
+    - name: keda-chaos-tests
+      templateType: Serial
+      deadline: 30m
+      children:
+        - inject-pod-failure
+        - inject-network-delay
+        - inject-cpu-stress
+        - inject-memory-stress
+        - inject-dns-chaos
+        - verify-recovery
+
+    # Test 1: Pod failure injection
+    - name: inject-pod-failure
+      templateType: PodChaos
+      deadline: 5m
+      podChaos:
+        selector:
+          namespaces:
+            - keda-system
+          labelSelectors:
+            app: keda-operator
+        mode: one
+        action: pod-failure
+        duration: 30s
+        scheduler:
+          cron: "@every 1m"
+
+    # Test 2: Network delay to Redis/Prometheus
+    - name: inject-network-delay
+      templateType: NetworkChaos
+      deadline: 5m
+      networkChaos:
+        selector:
+          namespaces:
+            - keda-system
+          labelSelectors:
+            app: keda-operator
+        mode: all
+        action: delay
+        delay:
+          latency: 100ms
+          jitter: 50ms
+          correlation: 0.5
+        duration: 60s
+        direction: both
+        target:
+          selector:
+            namespaces:
+              - sophia-system
+              - monitoring
+          mode: all
+
+    # Test 3: CPU stress on KEDA operator
+    - name: inject-cpu-stress
+      templateType: StressChaos
+      deadline: 5m
+      stressChaos:
+        selector:
+          namespaces:
+            - keda-system
+          labelSelectors:
+            app: keda-operator
+        mode: one
+        stressors:
+          cpu:
+            workers: 2
+            load: 80
+        duration: 60s
+
+    # Test 4: Memory stress on metrics server
+    - name: inject-memory-stress
+      templateType: StressChaos
+      deadline: 5m
+      stressChaos:
+        selector:
+          namespaces:
+            - keda-system
+          labelSelectors:
+            app: keda-operator-metrics-apiserver
+        mode: one
+        stressors:
+          memory:
+            workers: 1
+            size: 512Mi
+        duration: 60s
+
+    # Test 5: DNS chaos
+    - name: inject-dns-chaos
+      templateType: DNSChaos
+      deadline: 5m
+      dnsChaos:
+        selector:
+          namespaces:
+            - keda-system
+          labelSelectors:
+            app.kubernetes.io/name: keda-operator
+        mode: all
+        action: random
+        duration: 30s
+        patterns:
+          - redis.sophia-system.svc.cluster.local
+          - prometheus.monitoring.svc.cluster.local
+
+    # Test 6: Verify recovery
+    - name: verify-recovery
+      templateType: Task
+      deadline: 10m
+      task:
+        container:
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Waiting for KEDA recovery..."
+              sleep 30
+
+              # Check KEDA operator is running
+              kubectl wait --for=condition=Ready pod -l app=keda-operator -n keda-system --timeout=300s
+
+              # Check metrics server is running
+              kubectl wait --for=condition=Ready pod -l app=keda-operator-metrics-apiserver -n keda-system --timeout=300s
+
+              # Verify ScaledObjects are ready
+              kubectl get scaledobjects -A
+
+              echo "KEDA recovered successfully"
+---
+# Individual chaos experiments for targeted testing
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: keda-operator-kill
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: pod-failure
+spec:
+  selector:
+    namespaces:
+      - keda-system
+    labelSelectors:
+      app: keda-operator
+  mode: one
+  action: pod-kill
+  duration: 10s
+  scheduler:
+    cron: "@every 2m"
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: keda-network-partition
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: network-partition
+spec:
+  selector:
+    namespaces:
+      - keda-system
+    labelSelectors:
+      app.kubernetes.io/name: keda-operator
+  mode: all
+  action: partition
+  duration: 30s
+  direction: both
+  target:
+    selector:
+      namespaces:
+        - sophia-system
+        - sophia-system
+    mode: all
+---
+# Circuit breaker trigger test
+apiVersion: chaos-mesh.org/v1alpha1
+kind: TimeChaos
+metadata:
+  name: keda-time-skew
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: time-skew
+spec:
+  selector:
+    namespaces:
+      - keda-system
+    labelSelectors:
+      app: keda-operator
+  mode: all
+  timeOffset: 5m
+  duration: 60s
+---
+# Test scaling behavior under resource pressure
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: sophia-worker-stress
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: workload-stress
+spec:
+  selector:
+    namespaces:
+      - sophia-system
+    labelSelectors:
+      app: sophia-worker
+  mode: all
+  stressors:
+    cpu:
+      workers: 4
+      load: 90
+    memory:
+      workers: 2
+      size: 1Gi
+  duration: 120s
+---
+# HTTPChaos for webhook failures
+apiVersion: chaos-mesh.org/v1alpha1
+kind: HTTPChaos
+metadata:
+  name: keda-webhook-chaos
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: webhook-failure
+spec:
+  selector:
+    namespaces:
+      - keda-system
+    labelSelectors:
+      app: keda-operator
+  mode: all
+  target: Request
+  port: 9443
+  method: POST
+  path: /validate
+  abort: true
+  duration: 30s
+---
+# Test recovery from persistent failures
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Workflow
+metadata:
+  name: keda-persistent-failure-test
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: persistent-failure
+spec:
+  entry: persistent-failure-sequence
+  templates:
+    - name: persistent-failure-sequence
+      templateType: Serial
+      deadline: 20m
+      children:
+        - sustained-pod-failures
+        - sustained-network-issues
+        - verify-circuit-breaker
+        - verify-hpa-fallback
+        - recovery-validation
+
+    - name: sustained-pod-failures
+      templateType: PodChaos
+      deadline: 5m
+      podChaos:
+        selector:
+          namespaces:
+            - keda-system
+          labelSelectors:
+            app: keda-operator
+        mode: fixed
+        value: "1"
+        action: pod-failure
+        duration: 3m
+        gracePeriod: 0
+
+    - name: sustained-network-issues
+      templateType: NetworkChaos
+      deadline: 5m
+      networkChaos:
+        selector:
+          namespaces:
+            - keda-system
+        mode: all
+        action: loss
+        loss:
+          loss: "50"
+          correlation: "100"
+        duration: 2m
+
+    - name: verify-circuit-breaker
+      templateType: Task
+      deadline: 5m
+      task:
+        container:
+          image: curlimages/curl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Query Prometheus for circuit breaker status
+              curl -s "http://prometheus.monitoring.svc.cluster.local:9090/api/v1/query?query=rate(keda_scaled_object_events_total[1m])" | \
+              grep -q "value" && echo "Circuit breaker metrics available"
+
+    - name: verify-hpa-fallback
+      templateType: Task
+      deadline: 5m
+      task:
+        container:
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Check if HPA took over
+              kubectl get hpa -A | grep -E "sophia|sophia" && \
+              echo "HPA fallback active"
+
+    - name: recovery-validation
+      templateType: Task
+      deadline: 5m
+      task:
+        container:
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/bash
+            - -c
+            - |
+              # Wait and verify full recovery
+              sleep 60
+              kubectl get scaledobjects -A
+              kubectl get pods -n keda-system
+              echo "System recovery validated"
+---
+# Chaos Schedule for continuous testing
+apiVersion: chaos-mesh.org/v1alpha1
+kind: Schedule
+metadata:
+  name: keda-chaos-schedule
+  namespace: chaos-testing
+  labels:
+    app: keda
+    test-type: scheduled-chaos
+spec:
+  schedule: "0 */6 * * *" # Every 6 hours
+  type: Workflow
+  workflow:
+    entry: scheduled-chaos-tests
+    templates:
+      - name: scheduled-chaos-tests
+        templateType: Parallel
+        deadline: 15m
+        children:
+          - random-pod-failure
+          - random-network-delay
+          - random-resource-stress
+
+      - name: random-pod-failure
+        templateType: PodChaos
+        deadline: 5m
+        podChaos:
+          selector:
+            namespaces:
+              - keda-system
+              - sophia-system
+              - sophia-system
+          mode: random-max-percent
+          value: "30"
+          action: pod-failure
+          duration: 30s
+
+      - name: random-network-delay
+        templateType: NetworkChaos
+        deadline: 5m
+        networkChaos:
+          selector:
+            namespaces:
+              - keda-system
+          mode: all
+          action: delay
+          delay:
+            latency: 200ms
+            jitter: 100ms
+          duration: 60s
+
+      - name: random-resource-stress
+        templateType: StressChaos
+        deadline: 5m
+        stressChaos:
+          selector:
+            namespaces:
+              - keda-system
+              - sophia-system
+              - sophia-system
+          mode: random-max-percent
+          value: "50"
+          stressors:
+            cpu:
+              workers: 1
+              load: 70
+          duration: 45s

@@ -1,0 +1,359 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all-default
+  namespace: istio-system
+spec: {} # Empty spec means deny all by default
+---
+# Allow all traffic within Sophia domain
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sophia-internal-access
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]
+---
+# Allow Sophia orchestrator to access shared services
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sophia-to-shared-access
+  namespace: shared-services
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      domain: shared
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+            principals: ["cluster.local/ns/sophia-mesh/sa/sophia-orchestrator"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            paths: ["/api/*", "/memory/*", "/config/*", "/metrics/*", "/logs/*"]
+    - when:
+        - key: request.headers[x-domain]
+          values: ["sophia"]
+---
+# Allow all traffic within Sophia domain
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sophia-internal-access
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]
+---
+# Allow Sophia orchestrator to access shared services
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sophia-to-shared-access
+  namespace: shared-services
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      domain: shared
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+            principals: ["cluster.local/ns/sophia-mesh/sa/sophia-orchestrator"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            paths: ["/api/*", "/memory/*", "/config/*", "/metrics/*", "/logs/*"]
+    - when:
+        - key: request.headers[x-domain]
+          values: ["sophia"]
+---
+# Cross-domain access control - Sophia to Sophia (restricted)
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sophia-to-sophia-restricted
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      allow-cross-domain: "true"
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+            principals: ["cluster.local/ns/sophia-mesh/sa/sophia-orchestrator"]
+    - to:
+        - operation:
+            methods: ["GET", "POST"]
+            paths: ["/api/public/*", "/api/integration/*"]
+    - when:
+        - key: request.headers[x-cross-domain-token]
+          values: ["*"] # Token must be present
+        - key: request.headers[x-request-type]
+          values: ["integration", "query"]
+---
+# Cross-domain access control - Sophia to Sophia (restricted)
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: sophia-to-sophia-restricted
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      allow-cross-domain: "true"
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+            principals: ["cluster.local/ns/sophia-mesh/sa/sophia-orchestrator"]
+    - to:
+        - operation:
+            methods: ["GET", "POST"]
+            paths: ["/api/public/*", "/api/integration/*"]
+    - when:
+        - key: request.headers[x-cross-domain-token]
+          values: ["*"] # Token must be present
+        - key: request.headers[x-request-type]
+          values: ["integration", "query"]
+---
+# Allow ingress gateway access to UI services
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ingress-to-sophia-ui
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      app: sophia-ui
+  rules:
+    - from:
+        - source:
+            namespaces: ["istio-system"]
+            principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: ingress-to-sophia-ui
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      app: sophia-ui
+  rules:
+    - from:
+        - source:
+            namespaces: ["istio-system"]
+            principals: ["cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+---
+# MCP Router specific authorization
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: mcp-router-access-sophia
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      app: mcp-router
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            paths: ["/mcp/*", "/router/*"]
+    - when:
+        - key: request.headers[x-mcp-client]
+          values: ["sophia-orchestrator", "sophia-agent"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: mcp-router-access-sophia
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      app: mcp-router
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            paths: ["/mcp/*", "/router/*"]
+    - when:
+        - key: request.headers[x-mcp-client]
+          values: ["sophia-orchestrator", "sophia-agent"]
+---
+# Allow health checks from all namespaces
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-health-checks
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/health", "/healthz", "/ready", "/readyz", "/live", "/livez"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-health-checks-sophia
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/health", "/healthz", "/ready", "/readyz", "/live", "/livez"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-health-checks-shared
+  namespace: shared-services
+spec:
+  action: ALLOW
+  rules:
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/health", "/healthz", "/ready", "/readyz", "/live", "/livez"]
+---
+# Allow metrics scraping from Prometheus
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: prometheus-metrics-access
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["istio-system"]
+            principals: ["cluster.local/ns/istio-system/sa/prometheus"]
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/metrics", "/stats/prometheus"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: prometheus-metrics-access-sophia
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["istio-system"]
+            principals: ["cluster.local/ns/istio-system/sa/prometheus"]
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/metrics", "/stats/prometheus"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: prometheus-metrics-access-shared
+  namespace: shared-services
+spec:
+  action: ALLOW
+  rules:
+    - from:
+        - source:
+            namespaces: ["istio-system"]
+            principals: ["cluster.local/ns/istio-system/sa/prometheus"]
+    - to:
+        - operation:
+            methods: ["GET"]
+            paths: ["/metrics", "/stats/prometheus"]
+---
+# Rate limiting bypass for admin operations
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: admin-bypass-ratelimit
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      ratelimit-bypass: "true"
+  rules:
+    - from:
+        - source:
+            namespaces: ["sophia-mesh"]
+    - when:
+        - key: request.headers[x-admin-token]
+          values: ["*"] # Admin token must be present
+        - key: request.auth.claims[role]
+          values: ["admin", "superuser"]
+---
+# Emergency access for incident response
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: emergency-access
+  namespace: sophia-mesh
+spec:
+  action: ALLOW
+  selector:
+    matchLabels:
+      emergency-access: "enabled"
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/istio-system/sa/emergency-responder"]
+    - to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+    - when:
+        - key: request.headers[x-emergency-token]
+          values: ["*"]
+        - key: request.headers[x-incident-id]
+          values: ["*"]

@@ -1,0 +1,258 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: keda-autoscaling-rules
+  namespace: monitoring
+  labels:
+    app: keda
+    component: monitoring
+    prometheus: kube-prometheus
+    release: prometheus-operator
+spec:
+  groups:
+    - name: keda.scaling.performance
+      interval: 30s
+      rules:
+        # Core KEDA Performance Metrics
+        - alert: KEDAScalingLatencyHigh
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(keda_scaler_metrics_latency_bucket[5m])) by (scaler, scaledObject, le)
+            ) > 5
+          for: 5m
+          labels:
+            severity: warning
+            component: keda
+            category: performance
+          annotations:
+            summary: "KEDA scaler latency is high"
+            description: "KEDA scaler {{ $labels.scaler }} for {{ $labels.scaledObject }} has P99 latency of {{ $value }}s (target: <5s for 9s total scaling time)"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-scaling-latency"
+
+        - alert: KEDATargetScalingTimeExceeded
+          expr: |
+            (time() - keda_scaled_object_last_scale_time) > 9
+            and on(scaledObject) increase(keda_scaled_object_events_total[1m]) > 0
+          for: 3m
+          labels:
+            severity: critical
+            component: keda
+            category: sla
+          annotations:
+            summary: "KEDA scaling time exceeds 9s target"
+            description: "ScaledObject {{ $labels.scaledObject }} took {{ $value }}s to scale (target: 9s, 85% improvement from 60s baseline)"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-sla-violation"
+
+        # Circuit Breaker Monitoring
+        - alert: KEDACircuitBreakerTriggered
+          expr: |
+            rate(keda_scaled_object_events_total[1m]) > 3
+          for: 2m
+          labels:
+            severity: critical
+            component: keda
+            category: circuit-breaker
+          annotations:
+            summary: "KEDA circuit breaker triggered - falling back to HPA"
+            description: "ScaledObject {{ $labels.scaledObject }} is generating {{ $value }} events/minute (limit: 3), circuit breaker activated"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-circuit-breaker"
+
+        - alert: KEDACircuitBreakerRecovery
+          expr: |
+            rate(keda_scaled_object_events_total[5m]) < 1
+            and on(scaledObject) (time() - keda_circuit_breaker_triggered_time) > 120
+          for: 5m
+          labels:
+            severity: info
+            component: keda
+            category: circuit-breaker
+          annotations:
+            summary: "KEDA circuit breaker ready to reset"
+            description: "ScaledObject {{ $labels.scaledObject }} circuit breaker can be reset after {{ $value }}s cooldown"
+
+        # Scaler-Specific Alerts
+        - alert: ArtemisQueueBacklogHigh
+          expr: |
+            redis_list_length{list="sophia:task:queue"} > 1000
+          for: 10m
+          labels:
+            severity: warning
+            component: sophia
+            scaler: redis
+          annotations:
+            summary: "Sophia task queue backlog is high"
+            description: "Sophia queue length is {{ $value }} (threshold: 1000), consider increasing max replicas"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/sophia-queue-backlog"
+
+        - alert: SophiaProcessingRateLow
+          expr: |
+            sum(rate(sophia_analytics_events_processed_total[5m]))
+            /
+            count(up{job="sophia-analytics"}) < 50
+          for: 10m
+          labels:
+            severity: warning
+            component: sophia
+            scaler: prometheus
+          annotations:
+            summary: "Sophia processing rate below threshold"
+            description: "Sophia is processing {{ $value }} events/s per replica (threshold: 50), scaling may be ineffective"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/sophia-processing-rate"
+
+        # Resource and Cost Optimization
+        - alert: KEDAOverScaling
+          expr: |
+            (
+              avg_over_time(kube_deployment_status_replicas[10m])
+              /
+              avg_over_time(kube_deployment_status_replicas_available[10m])
+            ) > 1.5
+            and on(deployment) keda_scaled_object_ready == 1
+          for: 15m
+          labels:
+            severity: warning
+            component: keda
+            category: cost-optimization
+          annotations:
+            summary: "Potential over-scaling detected"
+            description: "Deployment {{ $labels.deployment }} has {{ $value }}x more replicas than needed, review scaling parameters"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-overscaling"
+
+        - alert: KEDAUnderScaling
+          expr: |
+            (
+              avg_over_time(container_cpu_usage_seconds_total[5m])
+              /
+              avg_over_time(kube_pod_container_resource_limits_cpu_cores[5m])
+            ) > 0.9
+            and on(pod) keda_scaled_object_ready == 1
+          for: 10m
+          labels:
+            severity: warning
+            component: keda
+            category: performance
+          annotations:
+            summary: "Under-scaling detected - pods at capacity"
+            description: "Pods for {{ $labels.deployment }} are at {{ $value }}% CPU capacity, increase scaling threshold"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-underscaling"
+
+        # KEDA Operator Health
+        - alert: KEDAOperatorDown
+          expr: |
+            up{job="keda-operator"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: keda
+            category: availability
+          annotations:
+            summary: "KEDA operator is down"
+            description: "KEDA operator has been down for 5 minutes, autoscaling is not functioning"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-operator-down"
+
+        - alert: KEDAMetricsServerDown
+          expr: |
+            up{job="keda-metrics-apiserver"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            component: keda
+            category: availability
+          annotations:
+            summary: "KEDA metrics server is down"
+            description: "KEDA metrics API server has been down for 5 minutes, scaling decisions impaired"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-metrics-down"
+
+        - alert: KEDAScalerErrors
+          expr: |
+            rate(keda_scaler_errors_total[5m]) > 0.1
+          for: 5m
+          labels:
+            severity: warning
+            component: keda
+            category: reliability
+          annotations:
+            summary: "KEDA scaler experiencing errors"
+            description: "Scaler {{ $labels.scaler }} has {{ $value }} errors/sec for {{ $labels.scaledObject }}"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-scaler-errors"
+
+    - name: keda.scaling.sla
+      interval: 60s
+      rules:
+        # SLA Compliance Monitoring
+        - record: keda:scaling_time_seconds
+          expr: |
+            histogram_quantile(0.95,
+              sum(rate(keda_scale_loop_duration_seconds_bucket[5m])) by (le)
+            )
+
+        - record: keda:scaling_improvement_percentage
+          expr: |
+            (1 - (keda:scaling_time_seconds / 60)) * 100
+
+        - alert: KEDASLAViolation
+          expr: |
+            keda:scaling_improvement_percentage < 85
+          for: 10m
+          labels:
+            severity: critical
+            component: keda
+            category: sla
+          annotations:
+            summary: "KEDA not meeting 85% improvement SLA"
+            description: "Current improvement is {{ $value }}% (target: 85% reduction from 60s to 9s)"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-sla-violation"
+
+        # AI Workload Specific Metrics
+        - record: ai:workload_efficiency
+          expr: |
+            sum(rate(sophia_analytics_events_processed_total[5m]))
+            /
+            sum(kube_pod_container_resource_requests_cpu_cores{namespace="sophia-system"})
+
+        - alert: AIWorkloadInefficient
+          expr: |
+            ai:workload_efficiency < 100
+          for: 15m
+          labels:
+            severity: warning
+            component: ai-workload
+            category: efficiency
+          annotations:
+            summary: "AI workload efficiency below threshold"
+            description: "Processing {{ $value }} events per CPU core (target: >100)"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/ai-workload-efficiency"
+
+    - name: keda.cron.schedules
+      interval: 60s
+      rules:
+        # Cron Schedule Monitoring
+        - alert: CronScheduleMissed
+          expr: |
+            (time() - keda_cron_schedule_last_trigger_time) > 3600
+            and hour() >= 8 and hour() <= 18
+            and day_of_week() >= 1 and day_of_week() <= 5
+          for: 5m
+          labels:
+            severity: warning
+            component: keda
+            scaler: cron
+          annotations:
+            summary: "Cron schedule trigger missed"
+            description: "Cron schedule {{ $labels.schedule }} hasn't triggered for {{ $value }}s during business hours"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/keda-cron-missed"
+
+        - alert: UnexpectedScalingDuringOffHours
+          expr: |
+            kube_deployment_status_replicas{deployment=~".*-worker|.*-analytics|.*-processor"} > 5
+            and (hour() < 8 or hour() > 18)
+            and day_of_week() >= 1 and day_of_week() <= 5
+          for: 15m
+          labels:
+            severity: info
+            component: keda
+            category: cost-optimization
+          annotations:
+            summary: "Unexpected scaling during off-hours"
+            description: "Deployment {{ $labels.deployment }} has {{ $value }} replicas during off-hours"
+            runbook_url: "https://docs.sophia-intel-ai.com/runbooks/off-hours-scaling"

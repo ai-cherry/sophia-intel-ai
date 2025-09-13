@@ -1,0 +1,36 @@
+{
+  "call_ended": {
+    "eventType": "call.ended",
+    "callId": "test_call_001",
+    "callUrl": "https://gong.io/call/test_001",
+    "participants": ["Test User 1", "Test User 2"],
+    "duration": 1800,
+    "endedAt": "2025-09-05T14:27:46.852031",
+    "source": "gong_production_test"
+  },
+  "transcript_ready": {
+    "eventType": "transcript.ready",
+    "callId": "test_call_002",
+    "transcriptUrl": "https://gong.io/transcript/test_002",
+    "language": "en",
+    "readyAt": "2025-09-05T14:27:46.852038",
+    "source": "gong_production_test"
+  },
+  "deal_at_risk": {
+    "eventType": "deal.at_risk",
+    "dealId": "test_deal_001",
+    "callId": "test_call_003",
+    "riskLevel": "high",
+    "riskFactors": ["lack_of_engagement", "pricing_concerns"],
+    "detectedAt": "2025-09-05T14:27:46.852041",
+    "source": "gong_production_test"
+  },
+  "insight_generated": {
+    "eventType": "insight.generated",
+    "callId": "test_call_004",
+    "insightType": "competitor_mentioned",
+    "confidence": 0.95,
+    "generatedAt": "2025-09-05T14:27:46.852043",
+    "source": "gong_production_test"
+  }
+}

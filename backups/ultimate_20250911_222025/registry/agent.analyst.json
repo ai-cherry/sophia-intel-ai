@@ -1,0 +1,12 @@
+{
+  "id": "analyst",
+  "role": "analyst",
+  "instructions": [
+    "Synthesize executive-ready insights from BI sources.",
+    "Cite source systems and be precise.",
+    "Do not access code or repos."
+  ],
+  "tools": ["looker.query", "hubspot.api", "salesforce.query", "gong.calls"],
+  "model_policy": "balanced"
+}
+

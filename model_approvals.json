@@ -1,0 +1,192 @@
+{
+  "gpt-5": {
+    "status": "restricted",
+    "allowed_orchestrators": ["master", "sophia", "sophia"],
+    "allowed_agents": [],
+    "cost_tier": "premium",
+    "max_tokens_per_request": 65536,
+    "requires_approval_above": 100000,
+    "notes": "Primary orchestrator model - use sparingly",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "grok-4-heavy": {
+    "status": "restricted",
+    "allowed_orchestrators": ["master", "sophia", "sophia"],
+    "allowed_agents": ["complex_solver", "reasoning_council"],
+    "cost_tier": "premium",
+    "max_tokens_per_request": 100000,
+    "requires_approval_above": 100000,
+    "notes": "5-10x compute - only for complex multi-agent problems",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "grok-4": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia", "sophia"],
+    "allowed_agents": ["analyzer", "researcher"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "grok-code-fast-1": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["code_reviewer", "coder", "speed_coder"],
+    "cost_tier": "economy",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "92 tokens/sec - primary for all coding tasks",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "grok-3-mini": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia", "sophia"],
+    "allowed_agents": ["quick_responder", "simple_tasks"],
+    "cost_tier": "economy",
+    "max_tokens_per_request": 8192,
+    "requires_approval_above": 100000,
+    "notes": "Cost-effective for simple tasks",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "claude-opus-4.1": {
+    "status": "approved",
+    "allowed_orchestrators": ["master", "sophia", "sophia"],
+    "allowed_agents": ["business_analyst", "strategic_thinker", "strategist"],
+    "cost_tier": "premium",
+    "max_tokens_per_request": 65536,
+    "requires_approval_above": 100000,
+    "notes": "Strategic reasoning and business analysis",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "claude-sonnet-4": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia", "sophia"],
+    "allowed_agents": ["general"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "qwen3-coder-480b": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["large_codebase_analyzer", "context_master"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 256000,
+    "requires_approval_above": 100000,
+    "notes": "Use for >100K token contexts only",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "glm-4.5": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia", "sophia"],
+    "allowed_agents": ["reasoner", "deep_thinker"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 65536,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "glm-4.5-air": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["quick_fixer", "rapid_response"],
+    "cost_tier": "economy",
+    "max_tokens_per_request": 16384,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "llama-4-maverick": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia", "sophia"],
+    "allowed_agents": ["multimodal", "deep_analyzer"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "llama-4-scout": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["pattern_scout", "repo_scanner"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 16384,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "gemini-2.5-pro": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["analyst", "researcher"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "gemini-2.5-flash": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["quick_scanner", "repo_scout"],
+    "cost_tier": "economy",
+    "max_tokens_per_request": 16384,
+    "requires_approval_above": 100000,
+    "notes": "Fast repository scanning",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "deepseek-reasoner-v3.1": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["reasoner", "code_analyst"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "deepseek-r1": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["analyst", "researcher"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "sonar-pro": {
+    "status": "approved",
+    "allowed_orchestrators": ["sophia"],
+    "allowed_agents": ["researcher", "market_analyst"],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 16384,
+    "requires_approval_above": 100000,
+    "notes": "Web search with 2x citations",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "claude-3.5-sonnet": {
+    "status": "disabled",
+    "allowed_orchestrators": [],
+    "allowed_agents": [],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "DEPRECATED - Use Claude Opus 4.1 instead",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  },
+  "grok-2": {
+    "status": "disabled",
+    "allowed_orchestrators": [],
+    "allowed_agents": [],
+    "cost_tier": "standard",
+    "max_tokens_per_request": 32768,
+    "requires_approval_above": 100000,
+    "notes": "DEPRECATED - Use Grok-4 series instead",
+    "last_updated": "2025-09-06T01:16:44.306697"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "AI: Explain File (Claude)",
+      "type": "shell",
+      "command": "claude -p \"Explain ${fileBasename} in this project context. Summarize purpose and key functions.\""
+    },
+    {
+      "label": "AI: Refactor (Preview)",
+      "type": "shell",
+      "command": "litellm-cli edit --dry-run --file ${file}"
+    },
+    {
+      "label": "AI: Quick Chat (Gemini)",
+      "type": "shell",
+      "command": "litellm-cli chat --model gemini-1.5-pro -p 'Summarize the changes in ${fileBasename}'"
+    },
+    {
+      "label": "Dev: Start Services",
+      "type": "shell",
+      "command": "./dev start"
+    },
+    {
+      "label": "Dev: Health Check",
+      "type": "shell",
+      "command": "./dev check"
+    }
+  ]
+}
+

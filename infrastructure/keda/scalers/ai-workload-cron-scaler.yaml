@@ -1,0 +1,306 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: ai-workload-cron-scaler
+  namespace: sophia-system
+  labels:
+    app: sophia-intel-ai
+    component: predictable-scaling
+    scaler-type: cron
+    managed-by: keda
+  annotations:
+    # Circuit breaker configuration
+    keda.sh/circuit-breaker-enabled: "true"
+    keda.sh/max-scale-events: "3"
+    keda.sh/max-scale-events-window: "60s"
+    keda.sh/fallback-to-hpa: "true"
+    # Monitoring annotations
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    # Schedule annotations
+    schedule.type: "business-hours"
+    schedule.timezone: "America/Los_Angeles"
+    # Deployment tracking
+    deployment.timestamp: "{{ .Values.deploymentTimestamp }}"
+    deployment.version: "{{ .Values.global.version }}"
+spec:
+  scaleTargetRef:
+    name: ai-workload-processor
+    kind: Deployment
+    apiVersion: apps/v1
+
+  # Base configuration for cron scaling
+  pollingInterval: 30 # Check schedule every 30 seconds
+  cooldownPeriod: 60 # Cooldown period between schedule changes
+  minReplicaCount: 2 # Minimum replicas always available
+  maxReplicaCount: 50 # Maximum replicas for peak times
+
+  # Advanced HPA configuration for predictable patterns
+  advanced:
+    restoreToOriginalReplicaCount: false
+    horizontalPodAutoscalerConfig:
+      name: ai-workload-cron-hpa
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 300 # 5 minute stabilization
+          policies:
+            - type: Percent
+              value: 25 # Gradual scale down
+              periodSeconds: 120
+            - type: Pods
+              value: 1
+              periodSeconds: 120
+          selectPolicy: Min
+        scaleUp:
+          stabilizationWindowSeconds: 60 # Quick scale up for scheduled events
+          policies:
+            - type: Percent
+              value: 100
+              periodSeconds: 60
+            - type: Pods
+              value: 10
+              periodSeconds: 60
+          selectPolicy: Max
+
+  # Cron Triggers for predictable AI workload patterns
+  triggers:
+    # Business hours - Weekdays
+    - type: cron
+      metadata:
+        timezone: America/Los_Angeles
+        start: "0 8 * * 1-5" # 8 AM Monday-Friday PST
+        end: "0 18 * * 1-5" # 6 PM Monday-Friday PST
+        desiredReplicas: "20"
+
+    # Peak hours - Morning analytics burst
+    - type: cron
+      metadata:
+        timezone: America/Los_Angeles
+        start: "0 9 * * 1-5" # 9 AM Monday-Friday PST
+        end: "0 11 * * 1-5" # 11 AM Monday-Friday PST
+        desiredReplicas: "35"
+
+    # Peak hours - Afternoon processing
+    - type: cron
+      metadata:
+        timezone: America/Los_Angeles
+        start: "0 13 * * 1-5" # 1 PM Monday-Friday PST
+        end: "0 15 * * 1-5" # 3 PM Monday-Friday PST
+        desiredReplicas: "30"
+
+    # After hours - Reduced capacity
+    - type: cron
+      metadata:
+        timezone: America/Los_Angeles
+        start: "0 18 * * 1-5" # 6 PM Monday-Friday PST
+        end: "0 8 * * 2-6" # 8 AM next day (Tue-Sat) PST
+        desiredReplicas: "5"
+
+    # Weekend - Minimal capacity
+    - type: cron
+      metadata:
+        timezone: America/Los_Angeles
+        start: "0 0 * * 6" # Midnight Saturday PST
+        end: "59 23 * * 0" # 11:59 PM Sunday PST
+        desiredReplicas: "3"
+
+    # End of month processing - High capacity
+    - type: cron
+      metadata:
+        timezone: America/Los_Angeles
+        start: "0 0 28-31 * *" # Last days of month
+        end: "59 23 28-31 * *"
+        desiredReplicas: "40"
+
+    # Quarter end processing - Maximum capacity
+    - type: cron
+      metadata:
+        timezone: America/Los_Angeles
+        start: "0 0 L * 3,6,9,12" # Last day of quarter months
+        end: "59 23 L * 3,6,9,12"
+        desiredReplicas: "50"
+
+  # Fallback configuration
+  fallback:
+    failureThreshold: 3
+    replicas: 10 # Fallback to moderate capacity
+---
+# ConfigMap for cron schedule patterns
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-workload-schedules
+  namespace: sophia-system
+  labels:
+    app: sophia-intel-ai
+    component: schedule-configuration
+data:
+  # Schedule definitions in JSON for dynamic updates
+  schedules.json: |
+    {
+      "schedules": [
+        {
+          "name": "business-hours",
+          "description": "Standard business hours capacity",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 8-18 * * 1-5",
+          "replicas": 20,
+          "priority": 1
+        },
+        {
+          "name": "morning-peak",
+          "description": "Morning analytics burst",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 9-11 * * 1-5",
+          "replicas": 35,
+          "priority": 2
+        },
+        {
+          "name": "afternoon-peak",
+          "description": "Afternoon processing peak",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 13-15 * * 1-5",
+          "replicas": 30,
+          "priority": 2
+        },
+        {
+          "name": "after-hours",
+          "description": "After business hours",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 18-8 * * *",
+          "replicas": 5,
+          "priority": 1
+        },
+        {
+          "name": "weekend",
+          "description": "Weekend minimal capacity",
+          "timezone": "America/Los_Angeles",
+          "cron": "* * * * 0,6",
+          "replicas": 3,
+          "priority": 1
+        },
+        {
+          "name": "month-end",
+          "description": "End of month processing",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 * 28-31 * *",
+          "replicas": 40,
+          "priority": 3
+        },
+        {
+          "name": "quarter-end",
+          "description": "Quarterly processing",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 * L 3,6,9,12 *",
+          "replicas": 50,
+          "priority": 4
+        },
+        {
+          "name": "black-friday",
+          "description": "Black Friday surge",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 * * 11 5",
+          "replicas": 50,
+          "priority": 5,
+          "date_constraint": "fourth_friday_november"
+        },
+        {
+          "name": "cyber-monday",
+          "description": "Cyber Monday surge",
+          "timezone": "America/Los_Angeles",
+          "cron": "0 * * 11 1",
+          "replicas": 45,
+          "priority": 5,
+          "date_constraint": "monday_after_thanksgiving"
+        }
+      ],
+      "priority_rules": {
+        "conflict_resolution": "highest_priority_wins",
+        "overlap_strategy": "max_replicas",
+        "transition_time": 60
+      }
+    }
+
+  # Special event overrides
+  special-events.yaml: |
+    events:
+      - name: "Product Launch"
+        date: "2025-01-15"
+        start_time: "08:00"
+        end_time: "20:00"
+        timezone: "America/Los_Angeles"
+        replicas: 50
+        description: "Major product launch event"
+      - name: "Annual Conference"
+        date: "2025-03-20"
+        start_time: "07:00"
+        end_time: "19:00"
+        timezone: "America/Los_Angeles"
+        replicas: 45
+        description: "Annual user conference"
+
+  # Scaling behavior modifiers for different schedule types
+  scaling-modifiers.yaml: |
+    modifiers:
+      business_hours:
+        scale_up_rate: 1.5
+        scale_down_rate: 0.5
+        buffer_percentage: 10
+      peak_hours:
+        scale_up_rate: 2.0
+        scale_down_rate: 0.3
+        buffer_percentage: 20
+      after_hours:
+        scale_up_rate: 1.0
+        scale_down_rate: 0.7
+        buffer_percentage: 5
+      special_events:
+        scale_up_rate: 3.0
+        scale_down_rate: 0.2
+        buffer_percentage: 30
+---
+# HorizontalPodAutoscaler for fallback (circuit breaker)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ai-workload-hpa-fallback
+  namespace: sophia-system
+  labels:
+    app: sophia-intel-ai
+    component: hpa-fallback
+    purpose: circuit-breaker
+  annotations:
+    description: "Fallback HPA for when KEDA circuit breaker triggers"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ai-workload-processor
+  minReplicas: 5
+  maxReplicas: 30
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30

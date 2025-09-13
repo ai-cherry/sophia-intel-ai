@@ -1,0 +1,373 @@
+{
+  "task": "intelligent_repository_cleanup_and_documentation_modernization",
+  "description": "Comprehensive repository cleanup targeting technical debt elimination, documentation modernization, and code quality improvement for the SOPHIA multi-agent system",
+  "context": {
+    "repository": "sophia-intel-ai SOPHIA multi-agent system",
+    "current_issues": [
+      "excessive_markdown_documentation_files_400_plus",
+      "technical_debt_and_legacy_code_patterns",
+      "outdated_documentation_and_redundant_files",
+      "one_time_scripts_and_experimental_code",
+      "inconsistent_naming_conventions",
+      "duplicate_functionality_across_modules"
+    ],
+    "cleanup_philosophy": "aggressive_smart_cleanup_with_preservation_of_core_functionality"
+  },
+  "cleanup_strategy": {
+    "phase_1": {
+      "name": "documentation_consolidation_and_modernization",
+      "priority": "critical",
+      "duration": "1_day",
+      "objectives": [
+        "reduce_documentation_from_400_to_under_20_essential_files",
+        "create_single_source_of_truth_documentation",
+        "eliminate_redundant_and_outdated_planning_documents",
+        "modernize_documentation_format_and_structure"
+      ],
+      "actions": {
+        "documentation_audit": {
+          "identify_core_documentation": [
+            "README.md_main_project_overview",
+            "QUICKSTART.md_getting_started_guide", 
+            "ARCHITECTURE.md_system_architecture_overview",
+            "API_REFERENCE.md_comprehensive_api_documentation",
+            "DEPLOYMENT_GUIDE.md_production_deployment_instructions",
+            "CONTRIBUTING.md_development_guidelines",
+            "CHANGELOG.md_version_history_and_updates"
+          ],
+          "consolidate_planning_documents": [
+            "merge_all_phase_documents_into_single_roadmap",
+            "consolidate_architecture_plans_into_main_architecture_doc",
+            "merge_all_setup_guides_into_quickstart",
+            "consolidate_integration_docs_into_api_reference"
+          ],
+          "eliminate_redundant_files": [
+            "remove_duplicate_planning_documents",
+            "delete_outdated_status_reports",
+            "eliminate_temporary_analysis_files",
+            "remove_superseded_implementation_plans"
+          ]
+        },
+        "documentation_modernization": {
+          "standardize_format": {
+            "use_consistent_markdown_structure": true,
+            "implement_mermaid_diagrams_for_architecture": true,
+            "add_code_examples_with_syntax_highlighting": true,
+            "include_interactive_table_of_contents": true
+          },
+          "content_quality": {
+            "ensure_accuracy_with_current_implementation": true,
+            "add_troubleshooting_sections": true,
+            "include_performance_benchmarks": true,
+            "add_security_considerations": true
+          }
+        }
+      },
+      "files_to_consolidate": [
+        "merge_all_ARTEMIS_*_files_into_single_ARTEMIS_ARCHITECTURE.md",
+        "consolidate_PHASE_*_files_into_ROADMAP.md",
+        "merge_deployment_guides_into_DEPLOYMENT_GUIDE.md",
+        "consolidate_integration_docs_into_INTEGRATIONS.md"
+      ]
+    },
+    "phase_2": {
+      "name": "code_debt_elimination_and_refactoring",
+      "priority": "high",
+      "duration": "2_days",
+      "objectives": [
+        "eliminate_unused_imports_and_dead_code",
+        "refactor_duplicate_functionality",
+        "modernize_legacy_code_patterns",
+        "improve_code_organization_and_structure"
+      ],
+      "actions": {
+        "dead_code_elimination": {
+          "identify_unused_modules": [
+            "scan_for_modules_with_no_imports",
+            "detect_functions_with_no_callers",
+            "find_classes_with_no_instantiation",
+            "locate_variables_with_no_references"
+          ],
+          "remove_experimental_code": [
+            "delete_prototype_implementations",
+            "remove_commented_out_legacy_code",
+            "eliminate_temporary_debugging_code",
+            "remove_one_time_migration_scripts"
+          ]
+        },
+        "duplicate_functionality_consolidation": {
+          "identify_duplicates": [
+            "find_similar_function_implementations",
+            "detect_redundant_class_definitions",
+            "locate_duplicate_configuration_patterns",
+            "identify_repeated_utility_functions"
+          ],
+          "consolidation_strategy": [
+            "create_shared_utility_modules",
+            "implement_base_classes_for_common_patterns",
+            "centralize_configuration_management",
+            "standardize_error_handling_patterns"
+          ]
+        },
+        "legacy_pattern_modernization": {
+          "python_modernization": [
+            "convert_to_type_hints_everywhere",
+            "use_dataclasses_instead_of_namedtuples",
+            "implement_async_await_patterns_consistently",
+            "use_pathlib_instead_of_os_path"
+          ],
+          "architecture_improvements": [
+            "implement_dependency_injection_patterns",
+            "use_factory_patterns_for_object_creation",
+            "implement_observer_pattern_for_events",
+            "use_strategy_pattern_for_provider_routing"
+          ]
+        }
+      }
+    },
+    "phase_3": {
+      "name": "file_system_organization_and_cleanup",
+      "priority": "high",
+      "duration": "1_day",
+      "objectives": [
+        "reorganize_directory_structure_for_clarity",
+        "eliminate_temporary_and_cache_files",
+        "standardize_naming_conventions",
+        "optimize_import_paths_and_dependencies"
+      ],
+      "actions": {
+        "directory_restructuring": {
+          "core_structure": {
+            "src/": "main_application_code",
+            "tests/": "comprehensive_test_suite",
+            "docs/": "consolidated_documentation",
+            "scripts/": "essential_utility_scripts_only",
+            "config/": "configuration_files",
+            "deployment/": "deployment_and_infrastructure"
+          },
+          "eliminate_redundant_directories": [
+            "merge_similar_functionality_directories",
+            "remove_empty_or_nearly_empty_directories",
+            "consolidate_script_directories",
+            "eliminate_temporary_directories"
+          ]
+        },
+        "file_cleanup": {
+          "remove_temporary_files": [
+            "delete_cache_files_and_temp_directories",
+            "remove_log_files_and_debug_outputs",
+            "eliminate_backup_files_and_duplicates",
+            "remove_system_generated_files"
+          ],
+          "standardize_naming": [
+            "use_snake_case_for_python_files",
+            "use_kebab_case_for_config_files",
+            "use_descriptive_names_for_scripts",
+            "ensure_consistent_file_extensions"
+          ]
+        }
+      }
+    },
+    "phase_4": {
+      "name": "configuration_and_dependency_optimization",
+      "priority": "medium",
+      "duration": "1_day",
+      "objectives": [
+        "consolidate_configuration_files",
+        "optimize_dependency_management",
+        "eliminate_unused_dependencies",
+        "standardize_environment_configuration"
+      ],
+      "actions": {
+        "configuration_consolidation": {
+          "merge_config_files": [
+            "consolidate_yaml_configuration_files",
+            "merge_environment_variable_definitions",
+            "standardize_configuration_schemas",
+            "implement_configuration_validation"
+          ],
+          "environment_standardization": [
+            "create_single_env_template_file",
+            "implement_environment_specific_overrides",
+            "add_configuration_documentation",
+            "implement_configuration_validation_scripts"
+          ]
+        },
+        "dependency_optimization": {
+          "audit_dependencies": [
+            "identify_unused_packages_in_requirements_files",
+            "detect_version_conflicts_and_duplicates",
+            "find_optional_dependencies_that_can_be_removed",
+            "locate_dev_dependencies_in_production_requirements"
+          ],
+          "optimization_actions": [
+            "remove_unused_dependencies",
+            "pin_versions_for_stability",
+            "separate_dev_from_production_dependencies",
+            "implement_dependency_security_scanning"
+          ]
+        }
+      }
+    }
+  },
+  "intelligent_cleanup_rules": {
+    "documentation_retention_criteria": {
+      "keep_if": [
+        "referenced_by_active_code",
+        "contains_unique_technical_information",
+        "provides_user_or_developer_guidance",
+        "documents_public_apis_or_interfaces"
+      ],
+      "remove_if": [
+        "duplicate_information_exists_elsewhere",
+        "contains_outdated_or_incorrect_information",
+        "planning_document_for_completed_features",
+        "temporary_analysis_or_experimental_notes"
+      ]
+    },
+    "code_retention_criteria": {
+      "keep_if": [
+        "actively_used_by_system_components",
+        "part_of_public_api_interface",
+        "contains_critical_business_logic",
+        "provides_essential_utility_functions"
+      ],
+      "remove_if": [
+        "no_imports_or_references_found",
+        "marked_as_deprecated_or_todo",
+        "prototype_or_experimental_implementation",
+        "superseded_by_newer_implementation"
+      ]
+    },
+    "file_retention_criteria": {
+      "keep_if": [
+        "part_of_core_system_functionality",
+        "required_for_deployment_or_configuration",
+        "essential_for_development_workflow",
+        "contains_important_documentation"
+      ],
+      "remove_if": [
+        "temporary_or_cache_file",
+        "duplicate_of_existing_file",
+        "generated_file_that_can_be_recreated",
+        "one_time_migration_or_setup_script"
+      ]
+    }
+  },
+  "quality_improvements": {
+    "code_standards": {
+      "formatting": [
+        "apply_black_formatting_to_all_python_files",
+        "use_ruff_for_linting_and_import_sorting",
+        "ensure_consistent_indentation_and_spacing",
+        "standardize_string_quote_usage"
+      ],
+      "type_safety": [
+        "add_type_hints_to_all_function_signatures",
+        "implement_strict_mypy_checking",
+        "use_generic_types_for_collections",
+        "implement_protocol_classes_for_interfaces"
+      ],
+      "documentation": [
+        "add_docstrings_to_all_public_functions",
+        "implement_consistent_docstring_format",
+        "include_parameter_and_return_type_documentation",
+        "add_usage_examples_in_docstrings"
+      ]
+    },
+    "architecture_improvements": {
+      "separation_of_concerns": [
+        "separate_business_logic_from_infrastructure",
+        "implement_clear_layer_boundaries",
+        "use_dependency_injection_for_external_services",
+        "separate_configuration_from_implementation"
+      ],
+      "error_handling": [
+        "implement_consistent_error_handling_patterns",
+        "use_custom_exception_classes_for_domain_errors",
+        "add_proper_logging_and_monitoring",
+        "implement_circuit_breaker_patterns"
+      ]
+    }
+  },
+  "automation_and_tooling": {
+    "cleanup_scripts": {
+      "automated_cleanup": [
+        "create_script_to_remove_unused_imports",
+        "implement_dead_code_detection_tool",
+        "build_duplicate_file_finder",
+        "create_documentation_consistency_checker"
+      ],
+      "validation_scripts": [
+        "implement_code_quality_gates",
+        "create_dependency_audit_tool",
+        "build_configuration_validation_script",
+        "implement_naming_convention_checker"
+      ]
+    },
+    "ci_integration": [
+      "add_cleanup_validation_to_ci_pipeline",
+      "implement_automated_code_formatting",
+      "add_dependency_security_scanning",
+      "include_documentation_link_checking"
+    ]
+  },
+  "success_metrics": {
+    "quantitative_goals": {
+      "documentation_reduction": "from_400_plus_to_under_20_files",
+      "code_coverage_improvement": "increase_to_above_85_percent",
+      "dependency_optimization": "reduce_unused_dependencies_to_zero",
+      "code_duplication_reduction": "eliminate_duplicate_functionality"
+    },
+    "qualitative_improvements": {
+      "developer_experience": [
+        "faster_onboarding_for_new_developers",
+        "clearer_codebase_navigation",
+        "improved_documentation_findability",
+        "consistent_code_patterns_throughout"
+      ],
+      "maintainability": [
+        "reduced_technical_debt",
+        "improved_code_readability",
+        "better_separation_of_concerns",
+        "standardized_error_handling"
+      ]
+    }
+  },
+  "risk_mitigation": {
+    "backup_strategy": [
+      "create_branch_before_major_cleanup_operations",
+      "maintain_list_of_deleted_files_for_recovery",
+      "test_system_functionality_after_each_phase",
+      "implement_rollback_procedures_for_breaking_changes"
+    ],
+    "validation_approach": [
+      "run_full_test_suite_after_each_cleanup_phase",
+      "validate_all_import_paths_and_dependencies",
+      "check_configuration_file_integrity",
+      "verify_documentation_links_and_references"
+    ]
+  },
+  "implementation_order": [
+    "phase_1_documentation_consolidation_first",
+    "phase_2_code_debt_elimination_second",
+    "phase_3_file_system_organization_third", 
+    "phase_4_configuration_optimization_last"
+  ],
+  "deliverables": {
+    "cleaned_repository": {
+      "maximum_20_documentation_files": true,
+      "zero_technical_debt_or_dead_code": true,
+      "consistent_code_patterns_throughout": true,
+      "optimized_dependency_management": true,
+      "comprehensive_cleanup_documentation": true
+    },
+    "improvement_reports": [
+      "before_and_after_metrics_comparison",
+      "list_of_eliminated_files_and_reasons",
+      "code_quality_improvement_summary",
+      "documentation_consolidation_report"
+    ]
+  }
+}
+

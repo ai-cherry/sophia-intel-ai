@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "memory": {
+      "baseUrl": "http://localhost:8081",
+      "headers": {}
+    },
+    "filesystem": {
+      "baseUrl": "http://localhost:8082",
+      "headers": {}
+    },
+    "git": {
+      "baseUrl": "http://localhost:8084",
+      "headers": {}
+    }
+  },
+  "notes": "Local MCP endpoints for Memory/Filesystem/Git. Set MCP_TOKEN and remove dev bypass for production."
+}

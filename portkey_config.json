@@ -1,0 +1,159 @@
+{
+  "version": "1.7.0",
+  "api_key": "nYraiE8dOR9A1gDwaRNpSSXRkXBc",
+  "base_url": "https://api.portkey.ai/v1",
+  
+  "providers": {
+    "openai": {
+      "virtual_key": "openai-vk-190a60",
+      "models": ["gpt-4o", "gpt-4o-mini", "o3-mini", "gpt-4-turbo"],
+      "default_model": "gpt-4o-mini",
+      "max_tokens": 4096,
+      "temperature": 0.2
+    },
+    "anthropic": {
+      "virtual_key": "anthropic-vk-b42804",
+      "models": ["claude-4-sonnet-20250522", "claude-3.5-sonnet", "claude-3-haiku"],
+      "default_model": "claude-3.5-sonnet",
+      "max_tokens": 8192,
+      "temperature": 0.3
+    },
+    "deepseek": {
+      "virtual_key": "deepseek-vk-24102f",
+      "models": ["deepseek-r1", "deepseek-chat", "deepseek-coder"],
+      "default_model": "deepseek-chat",
+      "max_tokens": 4096,
+      "temperature": 0.1
+    },
+    "xai": {
+      "virtual_key": "xai-vk-e65d0f",
+      "models": ["grok-3", "grok-3-alpha", "grok-3-fast"],
+      "default_model": "grok-3",
+      "max_tokens": 4096,
+      "temperature": 0.2
+    },
+    "groq": {
+      "virtual_key": "groq-vk-6b9b52",
+      "models": ["llama-3.1-70b-versatile", "llama-3.1-8b-instant", "mixtral-8x7b-32768"],
+      "default_model": "llama-3.1-70b-versatile",
+      "max_tokens": 4096,
+      "temperature": 0.2
+    },
+    "perplexity": {
+      "virtual_key": "perplexity-vk-56c172",
+      "models": ["sonar-medium-online", "sonar-small-online", "sonar-large-online"],
+      "default_model": "sonar-medium-online",
+      "max_tokens": 4096,
+      "temperature": 0.1
+    },
+    "together": {
+      "virtual_key": "together-ai-670469",
+      "models": ["meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo", "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"],
+      "default_model": "meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo",
+      "max_tokens": 4096,
+      "temperature": 0.2
+    },
+    "openrouter": {
+      "virtual_key": "vkj-openrouter-cc4151",
+      "models": ["auto", "meta-llama/llama-3.1-405b", "anthropic/claude-3.5-sonnet"],
+      "default_model": "auto",
+      "max_tokens": 4096,
+      "temperature": 0.2
+    },
+    "mistral": {
+      "virtual_key": "mistral-vk-f92861",
+      "models": ["mistral-large", "mistral-medium", "ministral-8b-2410"],
+      "default_model": "mistral-medium",
+      "max_tokens": 4096,
+      "temperature": 0.2
+    },
+    "cohere": {
+      "virtual_key": "cohere-vk-496fa9",
+      "models": ["command-r-plus", "command-r", "command"],
+      "default_model": "command-r",
+      "max_tokens": 4096,
+      "temperature": 0.2
+    }
+  },
+  
+  "routing_policies": {
+    "reasoning": {
+      "primary": ["openai/o3-mini", "anthropic/claude-4-sonnet-20250522"],
+      "fallback": ["deepseek/deepseek-r1", "xai/grok-3-alpha"]
+    },
+    "fast": {
+      "primary": ["groq/llama-3.1-70b-versatile", "xai/grok-3-fast"],
+      "fallback": ["together/meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo"]
+    },
+    "cheap": {
+      "primary": ["deepseek/deepseek-chat", "groq/llama-3.1-8b-instant"],
+      "fallback": ["mistral/ministral-8b-2410"]
+    },
+    "quality": {
+      "primary": ["anthropic/claude-3.5-sonnet", "openai/gpt-4o"],
+      "fallback": ["anthropic/claude-4-sonnet-20250522"]
+    },
+    "search": {
+      "primary": ["perplexity/sonar-medium-online"],
+      "fallback": ["perplexity/sonar-small-online"]
+    }
+  },
+  
+  "cache": {
+    "enabled": true,
+    "type": "semantic",
+    "ttl": 3600,
+    "similarity_threshold": 0.95
+  },
+  
+  "retry": {
+    "enabled": true,
+    "max_attempts": 3,
+    "delay_ms": 1000,
+    "exponential_backoff": true,
+    "jitter": true
+  },
+  
+  "guardrails": {
+    "enabled": true,
+    "pii_redaction": true,
+    "content_filtering": true,
+    "max_output_tokens": 8192,
+    "webhook_url": null
+  },
+  
+  "observability": {
+    "log_requests": true,
+    "log_responses": false,
+    "track_costs": true,
+    "cost_alert_threshold": 10.00,
+    "metrics_enabled": true
+  },
+  
+  "load_balancing": {
+    "strategy": "weighted_round_robin",
+    "health_check_interval": 60000,
+    "failure_threshold": 3,
+    "success_threshold": 2
+  },
+  
+  "rate_limiting": {
+    "enabled": true,
+    "requests_per_minute": 60,
+    "tokens_per_minute": 100000,
+    "concurrent_requests": 10
+  },
+  
+  "webhooks": {
+    "on_request": null,
+    "on_response": null,
+    "on_error": null,
+    "on_cache_hit": null
+  },
+  
+  "custom_headers": {
+    "X-Source": "sophia-intel-ai",
+    "X-Version": "1.0.0",
+    "X-Environment": "production"
+  }
+}

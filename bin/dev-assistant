@@ -1,0 +1,128 @@
+#!/usr/bin/env zsh
+set -euo pipefail
+
+# Unified wrapper for Codex and Claude CLIs with centralized persona
+# Usage examples:
+#   bin/dev-assistant plan "Implement auth endpoint"
+#   bin/dev-assistant implement "Refactor utils with tests"
+#   PROVIDER=codex MODEL=gpt-4o bin/dev-assistant plan "Design feature"
+#   PROVIDER=claude MODEL=claude-3-5-sonnet bin/dev-assistant implement "Apply plan" --seed-repo
+
+PROVIDER=${PROVIDER:-claude}          # claude|codex (default: claude for long-context)
+MODEL=${MODEL:-claude-3-5-sonnet-20240620}
+PERSONA_FILE_CLAUDE="$HOME/.config/claude/personas/master-architect.txt"
+PERSONA_FILE_CODEX="$HOME/.config/codex/personas/master-architect.txt"
+ACTION=${1:-}
+shift || true
+
+if [[ -z "${ACTION}" ]]; then
+  echo "Usage: bin/dev-assistant [plan|implement] <task text> [--seed-repo]" >&2
+  exit 1
+fi
+
+# Load keys if present (no secrets committed; follows AGENTS.md)
+[[ -f "$HOME/.config/sophia/env" ]] && source "$HOME/.config/sophia/env"
+
+SEED=false
+TASK_ARGS=()
+for arg in "$@"; do
+  if [[ "$arg" == "--seed-repo" ]]; then
+    SEED=true
+  else
+    TASK_ARGS+="$arg"
+  fi
+done
+
+TASK_TEXT=$(printf "%s " ${TASK_ARGS[@]:-} | sed 's/ *$//')
+if [[ -z "$TASK_TEXT" ]]; then
+  echo "Provide a task description, e.g., bin/dev-assistant plan \"Add endpoint\"" >&2
+  exit 1
+fi
+
+case "$ACTION" in
+  plan)
+    PROMPT_PREFIX="PLAN: $TASK_TEXT"
+    ;;
+  implement)
+    PROMPT_PREFIX="IMPLEMENT: $TASK_TEXT"
+    ;;
+  *)
+    echo "Unknown action: $ACTION (expected plan|implement)" >&2
+    exit 1
+    ;;
+esac
+
+# Seed repo context (limited for safety)
+SEED_ARGS=()
+if $SEED; then
+  if command -v git >/dev/null 2>&1; then
+    TOP_FILES=$(git ls-files | head -n 20 | tr '\n' ' ')
+    SEED_ARGS=(--add-dir . "--attach $TOP_FILES")
+  fi
+fi
+
+run_codex() {
+  if ! command -v codex >/dev/null 2>&1; then
+    echo "codex CLI not found. Install via Homebrew or npm." >&2
+    exit 127
+  fi
+  if [[ ! -f "$PERSONA_FILE_CODEX" ]]; then
+    echo "Persona missing: $PERSONA_FILE_CODEX (run scripts/cli/setup_cli_personas.sh)" >&2
+    exit 1
+  fi
+
+  case "$ACTION" in
+    plan)
+      codex --model "$MODEL" \
+            --system-prompt "$(cat "$PERSONA_FILE_CODEX")" \
+            ${SEED_ARGS[@]:-} \
+            "$PROMPT_PREFIX"
+      ;;
+    implement)
+      codex --model "$MODEL" \
+            --system-prompt "$(cat "$PERSONA_FILE_CODEX")" \
+            ${SEED_ARGS[@]:-} \
+            "${PROMPT_PREFIX}. Output a unified diff patch only, plus tests and docs updates as needed."
+      ;;
+  esac
+}
+
+run_claude() {
+  if ! command -v claude >/dev/null 2>&1; then
+    echo "claude CLI not found. Install the native binary or npm package." >&2
+    exit 127
+  fi
+  if [[ ! -f "$PERSONA_FILE_CLAUDE" ]]; then
+    echo "Persona missing: $PERSONA_FILE_CLAUDE (run scripts/cli/setup_cli_personas.sh)" >&2
+    exit 1
+  fi
+
+  case "$ACTION" in
+    plan)
+      claude --model "$MODEL" \
+             --append-system-prompt "$(cat "$PERSONA_FILE_CLAUDE")" \
+             ${SEED_ARGS[@]:-} \
+             -p "$PROMPT_PREFIX"
+      ;;
+    implement)
+      claude --model "$MODEL" \
+             --append-system-prompt "$(cat "$PERSONA_FILE_CLAUDE")" \
+             ${SEED_ARGS[@]:-} \
+             -p "$PROMPT_PREFIX. Produce: (A) unified diff only for code, (B) tests, (C) docs/changelog notes; keep edits minimal."
+      ;;
+  esac
+}
+
+case "$PROVIDER" in
+  codex)
+    run_codex
+    ;;
+  claude)
+    run_claude
+    ;;
+  *)
+    echo "Unknown PROVIDER: $PROVIDER (use claude or codex)" >&2
+    exit 1
+    ;;
+esac
+

@@ -1,0 +1,108 @@
+{
+  "cline": {
+    "version": "3.2.6+",
+    "providers": [
+      {
+        "name": "OpenRouterPrimary",
+        "base_url": "https://openrouter.ai/api/v1",
+        "models": [
+          {
+            "name": "claude-sonnet-4",
+            "id": "anthropic/claude-sonnet-4",
+            "context_window": 200000,
+            "temperature": 0.3,
+            "description": "Most powerful reasoning model"
+          },
+          {
+            "name": "gemini-2.5-flash",
+            "id": "google/gemini-2.5-flash",
+            "context_window": 50000,
+            "temperature": 0.4,
+            "description": "Fast response model"
+          }
+        ]
+      },
+      {
+        "name": "OpenRouterFree",
+        "base_url": "https://openrouter.ai/api/v1",
+        "models": [
+          {
+            "name": "deepseek-v3",
+            "id": "deepseek/deepseek-v3-0324",
+            "context_window": 32000,
+            "temperature": 0.1,
+            "description": "Cost-effective model"
+          },
+          {
+            "name": "qwen3-coder",
+            "id": "qwen/qwen3-coder",
+            "context_window": 100000,
+            "temperature": 0.2,
+            "description": "Specialized coding model"
+          }
+        ]
+      }
+    ],
+    "default_provider": "OpenRouterPrimary",
+    "default_model": "anthropic/claude-opus-4-1-20250805",
+    "fallback_strategy": {
+      "enabled": true,
+      "sequence": [
+        "claude-sonnet-4",
+        "gemini-2.5-flash",
+        "qwen3-coder",
+        "deepseek-v3"
+      ],
+      "retry_attempts": 3,
+      "retry_delay_ms": 1000
+    },
+    "task_routing": {
+      "code_generation": {
+        "primary": "qwen3-coder",
+        "fallback": "claude-sonnet-4"
+      },
+      "architecture": {
+        "primary": "claude-sonnet-4",
+        "fallback": "deepseek-v3"
+      },
+      "quick_response": {
+        "primary": "gemini-2.5-flash",
+        "fallback": "deepseek-v3"
+      },
+      "testing": {
+        "primary": "deepseek-v3",
+        "fallback": "qwen3-coder"
+      }
+    },
+    "memory_integration": {
+      "short_term": {
+        "enabled": true,
+        "provider": "langchain",
+        "buffer_size": 10
+      },
+      "long_term": {
+        "enabled": true,
+        "provider": "mem0",
+        "relevance_threshold": 0.8,
+        "max_results": 5
+      }
+    },
+    "metrics": {
+      "enabled": true,
+      "tracking": {
+        "tokens": true,
+        "cost": true,
+        "latency": true,
+        "success_rate": true
+      }
+    },
+    "integrations": {
+      "github_codespaces": {
+        "enabled": true,
+        "secrets_used": [
+          "OPENROUTER_API_KEY"
+        ]
+      }
+    }
+  }
+}

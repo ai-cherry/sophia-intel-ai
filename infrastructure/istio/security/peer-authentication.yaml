@@ -1,0 +1,160 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default-strict-mtls
+  namespace: istio-system
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: sophia-mesh-mtls
+  namespace: sophia-mesh
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: sophia-mesh-mtls
+  namespace: sophia-mesh
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: shared-services-mtls
+  namespace: shared-services
+spec:
+  mtls:
+    mode: STRICT
+---
+# Allow permissive mode for specific services during migration
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: migration-permissive
+  namespace: sophia-mesh
+spec:
+  selector:
+    matchLabels:
+      app: legacy-service
+  mtls:
+    mode: PERMISSIVE
+---
+# Workload-specific strict mTLS for critical services
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: sophia-orchestrator-strict
+  namespace: sophia-mesh
+spec:
+  selector:
+    matchLabels:
+      app: sophia-orchestrator
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8080:
+      mode: STRICT
+    9090:
+      mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: sophia-orchestrator-strict
+  namespace: sophia-mesh
+spec:
+  selector:
+    matchLabels:
+      app: sophia-orchestrator
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    8080:
+      mode: STRICT
+    9090:
+      mode: STRICT
+---
+# MCP router specific authentication
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: mcp-router-strict
+  namespace: sophia-mesh
+spec:
+  selector:
+    matchLabels:
+      app: mcp-router
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: mcp-router-strict-sophia
+  namespace: sophia-mesh
+spec:
+  selector:
+    matchLabels:
+      app: mcp-router
+  mtls:
+    mode: STRICT
+---
+# Shared memory service authentication
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: memory-service-strict
+  namespace: shared-services
+spec:
+  selector:
+    matchLabels:
+      app: memory-service
+  mtls:
+    mode: STRICT
+---
+# Shared config service authentication
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: config-service-strict
+  namespace: shared-services
+spec:
+  selector:
+    matchLabels:
+      app: config-service
+  mtls:
+    mode: STRICT
+---
+# Logging service authentication
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: logging-service-strict
+  namespace: shared-services
+spec:
+  selector:
+    matchLabels:
+      app: logging-service
+  mtls:
+    mode: STRICT
+---
+# Metrics service authentication
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: metrics-service-strict
+  namespace: shared-services
+spec:
+  selector:
+    matchLabels:
+      app: metrics-service
+  mtls:
+    mode: STRICT

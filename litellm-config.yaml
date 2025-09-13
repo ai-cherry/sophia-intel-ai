@@ -1,0 +1,45 @@
+model_list:
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: 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
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20241022
+      api_key: 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
+  - model_name: deepseek
+    litellm_params:
+      model: deepseek/deepseek-chat
+      api_key: sk-c8a5f1725d7b4f96b29a3d041848cb74
+  - model_name: grok
+    litellm_params:
+      model: xai/grok-beta
+      api_key: xai-4WmKCCbqXhuxL56tfrCxaqs3N84fcLVirQG0NIb0NB6ViDPnnvr3vsYOBwpPKpPMzW5UMuHqf1kv87m3
+  # Route through Portkey for guarded models
+  - model_name: gpt-4o-portkey
+    litellm_params:
+      model: openai/gpt-4o
+      api_base: https://api.portkey.ai/v1
+      api_key: pk-vk-your-virtual-key-here
+
+master_key: sk-litellm-master-key-2025
+general_settings:
+  database_url: "sqlite:///./litellm.db"
+  max_tokens: 4096
+  temperature: 0.7
+  drop_params: false
+  stream: true
+  set_verbose: false
+
+litellm_settings:
+  fallback_models:
+    - gpt-4o
+    - claude-sonnet
+    - deepseek
+  success_threshold: 1
+  failure_threshold: 3
+  retry_policy:
+    max_retries: 3
+    retry_delay: 1
+  cache: true
+  cache_ttl: 3600

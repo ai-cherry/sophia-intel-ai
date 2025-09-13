@@ -1,0 +1,99 @@
+# Staging environment overrides for KEDA
+# Closer to production but with some testing allowances
+
+global:
+  environment: staging
+
+# Moderate resource limits
+keda:
+  resources:
+    operator:
+      limits:
+        cpu: 750m
+        memory: 768Mi
+      requests:
+        cpu: 75m
+        memory: 96Mi
+    metricsApiServer:
+      limits:
+        cpu: 750m
+        memory: 768Mi
+      requests:
+        cpu: 75m
+        memory: 96Mi
+
+# Balanced scaling parameters
+scalers:
+  sophia:
+    minReplicaCount: 2
+    maxReplicaCount: 30
+    pollingInterval: 10
+    cooldownPeriod: 30
+    metadata:
+      listLength: "8"
+      activationListLength: "3"
+
+  sophia:
+    minReplicaCount: 2
+    maxReplicaCount: 50
+    pollingInterval: 15
+    cooldownPeriod: 45
+    metadata:
+      threshold: "80"
+      activationThreshold: "30"
+
+  aiWorkloadCron:
+    metadata:
+      schedules:
+        - name: staging-hours
+          start: "0 8 * * 1-5"
+          end: "0 20 * * 1-5"
+          desiredReplicas: "10"
+        - name: staging-peak
+          start: "0 10 * * 1-5"
+          end: "0 16 * * 1-5"
+          desiredReplicas: "15"
+
+  # Info level logging (merged with keda section above)
+  logging:
+    operator:
+      level: info
+    metricServer:
+      level: info
+
+# Standard circuit breaker
+circuitBreaker:
+  maxScaleEventsPerMinute: 5
+  cooldownPeriod: 45s
+  errorThreshold: 8
+
+# Enable security features
+security:
+  networkPolicy:
+    enabled: true
+
+# Use staging secrets backend
+externalSecrets:
+  backend: vault
+  refreshInterval: 10m
+  secrets:
+    - name: redis-auth
+      namespace: sophia-system
+      data:
+        - key: password
+          remoteRef:
+            key: staging/redis/sophia
+            property: password
+    - name: prometheus-auth
+      namespace: sophia-system
+      data:
+        - key: token
+          remoteRef:
+            key: staging/prometheus/sophia
+            property: bearer-token
+
+# Performance tuning for staging
+performance:
+  scalingModifiers:
+    formula: "desired_replicas + ceil(desired_replicas * 0.15)" # 15% buffer for staging
+  metricsCacheDuration: 15s

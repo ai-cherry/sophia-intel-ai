@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  # Unified API metrics endpoint (add a /metrics exporter if available)
+  - job_name: 'unified-api'
+    static_configs:
+      - targets: ['unified-api:8000']
+    metrics_path: /metrics
+
+  # MCP health checks via metrics (future exporters can be added)
+  - job_name: 'mcp'
+    static_configs:
+      - targets: ['mcp-filesystem:8082', 'mcp-git:8084', 'mcp-memory:8081']
+    metrics_path: /metrics
+

@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: "sophia-automation"
+    environment: base
+  annotations:
+    description: "Sophia Intel AI Platform Namespace"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sophia-service-account
+  namespace: sophia-intel-ai
+  labels:
+    app.kubernetes.io/name: sophia-intel-ai
+    app.kubernetes.io/component: service-account
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sophia-role
+  namespace: sophia-intel-ai
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "services", "endpoints", "configmaps", "secrets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sophia-role-binding
+  namespace: sophia-intel-ai
+subjects:
+  - kind: ServiceAccount
+    name: sophia-service-account
+    namespace: sophia-intel-ai
+roleRef:
+  kind: Role
+  name: sophia-role
+  apiGroup: rbac.authorization.k8s.io

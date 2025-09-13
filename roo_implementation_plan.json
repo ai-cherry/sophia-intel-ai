@@ -1,0 +1,360 @@
+{
+  "project": "sophia-intel-ai",
+  "title": "Graph-RAG Implementation Completion Plan",
+  "priority": "critical",
+  "estimated_hours": 4,
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Critical Dependency Resolution",
+      "priority": "P0",
+      "tasks": [
+        {
+          "id": "1.1",
+          "task": "Create Weaviate Client Implementation",
+          "description": "Implement the missing WeaviateClient class that all Graph-RAG components depend on",
+          "file_path": "app/weaviate/weaviate_client.py",
+          "implementation_details": {
+            "class_name": "WeaviateClient",
+            "required_methods": [
+              "store_embedding(embedding, text, metadata)",
+              "search_embeddings(query_embedding, top_k, repo_path)",
+              "batch_store(documents)",
+              "delete_by_metadata(filters)",
+              "get_by_id(doc_id)"
+            ],
+            "dependencies": [
+              "weaviate-client>=3.0.0",
+              "asyncio support",
+              "connection pooling"
+            ],
+            "config_needed": {
+              "WEAVIATE_URL": "http://localhost:8080",
+              "WEAVIATE_API_KEY": "optional",
+              "WEAVIATE_SCHEME": "http",
+              "COLLECTION_NAME": "SophiaMemory"
+            }
+          },
+          "acceptance_criteria": [
+            "All methods async/await compatible",
+            "Proper error handling with retries",
+            "Connection pooling implemented",
+            "Supports both local and cloud Weaviate"
+          ]
+        },
+        {
+          "id": "1.2",
+          "task": "Fix Embedding Service Import Paths",
+          "description": "Resolve inconsistent import paths for TogetherEmbeddingService",
+          "files_to_fix": [
+            "app/retrieval/graph_retriever.py",
+            "app/indexing/indexer.py"
+          ],
+          "changes": {
+            "incorrect": "from app.embeddings.together_embeddings import TogetherEmbeddingService",
+            "correct": "from app.embedding.embedding_service import TogetherEmbeddingService",
+            "also_check": [
+              "from app.embedding.models import EmbeddingModel",
+              "from app.embedding.utils import get_embedding_service"
+            ]
+          }
+        },
+        {
+          "id": "1.3",
+          "task": "Create __init__.py Files",
+          "description": "Ensure all packages have proper __init__.py files for imports",
+          "directories": [
+            "app/weaviate/__init__.py",
+            "app/retrieval/__init__.py",
+            "app/models/__init__.py"
+          ],
+          "exports": {
+            "app/weaviate/__init__.py": ["WeaviateClient"],
+            "app/retrieval/__init__.py": [
+              "GraphRetriever",
+              "GraphSearchRequest",
+              "GraphSearchResult"
+            ],
+            "app/models/__init__.py": [
+              "MemoryMetadata",
+              "EntityNode",
+              "RelationEdge",
+              "DocumentChunk"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Integration Fixes",
+      "priority": "P0",
+      "tasks": [
+        {
+          "id": "2.1",
+          "task": "Update Graph Endpoints Error Handling",
+          "description": "Add proper error handling and service initialization",
+          "file_path": "app/api/graph_endpoints.py",
+          "additions": [
+            "Try-catch blocks for Weaviate connection errors",
+            "Graceful degradation if Weaviate unavailable",
+            "Request validation middleware",
+            "Response caching for frequent queries"
+          ]
+        },
+        {
+          "id": "2.2",
+          "task": "Fix Incremental Indexer Integration",
+          "description": "Ensure incremental_indexer properly uses the new metadata model",
+          "file_path": "app/indexing/incremental_indexer.py",
+          "requirements": [
+            "Import MemoryMetadata from app.models.metadata",
+            "Convert legacy metadata to MemoryMetadata format",
+            "Add batch size configuration",
+            "Implement checkpointing for resume capability"
+          ]
+        },
+        {
+          "id": "2.3",
+          "task": "Align Airbyte ETL with Graph Structure",
+          "description": "Ensure Airbyte ETL outputs data compatible with graph storage",
+          "file_path": "app/indexing/airbyte_etl.py",
+          "updates": [
+            "Map Airbyte schemas to EntityNode/RelationEdge",
+            "Add transformation pipeline for different data sources",
+            "Implement data validation before graph insertion",
+            "Add metrics collection for ETL monitoring"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Testing Infrastructure",
+      "priority": "P1",
+      "tasks": [
+        {
+          "id": "3.1",
+          "task": "Create Unit Tests for Graph Components",
+          "description": "Comprehensive test coverage for all Graph-RAG components",
+          "test_files": [
+            "tests/test_weaviate_client.py",
+            "tests/test_graph_retriever.py",
+            "tests/test_metadata_models.py",
+            "tests/test_incremental_indexer.py"
+          ],
+          "coverage_targets": {
+            "minimum": 80,
+            "preferred": 95
+          },
+          "test_scenarios": [
+            "Connection failures and retries",
+            "Large batch processing",
+            "Concurrent operations",
+            "Edge cases in metadata",
+            "Multi-hop graph traversal"
+          ]
+        },
+        {
+          "id": "3.2",
+          "task": "Integration Test Suite",
+          "description": "End-to-end testing of Graph-RAG pipeline",
+          "file_path": "tests/integration/test_graph_rag_pipeline.py",
+          "test_flow": [
+            "1. Index sample repository",
+            "2. Create graph relationships",
+            "3. Perform vector search",
+            "4. Test metadata filtering",
+            "5. Verify incremental updates",
+            "6. Test deletion and cleanup"
+          ]
+        },
+        {
+          "id": "3.3",
+          "task": "Performance Benchmarks",
+          "description": "Establish performance baselines",
+          "file_path": "tests/benchmarks/graph_performance.py",
+          "metrics": [
+            "Indexing speed (docs/second)",
+            "Query latency (p50, p95, p99)",
+            "Memory usage under load",
+            "Concurrent request handling"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Configuration & Documentation",
+      "priority": "P1",
+      "tasks": [
+        {
+          "id": "4.1",
+          "task": "Environment Configuration",
+          "description": "Set up proper environment variables and configuration",
+          "files": [".env.example", "config/graph_config.yaml"],
+          "variables": {
+            "WEAVIATE_URL": "Weaviate instance URL",
+            "WEAVIATE_API_KEY": "API key for cloud Weaviate",
+            "GRAPH_COLLECTION_NAME": "Collection name for graph data",
+            "EMBEDDING_CACHE_SIZE": "Number of embeddings to cache",
+            "GRAPH_TRAVERSAL_MAX_HOPS": "Maximum hops for graph queries",
+            "BATCH_SIZE": "Batch size for indexing",
+            "RETRY_ATTEMPTS": "Number of retry attempts for failed operations"
+          }
+        },
+        {
+          "id": "4.2",
+          "task": "API Documentation",
+          "description": "Document all Graph-RAG endpoints",
+          "deliverables": [
+            "OpenAPI/Swagger spec update",
+            "README for graph endpoints",
+            "Example curl commands",
+            "Python client examples"
+          ]
+        },
+        {
+          "id": "4.3",
+          "task": "Deployment Guide",
+          "description": "Production deployment documentation",
+          "file_path": "docs/GRAPH_RAG_DEPLOYMENT.md",
+          "sections": [
+            "Prerequisites",
+            "Weaviate setup (Docker/Cloud)",
+            "Configuration steps",
+            "Performance tuning",
+            "Monitoring setup",
+            "Troubleshooting guide"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "Production Hardening",
+      "priority": "P2",
+      "tasks": [
+        {
+          "id": "5.1",
+          "task": "Add Monitoring & Observability",
+          "description": "Implement comprehensive monitoring",
+          "components": [
+            "Prometheus metrics for indexing/query performance",
+            "Structured logging with correlation IDs",
+            "Health check endpoints",
+            "Grafana dashboard templates"
+          ]
+        },
+        {
+          "id": "5.2",
+          "task": "Implement Caching Layer",
+          "description": "Add Redis caching for frequent queries",
+          "implementation": {
+            "cache_key_pattern": "graph:query:{hash}",
+            "ttl": 3600,
+            "invalidation_strategy": "on_index_update",
+            "cache_warming": "top_100_queries"
+          }
+        },
+        {
+          "id": "5.3",
+          "task": "Security Enhancements",
+          "description": "Add security layers for production",
+          "security_measures": [
+            "Input sanitization for graph queries",
+            "Rate limiting per API key",
+            "Query complexity limits",
+            "Audit logging for sensitive operations"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": 6,
+      "name": "Advanced Features",
+      "priority": "P3",
+      "tasks": [
+        {
+          "id": "6.1",
+          "task": "Multi-hop Graph Traversal",
+          "description": "Implement actual graph traversal beyond vector search",
+          "implementation": "Enable GraphRetriever to perform multi-hop queries when hops > 0"
+        },
+        {
+          "id": "6.2",
+          "task": "Hybrid Search Ranking",
+          "description": "Combine vector and graph scores for better relevance",
+          "algorithm": "Weighted combination of vector similarity and graph proximity"
+        },
+        {
+          "id": "6.3",
+          "task": "Graph Visualization API",
+          "description": "Add endpoints for graph visualization in the hub",
+          "endpoints": [
+            "/graph/visualize",
+            "/graph/schema",
+            "/graph/statistics"
+          ]
+        }
+      ]
+    }
+  ],
+  "execution_order": {
+    "critical_path": ["1.1", "1.2", "1.3", "2.1", "3.1", "4.1"],
+    "parallel_tasks": [
+      ["2.2", "2.3"],
+      ["3.2", "3.3"],
+      ["4.2", "4.3"],
+      ["5.1", "5.2", "5.3"]
+    ]
+  },
+  "success_criteria": {
+    "must_have": [
+      "All imports work without errors",
+      "Basic CRUD operations on graph data",
+      "Vector search functionality",
+      "80% test coverage",
+      "No hardcoded secrets"
+    ],
+    "should_have": [
+      "Performance benchmarks established",
+      "Monitoring dashboards",
+      "Caching layer",
+      "Complete API documentation"
+    ],
+    "nice_to_have": [
+      "Multi-hop traversal",
+      "Graph visualization",
+      "Advanced ranking algorithms"
+    ]
+  },
+  "risks": {
+    "high": [
+      {
+        "risk": "Weaviate connection failures in production",
+        "mitigation": "Implement circuit breaker pattern and fallback to pure vector search"
+      }
+    ],
+    "medium": [
+      {
+        "risk": "Performance degradation with large graphs",
+        "mitigation": "Implement pagination and query limits"
+      }
+    ],
+    "low": [
+      {
+        "risk": "Import conflicts with existing code",
+        "mitigation": "Use absolute imports and proper namespacing"
+      }
+    ]
+  },
+  "verification_steps": [
+    "Run `python -m pytest tests/ -v` with all tests passing",
+    "Execute `python -c 'import app.retrieval.graph_retriever'` without errors",
+    "Start API server and verify /graph/search endpoint responds",
+    "Index a sample repository and perform successful search",
+    "Check coverage report shows >80% coverage"
+  ],
+  "estimated_completion": "4-6 hours for P0/P1 tasks, 8-10 hours for complete implementation"
+}

@@ -1,0 +1,28 @@
+{
+  "timestamp": "2025-09-06T00:18:10.407270",
+  "basic_models": {
+    "gpt-4o-mini": "success",
+    "gpt-5-nano": "success",
+    "grok-3-mini": "success",
+    "glm-4.5-air": "success"
+  },
+  "connection_test": {
+    "gpt-5-nano": {
+      "status": "success",
+      "response": ""
+    },
+    "grok-3-mini": {
+      "status": "success",
+      "response": ""
+    },
+    "glm-4.5-air": {
+      "status": "success",
+      "response": "\n"
+    },
+    "gpt-4o-mini": {
+      "status": "success",
+      "response": "OK"
+    }
+  },
+  "success_rate": "100.0%"
+}

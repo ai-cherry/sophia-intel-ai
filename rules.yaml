@@ -1,0 +1,46 @@
+version: 1.0
+project: sophia-intel-ai
+environment: development
+
+rules:
+  style:
+    - functional_preferred: true
+    - no_global_state: true
+    - async_by_default: true
+    - type_hints: required
+    
+  lint:
+    python: 
+      - tool: black
+      - line_length: 88
+    javascript: 
+      - tool: prettier
+      - semi: false
+    typescript:
+      - tool: prettier
+      - strict: true
+      
+  commits:
+    - format: conventional
+    - atomic: true
+    - max_files: 10
+    - sign: true
+    
+  security:
+    - no_hardcoded_secrets: true
+    - use_env_vars: true
+    - sanitize_inputs: true
+    - no_eval: true
+    
+  testing:
+    - coverage_min: 80
+    - before_commit: true
+    - frameworks:
+        python: pytest
+        javascript: jest
+        
+  mcp:
+    servers:
+      - memory: "http://localhost:8081"
+      - filesystem: "http://localhost:8082"
+      - git: "http://localhost:8084"

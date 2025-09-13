@@ -1,0 +1,55 @@
+networks:
+  default:
+    external: true
+    name: builder-network
+services:
+  alertmanager:
+    container_name: sophia-alertmanager
+    image: prom/alertmanager:latest
+    ports:
+    - 9093:9093
+    volumes:
+    - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+  grafana:
+    container_name: sophia-grafana
+    environment:
+    - GF_SECURITY_ADMIN_PASSWORD=admin
+    image: grafana/grafana:latest
+    ports:
+    - 3001:3000
+    volumes:
+    - grafana-data:/var/lib/grafana
+    - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+    - ./grafana/datasources:/etc/grafana/provisioning/datasources
+  postgres-exporter:
+    container_name: sophia-postgres-exporter
+    environment:
+    - DATA_SOURCE_NAME=postgresql://builder:builder123@postgres:5432/builder?sslmode=disable
+    image: prometheuscommunity/postgres-exporter:latest
+    ports:
+    - 9187:9187
+  prometheus:
+    command:
+    - --config.file=/etc/prometheus/prometheus.yml
+    - --storage.tsdb.path=/prometheus
+    - --web.console.libraries=/etc/prometheus/console_libraries
+    - --web.console.templates=/etc/prometheus/consoles
+    - --storage.tsdb.retention.time=200h
+    - --web.enable-lifecycle
+    container_name: sophia-prometheus
+    image: prom/prometheus:latest
+    ports:
+    - 9090:9090
+    volumes:
+    - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    - ./alerts.yml:/etc/prometheus/alerts.yml
+  redis-exporter:
+    container_name: sophia-redis-exporter
+    environment:
+    - REDIS_ADDR=redis://valkey:6379
+    image: oliver006/redis_exporter:latest
+    ports:
+    - 9121:9121
+version: '3.8'
+volumes:
+- 'grafana-data:'

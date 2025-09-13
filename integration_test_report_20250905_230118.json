@@ -1,0 +1,66 @@
+{
+  "timestamp": "2025-09-05T23:01:18.863002",
+  "test_results": {
+    "portkey_providers": {
+      "openai": {
+        "status": "success",
+        "model": "gpt-3.5-turbo"
+      },
+      "anthropic": {
+        "status": "failed",
+        "error": "Error code: 404 - {'error': {'message': 'anthropic error: model: claude-2.1', 'type': 'not_found_err"
+      },
+      "deepseek": {
+        "status": "success",
+        "model": "deepseek-chat"
+      },
+      "mistral": {
+        "status": "success",
+        "model": "mistral-medium"
+      },
+      "groq": {
+        "status": "failed",
+        "error": "Error code: 404 - {'error': {'message': 'groq error: The model `portkey-default` does not exist or y"
+      }
+    },
+    "vector_databases": {
+      "qdrant": false,
+      "weaviate": false,
+      "redis": false,
+      "mem0": false
+    },
+    "vector_operations": {
+      "qdrant": {
+        "status": "failed"
+      },
+      "redis": {
+        "status": "unavailable"
+      }
+    },
+    "agent_roles": {
+      "creative": {
+        "status": "success",
+        "response_preview": "InfiniMind..."
+      },
+      "coding": {
+        "status": "success",
+        "response_preview": "Here are several ways to write a Python function t..."
+      },
+      "analytical": {
+        "status": "success",
+        "response_preview": "Of course. Here is a detailed analysis of the pros..."
+      }
+    },
+    "factory_integration": {
+      "status": "failed",
+      "error": "'ArtemisUnifiedFactory' object has no attribute 'get_status'"
+    }
+  },
+  "summary": {
+    "portkey_providers": 3,
+    "vector_databases": 0,
+    "vector_operations": 0,
+    "agent_roles": 3,
+    "factory_integration": "\u2717"
+  }
+}

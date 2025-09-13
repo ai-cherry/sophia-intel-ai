@@ -1,0 +1,19 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Foundational Knowledge API",
+    "description": "API for managing foundational business knowledge",
+    "version": "1.0.0"
+  },
+  "paths": {},
+  "servers": [
+    {
+      "url": "http://localhost:8003",
+      "description": "Local development"
+    },
+    {
+      "url": "https://api.sophia-intel.ai",
+      "description": "Production"
+    }
+  ]
+}

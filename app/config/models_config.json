@@ -1,0 +1,43 @@
+{
+  "role_models": {
+    "coder": "x-ai/grok-code-fast-1",
+    "critic": "x-ai/grok-4",
+    "judge": "openai/gpt-5",
+    "analyzer": "google/gemini-2.5-flash",
+    "generator": "x-ai/grok-4",
+    "validator": "anthropic/claude-sonnet-4",
+    "reasoning": "qwen/qwen3-30b-a3b",
+    "vision": "google/gemini-2.5-pro"
+  },
+  "temperature_settings": {
+    "creative": 0.9,
+    "balanced": 0.7,
+    "precise": 0.3,
+    "deterministic": 0.1
+  },
+  "model_pools": {
+    "fast": [
+      "google/gemini-2.5-flash",
+      "z-ai/glm-4.5-air",
+      "deepseek/deepseek-chat-v3-0324"
+    ],
+    "balanced": [
+      "google/gemini-2.5-pro",
+      "deepseek/deepseek-chat-v3.1",
+      "qwen/qwen3-30b-a3b"
+    ],
+    "heavy": ["openai/gpt-5", "x-ai/grok-4", "anthropic/claude-sonnet-4"],
+    "premium": ["openai/gpt-5", "x-ai/grok-4", "anthropic/claude-sonnet-4"],
+    "economy": [
+      "z-ai/glm-4.5-air",
+      "google/gemini-2.5-flash",
+      "deepseek/deepseek-chat-v3-0324"
+    ]
+  },
+  "fallback_chains": {
+    "openai/gpt-5": ["x-ai/grok-4", "google/gemini-2.5-pro"],
+    "x-ai/grok-4": ["openai/gpt-5", "anthropic/claude-sonnet-4"],
+    "anthropic/claude-sonnet-4": ["x-ai/grok-4", "openai/gpt-5"],
+    "x-ai/grok-code-fast-1": ["x-ai/grok-4", "openai/gpt-5"]
+  }
+}

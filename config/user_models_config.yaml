@@ -1,0 +1,433 @@
+# ============================================================================
+# USER-CONTROLLED CENTRALIZED MODEL CONFIGURATION
+# ============================================================================
+# This is YOUR configuration file - edit this to control all model routing
+# across LiteLLM Squad, Builder App, and Sophia Intel App
+#
+# HOW TO USE:
+# 1. Set 'enabled: true' for models you want to use
+# 2. Adjust 'priority' (1-10, lower = higher priority)
+# 3. Customize routing policies at the bottom
+# 4. All three systems will automatically use these settings
+# ============================================================================
+
+# Your API Configuration
+portkey:
+  api_key: "nYraiE8dOR9A1gDwaRNpSSXRkXBc"
+  base_url: "https://api.portkey.ai/v1"
+  
+# Your Model Preferences
+preferences:
+  prioritize_quality: true      # Set to false to prioritize speed
+  prioritize_performance: true   # Set to false to prioritize cost
+  allow_experimental: false      # Set to true to enable experimental models
+  max_latency_ms: 1000          # Maximum acceptable latency
+  min_context_tokens: 128000     # Minimum context window required
+
+# ============================================================================
+# YOUR APPROVED MODELS LIST
+# Edit this section to control which models are available
+# ============================================================================
+
+models:
+  # TOP TIER - Latest & Best Models (2025)
+  gpt-5:
+    enabled: true
+    priority: 1
+    provider: openai
+    display_name: "GPT-5"
+    context: 256000
+    my_notes: "Best for complex reasoning and architecture decisions"
+    
+  claude-sonnet-4:
+    enabled: true
+    priority: 1
+    provider: anthropic
+    display_name: "Claude Sonnet 4"
+    context: 200000
+    my_notes: "Excellent for code generation and analysis"
+    
+  gemini-2.5-pro:
+    enabled: true
+    priority: 1
+    provider: google
+    display_name: "Gemini 2.5 Pro"
+    context: 2000000  # 2M context!
+    my_notes: "Insane context window for research"
+    model_id: "google/gemini-2.5-pro"
+    
+  # PERFORMANCE TIER - Fast & Powerful
+  grok-code-fast-1:
+    enabled: true
+    priority: 2
+    provider: x-ai
+    display_name: "Grok Code Fast 1"
+    context: 128000
+    my_notes: "Blazing fast for code tasks"
+    
+  gemini-2.5-flash:
+    enabled: true
+    priority: 2
+    provider: google
+    display_name: "Gemini 2.5 Flash"
+    context: 1000000
+    my_notes: "Great balance of speed and capability"
+    
+  gemini-2.0-flash:
+    enabled: true
+    priority: 3
+    provider: google
+    display_name: "Gemini 2.0 Flash"
+    context: 1000000
+    my_notes: "Even faster variant"
+    
+  deepseek-v3.1:
+    enabled: true
+    priority: 2
+    provider: deepseek
+    display_name: "DeepSeek V3.1"
+    context: 128000
+    my_notes: "Good for code review and debugging"
+    
+  # NEW ADVANCED MODELS (2025)
+  deepseek-chat-v3.1-free:
+    enabled: true
+    priority: 2
+    provider: deepseek
+    display_name: "DeepSeek Chat V3.1 Free"
+    context: 128000
+    my_notes: "FREE tier! Excellent for cost-effective coding"
+    model_id: "deepseek/deepseek-chat-v3.1:free"
+    
+  deepseek-chat-v3-0324:
+    enabled: true
+    priority: 2
+    provider: deepseek
+    display_name: "DeepSeek Chat V3 0324"
+    context: 128000
+    my_notes: "Latest DeepSeek variant, strong reasoning"
+    model_id: "deepseek/deepseek-chat-v3-0324"
+    
+  llama-4-scout:
+    enabled: true
+    priority: 3
+    provider: meta-llama
+    display_name: "Llama 4 Scout"
+    context: 128000
+    my_notes: "Fast exploration and research agent"
+    model_id: "meta-llama/llama-4-scout"
+    
+  llama-4-maverick:
+    enabled: true
+    priority: 2
+    provider: meta-llama
+    display_name: "Llama 4 Maverick"
+    context: 128000
+    my_notes: "Creative problem solving, unconventional approaches"
+    model_id: "meta-llama/llama-4-maverick"
+    
+  grok-4:
+    enabled: true
+    priority: 1
+    provider: x-ai
+    display_name: "Grok 4"
+    context: 256000
+    my_notes: "Latest Grok - excellent reasoning and humor"
+    model_id: "x-ai/grok-4"
+    
+  qwen3-coder:
+    enabled: true
+    priority: 2
+    provider: qwen
+    display_name: "Qwen3 Coder"
+    context: 128000
+    my_notes: "Specialized for code generation and review"
+    model_id: "qwen/qwen3-coder"
+    
+  # RESEARCH TIER
+  qwen3-30b-a3b:
+    enabled: true
+    priority: 4
+    provider: qwen
+    display_name: "Qwen3 30B A3B"
+    context: 32768
+    my_notes: "Multilingual support"
+    model_id: "qwen/qwen3-30b-a3b"
+    
+  glm-4.5:
+    enabled: true
+    priority: 4
+    provider: z-ai
+    display_name: "GLM 4.5"
+    context: 128000
+    my_notes: "Research and academic tasks"
+    
+  # MINI TIER - Still powerful but efficient
+  gpt-4.1-mini:
+    enabled: true
+    priority: 5
+    provider: openai
+    display_name: "GPT-4.1 Mini"
+    context: 128000
+    my_notes: "Quick tasks, still very capable"
+    
+  gemini-2.5-flash-lite:
+    enabled: true
+    priority: 5
+    provider: google
+    display_name: "Gemini 2.5 Flash Lite"
+    context: 1000000
+    my_notes: "Ultra-fast for simple tasks"
+    model_id: "google/gemini-2.5-flash-lite"
+    
+  gemma-3-12b:
+    enabled: false  # Disabled - local model
+    priority: 6
+    provider: google
+    display_name: "Gemma 3 12B"
+    context: 8192
+    my_notes: "For local/offline use only"
+    
+  # EXPERIMENTAL - Disabled by default
+  gpt-oss-120b:
+    enabled: false  # Enable if you want to test
+    priority: 10
+    provider: openai
+    display_name: "GPT-OSS 120B"
+    context: 128000
+    my_notes: "Experimental open source variant"
+    
+  deepseek-v3-0324:
+    enabled: false  # Enable if you want to test
+    priority: 10
+    provider: deepseek
+    display_name: "DeepSeek V3 0324"
+    context: 128000
+    my_notes: "Experimental version"
+    
+  claude-3.7-sonnet:
+    enabled: false  # Enable if you want to test
+    priority: 10
+    provider: anthropic
+    display_name: "Claude 3.7 Sonnet"
+    context: 200000
+    my_notes: "Beta/experimental features"
+
+# ============================================================================
+# YOUR CUSTOM ROUTING POLICIES
+# Define how models are selected for different scenarios
+# ============================================================================
+
+routing_policies:
+  # My default policy - what I usually want
+  my_default:
+    name: "My Default"
+    description: "My preferred model selection"
+    models:
+      - grok-4            # NEW: Best overall model
+      - claude-sonnet-4   # Excellent for code
+      - gpt-5            # Strong reasoning
+      - gemini-2.5-pro   # Massive context
+    fallback:
+      - deepseek-chat-v3.1-free  # FREE fallback!
+      
+  # When I need maximum quality
+  quality_max:
+    name: "Maximum Quality"
+    description: "When only the best will do"
+    models:
+      - grok-4            # Latest and best from X-AI
+      - gpt-5
+      - claude-sonnet-4
+      - gemini-2.5-pro
+      
+  # When I need speed
+  speed_max:
+    name: "Maximum Speed"
+    description: "Fastest possible response"
+    models:
+      - grok-code-fast-1
+      - gemini-2.5-flash
+      - gemini-2.5-flash-lite
+      
+  # For coding tasks
+  coding:
+    name: "Coding Tasks"
+    description: "Optimized for code generation and review"
+    models:
+      - qwen3-coder       # Specialized coder
+      - deepseek-chat-v3.1-free  # FREE tier coding
+      - grok-code-fast-1
+      - claude-sonnet-4
+    fallback:
+      - deepseek-v3.1
+      
+  # For creative work
+  creative:
+    name: "Creative Work"
+    description: "For creative and narrative tasks"
+    models:
+      - llama-4-maverick  # Unconventional creative approaches
+      - claude-sonnet-4
+      - grok-4           # Humor and creativity
+      
+  # For research/analysis
+  research:
+    name: "Research & Analysis"
+    description: "Long context and deep analysis"
+    models:
+      - gemini-2.5-pro    # 2M context!
+      - llama-4-scout     # Research specialist
+      - gpt-5
+      - glm-4.5
+      
+  # Balanced approach
+  balanced:
+    name: "Balanced"
+    description: "Good mix of speed and quality"
+    models:
+      - gemini-2.5-flash
+      - claude-sonnet-4
+      - gpt-4.1-mini
+      
+  # FREE TIER - Zero cost!
+  free_tier:
+    name: "Free Tier"
+    description: "Zero cost models for routine tasks"
+    models:
+      - deepseek-chat-v3.1-free  # Completely FREE!
+    fallback:
+      - deepseek-chat-v3-0324    # Low cost alternative
+      
+  # SPECIALIST models for specific tasks
+  specialists:
+    name: "Task Specialists"
+    description: "Purpose-built models for specific tasks"
+    models:
+      - qwen3-coder         # Code specialist
+      - llama-4-scout       # Research specialist
+      - llama-4-maverick    # Creative specialist
+      - deepseek-chat-v3.1-free  # Free coding
+
+# ============================================================================
+# SYSTEM-SPECIFIC OVERRIDES
+# Customize behavior for each system
+# ============================================================================
+
+system_overrides:
+  litellm_squad:
+    default_policy: "balanced"
+    allow_all_models: true
+    parallel_requests: 5
+    test_on_free_tier: true  # Test on FREE before premium
+    
+  builder_app:
+    planner_policy: "quality_max"
+    coder_policy: "coding"
+    reviewer_policy: "quality_max"
+    allow_fallbacks: true
+    use_free_for_tests: true  # Use FREE tier for test runs
+    
+  sophia_intel:
+    default_policy: "my_default"
+    chat_policy: "balanced"
+    reasoning_policy: "quality_max"
+    creative_policy: "creative"
+    routine_policy: "free_tier"  # Use FREE for routine tasks
+
+# ============================================================================
+# TASK ROUTING RULES
+# Automatic model selection based on task characteristics
+# ============================================================================
+
+task_rules:
+  - condition: "code in task"
+    use_policy: "coding"
+    
+  - condition: "debug in task or fix in task"
+    use_models: ["qwen3-coder", "deepseek-chat-v3.1-free", "grok-code-fast-1"]
+    
+  - condition: "creative in task or story in task or maverick in task"
+    use_policy: "creative"
+    
+  - condition: "research in task or analyze in task or scout in task"
+    use_policy: "research"
+    
+  - condition: "quick in task or fast in task"
+    use_policy: "speed_max"
+    
+  - condition: "best in task or careful in task"
+    use_policy: "quality_max"
+    
+  - condition: "free in task or test in task or draft in task"
+    use_policy: "free_tier"
+    
+  - condition: "specialist in task"
+    use_policy: "specialists"
+    
+  - condition: "context_length > 100000"
+    use_models: ["gemini-2.5-pro", "gemini-2.5-flash", "grok-4"]
+    
+  - condition: "context_length > 500000"
+    use_models: ["gemini-2.5-pro"]  # Only model with 2M context
+
+# ============================================================================
+# VIRTUAL KEY MAPPINGS
+# Map providers to your Portkey virtual keys
+# ============================================================================
+
+virtual_keys:
+  openai: "openai-vk-190a60"
+  anthropic: "anthropic-vk-b42804"
+  google: "google-vk-default"  # Add your Google virtual key
+  x-ai: "xai-vk-e65d0f"
+  deepseek: "deepseek-vk-24102f"
+  openrouter: "vkj-openrouter-cc4151"  # Routes to many providers
+  qwen: "qwen-vk-default"      # Add if you have Qwen access
+  z-ai: "zai-vk-default"       # Add if you have Z-AI access
+  meta-llama: "vkj-openrouter-cc4151"  # Llama 4 models via OpenRouter
+  # Note: DeepSeek free tier doesn't need virtual key
+
+# ============================================================================
+# MONITORING & ALERTS
+# ============================================================================
+
+monitoring:
+  track_costs: true
+  cost_alert_threshold: 100.00  # Alert at $100
+  track_performance: true
+  log_slow_requests: true       # Log if > 2000ms
+  log_failed_requests: true
+  daily_budget: 1000.00         # Maximum daily spend ($1,000)
+  
+# ============================================================================
+# NOTES TO SELF
+# ============================================================================
+notes: |
+  Current Setup (2025-09-11):
+  - NEW: DeepSeek V3.1 FREE tier for cost-effective coding!
+  - NEW: Llama 4 Scout & Maverick for specialized tasks
+  - NEW: Grok 4 - latest and most powerful from X-AI
+  - NEW: Qwen3 Coder - specialized code generation
+  - Removed: Sonoma Sky/Dusk (replaced with better models)
+  - GPT-5, Claude Sonnet 4, Grok 4 are primary workhorses
+  - Gemini 2.5 Pro for massive context (2M tokens!)
+  - DeepSeek FREE tier saves money on routine coding
+  
+  Model Highlights:
+  - DeepSeek V3.1 Free: $0 cost for excellent coding!
+  - Llama 4 Scout: Optimized for research/exploration
+  - Llama 4 Maverick: Creative/unconventional solutions
+  - Grok 4: Top-tier reasoning with personality
+  - Qwen3 Coder: Purpose-built for code tasks
+  
+  To adjust:
+  1. Edit 'enabled' field to turn models on/off
+  2. Change 'priority' to reorder preferences
+  3. Modify routing_policies for different selection strategies
+  4. Update task_rules for automatic routing
+  
+  Remember:
+  - All three systems read from this file
+  - Changes take effect immediately
+  - Test with small tasks first after major changes

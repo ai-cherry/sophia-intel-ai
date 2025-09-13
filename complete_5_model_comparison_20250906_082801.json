@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-09-06T08:28:01.900610",
+  "all_models": [
+    [
+      "Grok Code Fast",
+      {
+        "score": 88.5,
+        "time": 17.65,
+        "tokens": 3625
+      }
+    ],
+    [
+      "Llama-4-Scout",
+      {
+        "score": 86.0,
+        "time": 11.45,
+        "tokens": 1434
+      }
+    ],
+    [
+      "GLM-4.5-Air",
+      {
+        "score": 84.5,
+        "time": 61.98,
+        "tokens": 9485
+      }
+    ],
+    [
+      "GPT-4o-mini",
+      {
+        "score": 78.5,
+        "time": 14.385096073150635,
+        "tokens": 1696
+      }
+    ]
+  ],
+  "gemini_details": {
+    "success": false,
+    "error": "{\"error\":{\"message\":\"Provider returned error\",\"code\":429,\"metadata\":{\"raw\":\"google/gemini-2.0-flash-exp:free is temporarily rate-limited upstream. Please retry shortly, or add your own key to accumulate your rate limits: https://openrouter.ai/settings/integrations\",\"provider_name\":\"Google\"}},\"user_id\":\"user_2uvYW9EjjlVjzKnJ0qkQ7PbTyTw\"}"
+  },
+  "gpt_details": {
+    "model": "gpt-4o-mini",
+    "provider": "Portkey/OpenAI",
+    "success": true,
+    "execution_time": 14.385096073150635,
+    "tokens": 1696,
+    "response_length": 4287,
+    "scores": {
+      "Specificity": 80,
+      "Accuracy": 100,
+      "Completeness": 100,
+      "Actionability": 37.5,
+      "Speed": 60,
+      "Overall": 78.5
+    },
+    "response_preview": "### MISSION: COMPREHENSIVE REPOSITORY ANALYSIS - sophia-intel-ai\n\n#### 1. SECURITY ANALYSIS (Priority: CRITICAL)\n\n**Findings:**\n- **Exposed API Keys:** \n  - **File:** `.env`\n  - **Details:** Found 16 exposed API keys including NETSUITE, PORTKEY, etc. This is a critical security risk as these keys can be used to access sensitive services.\n  \n- **Hardcoded Secrets:**\n  - **File:** `app/core/portkey_config.py`\n  - **Details:** Hardcoded secrets were identified. Review lines 15-25 for sensitive info"
+  }
+}

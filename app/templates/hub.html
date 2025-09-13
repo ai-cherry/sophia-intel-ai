@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#7c3aed">
+    <title>Sophia Intel AI - Unified Hub</title>
+    <link rel="stylesheet" href="/static/css/hub.css">
+    <link rel="stylesheet" href="/static/css/chat.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="/static/js/hub-controller.js" as="script">
+    <link rel="preload" href="/static/js/chat-interface.js" as="script">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="hub-header" role="banner">
+        <h1 class="hub-title">🚀 Sophia Intel AI - Unified Hub</h1>
+
+        <!-- Service Status Bar -->
+        <div class="service-status-bar" role="status" aria-live="polite">
+            <div class="status-indicators">
+                <div class="status-item" data-service="api">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="status-label">API Server (8005)</span>
+                    <span class="sr-only" id="api-status-text">Status: Unknown</span>
+                </div>
+                <div class="status-item" data-service="streamlit">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="status-label">Streamlit (8501)</span>
+                    <span class="sr-only" id="streamlit-status-text">Status: Unknown</span>
+                </div>
+                <div class="status-item" data-service="monitoring">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="status-label">Monitoring (8002)</span>
+                    <span class="sr-only" id="monitoring-status-text">Status: Unknown</span>
+                </div>
+                <div class="status-item" data-service="mcp_memory">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="status-label">MCP Memory (8001)</span>
+                    <span class="sr-only" id="mcp-memory-status-text">Status: Unknown</span>
+                </div>
+                <div class="status-item" data-service="mcp_review">
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <span class="status-label">MCP Review (8003)</span>
+                    <span class="sr-only" id="mcp-review-status-text">Status: Unknown</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header Controls -->
+        <div class="header-controls">
+            <button id="dark-mode-toggle" class="icon-button" aria-label="Toggle dark mode" aria-pressed="false">
+                <span class="icon-light">🌙</span>
+                <span class="icon-dark">☀️</span>
+            </button>
+            <button id="refresh-status" class="icon-button" aria-label="Refresh status">🔄</button>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="hub-navigation" role="tablist" aria-label="Hub sections">
+        <button id="overview-tab" data-tab="overview" class="tab-button active" role="tab" aria-selected="true" aria-controls="overview-panel" type="button">
+            📊 Overview
+        </button>
+        <button id="chat-tab" data-tab="chat" class="tab-button" role="tab" aria-selected="false" aria-controls="chat-panel" type="button">
+            💬 Chat Interface
+        </button>
+        <button id="repository-tab" data-tab="repository" class="tab-button" role="tab" aria-selected="false" aria-controls="repository-panel" type="button">
+            📁 Repository
+        </button>
+        <button id="api-tab" data-tab="api" class="tab-button" role="tab" aria-selected="false" aria-controls="api-panel" type="button">
+            📚 API Docs
+        </button>
+        <button id="metrics-tab" data-tab="metrics" class="tab-button" role="tab" aria-selected="false" aria-controls="metrics-panel" type="button">
+            📈 Metrics
+        </button>
+        <button id="monitoring-tab" data-tab="monitoring" class="tab-button" role="tab" aria-selected="false" aria-controls="monitoring-panel" type="button">
+            🔍 Monitoring
+        </button>
+        <button id="memory-tab" data-tab="memory" class="tab-button" role="tab" aria-selected="false" aria-controls="memory-panel" type="button">
+            🧠 MCP Memory
+        </button>
+        <button id="ws-tools-tab" data-tab="ws-tools" class="tab-button" role="tab" aria-selected="false" aria-controls="ws-tools-panel" type="button">
+            🔌 WebSocket Tools
+        </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="tab-content">
+        <!-- Overview Panel -->
+        <section id="overview-panel" class="tab-panel active" role="tabpanel" aria-labelledby="overview-tab">
+            <header class="panel-header">
+                <h2>🎯 System Overview</h2>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Active Models Card -->
+                <div id="active-models-card" class="dashboard-card">
+                    <h3 class="card-title">🤖 Active Models</h3>
+                    <div class="metric-list">
+                        <div class="metric-item">
+                            <span class="metric-label">GPT-5</span>
+                            <span class="metric-value" id="gpt5-status">Loading...</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Claude Sonnet 4</span>
+                            <span class="metric-value" id="claude-status">Loading...</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Gemini 2.5 Pro</span>
+                            <span class="metric-value" id="gemini-status">Loading...</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Total Models</span>
+                            <span class="metric-value" id="total-models">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cost Tracking Card -->
+                <div id="cost-tracking-card" class="dashboard-card">
+                    <h3 class="card-title">💰 Cost Tracking</h3>
+                    <div class="metric-list">
+                        <div class="metric-item">
+                            <span class="metric-label">Today's Spend</span>
+                            <span class="metric-value" id="todays-spend">$0.00</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Daily Budget</span>
+                            <span class="metric-value" id="daily-budget">$100.00</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Tokens Used</span>
+                            <span class="metric-value" id="tokens-used">0</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Request Count</span>
+                            <span class="metric-value" id="request-count">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Card -->
+                <div id="quick-actions-card" class="dashboard-card">
+                    <h3 class="card-title">⚡ Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="action-button" onclick="window.hubController?.testChat()">Test Chat Endpoint</button>
+                        <button class="action-button" onclick="window.hubController?.viewMetrics()">View Full Metrics</button>
+                        <button class="action-button" onclick="window.hubController?.restartServices()">Restart Services</button>
+                        <button class="action-button" onclick="window.hubController?.runTests()">Run Integration Tests</button>
+                    </div>
+                </div>
+
+                <!-- API Endpoints Card -->
+                <div id="api-endpoints-card" class="dashboard-card">
+                    <h3 class="card-title">🔌 API Endpoints</h3>
+                    <ul class="endpoint-list">
+                        <li class="endpoint-item">
+                            <span class="endpoint-path">/chat/completions</span>
+                            <span class="endpoint-status" data-endpoint="chat">Checking...</span>
+                        </li>
+                        <li class="endpoint-item">
+                            <span class="endpoint-path">/health</span>
+                            <span class="endpoint-status" data-endpoint="health">Checking...</span>
+                        </li>
+                        <li class="endpoint-item">
+                            <span class="endpoint-path">/metrics</span>
+                            <span class="endpoint-status" data-endpoint="metrics">Checking...</span>
+                        </li>
+                        <li class="endpoint-item">
+                            <span class="endpoint-path">/models</span>
+                            <span class="endpoint-status" data-endpoint="models">Checking...</span>
+                        </li>
+                        <li class="endpoint-item">
+                            <span class="endpoint-path">ws://localhost:8005/ws/bus</span>
+                            <span class="endpoint-status" data-endpoint="websocket">Checking...</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- System Status Card -->
+                <div id="system-status-card" class="dashboard-card">
+                    <h3 class="card-title">🔧 System Status</h3>
+                    <div class="metric-list">
+                        <div class="metric-item">
+                            <span class="metric-label">Uptime</span>
+                            <span class="metric-value" id="system-uptime">Calculating...</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Memory Usage</span>
+                            <span class="metric-value" id="memory-usage">N/A</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">CPU Usage</span>
+                            <span class="metric-value" id="cpu-usage">N/A</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Redis Connected</span>
+                            <span class="metric-value" id="redis-status">Checking...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Card -->
+                <div id="recent-activity-card" class="dashboard-card scrollable">
+                    <h3 class="card-title">📝 Recent Activity</h3>
+                    <ul class="activity-list" id="activity-list">
+                        <li class="activity-item">
+                            <span class="activity-text">System initialized</span>
+                            <span class="activity-time">Just now</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Chat Interface Panel -->
+        <section id="chat-panel" class="tab-panel" role="tabpanel" aria-labelledby="chat-tab">
+            <header class="panel-header">
+                <h2>💬 AI Chat Interface</h2>
+                <div class="panel-actions">
+                    <button onclick="if(window.chatInterface) window.chatInterface.clear()" class="action-button secondary">Clear Chat</button>
+                    <a href="http://localhost:8501" target="_blank" class="action-button">Open Streamlit Chat →</a>
+                </div>
+            </header>
+            <div id="native-chat-container" style="padding: 20px; height: calc(100% - 80px);">
+                <!-- Chat interface will be initialized here -->
+            </div>
+        </section>
+
+        <!-- Repository Browser Panel -->
+        <section id="repository-panel" class="tab-panel" role="tabpanel" aria-labelledby="repository-tab">
+            <header class="panel-header">
+                <h2>📁 Repository Browser</h2>
+            </header>
+            <div class="repository-container">
+                <div class="repo-sidebar">
+                    <h3>File Browser</h3>
+                    <div class="search-box">
+                        <input type="text" id="repo-search" placeholder="Search files..." aria-label="Search repository">
+                    </div>
+                    <div class="file-tree" id="file-tree">
+                        <p>Loading file tree...</p>
+                    </div>
+                </div>
+                <div class="repo-content">
+                    <div class="file-viewer" id="file-viewer">
+                        <p>Select a file to view</p>
+                    </div>
+                    <div class="git-status" id="git-status">
+                        <h4>Git Status</h4>
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- API Documentation Panel -->
+        <section id="api-panel" class="tab-panel" role="tabpanel" aria-labelledby="api-tab">
+            <header class="panel-header">
+                <h2>📚 API Documentation</h2>
+            </header>
+            <div class="iframe-container">
+                <iframe id="api-iframe" data-src="/docs" title="API Documentation" frameborder="0"></iframe>
+            </div>
+        </section>
+
+        <!-- Metrics Dashboard Panel -->
+        <section id="metrics-panel" class="tab-panel" role="tabpanel" aria-labelledby="metrics-tab">
+            <header class="panel-header">
+                <h2>📈 System Metrics</h2>
+            </header>
+            <div class="iframe-container">
+                <iframe id="metrics-iframe" data-src="/metrics" title="Prometheus Metrics" frameborder="0"></iframe>
+            </div>
+        </section>
+
+        <!-- Monitoring Dashboard Panel -->
+        <section id="monitoring-panel" class="tab-panel" role="tabpanel" aria-labelledby="monitoring-tab">
+            <header class="panel-header">
+                <h2>🔍 System Monitoring</h2>
+            </header>
+            <div class="iframe-container">
+                <iframe id="monitoring-iframe" data-src="http://localhost:8002" title="Monitoring Dashboard" frameborder="0"></iframe>
+                <div class="iframe-error" id="monitoring-error" style="display: none;">
+                    <p>⚠️ Monitoring service not running on port 8002</p>
+                    <button class="action-button" onclick="window.hubController?.startMonitoring()">Start Monitoring Service</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- MCP Memory Panel -->
+        <section id="memory-panel" class="tab-panel" role="tabpanel" aria-labelledby="memory-tab">
+            <header class="panel-header">
+                <h2>🧠 MCP Memory Server</h2>
+            </header>
+            <div class="memory-container">
+                <div class="memory-status" id="memory-status">
+                    <p>Checking MCP Memory Server status...</p>
+                </div>
+                <div class="memory-controls">
+                    <button class="action-button" onclick="window.hubController?.testMemory()">Test Memory Store</button>
+                    <button class="action-button" onclick="window.hubController?.clearMemory()">Clear Memory</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- WebSocket Testing Tools Panel -->
+        <section id="ws-tools-panel" class="tab-panel" role="tabpanel" aria-labelledby="ws-tools-tab">
+            <header class="panel-header">
+                <h2>🔌 WebSocket Testing Tools</h2>
+            </header>
+            <div class="ws-tools-container">
+                <div class="ws-connections">
+                    <h3>Connections</h3>
+                    <div class="ws-endpoint">
+                        <label>
+                            <input type="checkbox" data-ws="bus">
+                            ws://localhost:8005/ws/bus
+                        </label>
+                        <span class="ws-status" data-ws="bus">Disconnected</span>
+                    </div>
+                    <div class="ws-endpoint">
+                        <label>
+                            <input type="checkbox" data-ws="swarm">
+                            ws://localhost:8005/ws/swarm
+                        </label>
+                        <span class="ws-status" data-ws="swarm">Disconnected</span>
+                    </div>
+                    <div class="ws-endpoint">
+                        <label>
+                            <input type="checkbox" data-ws="teams">
+                            ws://localhost:8005/ws/teams
+                        </label>
+                        <span class="ws-status" data-ws="teams">Disconnected</span>
+                    </div>
+                </div>
+                <div class="ws-message-composer">
+                    <h3>Send Message</h3>
+                    <textarea id="ws-message" placeholder='{"type": "test", "data": "hello"}' rows="5"></textarea>
+                    <button class="action-button" onclick="window.hubController?.sendWSMessage()">Send Message</button>
+                </div>
+                <div class="ws-message-log">
+                    <h3>Message Log</h3>
+                    <div id="ws-log" class="log-container"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container" role="alert" aria-live="polite"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/chat-interface.js"></script>
+    <script src="/static/js/hub-controller.js" type="module"></script>
+    <script>
+        // Initialize chat interface when chat tab is activated
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatTab = document.getElementById('chat-tab');
+            let chatInitialized = false;
+
+            chatTab.addEventListener('click', function() {
+                if (!chatInitialized) {
+                    window.chatInterface = new ChatInterface('native-chat-container');
+                    chatInitialized = true;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

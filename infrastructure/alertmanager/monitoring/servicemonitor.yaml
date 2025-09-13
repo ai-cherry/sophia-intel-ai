@@ -1,0 +1,83 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    prometheus: kube-prometheus
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: alertmanager
+  endpoints:
+    - port: http
+      interval: 30s
+      path: /metrics
+      scheme: http
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: instance
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_container_name]
+          targetLabel: container
+        - sourceLabels: [__meta_kubernetes_pod_label_app]
+          targetLabel: app
+        - sourceLabels: [__meta_kubernetes_pod_label_version]
+          targetLabel: version
+      metricRelabelings:
+        # Drop unnecessary metrics to reduce cardinality
+        - sourceLabels: [__name__]
+          regex: "go_memstats_.*"
+          action: drop
+        - sourceLabels: [__name__]
+          regex: "go_gc_.*"
+          action: drop
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-metrics
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: metrics
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9093"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  selector:
+    app: alertmanager
+  ports:
+    - name: metrics
+      port: 9093
+      targetPort: 9093
+      protocol: TCP
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: alertmanager-pods
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: alertmanager
+  podMetricsEndpoints:
+    - port: http
+      interval: 30s
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_pod_host_ip]
+          targetLabel: host_ip

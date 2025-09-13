@@ -1,0 +1,115 @@
+# Staging Environment Overlay for KEDA
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: keda-system
+
+# Base configuration
+resources:
+  - ../../
+
+# Staging-specific labels
+commonLabels:
+  environment: staging
+  tier: staging
+
+# Staging-specific annotations
+commonAnnotations:
+  environment: staging
+  testing.enabled: "true"
+  canary.enabled: "true"
+
+# Patches for staging environment
+patches:
+  # Moderate resource requirements for staging
+  - patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: 750m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 768Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: 75m
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 96Mi
+    target:
+      kind: Deployment
+      name: ".*"
+
+  # Balanced scaling parameters for staging
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 2
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 30
+    target:
+      kind: ScaledObject
+      name: sophia-scaler
+
+  - patch: |-
+      - op: replace
+        path: /spec/minReplicaCount
+        value: 2
+      - op: replace
+        path: /spec/maxReplicaCount
+        value: 50
+    target:
+      kind: ScaledObject
+      name: sophia-scaler
+
+# ConfigMap overrides for staging
+configMapGenerator:
+  - name: keda-config
+    namespace: keda-system
+    behavior: merge
+    literals:
+      - environment=staging
+      - scaling.time.target=12 # Slightly relaxed target for staging
+      - circuit.breaker.enabled=true
+      - circuit.breaker.max.events=5 # More lenient for staging
+      - canary.rollout.enabled=true
+      - monitoring.enhanced=true
+
+# External secrets for staging
+patchesStrategicMerge:
+  - |-
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: redis-auth
+      namespace: sophia-system
+    spec:
+      secretStoreRef:
+        name: vault-backend
+        kind: SecretStore
+      dataFrom:
+        - extract:
+            key: staging/redis/sophia
+
+  - |-
+    apiVersion: external-secrets.io/v1beta1
+    kind: ExternalSecret
+    metadata:
+      name: prometheus-auth
+      namespace: sophia-system
+    spec:
+      secretStoreRef:
+        name: vault-backend
+        kind: SecretStore
+      dataFrom:
+        - extract:
+            key: staging/prometheus/sophia
+
+# Helm values override for staging
+helmCharts:
+  - name: keda
+    repo: https://kedacore.github.io/charts
+    version: 2.13.0
+    releaseName: sophia-intel-keda-staging
+    namespace: keda-system
+    valuesFile: ../../../helm/values-staging.yaml

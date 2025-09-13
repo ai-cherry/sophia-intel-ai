@@ -1,0 +1,14 @@
+{
+  "servers": [
+    { "name": "memory", "url": "http://127.0.0.1:8081" },
+    { "name": "filesystem", "url": "http://127.0.0.1:8082" },
+    { "name": "git", "url": "http://127.0.0.1:8084" }
+  ],
+  "policies": {
+    "filesystem": {
+      "allowPaths": ["app", "mcp", "agents", "docs", "bin", "infra"],
+      "denyGlobs": ["**/.env*", "**/secrets/**", "**/.git/**"]
+    },
+    "git": { "readOnly": false }
+  }
+}

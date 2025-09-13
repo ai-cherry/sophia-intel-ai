@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+    tier: monitoring
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9093"
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+spec:
+  type: ClusterIP
+  selector:
+    app: alertmanager
+    component: alerting
+  ports:
+    - name: http
+      port: 9093
+      targetPort: 9093
+      protocol: TCP
+    - name: oauth-proxy
+      port: 4180
+      targetPort: 4180
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-headless
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+    tier: monitoring
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  selector:
+    app: alertmanager
+    component: alerting
+  ports:
+    - name: http
+      port: 9093
+      targetPort: 9093
+      protocol: TCP
+    - name: cluster-tcp
+      port: 9094
+      targetPort: 9094
+      protocol: TCP
+    - name: cluster-udp
+      port: 9095
+      targetPort: 9095
+      protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-external
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+    tier: monitoring
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: alertmanager.sophia-sophia.ai
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:us-west-2:123456789012:certificate/abc123"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "tcp"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+spec:
+  type: LoadBalancer
+  selector:
+    app: alertmanager
+    component: alerting
+  ports:
+    - name: https
+      port: 443
+      targetPort: 4180
+      protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800

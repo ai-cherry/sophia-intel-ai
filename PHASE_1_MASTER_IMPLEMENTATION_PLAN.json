@@ -1,0 +1,628 @@
+{
+  "metadata": {
+    "plan_id": "VOICE_PWA_PHASE_1",
+    "version": "1.0.0",
+    "created": "2025-09-11",
+    "architect": "Master Planner AI",
+    "status": "READY_FOR_EXECUTION",
+    "estimated_duration": "10-14 days",
+    "confidence_level": "98%"
+  },
+
+  "architecture_assessment": {
+    "current_state": {
+      "strengths": [
+        "Robust voice system already exists (voice/core/, voice/adapters/)",
+        "WebRTC infrastructure operational (app/api/routers/voice_webrtc.py)",
+        "Bella voice personality locked and configured",
+        "Builder agent system fully operational",
+        "MCP services running (ports 8081, 8082, 8084)",
+        "Two-app architecture well-separated (Sophia Intel vs Builder Agno)",
+        "FastAPI unified server with voice routing",
+        "Next.js infrastructure in both apps"
+      ],
+      "challenges": [
+        "No mobile PWA manifest or service worker",
+        "Voice system not optimized for mobile WebRTC",
+        "Missing mobile-specific voice interface components",
+        "No integration between voice commands and builder agents",
+        "Dependency conflicts between React versions (18.2.0 vs 18.3.1)",
+        "Voice routers conditionally loaded due to missing API keys"
+      ],
+      "dependency_analysis": {
+        "sophia_intel_app": {
+          "next": "15.2.3",
+          "react": "^18.3.1",
+          "typescript": "^5",
+          "missing_voice_deps": ["aiortc", "websockets"]
+        },
+        "builder_agno_system": {
+          "next": "14.0.4", 
+          "react": "18.2.0",
+          "typescript": "5.3.3",
+          "outdated_packages": ["@langchain/core", "@tanstack/react-query"]
+        },
+        "backend_api": {
+          "fastapi": "0.104.1",
+          "aiortc": "1.6.0",
+          "present_voice_deps": true,
+          "conditional_voice_loading": true
+        }
+      }
+    },
+    "target_state": {
+      "mobile_pwa_enabled": true,
+      "voice_commands_to_code": true,
+      "real_agent_integration": true,
+      "dependency_harmonization": true,
+      "enhanced_voice_system": true,
+      "production_ready": true
+    }
+  },
+
+  "phase_1_scope": {
+    "primary_objectives": [
+      {
+        "id": "PWA_FOUNDATION",
+        "description": "Transform Sophia Intel App into PWA with voice interface",
+        "success_criteria": [
+          "PWA installable on mobile devices",
+          "Service worker caching operational",
+          "Offline capabilities for core features",
+          "Voice interface accessible on mobile"
+        ]
+      },
+      {
+        "id": "VOICE_MOBILE_OPTIMIZATION",
+        "description": "Optimize existing voice system for mobile WebRTC",
+        "success_criteria": [
+          "WebRTC connections work reliably on mobile",
+          "Audio quality optimized for mobile networks",
+          "Battery usage minimized",
+          "Connection recovery mechanisms"
+        ]
+      },
+      {
+        "id": "VOICE_BUILDER_INTEGRATION",
+        "description": "Connect voice commands to builder agent system",
+        "success_criteria": [
+          "Voice commands generate real code",
+          "Builder agents respond to natural language",
+          "Code output displayed in mobile interface",
+          "Agent coordination via voice"
+        ]
+      },
+      {
+        "id": "DEPENDENCY_HARMONIZATION",
+        "description": "Resolve all dependency conflicts and upgrade outdated packages",
+        "success_criteria": [
+          "No version conflicts between packages",
+          "All security vulnerabilities resolved",
+          "Performance optimizations applied",
+          "Consistent toolchain across apps"
+        ]
+      }
+    ]
+  },
+
+  "implementation_phases": {
+    "phase_1a_foundation": {
+      "duration": "3-4 days",
+      "dependencies": [],
+      "tasks": [
+        {
+          "task_id": "DEP_AUDIT_FIX",
+          "name": "Dependency Audit and Harmonization",
+          "priority": "CRITICAL",
+          "estimated_hours": 8,
+          "description": "Resolve all dependency conflicts and security issues",
+          "files_modified": [
+            "sophia-intel-app/package.json",
+            "builder-agno-system/package.json", 
+            "requirements.txt"
+          ],
+          "actions": [
+            "Upgrade builder-agno-system Next.js from 14.0.4 to 15.2.3",
+            "Harmonize React versions to 18.3.1 across both apps",
+            "Update @tanstack/react-query to 5.62.8 in builder system",
+            "Add missing voice dependencies to sophia-intel-app",
+            "Resolve TypeScript version conflicts",
+            "Run security audit and fix vulnerabilities",
+            "Test all existing functionality after upgrades"
+          ],
+          "validation": [
+            "npm audit shows no high/critical vulnerabilities",
+            "All apps build successfully",
+            "No runtime dependency errors",
+            "Voice system still functional"
+          ]
+        },
+        {
+          "task_id": "PWA_MANIFEST_SW",
+          "name": "PWA Infrastructure Setup", 
+          "priority": "HIGH",
+          "estimated_hours": 6,
+          "description": "Create PWA manifest and service worker for mobile installation",
+          "files_created": [
+            "sophia-intel-app/public/manifest.json",
+            "sophia-intel-app/public/sw.js",
+            "sophia-intel-app/public/icons/icon-192.png",
+            "sophia-intel-app/public/icons/icon-512.png"
+          ],
+          "files_modified": [
+            "sophia-intel-app/src/app/layout.tsx",
+            "sophia-intel-app/next.config.js"
+          ],
+          "actions": [
+            "Design PWA manifest with voice coding branding",
+            "Implement service worker with caching strategy",
+            "Add PWA meta tags to layout",
+            "Create app icons in multiple sizes",
+            "Configure Next.js PWA plugin",
+            "Test PWA installation on mobile devices"
+          ],
+          "validation": [
+            "PWA installable on iOS Safari and Android Chrome",
+            "Service worker caches critical resources",
+            "App works offline for basic features",
+            "Lighthouse PWA score > 90"
+          ]
+        },
+        {
+          "task_id": "VOICE_PAGE_SETUP",
+          "name": "Mobile Voice Interface Page",
+          "priority": "HIGH", 
+          "estimated_hours": 8,
+          "description": "Create dedicated voice coding page in Sophia Intel App",
+          "files_created": [
+            "sophia-intel-app/src/app/voice/page.tsx",
+            "sophia-intel-app/src/app/voice/layout.tsx",
+            "sophia-intel-app/src/components/voice/MobileVoiceInterface.tsx",
+            "sophia-intel-app/src/components/voice/VoiceButton.tsx",
+            "sophia-intel-app/src/components/voice/CodeDisplay.tsx"
+          ],
+          "actions": [
+            "Create mobile-optimized voice interface components",
+            "Implement push-to-talk and continuous listening modes", 
+            "Add visual feedback for voice states (listening, processing, speaking)",
+            "Create code display component with syntax highlighting",
+            "Add copy-to-clipboard and share functionality",
+            "Implement responsive design for all screen sizes",
+            "Add haptic feedback for mobile interactions"
+          ],
+          "validation": [
+            "Voice interface renders correctly on mobile",
+            "All interactive elements work with touch",
+            "Accessibility features functional",
+            "Performance metrics acceptable"
+          ]
+        }
+      ]
+    },
+
+    "phase_1b_voice_optimization": {
+      "duration": "3-4 days",
+      "dependencies": ["phase_1a_foundation"],
+      "tasks": [
+        {
+          "task_id": "WEBRTC_MOBILE_OPT",
+          "name": "WebRTC Mobile Optimization",
+          "priority": "CRITICAL",
+          "estimated_hours": 10,
+          "description": "Optimize WebRTC for mobile networks and battery life",
+          "files_modified": [
+            "voice/gateways/webrtc_gateway.py",
+            "app/api/routers/voice_webrtc.py",
+            "voice/core/session_manager.py"
+          ],
+          "files_created": [
+            "sophia-intel-app/src/lib/voice/WebRTCClient.ts",
+            "sophia-intel-app/src/lib/voice/AudioProcessor.ts",
+            "sophia-intel-app/src/hooks/useVoiceConnection.ts"
+          ],
+          "actions": [
+            "Add mobile-specific audio constraints (echo cancellation, noise suppression)",
+            "Implement adaptive bitrate for varying network conditions",
+            "Add connection recovery and reconnection logic",
+            "Optimize ICE candidate gathering for mobile networks",
+            "Implement TURN server fallback for NAT traversal",
+            "Add battery usage optimization (suspend on background)",
+            "Create TypeScript WebRTC client with mobile optimizations"
+          ],
+          "validation": [
+            "WebRTC connects reliably on mobile networks (4G/5G/WiFi)",
+            "Audio quality maintained under network stress",
+            "Battery drain minimized during voice sessions",
+            "Connection recovery works after network changes"
+          ]
+        },
+        {
+          "task_id": "VOICE_SDK_INTEGRATION",
+          "name": "Voice SDK Frontend Integration",
+          "priority": "HIGH",
+          "estimated_hours": 8,
+          "description": "Integrate WebRTC client with mobile voice interface",
+          "files_modified": [
+            "sophia-intel-app/src/components/voice/MobileVoiceInterface.tsx"
+          ],
+          "files_created": [
+            "sophia-intel-app/src/lib/voice/VoiceSessionManager.ts",
+            "sophia-intel-app/src/lib/voice/types.ts"
+          ],
+          "actions": [
+            "Connect WebRTC client to voice interface components",
+            "Implement real-time audio visualization",
+            "Add voice activity detection indicators",
+            "Create session management with proper cleanup",
+            "Add error handling and user feedback",
+            "Implement audio permissions handling",
+            "Add voice command history and replay"
+          ],
+          "validation": [
+            "Voice sessions start/stop reliably",
+            "Real-time audio feedback functional",
+            "Error states handled gracefully",
+            "No memory leaks in voice sessions"
+          ]
+        },
+        {
+          "task_id": "VOICE_API_ENHANCEMENT",
+          "name": "Voice API Mobile Enhancements",
+          "priority": "MEDIUM",
+          "estimated_hours": 6,
+          "description": "Enhance backend voice APIs for mobile-specific needs",
+          "files_modified": [
+            "app/api/routers/voice_webrtc.py",
+            "voice/adapters/tts_elevenlabs.py",
+            "voice/personality/elevenlabs_flirty.py"
+          ],
+          "actions": [
+            "Add mobile-specific response formatting",
+            "Implement voice response chunking for better mobile experience", 
+            "Add session persistence for mobile reconnections",
+            "Optimize TTS audio format for mobile playback",
+            "Add voice command validation and feedback",
+            "Implement rate limiting for mobile clients"
+          ],
+          "validation": [
+            "Mobile clients receive appropriate response formats",
+            "TTS audio plays correctly on mobile devices",
+            "Session persistence works across network changes",
+            "Rate limiting prevents abuse"
+          ]
+        }
+      ]
+    },
+
+    "phase_1c_builder_integration": {
+      "duration": "3-4 days",
+      "dependencies": ["phase_1b_voice_optimization"],
+      "tasks": [
+        {
+          "task_id": "VOICE_BUILDER_API",
+          "name": "Voice-to-Builder Agent Integration",
+          "priority": "CRITICAL",
+          "estimated_hours": 12,
+          "description": "Connect voice commands to builder agent system for real code generation",
+          "files_modified": [
+            "app/api/routers/voice_builder.py"
+          ],
+          "files_created": [
+            "app/api/voice_command_processor.py",
+            "app/integrations/voice_builder_bridge.py",
+            "sophia-intel-app/src/lib/api/voiceBuilder.ts"
+          ],
+          "actions": [
+            "Enhance voice_builder.py with natural language processing",
+            "Add intent recognition for coding commands",
+            "Connect to builder agent endpoints (planner, coder, reviewer)",
+            "Implement voice command validation and sanitization",
+            "Add real-time progress feedback for long-running operations",
+            "Create voice-friendly response formatting",
+            "Add voice command history and context retention"
+          ],
+          "validation": [
+            "Voice commands successfully generate real code",
+            "Builder agents respond appropriately to voice input",
+            "Generated code is syntactically correct",
+            "Voice feedback is natural and informative"
+          ]
+        },
+        {
+          "task_id": "NATURAL_LANG_PROCESSING",
+          "name": "Natural Language Command Processing",
+          "priority": "HIGH",
+          "estimated_hours": 8,
+          "description": "Implement robust NLP for voice command interpretation",
+          "files_created": [
+            "app/nlp/voice_command_parser.py",
+            "app/nlp/intent_classifier.py",
+            "app/nlp/code_request_analyzer.py"
+          ],
+          "actions": [
+            "Implement intent classification for coding requests",
+            "Add language detection for code generation",
+            "Create command parameter extraction",
+            "Add context awareness for multi-turn conversations",
+            "Implement command disambiguation and clarification",
+            "Add support for complex multi-step coding requests",
+            "Create voice command templates and examples"
+          ],
+          "validation": [
+            "Complex voice commands parsed correctly",
+            "Intent classification accuracy > 90%",
+            "Context maintained across conversation turns",
+            "Ambiguous commands handled gracefully"
+          ]
+        },
+        {
+          "task_id": "MOBILE_CODE_DISPLAY",
+          "name": "Mobile Code Display and Interaction",
+          "priority": "MEDIUM",
+          "estimated_hours": 6,
+          "description": "Create mobile-optimized code display with interaction features",
+          "files_modified": [
+            "sophia-intel-app/src/components/voice/CodeDisplay.tsx"
+          ],
+          "files_created": [
+            "sophia-intel-app/src/components/code/MobileCodeEditor.tsx",
+            "sophia-intel-app/src/components/code/SyntaxHighlighter.tsx",
+            "sophia-intel-app/src/lib/utils/codeFormatting.ts"
+          ],
+          "actions": [
+            "Implement syntax highlighting for multiple languages",
+            "Add code folding and expansion for mobile screens",
+            "Create copy, share, and save functionality",
+            "Add code execution preview where applicable",
+            "Implement zoom and scroll optimization for mobile",
+            "Add voice commands for code navigation",
+            "Create code diff view for iterations"
+          ],
+          "validation": [
+            "Code displays correctly on all mobile screen sizes",
+            "Syntax highlighting works for all supported languages",
+            "Copy/share functionality works reliably",
+            "Voice navigation of code is intuitive"
+          ]
+        }
+      ]
+    },
+
+    "phase_1d_testing_optimization": {
+      "duration": "2-3 days", 
+      "dependencies": ["phase_1c_builder_integration"],
+      "tasks": [
+        {
+          "task_id": "END_TO_END_TESTING",
+          "name": "Comprehensive End-to-End Testing",
+          "priority": "HIGH",
+          "estimated_hours": 8,
+          "description": "Test complete voice-to-code workflow on multiple devices",
+          "files_created": [
+            "tests/e2e/voice_coding_workflow.test.ts",
+            "tests/mobile/device_compatibility.test.ts",
+            "tests/voice/speech_recognition.test.ts"
+          ],
+          "actions": [
+            "Test voice command to code generation workflow",
+            "Verify WebRTC connectivity across network conditions",
+            "Test PWA installation and offline capabilities",
+            "Validate voice interface on iOS and Android",
+            "Test battery usage and performance impact",
+            "Verify accessibility compliance",
+            "Test error recovery and edge cases"
+          ],
+          "validation": [
+            "Complete workflow functional on target devices",
+            "No critical bugs in core functionality",
+            "Performance meets acceptable thresholds",
+            "Accessibility standards met"
+          ]
+        },
+        {
+          "task_id": "PERFORMANCE_OPTIMIZATION", 
+          "name": "Mobile Performance Optimization",
+          "priority": "MEDIUM",
+          "estimated_hours": 6,
+          "description": "Optimize performance for mobile devices and networks",
+          "files_modified": [
+            "sophia-intel-app/next.config.js",
+            "sophia-intel-app/src/components/voice/MobileVoiceInterface.tsx"
+          ],
+          "actions": [
+            "Optimize bundle size and code splitting",
+            "Implement lazy loading for non-critical components",
+            "Optimize image and audio assets",
+            "Add service worker caching strategies",
+            "Implement connection pooling for API calls",
+            "Add performance monitoring and analytics",
+            "Optimize re-renders and memory usage"
+          ],
+          "validation": [
+            "Bundle size reduced by minimum 20%",
+            "First contentful paint < 2 seconds on mobile",
+            "Voice response time < 3 seconds",
+            "Memory usage stable during extended use"
+          ]
+        },
+        {
+          "task_id": "SECURITY_HARDENING",
+          "name": "Security Review and Hardening", 
+          "priority": "HIGH",
+          "estimated_hours": 4,
+          "description": "Ensure security best practices for voice and mobile features",
+          "actions": [
+            "Review voice data handling and privacy",
+            "Implement secure WebRTC signaling",
+            "Add input validation for voice commands",
+            "Review and update CORS policies",
+            "Implement rate limiting for voice endpoints",
+            "Add security headers for PWA",
+            "Review dependencies for vulnerabilities"
+          ],
+          "validation": [
+            "Security audit passes without high-risk findings",
+            "Voice data properly protected",
+            "No unauthorized API access possible",
+            "Dependencies free of known vulnerabilities"
+          ]
+        }
+      ]
+    }
+  },
+
+  "integration_strategy": {
+    "existing_system_enhancements": {
+      "voice_system": {
+        "files_to_enhance": [
+          "voice/core/session_manager.py",
+          "voice/adapters/tts_elevenlabs.py", 
+          "app/api/routers/voice_webrtc.py"
+        ],
+        "improvements": [
+          "Add mobile-specific optimizations",
+          "Enhance error handling and recovery", 
+          "Add session persistence",
+          "Implement adaptive audio quality"
+        ]
+      },
+      "builder_agents": {
+        "files_to_enhance": [
+          "app/api/routers/builder.py",
+          "builder_cli/lib/agents.py"
+        ],
+        "improvements": [
+          "Add voice command interfaces",
+          "Enhance natural language processing",
+          "Add progress callbacks for voice feedback",
+          "Improve error messages for voice context"
+        ]
+      },
+      "unified_server": {
+        "files_to_enhance": [
+          "app/api/unified_server.py"
+        ],
+        "improvements": [
+          "Ensure voice routers always load",
+          "Add mobile-specific middleware",
+          "Enhance CORS for PWA requirements",
+          "Add voice session monitoring"
+        ]
+      }
+    }
+  },
+
+  "quality_gates": {
+    "code_quality": {
+      "typescript_coverage": "95%",
+      "python_coverage": "90%",
+      "lint_errors": 0,
+      "security_vulnerabilities": 0
+    },
+    "functionality": {
+      "voice_recognition_accuracy": "95%",
+      "code_generation_success": "90%",
+      "mobile_compatibility": "100%",
+      "pwa_lighthouse_score": "90+"
+    },
+    "performance": {
+      "voice_response_time": "<3s",
+      "pwa_load_time": "<2s",
+      "battery_impact": "minimal",
+      "memory_usage": "stable"
+    }
+  },
+
+  "risk_mitigation": {
+    "technical_risks": [
+      {
+        "risk": "WebRTC compatibility issues on mobile",
+        "probability": "medium",
+        "impact": "high", 
+        "mitigation": "Extensive device testing and fallback mechanisms"
+      },
+      {
+        "risk": "Dependency upgrade breaking existing functionality",
+        "probability": "medium",
+        "impact": "high",
+        "mitigation": "Comprehensive testing after each upgrade step"
+      },
+      {
+        "risk": "Voice recognition accuracy insufficient",
+        "probability": "low",
+        "impact": "medium",
+        "mitigation": "Use proven Deepgram service with fallback options"
+      }
+    ],
+    "contingency_plans": {
+      "rollback_strategy": "All changes in feature branches with automated testing",
+      "fallback_voice": "Text input mode if voice fails",
+      "performance_degradation": "Progressive enhancement with graceful degradation"
+    }
+  },
+
+  "success_metrics": {
+    "technical_kpis": [
+      "PWA installable on 95%+ mobile devices",
+      "Voice-to-code workflow success rate >90%",
+      "WebRTC connection success rate >95%", 
+      "Zero critical security vulnerabilities",
+      "Bundle size increase <10% despite new features"
+    ],
+    "user_experience_kpis": [
+      "Voice command response time <3 seconds",
+      "Mobile interface usability score >4.5/5",
+      "Code generation accuracy >90%",
+      "Session persistence works across network changes",
+      "Battery usage impact <5% during active use"
+    ]
+  },
+
+  "deployment_strategy": {
+    "staging_environment": {
+      "setup_required": true,
+      "testing_duration": "2 days",
+      "validation_criteria": [
+        "All functionality works in staging",
+        "Performance meets targets", 
+        "No regression in existing features"
+      ]
+    },
+    "production_rollout": {
+      "approach": "gradual",
+      "phases": [
+        "Internal team testing (1 day)",
+        "Beta user group (3 days)",
+        "Full production release"
+      ],
+      "rollback_plan": "Feature flags allow instant rollback"
+    }
+  },
+
+  "post_phase_1": {
+    "immediate_next_steps": [
+      "Phase 2: Advanced voice commands and agent coordination", 
+      "Phase 3: Real-time collaborative coding",
+      "Phase 4: Cloud deployment optimization"
+    ],
+    "technical_debt": [
+      "Consider migrating to latest React 19 when stable",
+      "Evaluate WebRTC alternatives for better mobile support",
+      "Plan for voice command training and personalization"
+    ]
+  },
+
+  "execution_checklist": {
+    "prerequisites": [
+      "✅ All required API keys available (ELEVENLABS_API_KEY, DEEPGRAM_API_KEY)",
+      "✅ Development environment properly configured", 
+      "✅ Existing voice system functional",
+      "✅ MCP services running and accessible",
+      "✅ Both Sophia Intel and Builder Agno apps operational"
+    ],
+    "daily_standups": true,
+    "progress_tracking": "GitHub issues with linked PRs",
+    "testing_cadence": "Continuous integration with mobile device testing",
+    "documentation": "Update all relevant docs as features are implemented"
+  }
+}

@@ -1,0 +1,107 @@
+{
+  "meta": {
+    "title": "Phase 2 Unified Plan (Refactor + Feature Track)",
+    "version": "1.2.0",
+    "created": "2025-09-08",
+    "author": "AI Agent",
+    "risk_level": "LOW_TO_MEDIUM",
+    "estimated_duration": "5-7 days",
+    "dependencies": [
+      "Phase 1 completed",
+      "Secure env at ${HOME}/.config/sophia/env",
+      "Makefile + scripts/multi-agent-docker-env.sh available"
+    ]
+  },
+  "tracks": [
+    {
+      "name": "Track A: Safe Refactoring & Infra",
+      "objectives": [
+        "Keep docker-compose.multi-agent.yml as canonical for dev",
+        "Add docker-compose.override.yml for local overrides",
+        "Refactor top 5 large modules with proxy shims",
+        "Standardize HTTP on app/core/async_http_client.py",
+        "Harden packages/sophia_core exports + typing"
+      ],
+      "tasks": [
+        {"id": "A-DC1", "action": "MATRIX", "description": "Service parity matrix (done)", "artifact": "docs/DOCKER_SERVICES_MATRIX.md"},
+        {"id": "A-DC2", "action": "CANONICALIZE", "description": "Use docker-compose.multi-agent.yml via Make targets", "validate": ["make dev-up", "make status", "make mcp-status"]},
+        {"id": "A-DC3", "action": "OVERRIDE", "description": "Ensure docker-compose.override.yml exists (local only)"},
+        {"id": "A-LF1", "action": "SPLIT", "description": "Split app/sophia/agent_factory.py → factories/ (base, config, logic) with legacy shim"},
+        {"id": "A-LF2", "action": "SPLIT", "description": "Split app/sophia/unified_factory.py similarly with legacy shim"},
+        {"id": "A-LF3", "action": "SPLIT", "description": "Split app/mcp/revenue_ops_gateway.py into gateways/ modules"},
+        {"id": "A-HTTP1", "action": "CANONICALIZE", "description": "Promote app/core/async_http_client.py as single client; add sync wrapper/logging if needed"},
+        {"id": "A-PKG1", "action": "EXPORTS", "description": "Ensure BaseAgent/BaseMemory/BaseSwarm/Settings exported; ship py.typed"}
+      ],
+      "validation": [
+        "make refactor.discovery",
+        "make refactor.scan-http",
+        "make refactor.probe MODULE=app.sophia.factories.agent_factory",
+        "pytest -q for impacted modules",
+        "make env.check"
+      ]
+    },
+    {
+      "name": "Track B: Router, Streaming, Policies, Indexer, Observability",
+      "objectives": [
+        "Unified provider router with resilient defaults",
+        "WebUI token streaming + 6-pane UX minimal upgrade",
+        "MCP policies for Git/FS with enforcement",
+        "Indexer debounce/ignores/deletes + hybrid recall",
+        "Metrics + CI smoke suite"
+      ],
+      "tasks": [
+        {"id": "B-RT1", "action": "ROUTER", "description": "EnhancedProviderRouter (extend app/llm/multi_transport.py or add packages/sophia_core/models/router.py) with OpenAI-compatible adapters (Portkey, OpenRouter, AIMLAPI), budgets, fallbacks, OTel hooks, metrics"},
+        {"id": "B-RT2", "action": "CONFIG", "description": "Add config/agents/routing.yml task→model map (planning/generation/validation/indexing/vision)"},
+        {"id": "B-RT3", "action": "CLI", "description": "Extend scripts/unified_ai_agents.py to accept --provider/--model/--task-type and route via router"},
+        {"id": "B-UI1", "action": "API", "description": "WebUI backend: POST /agents/complete and WS relay /ws?session_id=... with event envelope {type,chunk,usage}"},
+        {"id": "B-UI2", "action": "FRONTEND", "description": "Add grid layout + panes, streaming view, tool tray, diff modal (Monaco) minimal"},
+        {"id": "B-POL1", "action": "POLICY", "description": "mcp/policies/git.yml + enforcement in mcp/git/server.py (protected branches, commit template)"},
+        {"id": "B-POL2", "action": "POLICY", "description": "Enhance FS policy messages + hints; keep current denials"},
+        {"id": "B-IX1", "action": "INDEXER", "description": "Add ignore patterns, debounce, deletions; include repo/path metadata for RAG"},
+        {"id": "B-OBS1", "action": "METRICS", "description": "Prometheus metrics from router, MCP, indexer, WebUI; JSON logs with correlation IDs"},
+        {"id": "B-CI1", "action": "CI", "description": "GitHub Actions: compose config, build selected services, health curls, router dry-run, FS policy negative test"}
+      ],
+      "acceptance": {
+        "router": [
+          "Dry-run prints chosen provider/model",
+          "Live small completion returns within target TTFB; metrics recorded"
+        ],
+        "webui": [
+          "Create up to 6 sessions, stream tokens, invoke tools, view diffs, approve→write→commit"
+        ],
+        "policies": [
+          "Protected branch push blocked without override; template applied"
+        ],
+        "indexer": [
+          "File change appears in search within ~30s; router injects top-k context"
+        ],
+        "ci": [
+          "Green CI gate with smoke tests"
+        ]
+      }
+    }
+  ],
+  "sequence": [
+    {"day": 1, "focus": ["A-DC2", "A-DC3", "B-RT1 (skeleton)", "B-RT2 (config stub)"]},
+    {"day": 2, "focus": ["A-LF1", "B-RT1 (budgets/fallbacks)", "B-RT3 (CLI dry-run)"]},
+    {"day": 3, "focus": ["A-LF2", "A-HTTP1", "B-UI1 (backend WS) "]},
+    {"day": 4, "focus": ["A-LF3", "B-UI2 (minimal panes+diff)", "B-POL1"]},
+    {"day": 5, "focus": ["B-IX1", "B-OBS1", "B-CI1"]},
+    {"day": 6, "focus": ["Buffer/bugfix", "Documentation", "Stabilize"]}
+  ],
+  "risk_mitigation": {
+    "routing": "Start with dry-run; cap tokens; implement circuit breakers (reuse app/core/async_http_client.py)",
+    "webui": "Keep streaming endpoints async; timeouts; retries; backpressure on WS",
+    "policies": "Default-deny on protected branches; require explicit override flag",
+    "indexer": "Debounce to avoid CPU spikes; ignores for heavy dirs",
+    "ci": "Smoke-level only to keep runtime low"
+  },
+  "artifacts": [
+    "docs/DOCKER_SERVICES_MATRIX.md",
+    "config/agents/routing.yml (new)",
+    "mcp/policies/git.yml (new)",
+    "WebUI: /agents/complete + /ws",
+    "Prometheus metrics endpoints"
+  ]
+}
+

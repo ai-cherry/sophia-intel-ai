@@ -1,0 +1,3357 @@
+{
+  "clear_all_caches.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "print_results",
+      "complexity": 16,
+      "classname": "CacheCleaner",
+      "lineno": 349,
+      "endline": 392,
+      "closures": []
+    }
+  ],
+  "environment_circular_reference_resolver.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "detect_circular_references",
+      "complexity": 11,
+      "classname": "EnvironmentVariableResolver",
+      "lineno": 81,
+      "endline": 145,
+      "closures": []
+    }
+  ],
+  "environment_variable_resolver.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_get_from_local_config",
+      "complexity": 11,
+      "classname": "EnvironmentVariableResolver",
+      "lineno": 233,
+      "endline": 261,
+      "closures": []
+    }
+  ],
+  "run_code_quality_check.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "check_file",
+      "complexity": 19,
+      "classname": "CodeQualityChecker",
+      "lineno": 20,
+      "endline": 79,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "generate_report",
+      "complexity": 16,
+      "classname": "CodeQualityChecker",
+      "lineno": 116,
+      "endline": 174,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "CodeQualityChecker",
+      "complexity": 13,
+      "lineno": 14,
+      "endline": 174,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "CodeQualityChecker",
+          "lineno": 15,
+          "endline": 18,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "check_file",
+          "complexity": 19,
+          "classname": "CodeQualityChecker",
+          "lineno": 20,
+          "endline": 79,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "scan_directory",
+          "complexity": 11,
+          "classname": "CodeQualityChecker",
+          "lineno": 81,
+          "endline": 113,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "generate_report",
+          "complexity": 16,
+          "classname": "CodeQualityChecker",
+          "lineno": 116,
+          "endline": 174,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "scan_directory",
+      "complexity": 11,
+      "classname": "CodeQualityChecker",
+      "lineno": 81,
+      "endline": 113,
+      "closures": []
+    }
+  ],
+  "verify_cache_cleared.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "verify_caches_cleared",
+      "complexity": 19,
+      "lineno": 19,
+      "endline": 138,
+      "closures": []
+    }
+  ],
+  "agents/architect/architect_agent.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "generate_architectural_approaches",
+      "complexity": 13,
+      "classname": "ArchitectAgent",
+      "lineno": 493,
+      "endline": 650,
+      "closures": []
+    }
+  ],
+  "agents/conflict_resolution/simple_conflict_agent.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_monitored_files",
+      "complexity": 11,
+      "classname": "SimpleConflictAgent",
+      "lineno": 105,
+      "endline": 129,
+      "closures": []
+    }
+  ],
+  "agents/core/agent_registry.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "find_best_agent",
+      "complexity": 14,
+      "classname": "AgentRegistry",
+      "lineno": 248,
+      "endline": 326,
+      "closures": [
+        {
+          "type": "function",
+          "rank": "A",
+          "col_offset": 8,
+          "name": "score_agent",
+          "complexity": 5,
+          "lineno": 288,
+          "endline": 324,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_registry_status",
+      "complexity": 11,
+      "classname": "AgentRegistry",
+      "lineno": 369,
+      "endline": 423,
+      "closures": []
+    }
+  ],
+  "agents/meta_learning/evolution_engine.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_analyze_performance_patterns",
+      "complexity": 19,
+      "classname": "EvolutionEngine",
+      "lineno": 221,
+      "endline": 302,
+      "closures": []
+    }
+  ],
+  "agents/specialized/env_guard_agent.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_check_environment",
+      "complexity": 12,
+      "classname": "EnvironmentGuardAgent",
+      "lineno": 85,
+      "endline": 155,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_auto_fix_issues",
+      "complexity": 11,
+      "classname": "EnvironmentGuardAgent",
+      "lineno": 336,
+      "endline": 416,
+      "closures": []
+    }
+  ],
+  "agents/specialized/iac_agent.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_process_task_impl",
+      "complexity": 12,
+      "classname": "IaCAgent",
+      "lineno": 157,
+      "endline": 191,
+      "closures": []
+    }
+  ],
+  "ai_workspace/backend/app/main.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "execute_file_operations",
+      "complexity": 19,
+      "lineno": 177,
+      "endline": 265,
+      "closures": []
+    },
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "detect_file_operations",
+      "complexity": 11,
+      "lineno": 81,
+      "endline": 153,
+      "closures": []
+    }
+  ],
+  "ai_workspace/backend/app/routers/business_ai.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "check_integration_health",
+      "complexity": 12,
+      "classname": "AgentRouter",
+      "lineno": 106,
+      "endline": 214,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "route_query",
+      "complexity": 11,
+      "classname": "AgentRouter",
+      "lineno": 77,
+      "endline": 104,
+      "closures": []
+    }
+  ],
+  "sophia/dashboard/quick_health_check.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "quick_check",
+      "complexity": 12,
+      "lineno": 15,
+      "endline": 104,
+      "closures": []
+    }
+  ],
+  "backend/api/health_api.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "get_dashboard_summary",
+      "complexity": 14,
+      "lineno": 112,
+      "endline": 193,
+      "closures": []
+    }
+  ],
+  "backend/app/routers/agents.py": [
+    {
+      "type": "function",
+      "rank": "D",
+      "col_offset": 0,
+      "name": "get_analytics",
+      "complexity": 21,
+      "lineno": 335,
+      "endline": 421,
+      "closures": []
+    }
+  ],
+  "backend/app/routers/business_ai.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "check_integration_health",
+      "complexity": 12,
+      "classname": "AgentRouter",
+      "lineno": 108,
+      "endline": 216,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "route_query",
+      "complexity": 11,
+      "classname": "AgentRouter",
+      "lineno": 79,
+      "endline": 106,
+      "closures": []
+    }
+  ],
+  "backend/app/routers/health.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "detailed_health_check",
+      "complexity": 13,
+      "lineno": 35,
+      "endline": 130,
+      "closures": []
+    }
+  ],
+  "backend/monitoring/monitoring_validation_system.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_assess_system_health",
+      "complexity": 18,
+      "classname": "MonitoringValidationSystem",
+      "lineno": 1249,
+      "endline": 1302,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "collect_system_metrics",
+      "complexity": 15,
+      "classname": "MonitoringValidationSystem",
+      "lineno": 896,
+      "endline": 991,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "validate_data",
+      "complexity": 14,
+      "classname": "MonitoringValidationSystem",
+      "lineno": 468,
+      "endline": 559,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_validate_range",
+      "complexity": 11,
+      "classname": "MonitoringValidationSystem",
+      "lineno": 702,
+      "endline": 787,
+      "closures": []
+    }
+  ],
+  "backend/orchestration/task_analyzer.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "_heuristic_analysis",
+      "complexity": 22,
+      "classname": "TaskAnalyzer",
+      "lineno": 116,
+      "endline": 197,
+      "closures": []
+    }
+  ],
+  "backend/orchestration/tool_registry.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_execution_stats",
+      "complexity": 11,
+      "classname": "ToolRegistry",
+      "lineno": 283,
+      "endline": 316,
+      "closures": []
+    }
+  ],
+  "backend/rag/embeddings.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "embed_documents",
+      "complexity": 14,
+      "classname": "EmbeddingService",
+      "lineno": 62,
+      "endline": 120,
+      "closures": []
+    }
+  ],
+  "backend/services/file_operations_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "list_directory",
+      "complexity": 13,
+      "classname": "RealFileOperationsService",
+      "lineno": 243,
+      "endline": 327,
+      "closures": []
+    }
+  ],
+  "backend/services/lambda_inference_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_process_batch",
+      "complexity": 12,
+      "classname": "LambdaInferenceService",
+      "lineno": 205,
+      "endline": 256,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_performance_stats",
+      "complexity": 11,
+      "classname": "LambdaInferenceService",
+      "lineno": 395,
+      "endline": 419,
+      "closures": []
+    }
+  ],
+  "backend/services/memory_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_memory_stats",
+      "complexity": 11,
+      "classname": "RealMemoryService",
+      "lineno": 227,
+      "endline": 265,
+      "closures": []
+    }
+  ],
+  "backend/services/openrouter_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_make_request",
+      "complexity": 13,
+      "classname": "OpenRouterService",
+      "lineno": 217,
+      "endline": 278,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_select_model",
+      "complexity": 12,
+      "classname": "OpenRouterService",
+      "lineno": 132,
+      "endline": 158,
+      "closures": []
+    }
+  ],
+  "backend/services/real_time_sync_manager.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_process_sync_event",
+      "complexity": 13,
+      "classname": "RealTimeSyncManager",
+      "lineno": 402,
+      "endline": 495,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_validate_sync_event",
+      "complexity": 12,
+      "classname": "RealTimeSyncManager",
+      "lineno": 707,
+      "endline": 735,
+      "closures": []
+    }
+  ],
+  "backend/services/coding/repo_context_agent.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_find_relevant_files",
+      "complexity": 12,
+      "classname": "RepoContextAgent",
+      "lineno": 599,
+      "endline": 626,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_generate_repo_snapshot",
+      "complexity": 11,
+      "classname": "RepoContextAgent",
+      "lineno": 481,
+      "endline": 531,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_suggest_implementation_locations",
+      "complexity": 11,
+      "classname": "RepoContextAgent",
+      "lineno": 678,
+      "endline": 711,
+      "closures": []
+    }
+  ],
+  "backend/services/coding/sequential_thinking_agent.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_identify_risk_factors",
+      "complexity": 11,
+      "classname": "SequentialThinkingAgent",
+      "lineno": 531,
+      "endline": 560,
+      "closures": []
+    }
+  ],
+  "backend/services/embeddings/multi_provider_embedding_service.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "generate_batch_embeddings",
+      "complexity": 21,
+      "classname": "MultiProviderEmbeddingService",
+      "lineno": 420,
+      "endline": 491,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "generate_embedding",
+      "complexity": 13,
+      "classname": "MultiProviderEmbeddingService",
+      "lineno": 370,
+      "endline": 418,
+      "closures": []
+    }
+  ],
+  "backend/services/integrations/enhanced_hubspot_service.py": [
+    {
+      "type": "method",
+      "rank": "E",
+      "col_offset": 4,
+      "name": "get_sales_analytics",
+      "complexity": 33,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 443,
+      "endline": 540,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "_analyze_deal_quality",
+      "complexity": 25,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 705,
+      "endline": 739,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "_analyze_contact_quality",
+      "complexity": 24,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 668,
+      "endline": 701,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "_analyze_company_quality",
+      "complexity": 24,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 744,
+      "endline": 777,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_parse_deal",
+      "complexity": 19,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 893,
+      "endline": 996,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_marketing_analytics",
+      "complexity": 18,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 542,
+      "endline": 624,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_parse_company",
+      "complexity": 16,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 998,
+      "endline": 1098,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "EnhancedHubSpotService",
+      "complexity": 14,
+      "lineno": 142,
+      "endline": 1158,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 148,
+          "endline": 165,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "initialize",
+          "complexity": 3,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 168,
+          "endline": 200,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "sync_all_contacts",
+          "complexity": 11,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 202,
+          "endline": 282,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "sync_all_deals",
+          "complexity": 11,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 284,
+          "endline": 360,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "sync_all_companies",
+          "complexity": 11,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 362,
+          "endline": 441,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "E",
+          "col_offset": 4,
+          "name": "get_sales_analytics",
+          "complexity": 33,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 443,
+          "endline": 540,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "get_marketing_analytics",
+          "complexity": 18,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 542,
+          "endline": 624,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "get_data_quality_report",
+          "complexity": 4,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 626,
+          "endline": 666,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "D",
+          "col_offset": 4,
+          "name": "_analyze_contact_quality",
+          "complexity": 24,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 668,
+          "endline": 701,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "D",
+          "col_offset": 4,
+          "name": "_analyze_deal_quality",
+          "complexity": 25,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 705,
+          "endline": 739,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "D",
+          "col_offset": 4,
+          "name": "_analyze_company_quality",
+          "complexity": 24,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 744,
+          "endline": 777,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "_generate_quality_recommendations",
+          "complexity": 5,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 781,
+          "endline": 800,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "_parse_contact",
+          "complexity": 11,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 802,
+          "endline": 891,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "_parse_deal",
+          "complexity": 19,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 893,
+          "endline": 996,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "_parse_company",
+          "complexity": 16,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 998,
+          "endline": 1098,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "get_integration_health",
+          "complexity": 9,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 1100,
+          "endline": 1152,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "close",
+          "complexity": 2,
+          "classname": "EnhancedHubSpotService",
+          "lineno": 1155,
+          "endline": 1158,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_contacts",
+      "complexity": 11,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 202,
+      "endline": 282,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_deals",
+      "complexity": 11,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 284,
+      "endline": 360,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_companies",
+      "complexity": 11,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 362,
+      "endline": 441,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_parse_contact",
+      "complexity": 11,
+      "classname": "EnhancedHubSpotService",
+      "lineno": 802,
+      "endline": 891,
+      "closures": []
+    }
+  ],
+  "backend/services/integrations/enhanced_salesforce_service.py": [
+    {
+      "type": "method",
+      "rank": "E",
+      "col_offset": 4,
+      "name": "get_sales_analytics",
+      "complexity": 34,
+      "classname": "EnhancedSalesforceService",
+      "lineno": 602,
+      "endline": 706,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_lead_analytics",
+      "complexity": 17,
+      "classname": "EnhancedSalesforceService",
+      "lineno": 708,
+      "endline": 772,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "EnhancedSalesforceService",
+      "complexity": 11,
+      "lineno": 197,
+      "endline": 1212,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 203,
+          "endline": 228,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "initialize",
+          "complexity": 3,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 231,
+          "endline": 262,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "sync_all_accounts",
+          "complexity": 11,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 264,
+          "endline": 349,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "sync_all_contacts",
+          "complexity": 11,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 351,
+          "endline": 431,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "sync_all_opportunities",
+          "complexity": 11,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 433,
+          "endline": 512,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "sync_all_leads",
+          "complexity": 11,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 514,
+          "endline": 600,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "E",
+          "col_offset": 4,
+          "name": "get_sales_analytics",
+          "complexity": 34,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 602,
+          "endline": 706,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "get_lead_analytics",
+          "complexity": 17,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 708,
+          "endline": 772,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "_parse_account",
+          "complexity": 10,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 774,
+          "endline": 870,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "_parse_contact",
+          "complexity": 7,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 872,
+          "endline": 954,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "_parse_opportunity",
+          "complexity": 10,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 956,
+          "endline": 1040,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "_parse_lead",
+          "complexity": 11,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 1042,
+          "endline": 1152,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "get_integration_health",
+          "complexity": 9,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 1154,
+          "endline": 1206,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "close",
+          "complexity": 2,
+          "classname": "EnhancedSalesforceService",
+          "lineno": 1209,
+          "endline": 1212,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_accounts",
+      "complexity": 11,
+      "classname": "EnhancedSalesforceService",
+      "lineno": 264,
+      "endline": 349,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_contacts",
+      "complexity": 11,
+      "classname": "EnhancedSalesforceService",
+      "lineno": 351,
+      "endline": 431,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_opportunities",
+      "complexity": 11,
+      "classname": "EnhancedSalesforceService",
+      "lineno": 433,
+      "endline": 512,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_leads",
+      "complexity": 11,
+      "classname": "EnhancedSalesforceService",
+      "lineno": 514,
+      "endline": 600,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_parse_lead",
+      "complexity": 11,
+      "classname": "EnhancedSalesforceService",
+      "lineno": 1042,
+      "endline": 1152,
+      "closures": []
+    }
+  ],
+  "backend/services/integrations/intercom_integration_service.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "get_support_analytics",
+      "complexity": 30,
+      "classname": "IntercomIntegrationService",
+      "lineno": 404,
+      "endline": 541,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_parse_conversation",
+      "complexity": 17,
+      "classname": "IntercomIntegrationService",
+      "lineno": 574,
+      "endline": 685,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "sync_all_conversations",
+      "complexity": 12,
+      "classname": "IntercomIntegrationService",
+      "lineno": 202,
+      "endline": 264,
+      "closures": []
+    }
+  ],
+  "backend/services/integrations/linear_integration_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_developer_productivity_metrics",
+      "complexity": 16,
+      "classname": "LinearIntegrationService",
+      "lineno": 471,
+      "endline": 585,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_parse_issue",
+      "complexity": 13,
+      "classname": "LinearIntegrationService",
+      "lineno": 588,
+      "endline": 687,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_sprint_analytics",
+      "complexity": 11,
+      "classname": "LinearIntegrationService",
+      "lineno": 385,
+      "endline": 469,
+      "closures": []
+    }
+  ],
+  "backend/services/project_management/linear_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_transform_project_data",
+      "complexity": 11,
+      "classname": "LinearService",
+      "lineno": 107,
+      "endline": 146,
+      "closures": []
+    }
+  ],
+  "backend/services/query/query_preprocessing_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_extract_filters",
+      "complexity": 11,
+      "classname": "QueryPreprocessingService",
+      "lineno": 755,
+      "endline": 788,
+      "closures": []
+    }
+  ],
+  "backend/services/retrieval/multi_stage_retrieval_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "retrieve",
+      "complexity": 12,
+      "classname": "KeywordRetriever",
+      "lineno": 243,
+      "endline": 291,
+      "closures": []
+    }
+  ],
+  "backend/services/shared/memory_router.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_route_to_business",
+      "complexity": 11,
+      "classname": "MemoryRouter",
+      "lineno": 120,
+      "endline": 155,
+      "closures": []
+    }
+  ],
+  "backend/services/shared/repository_context_engine.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_extract_file_patterns",
+      "complexity": 18,
+      "classname": "RepositoryContextEngine",
+      "lineno": 188,
+      "endline": 255,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "suggest_relevant_context",
+      "complexity": 13,
+      "classname": "RepositoryContextEngine",
+      "lineno": 429,
+      "endline": 489,
+      "closures": []
+    }
+  ],
+  "backend/services/text/document_structure_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "preserve_structure_in_chunks",
+      "complexity": 13,
+      "classname": "DocumentStructureService",
+      "lineno": 546,
+      "endline": 598,
+      "closures": []
+    }
+  ],
+  "backend/services/text/semantic_chunking_service.py": [
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "LanguageDetector",
+      "complexity": 13,
+      "lineno": 95,
+      "endline": 125,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "detect_language",
+          "complexity": 12,
+          "classname": "LanguageDetector",
+          "lineno": 111,
+          "endline": 125,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "detect_language",
+      "complexity": 12,
+      "classname": "LanguageDetector",
+      "lineno": 111,
+      "endline": 125,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_markdown",
+      "complexity": 12,
+      "classname": "DocumentStructureAnalyzer",
+      "lineno": 209,
+      "endline": 251,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "chunk_text",
+      "complexity": 11,
+      "classname": "SemanticChunkingService",
+      "lineno": 300,
+      "endline": 330,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_chunk_sentence_aware",
+      "complexity": 11,
+      "classname": "SemanticChunkingService",
+      "lineno": 363,
+      "endline": 439,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_split_long_sentence",
+      "complexity": 11,
+      "classname": "SemanticChunkingService",
+      "lineno": 501,
+      "endline": 539,
+      "closures": []
+    }
+  ],
+  "backend/services/vector/qdrant_vector_search_service.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_build_filter",
+      "complexity": 18,
+      "classname": "QdrantVectorSearchService",
+      "lineno": 563,
+      "endline": 622,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_collection_stats",
+      "complexity": 16,
+      "classname": "QdrantVectorSearchService",
+      "lineno": 624,
+      "endline": 664,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "insert_vectors",
+      "complexity": 13,
+      "classname": "QdrantVectorSearchService",
+      "lineno": 300,
+      "endline": 395,
+      "closures": [
+        {
+          "type": "function",
+          "rank": "A",
+          "col_offset": 16,
+          "name": "upsert_operation",
+          "complexity": 3,
+          "lineno": 332,
+          "endline": 346,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "batch_search",
+      "complexity": 12,
+      "classname": "QdrantVectorSearchService",
+      "lineno": 498,
+      "endline": 561,
+      "closures": []
+    }
+  ],
+  "core/uv_manager_enhanced.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_find_uv_executable",
+      "complexity": 11,
+      "classname": "UVManagerEnhanced",
+      "lineno": 71,
+      "endline": 101,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "health_check",
+      "complexity": 11,
+      "classname": "UVManagerEnhanced",
+      "lineno": 382,
+      "endline": 441,
+      "closures": []
+    }
+  ],
+  "core/sophia_ai/orchestration/intelligent_router.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_generate_candidates",
+      "complexity": 12,
+      "classname": "IntelligentRouter",
+      "lineno": 271,
+      "endline": 332,
+      "closures": []
+    }
+  ],
+  "core/sophia_ai/orchestration/model_coordinator.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_parallel_consensus_coordination",
+      "complexity": 11,
+      "classname": "ModelCoordinator",
+      "lineno": 207,
+      "endline": 256,
+      "closures": []
+    }
+  ],
+  "core/framework/repository_wide_integration.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_extract_capabilities",
+      "complexity": 15,
+      "classname": "RepositoryWideIntegration",
+      "lineno": 288,
+      "endline": 324,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_is_agent_class",
+      "complexity": 14,
+      "classname": "RepositoryWideIntegration",
+      "lineno": 198,
+      "endline": 234,
+      "closures": []
+    }
+  ],
+  "core/framework/unified_base_agent.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_select_execution_framework",
+      "complexity": 15,
+      "classname": "UnifiedBaseAgent",
+      "lineno": 327,
+      "endline": 386,
+      "closures": []
+    }
+  ],
+  "core/hives/customer_success/customer_success_hive.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "analyze_customer_satisfaction",
+      "complexity": 21,
+      "classname": "CustomerSuccessAnalytics",
+      "lineno": 129,
+      "endline": 202,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "predict_churn_risk",
+      "complexity": 14,
+      "classname": "CustomerSuccessAnalytics",
+      "lineno": 204,
+      "endline": 293,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "CustomerSuccessAnalytics",
+      "complexity": 12,
+      "lineno": 46,
+      "endline": 293,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "CustomerSuccessAnalytics",
+          "lineno": 49,
+          "endline": 51,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "calculate_customer_health_scores",
+          "complexity": 9,
+          "classname": "CustomerSuccessAnalytics",
+          "lineno": 53,
+          "endline": 127,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "D",
+          "col_offset": 4,
+          "name": "analyze_customer_satisfaction",
+          "complexity": 21,
+          "classname": "CustomerSuccessAnalytics",
+          "lineno": 129,
+          "endline": 202,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "predict_churn_risk",
+          "complexity": 14,
+          "classname": "CustomerSuccessAnalytics",
+          "lineno": 204,
+          "endline": 293,
+          "closures": []
+        }
+      ]
+    }
+  ],
+  "core/hives/finance/finance_hive.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "analyze_financial_performance",
+      "complexity": 24,
+      "classname": "FinanceAnalytics",
+      "lineno": 43,
+      "endline": 153,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "FinanceAnalytics",
+      "complexity": 12,
+      "lineno": 36,
+      "endline": 283,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "FinanceAnalytics",
+          "lineno": 39,
+          "endline": 41,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "D",
+          "col_offset": 4,
+          "name": "analyze_financial_performance",
+          "complexity": 24,
+          "classname": "FinanceAnalytics",
+          "lineno": 43,
+          "endline": 153,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "analyze_budget_variance",
+          "complexity": 11,
+          "classname": "FinanceAnalytics",
+          "lineno": 155,
+          "endline": 226,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "generate_financial_insights",
+          "complexity": 9,
+          "classname": "FinanceAnalytics",
+          "lineno": 228,
+          "endline": 283,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_budget_variance",
+      "complexity": 11,
+      "classname": "FinanceAnalytics",
+      "lineno": 155,
+      "endline": 226,
+      "closures": []
+    }
+  ],
+  "core/hives/hr/hr_hive.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_recruitment_pipeline",
+      "complexity": 15,
+      "classname": "HRAnalytics",
+      "lineno": 105,
+      "endline": 150,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_employee_performance",
+      "complexity": 14,
+      "classname": "HRAnalytics",
+      "lineno": 44,
+      "endline": 103,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "HRAnalytics",
+      "complexity": 11,
+      "lineno": 37,
+      "endline": 202,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "HRAnalytics",
+          "lineno": 40,
+          "endline": 42,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "analyze_employee_performance",
+          "complexity": 14,
+          "classname": "HRAnalytics",
+          "lineno": 44,
+          "endline": 103,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "analyze_recruitment_pipeline",
+          "complexity": 15,
+          "classname": "HRAnalytics",
+          "lineno": 105,
+          "endline": 150,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "generate_hr_insights",
+          "complexity": 9,
+          "classname": "HRAnalytics",
+          "lineno": 152,
+          "endline": 202,
+          "closures": []
+        }
+      ]
+    }
+  ],
+  "core/hives/marketing/marketing_hive.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_campaign_performance",
+      "complexity": 16,
+      "classname": "MarketingAnalytics",
+      "lineno": 44,
+      "endline": 114,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "segment_customers",
+      "complexity": 15,
+      "classname": "MarketingAnalytics",
+      "lineno": 116,
+      "endline": 179,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "optimize_content_strategy",
+      "complexity": 14,
+      "classname": "MarketingAnalytics",
+      "lineno": 181,
+      "endline": 250,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "MarketingAnalytics",
+      "complexity": 12,
+      "lineno": 37,
+      "endline": 250,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "MarketingAnalytics",
+          "lineno": 40,
+          "endline": 42,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "analyze_campaign_performance",
+          "complexity": 16,
+          "classname": "MarketingAnalytics",
+          "lineno": 44,
+          "endline": 114,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "segment_customers",
+          "complexity": 15,
+          "classname": "MarketingAnalytics",
+          "lineno": 116,
+          "endline": 179,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "optimize_content_strategy",
+          "complexity": 14,
+          "classname": "MarketingAnalytics",
+          "lineno": 181,
+          "endline": 250,
+          "closures": []
+        }
+      ]
+    }
+  ],
+  "core/hives/operations/operations_hive.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_process_efficiency",
+      "complexity": 15,
+      "classname": "OperationsAnalytics",
+      "lineno": 44,
+      "endline": 122,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "optimize_resource_allocation",
+      "complexity": 11,
+      "classname": "OperationsHive",
+      "lineno": 392,
+      "endline": 451,
+      "closures": []
+    }
+  ],
+  "core/hives/product/product_hive.py": [
+    {
+      "type": "method",
+      "rank": "F",
+      "col_offset": 4,
+      "name": "analyze_user_behavior",
+      "complexity": 41,
+      "classname": "ProductAnalytics",
+      "lineno": 48,
+      "endline": 178,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "ProductAnalytics",
+      "complexity": 17,
+      "lineno": 41,
+      "endline": 298,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "ProductAnalytics",
+          "lineno": 44,
+          "endline": 46,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "F",
+          "col_offset": 4,
+          "name": "analyze_user_behavior",
+          "complexity": 41,
+          "classname": "ProductAnalytics",
+          "lineno": 48,
+          "endline": 178,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "analyze_feature_adoption",
+          "complexity": 11,
+          "classname": "ProductAnalytics",
+          "lineno": 180,
+          "endline": 249,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "analyze_product_performance",
+          "complexity": 12,
+          "classname": "ProductAnalytics",
+          "lineno": 251,
+          "endline": 298,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_product_performance",
+      "complexity": 12,
+      "classname": "ProductAnalytics",
+      "lineno": 251,
+      "endline": 298,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_feature_adoption",
+      "complexity": 11,
+      "classname": "ProductAnalytics",
+      "lineno": 180,
+      "endline": 249,
+      "closures": []
+    }
+  ],
+  "core/hives/sales/sales_hive.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "score_leads",
+      "complexity": 16,
+      "classname": "SalesAnalytics",
+      "lineno": 147,
+      "endline": 217,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_sales_pipeline",
+      "complexity": 11,
+      "classname": "SalesAnalytics",
+      "lineno": 43,
+      "endline": 102,
+      "closures": []
+    }
+  ],
+  "core/hives/security/security_hive.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "generate_security_insights",
+      "complexity": 19,
+      "classname": "SecurityAnalytics",
+      "lineno": 248,
+      "endline": 332,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "check_compliance_status",
+      "complexity": 16,
+      "classname": "SecurityAnalytics",
+      "lineno": 168,
+      "endline": 246,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "SecurityAnalytics",
+      "complexity": 11,
+      "lineno": 41,
+      "endline": 332,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "SecurityAnalytics",
+          "lineno": 44,
+          "endline": 46,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "analyze_security_threats",
+          "complexity": 10,
+          "classname": "SecurityAnalytics",
+          "lineno": 48,
+          "endline": 110,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "analyze_vulnerabilities",
+          "complexity": 5,
+          "classname": "SecurityAnalytics",
+          "lineno": 112,
+          "endline": 166,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "check_compliance_status",
+          "complexity": 16,
+          "classname": "SecurityAnalytics",
+          "lineno": 168,
+          "endline": 246,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "generate_security_insights",
+          "complexity": 19,
+          "classname": "SecurityAnalytics",
+          "lineno": 248,
+          "endline": 332,
+          "closures": []
+        }
+      ]
+    }
+  ],
+  "core/infrastructure/lambda_labs_gpu_manager.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_select_optimal_gpu",
+      "complexity": 14,
+      "classname": "LambdaLabsGPUManager",
+      "lineno": 259,
+      "endline": 317,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "optimize_allocation_strategy",
+      "complexity": 11,
+      "classname": "LambdaLabsGPUManager",
+      "lineno": 436,
+      "endline": 486,
+      "closures": []
+    }
+  ],
+  "core/memory/contextual_memory_manager.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_matches_query_filters",
+      "complexity": 16,
+      "classname": "ContextualMemoryManager",
+      "lineno": 615,
+      "endline": 653,
+      "closures": []
+    }
+  ],
+  "core/memory/enhanced_mem0_system.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "retrieve",
+      "complexity": 17,
+      "classname": "EnhancedMem0System",
+      "lineno": 290,
+      "endline": 370,
+      "closures": []
+    }
+  ],
+  "core/memory/mem0_enhanced_integration.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "retrieve_ultra_fast",
+      "complexity": 17,
+      "classname": "EnhancedMem0Manager",
+      "lineno": 341,
+      "endline": 484,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "store_ultra_fast",
+      "complexity": 11,
+      "classname": "EnhancedMem0Manager",
+      "lineno": 253,
+      "endline": 339,
+      "closures": []
+    }
+  ],
+  "core/orchestrator/enhanced_sophia_orchestrator.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_get_system_overview",
+      "complexity": 14,
+      "classname": "EnhancedArtemisOrchestrator",
+      "lineno": 859,
+      "endline": 887,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_rebalance_tasks",
+      "complexity": 13,
+      "classname": "EnhancedArtemisOrchestrator",
+      "lineno": 633,
+      "endline": 671,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_orchestrator_status",
+      "complexity": 13,
+      "classname": "EnhancedArtemisOrchestrator",
+      "lineno": 1456,
+      "endline": 1500,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_broadcast_metrics",
+      "complexity": 12,
+      "classname": "EnhancedArtemisOrchestrator",
+      "lineno": 523,
+      "endline": 566,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_detect_bottlenecks",
+      "complexity": 11,
+      "classname": "EnhancedArtemisOrchestrator",
+      "lineno": 952,
+      "endline": 995,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_handle_task_timeouts",
+      "complexity": 11,
+      "classname": "EnhancedArtemisOrchestrator",
+      "lineno": 1322,
+      "endline": 1365,
+      "closures": []
+    }
+  ],
+  "core/performance/advanced_performance_optimizer.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "collect_system_metrics",
+      "complexity": 12,
+      "classname": "SystemMetrics",
+      "lineno": 80,
+      "endline": 141,
+      "closures": []
+    }
+  ],
+  "core/performance/intelligent_performance_manager.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_performance_status",
+      "complexity": 13,
+      "classname": "IntelligentPerformanceManager",
+      "lineno": 838,
+      "endline": 887,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_calculate_overall_performance_score",
+      "complexity": 12,
+      "classname": "IntelligentPerformanceManager",
+      "lineno": 933,
+      "endline": 968,
+      "closures": []
+    }
+  ],
+  "core/performance/realistic_benchmarking_framework.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_performance_summary",
+      "complexity": 14,
+      "classname": "RealisticBenchmarkingFramework",
+      "lineno": 669,
+      "endline": 733,
+      "closures": []
+    }
+  ],
+  "core/performance/optimization/performance_optimizer.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_analyze_performance_issues",
+      "complexity": 11,
+      "classname": "PerformanceOptimizer",
+      "lineno": 432,
+      "endline": 498,
+      "closures": []
+    }
+  ],
+  "core/security/dynamic_rbac_optimizer.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_analyze_access_patterns",
+      "complexity": 12,
+      "classname": "DynamicRBACOptimizer",
+      "lineno": 464,
+      "endline": 504,
+      "closures": []
+    }
+  ],
+  "core/swarm_optimization/evolutionary_optimizer.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_evolve_simplified",
+      "complexity": 12,
+      "classname": "EvolutionarySwarmOptimizer",
+      "lineno": 479,
+      "endline": 538,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_evolve_with_deap",
+      "complexity": 11,
+      "classname": "EvolutionarySwarmOptimizer",
+      "lineno": 402,
+      "endline": 477,
+      "closures": []
+    }
+  ],
+  "dashboard/sophia_langroid_technical_dashboard.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "render_integrations_status",
+      "complexity": 15,
+      "lineno": 253,
+      "endline": 351,
+      "closures": [
+        {
+          "type": "function",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "color_status",
+          "complexity": 1,
+          "lineno": 271,
+          "endline": 277,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "render_model_performance",
+      "complexity": 14,
+      "lineno": 354,
+      "endline": 452,
+      "closures": []
+    },
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "render_system_logs",
+      "complexity": 11,
+      "lineno": 455,
+      "endline": 526,
+      "closures": []
+    }
+  ],
+  "infrastructure/lambda-labs/secrets_management.py": [
+    {
+      "type": "function",
+      "rank": "D",
+      "col_offset": 0,
+      "name": "main",
+      "complexity": 22,
+      "lineno": 342,
+      "endline": 417,
+      "closures": []
+    }
+  ],
+  "infrastructure/lambda_labs/lambda_labs_integration.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_costs",
+      "complexity": 11,
+      "classname": "CostOptimizer",
+      "lineno": 502,
+      "endline": 553,
+      "closures": []
+    }
+  ],
+  "infrastructure/setup/redis_setup.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_validate_setup",
+      "complexity": 13,
+      "classname": "RedisSetup",
+      "lineno": 260,
+      "endline": 319,
+      "closures": []
+    }
+  ],
+  "mcp_servers/enhanced_enterprise_server.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_read_resource_with_optimization",
+      "complexity": 16,
+      "classname": "EnhancedEnterpriseMCPServer",
+      "lineno": 921,
+      "endline": 975,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_run_autonomous_optimization",
+      "complexity": 13,
+      "classname": "EnhancedEnterpriseMCPServer",
+      "lineno": 1180,
+      "endline": 1220,
+      "closures": []
+    }
+  ],
+  "mcp_servers/json_enforce_roo_backup.py": {
+    "error": "'{' was never closed (<unknown>, line 116)"
+  },
+  "mcp_servers/sophia/terminal_mcp.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_execute_command",
+      "complexity": 12,
+      "classname": "TerminalMCPServer",
+      "lineno": 149,
+      "endline": 260,
+      "closures": []
+    }
+  ],
+  "mcp_servers/background_agents/background_agents_mcp_server.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_recommend_agents",
+      "complexity": 13,
+      "classname": "BackgroundAgentsMCPServer",
+      "lineno": 493,
+      "endline": 539,
+      "closures": []
+    }
+  ],
+  "mcp_servers/base/batch_processor.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_create_and_process_batch",
+      "complexity": 12,
+      "classname": "AdaptiveBatchProcessor",
+      "lineno": 348,
+      "endline": 393,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_optimize_parameters",
+      "complexity": 12,
+      "classname": "AdaptiveBatchProcessor",
+      "lineno": 677,
+      "endline": 712,
+      "closures": []
+    }
+  ],
+  "mcp_servers/base/resilience_system.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "call",
+      "complexity": 12,
+      "classname": "CircuitBreaker",
+      "lineno": 295,
+      "endline": 344,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_classify_failure",
+      "complexity": 11,
+      "classname": "RetryManager",
+      "lineno": 178,
+      "endline": 194,
+      "closures": []
+    }
+  ],
+  "mcp_servers/base/validation.py": [
+    {
+      "type": "method",
+      "rank": "E",
+      "col_offset": 4,
+      "name": "_validate_field",
+      "complexity": 36,
+      "classname": "MCPToolValidator",
+      "lineno": 73,
+      "endline": 165,
+      "closures": []
+    }
+  ],
+  "mcp_servers/enterprise/core/enterprise_base_server.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "handle_request",
+      "complexity": 13,
+      "classname": "EnterpriseBaseServer",
+      "lineno": 257,
+      "endline": 318,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_perform_health_check",
+      "complexity": 12,
+      "classname": "EnterpriseBaseServer",
+      "lineno": 427,
+      "endline": 513,
+      "closures": []
+    }
+  ],
+  "mcp_servers/enterprise/core/filesystem_cluster.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_execute_cluster_operation",
+      "complexity": 13,
+      "classname": "FileSystemMCPCluster",
+      "lineno": 466,
+      "endline": 516,
+      "closures": []
+    }
+  ],
+  "mcp_servers/graph_rag/server.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_agent_evolution_insights",
+      "complexity": 13,
+      "classname": "GraphRAGMCPServer",
+      "lineno": 564,
+      "endline": 632,
+      "closures": []
+    }
+  ],
+  "mcp_servers/huggingface/huggingface_mcp_server.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_search_models",
+      "complexity": 14,
+      "classname": "HuggingFaceMCPServer",
+      "lineno": 432,
+      "endline": 526,
+      "closures": []
+    }
+  ],
+  "mcp_servers/hyper_hub/orchestrator.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "rl_evolve",
+      "complexity": 11,
+      "classname": "HyperOrchestrator",
+      "lineno": 344,
+      "endline": 404,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_analyze_complexity",
+      "complexity": 11,
+      "classname": "HyperOrchestrator",
+      "lineno": 434,
+      "endline": 459,
+      "closures": []
+    }
+  ],
+  "mcp_servers/performance/performance_monitor.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_performance_summary",
+      "complexity": 17,
+      "classname": "PerformanceMonitor",
+      "lineno": 341,
+      "endline": 408,
+      "closures": []
+    }
+  ],
+  "mcp_servers/reliability/distributed_reliability_monitor.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_collect_metrics",
+      "complexity": 20,
+      "classname": "DistributedReliabilityMonitor",
+      "lineno": 385,
+      "endline": 497,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_comprehensive_report",
+      "complexity": 12,
+      "classname": "DistributedReliabilityMonitor",
+      "lineno": 589,
+      "endline": 650,
+      "closures": []
+    }
+  ],
+  "mcp_servers/reliability/metrics_collector.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_register_metric",
+      "complexity": 11,
+      "classname": "MCPMetricsCollector",
+      "lineno": 319,
+      "endline": 347,
+      "closures": []
+    }
+  ],
+  "mcp_servers/reliability/race_condition_detector.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_detect_race_condition",
+      "complexity": 18,
+      "classname": "RaceConditionDetector",
+      "lineno": 185,
+      "endline": 247,
+      "closures": []
+    }
+  ],
+  "mcp_servers/reliability/standalone_reliability_monitor.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_comprehensive_report",
+      "complexity": 12,
+      "classname": "StandaloneReliabilityMonitor",
+      "lineno": 348,
+      "endline": 412,
+      "closures": []
+    }
+  ],
+  "mcp_servers/security/security_mcp_server.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_security_scan",
+      "complexity": 12,
+      "classname": "SecurityMCPServer",
+      "lineno": 330,
+      "endline": 402,
+      "closures": []
+    }
+  ],
+  "mcp_servers/shared/performance_monitor.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_check_alerts",
+      "complexity": 13,
+      "classname": "MCPPerformanceMonitor",
+      "lineno": 356,
+      "endline": 377,
+      "closures": []
+    }
+  ],
+  "mcp_servers/shared/unified_cache.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get",
+      "complexity": 11,
+      "classname": "UnifiedCacheManager",
+      "lineno": 180,
+      "endline": 222,
+      "closures": []
+    }
+  ],
+  "mcp_servers/shared/unified_health_monitor.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "get_comprehensive_health",
+      "complexity": 14,
+      "classname": "UnifiedHealthMonitor",
+      "lineno": 355,
+      "endline": 435,
+      "closures": []
+    }
+  ],
+  "sales_coach/analytics/sentiment_analyzer.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_get_overall_sentiment",
+      "complexity": 15,
+      "classname": "AdvancedSentimentAnalyzer",
+      "lineno": 314,
+      "endline": 368,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_assess_deal_risk",
+      "complexity": 11,
+      "classname": "AdvancedSentimentAnalyzer",
+      "lineno": 827,
+      "endline": 882,
+      "closures": []
+    }
+  ],
+  "sales_coach/api/sales_coach_api.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "execute_tool",
+      "complexity": 14,
+      "lineno": 259,
+      "endline": 339,
+      "closures": []
+    }
+  ],
+  "sales_coach/integrations/gong.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_analyze_call_metrics",
+      "complexity": 11,
+      "classname": "GongIntegration",
+      "lineno": 234,
+      "endline": 272,
+      "closures": []
+    }
+  ],
+  "scripts/github_integration.py": [
+    {
+      "type": "function",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "main",
+      "complexity": 11,
+      "lineno": 237,
+      "endline": 276,
+      "closures": []
+    }
+  ],
+  "services/orchestrator/elastic_scaling_orchestrator.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_collect_metrics",
+      "complexity": 14,
+      "classname": "ElasticScalingOrchestrator",
+      "lineno": 857,
+      "endline": 903,
+      "closures": []
+    }
+  ],
+  "services/orchestrator/enterprise_readiness.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_check_compliance_flags",
+      "complexity": 14,
+      "classname": "EnterpriseComplianceManager",
+      "lineno": 278,
+      "endline": 309,
+      "closures": []
+    }
+  ],
+  "services/orchestrator/hyper_performance_engine.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "compress",
+      "complexity": 11,
+      "classname": "IntelligentCompressor",
+      "lineno": 325,
+      "endline": 370,
+      "closures": []
+    }
+  ],
+  "services/orchestrator/ultimate_resilience_system.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_apply_recovery_strategy",
+      "complexity": 17,
+      "classname": "SelfHealingTaskRecovery",
+      "lineno": 454,
+      "endline": 542,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_should_allow_request",
+      "complexity": 11,
+      "classname": "IntelligentCircuitBreaker",
+      "lineno": 169,
+      "endline": 204,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_categorize_failure",
+      "complexity": 11,
+      "classname": "IntelligentCircuitBreaker",
+      "lineno": 275,
+      "endline": 320,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_determine_recovery_strategy",
+      "complexity": 11,
+      "classname": "SelfHealingTaskRecovery",
+      "lineno": 425,
+      "endline": 452,
+      "closures": []
+    }
+  ],
+  "services/vector_proxy/app.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "search_vectors",
+      "complexity": 14,
+      "classname": "VectorProxyService",
+      "lineno": 187,
+      "endline": 290,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "insert_vectors",
+      "complexity": 11,
+      "classname": "VectorProxyService",
+      "lineno": 292,
+      "endline": 360,
+      "closures": []
+    }
+  ],
+  "sophia_mcp/business/notion.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "_analyze_business_knowledge",
+      "complexity": 25,
+      "classname": "SophiaNotionMCP",
+      "lineno": 472,
+      "endline": 547,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "_get_page_content",
+      "complexity": 21,
+      "classname": "SophiaNotionMCP",
+      "lineno": 285,
+      "endline": 363,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "search_business_knowledge",
+      "complexity": 11,
+      "classname": "SophiaNotionMCP",
+      "lineno": 645,
+      "endline": 776,
+      "closures": []
+    }
+  ],
+  "sophia_mcp/notion/sophia_notion_server.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_extract_business_content_from_blocks",
+      "complexity": 15,
+      "classname": "SophiaNotionServer",
+      "lineno": 332,
+      "endline": 389,
+      "closures": []
+    }
+  ],
+  "tasks/ingest-asana.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "backfill",
+      "complexity": 13,
+      "classname": "AsanaExtractor",
+      "lineno": 166,
+      "endline": 274,
+      "closures": []
+    }
+  ],
+  "tasks/ingest-hubspot.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "backfill",
+      "complexity": 18,
+      "classname": "HubSpotExtractor",
+      "lineno": 269,
+      "endline": 417,
+      "closures": []
+    }
+  ],
+  "tasks/ingest-linear.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "backfill",
+      "complexity": 15,
+      "classname": "LinearExtractor",
+      "lineno": 247,
+      "endline": 374,
+      "closures": []
+    }
+  ],
+  "tasks/ingest-notion.py": [
+    {
+      "type": "method",
+      "rank": "E",
+      "col_offset": 4,
+      "name": "backfill",
+      "complexity": 33,
+      "classname": "NotionExtractor",
+      "lineno": 187,
+      "endline": 386,
+      "closures": []
+    }
+  ],
+  "tasks/ingest-salesforce.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "backfill",
+      "complexity": 23,
+      "classname": "SalesforceExtractor",
+      "lineno": 304,
+      "endline": 515,
+      "closures": []
+    }
+  ],
+  "tasks/ingest-slack.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "backfill",
+      "complexity": 11,
+      "classname": "SlackExtractor",
+      "lineno": 217,
+      "endline": 278,
+      "closures": []
+    }
+  ],
+  "tools/audit_repository.py": [
+    {
+      "type": "method",
+      "rank": "E",
+      "col_offset": 4,
+      "name": "analyze_repository",
+      "complexity": 32,
+      "classname": "RepositoryAuditor",
+      "lineno": 359,
+      "endline": 457,
+      "closures": []
+    },
+    {
+      "type": "function",
+      "rank": "D",
+      "col_offset": 0,
+      "name": "generate_report",
+      "complexity": 30,
+      "lineno": 544,
+      "endline": 693,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "RepositoryAudit",
+      "complexity": 19,
+      "lineno": 60,
+      "endline": 102,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "summary",
+          "complexity": 18,
+          "classname": "RepositoryAudit",
+          "lineno": 71,
+          "endline": 102,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "summary",
+      "complexity": 18,
+      "classname": "RepositoryAudit",
+      "lineno": 71,
+      "endline": 102,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "analyze_file",
+      "complexity": 17,
+      "classname": "RepositoryAuditor",
+      "lineno": 226,
+      "endline": 301,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_assess_infrastructure_status",
+      "complexity": 16,
+      "classname": "RepositoryAuditor",
+      "lineno": 498,
+      "endline": 540,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "detect_mock_implementations",
+      "complexity": 14,
+      "classname": "RepositoryAuditor",
+      "lineno": 160,
+      "endline": 199,
+      "closures": []
+    },
+    {
+      "type": "class",
+      "rank": "C",
+      "col_offset": 0,
+      "name": "RepositoryAuditor",
+      "complexity": 13,
+      "lineno": 106,
+      "endline": 540,
+      "methods": [
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "__init__",
+          "complexity": 1,
+          "classname": "RepositoryAuditor",
+          "lineno": 109,
+          "endline": 115,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "A",
+          "col_offset": 4,
+          "name": "scan_repository",
+          "complexity": 5,
+          "classname": "RepositoryAuditor",
+          "lineno": 117,
+          "endline": 128,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "analyze_imports",
+          "complexity": 9,
+          "classname": "RepositoryAuditor",
+          "lineno": 130,
+          "endline": 158,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "detect_mock_implementations",
+          "complexity": 14,
+          "classname": "RepositoryAuditor",
+          "lineno": 160,
+          "endline": 199,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "sophia_import",
+          "complexity": 7,
+          "classname": "RepositoryAuditor",
+          "lineno": 201,
+          "endline": 224,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "analyze_file",
+          "complexity": 17,
+          "classname": "RepositoryAuditor",
+          "lineno": 226,
+          "endline": 301,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "B",
+          "col_offset": 4,
+          "name": "find_circular_dependencies",
+          "complexity": 8,
+          "classname": "RepositoryAuditor",
+          "lineno": 304,
+          "endline": 357,
+          "closures": [
+            {
+              "type": "function",
+              "rank": "B",
+              "col_offset": 8,
+              "name": "has_cycle",
+              "complexity": 7,
+              "lineno": 330,
+              "endline": 350,
+              "closures": []
+            }
+          ]
+        },
+        {
+          "type": "method",
+          "rank": "E",
+          "col_offset": 4,
+          "name": "analyze_repository",
+          "complexity": 32,
+          "classname": "RepositoryAuditor",
+          "lineno": 359,
+          "endline": 457,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "_assess_deployment_readiness",
+          "complexity": 11,
+          "classname": "RepositoryAuditor",
+          "lineno": 460,
+          "endline": 495,
+          "closures": []
+        },
+        {
+          "type": "method",
+          "rank": "C",
+          "col_offset": 4,
+          "name": "_assess_infrastructure_status",
+          "complexity": 16,
+          "classname": "RepositoryAuditor",
+          "lineno": 498,
+          "endline": 540,
+          "closures": []
+        }
+      ]
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_assess_deployment_readiness",
+      "complexity": 11,
+      "classname": "RepositoryAuditor",
+      "lineno": 460,
+      "endline": 495,
+      "closures": []
+    }
+  ],
+  "tools/mcp_server_analyzer.py": [
+    {
+      "type": "method",
+      "rank": "D",
+      "col_offset": 4,
+      "name": "identify_consolidation_opportunities",
+      "complexity": 24,
+      "classname": "MCPServerAnalyzer",
+      "lineno": 490,
+      "endline": 557,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "generate_migration_report",
+      "complexity": 16,
+      "classname": "MCPServerAnalyzer",
+      "lineno": 559,
+      "endline": 638,
+      "closures": []
+    }
+  ],
+  "tools/unified_deployment.py": [
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "generate_deployment_report",
+      "complexity": 18,
+      "classname": "SophiaDeployment",
+      "lineno": 928,
+      "endline": 1007,
+      "closures": []
+    },
+    {
+      "type": "method",
+      "rank": "C",
+      "col_offset": 4,
+      "name": "_execute_deployment",
+      "complexity": 15,
+      "classname": "SophiaDeployment",
+      "lineno": 313,
+      "endline": 378,
+      "closures": []
+    }
+  ]
+}

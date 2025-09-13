@@ -1,0 +1,134 @@
+simple_test_server.py:-:   File "simple_test_server.py", line 1737
+    "": RAGDomain.,
+                  ^
+SyntaxError: invalid syntax
+
+dashboard.py:-: Sorry: IndentationError: expected an indented block after 'if' statement on line 1028 (dashboard.py, line 1029)
+clear_all_caches.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 286 (clear_all_caches.py, line 287)
+app/main_unified.py:-: Sorry: IndentationError: expected an indented block after 'else' statement on line 518 (main_unified.py, line 519)
+app/core/agui_event_types.py:-: Sorry: IndentationError: unexpected indent (agui_event_types.py, line 68)
+app/core/agui_event_adapter.py:-:   File "app/core/agui_event_adapter.py", line 289
+    metadata = replace(metadata, domain=DomainContext.)
+                                                      ^
+SyntaxError: invalid syntax
+
+app/core/orchestrator_bridge.py:-: Sorry: IndentationError: unexpected indent (orchestrator_bridge.py, line 28)
+app/core/orchestrator_config.py:-: Sorry: IndentationError: unexpected indent (orchestrator_config.py, line 11)
+app/coordination/dynamic_resource_allocator.py:-: Sorry: IndentationError: unexpected indent (dynamic_resource_allocator.py, line 39)
+app/scaffolding/persona_manager.py:-: Sorry: IndentationError: unexpected indent (persona_manager.py, line 258)
+app/models/orchestration_models.py:-: Sorry: IndentationError: unexpected indent (orchestration_models.py, line 46)
+app/rag/unified_rag.py:-: Sorry: IndentationError: unexpected indent (unified_rag.py, line 40)
+app/personas/__init__.py:-: Sorry: IndentationError: unexpected indent (__init__.py, line 136)
+app/integrations/gong_sophia_bridge.py:-:   File "app/integrations/gong_sophia_bridge.py", line 13
+    from app.swarms..military_orchestrator import MillitaryOrchestrator
+                    ^
+SyntaxError: invalid syntax
+
+app/orchestration/factory_aware_orchestrator.py:-:   File "app/orchestration/factory_aware_orchestrator.py", line 16
+    from app..agent_factory import AgentFactory
+             ^
+SyntaxError: invalid syntax
+
+app/api/routers/research_swarm.py:-:   File "app/api/routers/research_swarm.py", line 10
+    from app..agent_factory import _factory
+             ^
+SyntaxError: invalid syntax
+
+app/api/routes/agui_stream.py:-:   File "app/api/routes/agui_stream.py", line 313
+    DomainContext..value: " tactical operations",
+                ^
+SyntaxError: ':' expected after dictionary key
+
+app/swarms/orchestrator_research_swarm.py:-:   File "app/swarms/orchestrator_research_swarm.py", line 22
+    from app..agent_factory import AgentFactory
+             ^
+SyntaxError: invalid syntax
+
+app/swarms/core/swarm_integration.py:-:   File "app/swarms/core/swarm_integration.py", line 24
+    from app.swarms..technical_agents import SwarmFactory
+                    ^
+SyntaxError: invalid syntax
+
+app/swarms/core/scheduler.py:-:   File "app/swarms/core/scheduler.py", line 15
+    from app.swarms..technical_agents import SwarmFactory
+                    ^
+SyntaxError: invalid syntax
+
+mcp-unified/central_registry.py:-:   File "mcp-unified/central_registry.py", line 160
+    MCPDomain.: [],
+              ^
+SyntaxError: invalid syntax
+
+tests/test_orchestrators.py:-:   File "tests/test_orchestrators.py", line 7
+    from app.._orchestrator import Orchestrator
+             ^
+SyntaxError: invalid syntax
+
+tests/integration/test_mcp_servers_integration.py:-: Sorry: IndentationError: unexpected indent (test_mcp_servers_integration.py, line 98)
+tests/e2e/test_cross_domain_workflows.py:-:   File "tests/e2e/test_cross_domain_workflows.py", line 8
+    from app..unified_factory import UnifiedFactory
+             ^
+SyntaxError: invalid syntax
+
+tests/e2e/test_concurrent_operations.py:-:   File "tests/e2e/test_concurrent_operations.py", line 12
+    from app..unified_factory import UnifiedFactory
+             ^
+SyntaxError: invalid syntax
+
+mcp-bridge/central_registry_integration.py:-:   File "mcp-bridge/central_registry_integration.py", line 91
+    domain = MCPDomain.
+                       ^
+SyntaxError: invalid syntax
+
+schemas/weaviate/loader.py:-:   File "schemas/weaviate/loader.py", line 124
+    global WEAVIATE_URL
+    ^^^^^^^^^^^^^^^^^^^
+SyntaxError: name 'WEAVIATE_URL' is used prior to global declaration
+
+scripts/index_repository.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 300 (index_repository.py, line 302)
+scripts/syntax_validator.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 242 (syntax_validator.py, line 244)
+scripts/unified_orchestrator.py:-: Sorry: IndentationError: unexpected indent (unified_orchestrator.py, line 38)
+scripts/update_claude_to_opus41.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 98 (update_claude_to_opus41.py, line 99)
+scripts/generate_security_summary.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 7 (generate_security_summary.py, line 9)
+scripts/final_cleanup_optimization.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 21 (final_cleanup_optimization.py, line 22)
+scripts/check_security_reports.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 7 (check_security_reports.py, line 9)
+scripts/performance_dev_automation.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 372 (performance_dev_automation.py, line 373)
+scripts/start_centralized_mcp.py:-:   File "scripts/start_centralized_mcp.py", line 93
+    domain = MCPDomain.
+                       ^
+SyntaxError: invalid syntax
+
+scripts/development/validate_mcp_servers.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 164 (validate_mcp_servers.py, line 165)
+scripts/testing/test_all_keys_comprehensive.py:-:   File "scripts/testing/test_all_keys_comprehensive.py", line 394
+    from app..unified_factory import _unified_factory
+             ^
+SyntaxError: invalid syntax
+
+scripts/testing/test_scout_swarm_integration.py:-:   File "scripts/testing/test_scout_swarm_integration.py", line 15
+    from app..scout_swarm.ultimate_scout_swarm import (
+             ^
+SyntaxError: invalid syntax
+
+scripts/testing/test_final_model_architecture.py:-:   File "scripts/testing/test_final_model_architecture.py", line 130
+    (OrchestratorType., "code_generation", "Generate a Python function"),
+                      ^
+SyntaxError: invalid syntax
+
+scripts/testing/test_complete_integration.py:-:   File "scripts/testing/test_complete_integration.py", line 158
+    from app..unified_factory import _unified_factory
+             ^
+SyntaxError: invalid syntax
+
+scripts/monitoring/security_monitoring_gates.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 298 (security_monitoring_gates.py, line 299)
+infrastructure/setup/qdrant_setup.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 241 (qdrant_setup.py, line 244)
+infrastructure/integration-tests/tests/scenario-high-load.py:-: Sorry: IndentationError: unexpected indent (scenario-high-load.py, line 328)
+infrastructure/keda/tests/performance-benchmark.py:-:   File "infrastructure/keda/tests/performance-benchmark.py", line 193
+    = self.k8s_apps_v1.read_namespaced_deployment(
+    ^
+SyntaxError: invalid syntax
+
+infrastructure/pulumi/production/lambda_labs.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 8 (lambda_labs.py, line 10)
+services/performance-kit/multi_tier_cache.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 478 (multi_tier_cache.py, line 480)
+services/performance-kit/single_flight.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 290 (single_flight.py, line 292)
+services/events-jobs/outbox.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 180 (outbox.py, line 181)
+services/neural-gateway/main.py:-: Sorry: IndentationError: expected an indented block after 'except' statement on line 320 (main.py, line 322)

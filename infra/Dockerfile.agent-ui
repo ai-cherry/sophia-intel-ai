@@ -1,0 +1,66 @@
+# Agent UI Dockerfile (Next.js)
+# Multi-stage build with proper node permissions to fix BuildKit cache corruption
+
+FROM --platform=$BUILDPLATFORM node:20-alpine AS deps
+RUN apk add --no-cache libc6-compat curl
+
+# Create app directory with proper ownership
+RUN mkdir -p /app && chown node:node /app
+WORKDIR /app
+USER node
+
+# Install dependencies with cache mount
+COPY --chown=node:node package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
+RUN --mount=type=cache,target=/home/node/.npm,uid=1000,gid=1000 \
+    npm install
+
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
+RUN mkdir -p /app && chown node:node /app
+WORKDIR /app
+USER node
+
+# Copy dependencies
+COPY --from=deps --chown=node:node /app/node_modules ./node_modules
+
+# Copy source code with proper ownership (avoid copying node_modules from context)
+COPY --chown=node:node package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
+COPY --chown=node:node next.config.js ./
+COPY --chown=node:node next.config.ts ./
+COPY --chown=node:node tailwind.config.ts ./
+COPY --chown=node:node postcss.config.mjs ./
+COPY --chown=node:node tsconfig.json ./
+COPY --chown=node:node components.json ./
+COPY --chown=node:node src ./src
+COPY --chown=node:node public ./public
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# Build with standalone output
+RUN npm run build
+
+FROM --platform=$TARGETPLATFORM node:20-alpine AS runner
+RUN apk add --no-cache curl
+
+# Create app directory with proper ownership
+RUN mkdir -p /app && chown node:node /app
+WORKDIR /app
+USER node
+
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Copy standalone build output
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
+
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000 || exit 1
+
+# Start the application
+CMD ["node", "server.js"]
+

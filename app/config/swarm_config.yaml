@@ -1,0 +1,43 @@
+patterns:
+  adversarial_debate:
+    enabled: true
+    min_participants: 3
+    max_debate_rounds: 3
+
+  quality_gates:
+    enabled: true
+    min_quality_threshold: 0.7
+    max_retry_rounds: 3
+
+  strategy_archive:
+    enabled: true
+    max_archive_size: 1000
+    similarity_threshold: 0.8
+
+  safety_boundaries:
+    enabled: true
+    risk_threshold: 0.3
+    require_human_approval: false
+
+  dynamic_roles:
+    enabled: true
+    rotation_frequency: 3
+
+  consensus:
+    enabled: true
+    min_agreement: 0.6
+
+  adaptive_parameters:
+    enabled: true
+    adaptation_rate: 0.1
+
+  knowledge_transfer:
+    enabled: true
+    max_knowledge_size: 10000
+
+concurrency:
+  max_parallel_agents: 10
+  max_parallel_patterns: 5
+  timeout_seconds: 300
+  use_rate_limiting: true
+  requests_per_minute: 60

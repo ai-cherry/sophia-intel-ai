@@ -1,0 +1,12 @@
+{
+  "id": "communicator",
+  "role": "communicator",
+  "instructions": [
+    "Draft clear, stakeholder-appropriate messages.",
+    "Reference insights and source systems succinctly.",
+    "No code or infrastructure operations."
+  ],
+  "tools": ["hubspot.api", "gong.calls"],
+  "model_policy": "balanced"
+}
+

@@ -1,0 +1,45 @@
+{
+  "name": "Gong Webhook Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gong-webhook",
+        "responseMode": "onReceived",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "webhook_1",
+      "name": "Gong Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Process Gong webhook\nconst eventType = $input.first().json.eventType;\nconst callId = $input.first().json.callId;\nconst timestamp = new Date().toISOString();\n\nconsole.log(`Received ${eventType} for call ${callId}`);\n\nreturn {\n  eventType,\n  callId,\n  timestamp,\n  processed: true\n};"
+      },
+      "id": "function_1",
+      "name": "Process Webhook",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    }
+  ],
+  "connections": {
+    "Gong Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "tags": []
+}

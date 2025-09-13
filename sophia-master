@@ -1,0 +1,933 @@
+#!/usr/bin/env bash
+# Sophia Intel AI - Master Control Script
+# Production-ready system lifecycle management
+# Author: Claude (System Architecture Designer)
+# Version: 2.0.0
+
+set -euo pipefail
+
+# =====================================================
+# CONFIGURATION & CONSTANTS
+# =====================================================
+
+readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+readonly SCRIPT_NAME="$(basename "$0")"
+readonly VERSION="2.0.0"
+
+# Environment
+readonly ENV_FILE="$SCRIPT_DIR/.env.master"
+readonly ENV_FALLBACK="$HOME/.config/sophia/env"
+
+# Directories
+readonly PID_DIR="$SCRIPT_DIR/.pids"
+readonly LOG_DIR="$SCRIPT_DIR/logs"
+readonly CONFIG_DIR="$SCRIPT_DIR/config"
+readonly STATE_FILE="$SCRIPT_DIR/.sophia-state.json"
+readonly LOCK_FILE="$SCRIPT_DIR/.sophia.lock"
+
+# Service Configuration
+declare -A SERVICES=(
+    ["redis"]="6379:redis-server"
+    ["litellm"]="4000:litellm"
+    ["mcp-memory"]="8081:mcp.memory_server:app"
+    ["mcp-filesystem"]="8082:mcp.filesystem.server:app"  
+    ["mcp-git"]="8084:mcp.git.server:app"
+)
+
+declare -A SERVICE_DEPS=(
+    ["litellm"]="redis"
+    ["mcp-memory"]="redis"
+    ["mcp-filesystem"]=""
+    ["mcp-git"]=""
+)
+
+# Timeouts and retries
+readonly STARTUP_TIMEOUT=120
+readonly HEALTH_CHECK_TIMEOUT=30
+readonly SHUTDOWN_TIMEOUT=30
+readonly MAX_RETRIES=3
+
+# Colors for output
+readonly RED='\033[0;31m'
+readonly GREEN='\033[0;32m'
+readonly YELLOW='\033[1;33m'
+readonly BLUE='\033[0;34m'
+readonly CYAN='\033[0;36m'
+readonly BOLD='\033[1m'
+readonly NC='\033[0m' # No Color
+
+# =====================================================
+# UTILITY FUNCTIONS
+# =====================================================
+
+# Logging with timestamp and levels
+log() {
+    local level="$1"
+    shift
+    local message="$*"
+    local timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+    
+    case "$level" in
+        "INFO")  echo -e "${GREEN}[${timestamp}] [INFO]${NC} $message" ;;
+        "WARN")  echo -e "${YELLOW}[${timestamp}] [WARN]${NC} $message" ;;
+        "ERROR") echo -e "${RED}[${timestamp}] [ERROR]${NC} $message" ;;
+        "DEBUG") echo -e "${BLUE}[${timestamp}] [DEBUG]${NC} $message" ;;
+        *)       echo -e "${CYAN}[${timestamp}]${NC} $message" ;;
+    esac
+    
+    # Also log to file
+    mkdir -p "$LOG_DIR"
+    echo "[${timestamp}] [$level] $message" >> "$LOG_DIR/sophia-master.log"
+}
+
+# Error handling with stack trace
+error_exit() {
+    local exit_code="${2:-1}"
+    log "ERROR" "$1"
+    log "ERROR" "Stack trace:"
+    local frame=0
+    while caller $frame 2>/dev/null; do
+        ((frame++))
+    done
+    cleanup_and_exit "$exit_code"
+}
+
+# Cleanup function
+cleanup_and_exit() {
+    local exit_code="${1:-0}"
+    rm -f "$LOCK_FILE" 2>/dev/null || true
+    exit "$exit_code"
+}
+
+# Signal handlers
+trap 'error_exit "Interrupted by user" 130' INT TERM
+trap 'cleanup_and_exit 0' EXIT
+
+# Lock mechanism to prevent concurrent runs
+acquire_lock() {
+    if [ -f "$LOCK_FILE" ]; then
+        local lock_pid
+        lock_pid="$(cat "$LOCK_FILE" 2>/dev/null || echo "")"
+        if [ -n "$lock_pid" ] && kill -0 "$lock_pid" 2>/dev/null; then
+            error_exit "Another instance of $SCRIPT_NAME is already running (PID: $lock_pid)"
+        else
+            log "WARN" "Stale lock file found, removing"
+            rm -f "$LOCK_FILE"
+        fi
+    fi
+    echo $$ > "$LOCK_FILE"
+}
+
+# =====================================================
+# SYSTEM VALIDATION
+# =====================================================
+
+check_dependencies() {
+    log "INFO" "Checking system dependencies..."
+    
+    local missing_deps=()
+    
+    # Check essential commands
+    local required_commands=("python3" "curl" "jq")
+    for cmd in "${required_commands[@]}"; do
+        if ! command -v "$cmd" >/dev/null 2>&1; then
+            missing_deps+=("$cmd")
+        fi
+    done
+    
+    # Check Python packages
+    if ! python3 -c "import uvicorn, fastapi, redis, pydantic" >/dev/null 2>&1; then
+        missing_deps+=("python packages (uvicorn, fastapi, redis, pydantic)")
+    fi
+    
+    # Check LiteLLM
+    if ! command -v litellm >/dev/null 2>&1; then
+        if [ ! -x "$SCRIPT_DIR/bin/litellm-cli" ]; then
+            missing_deps+=("litellm")
+        fi
+    fi
+    
+    if [ ${#missing_deps[@]} -gt 0 ]; then
+        log "WARN" "Missing dependencies: ${missing_deps[*]}"
+        log "INFO" "Install with: pip install uvicorn fastapi redis pydantic"
+        log "INFO" "Install jq with: brew install jq (macOS) or apt-get install jq (Linux)"
+        return 1
+    fi
+    
+    log "INFO" "✅ All dependencies satisfied"
+}
+
+validate_environment() {
+    log "INFO" "Validating environment configuration..."
+    
+    # Load environment
+    if [ -f "$ENV_FILE" ]; then
+        # shellcheck disable=SC1090
+        source "$ENV_FILE"
+        log "INFO" "✅ Loaded environment from $ENV_FILE"
+    elif [ -f "$ENV_FALLBACK" ]; then
+        # shellcheck disable=SC1090
+        source "$ENV_FALLBACK"
+        log "INFO" "✅ Loaded environment from $ENV_FALLBACK"
+    else
+        log "WARN" "No environment file found (.env.master or ~/.config/sophia/env)"
+        return 1
+    fi
+    
+    # Validate critical variables
+    local required_vars=("ANTHROPIC_API_KEY" "OPENAI_API_KEY" "LITELLM_MASTER_KEY")
+    local missing_vars=()
+    
+    for var in "${required_vars[@]}"; do
+        if [ -z "${!var:-}" ]; then
+            missing_vars+=("$var")
+        fi
+    done
+    
+    if [ ${#missing_vars[@]} -gt 0 ]; then
+        log "WARN" "Missing required environment variables: ${missing_vars[*]}"
+        return 1
+    fi
+    
+    # Validate file permissions
+    if [ "$(stat -f "%A" "$ENV_FILE" 2>/dev/null)" != "600" ]; then
+        log "WARN" "Environment file permissions are not secure (should be 600)"
+        chmod 600 "$ENV_FILE" 2>/dev/null || true
+    fi
+    
+    log "INFO" "✅ Environment validation complete"
+}
+
+initialize_directories() {
+    log "INFO" "Initializing directory structure..."
+    
+    local dirs=("$PID_DIR" "$LOG_DIR" "$CONFIG_DIR")
+    for dir in "${dirs[@]}"; do
+        mkdir -p "$dir" || error_exit "Failed to create directory: $dir"
+    done
+    
+    log "INFO" "✅ Directory structure initialized"
+}
+
+# =====================================================
+# SERVICE MANAGEMENT
+# =====================================================
+
+# Check if port is in use
+is_port_in_use() {
+    local port="$1"
+    python3 -c "
+import socket
+try:
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    result = sock.connect_ex(('127.0.0.1', $port))
+    sock.close()
+    exit(0 if result == 0 else 1)
+except:
+    exit(1)
+" 2>/dev/null
+}
+
+# Find available port
+find_available_port() {
+    local start_port="$1"
+    local port="$start_port"
+    
+    while is_port_in_use "$port"; do
+        ((port++))
+        if [ $port -gt $((start_port + 100)) ]; then
+            error_exit "No available ports found starting from $start_port"
+        fi
+    done
+    
+    echo "$port"
+}
+
+# Get service PID
+get_service_pid() {
+    local service="$1"
+    local pid_file="$PID_DIR/$service.pid"
+    
+    if [ -f "$pid_file" ]; then
+        local pid
+        pid="$(cat "$pid_file")"
+        if kill -0 "$pid" 2>/dev/null; then
+            echo "$pid"
+            return 0
+        else
+            rm -f "$pid_file"
+        fi
+    fi
+    
+    return 1
+}
+
+# Check service health
+check_service_health() {
+    local service="$1"
+    local port="${SERVICES[$service]%%:*}"
+    
+    case "$service" in
+        "redis")
+            if command -v redis-cli >/dev/null 2>&1; then
+                redis-cli ping >/dev/null 2>&1
+            else
+                is_port_in_use "$port"
+            fi
+            ;;
+        "litellm")
+            curl -s --max-time 5 "http://localhost:$port/health" >/dev/null 2>&1
+            ;;
+        "mcp-"*)
+            curl -s --max-time 5 "http://localhost:$port/health" >/dev/null 2>&1
+            ;;
+        *)
+            is_port_in_use "$port"
+            ;;
+    esac
+}
+
+# Wait for service to be healthy
+wait_for_service() {
+    local service="$1"
+    local timeout="${2:-$HEALTH_CHECK_TIMEOUT}"
+    local start_time
+    start_time="$(date +%s)"
+    
+    log "INFO" "Waiting for $service to become healthy..."
+    
+    while true; do
+        if check_service_health "$service"; then
+            log "INFO" "✅ $service is healthy"
+            return 0
+        fi
+        
+        local current_time
+        current_time="$(date +%s)"
+        if [ $((current_time - start_time)) -gt $timeout ]; then
+            log "ERROR" "❌ $service failed health check (timeout: ${timeout}s)"
+            return 1
+        fi
+        
+        sleep 2
+    done
+}
+
+# Start Redis
+start_redis() {
+    log "INFO" "Starting Redis..."
+    
+    if check_service_health "redis"; then
+        log "INFO" "✅ Redis already running"
+        return 0
+    fi
+    
+    # Check if Redis is available
+    if ! command -v redis-server >/dev/null 2>&1; then
+        log "WARN" "redis-server not found, skipping Redis startup"
+        return 1
+    fi
+    
+    local port="6379"
+    if is_port_in_use "$port"; then
+        port="$(find_available_port 6380)"
+        log "WARN" "Port 6379 in use, using port $port"
+    fi
+    
+    # Start Redis with custom config
+    nohup redis-server \
+        --daemonize no \
+        --port "$port" \
+        --dir "$SCRIPT_DIR" \
+        --logfile "$LOG_DIR/redis.log" \
+        --save "" \
+        --appendonly no \
+        > /dev/null 2>&1 &
+    
+    echo $! > "$PID_DIR/redis.pid"
+    
+    wait_for_service "redis" 10 || return 1
+    log "INFO" "✅ Redis started on port $port"
+}
+
+# Start LiteLLM
+start_litellm() {
+    log "INFO" "Starting LiteLLM proxy..."
+    
+    if check_service_health "litellm"; then
+        log "INFO" "✅ LiteLLM already running"
+        return 0
+    fi
+    
+    local port="4000"
+    if is_port_in_use "$port"; then
+        port="$(find_available_port 4001)"
+        log "WARN" "Port 4000 in use, using port $port"
+    fi
+    
+    # Determine LiteLLM binary
+    local litellm_bin="litellm"
+    if ! command -v "$litellm_bin" >/dev/null 2>&1; then
+        if [ -x "$SCRIPT_DIR/bin/litellm-cli" ]; then
+            litellm_bin="$SCRIPT_DIR/bin/litellm-cli"
+        else
+            log "WARN" "LiteLLM binary not found, skipping"
+            return 1
+        fi
+    fi
+    
+    # Check if config exists
+    if [ ! -f "$SCRIPT_DIR/litellm-complete.yaml" ]; then
+        log "WARN" "LiteLLM config not found, skipping"
+        return 1
+    fi
+    
+    # Start LiteLLM with comprehensive config
+    cd "$SCRIPT_DIR"
+    nohup "$litellm_bin" \
+        --config litellm-complete.yaml \
+        --port "$port" \
+        --host 0.0.0.0 \
+        --num_workers 1 \
+        --timeout 120 \
+        > "$LOG_DIR/litellm.log" 2>&1 &
+    
+    echo $! > "$PID_DIR/litellm.pid"
+    
+    wait_for_service "litellm" 20 || return 1
+    log "INFO" "✅ LiteLLM started on port $port"
+}
+
+# Start MCP Server
+start_mcp_server() {
+    local service="$1"
+    local port="${SERVICES[$service]%%:*}"
+    local module="${SERVICES[$service]#*:}"
+    
+    log "INFO" "Starting $service..."
+    
+    if check_service_health "$service"; then
+        log "INFO" "✅ $service already running"
+        return 0
+    fi
+    
+    if is_port_in_use "$port"; then
+        port="$(find_available_port $((port + 1)))"
+        log "WARN" "Port ${SERVICES[$service]%%:*} in use, using port $port"
+    fi
+    
+    # Check if module exists
+    if ! python3 -c "import ${module%:*}" >/dev/null 2>&1; then
+        log "WARN" "Python module ${module%:*} not found, skipping $service"
+        return 1
+    fi
+    
+    # Start MCP server with enhanced logging
+    cd "$SCRIPT_DIR"
+    nohup python3 -m uvicorn "$module" \
+        --host 0.0.0.0 \
+        --port "$port" \
+        --log-level info \
+        --access-log \
+        > "$LOG_DIR/$service.log" 2>&1 &
+    
+    echo $! > "$PID_DIR/$service.pid"
+    
+    wait_for_service "$service" 15 || return 1
+    log "INFO" "✅ $service started on port $port"
+}
+
+# Start all services in dependency order
+start_all_services() {
+    log "INFO" "Starting all services..."
+    
+    # Simple dependency resolution (Redis first, then others)
+    local sorted_services=("redis" "litellm" "mcp-memory" "mcp-filesystem" "mcp-git")
+    
+    local failed_services=()
+    local started_services=()
+    
+    for service in "${sorted_services[@]}"; do
+        if start_service_with_retry "$service"; then
+            started_services+=("$service")
+        else
+            failed_services+=("$service")
+        fi
+    done
+    
+    if [ ${#started_services[@]} -gt 0 ]; then
+        log "INFO" "✅ Started services: ${started_services[*]}"
+    fi
+    
+    if [ ${#failed_services[@]} -gt 0 ]; then
+        log "WARN" "Failed to start services: ${failed_services[*]}"
+    fi
+    
+    if [ ${#started_services[@]} -gt 0 ]; then
+        save_system_state "running"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Start service with retry logic
+start_service_with_retry() {
+    local service="$1"
+    local attempt=1
+    
+    while [ $attempt -le $MAX_RETRIES ]; do
+        log "INFO" "Starting $service (attempt $attempt/$MAX_RETRIES)"
+        
+        case "$service" in
+            "redis")
+                if start_redis; then return 0; fi
+                ;;
+            "litellm")
+                if start_litellm; then return 0; fi
+                ;;
+            "mcp-"*)
+                if start_mcp_server "$service"; then return 0; fi
+                ;;
+        esac
+        
+        log "WARN" "Failed to start $service on attempt $attempt"
+        ((attempt++))
+        
+        if [ $attempt -le $MAX_RETRIES ]; then
+            local delay=$((attempt * 2))
+            log "INFO" "Retrying in ${delay}s..."
+            sleep $delay
+        fi
+    done
+    
+    log "ERROR" "Failed to start $service after $MAX_RETRIES attempts"
+    return 1
+}
+
+# Stop service
+stop_service() {
+    local service="$1"
+    
+    log "INFO" "Stopping $service..."
+    
+    local pid
+    if pid="$(get_service_pid "$service")"; then
+        # Graceful shutdown
+        kill "$pid" 2>/dev/null || true
+        
+        # Wait for graceful shutdown
+        local timeout=10
+        while [ $timeout -gt 0 ] && kill -0 "$pid" 2>/dev/null; do
+            sleep 1
+            ((timeout--))
+        done
+        
+        # Force kill if still running
+        if kill -0 "$pid" 2>/dev/null; then
+            log "WARN" "Force killing $service (PID: $pid)"
+            kill -9 "$pid" 2>/dev/null || true
+        fi
+        
+        rm -f "$PID_DIR/$service.pid"
+        log "INFO" "✅ $service stopped"
+    else
+        log "INFO" "✅ $service was not running"
+    fi
+}
+
+# Stop all services
+stop_all_services() {
+    log "INFO" "Stopping all services..."
+    
+    # Stop in reverse dependency order
+    local services=("mcp-git" "mcp-filesystem" "mcp-memory" "litellm" "redis")
+    
+    for service in "${services[@]}"; do
+        stop_service "$service"
+    done
+    
+    # Cleanup any orphaned processes
+    cleanup_orphaned_processes
+    
+    log "INFO" "✅ All services stopped"
+    save_system_state "stopped"
+}
+
+# Cleanup orphaned processes
+cleanup_orphaned_processes() {
+    log "INFO" "Cleaning up orphaned processes..."
+    
+    # Kill any remaining processes
+    pkill -f "litellm.*4000" 2>/dev/null || true
+    pkill -f "mcp.*server" 2>/dev/null || true
+    pkill -f "uvicorn.*mcp" 2>/dev/null || true
+    
+    # Clean up PID files
+    rm -f "$PID_DIR"/*.pid
+    
+    sleep 2
+    log "INFO" "✅ Cleanup complete"
+}
+
+# =====================================================
+# HEALTH MONITORING
+# =====================================================
+
+# Comprehensive health check
+health_check() {
+    log "INFO" "Running comprehensive health check..."
+    
+    local -A health_status=()
+    local healthy_count=0
+    local total_count=0
+    
+    for service in "${!SERVICES[@]}"; do
+        ((total_count++))
+        if check_service_health "$service"; then
+            health_status["$service"]="✅ HEALTHY"
+            ((healthy_count++))
+        else
+            health_status["$service"]="❌ UNHEALTHY"
+        fi
+    done
+    
+    # Display results
+    echo -e "\n${BOLD}=== SOPHIA INTEL AI HEALTH STATUS ===${NC}\n"
+    
+    for service in "${!SERVICES[@]}"; do
+        local port="${SERVICES[$service]%%:*}"
+        printf "%-20s %s\n" "$service ($port)" "${health_status[$service]}"
+    done
+    
+    echo -e "\n${BOLD}Overall Status:${NC} $healthy_count/$total_count services healthy"
+    
+    if [ $healthy_count -eq $total_count ]; then
+        echo -e "${GREEN}🎉 System is fully operational${NC}\n"
+        return 0
+    else
+        echo -e "${YELLOW}⚠️  System has issues (but may be partially functional)${NC}\n"
+        return 1
+    fi
+}
+
+# Detailed system status
+detailed_status() {
+    echo -e "\n${BOLD}=== SOPHIA INTEL AI DETAILED STATUS ===${NC}\n"
+    
+    # System info
+    echo -e "${CYAN}System Information:${NC}"
+    echo "  Sophia Version: $VERSION"
+    echo "  Script Path: $SCRIPT_DIR"
+    echo "  Environment: $([ -f "$ENV_FILE" ] && echo "local (.env.master)" || echo "fallback")"
+    echo "  System State: $(get_system_state)"
+    echo ""
+    
+    # Process information
+    echo -e "${CYAN}Process Information:${NC}"
+    for service in "${!SERVICES[@]}"; do
+        local port="${SERVICES[$service]%%:*}"
+        local pid
+        if pid="$(get_service_pid "$service")"; then
+            echo "  $service: PID $pid (port $port)"
+        else
+            echo "  $service: Not running (port $port)"
+        fi
+    done
+    echo ""
+    
+    # Resource usage
+    echo -e "${CYAN}Resource Usage:${NC}"
+    echo "  Log Directory: $(du -sh "$LOG_DIR" 2>/dev/null | cut -f1 || echo "N/A")"
+    echo "  PID Directory: $(ls "$PID_DIR"/*.pid 2>/dev/null | wc -l | tr -d ' ') active PID files"
+    echo ""
+    
+    # Recent logs
+    echo -e "${CYAN}Recent Activity (last 5 lines):${NC}"
+    if [ -f "$LOG_DIR/sophia-master.log" ]; then
+        tail -5 "$LOG_DIR/sophia-master.log" | sed 's/^/  /'
+    else
+        echo "  No recent activity"
+    fi
+    echo ""
+}
+
+# =====================================================
+# STATE MANAGEMENT
+# =====================================================
+
+save_system_state() {
+    local state="$1"
+    local timestamp
+    timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    
+    if command -v jq >/dev/null 2>&1; then
+        cat > "$STATE_FILE" << EOF
+{
+  "state": "$state",
+  "timestamp": "$timestamp",
+  "version": "$VERSION",
+  "pid": $$
+}
+EOF
+    else
+        echo "$state" > "$STATE_FILE"
+    fi
+}
+
+get_system_state() {
+    if [ -f "$STATE_FILE" ]; then
+        if command -v jq >/dev/null 2>&1; then
+            jq -r '.state' "$STATE_FILE" 2>/dev/null || echo "unknown"
+        else
+            cat "$STATE_FILE" 2>/dev/null || echo "unknown"
+        fi
+    else
+        echo "unknown"
+    fi
+}
+
+# =====================================================
+# TESTING & VALIDATION
+# =====================================================
+
+run_integration_tests() {
+    log "INFO" "Running integration tests..."
+    
+    local pass_count=0
+    local fail_count=0
+    
+    echo -e "\n${BOLD}=== INTEGRATION TEST SUITE ===${NC}\n"
+    
+    # Test environment
+    echo -e "${CYAN}Environment Tests:${NC}"
+    if [ -f "$ENV_FILE" ]; then
+        echo "  ✅ Environment file exists"
+        ((pass_count++))
+    else
+        echo "  ❌ Environment file missing"
+        ((fail_count++))
+    fi
+    
+    # Test services
+    echo -e "\n${CYAN}Service Tests:${NC}"
+    for service in "${!SERVICES[@]}"; do
+        if check_service_health "$service"; then
+            echo "  ✅ $service is healthy"
+            ((pass_count++))
+        else
+            echo "  ❌ $service is unhealthy"
+            ((fail_count++))
+        fi
+    done
+    
+    # Test API endpoints (if authentication is available)
+    if [ -n "${LITELLM_MASTER_KEY:-}" ]; then
+        echo -e "\n${CYAN}API Tests:${NC}"
+        
+        # Test LiteLLM
+        if curl -s --max-time 5 "http://localhost:4000/v1/models" \
+            -H "Authorization: Bearer ${LITELLM_MASTER_KEY}" >/dev/null 2>&1; then
+            echo "  ✅ LiteLLM API responding"
+            ((pass_count++))
+        else
+            echo "  ❌ LiteLLM API not responding"
+            ((fail_count++))
+        fi
+        
+        # Test MCP Memory
+        if curl -s --max-time 5 "http://localhost:8081/health" >/dev/null 2>&1; then
+            echo "  ✅ MCP Memory API responding"
+            ((pass_count++))
+        else
+            echo "  ❌ MCP Memory API not responding"
+            ((fail_count++))
+        fi
+    fi
+    
+    # Summary
+    echo -e "\n${BOLD}Test Summary:${NC}"
+    echo -e "  ${GREEN}Passed: $pass_count${NC}"
+    echo -e "  ${RED}Failed: $fail_count${NC}"
+    
+    if [ $fail_count -eq 0 ]; then
+        echo -e "\n${GREEN}🎉 ALL TESTS PASSED!${NC}"
+        return 0
+    else
+        echo -e "\n${YELLOW}⚠️  Some tests failed${NC}"
+        return 1
+    fi
+}
+
+# =====================================================
+# MAIN COMMAND INTERFACE
+# =====================================================
+
+show_usage() {
+    cat << EOF
+${BOLD}Sophia Intel AI - Master Control Script v$VERSION${NC}
+
+${BOLD}USAGE:${NC}
+    $SCRIPT_NAME <command> [options]
+
+${BOLD}COMMANDS:${NC}
+    ${CYAN}Lifecycle Management:${NC}
+        start           Start all services with intelligent sequencing
+        stop            Gracefully stop all services
+        restart         Stop and start all services
+        status          Show detailed system status
+        health          Run comprehensive health checks
+
+    ${CYAN}Service Control:${NC}
+        start-service   Start a specific service
+        stop-service    Stop a specific service
+        restart-service Restart a specific service
+
+    ${CYAN}Testing & Validation:${NC}
+        test            Run integration test suite
+        validate        Validate system configuration
+        doctor          Diagnose and fix common issues
+
+    ${CYAN}Maintenance:${NC}
+        logs            Show recent logs
+        clean           Clean up orphaned processes and files
+        reset           Complete system reset (stop + clean + start)
+
+    ${CYAN}Information:${NC}
+        version         Show version information
+        help            Show this help message
+
+${BOLD}EXAMPLES:${NC}
+    $SCRIPT_NAME start              # Start all services
+    $SCRIPT_NAME health             # Check system health
+    $SCRIPT_NAME start-service redis  # Start only Redis
+    $SCRIPT_NAME test               # Run integration tests
+    $SCRIPT_NAME doctor             # Diagnose issues
+
+${BOLD}CONFIGURATION:${NC}
+    Environment: $ENV_FILE
+    Logs: $LOG_DIR/
+    PIDs: $PID_DIR/
+    State: $STATE_FILE
+
+${BOLD}SERVICES:${NC}
+$(for service in "${!SERVICES[@]}"; do
+    local port="${SERVICES[$service]%%:*}"
+    printf "    %-15s http://localhost:%s\n" "$service" "$port"
+done)
+
+EOF
+}
+
+main() {
+    local command="${1:-help}"
+    
+    # Handle help/version early
+    case "$command" in
+        "help"|"-h"|"--help")
+            show_usage
+            exit 0
+            ;;
+        "version"|"-v"|"--version")
+            echo "$SCRIPT_NAME version $VERSION"
+            exit 0
+            ;;
+    esac
+    
+    # Initialize system
+    acquire_lock
+    initialize_directories
+    
+    # Execute command
+    case "$command" in
+        "start")
+            if ! check_dependencies || ! validate_environment; then
+                log "WARN" "Some validation checks failed, but continuing startup..."
+            fi
+            start_all_services
+            health_check || true
+            ;;
+        "stop")
+            stop_all_services
+            ;;
+        "restart")
+            stop_all_services
+            sleep 3
+            start_all_services
+            health_check || true
+            ;;
+        "status")
+            detailed_status
+            ;;
+        "health")
+            health_check
+            ;;
+        "start-service")
+            local service="${2:-}"
+            if [ -z "$service" ]; then
+                error_exit "Usage: $SCRIPT_NAME start-service <service-name>"
+            fi
+            validate_environment || true
+            start_service_with_retry "$service"
+            ;;
+        "stop-service")
+            local service="${2:-}"
+            if [ -z "$service" ]; then
+                error_exit "Usage: $SCRIPT_NAME stop-service <service-name>"
+            fi
+            stop_service "$service"
+            ;;
+        "restart-service")
+            local service="${2:-}"
+            if [ -z "$service" ]; then
+                error_exit "Usage: $SCRIPT_NAME restart-service <service-name>"
+            fi
+            stop_service "$service"
+            sleep 2
+            start_service_with_retry "$service"
+            ;;
+        "test")
+            validate_environment || true
+            run_integration_tests
+            ;;
+        "validate")
+            check_dependencies
+            validate_environment
+            log "INFO" "✅ System validation complete"
+            ;;
+        "doctor")
+            log "INFO" "Running system diagnostics..."
+            check_dependencies || true
+            validate_environment || true
+            health_check || true
+            log "INFO" "✅ System diagnostics complete"
+            ;;
+        "logs")
+            if [ -f "$LOG_DIR/sophia-master.log" ]; then
+                tail -f "$LOG_DIR/sophia-master.log"
+            else
+                log "ERROR" "No logs found"
+            fi
+            ;;
+        "clean")
+            cleanup_orphaned_processes
+            ;;
+        "reset")
+            log "INFO" "Performing complete system reset..."
+            stop_all_services
+            cleanup_orphaned_processes
+            start_all_services
+            health_check || true
+            ;;
+        *)
+            error_exit "Unknown command: $command. Use '$SCRIPT_NAME help' for usage information."
+            ;;
+    esac
+}
+
+# =====================================================
+# SCRIPT ENTRY POINT
+# =====================================================
+
+main "$@"

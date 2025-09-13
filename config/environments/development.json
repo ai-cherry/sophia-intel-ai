@@ -1,0 +1,13 @@
+{
+  "debug": true,
+  "log_level": "DEBUG",
+  "database": {
+    "path": "tmp/dev_database.db",
+    "pool_size": 5
+  },
+  "features": {
+    "hot_reload": true,
+    "debug_ui": true,
+    "mock_integrations": false
+  }
+}

@@ -1,0 +1,310 @@
+{
+  "context": {
+    "project": "Sophia Intel AI",
+    "current_state": "90% complete multi-agent system with UI and streaming",
+    "key_discoveries": {
+      "agno_is_real": "Agno is a legitimate framework with 33k GitHub stars at github.com/agno-agi/agno",
+      "autogen_available": "Microsoft AutoGen installed and ready for GroupChat patterns",
+      "openrouter_universal": "OpenRouter works identically with all frameworks as OpenAI-compatible endpoint",
+      "ui_exists": "Beautiful Next.js UI already built with SSE streaming support",
+      "bridge_api_ready": "Bridge API at port 8003 orchestrates everything"
+    },
+    "environment": {
+      "centralized_env": ".env.local.unified contains all keys (OPENROUTER_API_KEY, etc)",
+      "no_key_prompts": "Environment loads automatically from repo root",
+      "platform": "Mac M3 ARM64 optimized",
+      "ports": {
+        "bridge_api": 8003,
+        "agent_ui": 3000,
+        "mcp_memory": 8081,
+        "mcp_filesystem": 8082,
+        "mcp_git": 8084
+      }
+    }
+  },
+  
+  "implementation_plan": {
+    "title": "Pragmatic UI-First Implementation with Real Streaming",
+    "philosophy": "Ship working features today, not perfect architecture tomorrow",
+    
+    "phase_1_immediate": {
+      "title": "Working Demo in 2 Hours",
+      "priority": "CRITICAL",
+      "tasks": [
+        {
+          "id": 1,
+          "action": "Enhance Bridge API OpenRouter Integration",
+          "file": "bridge/api.py",
+          "implementation": {
+            "add_imports": [
+              "from openai import AsyncOpenAI"
+            ],
+            "add_client": "openrouter = AsyncOpenAI(base_url='https://openrouter.ai/api/v1', api_key=os.getenv('OPENROUTER_API_KEY'))",
+            "enhance_endpoints": {
+              "/api/orchestration/chat/stream": "Add real streaming with openrouter.chat.completions.create(stream=True)",
+              "/api/swarm/platinum/run": "Implement 3-phase execution (plan with gpt-4o-mini, code with claude-3-haiku, review with gpt-4o-mini)"
+            }
+          }
+        },
+        {
+          "id": 2,
+          "action": "Create Swarms Visualization UI",
+          "file": "sophia-intel-app/src/app/(sophia)/swarms/page.tsx",
+          "implementation": {
+            "layout": "3-column grid showing Planning | Coding | Review",
+            "features": [
+              "Real-time SSE streaming",
+              "Phase indicators with animations",
+              "Loading states with spinners",
+              "Result cards with syntax highlighting"
+            ],
+            "components": "Use existing UI components from @/components/ui/*"
+          }
+        },
+        {
+          "id": 3,
+          "action": "Update Navigation",
+          "file": "sophia-intel-app/src/app/(sophia)/layout.tsx",
+          "implementation": {
+            "add_menu_items": [
+              "{ href: '/swarms', label: 'Swarms', icon: '🤖' }",
+              "{ href: '/router', label: 'Router', icon: '🔀' }",
+              "{ href: '/index', label: 'Index', icon: '📚' }"
+            ]
+          }
+        }
+      ],
+      "validation": {
+        "test_commands": [
+          "make -C infra dev-up",
+          "curl http://localhost:8003/health",
+          "open http://localhost:3000/swarms"
+        ],
+        "expected_result": "User enters task, sees real-time streaming through 3 phases"
+      }
+    },
+    
+    "phase_2_enhancement": {
+      "title": "Day 2 Polish",
+      "priority": "HIGH",
+      "tasks": [
+        {
+          "id": 4,
+          "action": "Add Debate Visualization",
+          "description": "Show Bold vs Practical planner debate in real-time",
+          "implementation": {
+            "approach": "Split planning column into sub-agents",
+            "animation": "Typing effect for each agent's response",
+            "synthesis": "Highlight Judge's final decision"
+          }
+        },
+        {
+          "id": 5,
+          "action": "Add Code Diff Viewer",
+          "description": "Show generated patches with apply button",
+          "implementation": {
+            "library": "react-diff-viewer or similar",
+            "features": ["Preview changes", "One-click apply", "Rollback option"]
+          }
+        },
+        {
+          "id": 6,
+          "action": "Add Cost Tracking",
+          "description": "Display token usage and cost per operation",
+          "implementation": {
+            "calculation": "Track tokens from OpenRouter responses",
+            "display": "Show running total in status bar",
+            "models": {
+              "cheap_planning": "openai/gpt-4o-mini @ $0.00015/1k",
+              "quality_coding": "anthropic/claude-3.5-sonnet @ $0.003/1k",
+              "fast_review": "anthropic/claude-3-haiku @ $0.00025/1k"
+            }
+          }
+        }
+      ]
+    },
+    
+    "phase_3_optional": {
+      "title": "Only If Users Demand",
+      "priority": "LOW",
+      "tasks": [
+        {
+          "id": 7,
+          "action": "Integrate Real Agno Framework",
+          "condition": "Only if need persistent memory and complex tools",
+          "implementation": {
+            "install": "git clone github.com/agno-agi/agno && pip install -e .",
+            "integrate": "Override LLM with OpenRouter client",
+            "ui": "Consider using Agno's official Agent UI"
+          }
+        },
+        {
+          "id": 8,
+          "action": "Add AutoGen GroupChat",
+          "condition": "Only if need sophisticated debate patterns",
+          "implementation": {
+            "already_installed": true,
+            "pattern": "Use GroupChat for multi-agent coordination",
+            "config": "Point to OpenRouter as base_url"
+          }
+        }
+      ]
+    }
+  },
+  
+  "technical_details": {
+    "openrouter_integration": {
+      "client_setup": {
+        "python": "client = OpenAI(base_url='https://openrouter.ai/api/v1', api_key=os.getenv('OPENROUTER_API_KEY'))",
+        "headers": {
+          "HTTP-Referer": "http://localhost:3000",
+          "X-Title": "Sophia Intel AI"
+        }
+      },
+      "streaming": {
+        "method": "stream=True in chat.completions.create()",
+        "parse": "async for chunk in stream: yield chunk.choices[0].delta.content"
+      },
+      "model_strategy": {
+        "planning": "openai/gpt-4o-mini (cheapest, good enough)",
+        "coding": "anthropic/claude-3.5-sonnet (quality matters)",
+        "review": "openai/gpt-4o-mini (cheap and fast)",
+        "fallbacks": "OpenRouter auto-routes if model unavailable"
+      }
+    },
+    
+    "sse_streaming": {
+      "backend": "EventSourceResponse from sse_starlette",
+      "frontend": "EventSource API or fetch with ReadableStream",
+      "events": ["phase", "content", "complete", "error"],
+      "format": "event: type\\ndata: {json}\\n\\n"
+    },
+    
+    "deployment": {
+      "local_m3": {
+        "command": "./deploy/local-m3.sh deploy",
+        "optimizations": "Native Python, no Docker for services",
+        "postgres_path": "/opt/homebrew/opt/postgresql@17/bin/pg_isready"
+      },
+      "docker": {
+        "build": "docker build -f infra/Dockerfile.bridge -t sophia-bridge .",
+        "compose": "docker compose -f infra/docker-compose.yml up"
+      },
+      "cloud": {
+        "fly_io": "fly deploy --config fly.toml",
+        "env_vars": "fly secrets set OPENROUTER_API_KEY=..."
+      }
+    }
+  },
+  
+  "testing_strategy": {
+    "unit_tests": {
+      "location": "tests/",
+      "run": "pytest tests/ -v",
+      "coverage": "pytest --cov=bridge --cov=mcp"
+    },
+    "integration_tests": {
+      "api": "curl -X POST http://localhost:8003/api/swarm/platinum/run -d '{\"task\":\"test\"}'",
+      "ui": "npm run test in sophia-intel-app/",
+      "e2e": "Use Playwright for full flow testing"
+    },
+    "smoke_tests": {
+      "services_up": "./deploy/test-deployment.sh env",
+      "docker_builds": "./deploy/test-deployment.sh docker",
+      "health_checks": "./deploy/local-m3.sh health"
+    }
+  },
+  
+  "success_metrics": {
+    "immediate": [
+      "User can see streaming responses in < 2 seconds",
+      "Three-phase swarm execution visible in UI",
+      "No setup required beyond 'make dev-up'"
+    ],
+    "day_2": [
+      "Debate visualization increases engagement",
+      "Cost tracking shows value",
+      "Code diffs can be applied with one click"
+    ],
+    "long_term": [
+      "System handles 100+ concurrent users",
+      "Costs remain under $0.10 per complex task",
+      "Users prefer this over ChatGPT for coding tasks"
+    ]
+  },
+  
+  "critical_insights": {
+    "discoveries": [
+      "Agno is REAL with 33k stars - not a typo!",
+      "All frameworks work identically with OpenRouter",
+      "The UI is already 80% built and beautiful",
+      "SSE streaming is already implemented"
+    ],
+    "decisions": [
+      "Use simple OpenRouter calls, not complex frameworks",
+      "Leverage existing Next.js UI instead of building new",
+      "Focus on user experience over architectural purity",
+      "Ship working demo today, enhance tomorrow"
+    ],
+    "warnings": [
+      "Don't get caught in framework wars",
+      "Don't rebuild what already works",
+      "Don't optimize prematurely",
+      "Don't add complexity users don't need"
+    ]
+  },
+  
+  "implementation_order": {
+    "hour_1": [
+      "Update bridge/api.py with OpenRouter client",
+      "Add streaming to chat endpoint",
+      "Test with curl"
+    ],
+    "hour_2": [
+      "Create swarms/page.tsx UI",
+      "Update navigation in layout.tsx",
+      "Test full flow in browser"
+    ],
+    "day_2": [
+      "Add debate visualization",
+      "Add diff viewer",
+      "Add cost tracking"
+    ],
+    "week_2": [
+      "Evaluate if Agno needed",
+      "Consider AutoGen for complex patterns",
+      "Optimize based on user feedback"
+    ]
+  },
+  
+  "files_to_modify": {
+    "critical": [
+      "bridge/api.py - Add OpenRouter and streaming",
+      "sophia-intel-app/src/app/(sophia)/swarms/page.tsx - Create new",
+      "sophia-intel-app/src/app/(sophia)/layout.tsx - Update nav"
+    ],
+    "optional": [
+      "builder_cli/lib/platinum.py - Enhance if needed",
+      "tests/test_bridge_api.py - Add swarm tests",
+      "deploy/k8s/deployment.yaml - Update for production"
+    ]
+  },
+  
+  "chatgpt_instructions": {
+    "approach": "Be pragmatic - ship working features over perfect architecture",
+    "focus": "User experience and immediate value",
+    "avoid": [
+      "Framework complexity without clear benefit",
+      "Rebuilding existing functionality",
+      "Premature optimization"
+    ],
+    "prioritize": [
+      "Real-time streaming feedback",
+      "Beautiful, intuitive UI",
+      "Cost-effective model selection",
+      "Minimal setup friction"
+    ],
+    "test_everything": "Every change should be immediately testable",
+    "document_clearly": "Add inline comments for complex logic"
+  }
+}

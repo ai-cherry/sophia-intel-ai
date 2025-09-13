@@ -1,0 +1,5 @@
+#!/bin/bash
+# DeepSeek CLI wrapper
+
+cd ~/sophia-intel-ai
+python3 deepseek_cli.py "$@"

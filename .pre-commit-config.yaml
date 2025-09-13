@@ -1,0 +1,33 @@
+repos:
+  - repo: local
+    hooks:
+      - id: block-env-proliferation
+        name: Block new .env variants
+        entry: scripts/check_env_variants.sh
+        language: script
+        pass_filenames: false
+      - id: block-root-markdown-spam
+        name: Block excessive root markdown
+        entry: scripts/check_root_docs.sh
+        language: script
+        pass_filenames: false
+      - id: block-sophia-in-sophia
+        name: Block Sophia paths in Sophia repo
+        entry: scripts/check_sophia_paths.sh
+        language: script
+        pass_filenames: false
+      - id: domain-wall-check
+        name: Domain wall check (Sophia vs Builder)
+        entry: bash scripts/ci/domain_wall_check.sh
+        language: system
+        pass_filenames: false
+      - id: banned-providers-check
+        name: LLM provider ban (Portkey-only)
+        entry: bash scripts/ci/banned_providers_check.sh
+        language: system
+        pass_filenames: false
+      - id: allow-temporary-override
+        name: Emergency override (use sparingly)
+        entry: bash -c 'echo "⚠️  Use: git commit --no-verify to bypass hooks (manual only)"'
+        language: system
+        stages: [manual]

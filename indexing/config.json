@@ -1,0 +1,31 @@
+{
+  "indexing_system": "haystack",
+  "chunk_size": 1000,
+  "chunk_overlap": 200,
+  "file_types": [
+    ".py",
+    ".md",
+    ".sh",
+    ".js",
+    ".ts",
+    ".json",
+    ".yml",
+    ".yaml"
+  ],
+  "exclude_dirs": [
+    "node_modules",
+    "__pycache__",
+    ".git",
+    ".github/workflows",
+    "venv",
+    ".venv"
+  ],
+  "exclude_patterns": [
+    ".*\\.pyc$",
+    ".*\\.d\\.ts$",
+    ".*\\.min\\.js$"
+  ],
+  "embedding_model": "BAAI/bge-small-en-v1.5",
+  "vector_dimensions": 384,
+  "reindex_period_days": 1
+}

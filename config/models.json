@@ -1,0 +1,26 @@
+{
+  "providers": {
+    "gateway": "litellm"  
+  },
+  "aliases": {
+    "claude": "claude-3-5-sonnet",
+    "gpt4": "gpt-4-turbo",
+    "llama": "groq-llama3-70b",
+    "fast": "groq-mixtral",
+    "cheap": "gpt-3.5-turbo",
+    "online": "perplexity-online",
+    "analytical": "gemini-1.5-pro"
+  },
+  "usecases": {
+    "coding.fast": "fast",
+    "coding.complex": "claude",
+    "analysis.large_context": "analytical",
+    "writing.cheap": "cheap"
+  },
+  "cli_defaults": {
+    "claude": "claude", 
+    "gemini": "analytical",
+    "lite": "fast",
+    "codex": "gpt4"
+  }
+}

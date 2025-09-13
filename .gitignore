@@ -1,0 +1,46 @@
+# Runtime/temporary state
+.pids/
+*.pid
+.backend.pid
+.frontend.pid
+
+# Logs: ignore raw logs but allow summaries
+logs/*
+!logs/*.md
+!logs/*.summary.*
+!logs/README.md
+*.log
+
+# Environments and secrets (never commit)
+.env
+.env.*
+.env.local
+.env.*.local
+master_secrets.yaml
+config/.key
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.home/
+
+# Node/Next.js
+node_modules/
+.next/
+
+# Databases and caches
+*.db
+*.sqlite
+*.sqlite3
+.swarm/
+.hive-mind/
+data/**/*.db
+data/**/*.sqlite*
+
+# Backups/archives
+backups/
+
+# OS
+.DS_Store

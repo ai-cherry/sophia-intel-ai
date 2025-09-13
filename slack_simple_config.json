@@ -1,0 +1,21 @@
+{
+  "slack_simple": {
+    "enabled": true,
+    "integration_type": "bot_token",
+    "bot_token": "REPLACE_WITH_YOUR_BOT_TOKEN",
+    "workspace": "Pay Ready",
+    "complete_access": true,
+    "capabilities": [
+      "Read all channels",
+      "Write to all channels",
+      "Access private channels (when invited)",
+      "Direct messages",
+      "File uploads/downloads",
+      "Message history",
+      "User information",
+      "Emoji reactions",
+      "Thread replies"
+    ],
+    "setup_time": "30 seconds"
+  }
+}

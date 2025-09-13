@@ -1,0 +1,330 @@
+{{ define "email.subject" -}}
+[{{ .Status | toUpper }}] {{ .GroupLabels.alertname }} - {{ .GroupLabels.domain }}/{{ .GroupLabels.namespace }}
+{{- end }}
+
+{{ define "email.html" -}}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            padding: 20px;
+            color: white;
+            text-align: center;
+        }
+        .header.critical {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+        .header.warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+        }
+        .header.resolved {
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+        }
+        .header.info {
+            background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header .status {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .metadata {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-bottom: 25px;
+            border-radius: 4px;
+        }
+        .metadata-item {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        .metadata-label {
+            font-weight: 600;
+            min-width: 120px;
+            color: #555;
+        }
+        .metadata-value {
+            color: #333;
+        }
+        .alert-box {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .alert-box.critical {
+            border-left: 4px solid #dc3545;
+        }
+        .alert-box.warning {
+            border-left: 4px solid #ffc107;
+        }
+        .alert-box.resolved {
+            border-left: 4px solid #28a745;
+        }
+        .alert-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #222;
+            margin-bottom: 10px;
+        }
+        .alert-description {
+            color: #555;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        .label {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #e9ecef;
+            color: #495057;
+            border-radius: 3px;
+            margin: 2px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+        .label.severity-critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .label.severity-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .metric {
+            font-family: 'Monaco', 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #d73502;
+            font-size: 14px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        .timestamp {
+            color: #6c757d;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+        .actions {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 0 5px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .button.secondary {
+            background: #6c757d;
+        }
+        .button.secondary:hover {
+            background: #545b62;
+        }
+        .footer {
+            padding: 20px;
+            background: #f8f9fa;
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            border-top: 1px solid #dee2e6;
+        }
+        .divider {
+            height: 1px;
+            background: #dee2e6;
+            margin: 20px 0;
+        }
+        .impact-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .impact-high {
+            background: #dc3545;
+            color: white;
+        }
+        .impact-medium {
+            background: #ffc107;
+            color: #333;
+        }
+        .impact-low {
+            background: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header {{ if eq .Status "resolved" }}resolved{{ else if eq (index .GroupLabels "severity") "CRITICAL" }}critical{{ else if eq (index .GroupLabels "severity") "WARNING" }}warning{{ else }}info{{ end }}">
+            <h2>{{ .Status | toUpper }}: {{ .GroupLabels.alertname }}</h2>
+            <div class="status">
+                {{ if eq .Status "firing" }}
+                    {{ .Alerts.Firing | len }} alert(s) firing
+                {{ else }}
+                    {{ .Alerts.Resolved | len }} alert(s) resolved
+                {{ end }}
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="metadata">
+                <div class="metadata-item">
+                    <span class="metadata-label">Domain:</span>
+                    <span class="metadata-value">{{ .GroupLabels.domain | default "Unknown" }}</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Environment:</span>
+                    <span class="metadata-value">{{ .GroupLabels.cluster | default "production" }}</span>
+                </div>
+                <div class="metadata-item">
+                    <span class="metadata-label">Namespace:</span>
+                    <span class="metadata-value">{{ .GroupLabels.namespace | default "default" }}</span>
+                </div>
+                {{ if .GroupLabels.service }}
+                <div class="metadata-item">
+                    <span class="metadata-label">Service:</span>
+                    <span class="metadata-value">{{ .GroupLabels.service }}</span>
+                </div>
+                {{ end }}
+                <div class="metadata-item">
+                    <span class="metadata-label">Severity:</span>
+                    <span class="metadata-value">
+                        <span class="label severity-{{ .GroupLabels.severity | toLower }}">
+                            {{ .GroupLabels.severity }}
+                        </span>
+                        {{ if eq .GroupLabels.severity "CRITICAL" }}
+                        <span class="impact-indicator impact-high">HIGH IMPACT</span>
+                        {{ else if eq .GroupLabels.severity "WARNING" }}
+                        <span class="impact-indicator impact-medium">MEDIUM IMPACT</span>
+                        {{ else }}
+                        <span class="impact-indicator impact-low">LOW IMPACT</span>
+                        {{ end }}
+                    </span>
+                </div>
+            </div>
+
+            {{ range .Alerts }}
+            <div class="alert-box {{ if eq .Labels.severity "CRITICAL" }}critical{{ else if eq .Labels.severity "WARNING" }}warning{{ else if eq .Status "resolved" }}resolved{{ end }}">
+                <div class="alert-title">
+                    {{ .Labels.alertname }}
+                    {{ if .Labels.pod }}
+                    <span style="font-weight: normal; color: #6c757d;">on {{ .Labels.pod }}</span>
+                    {{ end }}
+                </div>
+
+                {{ if .Annotations.description }}
+                <div class="alert-description">
+                    {{ .Annotations.description }}
+                </div>
+                {{ end }}
+
+                {{ if .Annotations.value }}
+                <div style="margin: 10px 0;">
+                    <strong>Current Value:</strong>
+                    <span class="metric">{{ .Annotations.value }}</span>
+                </div>
+                {{ end }}
+
+                <div class="timestamp">
+                    {{ if eq .Status "firing" }}
+                        <strong>Started:</strong> {{ .StartsAt.Format "2006-01-02 15:04:05 MST" }}
+                        <br>
+                        <strong>Duration:</strong> {{ .StartsAt | since }}
+                    {{ else }}
+                        <strong>Resolved:</strong> {{ .EndsAt.Format "2006-01-02 15:04:05 MST" }}
+                        <br>
+                        <strong>Total Duration:</strong> {{ .StartsAt.Sub .EndsAt }}
+                    {{ end }}
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <strong>Labels:</strong><br>
+                    {{ range .Labels.SortedPairs }}
+                    <span class="label">{{ .Name }}: {{ .Value }}</span>
+                    {{ end }}
+                </div>
+            </div>
+            {{ end }}
+
+            <div class="divider"></div>
+
+            <div class="actions">
+                <a href="{{ .ExternalURL }}" class="button">
+                    View in AlertManager
+                </a>
+                {{ if .GroupLabels.alertname }}
+                <a href="https://docs.sophia-sophia.ai/runbooks/{{ .GroupLabels.alertname }}" class="button secondary">
+                    View Runbook
+                </a>
+                {{ end }}
+                {{ if .GroupLabels.domain }}
+                <a href="https://grafana.sophia-sophia.ai/d/{{ .GroupLabels.domain }}" class="button secondary">
+                    View Dashboard
+                </a>
+                {{ end }}
+                {{ if eq .Status "firing" }}
+                <a href="{{ .ExternalURL }}/#/silences/new?filter={alertname%3D%22{{ .GroupLabels.alertname }}%22}" class="button secondary">
+                    Silence Alert
+                </a>
+                {{ end }}
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>
+                This is an automated alert from Sophia-Sophia AlertManager.<br>
+                For help, contact the platform team at platform@sophia-sophia.ai
+            </p>
+            <p style="margin-top: 10px; font-size: 11px; color: #999;">
+                Alert Group: {{ .GroupKey }}<br>
+                Receiver: {{ .Receiver }}
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+{{- end }}

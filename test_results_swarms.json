@@ -1,0 +1,88 @@
+{
+  "timestamp": "2025-09-05T14:18:17.083371",
+  "tests": [
+    {
+      "name": "Health check",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.093641"
+    },
+    {
+      "name": "Get teams",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.097389"
+    },
+    {
+      "name": "Execute team SIMPLEX",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.098154"
+    },
+    {
+      "name": "Execute team CONSENSUS",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.098880"
+    },
+    {
+      "name": "Get workflows",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.102759"
+    },
+    {
+      "name": "Execute workflow",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.103451"
+    },
+    {
+      "name": "Memory storage",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.108148"
+    },
+    {
+      "name": "Memory search",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.108863"
+    },
+    {
+      "name": "Hybrid search",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.112596"
+    },
+    {
+      "name": "test_mcp_connections",
+      "success": false,
+      "details": "name 'get_config' is not defined",
+      "timestamp": "2025-09-05T14:18:17.112749"
+    },
+    {
+      "name": "Statistics",
+      "success": false,
+      "details": "All connection attempts failed",
+      "timestamp": "2025-09-05T14:18:17.116347"
+    },
+    {
+      "name": "Pattern imports",
+      "success": false,
+      "details": "cannot import name 'AdversarialDebatePattern' from 'app.swarms.patterns' (unknown location)",
+      "timestamp": "2025-09-05T14:18:17.116740"
+    },
+    {
+      "name": "test_ag_ui_connection",
+      "success": false,
+      "details": "name 'get_config' is not defined",
+      "timestamp": "2025-09-05T14:18:17.116886"
+    }
+  ],
+  "summary": {
+    "total": 13,
+    "passed": 0,
+    "failed": 13
+  }
+}

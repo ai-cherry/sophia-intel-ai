@@ -1,0 +1,59 @@
+# Fly.io Configuration for Squad Services
+# Deploy separately for microservices architecture
+
+# AIMLAPI Squad Service
+[aimlapi]
+app = "sophia-aimlapi"
+primary_region = "lax"
+kill_signal = "SIGINT"
+kill_timeout = 5
+
+[aimlapi.build]
+  dockerfile = "deploy/Dockerfile.aimlapi"
+
+[aimlapi.env]
+  SERVICE_NAME = "aimlapi_squad"
+  PORT = "8090"
+  MCP_MEMORY_URL = "http://sophia-mcp.internal:8081"
+  MCP_FILESYSTEM_URL = "http://sophia-mcp.internal:8082"
+  MCP_GIT_URL = "http://sophia-mcp.internal:8084"
+
+[[aimlapi.services]]
+  internal_port = 8090
+  protocol = "tcp"
+  
+  [[aimlapi.services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [[aimlapi.services.http_checks]]
+    interval = "10s"
+    path = "/health"
+    method = "GET"
+
+# LiteLLM Squad Service
+[litellm]
+app = "sophia-litellm"
+primary_region = "lax"
+
+[litellm.env]
+  SERVICE_NAME = "litellm_squad"
+  PORT = "8091"
+  REDIS_URL = "redis://sophia-redis.internal:6379"
+
+[[litellm.services]]
+  internal_port = 8091
+  protocol = "tcp"
+
+# OpenRouter Squad Service
+[openrouter]
+app = "sophia-openrouter"
+primary_region = "lax"
+
+[openrouter.env]
+  SERVICE_NAME = "openrouter_squad"
+  PORT = "8092"
+
+[[openrouter.services]]
+  internal_port = 8092
+  protocol = "tcp"

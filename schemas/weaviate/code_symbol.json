@@ -1,0 +1,187 @@
+{
+  "class": "CodeSymbol",
+  "description": "Represents individual code symbols (functions, classes, methods, variables)",
+  "vectorizer": "none",
+  "moduleConfig": {
+    "text2vec-openai": {
+      "vectorizeClassName": false
+    }
+  },
+  "properties": [
+    {
+      "name": "id",
+      "dataType": ["string"],
+      "description": "Unique identifier for the symbol",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "repo",
+      "dataType": ["string"],
+      "description": "Repository name (sophia or sophia)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "file_path",
+      "dataType": ["string"],
+      "description": "File path containing this symbol",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "symbol",
+      "dataType": ["string"],
+      "description": "Symbol name (function, class, method name)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "kind",
+      "dataType": ["string"],
+      "description": "Symbol type (function, class, method, variable, constant)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "signature",
+      "dataType": ["text"],
+      "description": "Function/method signature with parameters and return type",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "start_line",
+      "dataType": ["int"],
+      "description": "Starting line number in file",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "end_line",
+      "dataType": ["int"],
+      "description": "Ending line number in file",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "service",
+      "dataType": ["string"],
+      "description": "Business service or domain this symbol belongs to",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "tags",
+      "dataType": ["string[]"],
+      "description": "Hierarchical ontology tags for filtering",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "body",
+      "dataType": ["text"],
+      "description": "Symbol implementation code",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "docstring",
+      "dataType": ["text"],
+      "description": "Documentation string or comments",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "complexity",
+      "dataType": ["int"],
+      "description": "Cyclomatic complexity score",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "dependencies",
+      "dataType": ["string[]"],
+      "description": "List of symbols this symbol depends on",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "callers",
+      "dataType": ["string[]"],
+      "description": "List of symbols that call this symbol",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    }
+  ],
+  "invertedIndexConfig": {
+    "bm25": {
+      "enabled": true,
+      "b": 0.75,
+      "k1": 1.2
+    },
+    "stopwords": {
+      "preset": "en",
+      "additions": ["def", "class", "function", "return", "import", "from"]
+    }
+  },
+  "shardingConfig": {
+    "virtualPerPhysical": 128,
+    "desiredCount": 1,
+    "actualCount": 1,
+    "desiredVirtualCount": 128,
+    "actualVirtualCount": 128,
+    "key": "_id",
+    "strategy": "hash",
+    "function": "murmur3"
+  }
+}

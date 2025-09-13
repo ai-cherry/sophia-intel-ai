@@ -1,0 +1,68 @@
+{
+  "environment": "production",
+  "primary_instance": "104.171.202.103",
+  "instances": {
+    "production": {
+      "ip": "104.171.202.103",
+      "type": "gpu_1x_rtx6000",
+      "role": "primary",
+      "services": [
+        "dashboard",
+        "api",
+        "monitoring"
+      ]
+    },
+    "core": {
+      "ip": "192.222.58.232",
+      "type": "gpu_1x_gh200",
+      "role": "ai-core",
+      "services": [
+        "inference",
+        "training"
+      ]
+    },
+    "orchestrator": {
+      "ip": "104.171.202.117",
+      "type": "gpu_1x_a6000",
+      "role": "mcp-orchestrator",
+      "services": [
+        "mcp",
+        "orchestration"
+      ]
+    },
+    "pipeline": {
+      "ip": "104.171.202.134",
+      "type": "gpu_1x_a100",
+      "role": "data-pipeline",
+      "services": [
+        "data-processing",
+        "etl"
+      ]
+    },
+    "development": {
+      "ip": "155.248.194.183",
+      "type": "gpu_1x_a10",
+      "role": "development",
+      "services": [
+        "testing",
+        "development"
+      ]
+    }
+  },
+  "endpoints": {
+    "dashboard": "http://104.171.202.103:8080",
+    "api": "http://104.171.202.103:8080/api",
+    "grafana": "http://104.171.202.103:3000",
+    "prometheus": "http://104.171.202.103:9090",
+    "ai_core": "http://192.222.58.232:8000",
+    "mcp_orchestrator": "http://104.171.202.117:8001",
+    "data_pipeline": "http://104.171.202.134:8002"
+  },
+  "ssh_commands": {
+    "production": "ssh ubuntu@104.171.202.103",
+    "core": "ssh ubuntu@192.222.58.232",
+    "orchestrator": "ssh ubuntu@104.171.202.117",
+    "pipeline": "ssh ubuntu@104.171.202.134",
+    "development": "ssh ubuntu@155.248.194.183"
+  }
+}

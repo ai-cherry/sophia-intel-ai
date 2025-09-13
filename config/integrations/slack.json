@@ -1,0 +1,4 @@
+{
+  "enabled": false,
+  "notes": "Populate via env or secrets file; do not commit secrets."
+}

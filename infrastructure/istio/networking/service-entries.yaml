@@ -1,0 +1,438 @@
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mcp-server-filesystem
+  namespace: istio-system
+  labels:
+    app: mcp
+    system: sophia-sophia
+    mesh: istio
+    type: mcp-server
+spec:
+  hosts:
+    - mcp-filesystem.sophia-sophia.local
+  ports:
+    - number: 8080
+      name: http
+      protocol: HTTP
+    - number: 8443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+  endpoints:
+    - address: 10.0.1.10
+      ports:
+        http: 8080
+        https: 8443
+      labels:
+        version: v1
+        region: us-west-2
+        zone: us-west-2a
+    - address: 10.0.1.11
+      ports:
+        http: 8080
+        https: 8443
+      labels:
+        version: v1
+        region: us-west-2
+        zone: us-west-2b
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mcp-server-git
+  namespace: istio-system
+  labels:
+    app: mcp
+    system: sophia-sophia
+    mesh: istio
+    type: mcp-server
+spec:
+  hosts:
+    - mcp-git.sophia-sophia.local
+  ports:
+    - number: 8081
+      name: http
+      protocol: HTTP
+    - number: 8444
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+  endpoints:
+    - address: 10.0.1.20
+      ports:
+        http: 8081
+        https: 8444
+      labels:
+        version: v1
+        region: us-west-2
+        zone: us-west-2a
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mcp-server-postgres
+  namespace: istio-system
+  labels:
+    app: mcp
+    system: sophia-sophia
+    mesh: istio
+    type: mcp-server
+spec:
+  hosts:
+    - mcp-postgres.sophia-sophia.local
+  ports:
+    - number: 5432
+      name: postgres
+      protocol: TCP
+    - number: 8082
+      name: http
+      protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: DNS
+  endpoints:
+    - address: 10.0.2.10
+      ports:
+        postgres: 5432
+        http: 8082
+      labels:
+        version: v1
+        region: us-west-2
+        zone: us-west-2a
+        tier: primary
+    - address: 10.0.2.11
+      ports:
+        postgres: 5432
+        http: 8082
+      labels:
+        version: v1
+        region: us-west-2
+        zone: us-west-2b
+        tier: secondary
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mcp-server-brave-search
+  namespace: istio-system
+  labels:
+    app: mcp
+    system: sophia-sophia
+    mesh: istio
+    type: mcp-server
+spec:
+  hosts:
+    - mcp-brave-search.sophia-sophia.local
+  ports:
+    - number: 8083
+      name: http
+      protocol: HTTP
+    - number: 8445
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+  endpoints:
+    - address: 10.0.3.10
+      ports:
+        http: 8083
+        https: 8445
+      labels:
+        version: v1
+        region: us-west-2
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: mcp-server-memory
+  namespace: istio-system
+  labels:
+    app: mcp
+    system: sophia-sophia
+    mesh: istio
+    type: mcp-server
+spec:
+  hosts:
+    - mcp-memory.sophia-sophia.local
+  ports:
+    - number: 8084
+      name: http
+      protocol: HTTP
+    - number: 8446
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+  endpoints:
+    - address: 10.0.4.10
+      ports:
+        http: 8084
+        https: 8446
+      labels:
+        version: v1
+        region: us-west-2
+        zone: us-west-2a
+    - address: 10.0.4.11
+      ports:
+        http: 8084
+        https: 8446
+      labels:
+        version: v1
+        region: us-west-2
+        zone: us-west-2b
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-openai-api
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: openai
+spec:
+  hosts:
+    - api.openai.com
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-anthropic-api
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: anthropic
+spec:
+  hosts:
+    - api.anthropic.com
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-github-api
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: github
+spec:
+  hosts:
+    - api.github.com
+    - github.com
+    - raw.githubusercontent.com
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-docker-registry
+  namespace: istio-system
+  labels:
+    app: external-registry
+    system: sophia-sophia
+    mesh: istio
+    provider: docker
+spec:
+  hosts:
+    - registry.docker.io
+    - index.docker.io
+    - auth.docker.io
+    - registry-1.docker.io
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-kubernetes-api
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: kubernetes
+spec:
+  hosts:
+    - kubernetes.default.svc.cluster.local
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-prometheus
+  namespace: istio-system
+  labels:
+    app: monitoring
+    system: sophia-sophia
+    mesh: istio
+    provider: prometheus
+spec:
+  hosts:
+    - prometheus.monitoring.svc.cluster.local
+  ports:
+    - number: 9090
+      name: http
+      protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-grafana
+  namespace: istio-system
+  labels:
+    app: monitoring
+    system: sophia-sophia
+    mesh: istio
+    provider: grafana
+spec:
+  hosts:
+    - grafana.monitoring.svc.cluster.local
+  ports:
+    - number: 3000
+      name: http
+      protocol: HTTP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-elastic-search
+  namespace: istio-system
+  labels:
+    app: logging
+    system: sophia-sophia
+    mesh: istio
+    provider: elastic
+spec:
+  hosts:
+    - elasticsearch.logging.svc.cluster.local
+  ports:
+    - number: 9200
+      name: http
+      protocol: HTTP
+    - number: 9300
+      name: transport
+      protocol: TCP
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-slack-api
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: slack
+spec:
+  hosts:
+    - slack.com
+    - api.slack.com
+    - hooks.slack.com
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-aws-services
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: aws
+spec:
+  hosts:
+    - "*.amazonaws.com"
+    - "*.aws.amazon.com"
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-gcp-services
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: gcp
+spec:
+  hosts:
+    - "*.googleapis.com"
+    - "*.cloud.google.com"
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: external-azure-services
+  namespace: istio-system
+  labels:
+    app: external-api
+    system: sophia-sophia
+    mesh: istio
+    provider: azure
+spec:
+  hosts:
+    - "*.azure.com"
+    - "*.azurewebsites.net"
+    - "*.windows.net"
+  ports:
+    - number: 443
+      name: https
+      protocol: HTTPS
+  location: MESH_EXTERNAL
+  resolution: DNS

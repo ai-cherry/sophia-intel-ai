@@ -1,0 +1,18 @@
+name: shared-components
+runtime: python
+description: Shared infrastructure components and ComponentResources for Sophia Intel AI
+
+backend:
+  url: https://app.pulumi.com
+
+template:
+  config:
+    shared:environment:
+      description: Environment name (dev, staging, prod)
+      default: dev
+    shared:project_name:
+      description: Base project name for tagging
+      default: sophia-intel-ai
+    shared:region:
+      description: Primary region for deployments
+      default: iad

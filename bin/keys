@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Edit/view the single-source env file without fuss
+
+set -euo pipefail
+ENV_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)/.env.master"
+
+usage(){
+  echo "keys: manage the one env file ($ENV_PATH)"
+  echo "Usage: keys [edit|show|path|create]"
+}
+
+cmd=${1:-path}
+case "$cmd" in
+  create)
+    if [ -f "$ENV_PATH" ]; then echo "Already exists: $ENV_PATH"; exit 0; fi
+    touch "$ENV_PATH" && chmod 600 "$ENV_PATH"
+    echo "# Add your API keys here" > "$ENV_PATH"
+    echo "Created $ENV_PATH (chmod 600)"
+    ;;
+  edit)
+    if [ ! -f "$ENV_PATH" ]; then touch "$ENV_PATH" && chmod 600 "$ENV_PATH"; fi
+    ${EDITOR:-nano} "$ENV_PATH"
+    ;;
+  show)
+    if [ ! -f "$ENV_PATH" ]; then echo "Missing: $ENV_PATH"; exit 1; fi
+    sed -E 's/(=.*).*/\1********/g' "$ENV_PATH"
+    ;;
+  path)
+    echo "$ENV_PATH"
+    ;;
+  *) usage; exit 1;;
+esac
+

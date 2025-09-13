@@ -1,0 +1,100 @@
+# Sophia AI Platform - Unified Configuration
+# Compatible with tools/unified_deployment.py
+
+components:
+  # Core Infrastructure Services
+  redis:
+    type: cache
+    enabled: true
+    docker_image: redis:7-alpine
+    health_check_url: http://localhost:6379
+    health_check_command: "redis-cli ping"
+    timeout_seconds: 30
+    retry_attempts: 3
+    
+  qdrant:
+    type: vector-db
+    enabled: true
+    docker_image: qdrant/qdrant:v1.7.4
+    health_check_url: http://localhost:6333/health
+    timeout_seconds: 45
+    retry_attempts: 3
+    
+  # Core APIs and Services
+  api:
+    type: api
+    enabled: true
+    depends_on:
+      - redis
+      - qdrant
+    docker_image: sophia-api:latest
+    health_check_url: http://localhost:8000/health
+    timeout_seconds: 60
+    retry_attempts: 5
+    env_vars:
+      REDIS_URL: "redis://redis:6379"
+      DATABASE_URL: "${NEON_DATABASE_URL}"
+      QDRANT_URL: "http://qdrant:6333"
+      ENVIRONMENT: "development"
+    
+  # Sophia MCP
+  # All agent functionality now in Sophia
+  mcp:
+    type: mcp
+    enabled: true
+    depends_on:
+      - redis
+      - qdrant
+    startup_script: start_sophia.sh
+    # Legacy references removed
+    timeout_seconds: 120
+    retry_attempts: 3
+    env_vars:
+      SOPHIA_MODE: "development"
+      REDIS_URL: "${REDIS_URL}"
+      PYTHONPATH: "/workspaces/sophia-main"
+      
+  # Chat Interface
+  chat_interface:
+    type: ui
+    enabled: true
+    depends_on:
+      - api
+    startup_script: start_chat_interface.sh
+    health_check_url: http://localhost:8088/health
+    timeout_seconds: 60
+    retry_attempts: 3
+    
+  # Dashboards
+  main_dashboard:
+    type: ui
+    enabled: true
+    depends_on:
+      - api
+    startup_script: start_main_dashboard.sh
+    health_check_url: http://localhost:8501
+    timeout_seconds: 45
+    retry_attempts: 3
+    
+  # Monitoring
+  prometheus:
+    type: monitoring
+    enabled: true
+    docker_image: prom/prometheus:latest
+    health_check_url: http://104.171.202.103:9090/-/healthy
+    timeout_seconds: 30
+    retry_attempts: 2
+    kubernetes_config: monitoring/k8s/prometheus-deployment.yaml
+    
+  grafana:
+    type: monitoring
+    enabled: true
+    depends_on:
+      - prometheus
+    docker_image: grafana/grafana:latest
+    health_check_url: http://localhost:3001/api/health
+    timeout_seconds: 45
+    retry_attempts: 2
+    env_vars:
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_PASSWORD:-admin}"
+    kubernetes_config: monitoring/k8s/grafana-deployment.yaml

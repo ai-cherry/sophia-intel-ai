@@ -1,0 +1,37 @@
+{
+  "timestamp": "2025-09-10T08:25:49.116955",
+  "tests": [
+    {
+      "integration": "slack",
+      "status": "failed",
+      "error": "The request to the Slack API failed. (url: https://slack.com/api/auth.test, status: 200)\nThe server responded with: {'ok': False, 'error': 'invalid_auth'}"
+    },
+    {
+      "integration": "gong",
+      "status": "failed"
+    },
+    {
+      "integration": "hubspot",
+      "status": "failed"
+    },
+    {
+      "integration": "salesforce",
+      "status": "failed"
+    },
+    {
+      "integration": "airtable",
+      "status": "failed",
+      "error": "Error connecting to localhost:6380. Multiple exceptions: [Errno 61] Connect call failed ('::1', 6380, 0, 0), [Errno 61] Connect call failed ('127.0.0.1', 6380)."
+    },
+    {
+      "integration": "looker",
+      "status": "failed"
+    }
+  ],
+  "summary": {
+    "working": 0,
+    "failed": 6,
+    "skipped": 0,
+    "total": 6
+  }
+}

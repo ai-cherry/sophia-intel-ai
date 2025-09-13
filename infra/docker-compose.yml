@@ -1,0 +1,297 @@
+version: '3.9'
+
+services:
+  # PostgreSQL for persistence (ARM64 native)
+  postgres:
+    image: postgres:16-alpine
+    platform: linux/arm64
+    container_name: builder-postgres
+    environment:
+      POSTGRES_DB: builder
+      POSTGRES_USER: builder
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-builder123}
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_POSTGRES}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U builder"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Valkey (Redis fork) for cache (ARM64 optimized)
+  valkey:
+    image: valkey/valkey:8-alpine
+    platform: linux/arm64
+    container_name: builder-valkey
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_REDIS}:6379"
+    volumes:
+      - valkey-data:/data
+    command: valkey-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # Weaviate for vector storage (ARM64)
+  weaviate:
+    image: semitechnologies/weaviate:1.26.1
+    platform: linux/arm64
+    container_name: builder-weaviate
+    environment:
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
+      DEFAULT_VECTORIZER_MODULE: "text2vec-openai"
+      ENABLE_MODULES: "text2vec-openai,generative-openai"
+      CLUSTER_HOSTNAME: "node1"
+      LIMIT_RESOURCES: "true"
+      GOMAXPROCS: "2"
+      GOGC: "100"
+      OPENAI_APIKEY: ${OPENAI_API_KEY}
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_WEAVIATE}:8080"
+      - "50051:50051"  # gRPC port
+    volumes:
+      - weaviate-data:/var/lib/weaviate
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Neo4j for knowledge graphs (ARM64)
+  neo4j:
+    image: neo4j:5-community
+    platform: linux/arm64
+    container_name: builder-neo4j
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/builder123}
+      NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
+      NEO4J_dbms_memory_pagecache_size: 512M
+      NEO4J_dbms_memory_heap_max__size: 1G
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_NEO4J_HTTP}:7474"  # HTTP
+      - "${PORT_NEO4J_BOLT}:7687"  # Bolt
+    volumes:
+      - neo4j-data:/data
+      - neo4j-logs:/logs
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PASSWORD:-builder123}", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Bridge API
+  
+
+  # Unified API Server (canonical)
+  unified-api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.unified
+      platforms:
+        - linux/arm64
+    platform: linux/arm64
+    container_name: sophia-unified-api
+    environment:
+      REDIS_URL: redis://valkey:6379/0
+      WORKSPACE_PATH: /workspace
+      WORKSPACE_NAME: sophia
+      AIML_ENHANCED_ENABLED: ${AIML_ENHANCED_ENABLED:-false}
+      AIMLAPI_BASE: ${AIMLAPI_BASE:-https://api.aimlapi.com/v1}
+      AIMLAPI_API_KEY: ${AIMLAPI_API_KEY:-}
+      AIML_ROUTER_TOKEN: ${AIML_ROUTER_TOKEN:-}
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_API}:8000"
+    volumes:
+      - ../:/workspace:rw
+    depends_on:
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles: ["dev", "prod"]
+    # Override the command per profile using environment or compose override files if needed
+    command: ["bash", "-lc", "${API_CMD:-uvicorn app.api.unified_server:app --host 0.0.0.0 --port 8000}"]
+
+  # Agent UI (Next.js)
+  sophia-intel-app:
+    build:
+      context: ../sophia-intel-app
+      dockerfile: ../infra/Dockerfile.sophia-intel-app
+      platforms:
+        - linux/arm64
+    platform: linux/arm64
+    container_name: builder-sophia-intel-app
+    environment:
+      NODE_ENV: development
+      API_BASE_URL: http://unified-api:8000
+      NEXT_PUBLIC_API_URL: http://unified-api:8000
+      NEXT_PUBLIC_API_BASE: http://unified-api:8000
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_UI}:3000"
+    depends_on:
+      unified-api:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles: ["dev", "prod"]
+
+  # Monitoring - Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: monitoring-prometheus
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_PROMETHEUS}:9090"
+    restart: unless-stopped
+
+  # Monitoring - Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: monitoring-grafana
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_GRAFANA}:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # MCP Filesystem Server
+  mcp-filesystem:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.mcp
+      platforms:
+        - linux/arm64
+    platform: linux/arm64
+    container_name: builder-mcp-filesystem
+    environment:
+      MCP_SECRET_KEY: ${MCP_SECRET_KEY:-secret}
+      MCP_TOKEN: ${MCP_TOKEN:-${MCP_SECRET_KEY:-secret}}
+      MCP_DEV_BYPASS: ${MCP_DEV_BYPASS:-true}
+      REDIS_URL: redis://valkey:6379/1
+      WORKSPACE_PATH: /workspace
+      WORKSPACE_NAME: builder
+      READ_ONLY: "false"
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_MCP_FILESYSTEM}:8082"
+    volumes:
+      - ../:/workspace:rw
+    depends_on:
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # MCP Git Server
+  mcp-git:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.mcp
+      platforms:
+        - linux/arm64
+    platform: linux/arm64
+    container_name: builder-mcp-git
+    environment:
+      MCP_SECRET_KEY: ${MCP_SECRET_KEY:-secret}
+      MCP_TOKEN: ${MCP_TOKEN:-${MCP_SECRET_KEY:-secret}}
+      MCP_DEV_BYPASS: ${MCP_DEV_BYPASS:-true}
+      REDIS_URL: redis://valkey:6379/2
+      GIT_REPO_PATH: /workspace
+      SERVER_TYPE: git
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_MCP_GIT}:8084"
+    volumes:
+      - ../:/workspace:rw
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.ssh:/root/.ssh:ro
+    depends_on:
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # MCP Memory Server
+  mcp-memory:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile.mcp
+      platforms:
+        - linux/arm64
+    platform: linux/arm64
+    container_name: builder-mcp-memory
+    environment:
+      MCP_SECRET_KEY: ${MCP_SECRET_KEY:-secret}
+      MCP_TOKEN: ${MCP_TOKEN:-${MCP_SECRET_KEY:-secret}}
+      MCP_DEV_BYPASS: ${MCP_DEV_BYPASS:-true}
+      REDIS_URL: redis://valkey:6379/3
+      SERVER_TYPE: memory
+      MAX_MEMORY_MB: 256
+    env_file:
+      - ./ports.env
+    ports:
+      - "${PORT_MCP_MEMORY}:8081"
+    depends_on:
+      valkey:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+
+volumes:
+  postgres-data:
+  valkey-data:
+  weaviate-data:
+  neo4j-data:
+  neo4j-logs:
+
+networks:
+  default:
+    name: builder-network
+    driver: bridge

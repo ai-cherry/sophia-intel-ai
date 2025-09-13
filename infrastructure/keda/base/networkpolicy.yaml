@@ -1,0 +1,246 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keda-operator-network-policy
+  namespace: keda-system
+  labels:
+    app: keda
+    component: security
+    policy-type: network
+  annotations:
+    description: "Network policy for KEDA operator communication"
+    security.sophia-intel-ai/level: "restricted"
+spec:
+  podSelector:
+    matchLabels:
+      app: keda-operator
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Ingress rules - who can talk to KEDA
+  ingress:
+    # Allow metrics scraping from Prometheus
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 8080 # Metrics port
+
+    # Allow webhook calls from kube-system
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: TCP
+          port: 9443 # Webhook port
+
+    # Allow internal KEDA communication
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: keda-operator
+      ports:
+        - protocol: TCP
+          port: 9666 # gRPC port
+
+  # Egress rules - what KEDA can talk to
+  egress:
+    # Allow DNS resolution
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: coredns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow Kubernetes API access
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+
+    # Allow Redis access for Sophia scaler
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: sophia-system
+          podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+
+    # Allow Prometheus access for Sophia scaler
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: monitoring
+          podSelector:
+            matchLabels:
+              app: prometheus
+      ports:
+        - protocol: TCP
+          port: 9090
+
+    # Allow access to scaled applications
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: sophia-system
+        - namespaceSelector:
+            matchLabels:
+              name: sophia-system
+      ports:
+        - protocol: TCP
+          port: 8080 # Application metrics
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keda-metrics-server-network-policy
+  namespace: keda-system
+  labels:
+    app: keda
+    component: security
+    policy-type: network
+  annotations:
+    description: "Network policy for KEDA metrics API server"
+    security.sophia-intel-ai/level: "restricted"
+spec:
+  podSelector:
+    matchLabels:
+      app: keda-operator-metrics-apiserver
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow HPA controller access
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: TCP
+          port: 6443 # Metrics API port
+        - protocol: TCP
+          port: 8080 # Health check port
+
+    # Allow internal KEDA communication
+    - from:
+        - podSelector:
+            matchLabels:
+              app: keda-operator
+      ports:
+        - protocol: TCP
+          port: 9666 # gRPC port
+
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector: {}
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+
+    # Allow Kubernetes API
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+
+    # Allow communication with KEDA operator
+    - to:
+        - podSelector:
+            matchLabels:
+              app: keda-operator
+      ports:
+        - protocol: TCP
+          port: 9666
+---
+# NetworkPolicy for applications being scaled
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keda-scaled-apps-policy
+  namespace: sophia-system
+  labels:
+    app: keda
+    component: security
+    policy-type: scaled-apps
+spec:
+  podSelector:
+    matchLabels:
+      scaled-by: keda
+  policyTypes:
+    - Ingress
+
+  ingress:
+    # Allow KEDA to access metrics
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: keda-system
+          podSelector:
+            matchLabels:
+              app: keda-operator
+      ports:
+        - protocol: TCP
+          port: 8080 # Metrics port
+---
+# Same policy for Sophia system
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keda-scaled-apps-policy
+  namespace: sophia-system
+  labels:
+    app: keda
+    component: security
+    policy-type: scaled-apps
+spec:
+  podSelector:
+    matchLabels:
+      scaled-by: keda
+  policyTypes:
+    - Ingress
+
+  ingress:
+    # Allow KEDA to access metrics
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: keda-system
+          podSelector:
+            matchLabels:
+              app: keda-operator
+      ports:
+        - protocol: TCP
+          port: 8080 # Metrics port

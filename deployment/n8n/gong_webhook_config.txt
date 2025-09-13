@@ -1,0 +1,47 @@
+
+═══════════════════════════════════════════════════════════════
+🎯 GONG CONFIGURATION INSTRUCTIONS
+═══════════════════════════════════════════════════════════════
+
+Your n8n webhook is ready! Now configure Gong:
+
+1. LOGIN TO GONG:
+   URL: https://app.gong.io
+   Navigate to: Admin → Automation Rules
+
+2. CREATE WEBHOOK RULES:
+
+   A) Call Ended Webhook:
+   ─────────────────────
+   Name: n8n - Call Ended
+   Event: Call Ended
+   URL: https://scoobyjava.app.n8n.cloud/webhook/gong-webhook
+   Method: POST
+
+   B) Transcript Ready Webhook:
+   ────────────────────────────
+   Name: n8n - Transcript Ready
+   Event: Transcript Ready
+   URL: https://scoobyjava.app.n8n.cloud/webhook/gong-webhook
+   Method: POST
+
+   C) Deal at Risk Webhook:
+   ────────────────────────
+   Name: n8n - Deal at Risk
+   Event: Deal Health Changed to At Risk
+   URL: https://scoobyjava.app.n8n.cloud/webhook/gong-webhook
+   Method: POST
+
+3. COPY WEBHOOK SECRET:
+   After creating the first webhook, Gong will provide a secret.
+   Copy it and add to n8n Variables:
+
+   n8n → Settings → Variables → Add Variable
+   Name: GONG_WEBHOOK_SECRET
+   Value: [Paste the secret from Gong]
+
+4. TEST THE INTEGRATION:
+   In Gong → Automation Rules → Click "Test" on any rule
+   Check n8n → Workflows → Executions
+
+═══════════════════════════════════════════════════════════════

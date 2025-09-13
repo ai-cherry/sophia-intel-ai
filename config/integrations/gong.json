@@ -1,0 +1,4 @@
+{
+  "enabled": false,
+  "notes": "Requires GONG_ACCESS_KEY and GONG_CLIENT_SECRET via env."
+}

@@ -1,0 +1,73 @@
+groups:
+- name: sophia-critical
+  rules:
+  - alert: SophiaServiceDown
+    annotations:
+      description: Service {{ $labels.job }} has been down for more than 30 seconds
+      summary: Sophia service {{ $labels.job }} is down
+    expr: up{job=~"sophia-.*"} == 0
+    for: 30s
+    labels:
+      severity: critical
+  - alert: BrainIngestFailureRate
+    annotations:
+      description: Brain ingest error rate is {{ $value }} errors/sec
+      summary: High brain ingest failure rate
+    expr: rate(brain_ingest_errors_total[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: critical
+  - alert: WeaviateConnectionFailure
+    annotations:
+      description: Multiple Weaviate connection failures detected
+      summary: Weaviate connection failures
+    expr: weaviate_connection_failures_total > 5
+    for: 1m
+    labels:
+      severity: critical
+- name: sophia-warning
+  rules:
+  - alert: HighResponseTime
+    annotations:
+      description: 95th percentile response time is {{ $value }}s
+      summary: High response time on {{ $labels.endpoint }}
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+      > 2.0
+    for: 5m
+    labels:
+      severity: warning
+  - alert: HighMemoryUsage
+    annotations:
+      description: Memory usage is {{ $value }}MB
+      summary: High memory usage on {{ $labels.job }}
+    expr: process_resident_memory_bytes / 1024 / 1024 > 1000
+    for: 5m
+    labels:
+      severity: warning
+- name: sophia-infrastructure
+  rules:
+  - alert: PostgresConnectionFailure
+    annotations:
+      description: PostgreSQL database connection failed
+      summary: PostgreSQL is down
+    expr: pg_up == 0
+    for: 30s
+    labels:
+      severity: critical
+  - alert: RedisConnectionFailure
+    annotations:
+      description: Redis connection failed
+      summary: Redis is down
+    expr: redis_up == 0
+    for: 30s
+    labels:
+      severity: critical
+  - alert: DiskSpaceRunningLow
+    annotations:
+      description: Available disk space is less than 10%
+      summary: Disk space running low
+    expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}
+      < 0.1
+    for: 5m
+    labels:
+      severity: warning

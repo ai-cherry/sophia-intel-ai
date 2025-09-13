@@ -1,0 +1,10 @@
+{
+  "project": "sophia-intel-ai",
+  "execution_mode": "systematic_deep_analysis",
+  "git_rules": {
+    "branch": "main",
+    "commit_only": true,
+    "no_push": true
+  },
+  "objective": "Consolidate Sophia BI into ONE dashboard with full integrations"
+}

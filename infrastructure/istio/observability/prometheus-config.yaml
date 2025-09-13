@@ -1,0 +1,290 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: istio-system
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+      external_labels:
+        cluster: 'sophia-sophia'
+        mesh: 'istio'
+
+    alerting:
+      alertmanagers:
+      - static_configs:
+        - targets:
+          - alertmanager.istio-system:9093
+
+    rule_files:
+      - '/etc/prometheus/rules/*.yml'
+
+    scrape_configs:
+    # Istio mesh metrics
+    - job_name: 'istio-mesh'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - istio-system
+          - sophia-mesh
+          - sophia-mesh
+          - shared-services
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: istio-telemetry;prometheus
+
+    # Envoy stats
+    - job_name: 'envoy-stats'
+      metrics_path: /stats/prometheus
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - sophia-mesh
+          - sophia-mesh
+          - shared-services
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        action: keep
+        regex: '.*-envoy-prom'
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:15090
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: pod_name
+
+    # Sophia orchestrator metrics
+    - job_name: 'sophia-orchestrator'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - sophia-mesh
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: sophia-orchestrator
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: pod
+      metric_relabel_configs:
+      - source_labels: [domain]
+        regex: sophia
+        target_label: orchestrator_domain
+        replacement: sophia
+
+    # Sophia orchestrator metrics
+    - job_name: 'sophia-orchestrator'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - sophia-mesh
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        action: keep
+        regex: sophia-orchestrator
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: pod
+      metric_relabel_configs:
+      - source_labels: [domain]
+        regex: sophia
+        target_label: orchestrator_domain
+        replacement: sophia
+
+    # MCP servers metrics
+    - job_name: 'mcp-servers'
+      kubernetes_sd_configs:
+      - role: service
+        namespaces:
+          names:
+          - shared-services
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_label_mcp_type]
+        action: keep
+        regex: .+
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_service_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_service_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_service_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_service_name]
+        action: replace
+        target_label: service
+
+    # Custom metrics for concurrent task limiting
+    - job_name: 'concurrent-tasks'
+      static_configs:
+      - targets:
+        - 'sophia-orchestrator.sophia-mesh:9090'
+        - 'sophia-orchestrator.sophia-mesh:9090'
+      metrics_path: '/metrics'
+      params:
+        filter: ['concurrent_tasks_*']
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-rules
+  namespace: istio-system
+data:
+  sophia-rules.yml: |
+    groups:
+    - name: sophia_alerts
+      interval: 30s
+      rules:
+      - alert: SophiaConcurrentTasksExceeded
+        expr: concurrent_tasks_active{domain="sophia"} > 8
+        for: 1m
+        labels:
+          severity: warning
+          domain: sophia
+        annotations:
+          summary: "Sophia concurrent tasks exceeded limit"
+          description: "Sophia orchestrator has {{ $value }} concurrent tasks (limit: 8)"
+
+      - alert: SophiaHighErrorRate
+        expr: rate(istio_request_total{destination_service_namespace="sophia-mesh",response_code=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          domain: sophia
+        annotations:
+          summary: "High error rate in Sophia domain"
+          description: "Error rate is {{ $value | humanizePercentage }} in Sophia services"
+
+      - alert: SophiaHighLatency
+        expr: histogram_quantile(0.99, rate(istio_request_duration_milliseconds_bucket{destination_service_namespace="sophia-mesh"}[5m])) > 5000
+        for: 5m
+        labels:
+          severity: warning
+          domain: sophia
+        annotations:
+          summary: "High latency in Sophia domain"
+          description: "99th percentile latency is {{ $value }}ms in Sophia services"
+
+  sophia-rules.yml: |
+    groups:
+    - name: sophia_alerts
+      interval: 30s
+      rules:
+      - alert: SophiaConcurrentTasksExceeded
+        expr: concurrent_tasks_active{domain="sophia"} > 8
+        for: 1m
+        labels:
+          severity: warning
+          domain: sophia
+        annotations:
+          summary: "Sophia concurrent tasks exceeded limit"
+          description: "Sophia orchestrator has {{ $value }} concurrent tasks (limit: 8)"
+
+      - alert: SophiaHighErrorRate
+        expr: rate(istio_request_total{destination_service_namespace="sophia-mesh",response_code=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          domain: sophia
+        annotations:
+          summary: "High error rate in Sophia domain"
+          description: "Error rate is {{ $value | humanizePercentage }} in Sophia services"
+
+      - alert: SophiaDataPipelineStalled
+        expr: rate(data_pipeline_processed_total{domain="sophia"}[5m]) == 0
+        for: 10m
+        labels:
+          severity: warning
+          domain: sophia
+        annotations:
+          summary: "Sophia data pipeline stalled"
+          description: "No data processed in the last 10 minutes"
+
+  mesh-rules.yml: |
+    groups:
+    - name: mesh_alerts
+      interval: 30s
+      rules:
+      - alert: CircuitBreakerOpen
+        expr: envoy_cluster_circuit_breakers_state{state="open"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Circuit breaker open"
+          description: "Circuit breaker is open for {{ $labels.cluster_name }}"
+
+      - alert: RateLimitExceeded
+        expr: rate(envoy_http_ratelimit_rate_limited_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limit exceeded"
+          description: "Rate limiting is affecting {{ $value | humanizePercentage }} of requests"
+
+      - alert: mTLSViolation
+        expr: istio_tcp_connections_opened_total{security_policy!="mutual_tls"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "mTLS violation detected"
+          description: "Non

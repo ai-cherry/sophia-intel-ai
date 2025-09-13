@@ -1,0 +1,355 @@
+{
+  "request_type": "sophia_metrics_and_routing_enhancement",
+  "version": "5.0",
+  "timestamp": "2025-09-07",
+  "priority": "HIGH",
+
+  "context": {
+    "current_state": {
+      "synthesis_pass": "IMPLEMENTED - working with SCOUT_SYNTHESIZER_ENABLED",
+      "specialist_profiles": "IMPLEMENTED - working with SCOUT_ENHANCED_SPECIALISTS",
+      "test_results": "PASSED - 3 diverse scenarios (security, performance, architecture)",
+      "schema_compliance": "WORKING - SCOUT_SCHEMA_STRICT enforcing output structure"
+    },
+    "user_preferences": {
+      "synthesis_quality": "Use Claude Opus 3 or GPT-5 for highest quality synthesis",
+      "cost_optimization": "Use diverse cost-effective models for parallel agents",
+      "existing_models": "Keep current models as fallbacks"
+    }
+  },
+
+  "implementation_tasks": [
+    {
+      "priority": 1,
+      "name": "Metrics Command Implementation",
+      "description": "Add comprehensive metrics visibility for scout operations",
+
+      "specification": {
+        "command": "./bin/sophia-run metrics",
+        "subcommands": {
+          "recent": "Show last N scout executions",
+          "stats": "Aggregate statistics over time window",
+          "costs": "Detailed cost breakdown by model/agent"
+        },
+
+        "implementation": {
+          "file": "app/swarms/cli/sophia_runner.py",
+          "function": "cmd_metrics",
+          "data_sources": [
+            "MCP memory search for 'integrated_swarm_*' entries",
+            "Result metadata from recent executions",
+            "Portkey manager cost tracking"
+          ],
+
+          "output_format": {
+            "execution_id": "string",
+            "timestamp": "ISO 8601",
+            "task": "string",
+            "timing": {
+              "total_ms": "float",
+              "agent_times_ms": {
+                "analyst": "float",
+                "strategist": "float",
+                "validator": "float",
+                "synthesis": "float"
+              },
+              "parallel_wait_ms": "float"
+            },
+            "tokens": {
+              "total": "integer",
+              "by_agent": {
+                "analyst": "integer",
+                "strategist": "integer",
+                "validator": "integer",
+                "synthesis": "integer"
+              }
+            },
+            "costs": {
+              "total_usd": "float",
+              "by_agent": {
+                "analyst": "float",
+                "strategist": "float",
+                "validator": "float",
+                "synthesis": "float"
+              },
+              "by_provider": {
+                "openai": "float",
+                "anthropic": "float",
+                "openrouter": "float",
+                "other": "float"
+              }
+            },
+            "quality_metrics": {
+              "schema_compliance": "boolean",
+              "confidence_scores": {
+                "analyst": "float 0-1",
+                "strategist": "float 0-1",
+                "validator": "float 0-1",
+                "synthesis": "float 0-1",
+                "final": "float 0-1"
+              },
+              "sections_found": [
+                "FINDINGS",
+                "INTEGRATIONS",
+                "RISKS",
+                "RECOMMENDATIONS",
+                "METRICS",
+                "CONFIDENCE"
+              ],
+              "synthesis_improvements": {
+                "contradictions_resolved": "integer",
+                "duplicates_merged": "integer",
+                "schema_fixes": "integer"
+              }
+            },
+            "models_used": {
+              "analyst": "provider/model",
+              "strategist": "provider/model",
+              "validator": "provider/model",
+              "synthesis": "provider/model"
+            }
+          }
+        },
+
+        "cli_examples": [
+          "./bin/sophia-run metrics --recent",
+          "./bin/sophia-run metrics --recent --limit 5",
+          "./bin/sophia-run metrics --stats --window 24h",
+          "./bin/sophia-run metrics --costs --breakdown"
+        ]
+      }
+    },
+
+    {
+      "priority": 2,
+      "name": "Advanced Model Routing with OpenRouter",
+      "description": "Implement sophisticated routing strategy with user's preferred models",
+
+      "specification": {
+        "feature_flag": "SCOUT_PREFER_OPENROUTER=true",
+
+        "routing_strategy": {
+          "synthesis_models": {
+            "description": "Highest quality models for synthesis (user preference)",
+            "primary": {
+              "provider": "anthropic",
+              "model": "claude-3-opus-20240229",
+              "reason": "User prefers Opus for synthesis quality"
+            },
+            "fallback_1": {
+              "provider": "openai",
+              "model": "gpt-5",
+              "reason": "GPT-5 as alternative when available",
+              "note": "Check if GPT-5 is in approved_models.py"
+            },
+            "fallback_2": {
+              "provider": "anthropic",
+              "model": "claude-3.5-sonnet-20241022",
+              "reason": "Current working fallback"
+            }
+          },
+
+          "specialist_routing": {
+            "security_scout": {
+              "when": "SCOUT_ENHANCED_SPECIALISTS=true AND role=ANALYST",
+              "primary": {
+                "provider": "openrouter",
+                "model": "deepseek/deepseek-chat-v3.1",
+                "reason": "Excellent at code security analysis, cost-effective"
+              },
+              "fallback": {
+                "provider": "openrouter",
+                "model": "qwen/qwen-2.5-coder-32b-instruct",
+                "reason": "Strong code understanding, good price"
+              }
+            },
+
+            "architecture_strategist": {
+              "when": "SCOUT_ENHANCED_SPECIALISTS=true AND role=STRATEGIST",
+              "primary": {
+                "provider": "openrouter",
+                "model": "qwen/qwq-32b-preview",
+                "reason": "Exceptional reasoning for architecture, 32K context"
+              },
+              "fallback": {
+                "provider": "openrouter",
+                "model": "meta-llama/llama-3.3-70b-instruct",
+                "reason": "Fast, reliable, cost-effective"
+              }
+            },
+
+            "performance_validator": {
+              "when": "SCOUT_ENHANCED_SPECIALISTS=true AND role=VALIDATOR",
+              "primary": {
+                "provider": "openrouter",
+                "model": "nvidia/llama-3.1-nemotron-70b-instruct",
+                "reason": "Optimized for technical validation, good benchmarking"
+              },
+              "fallback": {
+                "provider": "openrouter",
+                "model": "mistralai/mistral-large-2411",
+                "reason": "Strong at code review, 128K context"
+              }
+            }
+          },
+
+          "cost_optimized_alternatives": {
+            "description": "Additional cost-effective models for high-volume operations",
+            "batch_mode": {
+              "provider": "openrouter",
+              "model": "amazon/nova-pro-v1",
+              "reason": "AWS Nova Pro - extremely cost-effective for batch"
+            },
+            "quick_analysis": {
+              "provider": "openrouter",
+              "model": "google/gemini-flash-1.5-8b",
+              "reason": "Gemini Flash - ultra-fast, minimal cost"
+            },
+            "long_context": {
+              "provider": "openrouter",
+              "model": "google/gemini-pro-1.5",
+              "reason": "1M token context for massive repos"
+            }
+          }
+        },
+
+        "implementation": {
+          "file": "app/core/portkey_manager.py",
+          "method": "enhance_route_request",
+          "logic": [
+            "Check SCOUT_PREFER_OPENROUTER flag",
+            "If true, check agent role and SCOUT_ENHANCED_SPECIALISTS",
+            "Route to specialized model based on role",
+            "Track routing decisions in metadata",
+            "Fall back to existing routing if specialized model unavailable"
+          ],
+
+          "env_variables": [
+            "SCOUT_PREFER_OPENROUTER=true",
+            "SCOUT_SYNTHESIS_PREMIUM=true  # Use Opus/GPT-5 for synthesis",
+            "SCOUT_BATCH_MODE=false  # Use batch-optimized models when true",
+            "SCOUT_COST_LIMIT_USD=1.0  # Per-execution cost limit"
+          ]
+        },
+
+        "cost_tracking": {
+          "description": "Enhanced cost tracking per model",
+          "implementation": "Add model-specific cost calculation in portkey_manager.py",
+          "pricing_table": {
+            "claude-3-opus": { "input": 0.015, "output": 0.075 },
+            "gpt-5": { "input": 0.02, "output": 0.08 },
+            "deepseek-chat-v3.1": { "input": 0.0001, "output": 0.0002 },
+            "qwen-qwq-32b": { "input": 0.0002, "output": 0.0004 },
+            "llama-3.3-70b": { "input": 0.00035, "output": 0.0004 },
+            "mistral-large-2411": { "input": 0.002, "output": 0.006 },
+            "nova-pro-v1": { "input": 0.00008, "output": 0.00032 },
+            "gemini-flash-1.5-8b": { "input": 0.000075, "output": 0.0003 }
+          }
+        }
+      }
+    },
+
+    {
+      "priority": 3,
+      "name": "Parallel Timeout with Partial Results",
+      "description": "Prevent slow agents from blocking synthesis",
+
+      "specification": {
+        "feature_flag": "SCOUT_PARALLEL_TIMEOUT_MS=30000",
+
+        "implementation": {
+          "file": "app/swarms/core/micro_swarm_base.py",
+          "method": "_execute_parallel",
+          "changes": [
+            {
+              "current": "responses = await asyncio.gather(*tasks, return_exceptions=True)",
+              "new": "responses = await asyncio.wait_for(asyncio.gather(*tasks, return_exceptions=True), timeout=timeout_ms/1000)"
+            },
+            {
+              "add": "Wrap in try/except asyncio.TimeoutError",
+              "behavior": "On timeout, collect completed responses and proceed with partial synthesis"
+            }
+          ],
+
+          "partial_synthesis": {
+            "min_agents": 1,
+            "metadata_flag": "partial_synthesis: true",
+            "warning": "Add to result.metadata which agents timed out",
+            "synthesis_prompt_addition": "Note: Some agents timed out. Synthesize available responses."
+          }
+        },
+
+        "env_variables": [
+          "SCOUT_PARALLEL_TIMEOUT_MS=30000  # 30 seconds default",
+          "SCOUT_PARTIAL_SYNTHESIS_MIN_AGENTS=1  # Minimum agents needed",
+          "SCOUT_TIMEOUT_RETRY=false  # Whether to retry timed-out agents"
+        ]
+      }
+    }
+  ],
+
+  "testing_plan": {
+    "phase_1_metrics": [
+      "Run scout task",
+      "./bin/sophia-run scout --json --task 'Test metrics'",
+      "Then check metrics",
+      "./bin/sophia-run metrics --recent",
+      "Verify all fields populated"
+    ],
+
+    "phase_2_routing": [
+      "Enable OpenRouter preference",
+      "export SCOUT_PREFER_OPENROUTER=true",
+      "export SCOUT_SYNTHESIS_PREMIUM=true",
+      "Run scout and check models used",
+      "./bin/sophia-run scout --json --task 'Test routing' | jq '.metrics'",
+      "./bin/sophia-run metrics --recent | jq '.models_used'"
+    ],
+
+    "phase_3_timeout": [
+      "Set aggressive timeout",
+      "export SCOUT_PARALLEL_TIMEOUT_MS=5000",
+      "Run complex task",
+      "./bin/sophia-run scout --json --task 'Analyze entire codebase' | jq '.metadata.partial_synthesis'",
+      "Should see partial_synthesis: true if any agent exceeded 5s"
+    ]
+  },
+
+  "validation_criteria": {
+    "metrics_command": [
+      "Shows timing breakdown per agent",
+      "Shows token usage per agent",
+      "Shows cost breakdown by provider",
+      "Shows confidence scores",
+      "Shows synthesis improvements (contradictions resolved, etc.)"
+    ],
+
+    "routing": [
+      "Synthesis uses Opus or GPT-5 when available",
+      "Specialists use designated OpenRouter models",
+      "Fallbacks work when primary unavailable",
+      "Cost tracking accurate for all models"
+    ],
+
+    "timeout": [
+      "Slow agents don't block synthesis",
+      "Partial results handled gracefully",
+      "Timeout events logged in metadata"
+    ]
+  },
+
+  "success_metrics": {
+    "cost_reduction": "50-70% reduction in per-scout cost with OpenRouter models",
+    "quality_maintenance": "Synthesis quality remains high with Opus/GPT-5",
+    "reliability": "No scout failures due to timeouts",
+    "visibility": "Complete metrics for all scout operations"
+  },
+
+  "codex_instructions": {
+    "approach": "Implement in priority order, test each phase before proceeding",
+    "testing": "Use the testing_plan commands after each implementation",
+    "models": "Add new models to approved_models.py if not present",
+    "documentation": "Update CLI help text for new metrics command",
+    "error_handling": "Graceful degradation if premium models unavailable"
+  }
+}

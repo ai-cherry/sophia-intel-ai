@@ -1,0 +1,42 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements/base.txt -r requirements/dev.txt
+
+      - name: Start infrastructure
+        run: |
+          docker compose -f docker-compose.yml up -d redis postgres weaviate
+          sleep 10
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v -k "not sophia" --cov=app --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-logs
+          path: tests/logs/
+

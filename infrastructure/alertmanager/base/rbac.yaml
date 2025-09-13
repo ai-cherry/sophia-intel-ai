@@ -1,0 +1,281 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertmanager
+  labels:
+    app: alertmanager
+    component: alerting
+rules:
+  # Core resources
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/metrics
+      - services
+      - endpoints
+      - pods
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - secrets
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources:
+      - namespaces
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - persistentvolumeclaims
+      - persistentvolumes
+    verbs: ["get", "list", "watch"]
+
+  # Extensions
+  - apiGroups: ["extensions"]
+    resources:
+      - ingresses
+    verbs: ["get", "list", "watch"]
+
+  # Apps
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - daemonsets
+      - replicasets
+      - statefulsets
+    verbs: ["get", "list", "watch"]
+
+  # Batch
+  - apiGroups: ["batch"]
+    resources:
+      - cronjobs
+      - jobs
+    verbs: ["get", "list", "watch"]
+
+  # Autoscaling
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+    verbs: ["get", "list", "watch"]
+
+  # Policy
+  - apiGroups: ["policy"]
+    resources:
+      - poddisruptionbudgets
+    verbs: ["get", "list", "watch"]
+
+  # Networking
+  - apiGroups: ["networking.k8s.io"]
+    resources:
+      - networkpolicies
+      - ingresses
+    verbs: ["get", "list", "watch"]
+
+  # Storage
+  - apiGroups: ["storage.k8s.io"]
+    resources:
+      - storageclasses
+      - volumeattachments
+    verbs: ["get", "list", "watch"]
+
+  # RBAC
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources:
+      - clusterrolebindings
+      - clusterroles
+      - roles
+      - rolebindings
+    verbs: ["get", "list", "watch"]
+
+  # Monitoring
+  - apiGroups: ["monitoring.coreos.com"]
+    resources:
+      - alertmanagers
+      - alertmanagerconfigs
+      - prometheuses
+      - prometheusrules
+      - servicemonitors
+      - podmonitors
+    verbs: ["get", "list", "watch"]
+
+  # Certificates
+  - apiGroups: ["certificates.k8s.io"]
+    resources:
+      - certificatesigningrequests
+    verbs: ["get", "list", "watch"]
+
+  # API Extensions
+  - apiGroups: ["apiextensions.k8s.io"]
+    resources:
+      - customresourcedefinitions
+    verbs: ["get", "list", "watch"]
+
+  # Metrics
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - nodes
+      - pods
+    verbs: ["get", "list"]
+
+  # Discovery
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - endpointslices
+    verbs: ["get", "list", "watch"]
+
+  # Non-resource URLs
+  - nonResourceURLs:
+      - /metrics
+      - /metrics/cadvisor
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: alertmanager
+  labels:
+    app: alertmanager
+    component: alerting
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: alertmanager
+subjects:
+  - kind: ServiceAccount
+    name: alertmanager
+    namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    resourceNames:
+      - alertmanager-config
+      - alertmanager-templates
+      - alertmanager-teams-templates
+      - alertmanager-pagerduty-templates
+      - alert-rules-sophia
+      - alert-rules-sophia
+      - alert-rules-infrastructure
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources:
+      - secrets
+    resourceNames:
+      - alertmanager-secrets
+      - alertmanager-oauth
+    verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources:
+      - persistentvolumeclaims
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["apps"]
+    resources:
+      - statefulsets
+    resourceNames:
+      - alertmanager
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources:
+      - pods
+    verbs: ["get", "list", "watch", "delete"]
+  - apiGroups: [""]
+    resources:
+      - pods/exec
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: alertmanager-config
+subjects:
+  - kind: ServiceAccount
+    name: alertmanager
+    namespace: monitoring
+---
+# Role for AlertManager UI access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertmanager-ui
+  labels:
+    app: alertmanager
+    component: alerting
+rules:
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - pods
+      - services
+    verbs: ["get", "list"]
+  - nonResourceURLs:
+      - /api/v1/alerts
+      - /api/v1/silences
+      - /api/v1/status
+    verbs: ["get", "post", "put", "delete"]
+---
+# ClusterRole for read-only access
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertmanager-viewer
+  labels:
+    app: alertmanager
+    component: alerting
+rules:
+  - apiGroups: [""]
+    resources:
+      - namespaces
+      - pods
+      - services
+    verbs: ["get", "list"]
+  - nonResourceURLs:
+      - /api/v1/alerts
+      - /api/v1/silences
+      - /api/v1/status
+    verbs: ["get"]
+---
+# ClusterRole for silence management
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: alertmanager-silence-operator
+  labels:
+    app: alertmanager
+    component: alerting
+rules:
+  - nonResourceURLs:
+      - /api/v1/silences
+      - /api/v1/silences/*
+    verbs: ["get", "post", "put", "delete"]
+  - nonResourceURLs:
+      - /api/v1/alerts
+    verbs: ["get"]

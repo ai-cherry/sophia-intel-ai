@@ -1,0 +1,187 @@
+{
+  "class": "DocFragment",
+  "description": "Represents documentation fragments, BI reports, and knowledge base content",
+  "vectorizer": "none",
+  "moduleConfig": {
+    "text2vec-openai": {
+      "vectorizeClassName": false
+    }
+  },
+  "properties": [
+    {
+      "name": "id",
+      "dataType": ["string"],
+      "description": "Unique identifier for the document fragment",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "repo",
+      "dataType": ["string"],
+      "description": "Repository name (sophia or sophia)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "source",
+      "dataType": ["string"],
+      "description": "Source type (markdown, confluence, notion, api_doc, bi_report)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "title",
+      "dataType": ["string"],
+      "description": "Document or section title",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "section",
+      "dataType": ["string"],
+      "description": "Section or chapter name within document",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "tags",
+      "dataType": ["string[]"],
+      "description": "Hierarchical ontology tags for filtering",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "content",
+      "dataType": ["text"],
+      "description": "Full text content of the fragment",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "summary",
+      "dataType": ["text"],
+      "description": "AI-generated summary of the content",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": false,
+          "vectorizePropertyName": false
+        }
+      }
+    },
+    {
+      "name": "business_domain",
+      "dataType": ["string"],
+      "description": "Business domain (finance, sales, marketing, operations, etc.)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "urgency",
+      "dataType": ["string"],
+      "description": "Content urgency level (critical, high, medium, low)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "last_updated",
+      "dataType": ["date"],
+      "description": "When this fragment was last updated",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "author",
+      "dataType": ["string"],
+      "description": "Author or creator of the content",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "keywords",
+      "dataType": ["string[]"],
+      "description": "Extracted keywords for enhanced BM25 matching",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "related_code",
+      "dataType": ["string[]"],
+      "description": "Related code files or symbols referenced in this document",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    },
+    {
+      "name": "metrics",
+      "dataType": ["object"],
+      "description": "Associated business metrics or KPIs (for BI content)",
+      "moduleConfig": {
+        "text2vec-openai": {
+          "skip": true
+        }
+      }
+    }
+  ],
+  "invertedIndexConfig": {
+    "bm25": {
+      "enabled": true,
+      "b": 0.75,
+      "k1": 1.2
+    },
+    "stopwords": {
+      "preset": "en",
+      "additions": ["API", "SDK", "CLI", "FAQ"]
+    }
+  },
+  "shardingConfig": {
+    "virtualPerPhysical": 128,
+    "desiredCount": 1,
+    "actualCount": 1,
+    "desiredVirtualCount": 128,
+    "actualVirtualCount": 128,
+    "key": "_id",
+    "strategy": "hash",
+    "function": "murmur3"
+  }
+}

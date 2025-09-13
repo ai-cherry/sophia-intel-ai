@@ -1,0 +1,1698 @@
+{
+  "primary": {
+    "path": "/Users/lynnmusil/sophia-intel-ai/dev_mcp_unified",
+    "files": [
+      {
+        "path": "mcp_stdio_server.py",
+        "size": 2273,
+        "classes": [],
+        "functions": ["_list_tools", "main", "_call_tool"],
+        "imports": [
+          "import asyncio",
+          "from mcp.server.stdio import stdio_server",
+          "from dev_mcp_unified.tools.semantic_search import semantic_search",
+          "from mcp.types import TextContent, Tool",
+          "from dev_mcp_unified.tools.symbol_lookup import symbol_lookup",
+          "from dev_mcp_unified.tools.test_runner import run_tests",
+          "from mcp.server import Server"
+        ]
+      },
+      {
+        "path": "__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "routers/user_management.py",
+        "size": 8947,
+        "classes": [
+          "InviteRequest",
+          "UserUpdateRequest",
+          "UserResponse",
+          "UserCreateRequest",
+          "AuditLogResponse",
+          "PermissionCheckRequest"
+        ],
+        "functions": [
+          "from_user",
+          "get_system_health",
+          "update_user",
+          "get_user",
+          "deactivate_user",
+          "list_permissions",
+          "invite_user",
+          "check_permission",
+          "create_user",
+          "list_users",
+          "get_current_user"
+        ],
+        "imports": [
+          "from fastapi import APIRouter, Depends, HTTPException, status",
+          "from pydantic import BaseModel, EmailStr",
+          "from datetime import datetime",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "tools/doc_extractor.py",
+        "size": 456,
+        "classes": [],
+        "functions": ["extract_docs"],
+        "imports": [
+          "from pathlib import Path",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "tools/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "tools/test_runner.py",
+        "size": 323,
+        "classes": [],
+        "functions": ["run_tests"],
+        "imports": ["import subprocess", "from __future__ import annotations"]
+      },
+      {
+        "path": "tools/symbol_lookup.py",
+        "size": 658,
+        "classes": [],
+        "functions": ["symbol_lookup"],
+        "imports": [
+          "import ast",
+          "from pathlib import Path",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "tools/semantic_search.py",
+        "size": 524,
+        "classes": [],
+        "functions": ["semantic_search"],
+        "imports": [
+          "from pathlib import Path",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "embeddings/local_provider.py",
+        "size": 1115,
+        "classes": ["LocalDeterministicEmbedding"],
+        "functions": ["embed_batch", "__init__", "dims"],
+        "imports": [
+          "import hashlib",
+          "from .provider import EmbeddingProvider",
+          "from __future__ import annotations",
+          "import struct"
+        ]
+      },
+      {
+        "path": "embeddings/provider.py",
+        "size": 238,
+        "classes": ["EmbeddingProvider"],
+        "functions": ["embed_batch", "dims"],
+        "imports": ["from __future__ import annotations"]
+      },
+      {
+        "path": "embeddings/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "embeddings/openai_provider.py",
+        "size": 1141,
+        "classes": ["OpenAIEmbedding"],
+        "functions": ["embed_batch", "__init__", "dims"],
+        "imports": [
+          "from .provider import EmbeddingProvider",
+          "import os",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "embeddings/ollama_provider.py",
+        "size": 902,
+        "classes": ["OllamaEmbedding"],
+        "functions": ["embed_batch", "__init__", "dims"],
+        "imports": [
+          "import httpx",
+          "from .provider import EmbeddingProvider",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "core/config.py",
+        "size": 5233,
+        "classes": ["Settings", "Config"],
+        "functions": [
+          "validate_environment",
+          "validate_api_keys",
+          "get_secure_headers",
+          "get_settings",
+          "parse_cors_origins",
+          "validate_repo_root"
+        ],
+        "imports": [
+          "from functools import lru_cache",
+          "from typing import Optional",
+          "from pathlib import Path",
+          "from pydantic import BaseSettings, SecretStr, validator"
+        ]
+      },
+      {
+        "path": "core/security.py",
+        "size": 12027,
+        "classes": [
+          "SecurityError",
+          "InputSanitizer",
+          "JWTManager",
+          "PathTraversalError",
+          "PathValidator",
+          "RequestSigner"
+        ],
+        "functions": [
+          "decorator",
+          "is_safe_path",
+          "create_token",
+          "sanitize_html",
+          "sanitize_sql_identifier",
+          "sanitize_filename",
+          "__init__",
+          "require_scope",
+          "get_safe_path",
+          "sign_request",
+          "verify_token",
+          "get_current_user",
+          "verify_signature",
+          "wrapper"
+        ],
+        "imports": [
+          "from typing import Optional",
+          "from functools import wraps",
+          "from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer",
+          "import re",
+          "from datetime import datetime, timedelta",
+          "from pathlib import Path",
+          "from fastapi import Depends, HTTPException",
+          "import hashlib",
+          "import secrets",
+          "import jwt",
+          "import hmac"
+        ]
+      },
+      {
+        "path": "core/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "core/model_discovery.py",
+        "size": 16342,
+        "classes": ["ModelDiscoveryService", "ModelInfo"],
+        "functions": [
+          "__post_init__",
+          "_categorize_models",
+          "discover_all_models",
+          "_load_from_cache",
+          "_generate_categories_metadata",
+          "main",
+          "__init__",
+          "_validate_models_batch",
+          "_save_to_cache",
+          "_test_model",
+          "_is_cache_valid",
+          "_fetch_models_from_api",
+          "_get_default_models"
+        ],
+        "imports": [
+          "from dataclasses import asdict, dataclass",
+          "import asyncio",
+          "from datetime import datetime, timedelta",
+          "from pathlib import Path",
+          "import os",
+          "import json",
+          "from typing import Any, Optional",
+          "import httpx"
+        ]
+      },
+      {
+        "path": "core/context_engine.py",
+        "size": 4542,
+        "classes": ["ContextEngine", "ContextBundle"],
+        "functions": [
+          "_read_file",
+          "_load_rules",
+          "_ctx_snippet",
+          "build_context",
+          "select_action",
+          "_ctx_ast_symbols",
+          "__init__",
+          "_ctx_pattern",
+          "_ctx_full_with_deps"
+        ],
+        "imports": [
+          "from pathlib import Path",
+          "from dataclasses import dataclass",
+          "import yaml",
+          "import ast",
+          "from typing import Any",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "core/rbac_integration.py",
+        "size": 3996,
+        "classes": [],
+        "functions": [
+          "add_rbac_middleware",
+          "integrate_rbac_with_mcp_server",
+          "rbac_middleware",
+          "_initialize_rbac_database"
+        ],
+        "imports": [
+          "from importlib import import_module",
+          "from dev_mcp_unified.routers.user_management import router as user_management_router",
+          "import sys",
+          "import os",
+          "import and",
+          "from fastapi import FastAPI",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "core/job_queue.py",
+        "size": 1552,
+        "classes": ["JobQueue", "Job"],
+        "functions": [
+          "register",
+          "stop",
+          "__init__",
+          "_worker",
+          "start",
+          "enqueue"
+        ],
+        "imports": [
+          "import asyncio",
+          "from typing import Any, Callable",
+          "from dataclasses import dataclass, field"
+        ]
+      },
+      {
+        "path": "core/simple_key_manager.py",
+        "size": 763,
+        "classes": ["KeyProvider"],
+        "functions": ["get_key"],
+        "imports": [
+          "from typing import Optional",
+          "import os",
+          "from enum import Enum"
+        ]
+      },
+      {
+        "path": "core/mcp_server.py",
+        "size": 129560,
+        "classes": [
+          "FileWriteRequest",
+          "FileReadRequest",
+          "CommunicationStyle",
+          "AgentPersona",
+          "QueryRequest",
+          "AuthRequest",
+          "FileEditRequest",
+          "BehavioralPatterns",
+          "FilePreviewRequest",
+          "RunJobRequest",
+          "ORChatRequest",
+          "UniversalChatRequest",
+          "PersonalityTraits",
+          "ExpertiseProfile",
+          "TrainingRequest",
+          "AgentDefinition",
+          "SwarmBlueprint",
+          "ResearchRequest",
+          "ChatRequest",
+          "PreviewRequest"
+        ],
+        "functions": [
+          "root",
+          "index_stats",
+          "chat_with_persona",
+          "create_custom_persona",
+          "tool_vec_search",
+          "list_research_projects",
+          "get_crm_pipeline",
+          "factory_get_swarm_info",
+          "universal_chat",
+          "execute_quality_control_audit",
+          "get_persona",
+          "proxy_openrouter_stream",
+          "_create_research_workflow",
+          "background_list",
+          "login",
+          "factory_execute_swarm",
+          "factory_list_swarms",
+          "business_signals",
+          "sales_websocket_call",
+          "execute_ui_development_task",
+          "get_team_dashboard",
+          "factory_get_templates",
+          "do_index",
+          "get_persona_team",
+          "universal_chat_stream",
+          "_calculate_research_time",
+          "init_audit_db",
+          "get_call_dashboard",
+          "tool_docs",
+          "approve_agent_action",
+          "is_safe_path",
+          "get_persona_info",
+          "get_all_personas",
+          "tool_search",
+          "get_recent_calls",
+          "get_persona_health",
+          "gong_recent",
+          "write_file",
+          "query",
+          "trigger_deployment_rollback",
+          "execute_deployment_task",
+          "sales_intelligence_query",
+          "get_swarms_status",
+          "business_analytics",
+          "query_stream",
+          "start_research_automation",
+          "_extract_business_entities",
+          "optimize_project_with_ai",
+          "_get_research_agents",
+          "validate_custom_template",
+          "list_routes",
+          "bad",
+          "edit_file",
+          "factory_create_swarm",
+          "get_sophia_knowledge_status",
+          "get_business_dashboard",
+          "get_templates_by_industry",
+          "analyze_call_with_ai",
+          "start_call_monitoring",
+          "serve_voice_file",
+          "check_rate_limit",
+          "admin_panel",
+          "get_project_overview",
+          "deploy_agent_to_repository",
+          "preview_changes",
+          "get_template_details",
+          "log_change",
+          "get_research_status",
+          "sales_websocket_general",
+          "_probe",
+          "get_db_connection",
+          "monitor_agent_execution",
+          "list_research_templates",
+          "background_run",
+          "serve_agent_dashboard",
+          "gen",
+          "list_domains",
+          "factory_delete_swarm",
+          "train_sophia_brain",
+          "git_diff",
+          "execute_orchestrated_pipeline",
+          "trigger_business_workflow",
+          "tool_symbols",
+          "verify_token",
+          "proxy_openrouter",
+          "generate",
+          "read_file",
+          "factory_get_patterns",
+          "_create_knowledge_relationships",
+          "healthz",
+          "execute_web_research_task",
+          "business_leads",
+          "get_deployment_status",
+          "business_message_preview",
+          "background_logs",
+          "get_audit_log",
+          "initialize_sales_intelligence",
+          "proxy_openrouter_models",
+          "factory_health_check",
+          "tool_tests",
+          "sales_dashboard",
+          "_gong_auth_header",
+          "on_start",
+          "get_crm_contacts",
+          "git_status"
+        ],
+        "imports": [
+          "from dotenv import load_dotenv",
+          "import asyncio",
+          "import subprocess",
+          "from dev_mcp_unified.llm_adapters.deepseek_adapter import DeepSeekAdapter",
+          "from dev_mcp_unified.tools.semantic_search import semantic_search",
+          "from dev_mcp_unified.core.rbac_integration import integrate_rbac_with_mcp_server",
+          "import sqlite3",
+          "import logging",
+          "from dev_mcp_unified.llm_adapters.base_adapter import LLMRequest",
+          "from dev_mcp_unified.tools.doc_extractor import extract_docs",
+          "from app.swarms.research.industry_research_templates import template_orchestrator",
+          "import httpx",
+          "import uuid",
+          "from dev_mcp_unified.tools.symbol_lookup import symbol_lookup",
+          "from app.personas.persona_manager import get_persona_manager",
+          "from dev_mcp_unified.core.simple_key_manager import KeyProvider, get_key",
+          "from dev_mcp_unified.llm_adapters.openrouter_adapter import OpenRouterAdapter",
+          "from dev_mcp_unified.embeddings.local_provider import LocalDeterministicEmbedding",
+          "from pydantic import BaseModel",
+          "import shutil",
+          "from dev_mcp_unified.llm_adapters.openai_adapter import OpenAIAdapter",
+          "import secrets",
+          "from typing import Any",
+          "from dev_mcp_unified.llm_adapters.qwen_adapter import QwenAdapter",
+          "import jwt",
+          "from app.swarms.specialized.quality_control_swarm import quality_control_swarm",
+          "from dev_mcp_unified.core.job_queue import Job, JobQueue",
+          "from app.swarms.specialized.web_research_swarm import web_research_swarm",
+          "from app.swarms.specialized.deployment_swarm import deployment_swarm",
+          "import base64",
+          "import difflib",
+          "from contextlib import contextmanager",
+          "from app.swarms.specialized.ui_development_swarm import ui_development_swarm",
+          "from dev_mcp_unified.storage.vector_store import ChromaVectorStore, InMemoryVectorStore",
+          "from pathlib import Path",
+          "from dev_mcp_unified.llm_adapters.claude_adapter import ClaudeAdapter",
+          "import json",
+          "from fnmatch import fnmatch",
+          "from app.indexing.vector_store import VectorStore",
+          "from dev_mcp_unified.core.context_engine import ContextEngine",
+          "from starlette.responses import StreamingResponse",
+          "from dev_mcp_unified.tools.test_runner import run_tests",
+          "from app.swarms.sales_intelligence.dashboard import get_dashboard_html",
+          "from dev_mcp_unified.embeddings.ollama_provider import OllamaEmbedding",
+          "from dev_mcp_unified.indexing.indexer import index_path",
+          "import time",
+          "from fastapi.responses import HTMLResponse",
+          "from dataclasses import asdict",
+          "from fastapi import Depends, FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect",
+          "from fastapi.responses import HTMLResponse, StreamingResponse",
+          "from datetime import datetime, timedelta",
+          "from app.core.super_orchestrator import get_orchestrator",
+          "import re",
+          "import os",
+          "from fastapi.staticfiles import StaticFiles",
+          "from dev_mcp_unified.embeddings.openai_provider import OpenAIEmbedding",
+          "from __future__ import annotations",
+          "from dev_mcp_unified.auth.rbac_manager import Permission, rbac_manager",
+          "from fastapi.middleware.cors import CORSMiddleware"
+        ]
+      },
+      {
+        "path": "core/validation.py",
+        "size": 11277,
+        "classes": [
+          "FilePathValidator",
+          "FileWriteRequest",
+          "FileReadRequest",
+          "DatabaseQueryRequest",
+          "FileDeleteRequest",
+          "SearchRequest",
+          "RateLimitRequest",
+          "QueryRequestModel",
+          "DirectoryListRequest",
+          "AuthenticationRequest"
+        ],
+        "functions": [
+          "must_confirm",
+          "validate_password_strength",
+          "validate_data_types",
+          "sanitize_question",
+          "validate_file_path",
+          "validate_endpoint",
+          "validate_task",
+          "check_content_safety",
+          "validate_table_name",
+          "sanitize_search_query",
+          "validate_pattern"
+        ],
+        "imports": [
+          "import re",
+          "from datetime import datetime",
+          "from pydantic import BaseModel, Field, conint, constr, validator",
+          "from typing import Any, Literal, Optional"
+        ]
+      },
+      {
+        "path": "auth/rbac_manager.py",
+        "size": 9149,
+        "classes": ["User", "Permission", "RBACManager", "UserRole"],
+        "functions": [
+          "__post_init__",
+          "decorator",
+          "get_user",
+          "require_permission",
+          "has_permission",
+          "get_user_by_email",
+          "__init__",
+          "verify_token_with_permissions",
+          "check_permission",
+          "create_user",
+          "list_users",
+          "update_user_role",
+          "_init_database",
+          "wrapper"
+        ],
+        "imports": [
+          "from fastapi import Depends, Header, HTTPException",
+          "from dataclasses import dataclass",
+          "import os",
+          "import sqlite3",
+          "from datetime import datetime",
+          "from __future__ import annotations",
+          "import jwt",
+          "import uuid",
+          "from dev_mcp_unified.core.mcp_server import SECRET_KEY",
+          "from enum import Enum"
+        ]
+      },
+      {
+        "path": "storage/vector_store.py",
+        "size": 3276,
+        "classes": ["InMemoryVectorStore", "ChromaVectorStore", "VectorStore"],
+        "functions": ["norm", "__init__", "dot", "upsert", "query"],
+        "imports": [
+          "from pathlib import Path",
+          "import chromadb",
+          "from typing import Any",
+          "from __future__ import annotations",
+          "from chromadb.config import Settings  ",
+          "import math"
+        ]
+      },
+      {
+        "path": "integrations/error_handling.py",
+        "size": 22033,
+        "classes": [
+          "CircuitBreakerConfig",
+          "CircuitBreaker",
+          "IntegrationError",
+          "BIIntegrationErrorHandler",
+          "IntegrationStatus",
+          "RetryConfig",
+          "ErrorType",
+          "FallbackConfig",
+          "IntegrationCache"
+        ],
+        "functions": [
+          "with_retry",
+          "get_circuit_breaker",
+          "clear",
+          "record_success",
+          "should_retry",
+          "example_integration_with_error_handling",
+          "_get_mock_data",
+          "get_error_summary",
+          "get_health_report",
+          "_should_attempt_reset",
+          "decorator",
+          "can_execute",
+          "record_error",
+          "get_gong_calls",
+          "with_integration_error_handling",
+          "create_error",
+          "_update_platform_status",
+          "_execute_fallback",
+          "_get_degraded_response",
+          "execute",
+          "set",
+          "get",
+          "calculate_delay",
+          "wrapper",
+          "classify_error",
+          "_calculate_overall_health",
+          "__init__",
+          "record_failure"
+        ],
+        "imports": [
+          "import time",
+          "from functools import wraps",
+          "import asyncio",
+          "from dataclasses import dataclass, field",
+          "from datetime import datetime, timedelta",
+          "import contextlib",
+          "import json",
+          "import logging",
+          "from typing import Any, Callable, Optional",
+          "import httpx",
+          "import random",
+          "from enum import Enum"
+        ]
+      },
+      {
+        "path": "llm_adapters/openrouter_adapter.py",
+        "size": 3434,
+        "classes": ["OpenRouterAdapter"],
+        "functions": ["select_model", "complete"],
+        "imports": [
+          "import httpx",
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "import asyncio",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/qwen_adapter.py",
+        "size": 353,
+        "classes": ["QwenAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "llm_adapters/claude_adapter.py",
+        "size": 2162,
+        "classes": ["ClaudeAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "import httpx",
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "import asyncio",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/openai_adapter.py",
+        "size": 2047,
+        "classes": ["OpenAIAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "import httpx",
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "import asyncio",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/base_adapter.py",
+        "size": 540,
+        "classes": ["BaseLLMAdapter", "LLMRequest", "LLMResponse"],
+        "functions": ["__init__", "complete"],
+        "imports": [
+          "from typing import Any",
+          "from dataclasses import dataclass",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/deepseek_adapter.py",
+        "size": 2176,
+        "classes": ["DeepSeekAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "import httpx",
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "import asyncio",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "indexing/chunker.py",
+        "size": 8913,
+        "classes": ["definition", "ASTAwareChunker"],
+        "functions": [
+          "chunk_markdown",
+          "chunk_file",
+          "iter_files",
+          "chunk_python",
+          "_extract_node_chunk",
+          "__init__",
+          "_fallback_chunk",
+          "ast_aware_chunks",
+          "simple_chunks",
+          "chunk_javascript"
+        ],
+        "imports": [
+          "from collections.abc import Iterable",
+          "import re",
+          "from pathlib import Path",
+          "import ast",
+          "from typing import Any",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "indexing/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "indexing/indexer.py",
+        "size": 1686,
+        "classes": [],
+        "functions": ["index_path", "_file_summary", "content_hash"],
+        "imports": [
+          "from dev_mcp_unified.embeddings.provider import EmbeddingProvider",
+          "from .chunker import iter_files, simple_chunks",
+          "from dev_mcp_unified.storage.vector_store import VectorStore",
+          "import hashlib",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "monitoring/monitor.py",
+        "size": 10796,
+        "classes": ["MCPMonitor", "BackgroundIndexer"],
+        "functions": [
+          "index_repository",
+          "get_current_stats",
+          "get_process_stats",
+          "monitor_loop",
+          "stop",
+          "__init__",
+          "check_mcp_server_health",
+          "watch_loop",
+          "start_monitoring",
+          "start",
+          "get_memory_stats",
+          "get_cpu_stats"
+        ],
+        "imports": [
+          "import time",
+          "import asyncio",
+          "import psutil",
+          "import sys",
+          "from pathlib import Path",
+          "from dev_mcp_unified.embeddings.local_provider import LocalDeterministicEmbedding",
+          "import json",
+          "from dev_mcp_unified.indexing.chunker import ASTAwareChunker, iter_files",
+          "from datetime import datetime",
+          "from typing import Any",
+          "from __future__ import annotations",
+          "from dev_mcp_unified.storage.vector_store import InMemoryVectorStore",
+          "import httpx",
+          "import threading"
+        ]
+      }
+    ],
+    "servers": ["mcp_stdio_server.py", "core/mcp_server.py"],
+    "configs": [],
+    "capabilities": [
+      "InviteRequest",
+      "UserUpdateRequest",
+      "UserResponse",
+      "UserCreateRequest",
+      "AuditLogResponse",
+      "PermissionCheckRequest",
+      "Settings",
+      "Config",
+      "SecurityError",
+      "InputSanitizer",
+      "JWTManager",
+      "PathTraversalError",
+      "PathValidator",
+      "RequestSigner",
+      "FileWriteRequest",
+      "FileReadRequest",
+      "CommunicationStyle",
+      "AgentPersona",
+      "QueryRequest",
+      "AuthRequest",
+      "FileEditRequest",
+      "BehavioralPatterns",
+      "FilePreviewRequest",
+      "RunJobRequest",
+      "ORChatRequest",
+      "UniversalChatRequest",
+      "PersonalityTraits",
+      "ExpertiseProfile",
+      "TrainingRequest",
+      "AgentDefinition",
+      "SwarmBlueprint",
+      "ResearchRequest",
+      "ChatRequest",
+      "PreviewRequest",
+      "FilePathValidator",
+      "FileWriteRequest",
+      "FileReadRequest",
+      "DatabaseQueryRequest",
+      "FileDeleteRequest",
+      "SearchRequest",
+      "RateLimitRequest",
+      "QueryRequestModel",
+      "DirectoryListRequest",
+      "AuthenticationRequest",
+      "OpenRouterAdapter",
+      "MCPMonitor",
+      "BackgroundIndexer"
+    ],
+    "dependencies": []
+  },
+  "dev-mcp-unified": {
+    "path": "/Users/lynnmusil/sophia-intel-ai/dev-mcp-unified",
+    "files": [
+      {
+        "path": "test_six_models.py",
+        "size": 5693,
+        "classes": [],
+        "functions": ["test_model", "main"],
+        "imports": [
+          "import httpx",
+          "from dotenv import load_dotenv",
+          "import os",
+          "import asyncio"
+        ]
+      },
+      {
+        "path": "smoke_test_inproc.py",
+        "size": 521,
+        "classes": [],
+        "functions": ["run"],
+        "imports": [
+          "from dev_mcp_unified.core.mcp_server import app",
+          "from fastapi.testclient import TestClient",
+          "import os"
+        ]
+      },
+      {
+        "path": "__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "setup.py",
+        "size": 719,
+        "classes": [],
+        "functions": [],
+        "imports": ["from setuptools import find_packages, setup"]
+      },
+      {
+        "path": "test_all_features.py",
+        "size": 12409,
+        "classes": [],
+        "functions": [
+          "print_result",
+          "test_streaming",
+          "test_vector_search",
+          "test_openrouter_routing",
+          "main",
+          "test_llm_adapters",
+          "check_monitoring_stats",
+          "test_server_health",
+          "test_background_jobs",
+          "test_semantic_search",
+          "test_ui_availability",
+          "test_symbol_lookup",
+          "print_section"
+        ],
+        "imports": [
+          "import httpx",
+          "from pathlib import Path",
+          "import json",
+          "import asyncio"
+        ]
+      },
+      {
+        "path": "test_models.py",
+        "size": 4977,
+        "classes": [],
+        "functions": [
+          "test_model_chat",
+          "test_models_endpoint",
+          "main",
+          "test_user_specified_models"
+        ],
+        "imports": ["import httpx", "import asyncio"]
+      },
+      {
+        "path": "tools/doc_extractor.py",
+        "size": 493,
+        "classes": [],
+        "functions": ["extract_docs"],
+        "imports": [
+          "from pathlib import Path",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "tools/__init__.py",
+        "size": 1,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "tools/test_runner.py",
+        "size": 379,
+        "classes": [],
+        "functions": ["run_tests"],
+        "imports": ["import subprocess", "from __future__ import annotations"]
+      },
+      {
+        "path": "tools/symbol_lookup.py",
+        "size": 658,
+        "classes": [],
+        "functions": ["symbol_lookup"],
+        "imports": [
+          "import ast",
+          "from pathlib import Path",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "tools/semantic_search.py",
+        "size": 600,
+        "classes": [],
+        "functions": ["semantic_search"],
+        "imports": [
+          "from pathlib import Path",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "core/key_manager.py",
+        "size": 8820,
+        "classes": ["APIKeyConfig", "KeyProvider", "SecureKeyManager"],
+        "functions": [
+          "_validate_anthropic",
+          "_init_encryption",
+          "_load_encrypted_keys",
+          "validate_key",
+          "mask_key",
+          "_init_default_keys",
+          "set_key",
+          "_save_encrypted_keys",
+          "_validate_deepseek",
+          "_validate_qwen",
+          "__init__",
+          "get_key",
+          "get_all_keys",
+          "_validate_openai"
+        ],
+        "imports": [
+          "from typing import Optional",
+          "from cryptography.fernet import Fernet",
+          "import anthropic",
+          "from dataclasses import dataclass",
+          "import os",
+          "import json",
+          "from pathlib import Path",
+          "import logging",
+          "import keyring",
+          "import requests",
+          "import openai",
+          "from enum import Enum"
+        ]
+      },
+      {
+        "path": "core/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "core/context_engine.py",
+        "size": 4705,
+        "classes": ["ContextEngine", "ContextBundle"],
+        "functions": [
+          "_read_file",
+          "_load_rules",
+          "_ctx_snippet",
+          "build_context",
+          "select_action",
+          "_ctx_ast_symbols",
+          "__init__",
+          "_ctx_pattern",
+          "_ctx_full_with_deps"
+        ],
+        "imports": [
+          "from pathlib import Path",
+          "from dataclasses import dataclass",
+          "import yaml",
+          "import ast",
+          "from typing import Any",
+          "from __future__ import annotations",
+          "import scan"
+        ]
+      },
+      {
+        "path": "core/job_queue.py",
+        "size": 1552,
+        "classes": ["JobQueue", "Job"],
+        "functions": [
+          "register",
+          "stop",
+          "__init__",
+          "_worker",
+          "start",
+          "enqueue"
+        ],
+        "imports": [
+          "import asyncio",
+          "from typing import Any, Callable",
+          "from dataclasses import dataclass, field"
+        ]
+      },
+      {
+        "path": "core/simple_key_manager.py",
+        "size": 632,
+        "classes": ["KeyProvider"],
+        "functions": ["get_key"],
+        "imports": [
+          "from typing import Optional",
+          "import os",
+          "from enum import Enum"
+        ]
+      },
+      {
+        "path": "core/mcp_server.py",
+        "size": 1182,
+        "classes": [],
+        "functions": ["proxy"],
+        "imports": [
+          "from dotenv import load_dotenv",
+          "from aiohttp import ClientSession, web",
+          "import os",
+          "import logging",
+          "import aiohttp_cors"
+        ]
+      },
+      {
+        "path": "config/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "storage/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "llm_adapters/qwen_adapter.py",
+        "size": 360,
+        "classes": ["QwenAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/__init__.py",
+        "size": 0,
+        "classes": [],
+        "functions": [],
+        "imports": []
+      },
+      {
+        "path": "llm_adapters/claude_adapter.py",
+        "size": 520,
+        "classes": ["ClaudeAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/openai_adapter.py",
+        "size": 366,
+        "classes": ["OpenAIAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/base_adapter.py",
+        "size": 540,
+        "classes": ["BaseLLMAdapter", "LLMRequest", "LLMResponse"],
+        "functions": ["__init__", "complete"],
+        "imports": [
+          "from typing import Any",
+          "from dataclasses import dataclass",
+          "from __future__ import annotations"
+        ]
+      },
+      {
+        "path": "llm_adapters/deepseek_adapter.py",
+        "size": 372,
+        "classes": ["DeepSeekAdapter"],
+        "functions": ["complete"],
+        "imports": [
+          "from .base_adapter import BaseLLMAdapter, LLMRequest, LLMResponse",
+          "from __future__ import annotations"
+        ]
+      }
+    ],
+    "servers": ["core/mcp_server.py"],
+    "configs": [
+      "data/models_cache.json",
+      "data/model_categories.json",
+      ".env.local",
+      ".env.template"
+    ],
+    "capabilities": [
+      "APIKeyConfig",
+      "KeyProvider",
+      "SecureKeyManager",
+      "ContextEngine",
+      "ContextBundle"
+    ],
+    "dependencies": []
+  },
+  "app/mcp": {
+    "path": "/Users/lynnmusil/sophia-intel-ai/app/mcp",
+    "files": [
+      {
+        "path": "memory_adapter.py",
+        "size": 2601,
+        "classes": ["UnifiedMemoryAdapter"],
+        "functions": ["__init__", "store_conversation", "retrieve_context"],
+        "imports": [
+          "import httpx",
+          "from typing import Optional",
+          "import redis.asyncio",
+          "import json"
+        ]
+      },
+      {
+        "path": "python_adapter.py",
+        "size": 624,
+        "classes": ["PythonAgentClient"],
+        "functions": [
+          "__init__",
+          "initialize",
+          "search_memory",
+          "store_memory"
+        ],
+        "imports": [
+          "from app.mcp.assistant_coordinator import MCPAssistantCoordinator"
+        ]
+      },
+      {
+        "path": "server_v2.py",
+        "size": 20191,
+        "classes": [
+          "MemorySearchRequest",
+          "MemoryDeleteRequest",
+          "EnhancedMCPServer",
+          "MemoryUpdateRequest",
+          "MemoryStoreRequest",
+          "MCPInitRequest"
+        ],
+        "functions": [
+          "trace_requests",
+          "shutdown",
+          "refresh_token",
+          "close_session",
+          "add_security_headers",
+          "delete_memory",
+          "startup",
+          "initialize",
+          "health",
+          "get_or_generate_embedding",
+          "get_available_endpoints",
+          "update_memory",
+          "setup_middleware",
+          "broadcast_memory_update",
+          "__init__",
+          "setup_routes",
+          "metrics",
+          "verify_token",
+          "store_memory",
+          "search_memory"
+        ],
+        "imports": [
+          "import time",
+          "from fastapi import Depends, FastAPI, HTTPException, Request",
+          "from app.core.cost_monitor import CostRequest, get_cost_monitor",
+          "from opentelemetry.trace import Status, StatusCode",
+          "import structlog",
+          "from app.core.circuit_breaker import with_circuit_breaker",
+          "from pydantic import BaseModel, Field",
+          "import os",
+          "import uvicorn",
+          "from app.memory.unified_memory import UnifiedMemoryStore",
+          "from datetime import datetime",
+          "from typing import Any, Optional",
+          "import uuid",
+          "from opentelemetry import trace",
+          "from fastapi.middleware.cors import CORSMiddleware",
+          "from prometheus_client import Counter, Gauge, Histogram, generate_latest"
+        ]
+      },
+      {
+        "path": "assistant_coordinator.py",
+        "size": 1498,
+        "classes": ["MCPAssistantCoordinator"],
+        "functions": [
+          "_call_mcp",
+          "memory_search",
+          "initialize",
+          "memory_store",
+          "__init__"
+        ],
+        "imports": ["import httpx"]
+      },
+      {
+        "path": "secure_mcp_server.py",
+        "size": 15102,
+        "classes": [
+          "SecureMCPServer",
+          "MCPSecurityManager",
+          "ResourceIndicator",
+          "MCPCloudIntegration"
+        ],
+        "functions": [
+          "generate_resource_indicator",
+          "_update_metrics",
+          "execute_cloud_tool",
+          "generate_token",
+          "execute_tool",
+          "authenticate",
+          "websocket_endpoint",
+          "create_secure_mcp_server",
+          "secure_memory_search",
+          "health_check",
+          "is_valid",
+          "revoke_token",
+          "validate_resource",
+          "__init__",
+          "secure_code_generation",
+          "metrics",
+          "register_tool",
+          "validate_token",
+          "_setup_routes"
+        ],
+        "imports": [
+          "import time",
+          "from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer",
+          "import asyncio",
+          "from aiobreaker import CircuitBreaker",
+          "from datetime import datetime, timedelta",
+          "from dataclasses import dataclass",
+          "from app.core.ai_logger import logger",
+          "import uvicorn",
+          "from collections.abc import Callable",
+          "import hashlib",
+          "from typing import Any",
+          "import jwt",
+          "from fastapi import Depends, FastAPI, HTTPException, WebSocket",
+          "import httpx"
+        ]
+      }
+    ],
+    "servers": ["secure_mcp_server.py"],
+    "configs": [
+      "code_review_server/package-lock.json",
+      "code_review_server/package.json",
+      "code_review_server/tsconfig.json",
+      "code_review_server/node_modules/.package-lock.json",
+      "code_review_server/node_modules/tdigest/package.json",
+      "code_review_server/node_modules/toidentifier/package.json",
+      "code_review_server/node_modules/content-type/package.json",
+      "code_review_server/node_modules/es-errors/package.json",
+      "code_review_server/node_modules/es-errors/tsconfig.json",
+      "code_review_server/node_modules/ms/package.json",
+      "code_review_server/node_modules/content-disposition/package.json",
+      "code_review_server/node_modules/math-intrinsics/package.json",
+      "code_review_server/node_modules/math-intrinsics/tsconfig.json",
+      "code_review_server/node_modules/proxy-addr/package.json",
+      "code_review_server/node_modules/depd/package.json",
+      "code_review_server/node_modules/bintrees/package.json",
+      "code_review_server/node_modules/range-parser/package.json",
+      "code_review_server/node_modules/side-channel-list/package.json",
+      "code_review_server/node_modules/side-channel-list/tsconfig.json",
+      "code_review_server/node_modules/bytes/package.json",
+      "code_review_server/node_modules/call-bind-apply-helpers/package.json",
+      "code_review_server/node_modules/call-bind-apply-helpers/tsconfig.json",
+      "code_review_server/node_modules/express/package.json",
+      "code_review_server/node_modules/encodeurl/package.json",
+      "code_review_server/node_modules/once/package.json",
+      "code_review_server/node_modules/merge-descriptors/package.json",
+      "code_review_server/node_modules/safe-buffer/package.json",
+      "code_review_server/node_modules/function-bind/package.json",
+      "code_review_server/node_modules/ee-first/package.json",
+      "code_review_server/node_modules/typescript/package.json",
+      "code_review_server/node_modules/inherits/package.json",
+      "code_review_server/node_modules/iconv-lite/package.json",
+      "code_review_server/node_modules/es-define-property/package.json",
+      "code_review_server/node_modules/es-define-property/tsconfig.json",
+      "code_review_server/node_modules/fresh/package.json",
+      "code_review_server/node_modules/get-intrinsic/package.json",
+      "code_review_server/node_modules/qs/package.json",
+      "code_review_server/node_modules/call-bound/package.json",
+      "code_review_server/node_modules/call-bound/tsconfig.json",
+      "code_review_server/node_modules/dunder-proto/package.json",
+      "code_review_server/node_modules/dunder-proto/tsconfig.json",
+      "code_review_server/node_modules/path-to-regexp/package.json",
+      "code_review_server/node_modules/hasown/package.json",
+      "code_review_server/node_modules/hasown/tsconfig.json",
+      "code_review_server/node_modules/safer-buffer/package.json",
+      "code_review_server/node_modules/side-channel-weakmap/package.json",
+      "code_review_server/node_modules/side-channel-weakmap/tsconfig.json",
+      "code_review_server/node_modules/is-promise/package.json",
+      "code_review_server/node_modules/mime-types/package.json",
+      "code_review_server/node_modules/undici-types/package.json",
+      "code_review_server/node_modules/type-is/package.json",
+      "code_review_server/node_modules/vary/package.json",
+      "code_review_server/node_modules/unpipe/package.json",
+      "code_review_server/node_modules/has-symbols/package.json",
+      "code_review_server/node_modules/has-symbols/tsconfig.json",
+      "code_review_server/node_modules/raw-body/package.json",
+      "code_review_server/node_modules/http-errors/package.json",
+      "code_review_server/node_modules/accepts/package.json",
+      "code_review_server/node_modules/cookie-signature/package.json",
+      "code_review_server/node_modules/forwarded/package.json",
+      "code_review_server/node_modules/negotiator/package.json",
+      "code_review_server/node_modules/body-parser/package.json",
+      "code_review_server/node_modules/prom-client/package.json",
+      "code_review_server/node_modules/side-channel/package.json",
+      "code_review_server/node_modules/side-channel/tsconfig.json",
+      "code_review_server/node_modules/serve-static/package.json",
+      "code_review_server/node_modules/get-proto/package.json",
+      "code_review_server/node_modules/get-proto/tsconfig.json",
+      "code_review_server/node_modules/ipaddr.js/package.json",
+      "code_review_server/node_modules/cookie/package.json",
+      "code_review_server/node_modules/gopd/package.json",
+      "code_review_server/node_modules/gopd/tsconfig.json",
+      "code_review_server/node_modules/escape-html/package.json",
+      "code_review_server/node_modules/statuses/codes.json",
+      "code_review_server/node_modules/statuses/package.json",
+      "code_review_server/node_modules/parseurl/package.json",
+      "code_review_server/node_modules/etag/package.json",
+      "code_review_server/node_modules/wrappy/package.json",
+      "code_review_server/node_modules/send/package.json",
+      "code_review_server/node_modules/finalhandler/package.json",
+      "code_review_server/node_modules/side-channel-map/package.json",
+      "code_review_server/node_modules/side-channel-map/tsconfig.json",
+      "code_review_server/node_modules/object-inspect/package.json",
+      "code_review_server/node_modules/object-inspect/package-support.json",
+      "code_review_server/node_modules/on-finished/package.json",
+      "code_review_server/node_modules/debug/package.json",
+      "code_review_server/node_modules/media-typer/package.json",
+      "code_review_server/node_modules/mime-db/db.json",
+      "code_review_server/node_modules/mime-db/package.json",
+      "code_review_server/node_modules/es-object-atoms/package.json",
+      "code_review_server/node_modules/es-object-atoms/tsconfig.json",
+      "code_review_server/node_modules/router/package.json",
+      "code_review_server/node_modules/setprototypeof/package.json",
+      "code_review_server/node_modules/@types/express-serve-static-core/package.json",
+      "code_review_server/node_modules/@types/range-parser/package.json",
+      "code_review_server/node_modules/@types/express/package.json",
+      "code_review_server/node_modules/@types/qs/package.json",
+      "code_review_server/node_modules/@types/http-errors/package.json",
+      "code_review_server/node_modules/@types/body-parser/package.json",
+      "code_review_server/node_modules/@types/serve-static/package.json",
+      "code_review_server/node_modules/@types/mime/package.json",
+      "code_review_server/node_modules/@types/node/package.json",
+      "code_review_server/node_modules/@types/connect/package.json",
+      "code_review_server/node_modules/@types/send/package.json",
+      "code_review_server/node_modules/@opentelemetry/api/package.json",
+      "code_review_server/node_modules/typescript/lib/typesMap.json",
+      "code_review_server/node_modules/typescript/lib/pl/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/ja/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/it/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/cs/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/ru/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/zh-cn/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/zh-tw/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/pt-br/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/de/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/ko/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/fr/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/es/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/typescript/lib/tr/diagnosticMessages.generated.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/cp949.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/shiftjis.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/gbk-added.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/gb18030-ranges.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/cp936.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/big5-added.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/eucjp.json",
+      "code_review_server/node_modules/iconv-lite/encodings/tables/cp950.json",
+      "code_review_server/node_modules/http-errors/node_modules/statuses/codes.json",
+      "code_review_server/node_modules/http-errors/node_modules/statuses/package.json"
+    ],
+    "capabilities": [
+      "UnifiedMemoryAdapter",
+      "PythonAgentClient",
+      "MemorySearchRequest",
+      "MemoryDeleteRequest",
+      "EnhancedMCPServer",
+      "MemoryUpdateRequest",
+      "MemoryStoreRequest",
+      "MCPInitRequest",
+      "MCPAssistantCoordinator",
+      "SecureMCPServer",
+      "MCPSecurityManager",
+      "ResourceIndicator",
+      "MCPCloudIntegration"
+    ],
+    "dependencies": []
+  },
+  "app/swarms/mcp": {
+    "path": "/Users/lynnmusil/sophia-intel-ai/app/swarms/mcp",
+    "files": [
+      {
+        "path": "production_mcp_bridge.py",
+        "size": 13531,
+        "classes": [
+          "LoadBalancer",
+          "ServiceDiscovery",
+          "MessageQueue",
+          "ProductionMCPBridge"
+        ],
+        "functions": [
+          "set_cloud_discovery_config",
+          "get_consensus",
+          "connect",
+          "_analyze_consensus",
+          "_determine_primary_swarm",
+          "periodic_participant_sync",
+          "initialize_with_ha",
+          "demo",
+          "handle_cloud_deployment",
+          "vote_on_proposal",
+          "setup_cloud_monitoring",
+          "coordinate_task",
+          "configure",
+          "is_registered",
+          "is_ready",
+          "periodical_health_check",
+          "select_target",
+          "dequeue",
+          "register",
+          "__init__",
+          "broadcast_proposal",
+          "enqueue"
+        ],
+        "imports": [
+          "import time",
+          "from app.swarms.core.enhanced_swarm_manager import EnhancedSwarmManager",
+          "import asyncio",
+          "from app.core.circuit_breaker import with_circuit_breaker",
+          "from app.core.ai_logger import logger",
+          "import os",
+          "from app.swarms.communication.message_bus import MessageType, SwarmMessage",
+          "from app.swarms.mcp.swarm_mcp_bridge import SwarmMCPBridge",
+          "import logging",
+          "from datetime import datetime",
+          "from typing import Any",
+          "import redis.asyncio",
+          "from app.core.retry import exponential, retry",
+          "import threading"
+        ]
+      },
+      {
+        "path": "swarm_mcp_bridge.py",
+        "size": 19075,
+        "classes": ["MCPMessage", "MCPParticipant", "SwarmMCPBridge"],
+        "functions": [
+          "shutdown",
+          "coordinate_task",
+          "_determine_participants",
+          "_send_to_mcp",
+          "initialize",
+          "_execute_swarm_task",
+          "_send_status_update",
+          "__init__",
+          "_quality_check_with_debate",
+          "_listen_for_mcp_messages",
+          "_handle_mcp_message",
+          "demonstrate_6_way_coordination",
+          "register_swarm",
+          "_route_to_swarm",
+          "from_json",
+          "to_json"
+        ],
+        "imports": [
+          "from app.swarms.communication.message_bus import MessageBus",
+          "import asyncio",
+          "from dataclasses import dataclass, field",
+          "from websockets.exceptions import ConnectionClosed",
+          "from app.swarms.improved_swarm import ImprovedAgentSwarm",
+          "import websockets",
+          "from app.core.ai_logger import logger",
+          "import json",
+          "from app.swarms.debate.multi_agent_debate import MultiAgentDebateSystem",
+          "import logging",
+          "from app.swarms.memory_enhanced_swarm import MemoryEnhancedSwarm",
+          "from datetime import datetime",
+          "from typing import Any, Optional",
+          "from app.swarms.core.swarm_base import SwarmBase",
+          "from enum import Enum"
+        ]
+      }
+    ],
+    "servers": [],
+    "configs": [],
+    "capabilities": [
+      "LoadBalancer",
+      "ServiceDiscovery",
+      "MessageQueue",
+      "ProductionMCPBridge",
+      "MCPMessage",
+      "MCPParticipant",
+      "SwarmMCPBridge"
+    ],
+    "dependencies": []
+  },
+  "pulumi/mcp-server": {
+    "path": "/Users/lynnmusil/sophia-intel-ai/pulumi/mcp-server",
+    "files": [
+      {
+        "path": "__main__.py",
+        "size": 8578,
+        "classes": [],
+        "functions": ["main"],
+        "imports": [
+          "from shared import FlyApp, FlyAppConfig",
+          "import pulumi",
+          "import sys",
+          "import os",
+          "from pulumi import StackReference"
+        ]
+      },
+      {
+        "path": "src/main.py",
+        "size": 6470,
+        "classes": [
+          "HealthResponse",
+          "MemoryAddRequest",
+          "MemorySearchRequest"
+        ],
+        "functions": [
+          "health_check",
+          "startup_event",
+          "execute_tool",
+          "add_memory",
+          "list_available_tools",
+          "get_memory_types",
+          "shutdown_event",
+          "get_memory_stats",
+          "search_memory"
+        ],
+        "imports": [
+          "from dotenv import load_dotenv",
+          "import os",
+          "import uvicorn",
+          "from pydantic import BaseModel",
+          "from unified_memory import UnifiedMemorySystem",
+          "from typing import Any",
+          "from datetime import datetime",
+          "from fastapi import FastAPI, HTTPException",
+          "from fastapi.middleware.cors import CORSMiddleware"
+        ]
+      },
+      {
+        "path": "src/unified_memory.py",
+        "size": 32468,
+        "classes": [
+          "UnifiedMemoryConfig",
+          "SearchResult",
+          "MemoryEntry",
+          "MemoryType",
+          "UnifiedMemoryStore"
+        ],
+        "functions": [
+          "_update_access_stats",
+          "get_unified_memory_store",
+          "_combine_results",
+          "get_connection",
+          "_fts_search",
+          "__post_init__",
+          "get_stats",
+          "initialize",
+          "_init_weaviate",
+          "_invalidate_search_cache",
+          "_initialize_connection_pool",
+          "add_memory",
+          "_rerank_results",
+          "_vector_search",
+          "__init__",
+          "close",
+          "_initialize_schema",
+          "to_dict",
+          "search_memory"
+        ],
+        "imports": [
+          "from app.llm.real_executor import real_executor",
+          "import asyncio",
+          "from typing import Any, AsyncContextManager",
+          "from pathlib import Path",
+          "import os",
+          "import json",
+          "import weaviate.classes",
+          "import for",
+          "import logging",
+          "import aiosqlite",
+          "import hashlib",
+          "from datetime import datetime",
+          "import redis.asyncio",
+          "from dataclasses import asdict, dataclass, field",
+          "import weaviate",
+          "from contextlib import asynccontextmanager",
+          "from enum import Enum"
+        ]
+      }
+    ],
+    "servers": [],
+    "configs": [],
+    "capabilities": [
+      "HealthResponse",
+      "MemoryAddRequest",
+      "MemorySearchRequest",
+      "UnifiedMemoryConfig",
+      "SearchResult",
+      "MemoryEntry",
+      "MemoryType",
+      "UnifiedMemoryStore"
+    ],
+    "dependencies": []
+  }
+}

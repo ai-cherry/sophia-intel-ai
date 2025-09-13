@@ -1,0 +1,128 @@
+{
+  "name": "🎯 Gong-Sophia Context-Enhanced Intelligence",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gong-webhook",
+        "responseMode": "onReceived",
+        "responseData": "allEntries"
+      },
+      "id": "gong-webhook",
+      "name": "🎯 Gong Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// 🔐 RSA signature verification + Context strategy\nconst crypto = require('crypto');\nconst input = $input.first().json;\n\n// RSA Public Key for Gong webhook verification\nconst gongPublicKey = `-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxfj3V1rUOJJE2RBZrWSe\n8UAjEL6za9+XIBTdyYbEEpzmthys8qglYDX8PLimC79VjE1QK/XWmO8lTCbacYKN\nLRBLxh6SpF+3d6fDtg3HeaByH3iN2HhB5aEQCRbMOIiGgMEuVf1e9rdn0gBjTWYn\n7JWm7CHGZpA6j0RyaKqGjZVftZGhP/lmUZVJCDfS1mntd2aX738RNjU7jxCkGHYM\nizVSECcN0ZH3q55YW1iZjQiXcV1MHCpm3b9q8cKRVnluUwy9jwabLY4EAJI/rccg\n245uYivW06rAF4BOhVtnrkSebf85tRQFNH5bLdz7mI86AyUw9sA2FEW3JT2gi+qI\nFQIDAQAB\n-----END PUBLIC KEY-----`;\n\nlet signatureValid = false;\ntry {\n  const signature = $request.headers['x-gong-signature'];\n  if (signature) {\n    const verify = crypto.createVerify('RSA-SHA256');\n    verify.update(JSON.stringify(input));\n    signatureValid = verify.verify(gongPublicKey, signature, 'base64');\n  }\n} catch (error) {\n  console.log('⚠️ Signature verification failed:', error.message);\n}\n\n// 🧠 Context Strategy: Intelligent routing based on event priority\nlet contextStrategy = {\n  priority: 3, // Default medium priority\n  sophia_context: 'standard',\n  routing_decision: 'parallel_processing'\n};\n\nswitch (input.eventType) {\n  case 'call_ended':\n    contextStrategy = {\n      priority: input.outcome === 'closed_won' ? 5 : 4,\n      sophia_context: 'sales_intelligence',\n      routing_decision: 'high_priority_parallel'\n    };\n    break;\n  case 'transcript_ready':\n    contextStrategy = {\n      priority: 5, // Transcripts are high-value for context\n      sophia_context: 'content_analysis',\n      routing_decision: 'sequential_deep_processing'\n    };\n    break;\n  case 'deal_at_risk':\n    contextStrategy = {\n      priority: 5, // Critical priority\n      sophia_context: 'crisis_management',\n      routing_decision: 'emergency_processing'\n    };\n    break;\n}\n\nconsole.log(`🔐 Signature valid: ${signatureValid}`);\nconsole.log(`🎯 Context strategy: ${JSON.stringify(contextStrategy)}`);\n\nreturn {\n  ...input,\n  signatureValid,\n  contextStrategy,\n  timestamp: new Date().toISOString(),\n  sophiaContext: {\n    intelligence_layer: contextStrategy.sophia_context,\n    processing_priority: contextStrategy.priority,\n    security_verified: signatureValid\n  }\n};"
+      },
+      "id": "security-context",
+      "name": "🔐 Security + Context Strategy",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [440, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "high_priority",
+              "leftValue": "={{ $json.contextStrategy.priority }}",
+              "rightValue": 4,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "priority-router",
+      "name": "🎯 Priority Router",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [640, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://api.sophia-intel.ai/intelligence/gong-webhook",
+        "options": {
+          "timeout": 30000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "X-Sophia-Intelligence",
+              "value": "gong-context-integration"
+            }
+          ]
+        },
+        "sendBody": true,
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "sophia-notify",
+      "name": "🤖 Sophia: Intelligence Update",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 300]
+    }
+  ],
+  "connections": {
+    "🎯 Gong Webhook": {
+      "main": [
+        [
+          {
+            "node": "🔐 Security + Context Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔐 Security + Context Strategy": {
+      "main": [
+        [
+          {
+            "node": "🎯 Priority Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎯 Priority Router": {
+      "main": [
+        [
+          {
+            "node": "🤖 Sophia: Intelligence Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🤖 Sophia: Intelligence Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {}
+}

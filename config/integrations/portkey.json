@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "load_balancing": true,
+  "fallback_enabled": true,
+  "models": {
+    "anthropic": {
+      "weight": 40
+    },
+    "openai": {
+      "weight": 30
+    },
+    "deepseek": {
+      "weight": 15
+    },
+    "groq": {
+      "weight": 10
+    },
+    "perplexity": {
+      "weight": 5
+    }
+  }
+}

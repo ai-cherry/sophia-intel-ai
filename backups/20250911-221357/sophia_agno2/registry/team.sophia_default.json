@@ -1,0 +1,11 @@
+{
+  "id": "sophia_default",
+  "name": "Sophia BI Team",
+  "description": "Analyst → Strategist → Communicator",
+  "agents": [
+    { "id": "analyst", "role": "analyst", "instructions": [], "tools": [], "model_policy": "balanced" },
+    { "id": "strategist", "role": "strategist", "instructions": [], "tools": [], "model_policy": "quality" },
+    { "id": "communicator", "role": "communicator", "instructions": [], "tools": [], "model_policy": "balanced" }
+  ]
+}
+

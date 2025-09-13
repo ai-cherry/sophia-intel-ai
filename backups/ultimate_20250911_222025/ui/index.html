@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sophia Intel App - Unified Business Intelligence</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 2rem;
+            border-bottom: 2px solid #3b82f6;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        
+        .subtitle {
+            color: #94a3b8;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        nav {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid #334155;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+        
+        main {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .integration-card {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #334155;
+            transition: all 0.3s;
+        }
+        
+        .integration-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+        
+        .integration-card h3 {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-healthy { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-unknown { background: #6b7280; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        #chat-container {
+            background: rgba(30, 41, 59, 0.8);
+            padding: 2rem;
+            border-radius: 0.75rem;
+            border: 1px solid #334155;
+            margin-top: 2rem;
+        }
+        
+        #chat-input {
+            width: 100%;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid #3b82f6;
+            border-radius: 0.5rem;
+            color: #e2e8f0;
+            font-size: 1rem;
+            margin: 1rem 0;
+        }
+        
+        #chat-input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .app-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-left: 1rem;
+        }
+        
+        .info-panel {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid #3b82f6;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 SOPHIA INTEL APP</h1>
+        <span class="app-badge">v1.0.0-UNIFIED</span>
+        <div class="subtitle">The ONE Unified Business Intelligence Platform</div>
+    </div>
+    
+    <nav>
+        <button onclick="showDashboard()">📊 Dashboard</button>
+        <button onclick="showChat()">💬 Intel Chat</button>
+        <button onclick="showIntegrations()">🔌 Integrations</button>
+        <button onclick="checkHealth()">🏥 Health Check</button>
+        <button onclick="getInfo()">ℹ️ About</button>
+    </nav>
+    
+    <main>
+        <div class="info-panel" id="info-panel">
+            <strong>Sophia Intel App</strong> - This is THE unified platform. 
+            One codebase. One interface. One port (8000). Real integrations. Real data.
+        </div>
+        
+        <h2>Integration Status</h2>
+        <div class="status-grid" id="status-grid">
+            <div class="integration-card">
+                <h3>
+                    Salesforce
+                    <span class="status-indicator status-unknown" id="sf-status"></span>
+                </h3>
+                <div id="sf-details">Checking...</div>
+            </div>
+            <div class="integration-card">
+                <h3>
+                    Slack
+                    <span class="status-indicator status-unknown" id="slack-status"></span>
+                </h3>
+                <div id="slack-details">Checking...</div>
+            </div>
+            <div class="integration-card">
+                <h3>
+                    HubSpot
+                    <span class="status-indicator status-unknown" id="hub-status"></span>
+                </h3>
+                <div id="hub-details">Checking...</div>
+            </div>
+            <div class="integration-card">
+                <h3>
+                    Gong
+                    <span class="status-indicator status-unknown" id="gong-status"></span>
+                </h3>
+                <div id="gong-details">Checking...</div>
+            </div>
+        </div>
+        
+        <div id="chat-container">
+            <h2>🧠 Sophia Intel Chat</h2>
+            <p style="color: #94a3b8; margin: 0.5rem 0;">
+                Unified search across all integrations + web research
+            </p>
+            <input 
+                type="text" 
+                id="chat-input" 
+                placeholder="Ask about PayReady clients, search across all systems..." 
+                onkeypress="if(event.key === 'Enter') sendChat()"
+            >
+            <div id="chat-output"></div>
+        </div>
+    </main>
+    
+    <script>
+        // SOPHIA INTEL APP - Client Script
+        console.log('🚀 Sophia Intel App - Loaded');
+        
+        let ws = null;
+        
+        // Initialize WebSocket
+        function initWebSocket() {
+            ws = new WebSocket('ws://localhost:8000/ws');
+            ws.onopen = () => {
+                console.log('✅ Connected to Sophia Intel App WebSocket');
+            };
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('📨 Sophia Intel App:', data);
+            };
+            ws.onerror = (error) => {
+                console.error('❌ WebSocket error:', error);
+            };
+        }
+        
+        async function checkHealth() {
+            try {
+                const res = await fetch('/api/health');
+                const data = await res.json();
+                console.log('Health Check:', data);
+                
+                // Update UI based on health data
+                updateIntegrationStatus('sf', data.integrations.salesforce);
+                updateIntegrationStatus('slack', data.integrations.slack);
+                updateIntegrationStatus('hub', data.integrations.hubspot);
+                updateIntegrationStatus('gong', data.integrations.gong);
+                
+                // Show notification
+                showNotification('Health check complete');
+            } catch (error) {
+                console.error('Health check failed:', error);
+            }
+        }
+        
+        function updateIntegrationStatus(id, data) {
+            const indicator = document.getElementById(id + '-status');
+            const details = document.getElementById(id + '-details');
+            
+            if (data.configured) {
+                indicator.className = 'status-indicator status-healthy';
+                details.textContent = '✅ ' + data.status;
+            } else {
+                indicator.className = 'status-indicator status-error';
+                details.textContent = '❌ ' + data.status;
+            }
+        }
+        
+        async function getInfo() {
+            const res = await fetch('/api/info');
+            const data = await res.json();
+            alert('Sophia Intel App\n' + data.message + '\n\nFeatures:\n' + data.features.join('\n'));
+        }
+        
+        async function sendChat() {
+            const input = document.getElementById('chat-input');
+            const output = document.getElementById('chat-output');
+            const query = input.value;
+            
+            if (!query) return;
+            
+            const res = await fetch('/api/chat?query=' + encodeURIComponent(query));
+            const data = await res.json();
+            
+            output.innerHTML = '<div style="margin-top: 1rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-radius: 0.5rem;">' +
+                '<strong>Sophia Intel Response:</strong><br>' +
+                data.response + '<br>' +
+                '<small>Sources: ' + data.sources_searched.join(', ') + '</small>' +
+                '</div>';
+            
+            input.value = '';
+        }
+        
+        function showNotification(message) {
+            const info = document.getElementById('info-panel');
+            info.innerHTML = '✨ ' + message;
+            setTimeout(() => {
+                info.innerHTML = '<strong>Sophia Intel App</strong> - This is THE unified platform.';
+            }, 3000);
+        }
+        
+        // Initialize on load
+        window.onload = () => {
+            checkHealth();
+            initWebSocket();
+        };
+    </script>
+</body>
+</html>

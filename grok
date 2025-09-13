@@ -1,0 +1,5 @@
+#!/bin/bash
+# Grok CLI wrapper
+
+cd ~/sophia-intel-ai
+python3 grok_cli.py "$@"

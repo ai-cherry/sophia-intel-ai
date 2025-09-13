@@ -1,0 +1,20 @@
+# Sophia AI Business Intelligence Monitoring
+# Add these to your crontab: crontab -e
+
+# Critical payments monitoring - Every 15 minutes during business hours
+*/15 8-18 * * 1-5 cd /path/to/sophia-intel-ai && python3 scripts/run_bi_check.py --priority=critical
+
+# High priority monitoring - Every hour
+0 * * * * cd /path/to/sophia-intel-ai && python3 scripts/run_bi_check.py --priority=high
+
+# Medium priority monitoring - Every 4 hours
+0 */4 * * * cd /path/to/sophia-intel-ai && python3 scripts/run_bi_check.py --priority=medium
+
+# Daily summary - 9 AM Eastern, weekdays
+0 9 * * 1-5 cd /path/to/sophia-intel-ai && python3 scripts/send_daily_summary.py
+
+# Weekly report - Friday 5 PM Eastern
+0 17 * * 5 cd /path/to/sophia-intel-ai && python3 scripts/send_weekly_report.py
+
+# Health check - Every 5 minutes
+*/5 * * * * cd /path/to/sophia-intel-ai && python3 scripts/health_check.py

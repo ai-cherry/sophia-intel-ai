@@ -1,0 +1,162 @@
+{
+  "timestamp": "2025-08-05T20:54:39.089208",
+  "total_tests": 19,
+  "passed_tests": 19,
+  "failed_tests": 0,
+  "api_tests": {
+    "Fusion Metrics": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/metrics",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'redis_optimization': {'memory_saved': 2.4, 'cost_savings': 127.5, 'keys_pruned': 1847, 'status': '...",
+      "response_time_ms": 3.311
+    },
+    "System Health": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/health",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'overall_uptime': 99.94, 'avg_response_time': 245, 'total_cost_savings': 158.72, 'active_systems': ...",
+      "response_time_ms": 2.027
+    },
+    "Performance Metrics": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/performance",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'redis_memory_reduction': 67.0, 'redis_cost_optimization': 43.0, 'edge_rag_success_rate': 98.7, 'ed...",
+      "response_time_ms": 1.735
+    },
+    "System Status": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/status",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'overall_status': 'degraded', 'systems': {'redis_optimization': 'unknown', 'edge_rag': 'unknown', '...",
+      "response_time_ms": 1.7329999999999999
+    },
+    "Redis Trigger": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/trigger/redis_optimization",
+      "method": "POST",
+      "status_code": 200,
+      "response_preview": "{'message': 'Triggered redis_optimization operation', 'timestamp': '2025-08-05T20:54:39.103224'}",
+      "response_time_ms": 1.389
+    },
+    "Edge RAG Trigger": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/trigger/edge_rag",
+      "method": "POST",
+      "status_code": 200,
+      "response_preview": "{'message': 'Triggered edge_rag operation', 'timestamp': '2025-08-05T20:54:39.105068'}",
+      "response_time_ms": 1.206
+    },
+    "Hybrid Routing Trigger": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/trigger/hybrid_routing",
+      "method": "POST",
+      "status_code": 200,
+      "response_preview": "{'message': 'Triggered hybrid_routing operation', 'timestamp': '2025-08-05T20:54:39.161021'}",
+      "response_time_ms": 55.623
+    },
+    "Cross-DB Trigger": {
+      "status": "PASS",
+      "endpoint": "/api/fusion/trigger/cross_db_analytics",
+      "method": "POST",
+      "status_code": 200,
+      "response_preview": "{'message': 'Triggered cross_db_analytics operation', 'timestamp': '2025-08-05T20:54:39.166843'}",
+      "response_time_ms": 4.736
+    },
+    "Health Check": {
+      "status": "PASS",
+      "endpoint": "/health",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'status': 'healthy', 'version': '4.0.0', 'service': 'sophia-ai-platform', 'routers': ['health', 'au...",
+      "response_time_ms": 23.201
+    },
+    "Smoke Test": {
+      "status": "PASS",
+      "endpoint": "/smoke",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'status': 'operational', 'version': '4.0.0', 'timestamp': 1754441679.193825, 'message': 'Sophia AI ...",
+      "response_time_ms": 1.928
+    },
+    "Root Endpoint": {
+      "status": "PASS",
+      "endpoint": "/",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'message': 'Welcome to Sophia AI Platform v4.0', 'description': 'PropTech Business Intelligence Pla...",
+      "response_time_ms": 1.691
+    },
+    "Platform Info": {
+      "status": "PASS",
+      "endpoint": "/info",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'platform': 'Sophia AI', 'version': '4.0.0', 'description': 'PropTech Business Intelligence Platfor...",
+      "response_time_ms": 1.359
+    },
+    "GPU Quota": {
+      "status": "PASS",
+      "endpoint": "/api/gpu-quota",
+      "method": "GET",
+      "status_code": 200,
+      "response_preview": "{'hours_remaining': 87.60580182193262, 'quota_limit': 100, 'usage_today': 12.394198178067384, 'warni...",
+      "response_time_ms": 1.368
+    }
+  },
+  "integration_tests": {
+    "Fusion Metrics Structure": {
+      "status": "PASS",
+      "details": "All required fields present and valid",
+      "data_sample": {
+        "redis_cost_savings": 127.5,
+        "edge_success_rate": 98.7,
+        "hybrid_uptime": 99.94,
+        "cross_db_accuracy": 94.3
+      }
+    },
+    "System Health Calculations": {
+      "status": "PASS",
+      "details": "All health metrics calculated correctly",
+      "metrics": {
+        "uptime": 99.94,
+        "response_time": 245,
+        "cost_savings": 158.72,
+        "active_systems": 4
+      }
+    },
+    "Performance Metrics Structure": {
+      "status": "PASS",
+      "details": "All performance metrics valid",
+      "metrics": {
+        "redis_memory_reduction": 67.0,
+        "edge_rag_success_rate": 98.7,
+        "hybrid_routing_uptime": 99.94,
+        "cross_db_accuracy": 94.3
+      }
+    }
+  },
+  "performance_tests": {
+    "/api/fusion/metrics Performance": {
+      "status": "PASS",
+      "response_time_ms": 2.328157424926758,
+      "threshold_ms": 5000
+    },
+    "/api/fusion/health Performance": {
+      "status": "PASS",
+      "response_time_ms": 2.3093223571777344,
+      "threshold_ms": 5000
+    },
+    "/health Performance": {
+      "status": "PASS",
+      "response_time_ms": 2.243518829345703,
+      "threshold_ms": 5000
+    }
+  },
+  "errors": []
+}

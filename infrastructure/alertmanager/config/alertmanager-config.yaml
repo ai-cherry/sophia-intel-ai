@@ -1,0 +1,467 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    component: alerting
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      http_config:
+        tls_config:
+          insecure_skip_verify: false
+      smtp_from: 'alerts@sophia-sophia.ai'
+      smtp_smarthost: 'smtp.sendgrid.net:587'
+      smtp_auth_username: 'apikey'
+      smtp_auth_password_file: '/etc/alertmanager/secrets/smtp-password'
+      slack_api_url_file: '/etc/alertmanager/secrets/slack-api-url'
+      pagerduty_url: 'https://events.pagerduty.com/v2/enqueue'
+      opsgenie_api_url: 'https://api.opsgenie.com/'
+
+    templates:
+    - '/etc/alertmanager/templates/*.tmpl'
+
+    # Main routing tree with intelligent grouping
+    route:
+      group_by: ['alertname', 'cluster', 'service']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      receiver: 'default'
+
+      routes:
+      # CRITICAL alerts - immediate notification
+      - matchers:
+        - severity="CRITICAL"
+        group_wait: 10s
+        group_interval: 2m
+        repeat_interval: 1h
+        receiver: critical-alerts
+        continue: true
+        routes:
+        - matchers:
+          - domain="sophia"
+          receiver: sophia-critical
+          group_by: [alertname, namespace, service, pod]
+        - matchers:
+          - domain="sophia"
+          receiver: sophia-critical
+          group_by: [alertname, namespace, ai_model, gpu_node]
+        - matchers:
+          - domain="infrastructure"
+          receiver: infrastructure-critical
+          group_by: [alertname, cluster, node]
+
+      # Sophia Domain Routing (Real-time services)
+      - matchers:
+        - domain="sophia"
+        receiver: sophia-team
+        group_by: [alertname, namespace, service]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 4h
+        continue: true
+        routes:
+        # Circuit breaker alerts
+        - matchers:
+          - alertname=~"CircuitBreaker.*"
+          receiver: sophia-circuit-breaker
+          group_wait: 15s
+          group_interval: 2m
+          repeat_interval: 30m
+        # High latency alerts
+        - matchers:
+          - alertname=~".*Latency.*|.*Slow.*"
+          receiver: sophia-performance
+          group_wait: 45s
+          group_interval: 10m
+          repeat_interval: 2h
+        # Error rate alerts
+        - matchers:
+          - alertname=~".*Error.*|.*Failed.*"
+          receiver: sophia-errors
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 1h
+
+      # Sophia Domain Routing (AI/ML workloads)
+      - matchers:
+        - domain="sophia"
+        receiver: sophia-team
+        group_by: [alertname, namespace, ai_model, gpu_node]
+        group_wait: 45s      # Longer wait for batch processing
+        group_interval: 10m  # Less frequent grouping
+        repeat_interval: 6h
+        continue: true
+        routes:
+        # Model loading/training alerts
+        - matchers:
+          - alertname=~".*Model.*|.*Training.*"
+          receiver: sophia-ml-ops
+          group_wait: 60s
+          group_interval: 15m
+          repeat_interval: 4h
+        # GPU-related alerts
+        - matchers:
+          - alertname=~".*GPU.*|.*CUDA.*"
+          receiver: sophia-gpu-team
+          group_wait: 30s
+          group_interval: 5m
+          repeat_interval: 2h
+        # Inference pipeline alerts
+        - matchers:
+          - alertname=~".*Inference.*|.*Pipeline.*"
+          receiver: sophia-inference
+          group_wait: 45s
+          group_interval: 10m
+          repeat_interval: 3h
+
+      # KEDA Scaling Alerts
+      - matchers:
+        - alertname=~"KEDA.*"
+        receiver: platform-team
+        group_by: [alertname, scaledobject, namespace]
+        group_wait: 60s      # Prevent flapping
+        group_interval: 5m
+        repeat_interval: 30m
+        routes:
+        # Circuit breaker triggered scaling
+        - matchers:
+          - alertname="KEDACircuitBreakerScaling"
+          receiver: platform-critical
+          group_wait: 10s
+          repeat_interval: 15m
+        # Failed scaling operations
+        - matchers:
+          - alertname=~"KEDA.*Failed"
+          receiver: platform-failures
+          group_wait: 30s
+          repeat_interval: 1h
+
+      # Infrastructure Alerts
+      - matchers:
+        - alertname=~"Node.*|Disk.*|Memory.*|CPU.*"
+        receiver: infrastructure-team
+        group_by: [alertname, cluster, node]
+        group_wait: 10s      # Quick response for infra
+        group_interval: 3m
+        repeat_interval: 2h
+        routes:
+        # Node failures
+        - matchers:
+          - alertname=~"NodeDown|NodeNotReady"
+          receiver: infrastructure-critical
+          group_wait: 5s
+          repeat_interval: 30m
+        # Disk issues
+        - matchers:
+          - alertname=~".*Disk.*"
+          receiver: infrastructure-storage
+          group_wait: 30s
+          repeat_interval: 4h
+        # Memory/CPU pressure
+        - matchers:
+          - alertname=~".*Memory.*|.*CPU.*"
+          receiver: infrastructure-resources
+          group_wait: 60s
+          repeat_interval: 2h
+
+      # Network-related alerts
+      - matchers:
+        - alertname=~".*Network.*|.*Connection.*|.*Timeout.*"
+        receiver: network-team
+        group_by: [alertname, cluster, namespace, service]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 2h
+
+      # Security alerts
+      - matchers:
+        - alertname=~".*Security.*|.*Breach.*|.*Unauthorized.*"
+        receiver: security-critical
+        group_wait: 5s
+        group_interval: 1m
+        repeat_interval: 15m
+
+      # Maintenance window routing
+      - matchers:
+        - maintenance="true"
+        receiver: maintenance-channel
+        group_wait: 5m
+        group_interval: 30m
+        repeat_interval: 12h
+
+      # Default catch-all for unmatched alerts
+      - matchers:
+        - alertname=~".*"
+        receiver: default
+        group_wait: 60s
+        group_interval: 15m
+        repeat_interval: 6h
+
+    # Inhibition rules to reduce false positives
+    inhibit_rules:
+    # Suppress downstream alerts when circuit breaker is open
+    - source_matchers:
+      - alertname="CircuitBreakerOpen"
+      target_matchers:
+      - alertname=~".*HighLatency|.*Timeout|.*SlowResponse"
+      equal: [cluster, namespace, service]
+
+    # Suppress pod alerts when node is down
+    - source_matchers:
+      - alertname="NodeDown"
+      target_matchers:
+      - alertname=~"Pod.*|Container.*|.*NotReady"
+      equal: [node]
+
+    # Suppress scaling alerts during maintenance
+    - source_matchers:
+      - alertname="MaintenanceWindow"
+      target_matchers:
+      - alertname=~"KEDA.*|.*Scaling.*|.*Autoscaler.*"
+      equal: [namespace]
+
+    # AI Model loading suppresses inference alerts
+    - source_matchers:
+      - alertname="AIModelLoading"
+      target_matchers:
+      - alertname=~"AIInference.*|.*ModelServing.*"
+      equal: [namespace, model_name]
+
+    # Database migration suppresses query alerts
+    - source_matchers:
+      - alertname="DatabaseMigrationInProgress"
+      target_matchers:
+      - alertname=~".*Query.*|.*Connection.*|.*Database.*"
+      equal: [database, namespace]
+
+    # Cluster upgrade suppresses non-critical alerts
+    - source_matchers:
+      - alertname="ClusterUpgradeInProgress"
+      target_matchers:
+      - severity!="CRITICAL"
+      equal: [cluster]
+
+    # Network partition suppresses connection alerts
+    - source_matchers:
+      - alertname="NetworkPartition"
+      target_matchers:
+      - alertname=~".*Connection.*|.*Unreachable.*"
+      equal: [cluster, datacenter]
+
+    # GPU node maintenance suppresses GPU alerts
+    - source_matchers:
+      - alertname="GPUNodeMaintenance"
+      target_matchers:
+      - alertname=~".*GPU.*|.*CUDA.*"
+      equal: [gpu_node]
+
+    # Istio control plane issues suppress service mesh alerts
+    - source_matchers:
+      - alertname=~"IstioControlPlane.*"
+      target_matchers:
+      - alertname=~".*ServiceMesh.*|.*Envoy.*|.*Sidecar.*"
+      equal: [cluster]
+
+    # Storage volume issues suppress PVC alerts
+    - source_matchers:
+      - alertname="StorageVolumeFailure"
+      target_matchers:
+      - alertname=~".*PVC.*|.*Volume.*Mount.*"
+      equal: [node, persistentvolume]
+
+    # Receivers configuration
+    receivers:
+    - name: 'default'
+      slack_configs:
+      - channel: '#alerts'
+        title: '{{ template "slack.title" . }}'
+        text: '{{ template "slack.text" . }}'
+        send_resolved: true
+        actions:
+        - type: button
+          text: 'Runbook'
+          url: 'https://docs.sophia-sophia.ai/runbooks/{{ .GroupLabels.alertname }}'
+        - type: button
+          text: 'Dashboard'
+          url: 'https://grafana.sophia-sophia.ai/d/{{ .GroupLabels.domain }}'
+        - type: button
+          text: 'Silence'
+          url: '{{ .ExternalURL }}/#/silences/new?filter={alertname%3D"{{ .GroupLabels.alertname }}"}'
+
+    - name: 'critical-alerts'
+      pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty-critical-key'
+        client: 'AlertManager'
+        client_url: 'https://alertmanager.sophia-sophia.ai'
+        description: '{{ .GroupLabels.alertname }} - {{ .GroupLabels.namespace }}'
+        severity: 'critical'
+      slack_configs:
+      - channel: '#critical-alerts'
+        title: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        color: 'danger'
+        send_resolved: true
+
+    - name: 'sophia-team'
+      slack_configs:
+      - channel: '#sophia-alerts'
+        title: 'Sophia: {{ template "slack.title" . }}'
+        text: '{{ template "slack.sophia.text" . }}'
+        send_resolved: true
+
+    - name: 'sophia-critical'
+      pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty-sophia-key'
+        severity: 'critical'
+      slack_configs:
+      - channel: '#sophia-oncall'
+        color: 'danger'
+
+    - name: 'sophia-circuit-breaker'
+      slack_configs:
+      - channel: '#sophia-performance'
+        title: '⚡ Circuit Breaker Alert'
+        send_resolved: true
+
+    - name: 'sophia-performance'
+      slack_configs:
+      - channel: '#sophia-performance'
+        send_resolved: true
+
+    - name: 'sophia-errors'
+      slack_configs:
+      - channel: '#sophia-errors'
+        send_resolved: true
+
+    - name: 'sophia-team'
+      slack_configs:
+      - channel: '#sophia-alerts'
+        title: 'Sophia AI: {{ template "slack.title" . }}'
+        text: '{{ template "slack.sophia.text" . }}'
+        send_resolved: true
+
+    - name: 'sophia-critical'
+      pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty-sophia-key'
+        severity: 'critical'
+      email_configs:
+      - to: 'sophia-oncall@sophia-sophia.ai'
+        headers:
+          Subject: 'CRITICAL: {{ .GroupLabels.alertname }}'
+        html: '{{ template "email.html" . }}'
+
+    - name: 'sophia-ml-ops'
+      slack_configs:
+      - channel: '#sophia-mlops'
+        send_resolved: true
+      webhook_configs:
+      - url_file: '/etc/alertmanager/secrets/mlops-webhook-url'
+
+    - name: 'sophia-gpu-team'
+      slack_configs:
+      - channel: '#sophia-gpu'
+        title: '🎮 GPU Alert: {{ .GroupLabels.alertname }}'
+        send_resolved: true
+
+    - name: 'sophia-inference'
+      slack_configs:
+      - channel: '#sophia-inference'
+        send_resolved: true
+
+    - name: 'platform-team'
+      webhook_configs:
+      - url: 'http://platform-webhook.monitoring:8080/alerts'
+        send_resolved: true
+
+    - name: 'platform-critical'
+      pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty-platform-key'
+        severity: 'critical'
+
+    - name: 'platform-failures'
+      slack_configs:
+      - channel: '#platform-failures'
+        color: 'warning'
+
+    - name: 'infrastructure-team'
+      msteams_configs:
+      - webhook_url_file: '/etc/alertmanager/secrets/teams-infrastructure-webhook'
+        title: 'Infrastructure Alert'
+        text: '{{ template "teams.text" . }}'
+
+    - name: 'infrastructure-critical'
+      pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty-infra-key'
+        severity: 'critical'
+      msteams_configs:
+      - webhook_url_file: '/etc/alertmanager/secrets/teams-critical-webhook'
+
+    - name: 'infrastructure-storage'
+      email_configs:
+      - to: 'storage-team@sophia-sophia.ai'
+        send_resolved: true
+
+    - name: 'infrastructure-resources'
+      slack_configs:
+      - channel: '#infra-resources'
+        send_resolved: true
+
+    - name: 'network-team'
+      slack_configs:
+      - channel: '#network-alerts'
+        send_resolved: true
+
+    - name: 'security-critical'
+      pagerduty_configs:
+      - service_key_file: '/etc/alertmanager/secrets/pagerduty-security-key'
+        severity: 'critical'
+      email_configs:
+      - to: 'security-team@sophia-sophia.ai'
+        headers:
+          Priority: 'Urgent'
+          X-Security-Alert: 'true'
+
+    - name: 'maintenance-channel'
+      slack_configs:
+      - channel: '#maintenance'
+        send_resolved: false
+
+    # Time-based muting for non-critical alerts
+    time_intervals:
+    - name: business-hours
+      time_intervals:
+      - weekdays: ['monday:friday']
+        times:
+        - start_time: '09:00'
+          end_time: '17:00'
+        location: 'America/Los_Angeles'
+
+    - name: off-hours
+      time_intervals:
+      - weekdays: ['monday:friday']
+        times:
+        - start_time: '17:00'
+          end_time: '09:00'
+        location: 'America/Los_Angeles'
+      - weekdays: ['saturday', 'sunday']
+        location: 'America/Los_Angeles'
+
+    - name: maintenance-window
+      time_intervals:
+      - weekdays: ['sunday']
+        times:
+        - start_time: '02:00'
+          end_time: '04:00'
+        location: 'America/Los_Angeles'
+
+    # Mute non-critical alerts during off-hours
+    mute_time_intervals:
+    - name: mute-info-off-hours
+      time_intervals:
+      - off-hours
+      matchers:
+      - severity="INFO"

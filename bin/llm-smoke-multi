@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+# Load environment if available
+if [ -f "$REPO_ROOT/.env.sophia.local" ]; then
+    export $(grep -v '^#' "$REPO_ROOT/.env.sophia.local" | xargs)
+fi
+
+exec python3 "$REPO_ROOT/scripts/llm_smoke_multi.py" "$@"

@@ -1,0 +1,430 @@
+# ServiceAccount for KEDA Operator
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: keda-operator
+  namespace: keda-system
+  labels:
+    app: keda
+    component: security
+    app.kubernetes.io/name: keda-operator
+    app.kubernetes.io/version: "2.13.0"
+  annotations:
+    description: "Service account for KEDA operator"
+    eks.amazonaws.com/role-arn: "${AWS_IAM_ROLE_ARN}" # For AWS IRSA if needed
+automountServiceAccountToken: true
+---
+# ClusterRole for KEDA Operator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: keda-operator
+  labels:
+    app: keda
+    component: security
+    app.kubernetes.io/name: keda-operator
+rules:
+  # Core Kubernetes resources
+  - apiGroups: [""]
+    resources:
+      - nodes
+      - nodes/status
+      - pods
+      - services
+      - endpoints
+      - persistentvolumeclaims
+      - events
+      - configmaps
+      - secrets
+      - limitranges
+      - namespaces
+      - serviceaccounts
+    verbs: ["get", "list", "watch"]
+
+  # Events for logging
+  - apiGroups: [""]
+    resources:
+      - events
+    verbs: ["create", "patch"]
+
+  # Deployment management
+  - apiGroups: ["apps"]
+    resources:
+      - deployments
+      - deployments/scale
+      - deployments/status
+      - statefulsets
+      - statefulsets/scale
+      - statefulsets/status
+      - replicasets
+    verbs: ["get", "list", "watch", "update", "patch"]
+
+  # HPA management
+  - apiGroups: ["autoscaling"]
+    resources:
+      - horizontalpodautoscalers
+      - horizontalpodautoscalers/status
+    verbs: ["*"]
+
+  # KEDA CRDs
+  - apiGroups: ["keda.sh"]
+    resources:
+      - scaledobjects
+      - scaledobjects/status
+      - scaledobjects/finalizers
+      - triggerauthentications
+      - triggerauthentications/status
+      - clustertriggerauthentications
+      - clustertriggerauthentications/status
+      - scaledjobs
+      - scaledjobs/status
+      - scaledjobs/finalizers
+    verbs: ["*"]
+
+  # Batch jobs
+  - apiGroups: ["batch"]
+    resources:
+      - jobs
+      - cronjobs
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # External metrics
+  - apiGroups: ["external.metrics.k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list"]
+
+  # Custom metrics
+  - apiGroups: ["metrics.k8s.io"]
+    resources:
+      - pods
+      - nodes
+    verbs: ["get", "list"]
+
+  # Coordination for leader election
+  - apiGroups: ["coordination.k8s.io"]
+    resources:
+      - leases
+    verbs: ["get", "list", "create", "update", "patch", "watch", "delete"]
+
+  # Admission webhooks
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources:
+      - validatingwebhookconfigurations
+      - mutatingwebhookconfigurations
+    verbs: ["get", "list", "watch", "patch", "update"]
+
+  # Policy resources
+  - apiGroups: ["policy"]
+    resources:
+      - poddisruptionbudgets
+    verbs: ["get", "list", "watch"]
+---
+# ClusterRoleBinding for KEDA Operator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: keda-operator
+  labels:
+    app: keda
+    component: security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: keda-operator
+subjects:
+  - kind: ServiceAccount
+    name: keda-operator
+    namespace: keda-system
+---
+# ServiceAccount for KEDA Metrics Server
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: keda-metrics-server
+  namespace: keda-system
+  labels:
+    app: keda
+    component: security
+    app.kubernetes.io/name: keda-metrics-apiserver
+automountServiceAccountToken: true
+---
+# ClusterRole for KEDA Metrics Server
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: keda-metrics-server
+  labels:
+    app: keda
+    component: security
+rules:
+  # Read pods and nodes for metrics
+  - apiGroups: [""]
+    resources:
+      - pods
+      - nodes
+      - namespaces
+    verbs: ["get", "list"]
+
+  # External metrics API
+  - apiGroups: ["external.metrics.k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list"]
+
+  # Custom metrics API
+  - apiGroups: ["custom.metrics.k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list"]
+
+  # KEDA resources
+  - apiGroups: ["keda.sh"]
+    resources:
+      - scaledobjects
+      - triggerauthentications
+      - clustertriggerauthentications
+    verbs: ["get", "list", "watch"]
+---
+# ClusterRoleBinding for KEDA Metrics Server
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: keda-metrics-server
+  labels:
+    app: keda
+    component: security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: keda-metrics-server
+subjects:
+  - kind: ServiceAccount
+    name: keda-metrics-server
+    namespace: keda-system
+---
+# Role for KEDA in its own namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: keda-operator
+  namespace: keda-system
+  labels:
+    app: keda
+    component: security
+rules:
+  # ConfigMaps for leader election
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+  # Secrets management
+  - apiGroups: [""]
+    resources:
+      - secrets
+    verbs: ["get", "list", "watch"]
+
+  # Pod management in namespace
+  - apiGroups: [""]
+    resources:
+      - pods
+      - pods/log
+    verbs: ["get", "list", "watch"]
+
+  # Service management
+  - apiGroups: [""]
+    resources:
+      - services
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+# RoleBinding for KEDA in its namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: keda-operator
+  namespace: keda-system
+  labels:
+    app: keda
+    component: security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: keda-operator
+subjects:
+  - kind: ServiceAccount
+    name: keda-operator
+    namespace: keda-system
+---
+# Role for KEDA in Sophia namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: keda-scaler
+  namespace: sophia-system
+  labels:
+    app: keda
+    component: security
+rules:
+  # Read secrets for authentication
+  - apiGroups: [""]
+    resources:
+      - secrets
+    verbs: ["get", "list"]
+
+  # Read configmaps for configuration
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get", "list"]
+
+  # Manage deployments
+  - apiGroups: ["apps"]
+    resources:
+      - deployments/scale
+    verbs: ["get", "update", "patch"]
+
+  # Read pods for metrics
+  - apiGroups: [""]
+    resources:
+      - pods
+    verbs: ["get", "list"]
+---
+# RoleBinding for KEDA in Sophia namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: keda-scaler
+  namespace: sophia-system
+  labels:
+    app: keda
+    component: security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: keda-scaler
+subjects:
+  - kind: ServiceAccount
+    name: keda-operator
+    namespace: keda-system
+---
+# Role for KEDA in Sophia namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: keda-scaler
+  namespace: sophia-system
+  labels:
+    app: keda
+    component: security
+rules:
+  # Read secrets for authentication
+  - apiGroups: [""]
+    resources:
+      - secrets
+    verbs: ["get", "list"]
+
+  # Read configmaps for configuration
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get", "list"]
+
+  # Manage deployments
+  - apiGroups: ["apps"]
+    resources:
+      - deployments/scale
+    verbs: ["get", "update", "patch"]
+
+  # Read pods for metrics
+  - apiGroups: [""]
+    resources:
+      - pods
+    verbs: ["get", "list"]
+---
+# RoleBinding for KEDA in Sophia namespace
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: keda-scaler
+  namespace: sophia-system
+  labels:
+    app: keda
+    component: security
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: keda-scaler
+subjects:
+  - kind: ServiceAccount
+    name: keda-operator
+    namespace: keda-system
+---
+# ClusterRole for viewing KEDA resources (for developers)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: keda-viewer
+  labels:
+    app: keda
+    component: security
+    rbac.authorization.k8s.io/aggregate-to-view: "true"
+rules:
+  - apiGroups: ["keda.sh"]
+    resources:
+      - scaledobjects
+      - triggerauthentications
+      - clustertriggerauthentications
+      - scaledjobs
+    verbs: ["get", "list", "watch"]
+---
+# ClusterRole for editing KEDA resources (for operators)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: keda-editor
+  labels:
+    app: keda
+    component: security
+    rbac.authorization.k8s.io/aggregate-to-edit: "true"
+rules:
+  - apiGroups: ["keda.sh"]
+    resources:
+      - scaledobjects
+      - triggerauthentications
+      - scaledjobs
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["keda.sh"]
+    resources:
+      - clustertriggerauthentications
+    verbs: ["get", "list", "watch"]
+---
+# Security Policy for KEDA pods
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: keda-restricted
+  labels:
+    app: keda
+    component: security
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - "configMap"
+    - "emptyDir"
+    - "projected"
+    - "secret"
+    - "downwardAPI"
+    - "persistentVolumeClaim"
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: "MustRunAsNonRoot"
+  seLinux:
+    rule: "RunAsAny"
+  supplementalGroups:
+    rule: "RunAsAny"
+  fsGroup:
+    rule: "RunAsAny"
+  readOnlyRootFilesystem: true

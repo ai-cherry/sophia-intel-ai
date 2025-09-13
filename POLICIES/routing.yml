@@ -1,0 +1,26 @@
+# Model routing policies and thresholds.
+# Keep provider-agnostic rules here; provider specifics can live in MODELS.md.
+
+defaults:
+  temperature: 0.2
+  max_tokens: 1024
+
+aliases:
+  fast: gpt-4o-mini
+  balanced: claude-3-5-sonnet
+  research: llama-4-scout
+  creative: llama-4-maverick
+
+usecases:
+  coding:
+    default: balanced
+    reasoning: deepseek/deepseek-r1
+  analysis:
+    default: fast
+    large_context: gemini-1.5-pro
+  chat:
+    default: fast
+
+constraints:
+  max_latency_ms_p95: 2000
+  max_cost_per_call_usd: 0.05

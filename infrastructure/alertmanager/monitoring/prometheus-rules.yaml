@@ -1,0 +1,283 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: alertmanager-monitoring
+  namespace: monitoring
+  labels:
+    app: alertmanager
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+    - name: alertmanager.health
+      interval: 30s
+      rules:
+        # AlertManager instance health
+        - alert: AlertManagerDown
+          expr: up{job="alertmanager"} == 0
+          for: 5m
+          labels:
+            severity: CRITICAL
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "AlertManager instance {{ $labels.instance }} is down"
+            description: "AlertManager instance {{ $labels.instance }} has been down for more than 5 minutes"
+            runbook_url: "https://docs.sophia-sophia.ai/runbooks/alertmanager-down"
+            dashboard: "https://grafana.sophia-sophia.ai/d/alertmanager"
+
+        # Cluster health
+        - alert: AlertManagerClusterFailure
+          expr: |
+            count(count by (job) (
+              count by (job, instance) (
+                up{job="alertmanager"} == 1
+              )
+            )) < 2
+          for: 5m
+          labels:
+            severity: CRITICAL
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "AlertManager cluster has insufficient members"
+            description: "AlertManager cluster has less than 2 healthy members, HA is compromised"
+            value: "{{ $value }} members"
+
+        - alert: AlertManagerClusterSplitBrain
+          expr: |
+            count by (job) (
+              count by (job, alertmanager_cluster_name) (
+                alertmanager_cluster_members
+              )
+            ) > 1
+          for: 5m
+          labels:
+            severity: CRITICAL
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "AlertManager cluster split-brain detected"
+            description: "Multiple AlertManager clusters detected, indicating split-brain condition"
+
+        # Configuration issues
+        - alert: AlertManagerConfigReloadFailed
+          expr: |
+            alertmanager_config_last_reload_successful == 0
+          for: 5m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "AlertManager config reload failed"
+            description: "AlertManager configuration reload has failed on {{ $labels.instance }}"
+
+        - alert: AlertManagerConfigSyncFailed
+          expr: |
+            rate(alertmanager_cluster_messages_sent_failed_total[5m]) > 0.1
+          for: 10m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "AlertManager cluster sync failing"
+            description: "AlertManager cluster message synchronization is failing at {{ $value | humanize }} per second"
+
+        # Notification failures
+        - alert: AlertManagerNotificationsFailing
+          expr: |
+            rate(alertmanager_notifications_failed_total[5m]) > 0.1
+          for: 10m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+            notification: failing
+          annotations:
+            summary: "AlertManager notifications failing"
+            description: "AlertManager notifications to {{ $labels.integration }} are failing at {{ $value | humanize }} per second"
+
+        - alert: AlertManagerNotificationLatencyHigh
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(alertmanager_notification_latency_seconds_bucket[5m])) by (le, job)
+            ) > 30
+          for: 10m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "High notification latency"
+            description: "P99 notification latency is {{ $value | humanizeDuration }}, exceeding 30s threshold"
+
+        # Alert processing
+        - alert: AlertManagerHighAlertIngestionRate
+          expr: |
+            rate(alertmanager_alerts_received_total[5m]) > 500
+          for: 5m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "High alert ingestion rate"
+            description: "AlertManager is receiving {{ $value | humanize }} alerts per second"
+
+        - alert: AlertManagerAlertQueueBacklog
+          expr: |
+            alertmanager_notification_queue_length > 1000
+          for: 10m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "Alert notification queue backlog"
+            description: "AlertManager has {{ $value }} alerts in notification queue"
+
+        # Resource usage
+        - alert: AlertManagerHighMemoryUsage
+          expr: |
+            container_memory_working_set_bytes{namespace="monitoring",pod=~"alertmanager-.*"}
+            / container_spec_memory_limit_bytes{namespace="monitoring",pod=~"alertmanager-.*"}
+            * 100 > 90
+          for: 10m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+            resource: memory
+          annotations:
+            summary: "High memory usage for AlertManager"
+            description: "AlertManager pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of memory limit"
+
+        - alert: AlertManagerHighCPUUsage
+          expr: |
+            sum(rate(container_cpu_usage_seconds_total{namespace="monitoring",pod=~"alertmanager-.*"}[5m])) by (pod)
+            / sum(container_spec_cpu_quota{namespace="monitoring",pod=~"alertmanager-.*"}/100000) by (pod)
+            * 100 > 80
+          for: 10m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+            resource: cpu
+          annotations:
+            summary: "High CPU usage for AlertManager"
+            description: "AlertManager pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of CPU limit"
+
+        # Storage issues
+        - alert: AlertManagerStorageSpaceLow
+          expr: |
+            kubelet_volume_stats_available_bytes{namespace="monitoring",persistentvolumeclaim=~"storage-alertmanager-.*"}
+            / kubelet_volume_stats_capacity_bytes{namespace="monitoring",persistentvolumeclaim=~"storage-alertmanager-.*"}
+            * 100 < 10
+          for: 5m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+            storage: low
+          annotations:
+            summary: "Low storage space for AlertManager"
+            description: "AlertManager PVC {{ $labels.persistentvolumeclaim }} has only {{ $value | humanizePercentage }} free space"
+
+        # Silence and inhibition effectiveness
+        - alert: AlertManagerExcessiveSilences
+          expr: |
+            count(alertmanager_silences) > 100
+          for: 30m
+          labels:
+            severity: INFO
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "Excessive number of silences"
+            description: "AlertManager has {{ $value }} active silences, may indicate configuration issues"
+
+        - alert: AlertManagerInhibitionRuleIneffective
+          expr: |
+            increase(alertmanager_alerts_suppressed_total[1h]) == 0
+            AND increase(alertmanager_alerts_received_total[1h]) > 1000
+          for: 1h
+          labels:
+            severity: INFO
+            domain: infrastructure
+            component: alertmanager
+          annotations:
+            summary: "Inhibition rules may be ineffective"
+            description: "No alerts have been suppressed despite high alert volume, check inhibition rules"
+
+    - name: alertmanager.sla
+      interval: 60s
+      rules:
+        # SLA metrics
+        - alert: AlertManagerSLAViolation
+          expr: |
+            (
+              sum(rate(alertmanager_notifications_total[5m]))
+              /
+              (sum(rate(alertmanager_notifications_total[5m])) + sum(rate(alertmanager_notifications_failed_total[5m])))
+            ) * 100 < 99.9
+          for: 30m
+          labels:
+            severity: WARNING
+            domain: infrastructure
+            component: alertmanager
+            sla: violation
+          annotations:
+            summary: "AlertManager SLA violation"
+            description: "Notification success rate is {{ $value | humanizePercentage }}, below 99.9% SLA"
+
+        - alert: AlertManagerFalsePositiveRateHigh
+          expr: |
+            (
+              sum(rate(alertmanager_silences_created_total{reason="false_positive"}[24h]))
+              /
+              sum(rate(alertmanager_alerts_received_total[24h]))
+            ) * 100 > 30
+          for: 1h
+          labels:
+            severity: INFO
+            domain: infrastructure
+            component: alertmanager
+            effectiveness: low
+          annotations:
+            summary: "High false positive rate"
+            description: "False positive rate is {{ $value | humanizePercentage }}, target is < 30%"
+
+    - name: alertmanager.performance
+      interval: 60s
+      rules:
+        # Performance metrics
+        - record: alertmanager:notifications_sent:rate5m
+          expr: |
+            sum(rate(alertmanager_notifications_total[5m])) by (job, integration)
+
+        - record: alertmanager:notifications_failed:rate5m
+          expr: |
+            sum(rate(alertmanager_notifications_failed_total[5m])) by (job, integration)
+
+        - record: alertmanager:notification_latency:p99
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(alertmanager_notification_latency_seconds_bucket[5m])) by (le, job)
+            )
+
+        - record: alertmanager:alerts_received:rate5m
+          expr: |
+            sum(rate(alertmanager_alerts_received_total[5m])) by (job)
+
+        - record: alertmanager:alert_grouping_efficiency
+          expr: |
+            avg(alertmanager_alerts_per_group) by (job)
+
+        - record: alertmanager:cluster_health_score
+          expr: |
+            min(
+              count(up{job="alertmanager"} == 1) / 3 * 100,
+              100
+            )

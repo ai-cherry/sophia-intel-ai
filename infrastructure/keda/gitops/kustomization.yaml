@@ -1,0 +1,172 @@
+# Base Kustomization for KEDA Autoscaling
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: keda-base
+  annotations:
+    config.kubernetes.io/local-config: "true"
+    kustomize.toolkit.fluxcd.io/namespace: keda-system
+
+# Common labels applied to all resources
+commonLabels:
+  app.kubernetes.io/part-of: sophia-intel-ai
+  app.kubernetes.io/managed-by: kustomize
+  app.kubernetes.io/component: autoscaling
+  app.kubernetes.io/name: keda
+
+# Common annotations
+commonAnnotations:
+  deployment.strategy: progressive
+  sla.target: "85-percent-improvement"
+  scaling.target: "9-seconds"
+
+# Namespace where KEDA will be deployed
+namespace: keda-system
+
+# Resources to include in base configuration
+resources:
+  # Namespace
+  - namespace.yaml
+
+  # Security configurations
+  - ../base/rbac.yaml
+  - ../base/networkpolicy.yaml
+  - ../base/external-secrets.yaml
+
+  # Monitoring
+  - ../monitoring/prometheus-rules.yaml
+  - ../monitoring/custom-metrics-configmap.yaml
+
+  # Core ScaledObjects
+  - ../scalers/sophia-scaledobject.yaml
+  - ../scalers/sophia-scaledobject.yaml
+  - ../scalers/ai-workload-cron-scaler.yaml
+
+# ConfigMap generator for dynamic configuration
+configMapGenerator:
+  - name: keda-config
+    namespace: keda-system
+    literals:
+      - environment=base
+      - scaling.time.target=9
+      - scaling.time.baseline=60
+      - improvement.target=85
+      - circuit.breaker.enabled=true
+      - circuit.breaker.max.events=3
+      - circuit.breaker.cooldown=60
+    options:
+      labels:
+        app: keda
+        component: configuration
+      annotations:
+        generated: "true"
+
+# Secret generator for sensitive data (replaced by ExternalSecrets in production)
+secretGenerator:
+  - name: keda-secrets
+    namespace: keda-system
+    type: Opaque
+    literals:
+      - redis.password=changeme
+      - prometheus.token=changeme
+    options:
+      labels:
+        app: keda
+        component: secrets
+      annotations:
+        note: "These are placeholder secrets - use ExternalSecrets in production"
+
+# Patches to apply to resources
+patches:
+  # Add resource limits to all containers
+  - target:
+      kind: Deployment
+      name: ".*"
+    patch: |-
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+
+  # Add PodDisruptionBudget
+  - target:
+      kind: Deployment
+      name: ".*"
+    patch: |-
+      - op: add
+        path: /spec/template/metadata/annotations/prometheus.io~1scrape
+        value: "true"
+      - op: add
+        path: /spec/template/metadata/annotations/prometheus.io~1port
+        value: "8080"
+
+# Replacements for environment-specific values
+replacements:
+  - source:
+      kind: ConfigMap
+      name: keda-config
+      fieldPath: data.environment
+    targets:
+      - select:
+          kind: ScaledObject
+        fieldPaths:
+          - metadata.labels.environment
+
+  - source:
+      kind: ConfigMap
+      name: keda-config
+      fieldPath: data.circuit.breaker.max.events
+    targets:
+      - select:
+          kind: ScaledObject
+        fieldPaths:
+          - metadata.annotations.[keda.sh/max-scale-events]
+
+# Images to update
+images:
+  - name: ghcr.io/kedacore/keda
+    newTag: 2.13.0
+  - name: ghcr.io/kedacore/keda-metrics-apiserver
+    newTag: 2.13.0
+
+# Helm chart configuration (if using Helm with Kustomize)
+helmCharts:
+  - name: keda
+    repo: https://kedacore.github.io/charts
+    version: 2.13.0
+    releaseName: sophia-intel-keda
+    namespace: keda-system
+    valuesFile: ../helm/values.yaml
+    includeCRDs: true
+
+# Variables for substitution
+vars:
+  - name: NAMESPACE_KEDA
+    objref:
+      kind: Namespace
+      name: keda-system
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+
+  - name: REDIS_SECRET
+    objref:
+      kind: Secret
+      name: redis-credentials
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name
+
+  - name: PROMETHEUS_SECRET
+    objref:
+      kind: Secret
+      name: prometheus-credentials
+      apiVersion: v1
+    fieldref:
+      fieldpath: metadata.name

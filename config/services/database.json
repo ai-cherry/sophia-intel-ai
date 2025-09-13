@@ -1,0 +1,13 @@
+{
+  "type": "sqlite",
+  "connections": {
+    "main": "data/sophia_main.db",
+    "memory": "data/memory_store.db",
+    "cache": "tmp/cache.db"
+  },
+  "backup": {
+    "enabled": true,
+    "interval": "1h",
+    "retention": "7d"
+  }
+}

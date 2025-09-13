@@ -1,0 +1,33 @@
+groups:
+- name: model_cost_alerts
+  rules:
+  - alert: HighGPT5Cost
+    expr: model_cost_usd_today{model="openai/gpt-5"} > 80 * (env("MAX_DAILY_COST", 100.0) / 100)
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High GPT-5 cost usage"
+      description: "Model cost for openai/gpt-5 is {{ $value }} USD today, exceeding 80% of the daily budget."
+
+- name: model_latency_alerts
+  rules:
+  - alert: ModelLatencyHigh
+    expr: model_latency_seconds{quantile="0.95"} > 2000
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High model latency"
+      description: "95th percentile latency for models is {{ $value }} ms, exceeding SLA threshold."
+
+- name: model_availability_alerts
+  rules:
+  - alert: ModelUnavailable
+    expr: model_tokens_total{model=~".*"} == 0
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Model unavailable"
+      description: "No tokens processed for models in the last 5 minutes."

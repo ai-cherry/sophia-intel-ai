@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# Unified AI CLI router for local dev
+# Routes to existing CLIs and ensures common env for MCP + LiteLLM
+
+set -euo pipefail
+
+# Resolve repo root for optional helpers
+ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
+
+# Export MCP env so downstream tools (or adapters) can read them
+export MCP_MEMORY_URL=${MCP_MEMORY_URL:-http://127.0.0.1:8081}
+export MCP_FS_URL=${MCP_FS_URL:-http://127.0.0.1:8082}
+export MCP_GIT_URL=${MCP_GIT_URL:-http://127.0.0.1:8084}
+
+usage() {
+  cat <<EOF
+ai {codex|claude|lite|opencode} [args...]
+
+Examples:
+  ai claude -p "Summarize recent CRM pipeline results"
+  ai codex  "Write a SQL to summarize MRR by month"
+  # Gemini note: use 'lite' with a Gemini model or usecase
+  ai lite   --usecase analysis.large_context -p "Analyze anomalies"
+  ai lite   --model analytical -p "Explain trend drivers"
+  ai opencode --version
+
+Options:
+  --usecase <name>   Resolve model via config/usecases (e.g., coding.fast)
+  --model <name>     Explicit model override (e.g., gemini-1.5-pro)
+EOF
+}
+
+cmd=${1:-}; shift || true
+has_flag_model() { for a in "$@"; do [ "$a" = "--model" ] && return 0; done; return 1; }
+
+# extract optional --usecase <name>
+USECASE=""
+# Ensure ARGS is always defined even on older macOS bash with -u
+ARGS=()
+while (( "$#" )); do
+  if [ "$1" = "--usecase" ]; then
+    shift; USECASE="${1:-}"; shift || true; continue
+  fi
+  ARGS+=("$1"); shift || true
+done
+# Safely reset positional args even if ARGS is empty
+if [ "${ARGS+x}" = x ] && [ "${#ARGS[@]}" -gt 0 ]; then
+  set -- "${ARGS[@]}"
+else
+  set --
+fi
+
+case "$cmd" in
+  claude)
+    # Route to repo shim. Falls back to model alias if available.
+    if [ -x "$ROOT_DIR/bin/claude" ]; then
+      if has_flag_model "$@"; then
+        exec "$ROOT_DIR/bin/claude" "$@"
+      else
+        if [ -x "$ROOT_DIR/bin/llm-models" ]; then
+          if [ -n "$USECASE" ]; then MODEL=$("$ROOT_DIR/bin/llm-models" resolve usecase "$USECASE"); else MODEL=$("$ROOT_DIR/bin/llm-models" resolve cli claude); fi
+          exec "$ROOT_DIR/bin/claude" --model "$MODEL" "$@"
+        else
+          exec "$ROOT_DIR/bin/claude" "$@"
+        fi
+      fi
+    fi
+    echo "claude shim not found. Use 'ai lite --usecase coding.complex' or install litellm-cli." >&2
+    exit 127
+    ;;
+  codex)
+    command -v codex  >/dev/null 2>&1 || { echo "codex CLI not found" >&2; exit 127; }
+    if has_flag_model "$@"; then
+      exec codex "$@"
+    else
+      if [ -x "$ROOT_DIR/bin/llm-models" ]; then
+        if [ -n "$USECASE" ]; then MODEL=$("$ROOT_DIR/bin/llm-models" resolve usecase "$USECASE"); else MODEL=$("$ROOT_DIR/bin/llm-models" resolve cli codex); fi
+        exec codex --model "$MODEL" "$@"
+      else
+        exec codex "$@"
+      fi
+    fi
+    ;;
+  # 'gemini' subcommand removed intentionally. Use 'lite' with --model or --usecase.
+  lite)
+    if command -v litellm-cli >/dev/null 2>&1; then
+      if has_flag_model "$@"; then
+        exec litellm-cli "$@"
+      else
+        if [ -x "$ROOT_DIR/bin/llm-models" ]; then
+          if [ -n "$USECASE" ]; then MODEL=$("$ROOT_DIR/bin/llm-models" resolve usecase "$USECASE"); else MODEL=$("$ROOT_DIR/bin/llm-models" resolve cli lite); fi
+          exec litellm-cli chat --model "$MODEL" "$@"
+        else
+          exec litellm-cli "$@"
+        fi
+      fi
+    fi
+    echo "litellm-cli not found" >&2
+    exit 127
+    ;;
+  opencode)
+    # Use repo shim to avoid PATH issues
+    exec "$ROOT_DIR/bin/opencode" "$@"
+    ;;
+  ''|help|-h|--help)
+    usage
+    ;;
+  *)
+    echo "Unknown subcommand: $cmd" >&2
+    usage
+    exit 1
+    ;;
+esac

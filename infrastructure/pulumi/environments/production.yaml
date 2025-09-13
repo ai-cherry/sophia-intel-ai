@@ -1,0 +1,114 @@
+imports:
+  - shared
+
+values:
+  environment: production
+
+  # Production-specific overrides
+  infrastructure:
+    redis:
+      max_memory_mb: 2048
+      max_connections: 100
+      cluster_enabled: true
+      cluster_nodes: 3
+      ssl_verify: true
+      ssl_cert_reqs: required
+      backup_enabled: true
+      backup_retention_days: 30
+      monitoring_enabled: true
+
+    vector_db:
+      replication_factor: 2
+      backup_enabled: true
+      backup_retention_days: 90
+      performance_optimization: high_performance
+      disaster_recovery_enabled: true
+
+  # Production security - using placeholder references for actual secrets
+  security:
+    encryption_at_rest: true
+    encryption_in_transit: true
+    api_key_rotation_days: 30
+    session_timeout_minutes: 15
+    max_failed_attempts: 3
+    ip_whitelist_enabled: true
+    waf_enabled: true
+    ddos_protection: true
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 2000
+      burst_limit: 5000
+
+  # Production monitoring and alerting
+  monitoring:
+    metrics_enabled: true
+    tracing_enabled: true
+    profiling_enabled: true
+    uptime_monitoring: true
+    performance_monitoring: true
+    security_monitoring: true
+    alert_channels:
+      - type: slack
+        webhook: ${prod_slack_webhook}
+      - type: pagerduty
+        integration_key: ${prod_pagerduty_key}
+      - type: email
+        recipients:
+          - ops@sophia-intel-ai.com
+          - security@sophia-intel-ai.com
+
+  # Production application settings
+  application:
+    debug: false
+    log_level: warn
+    hot_reload: false
+    graceful_shutdown_timeout: 30
+    cors_origins:
+      - https://sophia-intel-ai.com
+      - https://api.sophia-intel-ai.com
+    websocket:
+      max_connections: 100
+      heartbeat_interval: 15
+      connection_timeout: 30
+    api:
+      rate_limit_per_minute: 2000
+      timeout_seconds: 60
+      max_request_size_mb: 50
+
+  # High availability settings
+  high_availability:
+    enabled: true
+    min_replicas: 3
+    max_replicas: 10
+    auto_scaling:
+      enabled: true
+      cpu_threshold: 70
+      memory_threshold: 80
+      scale_up_cooldown: 300
+      scale_down_cooldown: 600
+
+  # Disaster recovery
+  disaster_recovery:
+    enabled: true
+    backup_frequency: daily
+    cross_region_replication: true
+    recovery_time_objective_hours: 4
+    recovery_point_objective_hours: 1
+
+  # Compliance and audit
+  compliance:
+    gdpr_enabled: true
+    hipaa_enabled: false
+    sox_enabled: true
+    audit_log_retention_days: 2555 # 7 years
+    data_retention_days: 365
+
+  # Production secrets placeholders (actual values managed in Pulumi ESC)
+  secrets_references:
+    # These will be resolved at runtime from secure Pulumi ESC
+    redis_password: ${prod_redis_password}
+    openai_api_key: ${prod_openai_key}
+    anthropic_api_key: ${prod_anthropic_key}
+    qdrant_api_key: ${prod_qdrant_key}
+    weaviate_api_key: ${prod_weaviate_key}
+    portkey_api_key: ${prod_portkey_key}

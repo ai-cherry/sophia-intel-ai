@@ -1,0 +1,4 @@
+{
+  "enabled": false,
+  "notes": "Set AIRTABLE_PAT and AIRTABLE_BASE_ID via env."
+}

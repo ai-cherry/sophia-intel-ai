@@ -1,0 +1,252 @@
+# Architecture Rules and Compliance Configuration
+# This file defines the rules that prevent code duplication and maintain quality
+
+version: 1.0.0
+last_updated: 2025-01-03
+
+# Component limits to prevent proliferation
+max_components:
+  orchestrators: 4 # Max number of orchestrator classes
+  agents: 9 # Max number of agent types
+  managers: 3 # Max number of manager classes
+  ui_components: 15 # Max React components per feature
+  docker_files: 1 # Single unified Dockerfile
+  api_routers: 10 # Max number of API router files
+  test_files_per_module: 5 # Max test files per module
+
+# Naming conventions
+naming_conventions:
+  classes: PascalCase
+  functions: snake_case
+  constants: UPPER_SNAKE_CASE
+  files: snake_case
+  react_components: PascalCase
+  api_endpoints: /snake_case
+  docker_services: kebab-case
+
+# Forbidden patterns that indicate poor practices
+forbidden_patterns:
+  - "exec(" # Security risk
+  - "eval(" # Security risk
+  - "__import__" # Dynamic imports can hide dependencies
+  - "os.system(" # Use subprocess instead
+  - "import *" # Wildcard imports
+  - "# TODO: fix later" # Unaddressed TODOs
+  - "console.log(" # Debug statements in production
+  - "print(" # Use logging instead (except in CLI tools)
+
+# Required patterns for specific file types
+required_patterns:
+  api_endpoints:
+    - "@router"
+    - "APIRouter"
+    - "async def"
+  react_components:
+    - "export"
+    - "return"
+  python_classes:
+    - "__init__"
+    - "self"
+  test_files:
+    - "assert"
+    - "test_"
+
+# Dependency management rules
+dependency_rules:
+  max_imports_per_file: 30
+  max_depth_inheritance: 3
+  circular_import_check: true
+  forbidden_imports:
+    - "*" # No wildcard imports
+    - "from . import *" # No relative wildcards
+  required_imports:
+    test_files:
+      - "pytest"
+    api_files:
+      - "fastapi"
+    react_files:
+      - "react"
+
+# File structure limits
+file_structure:
+  max_file_size_kb: 500
+  max_lines_per_file: 1000
+  max_functions_per_file: 20
+  max_classes_per_file: 5
+  max_methods_per_class: 15
+  max_parameters_per_function: 7
+  max_nesting_depth: 4
+
+# Module organization rules
+module_organization:
+  allowed_top_level_dirs:
+    - app
+    - tests
+    - scripts
+    - agent-ui
+    - docs
+    - .github
+  required_files:
+    - README.md
+    - requirements.txt
+    - .gitignore
+    - Dockerfile
+  module_structure:
+    app:
+      required_subdirs:
+        - api
+        - agents
+        - core
+        - utils
+      forbidden_subdirs:
+        - temp
+        - old
+        - backup
+    tests:
+      required_subdirs:
+        - unit
+        - integration
+      naming_pattern: "test_*.py"
+
+# API design rules
+api_rules:
+  versioning_required: true
+  versioning_pattern: "/api/v{version}"
+  authentication_required:
+    - POST
+    - PUT
+    - DELETE
+    - PATCH
+  response_standards:
+    success_structure:
+      - status
+      - data
+    error_structure:
+      - status
+      - error
+      - message
+  rate_limiting:
+    enabled: true
+    default_limit: 100
+    time_window: 60
+
+# Database and model rules
+database_rules:
+  migration_required: true
+  migration_tool: alembic
+  model_requirements:
+    - id_field
+    - created_at
+    - updated_at
+  index_required_for:
+    - foreign_keys
+    - frequently_queried_fields
+
+# Testing requirements
+testing_rules:
+  min_coverage_percent: 80
+  required_test_types:
+    - unit
+    - integration
+  test_file_pattern: "test_*.py"
+  fixture_location: "tests/fixtures"
+  mock_strategy: "unittest.mock"
+
+# Documentation requirements
+documentation_rules:
+  docstring_required:
+    - classes
+    - public_functions
+    - api_endpoints
+  docstring_format: google
+  readme_sections:
+    - Installation
+    - Usage
+    - Configuration
+    - Testing
+    - Contributing
+  api_documentation:
+    tool: swagger
+    auto_generate: true
+
+# Security rules
+security_rules:
+  secrets_scanning: true
+  forbidden_in_code:
+    - api_key
+    - password
+    - secret
+    - token
+    - credential
+  required_env_vars:
+    - API keys
+    - Database credentials
+    - Third-party tokens
+  security_headers:
+    - X-Content-Type-Options
+    - X-Frame-Options
+    - Content-Security-Policy
+
+# Performance thresholds
+performance_rules:
+  max_response_time_ms: 500
+  max_query_time_ms: 100
+  max_memory_usage_mb: 512
+  max_cpu_usage_percent: 80
+  cache_required_for:
+    - frequently_accessed_data
+    - expensive_computations
+
+# Git and version control rules
+version_control_rules:
+  branch_naming:
+    feature: "feature/*"
+    bugfix: "bugfix/*"
+    hotfix: "hotfix/*"
+    release: "release/*"
+  commit_message_format: "type(scope): description"
+  commit_types:
+    - feat
+    - fix
+    - docs
+    - style
+    - refactor
+    - test
+    - chore
+  max_files_per_commit: 20
+  require_pull_request: true
+  require_code_review: true
+
+# Monitoring and alerting
+monitoring_rules:
+  required_metrics:
+    - response_time
+    - error_rate
+    - throughput
+    - cpu_usage
+    - memory_usage
+  log_levels:
+    - ERROR
+    - WARNING
+    - INFO
+  alert_thresholds:
+    error_rate: 1%
+    response_time: 1000ms
+    cpu_usage: 90%
+    memory_usage: 90%
+
+# Enforcement levels
+enforcement:
+  violations:
+    action: block # block, warn, or ignore
+    report: true
+  warnings:
+    action: warn
+    report: true
+  auto_fix:
+    enabled: true
+    tools:
+      - black # Python formatting
+      - ruff # Python linting
+      - prettier # JS/TS formatting
+      - eslint # JS/TS linting

@@ -1,0 +1,97 @@
+{
+  "timestamp": "2025-08-09",
+  "real_health_score": 12.058823529411768,
+  "status": "MAJOR OVERHAUL NEEDED",
+  "root_causes": [
+    {
+      "issue": "MASSIVE SECRET EXPOSURE",
+      "root_cause": "No centralized secret management - secrets hardcoded everywhere",
+      "evidence": "30 files with exposed secrets",
+      "fix_type": "MAJOR",
+      "fix_description": "Implement proper Pulumi ESC integration and remove all hardcoded secrets"
+    },
+    {
+      "issue": "MULTIPLE SECRET MANAGEMENT SYSTEMS",
+      "root_cause": "No single source of truth - multiple implementations created over time",
+      "evidence": "15 different secret management files",
+      "fix_type": "MAJOR",
+      "fix_description": "Consolidate to single Pulumi ESC-based system, delete duplicates"
+    },
+    {
+      "issue": "DEPLOYMENT SCRIPT CHAOS",
+      "root_cause": "Multiple deployment approaches without consolidation",
+      "evidence": "15 deployment scripts",
+      "fix_type": "MAJOR",
+      "fix_description": "Create single deployment entry point, archive old scripts"
+    },
+    {
+      "issue": "MULTIPLE DOCKER CONFIGURATIONS",
+      "root_cause": "Different Docker setups for different features without consolidation",
+      "evidence": "5 Docker compose files",
+      "fix_type": "MAJOR",
+      "fix_description": "Consolidate to single docker-compose.yml with environment overrides"
+    },
+    {
+      "issue": "ENVIRONMENT FILE CHAOS",
+      "root_cause": "Multiple environment configurations without clear hierarchy",
+      "evidence": "19 environment files",
+      "fix_type": "MAJOR",
+      "fix_description": "Standardize on Pulumi ESC with single .env template"
+    }
+  ],
+  "quick_fixes": [
+    {
+      "issue": "Missing ai_router.py",
+      "fix": "Copy ai_router.py from another location or recreate it",
+      "effort": "5 minutes",
+      "impact": "HIGH - needed for AI routing functionality"
+    }
+  ],
+  "major_fixes": [
+    {
+      "issue": "NO CENTRALIZED SECRET MANAGEMENT",
+      "description": "Secrets are scattered across multiple files and systems",
+      "root_cause": "Incremental development without architectural planning",
+      "fix_approach": "Implement Pulumi ESC as single source of truth",
+      "effort": "2-3 days",
+      "impact": "CRITICAL - security and maintainability",
+      "steps": [
+        "1. Set up Pulumi ESC properly with GitHub org secrets",
+        "2. Create single secret loading script",
+        "3. Remove all hardcoded secrets from all files",
+        "4. Update all applications to use environment variables",
+        "5. Test deployment with new system"
+      ]
+    },
+    {
+      "issue": "MULTIPLE DEPLOYMENT SYSTEMS",
+      "description": "Multiple ways to deploy with no clear primary path",
+      "root_cause": "Feature creep without consolidation",
+      "fix_approach": "Create single deployment entry point",
+      "effort": "1-2 days",
+      "impact": "HIGH - operational complexity",
+      "steps": [
+        "1. Choose primary deployment method (recommend docker-compose)",
+        "2. Create single deploy.sh script",
+        "3. Archive or delete old deployment scripts",
+        "4. Update documentation to reference single method",
+        "5. Test deployment path end-to-end"
+      ]
+    },
+    {
+      "issue": "DOCUMENTATION CHAOS",
+      "description": "Multiple README files with conflicting information",
+      "root_cause": "Documentation created for each feature without consolidation",
+      "fix_approach": "Create single source of truth documentation",
+      "effort": "1 day",
+      "impact": "MEDIUM - user confusion",
+      "steps": [
+        "1. Audit all documentation files",
+        "2. Create master README.md",
+        "3. Move detailed docs to docs/ folder",
+        "4. Remove or archive outdated docs",
+        "5. Ensure all docs reference current implementation"
+      ]
+    }
+  ]
+}

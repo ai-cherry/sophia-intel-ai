@@ -1,0 +1,4 @@
+git_policies:
+  protected_branches: ["main", "production"]
+  force_push_allowed: false
+  commit_template: "{message}\n\nCo-authored-by: AI Agent <agent@sophia-intel.ai>"

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Opencode wrapper - launches with proper environment
+
+# Ensure opencode is in PATH
+export PATH="$HOME/.opencode/bin:$PATH"
+
+# Check if opencode is available
+if ! command -v opencode >/dev/null 2>&1; then
+    echo "Error: opencode not found in PATH"
+    echo "Install with: curl -fsSL https://get.opencode.dev | bash"
+    exit 1
+fi
+
+# Launch opencode with all arguments passed through
+exec opencode "$@"

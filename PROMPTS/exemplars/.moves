@@ -1,0 +1,9 @@
+Moved the following from repo root into this folder:
+- CODEX_ARTEMIS_ENHANCED_PROMPT.json
+- CODEX_REPOSITORY_CLEANUP_PROMPT.json
+- CODEX_METRICS_ROUTING_PROMPT.json
+- CODEX_COMPREHENSIVE_QC_IMPROVEMENT_PROMPT.json
+- CHATGPT_IMPLEMENTATION_PROMPT.json
+- SOPHIA_CONSOLIDATION_PROMPT.json
+
+Update references if any code reads these by relative path.

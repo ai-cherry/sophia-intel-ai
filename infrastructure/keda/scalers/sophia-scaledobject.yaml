@@ -1,0 +1,209 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: sophia-scaler
+  namespace: sophia-system
+  labels:
+    app: sophia
+    component: analytics-processing
+    scaler-type: prometheus
+    managed-by: keda
+  annotations:
+    # Circuit breaker configuration
+    keda.sh/circuit-breaker-enabled: "true"
+    keda.sh/max-scale-events: "3"
+    keda.sh/max-scale-events-window: "60s"
+    keda.sh/fallback-to-hpa: "true"
+    # Monitoring annotations
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    # AI workload annotations
+    ai.workload/type: "analytics"
+    ai.workload/priority: "high"
+    # Deployment tracking
+    deployment.timestamp: "{{ .Values.deploymentTimestamp }}"
+    deployment.version: "{{ .Values.global.version }}"
+spec:
+  scaleTargetRef:
+    name: sophia-analytics
+    kind: Deployment
+    apiVersion: apps/v1
+
+  # Polling and cooldown configuration optimized for AI workloads
+  pollingInterval: 15 # Slightly longer polling for analytics
+  cooldownPeriod: 45 # Longer cooldown to prevent thrashing
+  idleReplicaCount: 1 # Keep at least 1 replica for quick response
+  minReplicaCount: 3 # Minimum for high availability
+  maxReplicaCount: 100 # Maximum for peak AI processing
+
+  # Advanced HPA configuration for AI workload patterns
+  advanced:
+    restoreToOriginalReplicaCount: false
+    horizontalPodAutoscalerConfig:
+      name: sophia-hpa
+      behavior:
+        scaleDown:
+          stabilizationWindowSeconds: 90 # Longer stabilization for AI workloads
+          policies:
+            - type: Percent
+              value: 30 # Conservative scale down
+              periodSeconds: 60
+            - type: Pods
+              value: 1
+              periodSeconds: 90
+          selectPolicy: Min # Choose the most conservative scale down
+        scaleUp:
+          stabilizationWindowSeconds: 0 # Immediate scale up for AI bursts
+          policies:
+            - type: Percent
+              value: 200 # Aggressive scale up
+              periodSeconds: 15
+            - type: Pods
+              value: 5
+              periodSeconds: 15
+          selectPolicy: Max # Choose the most aggressive scale up
+      metrics:
+        - type: External
+          external:
+            metric:
+              name: sophia_analytics_processing_rate
+              selector:
+                matchLabels:
+                  service: sophia-analytics
+            target:
+              type: AverageValue
+              averageValue: "100" # Target processing rate per replica
+
+  # Prometheus Metrics Trigger
+  triggers:
+    - type: prometheus
+      metadata:
+        # Prometheus server configuration
+        serverAddress: http://prometheus.monitoring.svc.cluster.local:9090
+        metricName: sophia_analytics_processing_rate
+        threshold: "100" # Target processing rate per replica
+        activationThreshold: "50" # Minimum rate to activate scaling
+
+        # Complex query for AI workload metrics
+        query: |
+          sum(rate(sophia_analytics_events_processed_total[1m]))
+          /
+          max(kube_deployment_status_replicas_available{deployment="sophia-analytics",namespace="sophia-system"})
+
+        # Additional Prometheus configuration
+        ignoreNullValues: "true"
+        unsafeSsl: "false"
+
+      authenticationRef:
+        - parameter: bearerToken
+          name: prometheus-auth
+          key: token
+
+    # Secondary trigger for memory-based scaling (AI models)
+    - type: prometheus
+      metadata:
+        serverAddress: http://prometheus.monitoring.svc.cluster.local:9090
+        metricName: sophia_model_memory_usage
+        threshold: "80" # Target memory usage percentage
+        activationThreshold: "60"
+
+        query: |
+          avg(
+            100 * (
+              container_memory_working_set_bytes{namespace="sophia-system",pod=~"sophia-analytics-.*"}
+              /
+              container_spec_memory_limit_bytes{namespace="sophia-system",pod=~"sophia-analytics-.*"}
+            )
+          )
+
+      authenticationRef:
+        - parameter: bearerToken
+          name: prometheus-auth
+          key: token
+
+  # Fallback configuration
+  fallback:
+    failureThreshold: 3
+    replicas: 15 # Fallback to 15 replicas on failure
+---
+# TriggerAuthentication for Prometheus
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: prometheus-auth
+  namespace: sophia-system
+  labels:
+    app: sophia
+    component: authentication
+spec:
+  secretTargetRef:
+    - parameter: bearerToken
+      name: prometheus-credentials
+      key: bearer-token
+---
+# ConfigMap for Sophia AI metrics configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sophia-ai-metrics-config
+  namespace: sophia-system
+  labels:
+    app: sophia
+    component: ai-metrics-configuration
+data:
+  # AI Processing Metrics
+  ai.processing.target.rate: "100" # Events per second per replica
+  ai.processing.max.rate: "500" # Maximum rate before alert
+  ai.model.inference.latency.p99: "200" # P99 latency in ms
+  ai.model.batch.size: "32" # Optimal batch size for AI models
+
+  # Memory and GPU metrics for AI workloads
+  ai.memory.usage.threshold: "80" # Percentage threshold
+  ai.gpu.utilization.target: "75" # Target GPU utilization
+  ai.gpu.memory.threshold: "90" # GPU memory threshold
+
+  # Model-specific configurations
+  model.load.time.max: "30" # Maximum model load time in seconds
+  model.cache.size: "5" # Number of models to keep in memory
+  model.version.strategy: "rolling" # Model update strategy
+
+  # Analytics pipeline settings
+  analytics.pipeline.stages: "5" # Number of pipeline stages
+  analytics.buffer.size: "1000" # Event buffer size
+  analytics.checkpoint.interval: "60" # Checkpoint interval in seconds
+
+  # Scaling parameters for AI workloads
+  scale.up.ai.burst.multiplier: "3" # Multiplier for AI burst loads
+  scale.down.ai.idle.delay: "300" # Delay before scaling down idle AI pods
+
+  # Cost optimization settings
+  spot.instance.percentage: "70" # Percentage of spot instances for AI workloads
+  preemptible.tolerance: "true" # Tolerate preemptible instances
+---
+# ServiceMonitor for Sophia metrics exposure
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sophia-keda-metrics
+  namespace: sophia-system
+  labels:
+    app: sophia
+    component: monitoring
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: sophia-analytics
+  endpoints:
+    - port: metrics
+      interval: 30s
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+      metricRelabelings:
+        - sourceLabels: [__name__]
+          regex: "sophia_analytics_.*"
+          action: keep

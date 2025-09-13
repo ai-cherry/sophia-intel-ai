@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+# Central model alias + usecase manager for single-dev control
+
+set -euo pipefail
+
+ROOT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )"/.. && pwd )"
+CFG="$ROOT_DIR/config/models.json"
+
+ensure_cfg() { [ -f "$CFG" ] || { echo "Missing $CFG" >&2; exit 1; }; }
+
+json_get() {
+  local jq_expr="$1"
+  if command -v jq >/dev/null 2>&1; then
+    jq -r "$jq_expr" "$CFG"
+  else
+    python3 - "$CFG" "$jq_expr" << 'PY'
+import json,sys
+cfg=json.load(open(sys.argv[1]))
+expr=sys.argv[2]
+# very small selector: support .aliases.KEY and .usecases.KEY and .cli_defaults.KEY
+parts=expr.strip('.').split('.')
+cur=cfg
+for p in parts:
+    cur=cur[p]
+if isinstance(cur,(dict,list)):
+    print(json.dumps(cur))
+else:
+    print(cur)
+PY
+  fi
+}
+
+json_set_alias() {
+  local name="$1"; shift; local model="$1"
+  if command -v jq >/dev/null 2>&1; then
+    tmp=$(mktemp)
+    jq --arg k "$name" --arg v "$model" '.aliases[$k]=$v' "$CFG" > "$tmp" && mv "$tmp" "$CFG"
+  else
+    python3 - "$CFG" "$name" "$model" << 'PY'
+import json,sys
+path=sys.argv[1]; name=sys.argv[2]; model=sys.argv[3]
+cfg=json.load(open(path))
+cfg.setdefault('aliases',{})[name]=model
+open(path,'w').write(json.dumps(cfg,indent=2))
+PY
+  fi
+}
+
+json_set_usecase() {
+  local use="$1"; shift; local alias="$1"
+  if command -v jq >/dev/null 2>&1; then
+    tmp=$(mktemp)
+    jq --arg k "$use" --arg v "$alias" '.usecases[$k]=$v' "$CFG" > "$tmp" && mv "$tmp" "$CFG"
+  else
+    python3 - "$CFG" "$use" "$alias" << 'PY'
+import json,sys
+path=sys.argv[1]; use=sys.argv[2]; alias=sys.argv[3]
+cfg=json.load(open(path))
+cfg.setdefault('usecases',{})[use]=alias
+open(path,'w').write(json.dumps(cfg,indent=2))
+PY
+  fi
+}
+
+resolve_alias() {
+  local alias="$1"
+  ensure_cfg
+  json_get ".aliases.$alias"
+}
+
+resolve_usecase() {
+  local use="$1"
+  ensure_cfg
+  local alias; alias=$(json_get ".usecases.$use")
+  resolve_alias "$alias"
+}
+
+resolve_cli() {
+  local cli="$1"
+  ensure_cfg
+  local alias; alias=$(json_get ".cli_defaults.$cli")
+  resolve_alias "$alias"
+}
+
+show() {
+  ensure_cfg
+  if command -v jq >/dev/null 2>&1; then jq . "$CFG"; else cat "$CFG"; fi
+}
+
+usage() {
+  cat <<EOF
+llm-models: centralized model alias manager
+
+Usage:
+  llm-models show
+  llm-models get alias <alias>
+  llm-models set alias <alias> <model>
+  llm-models get usecase <use>
+  llm-models set usecase <use> <alias>
+  llm-models get cli <cli>
+  llm-models set cli <cli> <alias>
+  llm-models resolve alias <alias>
+  llm-models resolve usecase <use>
+  llm-models resolve cli <claude|gemini|lite|codex>
+EOF
+}
+
+cmd=${1:-}; shift || true
+case "$cmd" in
+  show) show ;;
+  get)
+    case "${1:-}" in
+      alias) shift; json_get ".aliases.${1:-}" ;;
+      usecase) shift; json_get ".usecases.${1:-}" ;;
+      cli) shift; json_get ".cli_defaults.${1:-}" ;;
+      *) usage; exit 1;;
+    esac
+    ;;
+  set)
+    case "${1:-}" in
+      alias) shift; json_set_alias "${1:-}" "${2:-}" ;;
+      usecase) shift; json_set_usecase "${1:-}" "${2:-}" ;;
+      cli) shift; 
+        CLI_NAME="${1:-}"; CLI_ALIAS="${2:-}"; 
+        if command -v jq >/dev/null 2>&1; then
+          tmp=$(mktemp)
+          jq --arg k "$CLI_NAME" --arg v "$CLI_ALIAS" '.cli_defaults[$k]=$v' "$CFG" > "$tmp" && mv "$tmp" "$CFG"
+        else
+          python3 - "$CFG" "$CLI_NAME" "$CLI_ALIAS" << 'PY'
+import json,sys
+path=sys.argv[1]; name=sys.argv[2]; alias=sys.argv[3]
+cfg=json.load(open(path))
+cfg.setdefault('cli_defaults',{})[name]=alias
+open(path,'w').write(json.dumps(cfg,indent=2))
+PY
+        fi
+        ;;
+      *) usage; exit 1;;
+    esac
+    ;;
+  resolve)
+    case "${1:-}" in
+      alias) shift; resolve_alias "${1:-}" ;;
+      usecase) shift; resolve_usecase "${1:-}" ;;
+      cli) shift; resolve_cli "${1:-}" ;;
+      *) usage; exit 1;;
+    esac
+    ;;
+  ''|help|-h|--help) usage ;;
+  *) usage; exit 1;;
+esac

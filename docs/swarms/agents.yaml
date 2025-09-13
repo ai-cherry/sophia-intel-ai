@@ -1,0 +1,261 @@
+# Agent Definitions for Sophia Intel AI Swarms
+# Following orchestration standards from .ai-instructions/orchestration-standards.md
+
+agents:
+  # Strategic Planning Swarm
+  - id: strategic-analyst-001
+    role: Strategic Analyst
+    instructions: |
+      Analyze business strategies, market conditions, and competitive landscapes.
+      Provide data-driven insights for strategic decision-making.
+      Maintain objectivity and consider multiple perspectives.
+    capabilities:
+      - market_analysis
+      - competitive_intelligence
+      - strategic_planning
+      - trend_identification
+    functions:
+      - analyze_market_conditions
+      - evaluate_competition
+      - generate_strategic_recommendations
+    handoff_agents:
+      - risk-assessor-001
+      - resource-optimizer-001
+      - impact-analyzer-001
+    constraints:
+      - max_tokens: 4000
+      - timeout: 30s
+      - safety_level: high
+    metrics:
+      - accuracy_target: 0.95
+      - latency_target: 5s
+
+  - id: risk-assessor-001
+    role: Risk Assessor
+    instructions: |
+      Evaluate potential risks across technical, business, and operational dimensions.
+      Quantify risk probability and impact.
+      Recommend mitigation strategies.
+    capabilities:
+      - risk_identification
+      - risk_quantification
+      - mitigation_planning
+      - compliance_checking
+    functions:
+      - identify_risks
+      - calculate_risk_scores
+      - generate_mitigation_plans
+    handoff_agents:
+      - strategic-analyst-001
+      - decision-validator-001
+    constraints:
+      - max_tokens: 3000
+      - timeout: 20s
+      - safety_level: high
+    metrics:
+      - coverage_target: 0.98
+      - false_positive_rate: 0.05
+
+  # Development Swarm
+  - id: architecture-designer-001
+    role: Architecture Designer
+    instructions: |
+      Design scalable, maintainable system architectures.
+      Follow SOLID principles and design patterns.
+      Consider performance, security, and maintainability.
+    capabilities:
+      - system_design
+      - pattern_selection
+      - architecture_documentation
+      - technology_evaluation
+    functions:
+      - design_architecture
+      - evaluate_patterns
+      - create_diagrams
+    handoff_agents:
+      - code-generator-001
+      - performance-optimizer-001
+      - security-architect-001
+    constraints:
+      - max_tokens: 5000
+      - timeout: 45s
+      - safety_level: medium
+    metrics:
+      - design_quality_score: 0.9
+      - pattern_compliance: 0.95
+
+  - id: code-generator-001
+    role: Code Generator
+    instructions: |
+      Generate clean, efficient, well-documented code.
+      Follow project coding standards and best practices.
+      Include comprehensive error handling and logging.
+    capabilities:
+      - code_generation
+      - refactoring
+      - optimization
+      - documentation
+    functions:
+      - generate_code
+      - refactor_existing_code
+      - add_documentation
+    handoff_agents:
+      - code-reviewer-001
+      - test-engineer-001
+      - documentation-writer-001
+    constraints:
+      - max_tokens: 8000
+      - timeout: 60s
+      - safety_level: medium
+      - no_code_execution: true
+    metrics:
+      - code_quality_score: 0.85
+      - test_coverage: 0.8
+
+  - id: code-reviewer-001
+    role: Code Reviewer
+    instructions: |
+      Review code for quality, security, and best practices.
+      Identify bugs, vulnerabilities, and improvement opportunities.
+      Ensure compliance with coding standards.
+    capabilities:
+      - code_review
+      - bug_detection
+      - security_analysis
+      - style_checking
+    functions:
+      - review_code
+      - detect_vulnerabilities
+      - suggest_improvements
+    handoff_agents:
+      - code-generator-001
+      - test-engineer-001
+      - security-architect-001
+    constraints:
+      - max_tokens: 4000
+      - timeout: 30s
+      - safety_level: high
+    metrics:
+      - bug_detection_rate: 0.9
+      - false_positive_rate: 0.1
+
+  # Security Swarm
+  - id: vulnerability-scanner-001
+    role: Vulnerability Scanner
+    instructions: |
+      Scan code and infrastructure for security vulnerabilities.
+      Use OWASP guidelines and CVE databases.
+      Prioritize findings by severity and exploitability.
+    capabilities:
+      - vulnerability_scanning
+      - dependency_checking
+      - configuration_analysis
+      - cve_lookup
+    functions:
+      - scan_for_vulnerabilities
+      - check_dependencies
+      - analyze_configurations
+    handoff_agents:
+      - penetration-tester-001
+      - incident-responder-001
+      - security-architect-001
+    constraints:
+      - max_tokens: 3000
+      - timeout: 120s
+      - safety_level: critical
+      - read_only: true
+    metrics:
+      - detection_rate: 0.95
+      - scan_coverage: 0.99
+
+  # Research Swarm
+  - id: data-analyst-001
+    role: Data Analyst
+    instructions: |
+      Analyze data to extract insights and patterns.
+      Create visualizations and statistical analyses.
+      Ensure data quality and accuracy.
+    capabilities:
+      - data_analysis
+      - statistical_modeling
+      - visualization
+      - pattern_recognition
+    functions:
+      - analyze_data
+      - create_visualizations
+      - generate_reports
+    handoff_agents:
+      - research-specialist-001
+      - knowledge-synthesizer-001
+      - trend-analyzer-001
+    constraints:
+      - max_tokens: 4000
+      - timeout: 45s
+      - safety_level: medium
+      - data_privacy: strict
+    metrics:
+      - analysis_accuracy: 0.92
+      - insight_relevance: 0.88
+
+  - id: research-specialist-001
+    role: Research Specialist
+    instructions: |
+      Conduct deep research on technical and business topics.
+      Synthesize information from multiple sources.
+      Validate findings through fact-checking.
+    capabilities:
+      - web_search
+      - document_analysis
+      - fact_checking
+      - source_validation
+    functions:
+      - conduct_research
+      - analyze_documents
+      - verify_facts
+    handoff_agents:
+      - data-analyst-001
+      - knowledge-synthesizer-001
+      - fact-checker-001
+    constraints:
+      - max_tokens: 6000
+      - timeout: 60s
+      - safety_level: high
+      - source_credibility: verified
+    metrics:
+      - research_depth: 0.9
+      - accuracy_score: 0.95
+
+# Global Configuration
+global_config:
+  orchestration:
+    mode_normalizer: enabled
+    unified_facade: required
+    circuit_breakers: enabled
+    performance_monitoring: enabled
+
+  safety:
+    boundaries:
+      - no_code_execution
+      - no_external_api_without_approval
+      - no_sensitive_data_exposure
+      - rate_limiting
+      - output_validation
+
+  monitoring:
+    metrics:
+      - execution_time
+      - token_usage
+      - error_rates
+      - handoff_counts
+      - quality_scores
+
+    logging:
+      format: structured
+      level: INFO
+      include_trace: true
+
+  scaling:
+    max_concurrent_agents: 50
+    max_memory_per_agent: 512MB
+    max_execution_time: 300
+    max_tokens_per_minute: 100000

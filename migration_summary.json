@@ -1,0 +1,34 @@
+{
+  "migration_timestamp": "2025-09-11T14:30:12-07:00",
+  "env_files_processed": 11,
+  "total_secrets_extracted": 232,
+  "secrets_by_category": {
+    "ai_providers": 69,
+    "business_integrations": 34,
+    "databases": 39,
+    "infrastructure": 4,
+    "development": 14,
+    "security": 8,
+    "misc": 64
+  },
+  "env_files_found": [
+    "/Users/lynnmusil/sophia-intel-ai/.env.local.unified",
+    "/Users/lynnmusil/sophia-intel-ai/.env.production",
+    "/Users/lynnmusil/sophia-intel-ai/.envrc",
+    "/Users/lynnmusil/sophia-intel-ai/.env.local",
+    "/Users/lynnmusil/sophia-intel-ai/.env.voice",
+    "/Users/lynnmusil/sophia-intel-ai/.env.portkey",
+    "/Users/lynnmusil/sophia-intel-ai/.env",
+    "/Users/lynnmusil/sophia-intel-ai/sophia-intel-app/.env.local",
+    "/Users/lynnmusil/sophia-intel-ai/.env",
+    "/Users/lynnmusil/sophia-intel-ai/infra/ports.env",
+    "/Users/lynnmusil/sophia-intel-ai/.envrc"
+  ],
+  "next_steps": [
+    "1. Review centralized_config.yaml for accuracy",
+    "2. Test applications with new .env.centralized file",
+    "3. Update deployment scripts to use centralized config",
+    "4. Delete old .env files after verification",
+    "5. Implement model enforcement system"
+  ]
+}

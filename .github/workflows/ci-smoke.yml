@@ -1,0 +1,27 @@
+name: CI Smoke
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      ROUTER_SCRAPE_ENABLED: "false"
+      INDEX_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install minimal deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi starlette uvicorn httpx redis pytest pydantic
+      - name: Run smoke tests
+        run: |
+          pytest -q tests/test_router_policy.py tests/test_mcp_fs_allowlist.py tests/test_bridge_smoke.py tests/test_memory_server_api.py
+

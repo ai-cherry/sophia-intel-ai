@@ -1,0 +1,32 @@
+{
+  "timestamp": "2025-09-05T14:25:50.797916",
+  "activated_workflows": [
+    {
+      "id": "maL2WopWfE2TwkEh",
+      "name": "Gong \u2192 Sophia Service Integration - 20250905_133725",
+      "status": "activated",
+      "timestamp": "2025-09-05T14:25:52.286896"
+    },
+    {
+      "id": "pU6N9bsI2FqR9cmP",
+      "name": "Gong Integration - 20250905_123327",
+      "status": "activated",
+      "timestamp": "2025-09-05T14:25:53.997166"
+    },
+    {
+      "id": "wquRG54VAfOmInZC",
+      "name": "Gong Integration - Secure - 20250905_125057",
+      "status": "activated",
+      "timestamp": "2025-09-05T14:25:55.672492"
+    },
+    {
+      "id": "x9luMNan70YwbdAk",
+      "name": "Gong Integration Enhanced - 20250905_123021",
+      "status": "activated",
+      "timestamp": "2025-09-05T14:25:57.024496"
+    }
+  ],
+  "errors": [],
+  "webhook_url": "https://scoobyjava.app.n8n.cloud/webhook/gong-webhook",
+  "status": "success"
+}

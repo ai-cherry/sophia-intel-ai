@@ -1,0 +1,24 @@
+# High-level relationships and allowed types. Keep small and auditable.
+
+entities:
+  - User
+  - Project
+  - Agent
+  - Episode
+  - Memory
+
+relations:
+  - name: user_owns_project
+    from: User
+    to: Project
+  - name: agent_executes_episode
+    from: Agent
+    to: Episode
+  - name: episode_writes_memory
+    from: Episode
+    to: Memory
+
+fact_types:
+  - Metric
+  - Event
+  - Log

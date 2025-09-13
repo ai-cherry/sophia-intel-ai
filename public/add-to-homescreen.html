@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sophia Voice - Add to Home Screen</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="manifest" href="/voice-manifest.json">
+    <style>
+        body {
+            font-family: -apple-system, system-ui;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .instructions {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .emoji {
+            font-size: 48px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="emoji">🎤</div>
+    <h1>Sophia Voice Assistant</h1>
+    
+    <div class="instructions">
+        <h2>Add to Home Screen</h2>
+        <p><strong>iPhone:</strong></p>
+        <ol>
+            <li>Tap the Share button (square with arrow)</li>
+            <li>Scroll down and tap "Add to Home Screen"</li>
+            <li>Name it "Sophia Voice"</li>
+            <li>Tap "Add"</li>
+        </ol>
+        
+        <p><strong>Android:</strong></p>
+        <ol>
+            <li>Tap the menu (3 dots)</li>
+            <li>Tap "Add to Home screen"</li>
+            <li>Name it "Sophia Voice"</li>
+            <li>Tap "Add"</li>
+        </ol>
+    </div>
+    
+    <button onclick="window.location='/voice'">Open Voice Assistant</button>
+    
+    <script>
+        // PWA install prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+{
+  "audit_timestamp": "2025-08-03T16:00:00Z",
+  "repository": "sophia-main",
+  "summary": {
+    "total_issues": 147,
+    "critical_vulnerabilities": 3,
+    "high_complexity_functions": 8,
+    "code_quality_issues": 144
+  },
+  "vulnerabilities": {
+    "critical": [
+      {
+        "package": "setuptools",
+        "version": "59.6.0",
+        "vulnerabilities": [
+          {
+            "id": "PYSEC-2022-43012",
+            "cve": "CVE-2022-40897",
+            "description": "ReDoS vulnerability in package_index.py",
+            "fix_version": "65.5.1"
+          },
+          {
+            "id": "PYSEC-2025-49",
+            "cve": "CVE-2025-47273",
+            "description": "Path traversal vulnerability allowing arbitrary file writes",
+            "fix_version": "78.1.1"
+          }
+        ]
+      },
+      {
+        "package": "wheel",
+        "version": "0.37.1",
+        "vulnerabilities": [
+          {
+            "id": "PYSEC-2022-43017",
+            "cve": "CVE-2022-40898",
+            "description": "DoS via attacker controlled input to wheel cli",
+            "fix_version": "0.38.1"
+          }
+        ]
+      }
+    ]
+  },
+  "complexity_issues": {
+    "extremely_high": [
+      {
+        "file": "backend/services/integrations/enhanced_hubspot_service.py",
+        "function": "get_sales_analytics",
+        "complexity": 33,
+        "rank": "E"
+      },
+      {
+        "file": "backend/services/integrations/enhanced_salesforce_service.py",
+        "function": "get_sales_analytics",
+        "complexity": 34,
+        "rank": "E"
+      }
+    ],
+    "very_high": [
+      {
+        "file": "backend/services/integrations/enhanced_hubspot_service.py",
+        "function": "_analyze_deal_quality",
+        "complexity": 25,
+        "rank": "D"
+      },
+      {
+        "file": "backend/services/integrations/enhanced_hubspot_service.py",
+        "function": "_analyze_contact_quality",
+        "complexity": 24,
+        "rank": "D"
+      },
+      {
+        "file": "backend/services/integrations/enhanced_hubspot_service.py",
+        "function": "_analyze_company_quality",
+        "complexity": 24,
+        "rank": "D"
+      },
+      {
+        "file": "backend/orchestration/task_analyzer.py",
+        "function": "_heuristic_analysis",
+        "complexity": 22,
+        "rank": "D"
+      },
+      {
+        "file": "backend/services/embeddings/multi_provider_embedding_service.py",
+        "function": "generate_batch_embeddings",
+        "complexity": 21,
+        "rank": "D"
+      },
+      {
+        "file": "backend/app/routers/agents.py",
+        "function": "get_analytics",
+        "complexity": 21,
+        "rank": "D"
+      }
+    ]
+  },
+  "code_quality_issues": {
+    "unused_imports": 47,
+    "line_length_violations": 89,
+    "bare_except_clauses": 3,
+    "import_order_issues": 5
+  },
+  "debt_items_identified": [
+    "Legacy Agno references in multiple files",
+    "Unused Terraform configurations",
+    "AWS stub files that are no longer needed",
+    "Duplicate integration code",
+    "Conflicting secret management approaches",
+    "Multiple main entry points causing confusion",
+    "Outdated documentation references"
+  ],
+  "recommendations": {
+    "immediate": [
+      "Update setuptools to 78.1.1+ to fix critical path traversal vulnerability",
+      "Update wheel to 0.38.1+ to fix DoS vulnerability",
+      "Refactor extremely complex functions (complexity > 30)",
+      "Remove unused imports and fix line length violations"
+    ],
+    "short_term": [
+      "Break down high complexity functions (complexity > 20)",
+      "Consolidate duplicate integration code",
+      "Standardize secret management approach",
+      "Remove legacy Agno/Terraform references"
+    ],
+    "long_term": [
+      "Implement comprehensive code quality gates",
+      "Add automated complexity monitoring",
+      "Establish coding standards enforcement"
+    ]
+  }
+}

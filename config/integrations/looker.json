@@ -1,0 +1,4 @@
+{
+  "enabled": false,
+  "notes": "Provide LOOKER_CLIENT_ID/LOOKER_CLIENT_SECRET and base URL via env or service config."
+}

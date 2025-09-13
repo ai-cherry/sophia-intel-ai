@@ -1,0 +1,28 @@
+name: Architecture Guards
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Domain Wall Check (warn mode)
+        env:
+          ENFORCE_STRICT: "0"
+        run: bash scripts/ci/domain_wall_check.sh
+
+      - name: LLM Provider Ban (warn mode)
+        env:
+          ENFORCE_STRICT: "0"
+        run: bash scripts/ci/banned_providers_check.sh
+
+      # To enforce strictly, set ENFORCE_STRICT=1 or duplicate steps with strict mode.
+

@@ -1,0 +1,18 @@
+name: database
+runtime: python
+description: Database infrastructure - Neon PostgreSQL and Redis for Sophia Intel AI
+
+backend:
+  url: https://app.pulumi.com
+
+template:
+  config:
+    database:environment:
+      description: Environment name (dev, staging, prod)
+      default: dev
+    database:postgres_db_name:
+      description: PostgreSQL database name
+      default: sophia_intel_ai
+    database:redis_memory_mb:
+      description: Redis memory allocation in MB
+      default: 256

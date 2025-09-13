@@ -1,0 +1,67 @@
+# PULUMI ESC - ALL SECRETS CENTRALIZED
+imports:
+  - aws-secrets
+  - gcp-secrets
+  
+values:
+  # Portkey Gateway (ONLY LLM KEY NEEDED)
+  portkey:
+    api_key:
+      fn::secret: ${aws:secrets/portkey-api-key}
+    virtual_keys:
+      openrouter:
+        fn::secret: ${aws:secrets/openrouter-vk}
+      together:
+        fn::secret: ${aws:secrets/together-vk}
+      aimlapi:
+        fn::secret: ${aws:secrets/aimlapi-vk}
+  
+  # Infrastructure
+  databases:
+    neon:
+      url:
+        fn::secret: ${aws:secrets/neon-database-url}
+    redis:
+      url: redis://localhost:6379
+    weaviate:
+      url: http://localhost:8085
+    qdrant:
+      url: http://localhost:8086
+    milvus:
+      url: http://localhost:19530
+  
+  # Business Integrations (Protected)
+  integrations:
+    hubspot:
+      api_key:
+        fn::secret: ${aws:secrets/hubspot-api-key}
+    salesforce:
+      client_id:
+        fn::secret: ${aws:secrets/salesforce-client-id}
+      client_secret:
+        fn::secret: ${aws:secrets/salesforce-client-secret}
+    gong:
+      access_key:
+        fn::secret: ${aws:secrets/gong-access-key}
+      secret:
+        fn::secret: ${aws:secrets/gong-secret}
+  
+  # MCP Configuration
+  mcp:
+    jwt_secret:
+      fn::secret: ${aws:secrets/mcp-jwt-secret}
+    ports:
+      memory: 8081
+      filesystem: 8082
+      git: 8084
+
+environmentVariables:
+  PORTKEY_API_KEY: ${portkey.api_key}
+  OPENROUTER_VK: ${portkey.virtual_keys.openrouter}
+  TOGETHER_VK: ${portkey.virtual_keys.together}
+  AIMLAPI_VK: ${portkey.virtual_keys.aimlapi}
+  NEON_DATABASE_URL: ${databases.neon.url}
+  REDIS_URL: ${databases.redis.url}
+  WEAVIATE_URL: ${databases.weaviate.url}
+  QDRANT_URL: ${databases.qdrant.url}
+  MILVUS_URL: ${databases.milvus.url}

@@ -1,0 +1,19 @@
+{
+  "airtable": {
+    "enabled": true,
+    "status": "connected",
+    "api_key": "patuojzcFCHtcwkH3.2d1b20fd467f58319534f2abb02899d32390e1db02ffa226aa08c084bd21ce5d",
+    "base_id": "appBOVJqGE166onrD",
+    "tables": {
+      "knowledge": "Knowledge Base",
+      "insights": "Insights",
+      "conversations": "Conversations"
+    },
+    "webhook_url": null,
+    "stats": {
+      "records": 10,
+      "api_calls": "unlimited",
+      "last_sync": "2025-09-04T15:16:05.544900"
+    }
+  }
+}

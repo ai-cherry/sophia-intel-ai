@@ -1,0 +1,952 @@
+openapi: 3.0.3
+info:
+  title: Foundational Knowledge API
+  description: |
+    API for managing foundational business knowledge with versioning, classification, and Airtable sync.
+
+    ## Features
+    - CRUD operations for knowledge entities
+    - AI-powered classification
+    - Version tracking and rollback
+    - Bidirectional Airtable synchronization
+    - Pay-Ready business context
+    - Redis caching for performance
+
+  version: 1.0.0
+  contact:
+    name: Sophia Intel AI Team
+    email: support@sophia-intel.ai
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:8003
+    description: Local development server
+  - url: https://api.sophia-intel.ai
+    description: Production server
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: knowledge
+    description: Knowledge entity management
+  - name: sync
+    description: Airtable synchronization
+  - name: versioning
+    description: Version management
+  - name: health
+    description: Health checks and monitoring
+
+paths:
+  /api/knowledge/:
+    post:
+      tags: [knowledge]
+      summary: Create knowledge entity
+      description: Create a new foundational knowledge entry with automatic classification
+      operationId: createKnowledge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeCreateRequest"
+      responses:
+        "200":
+          description: Knowledge entity created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+    get:
+      tags: [knowledge]
+      summary: List knowledge entities
+      description: List knowledge entities with optional filters
+      operationId: listKnowledge
+      parameters:
+        - name: classification
+          in: query
+          schema:
+            $ref: "#/components/schemas/KnowledgeClassification"
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+            default: true
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: List of knowledge entities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeResponse"
+
+  /api/knowledge/{knowledge_id}:
+    get:
+      tags: [knowledge]
+      summary: Get knowledge entity
+      operationId: getKnowledge
+      parameters:
+        - name: knowledge_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Knowledge entity details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags: [knowledge]
+      summary: Update knowledge entity
+      operationId: updateKnowledge
+      parameters:
+        - name: knowledge_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeUpdateRequest"
+      responses:
+        "200":
+          description: Knowledge entity updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      tags: [knowledge]
+      summary: Delete knowledge entity
+      operationId: deleteKnowledge
+      security:
+        - adminKey: []
+      parameters:
+        - name: knowledge_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Knowledge entity deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Knowledge deleted successfully
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/knowledge/search:
+    get:
+      tags: [knowledge]
+      summary: Search knowledge entities
+      operationId: searchKnowledge
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: include_operational
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeResponse"
+
+  /api/knowledge/foundational:
+    get:
+      tags: [knowledge]
+      summary: List foundational knowledge
+      description: Get all knowledge marked as foundational
+      operationId: listFoundational
+      responses:
+        "200":
+          description: List of foundational knowledge
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KnowledgeResponse"
+
+  /api/knowledge/context/pay-ready:
+    get:
+      tags: [knowledge]
+      summary: Get Pay-Ready context
+      description: Get comprehensive Pay-Ready business context
+      operationId: getPayReadyContext
+      responses:
+        "200":
+          description: Pay-Ready context
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PayReadyContextResponse"
+
+  /api/knowledge/{knowledge_id}/versions:
+    get:
+      tags: [versioning]
+      summary: Get version history
+      operationId: getVersionHistory
+      parameters:
+        - name: knowledge_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Version history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VersionInfo"
+
+  /api/knowledge/{knowledge_id}/restore:
+    post:
+      tags: [versioning]
+      summary: Restore version
+      operationId: restoreVersion
+      security:
+        - adminKey: []
+      parameters:
+        - name: knowledge_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version_number]
+              properties:
+                version_number:
+                  type: integer
+                  minimum: 1
+      responses:
+        "200":
+          description: Version restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/knowledge/{knowledge_id}/compare:
+    get:
+      tags: [versioning]
+      summary: Compare versions
+      operationId: compareVersions
+      parameters:
+        - name: knowledge_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: v1
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+        - name: v2
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Version comparison
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VersionComparison"
+
+  /api/knowledge/sync:
+    post:
+      tags: [sync]
+      summary: Trigger synchronization
+      operationId: triggerSync
+      security:
+        - adminKey: []
+      parameters:
+        - name: sync_type
+          in: query
+          schema:
+            type: string
+            enum: [full, incremental]
+            default: incremental
+      responses:
+        "200":
+          description: Sync initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncStatusResponse"
+
+  /api/knowledge/sync/status:
+    get:
+      tags: [sync]
+      summary: Get sync status
+      operationId: getSyncStatus
+      responses:
+        "200":
+          description: Current sync status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncStatus"
+
+  /api/knowledge/sync/history:
+    get:
+      tags: [sync]
+      summary: Get sync history
+      operationId: getSyncHistory
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Sync operation history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SyncHistoryEntry"
+
+  /api/knowledge/sync/trigger:
+    post:
+      tags: [sync]
+      summary: Manually trigger sync
+      operationId: manualSync
+      security:
+        - adminKey: []
+      parameters:
+        - name: sync_type
+          in: query
+          schema:
+            type: string
+            enum: [full, incremental]
+            default: incremental
+      responses:
+        "200":
+          description: Sync triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  result:
+                    $ref: "#/components/schemas/SyncResult"
+
+  /api/knowledge/sync/resume:
+    post:
+      tags: [sync]
+      summary: Resume sync scheduler
+      operationId: resumeSync
+      security:
+        - adminKey: []
+      responses:
+        "200":
+          description: Scheduler resumed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Sync scheduler resumed successfully
+
+  /api/knowledge/statistics:
+    get:
+      tags: [knowledge]
+      summary: Get statistics
+      operationId: getStatistics
+      responses:
+        "200":
+          description: Knowledge base statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Statistics"
+
+  /health/:
+    get:
+      tags: [health]
+      summary: Basic health check
+      operationId: healthCheck
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /health/detailed:
+    get:
+      tags: [health]
+      summary: Detailed health check
+      operationId: detailedHealthCheck
+      responses:
+        "200":
+          description: Detailed health information
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DetailedHealthStatus"
+
+  /health/ready:
+    get:
+      tags: [health]
+      summary: Readiness probe
+      operationId: readinessCheck
+      security: []
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /health/live:
+    get:
+      tags: [health]
+      summary: Liveness probe
+      operationId: livenessCheck
+      security: []
+      responses:
+        "200":
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alive:
+                    type: boolean
+                  timestamp:
+                    type: string
+                    format: date-time
+                  pid:
+                    type: integer
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT authentication token
+
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service authentication
+
+    adminKey:
+      type: apiKey
+      in: header
+      name: X-Admin-Key
+      description: Admin API key for privileged operations
+
+  schemas:
+    KnowledgeClassification:
+      type: string
+      enum:
+        - company_info
+        - business_metrics
+        - payment_processing
+        - integration_config
+        - operational
+        - system_config
+      description: Classification of knowledge entities
+
+    KnowledgePriority:
+      type: integer
+      minimum: 1
+      maximum: 5
+      description: Priority level (1=minimal, 5=critical)
+
+    KnowledgeCreateRequest:
+      type: object
+      required: [name, category, content]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+        classification:
+          $ref: "#/components/schemas/KnowledgeClassification"
+        priority:
+          $ref: "#/components/schemas/KnowledgePriority"
+        content:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+
+    KnowledgeUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+        classification:
+          $ref: "#/components/schemas/KnowledgeClassification"
+        priority:
+          $ref: "#/components/schemas/KnowledgePriority"
+        content:
+          type: object
+          additionalProperties: true
+        metadata:
+          type: object
+          additionalProperties: true
+        is_active:
+          type: boolean
+
+    KnowledgeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          type: string
+        classification:
+          $ref: "#/components/schemas/KnowledgeClassification"
+        priority:
+          $ref: "#/components/schemas/KnowledgePriority"
+        content:
+          type: object
+          additionalProperties: true
+        is_foundational:
+          type: boolean
+        version:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        synced_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    PayReadyContextResponse:
+      type: object
+      properties:
+        company_info:
+          type: object
+          additionalProperties: true
+        business_metrics:
+          type: object
+          additionalProperties: true
+        payment_systems:
+          type: object
+          additionalProperties: true
+        integrations:
+          type: object
+          additionalProperties: true
+        compliance:
+          type: object
+          additionalProperties: true
+
+    VersionInfo:
+      type: object
+      properties:
+        version_id:
+          type: string
+          format: uuid
+        version_number:
+          type: integer
+        change_summary:
+          type: string
+        changed_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    VersionComparison:
+      type: object
+      properties:
+        v1:
+          type: integer
+        v2:
+          type: integer
+        differences:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              old_value:
+                type: any
+              new_value:
+                type: any
+
+    SyncStatusResponse:
+      type: object
+      properties:
+        operation_id:
+          type: string
+        operation_type:
+          type: string
+        status:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        records_processed:
+          type: integer
+        conflicts_detected:
+          type: integer
+
+    SyncStatus:
+      type: object
+      properties:
+        current_status:
+          type: string
+          enum: [idle, running, success, failed, partial]
+        sync_health:
+          type: string
+          enum: [healthy, degraded, critical]
+        consecutive_failures:
+          type: integer
+        last_sync_time:
+          type: string
+          format: date-time
+          nullable: true
+        last_sync_result:
+          type: object
+          nullable: true
+        next_scheduled_runs:
+          type: object
+          additionalProperties:
+            type: string
+            format: date-time
+        scheduler_running:
+          type: boolean
+        auto_sync_enabled:
+          type: boolean
+        incremental_interval_minutes:
+          type: integer
+        full_sync_schedule:
+          type: string
+        history_count:
+          type: integer
+
+    SyncHistoryEntry:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [incremental, full]
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        duration_seconds:
+          type: number
+        records_synced:
+          type: integer
+        conflicts_detected:
+          type: integer
+        errors:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [success, failed, partial]
+
+    SyncResult:
+      type: object
+      properties:
+        type:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        duration_seconds:
+          type: number
+        records_synced:
+          type: integer
+        conflicts_detected:
+          type: integer
+        error:
+          type: string
+          nullable: true
+        status:
+          type: string
+
+    Statistics:
+      type: object
+      properties:
+        total_entries:
+          type: integer
+        foundational_count:
+          type: integer
+        operational_count:
+          type: integer
+        by_classification:
+          type: object
+          additionalProperties:
+            type: integer
+        by_priority:
+          type: object
+          additionalProperties:
+            type: integer
+        cache_stats:
+          type: object
+          properties:
+            hit_rate:
+              type: number
+            total_hits:
+              type: integer
+            total_misses:
+              type: integer
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        service:
+          type: string
+        version:
+          type: string
+
+    DetailedHealthStatus:
+      allOf:
+        - $ref: "#/components/schemas/HealthStatus"
+        - type: object
+          properties:
+            environment:
+              type: string
+            components:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  error:
+                    type: string
+                    nullable: true
+            metrics:
+              type: object
+              properties:
+                cpu_usage_percent:
+                  type: number
+                memory:
+                  type: object
+                  properties:
+                    total_mb:
+                      type: integer
+                    available_mb:
+                      type: integer
+                    percent_used:
+                      type: number
+                disk:
+                  type: object
+                  properties:
+                    total_gb:
+                      type: integer
+                    free_gb:
+                      type: integer
+                    percent_used:
+                      type: number
+                process:
+                  type: object
+                  properties:
+                    pid:
+                      type: integer
+                    memory_mb:
+                      type: integer
+                    threads:
+                      type: integer
+                    connections:
+                      type: integer
+            config:
+              type: object
+              additionalProperties: true
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: Authentication required
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: Knowledge not found
+
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: Rate limit exceeded
+              limit:
+                type: integer
+              current:
+                type: integer
+              reset_time:
+                type: integer
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+        Retry-After:
+          schema:
+            type: integer
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: Internal server error occurred

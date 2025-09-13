@@ -1,0 +1,41 @@
+{
+  "PROJECT": "sophia-intel-ai",
+  "ABSOLUTE_FUCKING_RULES": [
+    "THERE IS ONE APP: sophia-app/",
+    "THERE IS ONE UI: sophia-app/ui/index.html",
+    "THERE IS ONE SERVER: sophia-app/main.py",
+    "THERE IS ONE PORT: 8000",
+    "NEVER CREATE ANOTHER DASHBOARD",
+    "NEVER CREATE ANOTHER UI DIRECTORY",
+    "NEVER ADD MOCK DATA",
+    "NEVER DUPLICATE FUNCTIONALITY"
+  ],
+  
+  "BANNED_ACTIONS": [
+    "Creating any file with 'dashboard' in the name",
+    "Creating directories named: ui, frontend, webapp, client",
+    "Adding mock/fake/test data",
+    "Creating new MCP servers",
+    "Working outside sophia-app/"
+  ],
+  
+  "REQUIRED_ACTIONS": [
+    "All code goes in sophia-app/",
+    "All UI changes in sophia-app/ui/index.html",
+    "All API endpoints in sophia-app/main.py or sophia-app/api/",
+    "Test locally before committing",
+    "Run with: ./sophia-app/run.sh"
+  ],
+  
+  "DIRECTORY_STRUCTURE": {
+    "allowed": ["sophia-app/"],
+    "forbidden": ["dashboard/", "sophia-intel-app/", "bridge/", "router/", "builder-cli/"]
+  },
+  
+  "GIT_RULES": {
+    "branch": "main",
+    "no_feature_branches": true,
+    "commit_prefix": "fix:",
+    "test_before_commit": true
+  }
+}

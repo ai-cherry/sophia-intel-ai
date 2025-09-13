@@ -1,0 +1,15 @@
+[Unit]
+Description=Sophia AI Business Intelligence Monitor
+After=network.target
+
+[Service]
+Type=simple
+User=sophia
+WorkingDirectory=/path/to/sophia-intel-ai
+ExecStart=/usr/bin/python3 -m app.api.unified_server
+Restart=always
+RestartSec=10
+Environment=PYTHONPATH=/path/to/sophia-intel-ai
+
+[Install]
+WantedBy=multi-user.target

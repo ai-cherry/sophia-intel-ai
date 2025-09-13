@@ -1,0 +1,345 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sophia-sophia
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sophia-config
+  namespace: sophia-sophia
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  REDIS_URL: "redis://redis-service:6379"
+  WEAVIATE_URL: "http://weaviate-service:8080"
+  POSTGRES_URL: "postgresql://sophia:sophia123@postgres-service/sophia"
+  ENABLE_SOPHIA: "true"
+  ENABLE_ARTEMIS: "true"
+  ENABLE_WEB_RESEARCH: "true"
+  ENABLE_CACHING: "true"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: sophia-secrets
+  namespace: sophia-sophia
+type: Opaque
+stringData:
+  PORTKEY_API_KEY: "your-portkey-api-key"
+  SECRET_KEY: "your-secret-key"
+  ENCRYPTION_KEY: "your-encryption-key"
+  JWT_SECRET: "your-jwt-secret"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-sophia
+  namespace: sophia-sophia
+  labels:
+    app: sophia-sophia
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sophia-sophia
+  template:
+    metadata:
+      labels:
+        app: sophia-sophia
+    spec:
+      containers:
+        - name: app
+          image: sophia-sophia:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: sophia-config
+            - secretRef:
+                name: sophia-secrets
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: secrets-volume
+              mountPath: /app/.secrets
+              readOnly: true
+      volumes:
+        - name: secrets-volume
+          secret:
+            secretName: sophia-secrets
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-sophia-service
+  namespace: sophia-sophia
+spec:
+  selector:
+    app: sophia-sophia
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: sophia-sophia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-storage
+              mountPath: /data
+      volumes:
+        - name: redis-storage
+          persistentVolumeClaim:
+            claimName: redis-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: sophia-sophia
+spec:
+  selector:
+    app: redis
+  ports:
+    - protocol: TCP
+      port: 6379
+      targetPort: 6379
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-pvc
+  namespace: sophia-sophia
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: weaviate
+  namespace: sophia-sophia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: weaviate
+  template:
+    metadata:
+      labels:
+        app: weaviate
+    spec:
+      containers:
+        - name: weaviate
+          image: semitechnologies/weaviate:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED
+              value: "true"
+            - name: PERSISTENCE_DATA_PATH
+              value: "/var/lib/weaviate"
+          volumeMounts:
+            - name: weaviate-storage
+              mountPath: /var/lib/weaviate
+      volumes:
+        - name: weaviate-storage
+          persistentVolumeClaim:
+            claimName: weaviate-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: weaviate-service
+  namespace: sophia-sophia
+spec:
+  selector:
+    app: weaviate
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: weaviate-pvc
+  namespace: sophia-sophia
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: sophia-sophia
+spec:
+  serviceName: postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: sophia
+            - name: POSTGRES_USER
+              value: sophia
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: password
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 50Gi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: sophia-sophia
+spec:
+  selector:
+    app: postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres-secret
+  namespace: sophia-sophia
+type: Opaque
+stringData:
+  password: "sophia123"
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: sophia-sophia-hpa
+  namespace: sophia-sophia
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sophia-sophia
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sophia-sophia-ingress
+  namespace: sophia-sophia
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - sophia-sophia.example.com
+      secretName: sophia-sophia-tls
+  rules:
+    - host: sophia-sophia.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: sophia-sophia-service
+                port:
+                  number: 80

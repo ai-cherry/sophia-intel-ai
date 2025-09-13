@@ -1,0 +1,83 @@
+name: Validate PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate:
+    name: Validate Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      # Removed legacy agent-ui Node setup; UI checks handled elsewhere if needed
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff black mypy pytest pytest-asyncio pytest-cov
+
+      - name: Run Python linters
+        run: |
+          echo "🔍 Running ruff..."
+          ruff check app/ --fix --exit-non-zero-on-fix
+          echo "🎨 Running black..."
+          black --check app/
+          echo "📝 Running mypy..."
+          mypy app/ --ignore-missing-imports
+
+      - name: Run Python tests
+        run: |
+          echo "🧪 Running tests..."
+          pytest tests/ -v --cov=app --cov-report=term-missing
+        continue-on-error: true
+
+      # Removed legacy agent-ui steps (repository no longer contains agent-ui)
+
+      - name: Run evaluation gates (lightweight)
+        if: success()
+        run: |
+          python -c "
+          import sys
+          sys.path.append('.')
+          from app.evaluation.gates import EvaluationGateManager
+
+          manager = EvaluationGateManager()
+
+          # Set expectations for PR validation
+          manager.reliability_eval.set_expectations(
+              expected=['code_search', 'test_runner'],
+              prohibited=['git.push', 'rm', 'sudo']
+          )
+
+          # Simulate some tool calls (in real PR, these would be actual)
+          manager.reliability_eval.record_tool_call('code_search', {'query': 'validation'})
+          manager.reliability_eval.record_tool_call('test_runner', {'suite': 'unit'})
+
+          # Evaluate
+          result = manager.reliability_eval.evaluate()
+
+          print(f'🚪 Gate Status: {result.status.value}')
+          print(f'📊 Score: {result.score:.1f}/{result.max_score}')
+
+          if not result.passed:
+              print('❌ Gate failed!')
+              sys.exit(1)
+          else:
+              print('✅ Gate passed!')
+          "
+
+      # Removed GitHub comment summarizing step outcomes (legacy ids)

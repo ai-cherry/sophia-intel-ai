@@ -1,0 +1,12 @@
+{
+  "id": "strategist",
+  "role": "strategist",
+  "instructions": [
+    "Derive trends and strategic implications from metrics.",
+    "Recommend actions tied to KPIs.",
+    "Stay within BI domain; no code changes."
+  ],
+  "tools": ["looker.query", "salesforce.query"],
+  "model_policy": "quality"
+}
+

@@ -1,0 +1,554 @@
+{
+  "duplicate_env_files": [
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/.env.local",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 12849
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/.env.production",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 6768
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/.env.voice",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 860
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/.env.portkey",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2087
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/.env",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 7811
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/.envrc",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 793
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/infra/ports.env",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 227
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/sophia-intel-app/.env.local",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 503
+    }
+  ],
+  "duplicate_dashboards": [
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/agent-ui",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 96
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/sophia-v2",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 160
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/webui",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 192
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/dashboards",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 128
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/ui",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 128
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/dashboard.py",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 45377
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/demo_advanced_dashboard.py",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 16775
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/dashboard_integration.py",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 10116
+    }
+  ],
+  "duplicate_mcp": [
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/mcp_memory_server",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 192
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/mcp_servers",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 416
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/mcp-bridge",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 416
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/mcp-unified",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 224
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/bridge",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 192
+    }
+  ],
+  "outdated_docs": [
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/ADVANCED_DASHBOARD_IMPLEMENTATION_PLAN.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 17237
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/AI_AGENT_INSTRUCTIONS.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2674
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/BUILDER_IMPLEMENTATION_PLAN.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 11772
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/DEPLOYMENT_PLAN_TO_PRODUCTION.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 9097
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/IMPROVEMENT_PLAN_PHASE2.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 9732
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/IMPLEMENTATION_COMPLETE.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 7997
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/IMPLEMENTATION_SUMMARY.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2708
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/LOCAL_DEPLOYMENT_STATUS.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 5596
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/SOPHIA_COMPLETE_OVERHAUL_PLAN.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 10175
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/SOPHIA_DASHBOARD_ENHANCEMENT_PROPOSAL.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 10033
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/VOICE_CODING_IMPLEMENTATION_PLAN.md",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 21896
+    }
+  ],
+  "test_artifacts": [
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/enhanced_agents_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 192
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/scout_swarm_test_results_20250906_090130.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 5578
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/deployment_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 4242
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/portkey_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1600
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/final_architecture_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 177
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/scout_swarm_test_results_20250906_090053.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 3868
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/load_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1958
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/comprehensive_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1443
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/simplified_bi_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 4033
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/aimlapi_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 553
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/business_intelligence_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 5927
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/all_keys_test_report.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 660
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/basic_integration_test_report_1754156176.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 5517
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/integration_test_report_1756869480.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2113
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/portkey_test_report_20250905_223246.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 6957
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/integration_test_report_20250905_230118.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1709
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/sophia_v33_test_report.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 8444
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/deployment_test_report.txt",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 6005
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/test_results_latest_models.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 7983
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/test_strict.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 512
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/test_mcp_connection.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 329
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/test_results_nl_swarm.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 4485
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/test_results_swarms.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2401
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1061
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/test_final.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 485
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/comprehensive_key_test_20250905_231122.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 3387
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/comprehensive_test_results.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1443
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/integration_test_report_1756869480.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2113
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/integration_test_report_20250905_230118.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1709
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/scout_swarm_test_results_20250906_090130.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 5578
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/scout_swarm_test_results_20250906_090053.json",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 3868
+    }
+  ],
+  "duplicate_scripts": [
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/cleanup.sh",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 908
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/aggressive_cleanup.sh",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 9401
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/final_cleanup.sh",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 927
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/cleanup_git.sh",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 764
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/cleanup_duplicates.sh",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 3893
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/consolidate_cli.sh",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 4662
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/consolidate_mcp.sh",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 10147
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/execute_consolidation.py",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 2891
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/consolidate_dashboards.py",
+      "exists": true,
+      "is_file": true,
+      "is_dir": false,
+      "size_bytes": 1069
+    }
+  ],
+  "old_builders": [
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/builder_cli",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 192
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/builder-cli",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 224
+    },
+    {
+      "path": "/Users/lynnmusil/sophia-intel-ai/builder-agno-system",
+      "exists": true,
+      "is_file": false,
+      "is_dir": true,
+      "size_bytes": 192
+    }
+  ],
+  "summary": {
+    "total_items_to_remove": 75,
+    "generated_at": "2025-09-11T14:32:42.303530",
+    "categories": [
+      "duplicate_env_files",
+      "duplicate_dashboards",
+      "duplicate_mcp",
+      "outdated_docs",
+      "test_artifacts",
+      "duplicate_scripts",
+      "old_builders"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+name: Anti-Fragmentation Enforcement
+
+on: [push, pull_request]
+
+jobs:
+  enforce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Env variants check
+        run: |
+          bash scripts/check_env_variants.sh
+
+      - name: Root markdown policy
+        run: |
+          bash scripts/check_root_docs.sh
+
+      - name: Env doctor report
+        run: |
+          python3 scripts/env_doctor.py
+
+      - name: Sophia path guard
+        run: |
+          bash scripts/check_sophia_paths.sh

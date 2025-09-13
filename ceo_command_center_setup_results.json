@@ -1,0 +1,23 @@
+{
+  "status": "error",
+  "timestamp": "2025-09-04T13:47:00.479294",
+  "pages_created": [],
+  "databases_created": [],
+  "errors": ["Notion resource not found"],
+  "summary": {},
+  "workspace_health": {
+    "status": "healthy",
+    "bot_name": "sophia-intel",
+    "bot_type": "bot",
+    "workspace_sample": 2,
+    "total_users_sample": 5,
+    "api_version": "2022-06-28",
+    "last_check": "2025-09-04T13:47:01.339029"
+  },
+  "cleared_items": {
+    "pages_archived": [],
+    "databases_archived": [],
+    "total_cleared": 0
+  },
+  "error": "Notion resource not found"
+}

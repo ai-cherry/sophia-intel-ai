@@ -1,0 +1,174 @@
+{
+  "request_type": "sophia_complete_implementation",
+  "version": "3.0",
+  "timestamp": "2025-09-07",
+  "context": {
+    "repo_path": "/Users/lynnmusil/sophia-intel-ai",
+    "current_state": "Phase 3 CLI enhancements completed, scout running but with output parsing issues",
+    "environment": {
+      "services_running": ["weaviate", "redis"],
+      "mcp_server": "./bin/mcp-fs-memory",
+      "env_file": ".env.sophia.local"
+    }
+  },
+
+  "critical_issues_found": {
+    "1_result_object_bug": {
+      "severity": "CRITICAL",
+      "location": "app/swarms/cli/sophia_runner.py:935",
+      "issue": "Result object has no 'final_output' attribute",
+      "fix_required": "Check Result object structure and use correct attribute (likely 'output' or 'content')",
+      "files_to_check": [
+        "app/swarms/core/swarm_integration.py",
+        "app/orchestrators/base_orchestrator.py"
+      ]
+    },
+
+    "2_security_vulnerabilities": {
+      "hook_execution": {
+        "severity": "HIGH",
+        "issue": "Weak ownership validation for hooks",
+        "fix": "Strengthen ownership check, add content hashing"
+      },
+      "path_traversal": {
+        "severity": "HIGH",
+        "issue": "Path validation may have edge cases",
+        "fix": "Use pathlib.Path.resolve() with strict bounds"
+      }
+    },
+
+    "3_performance_issues": {
+      "memory_management": {
+        "issue": "No cleanup for accumulated memory chunks",
+        "fix": "Implement LRU eviction"
+      },
+      "cache_growth": {
+        "issue": "Cache grows unbounded in tmp/scout_index_cache.json",
+        "fix": "Add TTL and size limits"
+      }
+    }
+  },
+
+  "tasks_to_complete": [
+    {
+      "priority": 1,
+      "task": "Fix Result object attribute bug",
+      "actions": [
+        "Inspect Result class structure",
+        "Update sophia_runner.py to use correct attribute",
+        "Test with actual scout run"
+      ],
+      "success_criteria": "Scout runs without 'final_output' error"
+    },
+
+    {
+      "priority": 2,
+      "task": "Complete Coding Swarm Migration",
+      "spec": {
+        "file": "app/swarms/sophia/enhanced_coding.py",
+        "schema": {
+          "IMPLEMENTATION": "code changes made/proposed",
+          "TESTS": "test coverage and cases",
+          "DOCUMENTATION": "docs updates needed",
+          "QUALITY": "code quality metrics",
+          "RISKS": "potential issues identified",
+          "CONFIDENCE": "0.0-1.0"
+        },
+        "overlays": {
+          "ANALYST": "Focus on code quality, patterns, performance",
+          "STRATEGIST": "Consider architecture impact, scalability",
+          "VALIDATOR": "Verify correctness, test coverage, edge cases"
+        },
+        "feature_flags": [
+          "CODING_ENHANCED_ENABLED=true",
+          "CODING_SCHEMA_STRICT=false",
+          "CODING_TOOL_ENABLED=true"
+        ]
+      }
+    },
+
+    {
+      "priority": 3,
+      "task": "Add Metrics Command",
+      "description": "Simple command to show recent scout execution metrics",
+      "implementation": "./bin/sophia-run metrics --recent"
+    },
+
+    {
+      "priority": 4,
+      "task": "Security Hardening",
+      "fixes": [
+        "Strengthen hook ownership validation",
+        "Improve path traversal protection",
+        "Add input sanitization for MCP calls"
+      ]
+    },
+
+    {
+      "priority": 5,
+      "task": "Test Suite Enhancement",
+      "add_tests_for": [
+        "Hook execution security",
+        "JSON output parsing",
+        "Approval mode flow",
+        "Project instructions loading"
+      ]
+    }
+  ],
+
+  "validation_steps": [
+    {
+      "step": 1,
+      "command": "./bin/sophia-run scout --check",
+      "expected": "All checks pass with weaviate=true, llm configured"
+    },
+    {
+      "step": 2,
+      "command": "./bin/sophia-run scout --json --approval full-auto --task 'Analyze swarms'",
+      "expected": "Valid JSON with populated sections"
+    },
+    {
+      "step": 3,
+      "command": "./bin/sophia-run scout --approval suggest --task 'Test approvals'",
+      "expected": "Prompts appear and can be answered"
+    },
+    {
+      "step": 4,
+      "command": "Run with hooks in .sophia/hooks/",
+      "expected": "Pre-hook runs before, post-hook after"
+    }
+  ],
+
+  "codex_instructions": {
+    "approach": "Fix critical bugs first, then migrate coding swarm, then security",
+    "testing": "Test each fix locally before moving to next",
+    "commits": "DO NOT push to GitHub - local only",
+    "collaboration": "Use collab emit/approve/apply pattern",
+    "documentation": "Update CODEX_IMPLEMENTATION_REQUEST.md with changes"
+  },
+
+  "success_metrics": {
+    "must_have": [
+      "Scout runs without errors",
+      "JSON output properly formatted",
+      "Approval modes work correctly",
+      "Hooks execute as expected"
+    ],
+    "nice_to_have": [
+      "Coding swarm migration complete",
+      "Metrics command working",
+      "Security hardening applied",
+      "Test coverage >80%"
+    ]
+  },
+
+  "current_test_results": {
+    "readiness_check": "✅ Passing (weaviate=true, llm configured)",
+    "scout_execution": "❌ Fails with 'final_output' AttributeError",
+    "json_output": "⚠️ Returns empty sections but valid JSON",
+    "hooks": "✅ Created and executable",
+    "project_instructions": "✅ File created at .sophia/scout.md"
+  },
+
+  "recommendation": "START WITH FIX #1 - The Result object bug is blocking all real testing. Once fixed, we can validate the entire scout pipeline and move to coding swarm migration."
+}

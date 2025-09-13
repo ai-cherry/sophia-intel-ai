@@ -1,0 +1,17 @@
+# Which document or service is authoritative for specific concerns.
+# Keep minimal, explicit, and testable.
+
+# docs
+start_guide: START_HERE.md
+readme: README.md
+architecture: ARCHITECTURE.md
+adrs: docs/architecture/decisions/
+
+# environment
+environment_source: .env.master
+keys_manager: ./bin/keys
+service_launcher: ./sophia
+
+# models and routing
+models_overview: MODELS.md
+policies_index: POLICIES.md

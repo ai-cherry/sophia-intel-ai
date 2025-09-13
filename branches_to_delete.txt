@@ -1,0 +1,9 @@
+  ai/manus-smoke-20250812-194929
+  auto/add-a-comment-to-readmemd
+  auto/add-a-task-priority-feature
+  auto/add-a-task-priority-feature-to
+  auto/deploy-pr-#202-to-flyio
+  codex/analyze-codebase-and-provide-feedback
+  codex/analyze-codebase-and-provide-feedback-65trup
+  codex/analyze-codebase-and-provide-feedback-ejfd7m
+  codex/design-deployment-plan-for-ai-agent-swarms

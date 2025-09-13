@@ -1,0 +1,97 @@
+# Sophia Intel AI - Local Development Configuration
+# This file defines startup configuration for local development
+
+# Service Configuration
+services:
+  redis:
+    enabled: true
+    port: 6380
+    health_check: "redis://localhost:6380"
+    timeout: 30
+
+  postgres:
+    enabled: true
+    port: 5432
+    health_check: "tcp://localhost:5432"
+    timeout: 60
+
+  weaviate:
+    enabled: true
+    port: 8081
+    health_check: "http://localhost:8081/v1/.well-known/ready"
+    timeout: 45
+
+  unified_api:
+    enabled: true
+    port: 8003
+    health_check: "http://localhost:8003/healthz"
+    timeout: 90
+    depends_on:
+      - redis
+      - postgres
+      - weaviate
+
+  mcp_server:
+    enabled: true
+    port: 8004
+    health_check: "http://localhost:8004/health"
+    timeout: 60
+    depends_on:
+      - redis
+
+  vector_store:
+    enabled: true
+    port: 8005
+    health_check: "http://localhost:8005/health"
+    timeout: 60
+    depends_on:
+      - weaviate
+
+# Startup Configuration
+startup:
+  mode: "development"
+  auto_recovery: true
+  health_check_interval: 60
+  max_startup_time: 300
+  dependency_wait_time: 30
+
+# Resource Limits (Development)
+resources:
+  memory_limit: "4g"
+  cpu_limit: "2.0"
+  disk_limit: "20g"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  file: "/Users/lynnmusil/sophia-intel-ai/logs/startup.log"
+  max_size: "100m"
+  rotate: true
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus_port: 9090
+  grafana_port: 3001
+
+# Environment Variables
+environment:
+  SOPHIA_ENVIRONMENT: "development"
+  SOPHIA_LOG_LEVEL: "INFO"
+  PYTHONPATH: "/Users/lynnmusil/sophia-intel-ai"
+
+# Docker Configuration
+docker:
+  compose_file: "docker-compose.yml"
+  project_name: "sophia-intel-ai"
+  build_timeout: 600
+  pull_timeout: 300
+
+# Security Settings
+security:
+  enable_ssl: false
+  cors_enabled: true
+  allowed_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+    - "http://127.0.0.1:3000"

@@ -1,0 +1,4 @@
+#!/bin/bash
+cd ~/sophia-intel-ai
+export PATH="$HOME/.codex/bin:$PATH"
+codex

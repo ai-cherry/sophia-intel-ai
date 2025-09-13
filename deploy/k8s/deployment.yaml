@@ -1,0 +1,350 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sophia
+---
+# Bridge API Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-bridge
+  namespace: sophia
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sophia-bridge
+  template:
+    metadata:
+      labels:
+        app: sophia-bridge
+    spec:
+      containers:
+      - name: bridge
+        image: sophia-bridge:latest
+        ports:
+        - containerPort: 8003
+        env:
+        - name: OPENROUTER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets
+              key: openrouter-api-key
+        - name: POSTGRES_URL
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets
+              key: postgres-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8003
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+# MCP Memory Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-mcp-memory
+  namespace: sophia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sophia-mcp-memory
+  template:
+    metadata:
+      labels:
+        app: sophia-mcp-memory
+    spec:
+      containers:
+      - name: mcp-memory
+        image: sophia-mcp:latest
+        ports:
+        - containerPort: 8081
+        env:
+        - name: SERVER_TYPE
+          value: "memory"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8081
+          initialDelaySeconds: 20
+          periodSeconds: 10
+---
+# MCP Filesystem Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-mcp-filesystem
+  namespace: sophia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sophia-mcp-filesystem
+  template:
+    metadata:
+      labels:
+        app: sophia-mcp-filesystem
+    spec:
+      containers:
+      - name: mcp-filesystem
+        image: sophia-mcp:latest
+        ports:
+        - containerPort: 8082
+        env:
+        - name: SERVER_TYPE
+          value: "filesystem"
+        - name: WORKSPACE_PATH
+          value: "/workspace"
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8082
+          initialDelaySeconds: 20
+          periodSeconds: 10
+      volumes:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: sophia-workspace-pvc
+---
+# MCP Git Server Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-mcp-git
+  namespace: sophia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sophia-mcp-git
+  template:
+    metadata:
+      labels:
+        app: sophia-mcp-git
+    spec:
+      containers:
+      - name: mcp-git
+        image: sophia-mcp:latest
+        ports:
+        - containerPort: 8084
+        env:
+        - name: SERVER_TYPE
+          value: "git"
+        - name: GIT_REPO_PATH
+          value: "/workspace"
+        - name: INDEX_ENABLED
+          value: "true"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: sophia-secrets
+              key: redis-url
+        volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8084
+          initialDelaySeconds: 20
+          periodSeconds: 10
+      volumes:
+      - name: workspace
+        persistentVolumeClaim:
+          claimName: sophia-workspace-pvc
+---
+# Agent UI Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sophia-ui
+  namespace: sophia
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sophia-ui
+  template:
+    metadata:
+      labels:
+        app: sophia-ui
+    spec:
+      containers:
+      - name: ui
+        image: sophia-ui:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: API_BASE_URL
+          value: "http://sophia-bridge-service:8003"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+---
+# Persistent Volume Claim for workspace
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sophia-workspace-pvc
+  namespace: sophia
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-bridge-service
+  namespace: sophia
+spec:
+  selector:
+    app: sophia-bridge
+  ports:
+    - port: 8003
+      targetPort: 8003
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-mcp-memory-service
+  namespace: sophia
+spec:
+  selector:
+    app: sophia-mcp-memory
+  ports:
+    - port: 8081
+      targetPort: 8081
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-mcp-filesystem-service
+  namespace: sophia
+spec:
+  selector:
+    app: sophia-mcp-filesystem
+  ports:
+    - port: 8082
+      targetPort: 8082
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-mcp-git-service
+  namespace: sophia
+spec:
+  selector:
+    app: sophia-mcp-git
+  ports:
+    - port: 8084
+      targetPort: 8084
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sophia-ui-service
+  namespace: sophia
+spec:
+  selector:
+    app: sophia-ui
+  ports:
+    - port: 80
+      targetPort: 3000
+  type: LoadBalancer
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sophia-ingress
+  namespace: sophia
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: sophia.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sophia-ui-service
+            port:
+              number: 80
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: sophia-bridge-service
+            port:
+              number: 8003

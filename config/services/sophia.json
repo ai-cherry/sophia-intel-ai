@@ -1,0 +1,24 @@
+{
+  "name": "Sophia Business Intelligence",
+  "personality": "Smart, strategic, and savvy",
+  "capabilities": [
+    "sales_intelligence",
+    "client_success",
+    "market_research",
+    "business_analytics"
+  ],
+  "agno_teams": {
+    "sales_intelligence": {
+      "agents": 5
+    },
+    "research": {
+      "agents": 4
+    },
+    "client_success": {
+      "agents": 4
+    },
+    "market_analysis": {
+      "agents": 4
+    }
+  }
+}

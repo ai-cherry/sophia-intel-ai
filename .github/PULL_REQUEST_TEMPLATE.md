@@ -1,9 +1,9 @@
 ## Summary
 
-- [ ] Scope: Sophia / Builder (choose one)
+- [ ] Scope: Sophia BI only (coding UI is external; no UI changes in this repo)
 - [ ] Portkey-only LLM usage (no direct provider SDKs/keys)
 - [ ] Domain separation respected (no Sophia↔Builder blending)
-- [ ] Secrets policy respected (no keys in repo; uses ~/.config/sophia/env)
+- [ ] Secrets policy respected (no keys in repo; uses <repo>/.env.master only)
 
 ## Changes
 
@@ -17,6 +17,5 @@
 ## Checklist
 
 - [ ] No `/health` endpoint duplication (uses /healthz and /api/health)
-- [ ] No new cross-imports across `sophia-intel-app` and `builder-agno-system`
+- [ ] No introduction of UI directories or builder references (no `builder-agno-system`, no `frontend/`)
 - [ ] Docs updated if behavior/process changed (AGENTS.md, docs/AGENTS_CONTRACT.md)
-

@@ -5,9 +5,7 @@ Tests Claude API connectivity and functionality
 import os
 import httpx
 import pytest
-from dotenv import load_dotenv
-# Load environment variables
-load_dotenv(".env.production")
+# No dotenv loading; rely on process env provided by runner
 class TestAnthropicIntegration:
     @pytest.fixture
     def api_key(self):

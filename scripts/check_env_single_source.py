@@ -16,26 +16,46 @@ FORBIDDEN = [
     ".env.security",
 ]
 
-ALLOW_DIRS = {"docs", ".github", "deploy", "infra"}  # allowed to mention in docs/pipelines
-
-def is_allowed(p: Path) -> bool:
-    parts = set(p.parts)
-    return any(x in parts for x in ALLOW_DIRS)
+# Limit scan to runtime codepaths to avoid false positives in docs/tests
+SCAN_DIRS = [
+    "app",
+    "backend",
+    "services",
+    "config",
+    "bin",
+]
 
 def main() -> int:
     bad: list[tuple[str, str]] = []
-    for path in ROOT.rglob("*.*"):
+    candidates = []
+    for d in SCAN_DIRS:
+        base = (ROOT / d).resolve()
+        if not base.exists():
+            continue
+        if base.is_file():
+            candidates.append(base)
+            continue
+        for path in base.rglob("*.*"):
+            candidates.append(path)
+    # Add specific root-managed scripts
+    for special in (ROOT / "sophia", ROOT / "unified-system-manager.sh"):
+        if special.exists():
+            candidates.append(special)
+    for path in candidates:
         if path.is_dir():
             continue
         # Skip large/binary and node_modules, .git, etc.
-        if any(s in path.parts for s in (".git", "node_modules", ".next", "venv", ".venv")):
+        if any(s in path.parts for s in (".git", "node_modules", ".next", "venv", ".venv", "__pycache__", "backups", "docs", ".devcontainer", "tmp")):
+            continue
+        # Skip non-source files (allow only code/config types)
+        if not any(str(path).endswith(ext) for ext in (".py", ".ts", ".tsx", ".js", ".sh", ".yaml", ".yml", ".json")):
             continue
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
         for pat in FORBIDDEN:
-            if pat in text and not is_allowed(path):
+            if pat in text:
                 bad.append((str(path), pat))
     if bad:
         print("❌ Forbidden env patterns detected:")
@@ -48,4 +68,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

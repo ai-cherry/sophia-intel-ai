@@ -78,7 +78,7 @@ class ReliableProviderManager:
         self.api_key = os.environ.get("PORTKEY_API_KEY")
         if not self.api_key:
             raise RuntimeError(
-                "PORTKEY_API_KEY is not set. Configure it via environment or ~/.config//env"
+                "PORTKEY_API_KEY is not set. Configure it in ./.env.master and start via ./sophia"
             )
         self.clients = {}
         self.performance_history = {}

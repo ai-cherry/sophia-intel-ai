@@ -26,7 +26,7 @@ echo "Cleaning up old processes..."
 # Best-effort clean by name instead of ports (portable)
 pkill -f "uvicorn mcp.memory_server:app" 2>/dev/null || true
 pkill -f "uvicorn mcp.filesystem.server:app" 2>/dev/null || true
-pkill -f "uvicorn mcp.git_server:app" 2>/dev/null || true
+pkill -f "uvicorn mcp.git.server:app" 2>/dev/null || true
 pkill -f "sophia_intel_mcp.py" 2>/dev/null || true
 
 sleep 1
@@ -44,7 +44,7 @@ nohup python3 -m uvicorn mcp.filesystem.server:app --host 0.0.0.0 --port ${PORT_
 echo "Filesystem Server PID: $!"
 
 echo "Starting Git Server on port ${PORT_MCP_GIT}..."
-nohup python3 -m uvicorn mcp.git_server:app --host 0.0.0.0 --port ${PORT_MCP_GIT} > /tmp/mcp_git.log 2>&1 &
+nohup python3 -m uvicorn mcp.git.server:app --host 0.0.0.0 --port ${PORT_MCP_GIT} > /tmp/mcp_git.log 2>&1 &
 echo "Git Server PID: $!"
 
 # Optional: custom Sophia MCP wrapper (non-HTTP)

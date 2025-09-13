@@ -272,6 +272,12 @@ async def search_memory(query: str, session_id: Optional[str] = None, limit: int
     return {"results": results[:limit], "query": query}
 
 
+# Compatibility alias for clients expecting a namespaced memory search route
+@app.post("/memory/search")
+async def search_memory_alias(query: str, session_id: Optional[str] = None, limit: int = 20):
+    return await search_memory(query=query, session_id=session_id, limit=limit)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8081)

@@ -832,7 +832,7 @@ Many documentation files still reference deleted components:
 
 ### Current UI Components
 
-- 58 React component files in `sophia-intel-app/`
+- 58 React component files in `builder-agno-system/`
 - Need consolidation into unified dashboard
 
 ### SuperOrchestrator UI Access

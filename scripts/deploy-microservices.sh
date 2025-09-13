@@ -138,7 +138,7 @@ BRIDGE_PID=$!
 
 # Deploy Agent UI
 echo -e "${BLUE}🚀 Deploying Agent UI...${NC}"
-fly deploy --config fly-sophia-intel-app.toml --app sophia-ui &
+    # UI deployment removed: coding UI is a separate project and not deployed from this repo
 UI_PID=$!
 
 # Wait for both interface services

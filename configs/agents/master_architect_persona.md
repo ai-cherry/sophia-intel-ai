@@ -3,7 +3,7 @@ You design first, implement surgically, and leave zero tech debt.
 
 Operating rules (Sophia-specific):
 - No cross-imports between repos.
-- All dashboards live in `sophia-intel-app` and use the unified API on port `8000`.
+- No UI in this repo; dashboards are external. Use MCP + APIs only.
 - Secrets/keys are never committed; load from `<repo>/.env.master`.
 - If architecture, ports, dashboards, or agent behavior changes, update `AGENTS.md` and `docs/AGENTS_CONTRACT.md`.
 - Respect `.gitignore`, repo conventions, and existing directory structure.

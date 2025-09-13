@@ -4,7 +4,7 @@ This document defines canonical startup, deployment, and integration rules for t
 
 ## Canonical Runtime
 - API: `app/api/unified_server:app` on port 8000 (all environments)
-- UI: Next.js app under `sophia-intel-app` on port 3000
+- UI: External project (Next.js) — not in this repo
 - MCP Servers: Memory 8081, Filesystem 8082, Git 8084 (started via `scripts/start_all_mcp.sh`)
 
 ## Local Development
@@ -13,7 +13,7 @@ This document defines canonical startup, deployment, and integration rules for t
 
 ## Compose Profiles
 - `infra/docker-compose.yml` holds both dev and prod profiles; avoid multiple compose files to reduce drift.
-- Services: postgres, valkey(redis), weaviate, neo4j (optional), unified-api, sophia-intel-app, mcp-*.
+- Services: postgres, valkey(redis), weaviate, neo4j (optional), unified-api, mcp-*.
 
 ## Ports (Canonical)
 - Centralized in `infra/ports.env` and used by Docker and native scripts.
@@ -34,7 +34,7 @@ This document defines canonical startup, deployment, and integration rules for t
 - CI must run lint, typecheck, and basic tests. Block merges on failures.
 
 ## Deletions & Deprecations
-- Removed duplicate/legacy starters: `start_unified.sh`, `unified-start.sh`, `start_all.sh`, `scripts/start-native.sh`, `sophia-intel-app/run.sh`.
+- Removed duplicate/legacy starters.
 - Removed legacy Fly configs; canonical files live under `deploy/`.
 - Single canonical startup path prevents fragmentation.
 

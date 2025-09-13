@@ -9,7 +9,7 @@ Goals:
 
 Behavior:
 - Load environment only from repo .env.master (single source of truth).
-- Apply dev-friendly defaults (MCP_DEV_BYPASS=true, REDIS_URL local, LITELLM_MASTER_KEY default).
+- Apply dev-friendly defaults (MCP_DEV_BYPASS=true, REDIS_URL local) and never prompt.
 - If invoked with a service command (start/stop/restart/status/health/logs/clean),
   delegate to the unified-system-manager.sh for consistent process control.
 - If invoked without a service command, dispatch to sophia_cli.cli as the primary entrypoint.
@@ -53,18 +53,10 @@ def load_env_files() -> None:
             # Silently continue; downstream services may still start
             pass
 
-    # Dev-friendly defaults to align with ./dev and the unified manager
+    # Dev-friendly defaults to align with unified manager
     os.environ.setdefault("MCP_DEV_BYPASS", "true")
     os.environ.setdefault("REDIS_URL", "redis://localhost:6379/1")
-    os.environ.setdefault("LITELLM_MASTER_KEY", "sk-litellm-master-2025")
-
-    # Wiring for Grok CLI: prefer XAI_API_KEY if GROK_API_KEY not set
-    if not os.environ.get("GROK_API_KEY"):
-        xai = os.environ.get("XAI_API_KEY")
-        if xai:
-            os.environ["GROK_API_KEY"] = xai
-    # Sensible default model for fast coding
-    os.environ.setdefault("GROK_MODEL", "grok-code-fast-1")
+    # No LiteLLM/OpenRouter/grok defaults; Portkey-only policy
 
 
 def delegate_to_manager(args: List[str]) -> int:
@@ -118,29 +110,7 @@ def main() -> None:
             rc = delegate_to_manager([cmd, *rest])
             sys.exit(rc)
 
-        if cmd == "studio":
-            # Launch the Studio (Next.js dev) in ./sophia-intel-app if available
-            app_dir = Path(__file__).parent / "sophia-intel-app"
-            if not app_dir.exists():
-                print("[ERROR] app/ directory not found. Studio not available.")
-                sys.exit(1)
-            pkg = app_dir / "package.json"
-            if not pkg.exists():
-                print("[ERROR] app/package.json not found. Cannot start Studio.")
-                sys.exit(1)
-            if (app_dir / "pnpm-lock.yaml").exists():
-                runner = ["pnpm", "dev"]
-            elif (app_dir / "yarn.lock").exists():
-                runner = ["yarn", "dev"]
-            else:
-                runner = ["npm", "run", "dev"]
-            print("[INFO] Starting Sophia Studio (Next.js dev)…")
-            try:
-                rc = subprocess.call(runner, cwd=str(app_dir), env=os.environ)
-                sys.exit(rc)
-            except FileNotFoundError:
-                print(f"[ERROR] Runner not found: {runner[0]}. Install it and retry.")
-                sys.exit(1)
+        # 'studio' command removed: coding UI must live outside this repo
 
         if cmd == "exec":
             # Execute an arbitrary command as a child process inheriting the loaded env
@@ -153,6 +123,12 @@ def main() -> None:
         if cmd == "test":
             rc = run_validator()
             sys.exit(rc)
+
+    # Enforce Portkey key presence for service start
+    if len(sys.argv) > 1 and sys.argv[1] in {"start", "restart"}:
+        if not os.environ.get("PORTKEY_API_KEY"):
+            print("[ERROR] PORTKEY_API_KEY is required (single-source: ./.env.master). Failing fast.", file=sys.stderr)
+            sys.exit(1)
 
     # Otherwise, dispatch to the unified CLI
     try:

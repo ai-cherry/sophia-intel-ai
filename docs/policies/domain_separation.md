@@ -5,7 +5,7 @@ Purpose
 
 Rules
 - API: The Sophia API must not mount Builder routers. Builder coding flows run via CLI agents/swarms only.
-- UI: `sophia-intel-app/` and `builder-agno-system/` are independent apps with no cross-imports.
+- No in-repo UIs. Coding UI is a separate project (external). No cross-imports.
 - Data/Auth: Separate JWT audiences, CORS, Redis prefixes, and DB schemas per domain.
 
 Enforcement
@@ -14,4 +14,3 @@ Enforcement
 
 Exceptions
 - Any cross-domain change requires explicit ADR and dual approval.
-

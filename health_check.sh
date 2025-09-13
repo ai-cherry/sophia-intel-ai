@@ -2,9 +2,7 @@
 # Health check script for Sophia Platform
 
 # Load environment if available
-if [ -f .env.local ]; then
-    source .env.local
-fi
+# Do not source local env files; environment is provided by ./sophia (.env.master)
 
 # Set default ports if not defined
 MCP_PORT=${MCP_PORT:-3333}
@@ -192,5 +190,5 @@ if [ $services_ok -lt $total_services ]; then
     echo "💡 Recommendations:"
     echo "  • Check logs: tail -f logs/*.log"
     echo "  • Restart services: ./stop_all.sh && ./deploy_all.sh"
-    echo "  • Check environment: cat .env.local"
+    echo "  • Check environment: ensure <repo>/.env.master exists (chmod 600)"
 fi

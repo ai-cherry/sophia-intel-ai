@@ -338,9 +338,7 @@ class DynamicPortkeyClient:
 # Convenience functions
 @with_circuit_breaker("external_api")
 async def create_dynamic_client() -> DynamicPortkeyClient:
-    """Create a dynamic Portkey client with environment configuration."""
-    from dotenv import load_dotenv
-    load_dotenv(".env.local")
+    """Create a dynamic Portkey client using process environment (single source)."""
     return DynamicPortkeyClient(
         portkey_api_key=os.getenv("PORTKEY_API_KEY"),
         openrouter_api_key=os.getenv("OPENROUTER_API_KEY"),

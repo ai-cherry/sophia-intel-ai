@@ -76,7 +76,7 @@ check_port() {
     return 1
 }
 
-// LiteLLM removed: Portkey is the preferred gateway; no local proxy management
+# LiteLLM removed: Portkey is the preferred gateway; no local proxy management
 
 start_mcp_servers() {
     log "Starting MCP servers..."
@@ -84,7 +84,7 @@ start_mcp_servers() {
     # Kill any existing MCP servers
     pkill -f "mcp.memory_server" 2>/dev/null || true
     pkill -f "mcp.filesystem.server" 2>/dev/null || true
-    pkill -f "mcp.git_server" 2>/dev/null || true
+    pkill -f "mcp.git.server" 2>/dev/null || true
     sleep 2
     
     # Ensure uvicorn available
@@ -142,7 +142,7 @@ stop_mcp_servers() {
     # Cleanup any orphaned processes
     pkill -f "mcp.memory_server" 2>/dev/null || true
     pkill -f "mcp.filesystem.server" 2>/dev/null || true
-    pkill -f "mcp.git_server" 2>/dev/null || true
+    pkill -f "mcp.git.server" 2>/dev/null || true
 }
 
 health_check() {
@@ -170,18 +170,6 @@ health_check() {
             echo -e "❌ MCP ${mcp_names[$i]}: ${RED}Not running${NC}"
         fi
     done
-    
-    # Check Opencode
-    if command -v opencode >/dev/null 2>&1; then
-        echo -e "✅ Opencode: ${GREEN}Available${NC} in PATH"
-        echo -e "   └─ Version: $(opencode --version 2>/dev/null || echo 'Unknown')"
-    else
-        echo -e "❌ Opencode: ${RED}Not in PATH${NC}"
-        if [ -f "$HOME/.opencode/bin/opencode" ]; then
-            echo -e "   └─ Binary exists at ~/.opencode/bin/opencode"
-            echo -e "   └─ Run: source ~/.zshrc"
-        fi
-    fi
     
     # Check API Keys
     local key_count=$(grep -c "API_KEY\|API_TOKEN" "$ENV_FILE" 2>/dev/null || echo "0")
@@ -236,7 +224,7 @@ start_all() {
     echo -e "• MCP Memory:       http://localhost:8081/health"
     echo -e "• MCP Filesystem:   http://localhost:8082/health"
     echo -e "• MCP Git:          http://localhost:8084/health"
-    echo -e "• Sophia Studio:    http://localhost:3000   (run: ./sophia studio)"
+    # No coding UI in this repo.
 }
 
 stop_all() {
@@ -290,7 +278,7 @@ case "${1:-}" in
         echo "Usage: $0 {start|stop|restart|status|health|logs|clean}"
         echo ""
         echo "Commands:"
-        echo "  start      - Start all services (LiteLLM + MCP)"
+        echo "  start      - Start all services (MCP only)"
         echo "  stop       - Stop all services"
         echo "  restart    - Restart all services"
         echo "  status     - Show detailed status and logs"
@@ -299,8 +287,6 @@ case "${1:-}" in
         echo "  clean      - Clean up orphaned processes"
         echo ""
         echo "Individual service control:"
-        echo "  litellm-start  - Start only LiteLLM"
-        echo "  litellm-stop   - Stop only LiteLLM"
         echo "  mcp-start      - Start only MCP servers"
         echo "  mcp-stop       - Stop only MCP servers"
         echo ""

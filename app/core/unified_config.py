@@ -126,15 +126,7 @@ class SophiaConfig(BaseSettings):
     aimlapi_max_retries: int = Field(default=3, env="AIMLAPI_MAX_RETRIES")
     aiml_enhanced_enabled: bool = Field(default=True, env="AIML_ENHANCED_ENABLED")
     
-    # LiteLLM Configuration
-    litellm_api_key: Optional[str] = Field(default=None, env="LITELLM_API_KEY")
-    litellm_base_url: str = Field(
-        default="https://api.litellm.ai/v1",
-        env="LITELLM_BASE_URL"
-    )
-    litellm_enable_routing: bool = Field(default=True, env="LITELLM_ENABLE_ROUTING")
-    litellm_cache_enabled: bool = Field(default=True, env="LITELLM_CACHE_ENABLED")
-    litellm_daily_budget: float = Field(default=100.0, env="LITELLM_DAILY_BUDGET")
+    # Legacy local proxy configuration removed — Portkey is the only gateway
     
     # Portkey Configuration
     portkey_api_key: Optional[str] = Field(default=None, env="PORTKEY_API_KEY")

@@ -13,7 +13,7 @@ from fastapi import Depends, HTTPException
 from app.core.circuit_breaker import with_circuit_breaker
 from app.core.connections import get_connection_manager
 # Import enhanced configuration system following ADR-006
-from config.manager import get_config
+from config.unified_manager import get_config
 logger = logging.getLogger(__name__)
 class GlobalState:
     """Enhanced global state using ADR-006 configuration management."""
@@ -38,7 +38,7 @@ class GlobalState:
             # Use the enhanced config manager; fall back gracefully if validators are absent
             self.config = get_config()
             try:
-                from config.manager import validate_environment as _validate
+                from config.unified_manager import validate_environment as _validate
                 self.validation = _validate()
             except Exception:
                 self.validation = None

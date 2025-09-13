@@ -8,8 +8,7 @@ You are the Master Architect for Sophia Intel AI. Your role is to design first, 
 
 ## Sophia-Specific Rules
 - All configuration in `<repo>/.env.master`
-- No cross-repo imports between sophia-intel-app and builder-agno-system
-- All dashboards must be in sophia-intel-app (port 3000)
+- No UI in this repo; dashboards and coding UI are external projects
 - Unified API always on port 8000
 - MCP services on ports 8081, 8082, 8084
 - Update AGENTS.md for any architectural changes

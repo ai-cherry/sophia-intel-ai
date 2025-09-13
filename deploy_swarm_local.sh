@@ -93,8 +93,8 @@ echo -e "${CYAN}🚀 Starting MCP servers...${NC}"
 
 # Kill any existing MCP servers
 pkill -f "mcp/memory_server.py" 2>/dev/null || true
-pkill -f "mcp/filesystem.py" 2>/dev/null || true
-pkill -f "mcp/git_server.py" 2>/dev/null || true
+pkill -f "mcp/filesystem/server.py" 2>/dev/null || true
+pkill -f "mcp/git/server.py" 2>/dev/null || true
 
 sleep 1
 
@@ -102,10 +102,10 @@ sleep 1
 nohup python3 "$REPO_ROOT/mcp/memory_server.py" > "$REPO_ROOT/logs/mcp_memory.log" 2>&1 &
 echo "  Memory server starting on port 8081..."
 
-nohup python3 "$REPO_ROOT/mcp/filesystem.py" > "$REPO_ROOT/logs/mcp_filesystem.log" 2>&1 &
+nohup python3 -m uvicorn mcp.filesystem.server:app --host 0.0.0.0 --port 8082 > "$REPO_ROOT/logs/mcp_filesystem.log" 2>&1 &
 echo "  Filesystem server starting on port 8082..."
 
-nohup python3 "$REPO_ROOT/mcp/git_server.py" > "$REPO_ROOT/logs/mcp_git.log" 2>&1 &
+nohup python3 -m uvicorn mcp.git.server:app --host 0.0.0.0 --port 8084 > "$REPO_ROOT/logs/mcp_git.log" 2>&1 &
 echo "  Git server starting on port 8084..."
 
 sleep 3
@@ -178,14 +178,14 @@ cat > "$CONFIG_ROOT/claude/claude_desktop_config.json" << EOF
     },
     "sophia-filesystem": {
       "command": "python3",
-      "args": ["$REPO_ROOT/mcp/filesystem.py"],
+      "args": ["-m", "uvicorn", "mcp.filesystem.server:app", "--host", "0.0.0.0", "--port", "8082"],
       "env": {
         "WORKSPACE_PATH": "$REPO_ROOT"
       }
     },
     "sophia-git": {
       "command": "python3",
-      "args": ["$REPO_ROOT/mcp/git_server.py"],
+      "args": ["-m", "uvicorn", "mcp.git.server:app", "--host", "0.0.0.0", "--port", "8084"],
       "env": {
         "REPO_PATH": "$REPO_ROOT"
       }

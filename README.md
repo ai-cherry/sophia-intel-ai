@@ -75,17 +75,17 @@ What I changed to enforce it
 - Loader unification:
     - `./sophia` now loads only `.env.master`. No `~/.config`, no ESC fallback.
     - `unified-system-manager.sh` sources only `.env.master` and exits with one clear line if missing.
-    - `agents/load_env.py` silently loads `.env.master` (no spam prints on import).
+    - Runtime code no longer calls dotenv; all processes inherit env from `./sophia`.
 - Zero prompts, zero loops:
     - No scripts will ask for keys. If missing, you see one line: “.env.master not found at …; cp .env.template .env.master && chmod 600 .env.master”.
 - One daily action:
-    - Run `./sophia start` once per session. It exports env to all child processes (LiteLLM, MCP, your tools), so nothing else needs to “load keys”.
+- Run `./sophia start` once per session. It exports env to all child processes so nothing else needs to “load keys”.
 
 How everything finds keys now
 
 - Services and CLIs launched from `./sophia` inherit the environment — no extra sourcing.
-- Python code can still explicitly call `from agents.load_env import load_master_env` if you run scripts standalone, but imports are silent now and won’t nag.
-- Node/Shell examples still work if you ever need them, but you don’t need to use them if you start via `./sophia`.
+- For standalone execution, use `./sophia exec <command>` so children inherit the same env.
+- Coding UI is a separate project (outside this repo). This repo contains the BI app + MCP only.
 
 Practical daily flow
 
@@ -140,43 +140,28 @@ pip3 install -r requirements.txt
 pip3 install -r requirements.txt -r requirements/dev.txt
 ```
 
-4. Install Node.js dependencies (for UI):
-
-```bash
-cd sophia-intel-app && npm install
-cd ../agno-builder-app && npm install  
-cd ../litellm-builder-app && npm install
-```
+4. (Optional) Frontend is external — no UI in this repo.
 
 ### Quick Start (Current)
 
-1. One-command local up (MCP + API + UI):
+1. Start MCP (canonical):
 
 ```bash
-./local-up.sh up     # starts MCP(8081/8082/8084), API(8000), UI(3000)
-./local-up.sh status # quick health checks
-./local-up.sh logs   # tail logs
-./local-up.sh down   # stop everything
-```
-
-2. Use Claude Code locally with repo defaults (plan mode + local MCP config):
-
-```bash
-./dev claude "refactor this" --permission-mode plan --print
-# or legacy flag (auto-mapped): ./dev claude "refactor this" --mode plan
+./sophia start   # starts memory(8081), filesystem(8082), git(8084)
+./sophia status  # health
 ```
 
 Access:
 
-- Sophia Intel App: <http://localhost:3000>
-- API Health: <http://localhost:8000/health>
+- BI dashboards run in an external project (Next.js) — not in this repo
+- API Health: <http://localhost:8000/health> (if you run backend)
 
 ### Dev Stack (Current)
 
-- Start MCP services: `./unified-system-manager.sh mcp-start` (Portkey is used as LLM gateway)
+- Start MCP services: `./unified-system-manager.sh mcp-start` (Portkey is the only LLM gateway)
 - Check status: `./unified-system-manager.sh status`
 - Start API: `uvicorn backend.main:app --host 0.0.0.0 --port 8000`
-- Start UI: `cd sophia-intel-app && npm run dev`
+ 
 
 Notes:
 - Main compose: `docker-compose.yml` (API/UI/DBs)
@@ -187,6 +172,15 @@ Notes:
 **UPDATED Environment**:
 - Single source: `<repo>/.env.master` (git-ignored, chmod 600)
   - Required: `PORTKEY_API_KEY` (plus optional `PORTKEY_VK_*` virtual keys per provider)
+
+## One True Dev Flow (Final)
+
+- Start Sophia MCP: `./sophia start` (8081, 8082, 8084; reads ./.env.master)
+- Start Coding UI (external project): reads same .env.master path; never prompts
+- Use Coding UI: Plan → Patch → Validate; apply patches via MCP FS
+- Commit in this BI repo when validation passes
+
+See docs/ONE_TRUE_DEV_FLOW.md and docs/CODING_UI_STANDALONE.md for the one-true dev setup and external Coding UI contracts.
 
 ## 📋 Usage
 

@@ -21,8 +21,7 @@ Environment Loading
 - App fallbacks: `.env`, `.env.local` (via `app.core.env.load_env_once`).
 
 Do/Don’t
-- Do: Add/extend dashboards under `sophia-intel-app/` only.
-- Don’t: Create parallel dashboards outside `sophia-intel-app/` for business features.
+This repository does not contain a UI. The BI UI is managed separately. Do not attempt to add UI here.
 - Do: Keep Builder dashboard at `builder-system/` strictly for dev workflows.
 
 Verification

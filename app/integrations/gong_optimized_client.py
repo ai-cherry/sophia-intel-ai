@@ -144,7 +144,7 @@ class GongOptimizedClient:
             import base64
             if not (self.access_key and self.client_secret):
                 # Raise a clear error if credentials are missing
-                raise RuntimeError("Gong credentials missing: set GONG_ACCESS_KEY and GONG_CLIENT_SECRET in ~/.config/sophia/env")
+                raise RuntimeError("Gong credentials missing: set GONG_ACCESS_KEY and GONG_CLIENT_SECRET in .env.master (repo root)")
             credentials = f"{self.access_key}:{self.client_secret}"
             encoded = base64.b64encode(credentials.encode()).decode()
             return {"Authorization": f"Basic {encoded}"}

@@ -455,8 +455,8 @@
       }
     },
     "development": {
-      "load_dotenv(path(\".env.local\").resolve(), override": {
-        "fn::secret": "False)"
+      "note_local_dotenv_removed": {
+        "fn::secret": "Local dotenv disabled; use CI-injected secrets"
       },
       "local_dev_mode": {
         "fn::secret": "true"
@@ -484,15 +484,9 @@
       "k, v": {
         "fn::secret": "s.split(\"=\", 1)"
       },
-      "load_dotenv(path(\"~/.config/sophia/env\").expanduser(), override": {
-        "fn::secret": "False)"
-      },
-      "load_dotenv(path(\"~/.config//env\").expanduser(), override": {
-        "fn::secret": "False)"
-      },
-      "load_dotenv(path(\".env\").resolve(), override": {
-        "fn::secret": "False)"
-      },
+      "note_local_dotenv_removed_1": {"fn::secret": "Removed load_dotenv ~/.config reference"},
+      "note_local_dotenv_removed_2": {"fn::secret": "Removed load_dotenv ~/.config legacy"},
+      "note_local_dotenv_removed_3": {"fn::secret": "Removed load_dotenv .env reference"},
       "node_env": {
         "fn::secret": "development"
       },
@@ -649,9 +643,7 @@
       "agno_api_image": {
         "fn::secret": "ghcr.io/agno-agi/agent-api:v1.0.0"
       },
-      "agno_ui_image": {
-        "fn::secret": "ghcr.io/agno-agi/sophia-intel-app:v1.0.0"
-      },
+      
       "openrouter_api_key": {
         "fn::secret": "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"
       },
@@ -1063,26 +1055,12 @@
       "aiml_router_token": {
         "fn::secret": "# Optional: Bearer token for /api/aiml/* routes"
       },
-      "litellm_api_key": {
-        "fn::secret": "CHANGEME"
-      },
-      "litellm_base_url": {
-        "fn::secret": "https://api.litellm.ai/v1"
-      },
-      "litellm_enable_routing": {
-        "fn::secret": "true"
-      },
-      "litellm_cache_enabled": {
-        "fn::secret": "true"
-      },
-      "litellm_daily_budget": {
-        "fn::secret": "100.00"
-      },
+      
       "codex_enabled": {
         "fn::secret": "true"
       },
       "codex_base_url": {
-        "fn::secret": "http://localhost:8090/v1"
+        "fn::secret": ""
       },
       "codex_model": {
         "fn::secret": "codex-1"

@@ -89,9 +89,6 @@ gemini-vk-7c8d93       # Google Gemini (needs dashboard setup)
 
 1. **Fix Gemini Quota**: Check Google Cloud Console for billing/quota
 2. **Configure Portkey**: Add virtual key in Portkey dashboard
-3. **Update LiteLLM**: Add Gemini to `litellm-complete.yaml` if needed
-4. **Test Again**: Run `python3 test_portkey_gemini.py`
-
 ## Alternative: Use Different Provider
 
 If Gemini continues to have issues, these alternatives work immediately:

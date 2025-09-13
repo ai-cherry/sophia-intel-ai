@@ -111,7 +111,7 @@ echo -e "   ${GREEN}✅ Filesystem Server on 8082${NC}"
 # Start Git Server
 if ! curl -s http://localhost:8084/health >/dev/null 2>&1; then
     echo "   Starting Git Server..."
-    nohup python3 -m uvicorn mcp.git_server:app \
+    nohup python3 -m uvicorn mcp.git.server:app \
         --host 0.0.0.0 --port 8084 \
         > logs/mcp-git.log 2>&1 &
     echo $! > .pids/mcp-git.pid

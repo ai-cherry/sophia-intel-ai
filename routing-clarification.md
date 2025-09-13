@@ -1,4 +1,4 @@
-# Model Routing Clarification - How It Actually Works
+# Model Routing — One-True Policy
 
 ## Current Setup - You Have Multiple Routing Layers!
 
@@ -11,20 +11,8 @@ Your Portkey key `nYraiE8dOR9A1gDwaRNpSSXRkXBc` - we need to check what's config
 - Is it set up for specific providers?
 - What fallback rules are configured?
 
-### 3. LiteLLM (NOT Connected Yet)
-LiteLLM is configured but NOT running. To use it:
-```bash
-# Start LiteLLM proxy
-cd ~/sophia-intel-ai
-litellm --config litellm-config.yaml --port 4000
-
-# Then add to Opencode
-opencode auth login
-# Select "Other"
-# Name: litellm
-# API Key: sk-litellm-master-key-2025
-# Base URL: http://localhost:4000
-```
+### 3. No local proxies
+No LiteLLM. No local OpenRouter. Portkey-only.
 
 ## How Opencode Decides Where to Route
 
@@ -71,7 +59,7 @@ curl https://api.portkey.ai/v1/chat/completions \
 
 ## The Real Answer - It's Confusing!
 
-**Opencode doesn't "know" where to pull from.** It just sends to whatever provider you tell it:
+Portkey is the only gateway.
 
 1. **No provider specified** → Uses raw API keys from environment
 2. **Provider "portkey"** → Sends to Portkey, which decides routing based on:
@@ -114,18 +102,12 @@ opencode run --provider portkey --model "claude-3-opus"  # Routes to Anthropic
 opencode run --provider portkey --model "mistralai/mistral-7b"  # Routes to OpenRouter/Together
 ```
 
-### Option 3: Use LiteLLM for Local Routing
-Start LiteLLM proxy and let it handle routing:
-```bash
-# LiteLLM knows how to route based on model names
-opencode run --provider litellm --model "gpt-4"
-opencode run --provider litellm --model "claude-3-opus"
-opencode run --provider litellm --model "together/llama-3-70b"
-```
+### Option 3: (Removed)
+Local proxy routing is not supported.
 
 ## To Check Your Current Portkey Configuration
 
-Go to https://dashboard.portkey.ai and check:
+Go to Portkey dashboard and check:
 1. What providers are linked to your virtual key
 2. What routing mode is set (loadbalance, fallback, etc.)
 3. Any custom routes configured

@@ -1,5 +1,7 @@
 # Sophia Intel AI - Environment Setup Guide
 
+Note: As of 2025-09-13, local development uses a single-source env file only: <repo>/.env.master. Do not use .env.local or ~/.config/sophia/env. Runtime code must rely on process env loaded by ./sophia; cloud deploys inject secrets via CI.
+
 ## 🎯 The Proper Environment for This Project
 
 ### Core Environment File: `.env.master`
@@ -32,9 +34,7 @@ PERPLEXITY_API_KEY=""                  # Web search
 OPENROUTER_API_KEY=""                  # 100+ models
 TOGETHER_API_KEY=""                    # Open models
 
-# === LITELLM CONFIGURATION ===
-LITELLM_MASTER_KEY="sk-litellm-master-2025"  # Auth token
-LITELLM_PORT=4000                             # Proxy port
+## Portkey Gateway is the only routing layer; no LiteLLM local proxy
 
 # === MCP SERVER CONFIGURATION ===
 MCP_MEMORY_PORT=8081                   # Memory server
@@ -95,7 +95,7 @@ if env_file.exists():
 source ~/sophia-intel-ai/.env.master
 
 # Now all variables are available
-echo "Using LiteLLM on port: $LITELLM_PORT"
+echo "Using Portkey Gateway with VKs"
 ```
 
 ### 4. For Node.js/JavaScript
@@ -107,7 +107,7 @@ require('dotenv').config({
 });
 
 // Now process.env has all variables
-console.log(`LiteLLM port: ${process.env.LITELLM_PORT}`);
+console.log('Portkey Gateway enabled');
 ```
 
 ## 🔒 Security Best Practices
@@ -135,7 +135,7 @@ ls -la ~/.sophia-intel-ai/.env.master
 ```bash
 # Development (.env.master)
 MCP_DEV_BYPASS=true
-LITELLM_MASTER_KEY="sk-litellm-master-2025"
+PORTKEY_API_KEY="your_portkey_api_key"
 
 # Production (.env.production)
 MCP_DEV_BYPASS=false
@@ -177,7 +177,7 @@ chmod 600 .env.master
 
 # Should show:
 # ✅ Redis: PASS
-# ✅ LiteLLM API: PASS
+# ✅ Portkey Gateway: PASS
 # ✅ MCP Memory: PASS
 # ✅ MCP Filesystem: PASS
 # ✅ MCP Git: PASS

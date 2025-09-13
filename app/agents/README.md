@@ -201,7 +201,7 @@ The system provides full REST API access:
 ### Next Steps
 
 1. **Run the demo**: `python app/agents/demo.py`
-2. **Add API keys** to `.env.local` for full functionality
+2. **Add API keys** to `<repo>/.env.master` for full functionality (single source)
 3. **Import routes** into your FastAPI app
 4. **Start creating agents** and swarms immediately
 

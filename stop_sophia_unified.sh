@@ -50,7 +50,7 @@ stop_service "sophia-server"
 stop_service "mcp-memory"
 stop_service "mcp-filesystem"
 stop_service "mcp-git"
-stop_service "sophia-intel-app"
+stop_service "UI-removed"
 
 # Clean up state file
 rm -f "$SOPHIA_HOME/.sophia-state.json"

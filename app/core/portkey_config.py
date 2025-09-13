@@ -60,7 +60,7 @@ class PortkeyManager:
         self.api_key = os.getenv("PORTKEY_API_KEY")
         if not self.api_key:
             raise RuntimeError(
-                "PORTKEY_API_KEY is not set. Configure it via environment or ~/.config//env"
+                "PORTKEY_API_KEY is not set. Configure it in ./.env.master and start via ./sophia"
             )
         self.base_url = os.getenv("PORTKEY_BASE_URL", "https://api.portkey.ai/v1")
         # Initialize provider configurations with actual virtual keys

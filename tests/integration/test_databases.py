@@ -7,9 +7,7 @@ import os
 import asyncpg
 import httpx
 import pytest
-from dotenv import load_dotenv
-# Load environment variables
-load_dotenv(".env.production")
+# No dotenv loading; rely on process env provided by runner
 class TestDatabaseIntegrations:
     @pytest.mark.asyncio
     async def test_neon_postgresql_connection(self):

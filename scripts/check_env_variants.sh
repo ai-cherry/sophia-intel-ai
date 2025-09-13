@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-allowed=(".env" ".env.local" ".env.template")
+allowed=(".env.master" ".env.template" ".env.example")
 violations=()
 for f in .env*; do
   [[ -e "$f" ]] || continue
@@ -19,4 +19,3 @@ if (( ${#violations[@]} > 0 )); then
 fi
 
 echo "✅ Env variants check passed"
-

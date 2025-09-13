@@ -40,10 +40,3 @@ echo "# With Portkey (after setup):"
 echo "opencode run --model 'portkey/gpt-4o' 'Generate code'"
 echo ""
 
-echo "💡 For LiteLLM integration:"
-echo "1. pip install litellm"
-echo "2. litellm --config litellm-config.yaml --port 4000"
-echo "3. opencode auth login → Other → litellm → http://localhost:4000"
-echo ""
-
-echo "📚 Documentation saved to: docs/portkey-litellm-setup.md"

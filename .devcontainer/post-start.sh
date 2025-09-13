@@ -3,10 +3,7 @@ set -euo pipefail
 
 echo "🚀 DevContainer Post-Start Setup..."
 
-# Load environment variables
-if [ -f ".env" ]; then
-    export $(grep -v '^#' .env | xargs)
-fi
+# Environment is sourced only from <repo>/.env.master via ./sophia. Do not load .env here.
 
 # Start services if needed
 # docker-compose up -d || echo "No docker-compose.yml found"

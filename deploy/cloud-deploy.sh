@@ -17,9 +17,9 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 ENV_FILE="${SOPHIA_ENV_FILE:-}"
 CLOUD_PROVIDER="${CLOUD_PROVIDER:-fly}"
 
-# Load environment
+# Load environment (cloud-only)
 load_environment() {
-    echo -e "${YELLOW}⚠️  Cloud deploy expects env injected by CI/CD or SOPHIA_ENV_FILE explicitly set.${NC}"
+    echo -e "${YELLOW}⚠️  Cloud-only script: env must be injected by CI/CD or set via SOPHIA_ENV_FILE. Do not use for local dev.${NC}"
     if [ -n "$ENV_FILE" ] && [ -f "$ENV_FILE" ]; then
         export $(grep -v '^#' "$ENV_FILE" | xargs)
         echo -e "${GREEN}✅ Loaded env from $ENV_FILE${NC}"
@@ -52,13 +52,7 @@ build_images() {
         --push \
         .
     
-    echo "Building Agent UI..."
-    docker buildx build \
-        --platform linux/arm64,linux/amd64 \
-        -t sophia-ui:latest \
-        -f infra/Dockerfile.sophia-intel-app \
-        --push \
-        sophia-intel-app/
+    # Coding UI is not built from this repo
     
     echo -e "${GREEN}✅ Images built and pushed${NC}"
 }

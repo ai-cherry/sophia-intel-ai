@@ -31,9 +31,7 @@ class ESCIntegrationConfig:
     auto_refresh: bool = True
     refresh_interval: int = 300
     watch_files: bool = True
-    fallback_env_files: list[str] = field(
-        default_factory=lambda: [".env", ".env.local"]
-    )
+    fallback_env_files: list[str] = field(default_factory=lambda: [])
     enable_audit_logging: bool = True
     backward_compatibility: bool = True
     hot_reload_enabled: bool = True

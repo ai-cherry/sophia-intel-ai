@@ -27,11 +27,7 @@ spec:
           env:
             - name: ENVIRONMENT
               value: "production"
-            - name: LITELLM_MASTER_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: litellm-secrets
-                  key: master_key
+            # Removed LiteLLM; Portkey is the only LLM gateway
           readinessProbe:
             httpGet:
               path: /health
@@ -55,4 +51,3 @@ spec:
     - name: http
       port: 8000
       targetPort: 8000
-

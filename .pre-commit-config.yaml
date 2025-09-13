@@ -6,6 +6,11 @@ repos:
         entry: scripts/check_env_variants.sh
         language: script
         pass_filenames: false
+      - id: enforce-single-env-source
+        name: Enforce single env source in runtime code
+        entry: python3 scripts/check_env_single_source.py
+        language: system
+        pass_filenames: false
       - id: block-root-markdown-spam
         name: Block excessive root markdown
         entry: scripts/check_root_docs.sh
@@ -19,6 +24,11 @@ repos:
       - id: domain-wall-check
         name: Domain wall check (Sophia vs Builder)
         entry: bash scripts/ci/domain_wall_check.sh
+        language: system
+        pass_filenames: false
+      - id: disallow-builder-ui
+        name: Disallow Builder UI in repo
+        entry: bash scripts/ci/disallow_builder_ui.sh
         language: system
         pass_filenames: false
       - id: banned-providers-check

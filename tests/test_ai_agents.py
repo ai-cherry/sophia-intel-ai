@@ -4,8 +4,7 @@ AI Agents Test Suite
 Tests EVERY AI agent with REAL queries
 """
 import asyncio
-from dotenv import load_dotenv
-load_dotenv()
+# No dotenv loading; tests should rely on process env or .env.master loaded by ./sophia
 class AIAgentTester:
     def __init__(self):
         self.results = {}

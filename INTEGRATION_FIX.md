@@ -73,7 +73,7 @@ GONG_API_SECRET=your-secret
 The system now has:
 - **Bridge API** (`bridge/api.py`): Connects agents with SSE streaming
 - **Model Router** (`router/top25.py`): OpenRouter Top-25 management
-- **MCP Servers** (`mcp/filesystem.py`): Filesystem with allowlist
+- **MCP Servers** (`mcp/filesystem/server.py`): Filesystem with allowlist
 - **Builder CLI** (`builder-cli/forge.py`): Complete CLI interface
 
 ## 📊 Test Results

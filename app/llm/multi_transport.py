@@ -27,17 +27,11 @@ class MultiTransportLLM:
             "openrouter": os.getenv("OPENROUTER_API_KEY"),
             "together": os.getenv("TOGETHER_AI_API_KEY"),
             "groq": os.getenv("GROQ_API_KEY"),
-            "xai": os.getenv("XAI_API_KEY"),
             "deepseek": os.getenv("DEEPSEEK_API_KEY"),
             "perplexity": os.getenv("PERPLEXITY_API_KEY"),
             "aimlapi": os.getenv("AIMLAPI_API_KEY"),
             "portkey": os.getenv("PORTKEY_API_KEY"),
         }
-        # Compatibility: allow GROK_API_KEY as alias for XAI_API_KEY
-        if not self.keys.get("xai"):
-            alias = os.getenv("GROK_API_KEY")
-            if alias:
-                self.keys["xai"] = alias
         # Portkey virtual keys
         self.portkey_vks = {
             "perplexity": os.getenv("PORTKEY_VK_PERPLEXITY"),
@@ -153,8 +147,7 @@ class MultiTransportLLM:
             )
         elif provider == "groq":
             return await self._complete_groq(model, messages, max_tokens, temperature)
-        elif provider == "xai":
-            return await self._complete_xai(model, messages, max_tokens, temperature)
+        # All x.ai usage must go through Portkey via virtual keys; no direct path
         elif provider == "deepseek":
             return await self._complete_deepseek(
                 model, messages, max_tokens, temperature
@@ -349,37 +342,6 @@ class MultiTransportLLM:
                 usage=data.get("usage", {}),
                 model=model,
                 provider="groq",
-                raw=data,
-            )
-    async def _complete_xai(
-        self,
-        model: str,
-        messages: list[dict[str, str]],
-        max_tokens: int,
-        temperature: float,
-    ) -> LLMResponse:
-        """X.AI (Grok) completion."""
-        if not self.keys.get("xai"):
-            raise RuntimeError("XAI_API_KEY not set")
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "https://api.x.ai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {self.keys['xai']}"},
-                json={
-                    "model": model,
-                    "messages": messages,
-                    "max_tokens": max_tokens,
-                    "temperature": temperature,
-                },
-                timeout=30,
-            )
-            response.raise_for_status()
-            data = response.json()
-            return LLMResponse(
-                text=data["choices"][0]["message"]["content"],
-                usage=data.get("usage", {}),
-                model=model,
-                provider="xai",
                 raw=data,
             )
     async def _complete_deepseek(

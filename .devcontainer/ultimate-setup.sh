@@ -365,44 +365,7 @@ start_mcp_servers() {
 
 # Start frontend
 start_frontend() {
-    log_info "🎨 Starting frontend dashboard..."
-    
-    # Check if frontend is already running
-    if curl -s ${SOPHIA_FRONTEND_ENDPOINT} &>/dev/null; then
-        log_success "Frontend is already running"
-        return 0
-    fi
-    
-    if [ ! -f "frontend/package.json" ]; then
-        log_warn "frontend/package.json not found, skipping frontend startup"
-        return 0
-    fi
-    
-    cd frontend
-    
-    # Install dependencies if node_modules doesn't exist
-    if [ ! -d "node_modules" ]; then
-        log_info "Installing frontend dependencies..."
-        npm install || {
-            log_warn "npm install failed, trying with --legacy-peer-deps"
-            npm install --legacy-peer-deps || {
-                log_error "Frontend dependency installation failed"
-                cd ..
-                return 1
-            }
-        }
-    fi
-    
-    # Kill any existing frontend processes
-    pkill -f "npm.*dev" || true
-    
-    # Start frontend in background
-    log_info "Starting frontend development server..."
-    nohup npm run dev > /tmp/logs/frontend.log 2>&1 &
-    cd ..
-    
-    sleep 5
-    log_success "Frontend started in background"
+    log_info "Frontend startup disabled. Coding UI is a separate project; no UI runs inside this repo."
     return 0
 }
 
@@ -531,3 +494,4 @@ trap 'log_error "Setup interrupted!"; exit 1' INT TERM
 # Run main function
 main "$@"
 
+# Notice: Coding UI is a separate project; no UI runs in this repo.

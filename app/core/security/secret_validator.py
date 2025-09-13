@@ -30,7 +30,6 @@ class SecretType(str, Enum):
     PERPLEXITY_API_KEY = "perplexity_api_key"
     GROQ_API_KEY = "groq_api_key"
     MISTRAL_API_KEY = "mistral_api_key"
-    XAI_API_KEY = "xai_api_key"
     TOGETHER_API_KEY = "together_api_key"
     COHERE_API_KEY = "cohere_api_key"
     # No direct Google Gemini key type; use OpenRouter/AIMLAPI/Together/HF

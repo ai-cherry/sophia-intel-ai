@@ -6,7 +6,6 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timedelta
-from dotenv import load_dotenv
 from app.integrations.connectors.netsuite_connector import (
     NetSuiteAuthMethod,
     NetSuiteConfig,
@@ -21,10 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 async def test_netsuite_connection():
     """Test NetSuite connection and basic operations"""
-    # Load environment variables
-    from pathlib import Path
-    env_path = Path(__file__).parent.parent.parent / ".env"
-    load_dotenv(env_path)
+    # Rely on process environment (.env.master loaded by ./sophia)
     # Create NetSuite configuration
     config = NetSuiteConfig(
         name="netsuite",
@@ -183,10 +179,7 @@ def main():
     """Run the test"""
     print("Starting NetSuite integration test...")
     print("Make sure you have configured your .env file with NetSuite credentials\n")
-    # Load environment variables
-    from pathlib import Path
-    env_path = Path(__file__).parent.parent.parent / ".env"
-    load_dotenv(env_path)
+    # Environment should be provided by process env (.env.master via ./sophia)
     # Check for required environment variables
     required_vars = ["NETSUITE_ACCOUNT_ID"]
     missing_vars = [var for var in required_vars if not os.getenv(var)]

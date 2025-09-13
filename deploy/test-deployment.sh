@@ -178,16 +178,7 @@ test_docker_build() {
         FAILED_TESTS+=("MCP Docker build")
     fi
     
-    # Test Agent UI Docker build
-    echo -e "${BLUE}Building Agent UI Docker image...${NC}"
-    if docker build -f infra/Dockerfile.sophia-intel-app -t sophia-ui:test sophia-intel-app/ > /dev/null 2>&1; then
-        echo -e "${GREEN}✅ Agent UI Docker build successful${NC}"
-        ((TESTS_PASSED++))
-    else
-        echo -e "${RED}❌ Agent UI Docker build failed${NC}"
-        ((TESTS_FAILED++))
-        FAILED_TESTS+=("Agent UI Docker build")
-    fi
+    # No UI in this repo — skip any UI builds
 }
 
 # Test Kubernetes manifests

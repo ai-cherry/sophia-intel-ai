@@ -10,7 +10,7 @@ Environment policy (enforced): `.env.master` only; manage with `./bin/keys edit`
 ### Master Control Script (Recommended)
 ```bash
 # Primary management tool
-./sophia start    # Start all services (Redis, LiteLLM, MCP servers)
+./sophia start    # Start all services (MCP servers; Portkey gateway via env)
 ./sophia status   # Check system status
 ./sophia test     # Run comprehensive tests
 ./sophia stop     # Stop all services
@@ -30,7 +30,7 @@ Environment policy (enforced): `.env.master` only; manage with `./bin/keys edit`
 
 | Service | Port | URL | Auth |
 |---------|------|-----|------|
-| LiteLLM | 4000 | http://localhost:4000/v1/models | Bearer sk-litellm-master-2025 |
+| Portkey | n/a  | https://api.portkey.ai/v1/health | x-portkey-api-key: $PORTKEY_API_KEY |
 | MCP Memory | 8081 | http://localhost:8081 | None (dev bypass) |
 | MCP Filesystem | 8082 | http://localhost:8082 | None (dev bypass) |
 | MCP Git | 8084 | http://localhost:8084 | None (dev bypass) |
@@ -170,7 +170,7 @@ cursor .                      # Open in Cursor with MCP
 ## Support
 
 * **Logs**: `logs/` directory
-* **Config**: `.env.master` (environment), `litellm-complete.yaml` (models)
+* **Config**: `.env.master` (environment). Portkey Gateway + VKs only.
 * **Scripts**: `sophia` (master control), `dev` (unified wrapper)
 
 ---

@@ -1,0 +1,35 @@
+name: no-legacy-stack
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Run legacy stack guard (runtime)
+        run: bash scripts/ci/no_legacy_stack_guard.sh
+
+      - name: Global forbidden patterns (runtime only; docs scanned separately)
+        run: |
+          set -euo pipefail
+          FORBIDDEN='(builder-agno-system|sophia-intel-app(?!/external)|litellm|/frontend\b|mcp/filesystem\.py\b|mcp/git_server\.py\b|npx\s+create-sophia-intel-app|http://localhost:4000|:8090|api\.x\.ai|\bXAI_API_KEY\b|\bgrok\b(?!.*EXTERNAL_TOOLS))'
+          if rg -n "$FORBIDDEN" -S --hidden --glob '!**/.git/**' --glob '!docs/**' ; then
+            echo "Forbidden patterns detected. Purge or rewrite required." >&2
+            exit 1
+          fi
+      - name: Runtime env guard (no dotenv or ~/.config)
+        run: |
+          set -euo pipefail
+          if rg -n "dotenv|from\s+dotenv|load_dotenv|/\.config|expanduser\(.*\.config" -S app mcp backend services -g '!**/requirements*' -g '!**/*.lock' ; then
+            echo "Forbidden runtime env patterns detected (.env loaders or ~/.config)." >&2
+            exit 1
+          fi

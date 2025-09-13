@@ -81,7 +81,7 @@ EXPOSE 8081 8082 8084
 CMD if [ "$SERVER_TYPE" = "memory" ]; then \
         python -m mcp.memory_server; \
     elif [ "$SERVER_TYPE" = "git" ]; then \
-        python -m mcp.git_server; \
+        python -m mcp.git.server; \
     else \
         python -m mcp.filesystem; \
     fi

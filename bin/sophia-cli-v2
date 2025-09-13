@@ -111,8 +111,8 @@ start_mcp_servers() {
     
     # Start MCP servers in background
     nohup python3 "$REPO_ROOT/mcp/memory_server.py" > "$LOG_DIR/mcp_memory.log" 2>&1 &
-    nohup python3 "$REPO_ROOT/mcp/filesystem.py" > "$LOG_DIR/mcp_filesystem.log" 2>&1 &
-    nohup python3 "$REPO_ROOT/mcp/git_server.py" > "$LOG_DIR/mcp_git.log" 2>&1 &
+    nohup python3 -m uvicorn mcp.filesystem.server:app --host 0.0.0.0 --port 8082 > "$LOG_DIR/mcp_filesystem.log" 2>&1 &
+    nohup python3 -m uvicorn mcp.git.server:app --host 0.0.0.0 --port 8084 > "$LOG_DIR/mcp_git.log" 2>&1 &
     
     sleep 3
     echo -e "${GREEN}✅ MCP servers started${NC}"
@@ -311,8 +311,8 @@ case "$ACTION" in
     kill-all)
         echo -e "${RED}⛔ Emergency stop...${NC}"
         pkill -f "mcp/memory_server.py" || true
-        pkill -f "mcp/filesystem.py" || true
-        pkill -f "mcp/git_server.py" || true
+        pkill -f "mcp.filesystem.server" || true
+        pkill -f "mcp.git.server" || true
         wtc
         echo -e "${GREEN}✅ All processes stopped${NC}"
         ;;
@@ -355,7 +355,7 @@ Examples:
   sophia-cli status
 
 Configuration:
-  - Environment: ~/.config/sophia/env
+  - Environment: <repo>/.env.master (single source)
   - Agent rules: $REPO_ROOT/AGENTS.md
   - Logs: $REPO_ROOT/logs/
   - Worktrees: $REPO_ROOT/../worktrees/

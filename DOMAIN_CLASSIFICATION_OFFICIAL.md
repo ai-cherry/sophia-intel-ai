@@ -73,23 +73,18 @@
 
 ## App Names (OFFICIAL)
 
-### ✅ **sophia-intel-app**
-- **Port**: 3000
-- **Purpose**: Business Intelligence Dashboard
+### ✅ BI App (no in-repo UI)
+- **Purpose**: Business Intelligence API + MCP
 - **Domain**: SOPHIA
-- **Data**: Airtable, business metrics, executive reporting
+- **Note**: Dashboards and coding UI are external projects
 
-### ✅ **agno-builder-app** 
-- **Port**: 3001
-- **Purpose**: AI Agent Development Platform
+### ✅ Coding UI (external project)
+- **Purpose**: Code planning/patching against this repo via MCP
 - **Domain**: CODE
-- **Data**: Agent configurations, code generation
+- **Note**: Lives outside this repo (local/cloud)
 
-### ✅ **litellm-builder-app**
-- **Port**: 8090
-- **Purpose**: Intelligent AI Routing System
-- **Domain**: CODE
-- **Data**: Model routing, cost optimization
+### ❌ Removed: local proxies/UIs (LiteLLM, etc.)
+Portkey is the only LLM gateway.
 
 ## Memory Routing Rules
 
@@ -117,7 +112,7 @@ Code Repository → CODE Domain → Technical Analysis → Developer Tools
 ## 🎯 ALWAYS DO THIS:
 - ✅ Route business data to SOPHIA domain
 - ✅ Route technical data to CODE domain
-- ✅ Use proper app names (sophia-intel-app, etc.)
+- ✅ Keep UIs in their own repos (no UI in BI repo)
 - ✅ Validate domain assignments in code reviews
 
 ---

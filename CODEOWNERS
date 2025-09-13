@@ -12,8 +12,7 @@
 /app/swarms/ @lynnmusil
 
 # Frontend and UI components
-/sophia-intel-app/ @lynnmusil
-/builder-agno-system/ @lynnmusil
+# No in-repo UIs
 /_legacy-ui/ @lynnmusil
 *.jsx @lynnmusil
 *.tsx @lynnmusil

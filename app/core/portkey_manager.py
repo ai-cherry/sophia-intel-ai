@@ -17,10 +17,6 @@ except Exception:
     Portkey = None  # type: ignore
     _HAS_PORTKEY = False
 from app.core.secrets_manager import get_secret
-from dotenv import load_dotenv
-
-# Load Portkey environment
-load_dotenv(".env.portkey")
 
 logger = logging.getLogger(__name__)
 class ModelTier(Enum):

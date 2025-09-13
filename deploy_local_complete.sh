@@ -160,7 +160,7 @@ if check_port 8084; then
 else
     echo "  Starting MCP Git Server..."
     kill_port 8084
-    python3 -m uvicorn mcp.git_server:app \
+    python3 -m uvicorn mcp.git.server:app \
         --host 0.0.0.0 --port 8084 > "$LOG_DIR/mcp_git.log" 2>&1 &
     echo $! > "$PID_DIR/mcp_git.pid"
     wait_for_service 8084 "MCP Git"
@@ -233,7 +233,6 @@ if check_port 3000; then
 else
     echo "  Starting Sophia Intel App..."
     kill_port 3000
-    cd sophia-intel-app
     npm run dev > "$LOG_DIR/sophia_app.log" 2>&1 &
     echo $! > "$PID_DIR/sophia_app.pid"
     cd ..
@@ -301,11 +300,7 @@ test_api "http://localhost:8084/health" "MCP Git"
 echo ""
 echo "Testing Model Configuration..."
 python3 -c "
-from config.model_manager import get_model_manager
-manager = get_model_manager()
-active = len([m for m in manager.models.values() if m.get('enabled')])
-print(f'  Active Models: {active}/17')
-print(f'  Daily Budget: \${manager.config.get(\"monitoring\", {}).get(\"daily_budget\", 0):.2f}')
+print('  Models managed via Portkey VKs')
 " 2>/dev/null || echo -e "  Model Config: ${RED}Error loading${NC}"
 
 echo ""
@@ -316,9 +311,7 @@ echo ""
 echo "📍 Service URLs:"
 echo "  Main API:        http://localhost:8003/docs"
 echo "  Bridge API:      http://localhost:8000/docs"
-echo "  Builder API:     http://localhost:8004/docs"
-echo "  Sophia App:      http://localhost:3000"
-echo "  Dashboard:       http://localhost:5173"
+echo "  (No in-repo UI; dashboards are external)"
 echo "  MCP Memory:      http://localhost:8081"
 echo "  MCP Filesystem:  http://localhost:8082"
 echo "  MCP Git:         http://localhost:8084"

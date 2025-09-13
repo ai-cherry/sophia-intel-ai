@@ -1,41 +1,6 @@
 #!/usr/bin/env bash
-# Standalone Grok runner that sources repo-local .env.master only (no prompts, no fallbacks)
-set -euo pipefail
-
-ROOT_DIR="$(cd "$(dirname "$0")"/.. && pwd)"
-ENV_FILE="$ROOT_DIR/.env.master"
-
-# Parse .env.master minimally (key=value, ignore comments/blank)
-if [[ -f "$ENV_FILE" ]]; then
-  while IFS= read -r line; do
-    [[ -z "$line" || "$line" =~ ^# ]] && continue
-    if [[ "$line" == *=* ]]; then
-      key="${line%%=*}"
-      val="${line#*=}"
-      key="${key//[$'\t\r\n ']}"
-      val="${val%$'\r'}"
-      val="${val%$'\n'}"
-      val="${val%\'}"; val="${val#\'}"; val="${val%\"}"; val="${val#\"}"
-      case "$key" in
-        GROK_API_KEY)
-          GROK_API_KEY_VALUE="$val";;
-        XAI_API_KEY)
-          XAI_API_KEY_VALUE="$val";;
-      esac
-    fi
-  done < "$ENV_FILE"
-fi
-
-# Prefer explicit env, then GROK_API_KEY from file, then XAI_API_KEY from file
-: "${GROK_API_KEY_VALUE:=}"
-: "${XAI_API_KEY_VALUE:=}"
-
-if [[ -z "${GROK_API_KEY:-}" ]]; then
-  if [[ -n "$GROK_API_KEY_VALUE" ]]; then
-    export GROK_API_KEY="$GROK_API_KEY_VALUE"
-  elif [[ -n "$XAI_API_KEY_VALUE" ]]; then
-    export GROK_API_KEY="$XAI_API_KEY_VALUE"
-  fi
-fi
-
-exec grok "$@"
+# Deprecated in-repo provider CLI stub
+# Policy: Toolbox CLIs live outside this repo. Do not call provider CLIs here.
+echo "[FORBIDDEN] In-repo 'grok' is disabled. Use external Toolbox CLI only." >&2
+echo "See docs/EXTERNAL_TOOLS.md for install and usage." >&2
+exit 2

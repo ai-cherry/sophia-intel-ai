@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
-from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
@@ -17,15 +16,13 @@ class UnifiedConfigManager:
     """
     Centralized configuration management
     Priority order:
-    1. Environment variables
-    2. ~/.config/sophia/env (secure storage)
-    3. config/integrations/*.json files
-    4. Default values
+    1. Environment variables (single source of truth)
+    2. config/integrations/*.json files
+    3. Default values
     """
     
     def __init__(self):
         self.config_dir = Path(__file__).parent
-        self.secure_env_path = Path.home() / ".config/sophia/env"
         self.integrations_dir = self.config_dir / "integrations"
         self._cache = {}
         
@@ -33,22 +30,8 @@ class UnifiedConfigManager:
         self._load_environment()
         
     def _load_environment(self):
-        """Load environment variables from secure location"""
-        # First, try secure location
-        if self.secure_env_path.exists():
-            load_dotenv(self.secure_env_path)
-            logger.info(f"Loaded secure environment from {self.secure_env_path}")
-        else:
-            # Create secure directory if it doesn't exist
-            self.secure_env_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Look for .env.example to guide user
-            example_path = Path(__file__).parent.parent / ".env.example"
-            if example_path.exists():
-                logger.warning(f"No secure env found. Copy {example_path} to {self.secure_env_path}")
-        
-        # Override with actual environment variables (highest priority)
-        # This allows CI/CD and Docker to work properly
+        """No file-based loading: rely on process environment only."""
+        # Intentionally empty to avoid drift; all env must be injected
         
     def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value by key"""

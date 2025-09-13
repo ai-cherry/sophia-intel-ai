@@ -133,7 +133,6 @@ This repository contains **TWO SEPARATE APPLICATIONS** that must be started inde
 ```bash
 bash scripts/dev/bootstrap_all.sh
 ```
-- **sophia-intel-app** UI on port 3000
 - **Unified API** backend on port 8000/8010 
 - **MCP Services**: Memory (8081), Filesystem (8082), Git (8084)
 - Purpose: PayReady business intelligence and analytics
@@ -142,7 +141,6 @@ bash scripts/dev/bootstrap_all.sh
 ```bash
 bash start_builder_agno.sh
 ```
-- **builder-agno-system** combined UI/API on port 8005
 - Purpose: Multi-agent code generation, swarms, infrastructure management
 
 ## ⚠️ Architecture Requirements

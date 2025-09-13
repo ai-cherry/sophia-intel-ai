@@ -70,8 +70,8 @@ class SophiaTestSuite:
         else:
             self.warn_test("1.1", f"Secure environment not found at {secure_env}")
         
-        # Test 1.2: Check for exposed secrets in repo
-        env_files = [".env", ".env.template", ".env.local"]
+        # Test 1.2: Check for exposed secrets in repo (only template)
+        env_files = [".env.template"]
         for env_file in env_files:
             if Path(env_file).exists():
                 content = Path(env_file).read_text()

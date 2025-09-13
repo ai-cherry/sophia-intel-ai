@@ -13,6 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
+echo -e "${YELLOW}DEPRECATED: Use ./sophia start|status|health. This script will delegate and exit.${NC}"
 SOPHIA_HOME="$(cd "$(dirname "$0")" && pwd)"
 LOG_DIR="$SOPHIA_HOME/logs"
 PID_DIR="$SOPHIA_HOME/pids"
@@ -103,22 +104,9 @@ else
     echo -e "   ${YELLOW}⚠ Startup validator not found, skipping preflight checks${NC}"
 fi
 
-# Check for environment configuration
-echo ""
-echo -e "${YELLOW}2. Loading Configuration...${NC}"
-if [ -f "$CONFIG_DIR/env" ]; then
-    echo -e "   ${GREEN}✓ Secure environment found${NC}"
-    export $(grep -v '^#' "$CONFIG_DIR/env" | xargs)
-else
-    echo -e "   ${YELLOW}⚠ No secure environment found at $CONFIG_DIR/env${NC}"
-    echo -e "   ${YELLOW}  Copy .env.example to $CONFIG_DIR/env and configure${NC}"
-    
-    # Check if we have minimal config in regular .env
-    if [ -f "$SOPHIA_HOME/.env" ]; then
-        echo -e "   ${YELLOW}  Using .env file (not recommended for production)${NC}"
-        export $(grep -v '^#' "$SOPHIA_HOME/.env" | xargs)
-    fi
-fi
+echo -e "${BLUE}Delegating to unified manager...${NC}"
+"$SOPHIA_HOME/unified-system-manager.sh" start
+exit $?
 
 # Check External Services First
 echo ""

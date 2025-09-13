@@ -48,7 +48,7 @@ class MCPContextManager:
             for f in files:
                 ext = str(f.get("lang") or "").lower() or "other"
                 by_ext[ext] = by_ext.get(ext, 0) + 1
-            key_dirs = [d for d in ["app", "sophia-intel-app", "mcp", "builder_cli", "tests", "scripts"] if os.path.isdir(d)]
+            key_dirs = [d for d in ["app", "mcp", "tests", "scripts"] if os.path.isdir(d)]
             return {"total_files": len(files), "by_language": by_ext, "key_directories": key_dirs}
         except Exception as e:
             return {"error": str(e)}

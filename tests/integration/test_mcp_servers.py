@@ -6,9 +6,7 @@ import asyncio
 import os
 import httpx
 import pytest
-from dotenv import load_dotenv
-# Load environment variables
-load_dotenv(".env.production")
+# No dotenv loading; rely on process env provided by runner
 class TestMCPServersIntegration:
     @pytest.fixture
     def mcp_base_url(self):

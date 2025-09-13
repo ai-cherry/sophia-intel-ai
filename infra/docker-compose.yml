@@ -136,29 +136,7 @@ services:
     # Override the command per profile using environment or compose override files if needed
     command: ["bash", "-lc", "${API_CMD:-uvicorn app.api.unified_server:app --host 0.0.0.0 --port 8000}"]
 
-  # Agent UI (Next.js)
-  sophia-intel-app:
-    build:
-      context: ../sophia-intel-app
-      dockerfile: ../infra/Dockerfile.sophia-intel-app
-      platforms:
-        - linux/arm64
-    platform: linux/arm64
-    container_name: builder-sophia-intel-app
-    environment:
-      NODE_ENV: development
-      API_BASE_URL: http://unified-api:8000
-      NEXT_PUBLIC_API_URL: http://unified-api:8000
-      NEXT_PUBLIC_API_BASE: http://unified-api:8000
-    env_file:
-      - ./ports.env
-    ports:
-      - "${PORT_UI}:3000"
-    depends_on:
-      unified-api:
-        condition: service_healthy
-    restart: unless-stopped
-    profiles: ["dev", "prod"]
+  # Agent UI intentionally NOT defined here. Coding UI is a separate project.
 
   # Monitoring - Prometheus
   prometheus:

@@ -6,7 +6,7 @@ This directory contains Architecture Decision Records for the Sophia Intel AI Au
 
 | ADR                     | Title                                    | Status   | Date       | Implementation References                                                                                                                                |
 | ----------------------- | ---------------------------------------- | -------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [ADR-001](./ADR-001.md) | UI Consolidation Strategy                | Accepted | 2025-01-09 | [`sophia-intel-app/`](../../../sophia-intel-app/), [`docker-compose.local.yml`](../../../docker-compose.local.yml:220)                                                   |
+| [ADR-001](./ADR-001.md) | UI Consolidation Strategy                | Deprecated | 2025-01-09 | UI lives in external repo |
 | [ADR-002](./ADR-002.md) | Evolution Engine Architecture            | Accepted | 2025-01-09 | [`EvolutionEngine`](../../../app/swarms/unified_enhanced_orchestrator.py:461), [`ConsensusPattern`](../../../app/swarms/patterns/consensus.py)           |
 | [ADR-003](./ADR-003.md) | Consciousness Tracking System            | Accepted | 2025-01-09 | [`ConsciousnessTracker`](../../../app/swarms/unified_enhanced_orchestrator.py:675)                                                                       |
 | [ADR-004](./ADR-004.md) | MCP Server Security Framework            | Accepted | 2025-01-09 | [`UnifiedMemoryStore`](../../../pulumi/mcp-server/src/unified_memory.py:140)                                                                             |

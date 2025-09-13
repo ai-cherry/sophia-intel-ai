@@ -6,7 +6,7 @@ Sophia Intel App is a unified business intelligence platform for PayReady, integ
 ## Core Components
 
 ### 1. Main Application UI
-- **Folder**: `sophia-intel-app/` (Next.js)
+- Dashboards: external project (Next.js) — not in this repo
 - **Port**: 3000
 - **Description**: Consolidated Sophia dashboards with real-time integrations
 
@@ -49,7 +49,7 @@ curl http://localhost:8003/healthz
 ```
 
 ## Important Notes
-- Do NOT create separate dashboard apps – use `sophia-intel-app/`
+- Do NOT create any dashboard app in this repo — use the external BI UI
 - Use existing integrations in `app/integrations/`
 - Agent UI is canonical; backend is `app/main_unified.py`
 - Follow AGENTS.md and docs/AGENTS_CONTRACT.md

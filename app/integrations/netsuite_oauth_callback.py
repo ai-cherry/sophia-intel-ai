@@ -123,10 +123,7 @@ async def main():
     """Run OAuth 2.0 flow"""
     import os
     from pathlib import Path
-    from dotenv import load_dotenv
-    # Load environment
-    env_path = Path(__file__).parent.parent.parent / ".env"
-    load_dotenv(env_path)
+    # Environment should be provided via process env (.env.master loaded by ./sophia)
     # Get configuration
     client_id = os.getenv("NETSUITE_CLIENT_ID")
     client_secret = os.getenv("NETSUITE_CLIENT_SECRET")

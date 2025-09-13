@@ -298,7 +298,7 @@ case "$1" in
     cd mcp_servers/base
     python -m uvicorn mcp.memory_server:app --host 0.0.0.0 --port 8081 &
     python -m uvicorn mcp.filesystem.server:app --host 0.0.0.0 --port 8082 &
-    python -m uvicorn mcp.git_server:app --host 0.0.0.0 --port 8084 &
+    python -m uvicorn mcp.git.server:app --host 0.0.0.0 --port 8084 &
     echo "MCP servers started on ports 8081, 8082, 8084"
     ;;
     

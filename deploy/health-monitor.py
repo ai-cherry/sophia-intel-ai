@@ -81,7 +81,7 @@ class HealthMonitor:
                 name="MCP Git",
                 port=8084,
                 process_name="python.*git_server",
-                restart_command="cd /app && python -m mcp.git_server"
+                restart_command="cd /app && python -m mcp.git.server"
             ),
         ]
         

@@ -17,16 +17,17 @@
   - Broadcast major decisions via `/notify`
   - Update AGENTS.md with learnings
 - **MCP Integration**:
-  - Memory: `localhost:8081` (Redis-backed persistence)
-  - Filesystem: `localhost:8082` (Secure file ops)
-  - Git: `localhost:8084` (Repository operations)
+  - Memory: `localhost:8081` (mcp/memory_server.py)
+  - Filesystem: `localhost:8082` (mcp/filesystem/server.py)
+  - Git: `localhost:8084` (mcp/git/server.py)
   - Naming and Ports: see `CONVENTIONS.md`
   - Models and Routing: see `MODELS.md` and use `./dev ai` / `./dev models`
 
 ### Repository Separation
-- **Sophia Intel App**: Business intelligence & dashboards (Port 3000)
-- **Builder Agno System**: Code infrastructure & agents (Port 3001)
-- **NO CROSS-IMPORTS** between repos
+- **BI UI (Dashboards)**: External project (Next.js) — NOT in this repo
+- **Coding UI**: External project (local/cloud) — NOT in this repo
+- **This repo**: BI backends/integrations + MCP only
+- **NO CROSS-IMPORTS** and NO UI inside this repo
 
 ### Model Governance
 **Approved Models Only**:

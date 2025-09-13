@@ -14,9 +14,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import weaviate
 
-# Set environment from our unified env file if not already set
-if not os.environ.get("SOPHIA_REPO_ENV_FILE"):
-    os.environ["SOPHIA_REPO_ENV_FILE"] = "/Users/lynnmusil/sophia-intel-ai/.env.local.unified"
+# Tests must rely on process environment (./sophia loads .env.master); no .env.local fallback
 
 app = FastAPI(title="Sophia Test API")
 

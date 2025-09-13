@@ -17,8 +17,7 @@ echo -e "${CYAN}     SOPHIA INTEL AI - UNIFIED CLI DEMONSTRATION${NC}"
 echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-# Load environment
-source ~/.zshrc 2>/dev/null || true
+echo -e "${YELLOW}Note: Local env is loaded from .env.master only. ~/.config and .env.local are deprecated.${NC}"
 
 # Demo 1: Validation
 echo -e "${MAGENTA}━━━ Demo 1: System Validation ━━━${NC}"
@@ -135,8 +134,8 @@ echo "  • Production-ready personas"
 echo "  • Daily workflow optimization"
 echo ""
 echo -e "${YELLOW}📚 Next Steps:${NC}"
-echo "  1. Add your API keys to ~/.config/sophia/env"
-echo "  2. Try: sophia-cli plan \"Your first feature\""
-echo "  3. Read: ~/sophia-intel-ai/CLI_QUICK_START.md"
+echo "  1. Add your API keys to <repo>/.env.master (chmod 600)"
+echo "  2. Try: ./sophia start && ./sophia health"
+echo "  3. Run: ./sophia studio (Builder UI)"
 echo ""
 echo -e "${CYAN}Happy coding with Sophia Intel AI! 🚀${NC}"

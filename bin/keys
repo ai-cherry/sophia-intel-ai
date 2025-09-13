@@ -6,7 +6,7 @@ ENV_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")"/.. && pwd)/.env.master"
 
 usage(){
   echo "keys: manage the one env file ($ENV_PATH)"
-  echo "Usage: keys [edit|show|path|create]"
+  echo "Usage: keys [edit|show|path|create|sync|missing|list]"
 }
 
 cmd=${1:-path}
@@ -28,6 +28,22 @@ case "$cmd" in
   path)
     echo "$ENV_PATH"
     ;;
+  sync)
+    python3 "$(cd "$(dirname "$0")"/.. && pwd)/scripts/keys_sync.py"
+    ;;
+  list)
+    if [ ! -f "$ENV_PATH" ]; then echo "Missing: $ENV_PATH"; exit 1; fi
+    grep -E '^[A-Z0-9_]+=' "$ENV_PATH" | cut -d= -f1
+    ;;
+  missing)
+    REG="$(cd "$(dirname "$0")"/.. && pwd)/config/keys_registry.json"
+    if [ ! -f "$REG" ]; then echo "Missing registry: $REG"; exit 1; fi
+    TMP=$(mktemp)
+    grep -E '^[A-Z0-9_]+=' "$ENV_PATH" 2>/dev/null | cut -d= -f1 | sort -u > "$TMP" || true
+    jq -r '.order[].keys[]' "$REG" | sort -u > "$TMP.keys"
+    echo "Missing keys:"
+    comm -23 "$TMP.keys" "$TMP" || true
+    rm -f "$TMP" "$TMP.keys"
+    ;;
   *) usage; exit 1;;
 esac
-

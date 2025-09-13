@@ -134,7 +134,7 @@ echo -e "${BLUE}📦 Consolidating requirements...${NC}"
 
 # Keep only root pyproject.toml and backend-specific ones
 find . -name "requirements*.txt" -delete 2>/dev/null || true
-find . -name "pyproject.toml" -not -path "./pyproject.toml" -not -path "./backend/pyproject.toml" -not -path "./frontend/package.json" -delete 2>/dev/null || true
+find . -name "pyproject.toml" -not -path "./pyproject.toml" -not -path "./backend/pyproject.toml" -delete 2>/dev/null || true
 
 echo -e "${GREEN}✅ Consolidated requirements${NC}"
 
@@ -218,4 +218,3 @@ echo -e "${CYAN}2. Test: ./scripts/sophia.sh hello-backend${NC}"
 echo -e "${CYAN}3. Deploy: ./scripts/sophia.sh deploy${NC}"
 echo ""
 echo -e "${GREEN}✨ Sophia AI Platform is now TECH DEBT FREE!${NC}"
-

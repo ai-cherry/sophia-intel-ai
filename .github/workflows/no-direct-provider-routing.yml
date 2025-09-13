@@ -1,0 +1,30 @@
+name: no-direct-provider-routing
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  guard-direct-provider-http:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
+      - name: Block direct provider HTTP in runtime code
+        run: |
+          echo "Scanning runtime for banned provider URLs..."
+          PATTERN='https://api\.openai\.com|https://api\.anthropic\.com|https://openrouter\.ai/api|https://api\.x\.ai|api\.x\.ai|api\.groq\.com|api\.mistral\.ai'
+          # Scan only runtime code paths; exclude docs and tests
+          matches=$(rg -n "$PATTERN" -S app backend services mcp --glob '!**/tests/**' --glob '!**/docs/**' || true)
+          if [ -n "$matches" ]; then
+            echo "❌ Direct provider URLs detected in runtime code:" && echo "$matches"
+            exit 1
+          fi
+          echo "✅ No direct provider URLs in runtime code"
+

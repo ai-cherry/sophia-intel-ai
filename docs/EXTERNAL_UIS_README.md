@@ -5,10 +5,10 @@ Repos/Worktrees (outside this repo):
   - API: POST /api/coding/plan, POST /api/coding/patch?apply=true, POST /api/coding/validate, GET /api/providers/vk
   - Uses MCP FS/Git (8082/8084) and Portkey (server-side) with .env.master
   - Scaffold: scripts/scaffold_forge_ui.sh
-- Portkey UI (../worktrees/portkey-ui, port 3200)
+- Workbench (../worktrees/workbench-ui, port 3200)
   - VK health, logs, routing views; Portkey-only server calls
   - Optional read-only MCP context panels
-  - Scaffold: scripts/scaffold_portkey_ui.sh
+  - Scaffold: scripts/scaffold_workbench_ui.sh
 - Sophia BI UI (../worktrees/sophia-bi-ui, port 3300)
   - Dashboards consuming BI API from this repo (http://localhost:8000)
 
@@ -31,12 +31,12 @@ REPO_ENV_MASTER_PATH=$(pwd -P | sed 's|/worktrees/forge-ui||')/.env.master \
 curl -fsS http://localhost:3100/health
 ```
 
-Quick Start (Portkey)
+Quick Start (Workbench)
 ```bash
-bash scripts/scaffold_portkey_ui.sh  ../worktrees/portkey-ui
-cd ../worktrees/portkey-ui
+bash scripts/scaffold_workbench_ui.sh  ../worktrees/workbench-ui
+cd ../worktrees/workbench-ui
 pnpm i || npm i
-REPO_ENV_MASTER_PATH=$(pwd -P | sed 's|/worktrees/portkey-ui||')/.env.master \
+REPO_ENV_MASTER_PATH=$(pwd -P | sed 's|/worktrees/workbench-ui||')/.env.master \
   PORTKEY_API_KEY=pk_live_xxx \
   npm run dev
 # Test

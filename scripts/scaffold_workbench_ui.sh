@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Scaffold an external Portkey Console UI (server-only) in a sibling folder.
-# Creates an independent Node+TS Fastify app with Portkey health/logs/console.
+# Scaffold an external Workbench UI (server-only) in a sibling folder.
+# Creates an independent Node+TS Fastify app with Portkey-backed health/logs/console.
 
-TARGET_DIR="${1:-"../worktrees/portkey-ui"}"
+TARGET_DIR="${1:-"../worktrees/workbench-ui"}"
 PORT="${PORT:-3200}"
 
-echo "Scaffolding Portkey UI at: ${TARGET_DIR} (port ${PORT})"
+echo "Scaffolding Workbench at: ${TARGET_DIR} (port ${PORT})"
 mkdir -p "${TARGET_DIR}/src"
 
 cat > "${TARGET_DIR}/README.md" << 'EOF'
-# Portkey Console UI (External)
+# Workbench (External)
 
-Server-only app for VK Health, Routing, Request Logs, and Live Console.
+Server-only coding console for VK Health, Routing, Request Logs, and Live Console.
 
 Ports
 - App: 3200 (default)
@@ -40,7 +40,7 @@ EOF
 
 cat > "${TARGET_DIR}/package.json" << EOF
 {
-  "name": "portkey-ui",
+  "name": "workbench-ui",
   "private": true,
   "type": "module",
   "scripts": {
@@ -112,7 +112,7 @@ const PORT = Number(process.env.PORT || ${PORT})
 const PORTKEY_API_KEY = process.env.PORTKEY_API_KEY || ''
 const PORTKEY_BASE = process.env.PORTKEY_BASE_URL || 'https://api.portkey.ai/v1'
 
-app.get('/health', async () => ({ status: 'ok', service: 'portkey-ui' }))
+app.get('/health', async () => ({ status: 'ok', service: 'workbench' }))
 
 app.get('/api/portkey/health', async (_req, reply) => {
   if (!PORTKEY_API_KEY) return reply.code(400).send({ error: 'Missing PORTKEY_API_KEY' })
@@ -160,9 +160,9 @@ app.post('/api/portkey/console', async (req, reply) => {
 })
 
 app.listen({ port: PORT, host: '0.0.0.0' }).then(() => {
-  app.log.info(`Portkey UI listening on :${PORT}`)
+  app.log.info(`Workbench listening on :${PORT}`)
 })
 EOF
 
-echo "✅ Portkey UI scaffolded at ${TARGET_DIR}"
+echo "✅ Workbench scaffolded at ${TARGET_DIR}"
 

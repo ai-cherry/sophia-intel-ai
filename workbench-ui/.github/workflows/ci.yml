@@ -1,0 +1,31 @@
+name: workbench-ui-ci
+
+on:
+  push:
+    paths:
+      - 'workbench-ui/**'
+  pull_request:
+    paths:
+      - 'workbench-ui/**'
+
+jobs:
+  build-and-health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        working-directory: workbench-ui
+        run: |
+          npm ci || npm install
+      - name: Build
+        working-directory: workbench-ui
+        run: npm run build
+      - name: Health check (static)
+        run: |
+          # No server secrets required; just lint/build and presence of server entry
+          test -f workbench-ui/src/server.ts
+          echo ok
+

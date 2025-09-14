@@ -230,25 +230,14 @@ async def voice_websocket(websocket: WebSocket):
 
 
 async def process_voice_command(transcript: str) -> Optional[str]:
-    """Process voice command and generate response"""
-    # Send to Builder API for processing
+    """Process voice command and generate response.
+    Note: Legacy Builder API removed. For now, return a simple acknowledgement.
+    """
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(
-                "http://localhost:8000/api/builder/team/run",
-                json={
-                    "team_id": "default",
-                    "task": transcript,
-                    "context": {"source": "voice"}
-                }
-            )
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("result", {}).get("summary", "Task completed")
+        return f"You said: {transcript}"
     except Exception as e:
         logger.error(f"Failed to process command: {e}")
-    
-    return "I couldn't process that command. Please try again."
+        return "I couldn't process that command. Please try again."
 
 
 @app.get("/health")

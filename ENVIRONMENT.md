@@ -140,7 +140,6 @@ PORTKEY_API_KEY="your_portkey_api_key"
 # Production (.env.production)
 MCP_DEV_BYPASS=false
 MCP_TOKEN="cryptographically-secure-token"
-LITELLM_MASTER_KEY="production-secure-key"
 ```
 
 ## 🚀 Quick Setup for New Developers

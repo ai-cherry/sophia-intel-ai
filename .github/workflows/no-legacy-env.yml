@@ -1,0 +1,22 @@
+name: no-legacy-env
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  guard-env-sources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - name: Forbid legacy env patterns in runtime
+        run: |
+          PATTERN='(\.env\.local|~/.config|from\s+dotenv|load_dotenv)'
+          matches=$(rg -n "$PATTERN" -S app backend services mcp builder_cli sophia_cli --glob '!**/tests/**' --glob '!**/docs/**' || true)
+          if [ -n "$matches" ]; then
+            echo "❌ Legacy env usage detected:" && echo "$matches" && exit 1
+          fi
+          echo "✅ No legacy env usage in runtime paths"
+

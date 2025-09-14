@@ -1,0 +1,18 @@
+[
+  { "id": "openai/gpt-5", "tags": ["default", "general", "coding"], "context": 128000 },
+  { "id": "anthropic/claude-opus-4.1", "tags": ["reasoning", "long"], "context": 200000 },
+  { "id": "anthropic/claude-sonnet-4", "tags": ["reasoning", "coding"], "context": 200000 },
+  { "id": "x-ai/grok-code-fast-1", "tags": ["fast", "coding"], "context": 32000 },
+  { "id": "x-ai/grok-4-07-09", "tags": ["reasoning", "coding", "premium"], "context": 32000 },
+  { "id": "google/gemini-2.5-flash", "tags": ["fast", "long-context"], "context": 1000000 },
+  { "id": "google/gemini-2.5-pro", "tags": ["reasoning", "premium", "long-context"], "context": 1000000 },
+  { "id": "deepseek/v3.1", "tags": ["general", "reasoning"], "context": 200000 },
+  { "id": "deepseek/v3-0324", "tags": ["general", "cheap"], "context": 200000 },
+  { "id": "deepseek/r1-0528-free", "tags": ["free", "reasoning"], "context": 164000 },
+  { "id": "deepseek/r1-0528-qwen3-8b", "tags": ["cheap", "reasoning"], "context": 131000 },
+  { "id": "mistralai/mistral-nemo", "tags": ["general", "coding"], "context": 128000 },
+  { "id": "mistralai/magistral-small-2506", "tags": ["balanced", "multilingual"], "context": 40000 },
+  { "id": "mistralai/magistral-medium-2506", "tags": ["reasoning", "deep"], "context": 41000 },
+  { "id": "mistralai/magistral-medium-2506-thinking", "tags": ["reasoning", "thinking"], "context": 41000 },
+  { "id": "qwen/qwen3-30b-a3b", "tags": ["general", "multilingual"], "context": 128000 }
+]

@@ -1,0 +1,21 @@
+name: no-legacy-routes
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  guard-routes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - name: Forbid legacy builder routes in runtime
+        run: |
+          matches=$(rg -n "/api/builder/" -S app backend services mcp builder_cli sophia_cli --glob '!**/tests/**' --glob '!**/docs/**' || true)
+          if [ -n "$matches" ]; then
+            echo "❌ Legacy /api/builder/ routes found:" && echo "$matches" && exit 1
+          fi
+          echo "✅ No legacy builder routes"
+

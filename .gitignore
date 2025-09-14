@@ -43,5 +43,8 @@ data/**/*.sqlite*
 # Backups/archives
 backups/
 
+# Temporary scaffolds
+tmp/
+
 # OS
 .DS_Store

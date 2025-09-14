@@ -109,3 +109,11 @@ class Config:
 
 # Auto-load on import (silent)
 Config.load_env()
+
+# Provide a compatibility alias `settings` for modules expecting pydantic-based settings
+try:  # Prefer the API settings if available
+    from app.api.config.settings import settings as settings  # type: ignore
+except Exception:  # pragma: no cover - compatibility fallback
+    class _SettingsShim:
+        pass
+    settings = _SettingsShim()  # type: ignore

@@ -64,45 +64,51 @@ ROLE_PERMISSIONS = {
     ],
     "viewer": ["dashboard:public:read", "system:health:read"],
 }
-# In-memory user store (replace with database in production)
-USERS_DB: dict[str, UserInDB] = {
-    "admin@sophia-intel.ai": UserInDB(
-        id="admin-001",
-        email="admin@sophia-intel.ai",
-        name="System Administrator",
-        role="executive",
-        permissions=ROLE_PERMISSIONS["executive"],
-        hashed_password=pwd_context.hash("admin123"),
-        created_at=datetime.utcnow(),
-    ),
-    "ceo@sophia-intel.ai": UserInDB(
-        id="ceo-001",
-        email="ceo@sophia-intel.ai",
-        name="CEO",
-        role="executive",
-        permissions=ROLE_PERMISSIONS["executive"],
-        hashed_password=pwd_context.hash("ceo123"),
-        created_at=datetime.utcnow(),
-    ),
-    "manager@sophia-intel.ai": UserInDB(
-        id="mgr-001",
-        email="manager@sophia-intel.ai",
-        name="Team Manager",
-        role="manager",
-        permissions=ROLE_PERMISSIONS["manager"],
-        hashed_password=pwd_context.hash("manager123"),
-        created_at=datetime.utcnow(),
-    ),
-    "analyst@sophia-intel.ai": UserInDB(
-        id="analyst-001",
-        email="analyst@sophia-intel.ai",
-        name="Data Analyst",
-        role="analyst",
-        permissions=ROLE_PERMISSIONS["analyst"],
-        hashed_password=pwd_context.hash("analyst123"),
-        created_at=datetime.utcnow(),
-    ),
-}
+# In-memory user store (demo only; disabled in production)
+_env = os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development"))
+_is_prod = _env.lower() in {"prod", "production"}
+
+if not _is_prod:
+    USERS_DB: dict[str, UserInDB] = {
+        "admin@sophia-intel.ai": UserInDB(
+            id="admin-001",
+            email="admin@sophia-intel.ai",
+            name="System Administrator",
+            role="executive",
+            permissions=ROLE_PERMISSIONS["executive"],
+            hashed_password=pwd_context.hash("admin123"),
+            created_at=datetime.utcnow(),
+        ),
+        "ceo@sophia-intel.ai": UserInDB(
+            id="ceo-001",
+            email="ceo@sophia-intel.ai",
+            name="CEO",
+            role="executive",
+            permissions=ROLE_PERMISSIONS["executive"],
+            hashed_password=pwd_context.hash("ceo123"),
+            created_at=datetime.utcnow(),
+        ),
+        "manager@sophia-intel.ai": UserInDB(
+            id="mgr-001",
+            email="manager@sophia-intel.ai",
+            name="Team Manager",
+            role="manager",
+            permissions=ROLE_PERMISSIONS["manager"],
+            hashed_password=pwd_context.hash("manager123"),
+            created_at=datetime.utcnow(),
+        ),
+        "analyst@sophia-intel.ai": UserInDB(
+            id="analyst-001",
+            email="analyst@sophia-intel.ai",
+            name="Data Analyst",
+            role="analyst",
+            permissions=ROLE_PERMISSIONS["analyst"],
+            hashed_password=pwd_context.hash("analyst123"),
+            created_at=datetime.utcnow(),
+        ),
+    }
+else:
+    USERS_DB: dict[str, UserInDB] = {}
 # Refresh token store (replace with database/Redis in production)
 REFRESH_TOKENS: dict[str, dict] = {}
 class AuthService:
@@ -122,6 +128,9 @@ class AuthService:
     @staticmethod
     def authenticate_user(email: str, password: str) -> UserInDB | None:
         """Authenticate user with email and password"""
+        if _is_prod and not USERS_DB:
+            # In production, demo users are disabled; delegate to real auth layer
+            return None
         user = AuthService.get_user(email)
         if not user:
             return None

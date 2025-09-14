@@ -27,3 +27,12 @@ cli\:install:
 	@chmod +x bin/sophia;
 	@echo "CLI installed. Run: ./bin/sophia --help"
 
+.PHONY: clean
+clean:
+	@echo "Cleaning local artifacts...";
+	rm -rf .next || true;
+	rm -rf workbench-ui/node_modules || true;
+	rm -rf .pytest_cache .ruff_cache __pycache__ || true;
+	rm -rf logs/*.log || true;
+	find . -name "*.pyc" -delete || true;
+	@echo "Done."

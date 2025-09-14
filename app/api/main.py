@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 # Configure structured logging
-from backend.core.logging import setup_logging
+from app.core.logging import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
 @asynccontextmanager
@@ -26,14 +26,14 @@ async def lifespan(app: FastAPI):
     logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
     # Initialize database
     try:
-        from backend.core.database import init_db
+        from app.api.core.database import init_db
         await init_db()
         logger.info("✓ Database connected")
     except Exception as e:
         logger.warning(f"Database initialization skipped: {e}")
     # Initialize Redis
     try:
-        from backend.core.cache import init_redis
+        from app.api.core.cache import init_redis
         await init_redis()
         logger.info("✓ Redis connected")
     except Exception as e:
@@ -50,6 +50,13 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+# Core middleware (rate limiting)
+try:
+    from app.api.middleware.rate_limit import RateLimitMiddleware
+    app.add_middleware(RateLimitMiddleware)
+    logger.info("✓ Rate limiting middleware enabled")
+except Exception as e:
+    logger.warning(f"Rate limit middleware unavailable: {e}")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
@@ -99,15 +106,15 @@ async def readiness_check() -> Dict[str, Any]:
     checks = {}
     # Check database
     try:
-        from backend.core.database import check_connection
-        checks["database"] = await check_connection()
-    except:
+        from app.api.core.database import check_connection as db_check
+        checks["database"] = await db_check()
+    except Exception:
         checks["database"] = False
     # Check Redis
     try:
-        from backend.core.cache import check_connection
-        checks["redis"] = await check_connection()
-    except:
+        from app.api.core.cache import check_connection as redis_check
+        checks["redis"] = await redis_check()
+    except Exception:
         checks["redis"] = False
     all_ready = all(checks.values()) if checks else True
     return {
@@ -142,9 +149,9 @@ async def metrics():
     from fastapi.responses import Response
     from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
-# Import routers
+# Import routers (prefer canonical app.* modules)
 try:
-    from backend.routers import chat, memory, orchestration
+    from app.api.routers import chat, memory, orchestration
     app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
     app.include_router(
         orchestration.router, prefix="/api/orchestration", tags=["orchestration"]
@@ -170,7 +177,7 @@ except ImportError as e:
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "backend.main:app",
+        "app.api.main:app",
         host="${BIND_IP}",
         port=int(os.getenv("PORT", 8000)),
         reload=os.getenv("ENVIRONMENT") == "development",

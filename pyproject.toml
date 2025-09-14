@@ -61,10 +61,6 @@ dependencies = [
     "asyncpg==0.29.0",
     "neo4j==5.24.0",  # Graph database for knowledge graphs
     
-    # Task Queue & Background Jobs
-    "celery[redis]==5.3.4",
-    "arq==0.26.0",  # Async task queue with Redis
-    
     # Monitoring & Logging
     "prometheus-client==0.19.0",
     "opentelemetry-api==1.22.0",
@@ -77,9 +73,6 @@ dependencies = [
     # Rate Limiting & Circuit Breaking
     "slowapi==0.1.9",
     "circuitbreaker==2.0.0",
-    
-    # Search & Web Tools
-    "duckduckgo-search==6.3.7",  # DuckDuckGo search API
     
     # Utilities
     "python-multipart==0.0.20",
@@ -103,6 +96,11 @@ dev = [
     "pip-tools==7.4.1",  # For dependency management
     "safety==3.2.14",  # Security vulnerability scanning
     "bandit==1.8.6",  # Security linting
+]
+
+tasks = [
+    "celery[redis]==5.3.4",
+    "arq==0.26.0",
 ]
 
 test = [
@@ -257,7 +255,7 @@ exclude = [
 known-first-party = ["sophia_intel_ai", "app"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

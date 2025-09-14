@@ -50,7 +50,7 @@ def verify_critical_keys():
         'OPENAI_API_KEY': 'OpenAI GPT',
         'XAI_API_KEY': 'Grok API',
         'GROQ_API_KEY': 'Groq Fast Inference',
-        'LITELLM_MASTER_KEY': 'LiteLLM Proxy'
+        
     }
     
     missing = []

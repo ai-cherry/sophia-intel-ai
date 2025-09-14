@@ -8,7 +8,7 @@ Flow
 - Start MCP: `./sophia start` → memory:8081, filesystem:8082, git:8084. Reads `./.env.master`. No prompts.
 - Coding UI (external):
   - Reads the same `./.env.master` server‑side only.
-  - Uses Portkey + VKs (no LiteLLM/local proxies).
+  - Uses Portkey + VKs (no alternate local proxies).
   - Plan → Patch (via MCP FS) → Validate tests.
 - Commit results in this BI repo.
 
@@ -19,4 +19,4 @@ Environment
 - Optional fallback: `OPENROUTER_API_KEY`.
 
 Forbidden
-- No coding UI here. No TUI here. No LiteLLM. No local OpenRouter. No dotenv/`~/.config`.
+- No coding UI here. No TUI here. No alternate local proxies. No local OpenRouter. No dotenv/`~/.config`.

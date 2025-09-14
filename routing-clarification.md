@@ -12,7 +12,7 @@ Your Portkey key `nYraiE8dOR9A1gDwaRNpSSXRkXBc` - we need to check what's config
 - What fallback rules are configured?
 
 ### 3. No local proxies
-No LiteLLM. No local OpenRouter. Portkey-only.
+No alternate local proxies. No local OpenRouter. Portkey-only.
 
 ## How Opencode Decides Where to Route
 

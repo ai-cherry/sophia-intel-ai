@@ -28,7 +28,7 @@ Environment
 Code and Docs Style
 - Python: lower_snake_case for files; FastAPI apps in mcp/<name>/server.py
 - Shell: kebab-case or clear single-word names; keep under root or bin/
-- Config: under config/ (no LiteLLM configs)
+- Config: under config/ (no alternate local proxy configs)
 - Docs: use stable headings: Start Here, Local Development, Services and Ports, Models and Routing, MCP Servers, Security (Dev Scaffolding), Troubleshooting, Glossary
 
 Glossary

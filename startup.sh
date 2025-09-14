@@ -21,7 +21,6 @@ echo -e "${YELLOW}1. Running pre-flight checks...${NC}"
 
 # Kill any zombie processes
 echo "   Cleaning up zombie processes..."
-pkill -f "litellm.*4000" 2>/dev/null || true
 pkill -f "mcp.*server" 2>/dev/null || true
 sleep 2
 
@@ -58,8 +57,7 @@ if ! redis-cli ping >/dev/null 2>&1; then
 fi
 echo -e "   ${GREEN}✅ Redis running${NC}"
 
-# 3. Start LiteLLM
-echo -e "\n${YELLOW}3. Skipping LiteLLM (Portkey-only policy)${NC}"
+# 3. Skipping local LLM proxies (Portkey-only policy)
 
 # 4. Start MCP Servers
 echo -e "\n${YELLOW}4. Starting MCP Servers...${NC}"

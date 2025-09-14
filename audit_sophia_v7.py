@@ -204,7 +204,7 @@ class SophiaV7Auditor:
         required_deps = {
             "agno": ">=0.1.0",
             "langgraph": ">=0.3.5",
-            "litellm": ">=1.55.0",
+            # removed local proxy routing
             "qdrant-client": ">=1.12.0",
             "redis": ">=5.2.0",
             "zep-python": ">=2.1.0",

@@ -18,7 +18,7 @@
 
 ## Policies
 
-- Portkey-only routing; no LiteLLM or local OpenRouter.
+- Portkey-only routing; no alternate local proxies or local OpenRouter.
 - No UI in this repo. Coding UI is external (local/cloud).
 - No dotenv or `~/.config` in runtime code.
 

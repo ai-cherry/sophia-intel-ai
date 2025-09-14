@@ -118,7 +118,7 @@ class SecretCentralizer:
         
         # Development mappings
         dev_keys = [
-            'continue', 'litellm', 'langchain', 'sentry', 'arize', 'jwt_secret',
+            'continue', 'langchain', 'sentry', 'arize', 'jwt_secret',
             'api_secret', 'encryption_key', 'mcp_secret', 'mcp_api_key', 'telegram',
             'n8n'
         ]

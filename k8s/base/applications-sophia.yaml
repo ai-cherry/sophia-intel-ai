@@ -27,7 +27,7 @@ spec:
           env:
             - name: ENVIRONMENT
               value: "production"
-            # Removed LiteLLM; Portkey is the only LLM gateway
+            # Portkey is the only LLM gateway
           readinessProbe:
             httpGet:
               path: /health

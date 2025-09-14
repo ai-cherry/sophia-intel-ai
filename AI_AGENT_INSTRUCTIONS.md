@@ -2,7 +2,7 @@
 
 One True Setup
 - This repo = BI app (API + integrations) and MCP only. No coding UI lives here.
-- Portkey-only LLM routing (with VKs). No LiteLLM. No local OpenRouter.
+- Portkey-only LLM routing (with VKs). No alternate local proxies.
 - Exactly one MCP suite: memory(8081), filesystem(8082), git(8084).
 - Single env source: `<repo>/.env.master` loaded by `./sophia`.
 
@@ -26,5 +26,5 @@ Environment
 
 Forbidden
 - Creating or starting any UI in this repo
-- Using LiteLLM or local OpenRouter
+- Using alternate local proxies
 - Adding alternate env loaders (dotenv, ~/.config)

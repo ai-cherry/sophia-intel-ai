@@ -56,7 +56,7 @@ def load_env_files() -> None:
     # Dev-friendly defaults to align with unified manager
     os.environ.setdefault("MCP_DEV_BYPASS", "true")
     os.environ.setdefault("REDIS_URL", "redis://localhost:6379/1")
-    # No LiteLLM/OpenRouter/grok defaults; Portkey-only policy
+    # No alternate local proxies/OpenRouter/grok defaults; Portkey-only policy
 
 
 def delegate_to_manager(args: List[str]) -> int:

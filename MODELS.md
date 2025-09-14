@@ -20,10 +20,10 @@ CLI helper
 
 Using models in terminal
 - `./dev ai claude -p "…"` → uses cli default model for claude
-- Use Gemini via LiteLLM: `./dev ai lite --usecase analysis.large_context -p "…"` or `--model gemini-1.5-pro`
+- Use Gemini via Portkey/OpenRouter routing.
 - `./dev ai lite --model gpt-4-turbo -p "…"` → force a specific model
 
 Tips
-- Keep `aliases` in sync with the models declared in `litellm-complete.yaml`.
+- Keep `aliases` in sync with your curated model list in config/top_models.json.
 - For quick switching, set CLI defaults to your preferred aliases:
   `./dev models set cli gemini analytical`

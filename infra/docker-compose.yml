@@ -5,11 +5,11 @@ services:
   postgres:
     image: postgres:16-alpine
     platform: linux/arm64
-    container_name: builder-postgres
+    container_name: sophia-postgres
     environment:
-      POSTGRES_DB: builder
-      POSTGRES_USER: builder
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-builder123}
+      POSTGRES_DB: sophia
+      POSTGRES_USER: sophia
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sophia123}
     env_file:
       - ./ports.env
     ports:
@@ -18,7 +18,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U builder"]
+      test: ["CMD-SHELL", "pg_isready -U sophia"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,7 +28,7 @@ services:
   valkey:
     image: valkey/valkey:8-alpine
     platform: linux/arm64
-    container_name: builder-valkey
+    container_name: sophia-valkey
     env_file:
       - ./ports.env
     ports:
@@ -47,7 +47,7 @@ services:
   weaviate:
     image: semitechnologies/weaviate:1.26.1
     platform: linux/arm64
-    container_name: builder-weaviate
+    container_name: sophia-weaviate
     environment:
       AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
       PERSISTENCE_DATA_PATH: "/var/lib/weaviate"
@@ -76,9 +76,9 @@ services:
   neo4j:
     image: neo4j:5-community
     platform: linux/arm64
-    container_name: builder-neo4j
+    container_name: sophia-neo4j
     environment:
-      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/builder123}
+      NEO4J_AUTH: ${NEO4J_AUTH:-neo4j/sophia123}
       NEO4J_PLUGINS: '["apoc", "graph-data-science"]'
       NEO4J_dbms_memory_pagecache_size: 512M
       NEO4J_dbms_memory_heap_max__size: 1G
@@ -172,14 +172,14 @@ services:
       platforms:
         - linux/arm64
     platform: linux/arm64
-    container_name: builder-mcp-filesystem
+    container_name: sophia-mcp-filesystem
     environment:
       MCP_SECRET_KEY: ${MCP_SECRET_KEY:-secret}
       MCP_TOKEN: ${MCP_TOKEN:-${MCP_SECRET_KEY:-secret}}
       MCP_DEV_BYPASS: ${MCP_DEV_BYPASS:-true}
       REDIS_URL: redis://valkey:6379/1
       WORKSPACE_PATH: /workspace
-      WORKSPACE_NAME: builder
+      WORKSPACE_NAME: sophia
       READ_ONLY: "false"
     env_file:
       - ./ports.env
@@ -205,7 +205,7 @@ services:
       platforms:
         - linux/arm64
     platform: linux/arm64
-    container_name: builder-mcp-git
+    container_name: sophia-mcp-git
     environment:
       MCP_SECRET_KEY: ${MCP_SECRET_KEY:-secret}
       MCP_TOKEN: ${MCP_TOKEN:-${MCP_SECRET_KEY:-secret}}

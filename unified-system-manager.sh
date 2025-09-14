@@ -76,7 +76,7 @@ check_port() {
     return 1
 }
 
-# LiteLLM removed: Portkey is the preferred gateway; no local proxy management
+# Portkey is the preferred gateway; no local proxy management
 
 start_mcp_servers() {
     log "Starting MCP servers..."
@@ -279,7 +279,7 @@ case "${1:-}" in
         ;;
     clean)
         log "Cleaning up orphaned processes..."
-        pkill -f litellm 2>/dev/null || true
+        true
         pkill -f "mcp\." 2>/dev/null || true
         rm -f "$PID_DIR"/*.pid
         log "✅ Cleanup complete"

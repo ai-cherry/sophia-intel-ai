@@ -4,7 +4,7 @@ Workflow: `.github/workflows/no-legacy-stack.yml`
 - Fails on forbidden patterns anywhere in repo (code + docs + configs):
   - `builder-agno-system`
   - `sophia-intel-app` (as in-repo path; allow only if explicitly saying “external”)
-  - `litellm`
+  - local LLM proxy ports or binaries
   - `/frontend\b`
   - `mcp/filesystem.py`
   - `mcp/git_server.py`

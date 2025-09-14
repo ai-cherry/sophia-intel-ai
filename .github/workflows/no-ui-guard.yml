@@ -1,0 +1,21 @@
+name: No-UI Guard
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  guard-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - name: Forbid UI stacks and legacy app footprints in backend
+        run: |
+          PATTERN='(builder-agno-system|sophia-intel-app(?!/external)|/frontend\b|webui/|next\.config\.(js|mjs|ts)|vite\.config\.(js|mjs|ts)|npx\s+create-sophia-intel-app|:8090|api\.x\.ai|\bXAI_API_KEY\b)'
+          matches=$(rg -n "$PATTERN" -S app backend services mcp sophia_cli --glob '!**/tests/**' --glob '!**/docs/**' || true)
+          if [ -n "$matches" ]; then
+            echo "❌ Forbidden UI/legacy patterns found:" && echo "$matches" && exit 1
+          fi
+          echo "✅ No forbidden UI/legacy patterns"

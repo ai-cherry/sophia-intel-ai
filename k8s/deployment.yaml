@@ -16,7 +16,6 @@ data:
   WEAVIATE_URL: "http://weaviate-service:8080"
   POSTGRES_URL: "postgresql://sophia:sophia123@postgres-service/sophia"
   ENABLE_SOPHIA: "true"
-  ENABLE_ARTEMIS: "true"
   ENABLE_WEB_RESEARCH: "true"
   ENABLE_CACHING: "true"
 

@@ -83,7 +83,7 @@
 - **Domain**: CODE
 - **Note**: Lives outside this repo (local/cloud)
 
-### ❌ Removed: local proxies/UIs (LiteLLM, etc.)
+### ❌ Removed: local proxies/UIs (no alternate local LLM proxies)
 Portkey is the only LLM gateway.
 
 ## Memory Routing Rules

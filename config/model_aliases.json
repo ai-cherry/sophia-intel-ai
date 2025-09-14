@@ -11,7 +11,7 @@
   "deepseek-r1-free": "deepseek/r1-0528-free",
   "deepseek-r1-qwen8b": "deepseek/r1-0528-qwen3-8b",
   "mistral-nemo": "mistralai/mistral-nemo",
-  "magistral-small": "mistralai/magistral-small-2506",
+  "magistral-small": "openai/gpt-4o-mini",
   "magistral-medium": "mistralai/magistral-medium-2506",
   "magistral-medium-thinking": "mistralai/magistral-medium-2506-thinking",
   "qwen3-30b-a3b": "qwen/qwen3-30b-a3b"

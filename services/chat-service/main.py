@@ -25,12 +25,14 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from prometheus_client import Counter, Gauge, Histogram, generate_latest
 from pydantic import BaseModel, Field
+from config.python_settings import settings_from_env
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 # OpenTelemetry tracing
+_settings = settings_from_env()
 OTLP_ENDPOINT = os.getenv("OTLP_ENDPOINT", "http://otel-collector:4318/v1/traces")
-SERVICE_NAME = os.getenv("OTEL_SERVICE_NAME", "chat-service")
+SERVICE_NAME = os.getenv("OTEL_SERVICE_NAME", _settings.SERVICE_NAME or "chat-service")
 resource = Resource.create({"service.name": SERVICE_NAME})
 provider = TracerProvider(resource=resource)
 processor = BatchSpanProcessor(OTLPSpanExporter(endpoint=OTLP_ENDPOINT))
@@ -504,15 +506,14 @@ async def lifespan(app: FastAPI):
     """Application lifespan management"""
     global connection_manager, redis_client, db_pool, http_client
     # Initialize Redis
-    redis_client = redis.from_url("redis://redis-cluster:6379")
+redis_url = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/0")
+redis_client = redis.from_url(redis_url)
     # Initialize database pool
-    db_pool = await asyncpg.create_pool(
-        "postgresql://sophia:${POSTGRES_PASSWORD}@postgres-main:5432/sophia_ai",
-        min_size=5,
-        max_size=20,
-    )
+    pg_dsn = _settings.POSTGRES_URL or os.getenv("POSTGRES_URL", "postgresql://user:pass@localhost:5432/sophia")
+    db_pool = await asyncpg.create_pool(pg_dsn, min_size=5, max_size=20)
     # Initialize HTTP client
-    http_client = httpx.AsyncClient(timeout=30.0)
+    timeout_ms = _settings.HTTP_DEFAULT_TIMEOUT_MS or 15000
+    http_client = httpx.AsyncClient(timeout=timeout_ms / 1000.0)
     # Initialize connection manager
     connection_manager = ChatConnectionManager()
     logger.info("Chat service initialized")
@@ -533,13 +534,7 @@ FastAPIInstrumentor.instrument_app(app)
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://www.sophia-intel.ai",
-        "https://chat.sophia-intel.ai",
-        "https://dashboard.sophia-intel.ai",
-        "${SOPHIA_FRONTEND_ENDPOINT}",  # Development
-        "http://localhost:3001",  # Development
-    ],
+    allow_origins=(os.getenv("ALLOWED_ORIGINS", "*").split(",") if _settings.APP_ENV == "dev" else os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -6,6 +6,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 import redis.asyncio as redis
+from config.python_settings import settings_from_env
 import structlog
 # Import our search quality components
 from contextual_bandit import (
@@ -71,6 +72,7 @@ bandit: Optional[ProductionContextualBandit] = None
 rrf_fusion: Optional[OptimizedReciprocalRankFusion] = None
 reranker: Optional[OptimizedCrossEncoderReranker] = None
 redis_client: Optional[redis.Redis] = None
+_settings = settings_from_env()
 # Pydantic models
 class ProviderContextRequest(BaseModel):
     query_length: int = Field(..., ge=0, le=10000)
@@ -128,7 +130,7 @@ async def lifespan(app: FastAPI):
     try:
         # Initialize Redis connection
         redis_client = redis.from_url(
-            "redis://redis:6379",
+            (_settings.REDIS_URL or os.getenv("REDIS_URL", "redis://redis:6379")),
             encoding="utf-8",
             decode_responses=True,
             socket_connect_timeout=5,
@@ -191,7 +193,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=(os.getenv("ALLOWED_ORIGINS", "*").split(",") if _settings.APP_ENV == "dev" else os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -7,6 +7,7 @@ import json
 from typing import Any, Dict, Optional, List
 
 import requests
+from config.python_settings import settings_from_env
 from fastapi import FastAPI, HTTPException, Body, Request
 from fastapi.responses import Response, JSONResponse
 from pydantic import BaseModel
@@ -16,14 +17,15 @@ from collections import deque
 from prometheus_client import Counter, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
 
-WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+_settings = settings_from_env()
+WEAVIATE_URL = _settings.WEAVIATE_URL or os.getenv("WEAVIATE_URL", "http://localhost:8080")
 WEAVIATE_API_KEY = os.getenv("WEAVIATE_API_KEY", "")
 CLASS_NAME = os.getenv("VECTOR_CLASS", "BusinessDocument")
 
 app = FastAPI(title="MCP Vector Server")
-_mcp_token = os.getenv("MCP_TOKEN")
-_dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
-_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_mcp_token = _settings.MCP_TOKEN or os.getenv("MCP_TOKEN")
+_dev_bypass = (_settings.MCP_DEV_BYPASS == "1")
+_rate_limit_rpm = int(_settings.RATE_LIMIT_RPM)
 _rate_buckets: dict[str, deque] = {}
 
 # Metrics

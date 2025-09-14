@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 import yaml
 from fastapi import FastAPI, HTTPException, Request
+from config.python_settings import settings_from_env
 from fastapi.responses import JSONResponse, Response
 from time import perf_counter
 from collections import deque
@@ -35,9 +36,10 @@ REPOS = {
 }
 SSH_AUTH_SOCK = os.getenv("SSH_AUTH_SOCK", "")
 app = FastAPI(title="MCP Git Server")
-_mcp_token = os.getenv("MCP_TOKEN")
-_dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
-_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_settings = settings_from_env()
+_mcp_token = _settings.MCP_TOKEN or os.getenv("MCP_TOKEN")
+_dev_bypass = (_settings.MCP_DEV_BYPASS == "1")
+_rate_limit_rpm = int(_settings.RATE_LIMIT_RPM)
 _rate_buckets: dict[str, deque] = {}
 
 # Metrics

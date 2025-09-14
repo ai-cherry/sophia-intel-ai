@@ -7,20 +7,27 @@
     "openai": "openai-vk-190a60",
     "perplexity": "perplexity-vk-56c172",
     "together-ai": "together-ai-670469",
-    "openrouter": "vkj-openrouter-cc4151",
+    "openrouter": "openrouter-vk-45aeee",
     "x-ai": "xai-vk-e65d0f",
+    "xai": "xai-vk-e65d0f",
+    "huggingface": "huggingface-vk-28240e",
+    "cohere": "cohere-vk-496fa9",
+    "qdrant": "qdrant-vk-d2b62a",
+    "milvus": "milvus-vk-34fa02",
+    "mistral": "mistral-vk-f92861",
+    "mistralai": "mistral-vk-f92861",
     "github": "github-vk-a5b609",
     "stability": "stability-vk-a575fb"
   },
   "model_mappings": {
     "grok-fast": {
       "provider": "openrouter",
-      "virtual_key": "vkj-openrouter-cc4151",
+      "virtual_key": "openrouter-vk-45aeee",
       "model": "x-ai/grok-beta"
     },
     "grok-4": {
       "provider": "openrouter",
-      "virtual_key": "vkj-openrouter-cc4151",
+      "virtual_key": "openrouter-vk-45aeee",
       "model": "x-ai/grok-2-1212"
     },
     "magistral-small": {

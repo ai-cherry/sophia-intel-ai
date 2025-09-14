@@ -10,6 +10,7 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel
+from config.python_settings import settings_from_env
 
 import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException, Request
@@ -21,15 +22,16 @@ from prometheus_client import Counter, Histogram, CollectorRegistry, generate_la
 app = FastAPI(title="MCP Memory Server")
 
 # Redis connection (use DB 1 for memory)
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+_settings = settings_from_env()
+REDIS_URL = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/1")
 redis_client: Optional[redis.Redis] = None
 
 # Minimal auth scaffolding (optional):
 # If MCP_TOKEN is set, require Authorization: Bearer <token>.
 # If not set and MCP_DEV_BYPASS=true, allow unauthenticated (dev-friendly).
-_mcp_token = os.getenv("MCP_TOKEN")
-_dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
-_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_mcp_token = _settings.MCP_TOKEN or os.getenv("MCP_TOKEN")
+_dev_bypass = (_settings.MCP_DEV_BYPASS == "1")
+_rate_limit_rpm = int(_settings.RATE_LIMIT_RPM)
 _rate_buckets: dict[str, deque] = {}
 
 # Metrics

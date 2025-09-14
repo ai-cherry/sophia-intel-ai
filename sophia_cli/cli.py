@@ -48,7 +48,7 @@ def portkey_headers(model: str) -> dict:
     vk_env = f"PORTKEY_VK_{provider.upper()}"
     vk = os.getenv(vk_env, "")
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "x-portkey-api-key": api_key,  # Correct Portkey header format
         "Content-Type": "application/json",
         "x-portkey-provider": provider,
     }
@@ -63,7 +63,7 @@ def portkey_models() -> list[str]:
         return []
     try:
         with httpx.Client(timeout=20.0) as client:
-            r = client.get("https://api.portkey.ai/v1/models", headers={"Authorization": f"Bearer {api_key}"})
+            r = client.get("https://api.portkey.ai/v1/models", headers={"x-portkey-api-key": api_key})
             if r.status_code != 200:
                 return []
             data = r.json()
@@ -74,8 +74,10 @@ def portkey_models() -> list[str]:
 
 def portkey_chat(model: str, messages: list[dict], max_tokens: int = 512, temperature: float = 0.2) -> dict:
     headers = portkey_headers(model)
+    # Remove provider prefix for Portkey (e.g., "openai/gpt-4o-mini" -> "gpt-4o-mini")
+    model_name = model.split("/", 1)[-1] if "/" in model else model
     payload = {
-        "model": model,
+        "model": model_name,
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": temperature,

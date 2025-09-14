@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "fs-memory": {
+      "command": "python3",
+      "args": ["/Users/lynnmusil/sophia-intel-ai/tools/mcp/fs_memory_stdio.py"],
+      "env": {},
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

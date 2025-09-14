@@ -13,9 +13,11 @@ import yaml
 from fastapi import FastAPI, HTTPException, Request
 import json
 import time
+from config.python_settings import settings_from_env
+_settings = settings_from_env()
 try:
     import redis  # type: ignore
-    _redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+    _redis_url = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/1")
     _rq = redis.Redis.from_url(_redis_url)
 except Exception:
     _rq = None
@@ -69,11 +71,11 @@ def allowed_to_write(path: Path, policy: Policy) -> bool:
     return any(p.startswith(allow) for allow in policy.write_allowed)
 WORKSPACE_PATH = Path(os.getenv("WORKSPACE_PATH", "/workspace"))
 WORKSPACE_NAME = os.getenv("WORKSPACE_NAME", "sophia")
-READ_ONLY = os.getenv("READ_ONLY", "false").lower() == "true"
+READ_ONLY = (_settings.READ_ONLY == "1")
 app = FastAPI(title=f"MCP Filesystem Server ({WORKSPACE_NAME})")
-_mcp_token = os.getenv("MCP_TOKEN")
-_dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
-_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_mcp_token = _settings.MCP_TOKEN or os.getenv("MCP_TOKEN")
+_dev_bypass = (_settings.MCP_DEV_BYPASS == "1")
+_rate_limit_rpm = int(_settings.RATE_LIMIT_RPM)
 _rate_buckets: dict[str, deque] = {}
 
 # Metrics

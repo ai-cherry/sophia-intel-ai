@@ -30,6 +30,8 @@ venv/
 # Node/Next.js
 node_modules/
 .next/
+dump.rdb
+workbench-ui/
 
 # Databases and caches
 *.db

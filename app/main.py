@@ -25,6 +25,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from qdrant_client import AsyncQdrantClient
 from shared.core.unified_config import get_config_value
+from config.python_settings import settings_from_env
 from app.api.routes import create_api_router
 # Import unified components (eliminates fragmented imports)
 from app.memory.bus import UnifiedMemoryBus, create_memory_bus
@@ -41,6 +42,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 # Global state (eliminates scattered global variables)
+_settings = settings_from_env()
 app_state: Dict[str, Any] = {}
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -55,9 +57,11 @@ async def lifespan(app: FastAPI):
         setup_metrics()
         logger.info("✅ Observability initialized")
         # Neon PostgreSQL connection with autoscaling
-        neon_dsn = get_config_value("neon_database_url") or os.getenv(
-            "NEON_DATABASE_URL",
-            "postgresql://user:pass@neon-host/sophia_ai?sslmode=require",
+        neon_dsn = (
+            os.getenv("NEON_DATABASE_URL")
+            or _settings.POSTGRES_URL
+            or get_config_value("neon_database_url")
+            or "postgresql://user:pass@neon-host/sophia_ai?sslmode=require"
         )
         pg_pool = await asyncpg.create_pool(
             neon_dsn,
@@ -72,8 +76,11 @@ async def lifespan(app: FastAPI):
         )
         logger.info("✅ Neon PostgreSQL pool initialized")
         # Redis with client-side tracking (Jul '25 optimization)
-        redis_url = get_config_value("redis_url") or os.getenv(
-            "REDIS_URL", "${REDIS_URL}"
+        redis_url = (
+            _settings.REDIS_URL
+            or os.getenv("REDIS_URL")
+            or get_config_value("redis_url")
+            or "redis://localhost:6379/0"
         )
         redis_client = aioredis.from_url(
             redis_url,
@@ -87,8 +94,10 @@ async def lifespan(app: FastAPI):
         await redis_client.ping()
         logger.info("✅ Redis client initialized with tracking")
         # Qdrant vector database
-        qdrant_url = get_config_value("qdrant_url") or os.getenv(
-            "QDRANT_URL", "http://localhost:6333"
+        qdrant_url = (
+            os.getenv("QDRANT_URL")
+            or get_config_value("qdrant_url")
+            or "http://localhost:6333"
         )
         qdrant_client = AsyncQdrantClient(url=qdrant_url, timeout=30.0)
         # Test Qdrant connection
@@ -147,7 +156,7 @@ app = FastAPI(
 # Middleware stack (eliminates duplicate middleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=(os.getenv("ALLOWED_ORIGINS", "*").split(",") if _settings.APP_ENV == "dev" else os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

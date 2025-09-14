@@ -29,13 +29,13 @@ Generated: 2025-09-14T01:13:00-07:00
 ## 3. Repository Structure Assessment
 
 ### Should Workbench UI Be Separated?
-**Recommendation: NO - Keep in Main Repository**
+**Recommendation: YES — Separate Repository with Git Worktree for Co-Dev**
 
 **Reasons:**
-1. **Tight Integration**: Workbench UI directly uses MCP servers (8081-8085)
-2. **Shared Policies**: Uses same POLICIES/access.yml for file access control
-3. **Common Configuration**: Shares model aliases and environment settings
-4. **Development Workflow**: Part of unified development experience
+1. **Clear Boundaries**: Backend/MCP stays focused; UI cadences and deps won’t burden backend CI.
+2. **Same DX**: Use a git worktree (`../worktrees/workbench-ui`) to keep smooth local co-development.
+3. **Shared Config**: Reuse `.env.master` schema and ESC mapping; Workbench consumes the same contract.
+4. **Artifacts**: Avoids `.next/` and large UI caches in backend history.
 
 ### Current Directory Structure (Key Components)
 ```
@@ -44,7 +44,7 @@ sophia-intel-ai/
 │   ├── memory_server.py    # Session & memory management
 │   ├── filesystem/         # File operations with policies
 │   └── git/               # Git operations
-├── workbench-ui/          # TypeScript/Express UI (should stay)
+├── (external) workbench-ui  # TypeScript/Express UI (separate repo via worktree)
 ├── config/                # Shared configuration
 │   └── model_aliases.json # Model routing configuration
 ├── POLICIES/              # Access control policies
@@ -88,9 +88,9 @@ The current format is already optimized for AI agent interaction. The servers pr
 ## 6. Files Requiring Attention
 
 ### Uncommitted Changes
-- Multiple documentation files deleted (cleanup in progress)
-- New workflow file added: `.github/workflows/no-ui-guard.yml`
-- Configuration files modified for Portkey compatibility
+- Docs added for Workbench extraction and local MCP setups
+- Env schema + loaders added; services wired to loaders
+- CI: env schema validation and lightweight no-real-secrets scan
 
 ### Critical Configuration Files
 1. `config/model_aliases.json` - Model routing (updated)
@@ -106,9 +106,9 @@ The current format is already optimized for AI agent interaction. The servers pr
 3. ✅ All changes pushed to GitHub
 
 ### Architecture Decisions
-1. **Keep Workbench UI in main repo** - Better integration
-2. **Maintain current MCP server format** - Already optimal for AI agents
-3. **Continue using Portkey** for model routing with proper OpenRouter configs
+1. **Extract Workbench to separate repo** — use git worktree for co-dev
+2. **Maintain current MCP server format** — FastAPI HTTP; stdio optional for local perf
+3. **Flexible provider routing** — choose Portkey/OpenRouter/Direct by env
 
 ### Next Steps
 1. Test CLI with corrected model configurations

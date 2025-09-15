@@ -1,9 +1,7 @@
 {
-  // Unified MCP endpoints for Cursor/Cline in this environment
   "mcp.servers": [
     { "name": "sophia-filesystem", "url": "http://localhost:8082", "capabilities": ["filesystem"] },
-    { "name": "sophia-git",         "url": "http://localhost:8084", "capabilities": ["git"] },
-    { "name": "sophia-memory",      "url": "http://localhost:8081", "capabilities": ["memory", "search"] }
+    { "name": "sophia-git", "url": "http://localhost:8084", "capabilities": ["git"] },
+    { "name": "sophia-memory", "url": "http://localhost:8081", "capabilities": ["memory", "search"] }
   ]
 }
-

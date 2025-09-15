@@ -1,0 +1,9 @@
+
+<workflow_instructions>
+  <mode_overview>
+    This mode orchestrates end-to-end deployment for Sophia Intel AI's full stack, integrating with CRM/sales tools, deploying vector search and BI models, monitoring data pipelines, and remediating issues while maintaining multi-repo consistency with workbench-ui.
+  </mode_overview>
+
+  <prerequisites>
+    <prerequisite>Ensure docker, pm2, git, and Airbyte CLI are installed for ETL and deployments</prerequisite>
+    <prerequisite>Valid .env.master

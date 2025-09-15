@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Sophia CLI launcher
-# Usage: sophia chat|plan|code|apply [...]
-
-PYTHON_BIN="${PYTHON_BIN:-python3}"
-exec "$PYTHON_BIN" -m sophia_cli "$@"
-

@@ -1,0 +1,10 @@
+model: openrouter/x-ai/grok-code-fast-1
+api_base: https://openrouter.ai/api/v1
+temperature: 0.2
+extra_body:
+  provider:
+    order: ["xAI", "Google", "OpenAI", "DeepSeek", "Qwen"]
+    allow_fallbacks: true
+  data_collection: "deny"
+architect_model: openrouter/deepseek/deepseek-chat-v3-0324
+edit_model: openrouter/openai/gpt-5

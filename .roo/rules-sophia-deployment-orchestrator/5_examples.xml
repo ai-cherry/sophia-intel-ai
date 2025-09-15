@@ -1,0 +1,93 @@
+<examples>
+  <example name="etl_deploy">
+    <description>Deploy Airbyte ETL for CRM to vector/BI</description>
+    <context>General data sync for BI/MCP</context>
+    <workflow>
+      <step>1. Sync repos (sophia-intel-ai + workbench-ui)</step>
+      <step>2. Validate configs (sophia.config.yaml, .env.master)</step>
+      <step>3. Test ETL with mocks (CRM APIs, Airbyte connection)</step>
+      <step>4. Deploy (docker compose up Airbyte, Weaviate)</step>
+      <step>5. Monitor sync (discrepancy check, MCP store status)</step>
+      <step>6. Remediate if fail (rollback git, restart services)</step>
+    </workflow>
+    <code><![CDATA[
+# Example ETL deploy script
+./scripts/deploy_etl.sh
+# Output: Airbyte pipelines running, data synced to Looker
+]]></code>
+    <explanation>Ensures ETL for any source with privacy masking</explanation>
+  </example>
+
+  <example name="integration_test">
+    <description>Test integrations (CRM, Gong, Intercom, Slack)</description>
+    <context>Validate API calls and data flow</context>
+    <workflow>
+      <step>1. Mock APIs (Salesforce/HubSpot)</step>
+      <step>2. Run pytest for endpoints</step>
+      <step>3. Check MCP memory for state</step>
+      <step>4. Verify multi-repo sync</step>
+      <step>5. Rollback on failure</step>
+    </workflow>
+    <code><![CDATA[
+# Example integration test
+pytest tests/integration/test_integrations.py -v
+# Output: All APIs pass, no errors
+]]></code>
+    <explanation>Tests end-to-end flow with mocks for robustness</explanation>
+  </example>
+
+  <example name="mcp_validation">
+    <description>Validate MCP servers and agent orchestration</description>
+    <context>Ensure memory/filesystem/git operational</context>
+    <workflow>
+      <step>1. Start MCP (docker compose up mcp)</step>
+      <step>2. Test memory store/retrieve</step>
+      <step>3. Validate git sync</step>
+      <step>4. Run agent (genetic-algorithm mode)</step>
+      <step>5. Check blended factory chain</step>
+    </workflow>
+    <code><![CDATA[
+# Example MCP validation
+python scripts/validate_mcp.py
+# Output: MCP healthy, agents running
+]]></code>
+    <explanation>Confirms core workflows and multi-repo deps</explanation>
+  </example>
+
+  <example name="privacy_rollback">
+    <description>Test rollback for privacy breach</description>
+    <context>Simulate PII leak in ETL</context>
+    <workflow>
+      <step>1. Deploy with mock PII</step>
+      <step>2. Trigger breach (unmasked data)</step>
+      <step>3. Rollback (git revert, docker down)</step>
+      <step>4. Re-deploy with masking</step>
+      <step>5. Validate no leaks</step>
+    </workflow>
+    <code><![CDATA[
+# Example rollback
+git revert HEAD
+docker compose down
+# Output: State restored, privacy ensured
+]]></code>
+    <explanation>Demonstrates GDPR/CCPA compliance in remediation</explanation>
+  </example>
+
+  <example name="full_stack_rollout">
+    <description>End-to-end deploy of all modules</description>
+    <context>Complete repository rollout</context>
+    <workflow>
+      <step>1. Prep: Sync repos, validate configs</step>
+      <step>2. Test: APIs, ETL, MCP, agents</step>
+      <step>3. Deploy: Docker MCP/ETL/BI, pm2 agents</step>
+      <step>4. Monitor: Health, uptime alerts</step>
+      <step>5. Remediate if needed</step>
+    </workflow>
+    <code><![CDATA[
+# Example full rollout
+./scripts/full_deploy.sh
+# Output: Full stack deployed, validated
+]]></code>
+    <explanation>Orchestrates entire Sophia Intel AI stack</explanation>
+  </example>
+</examples>

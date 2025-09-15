@@ -536,5 +536,7 @@ async def search_pipeline(
     finally:
         ACTIVE_REQUESTS.dec()
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run(app, host="${BIND_IP}", port=8200)
+    bind_ip = os.getenv("BIND_IP", "0.0.0.0")
+    uvicorn.run(app, host=bind_ip, port=8200)

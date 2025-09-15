@@ -751,10 +751,11 @@ def get_config(service: str = None, environment: str = None) -> Dict[str, Any]:
             import re
             assignments = re.findall(r"(\w+)\s*=\s*([^\\n]+)", content)
             for var_name, var_value in assignments:
-                # Simple evaluation (be careful with this in production)
+                # Safe literal evaluation; fall back to string stripping
                 try:
-                    config_vars[var_name] = eval(var_value)
-                except:
+                    import ast
+                    config_vars[var_name] = ast.literal_eval(var_value)
+                except Exception:
                     config_vars[var_name] = var_value.strip("\"'")
         except Exception as e:
             logger.warning(f"Could not extract from {py_path}: {e}")

@@ -57,7 +57,7 @@ jobs:
         uses: pulumi/auth-actions@v1
         with:
           organization: your-pulumi-org
-          requested-token-type: urn:pulumi:token-type:access_token:organization
+          requested-token-type: "urn:pulumi:token-type:access_token:organization"
 
       - name: Export ESC env to dotenv
         id: esc
@@ -104,11 +104,13 @@ jobs:
 
       - name: Skip worker deploy (not configured)
         if: ${{ hashFiles(matrix.config) != '' && matrix.app == 'worker' }}
-        run: echo "Skipping worker deploy: entrypoint not finalized"
+        run: |
+          echo "Skipping worker deploy: entrypoint not finalized"
 
       - name: Skip MCP deploy (gateway not implemented)
         if: ${{ hashFiles(matrix.config) != '' && matrix.app == 'mcp' }}
-        run: echo "Skipping MCP deploy: unified gateway not implemented"
+        run: |
+          echo "Skipping MCP deploy: unified gateway not implemented"
 
       - name: Post-deploy health (API)
         if: ${{ matrix.app == 'api' }}

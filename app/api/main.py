@@ -58,9 +58,15 @@ try:
 except Exception as e:
     logger.warning(f"Rate limit middleware unavailable: {e}")
 # CORS configuration
+def _compute_cors_origins() -> list[str]:
+    env = os.getenv("CORS_ORIGINS", "")
+    if os.getenv("ENVIRONMENT", "development").lower() in ("dev", "development"):
+        return env.split(",") if env else ["http://localhost","http://localhost:3000","http://127.0.0.1"]
+    return [o for o in (env.split(",") if env else []) if o]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Will restrict in production
+    allow_origins=_compute_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

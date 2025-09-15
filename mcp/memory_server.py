@@ -275,11 +275,19 @@ async def list_sessions(limit: int = 100) -> List[Dict[str, Any]]:
     return sessions[:limit]
 
 
+class SearchRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = None
+    limit: int = 20
+
 @app.post("/search")
-async def search_memory(query: str, session_id: Optional[str] = None, limit: int = 20):
+async def search_memory(req: SearchRequest):
     """Search across memory entries."""
     r = await get_redis()
-    results = []
+    results: List[Dict[str, Any]] = []
+    query = req.query
+    session_id = req.session_id
+    limit = req.limit
     
     # Determine search scope
     if session_id:
@@ -314,9 +322,85 @@ async def search_memory(query: str, session_id: Optional[str] = None, limit: int
 
 # Compatibility alias for clients expecting a namespaced memory search route
 @app.post("/memory/search")
-async def search_memory_alias(query: str, session_id: Optional[str] = None, limit: int = 20):
-    return await search_memory(query=query, session_id=session_id, limit=limit)
+async def search_memory_alias(req: SearchRequest):
+    return await search_memory(req=req)
 
+
+# Compatibility endpoints for legacy clients (e.g., Agno MCP client)
+# These mirror simple key/value semantics onto session-scoped memory.
+class KVRequest(BaseModel):
+    key: str
+    value: Any | None = None
+
+
+@app.post("/store")
+async def kv_store(req: KVRequest):
+    """Store a value under a session key, compatible with legacy /store.
+
+    Maps to: POST /sessions/{key}/memory with content serialized.
+    """
+    content: str
+    try:
+        # Preserve strings as-is; serialize other types
+        if isinstance(req.value, str):
+            content = req.value
+        else:
+            content = json.dumps(req.value)
+    except Exception:
+        content = str(req.value)
+
+    entry = MemoryEntry(content=content, role="assistant", metadata={"kv": True})
+    result = await store_memory(session_id=req.key, entry=entry)
+    return {"ok": True, "session": req.key, **result}
+
+
+@app.get("/retrieve")
+async def kv_retrieve(key: str):
+    """Retrieve session memory for a key, compatible with legacy /retrieve.
+
+    Returns the same structure as get_session_memory.
+    """
+    ctx = await get_session_memory(session_id=key, limit=100)
+    return ctx
+
+
+@app.delete("/delete")
+async def kv_delete(key: str):
+    """Delete all memory for a session key, compatible with legacy /delete."""
+    r = await get_redis()
+    # Remove timeline entries
+    timeline_key = f"session:{key}:timeline"
+    meta_key = f"session:{key}:meta"
+    try:
+        # Delete per-entry hashes referenced in the timeline
+        ids = await r.lrange(timeline_key, 0, -1)
+        if ids:
+            await r.delete(*ids)
+    except Exception:
+        pass
+    # Delete timeline and meta
+    await r.delete(timeline_key)
+    await r.delete(meta_key)
+    # Also delete any stray memory:<key>:* entries
+    try:
+        cursor = 0
+        pattern = f"memory:{key}:*"
+        while True:
+            cursor, keys = await r.scan(cursor, match=pattern, count=100)
+            if keys:
+                await r.delete(*keys)
+            if cursor == 0:
+                break
+    except Exception:
+        pass
+    return {"ok": True, "session": key, "deleted": True}
+
+
+@app.get("/search")
+async def kv_search(query: str, limit: int = 50):
+    """GET-based search, compatible with legacy /search?query=..."""
+    req = SearchRequest(query=query, limit=limit)
+    return await search_memory(req)
 
 if __name__ == "__main__":
     import uvicorn

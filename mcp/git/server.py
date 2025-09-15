@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import yaml
+import time
 from fastapi import FastAPI, HTTPException, Request
 from config.python_settings import settings_from_env
 from fastapi.responses import JSONResponse, Response
@@ -109,12 +110,51 @@ def run(cmd: List[str], cwd: Path) -> str:
         raise HTTPException(500, detail=e.output.decode("utf-8", errors="replace"))
 @app.get("/health")
 async def health() -> Dict[str, Any]:
-    return {"status": "ok", "ssh_agent": bool(SSH_AUTH_SOCK)}
+    return {"status": "healthy", "ssh_agent": bool(SSH_AUTH_SOCK)}
 
 @app.get("/metrics")
 async def metrics():
     data = generate_latest(REGISTRY)
     return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+
+# Compatibility GET endpoints to match validation/docs
+@app.get("/status")
+async def http_git_status(repo: str = "sophia") -> Dict[str, Any]:
+    repo_path = REPOS.get(repo)
+    if not repo_path or not repo_path.exists():
+        raise HTTPException(400, detail="unknown repo")
+    porcelain = run(["git", "status", "--porcelain"], repo_path)
+    branch = run(["git", "rev-parse", "--abbrev-ref", "HEAD"], repo_path).strip()
+    return {"branch": branch, "porcelain": porcelain}
+
+@app.get("/log")
+async def http_git_log(repo: str = "sophia", limit: int = 10, pretty: bool = True) -> Dict[str, Any]:
+    repo_path = REPOS.get(repo)
+    if not repo_path or not repo_path.exists():
+        raise HTTPException(400, detail="unknown repo")
+    limit = max(1, min(int(limit or 10), 100))
+    fmt = "%h%x09%an%x09%ad%x09%s"
+    out = run(["git", "log", f"-n{limit}", f"--pretty=format:{fmt}", "--date=iso"], repo_path)
+    if not pretty:
+        return {"raw": out}
+    entries: List[Dict[str, str]] = []
+    for line in out.splitlines():
+        parts = line.split("\t", 3)
+        if len(parts) != 4:
+            entries.append({"hash": "", "author": "", "date": "", "message": line.strip()})
+            continue
+        sh, author, date, msg = parts
+        entries.append({"hash": sh, "author": author, "date": date, "message": msg})
+    return {"commits": entries}
+
+@app.get("/branches")
+async def http_git_branches(repo: str = "sophia") -> Dict[str, Any]:
+    repo_path = REPOS.get(repo)
+    if not repo_path or not repo_path.exists():
+        raise HTTPException(400, detail="unknown repo")
+    out = run(["git", "branch", "--format=%(refname:short)"], repo_path)
+    branches = [line.strip().lstrip("* ").strip() for line in out.splitlines() if line.strip()]
+    return {"branches": branches}
 @app.post("/git/status")
 async def git_status(req: GitStatusRequest) -> Dict[str, Any]:
     repo = REPOS.get(req.repo)

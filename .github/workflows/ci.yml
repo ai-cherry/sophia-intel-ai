@@ -1,11 +1,11 @@
-name: CI
+name: ci-quality
 
 on:
   push:
   pull_request:
 
 jobs:
-  python-tests:
+  sanity:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -16,45 +16,30 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Python dependencies (best-effort)
+      - name: Install tooling
         run: |
-          set -e
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt || true; fi
-          pip install pytest ruff || true
+          python -m pip install --upgrade pip
+          pip install ruff pyyaml pytest
 
-      - name: Run pytest if tests exist
+      - name: Run sanity checks
         run: |
-          if [ -d tests ]; then
-            echo "Running pytest..."
-            pytest -q || pytest -q -k "" || true
-          else
-            echo "No tests directory; skipping."
-          fi
+          python scripts/ci_sanity_checks.py
 
-      - name: Python lint (ruff) if config present
+      - name: Ruff lint
         run: |
-          if [ -f ruff.toml ] || [ -f pyproject.toml ]; then
-            echo "Running ruff..."
-            ruff check . || true
-          else
-            echo "No ruff config; skipping."
-          fi
+          ruff check .
 
-  node-tests:
+      - name: Run tests (quick)
+        run: |
+          pytest -q
+
+  secrets-scan:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Detect Node project and run tests
-        run: |
-          if [ -f package.json ]; then
-            echo "Node project detected. Running tests..."
-            corepack enable || true
-            if [ -f package-lock.json ]; then npm ci || npm install; else npm install; fi
-            npm test || echo "npm test failed or not defined; continuing."
-            if npm run | grep -q " lint"; then npm run lint || true; fi
-          else
-            echo "No package.json; skipping Node tests."
-          fi
+      - name: Gitleaks scan (non-blocking initially)
+        uses: zricethezav/gitleaks-action@v2
+        continue-on-error: true
+

@@ -67,9 +67,11 @@ class SophiaAIUnified:
     def _setup_middleware(self):
         """Setup FastAPI middleware"""
         # CORS middleware
-        allowed_origins = os.getenv(
-            "CORS_ORIGINS", "${SOPHIA_FRONTEND_ENDPOINT},http://localhost:5173"
-        ).split(",")
+        raw = os.getenv("CORS_ORIGINS", "")
+        if self.environment in ("dev", "development"):
+            allowed_origins = raw.split(",") if raw else ["http://localhost","http://localhost:5173","http://127.0.0.1"]
+        else:
+            allowed_origins = [o for o in (raw.split(",") if raw else []) if o]
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=allowed_origins,

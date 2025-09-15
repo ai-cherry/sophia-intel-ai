@@ -24,6 +24,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from prometheus_client import Counter, Gauge, Histogram, generate_latest
+from starlette.responses import Response
 from pydantic import BaseModel, Field
 from config.python_settings import settings_from_env
 # Configure logging
@@ -506,8 +507,8 @@ async def lifespan(app: FastAPI):
     """Application lifespan management"""
     global connection_manager, redis_client, db_pool, http_client
     # Initialize Redis
-redis_url = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/0")
-redis_client = redis.from_url(redis_url)
+    redis_url = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    redis_client = redis.from_url(redis_url)
     # Initialize database pool
     pg_dsn = _settings.POSTGRES_URL or os.getenv("POSTGRES_URL", "postgresql://user:pass@localhost:5432/sophia")
     db_pool = await asyncpg.create_pool(pg_dsn, min_size=5, max_size=20)
@@ -532,9 +533,16 @@ app = FastAPI(
 )
 FastAPIInstrumentor.instrument_app(app)
 # CORS configuration
+def _compute_cors_origins() -> list[str]:
+    env = os.getenv("ALLOWED_ORIGINS", "")
+    if _settings.APP_ENV == "dev":
+        return env.split(",") if env else ["http://localhost", "http://localhost:3000", "http://127.0.0.1"]
+    # production/staging: fail-closed unless explicitly configured
+    return [o for o in (env.split(",") if env else []) if o]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(os.getenv("ALLOWED_ORIGINS", "*").split(",") if _settings.APP_ENV == "dev" else os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]),
+    allow_origins=_compute_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -553,7 +561,7 @@ async def health_check():
 @app.get("/metrics")
 async def metrics():
     """Prometheus metrics endpoint"""
-    return generate_latest()
+    return Response(generate_latest(), media_type="text/plain; version=0.0.4; charset=utf-8")
 @app.websocket("/ws/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, user_id: str):
     """WebSocket endpoint for real-time chat"""
@@ -666,4 +674,5 @@ async def get_session_messages(session_id: str, limit: int = 50, offset: int = 0
         return {"messages": messages, "total": len(messages)}
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="${BIND_IP}", port=8002)
+    bind_ip = os.getenv("BIND_IP", "0.0.0.0")
+    uvicorn.run(app, host=bind_ip, port=8002)

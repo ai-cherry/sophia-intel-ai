@@ -183,22 +183,35 @@ DEFAULT_EXCLUDES = [
 def _is_excluded(path: Path, exclude: List[str]) -> bool:
     sp = str(path)
     return any(fnmatch.fnmatch(sp, pat) for pat in exclude)
-def _iter_files(base: Path, globs: Optional[List[str]], exclude: List[str]) -> List[Path]:
+def _iter_files(
+    base: Path,
+    globs: Optional[List[str]],
+    exclude: List[str],
+    max_count: Optional[int] = None,
+    time_budget_seconds: Optional[float] = None,
+) -> List[Path]:
     base = base.resolve()
-    files: List[Path] = []
     patterns = globs or ["**/*"]
+    seen: set[Path] = set()
+    unique: List[Path] = []
+    start = perf_counter()
     for pat in patterns:
         for p in base.glob(pat):
-            if p.is_file() and not _is_excluded(p, exclude) and within(p, base):
-                files.append(p)
-    # De-duplicate while preserving order
-    seen = set()
-    unique: List[Path] = []
-    for p in files:
-        rp = p.resolve()
-        if rp not in seen:
+            if time_budget_seconds is not None and (perf_counter() - start) > time_budget_seconds:
+                return unique
+            if not p.is_file():
+                continue
+            if _is_excluded(p, exclude):
+                continue
+            if not within(p, base):
+                continue
+            rp = p.resolve()
+            if rp in seen:
+                continue
             unique.append(p)
             seen.add(rp)
+            if max_count is not None and len(unique) >= max_count:
+                return unique
     return unique
 def _detect_lang(path: Path) -> str:
     ext = path.suffix.lower()
@@ -315,7 +328,7 @@ def _extract_deps_for_file(path: Path, content: str, lang: str) -> List[str]:
 @app.get("/health")
 async def health() -> Dict[str, Any]:
     return {
-        "status": "ok",
+        "status": "healthy",
         "workspace": str(WORKSPACE_PATH),
         "name": WORKSPACE_NAME,
         "read_only": READ_ONLY,
@@ -425,9 +438,15 @@ async def repo_list(req: RepoListRequest) -> Dict[str, Any]:
     exclude = list(DEFAULT_EXCLUDES)
     if req.exclude:
         exclude += req.exclude
-    files = _iter_files(base, req.globs, exclude)
+    files = _iter_files(
+        base,
+        req.globs,
+        exclude,
+        max_count=(max(0, req.limit) or None),
+        time_budget_seconds=3.5,
+    )
     out = []
-    for p in files[: max(0, req.limit) or len(files)]:
+    for p in files:
         try:
             st = p.stat()
             out.append(
@@ -467,7 +486,7 @@ async def repo_read(req: RepoReadRequest) -> Dict[str, Any]:
 async def repo_search(req: RepoSearchRequest) -> Dict[str, Any]:
     base = WORKSPACE_PATH
     exclude = list(DEFAULT_EXCLUDES)
-    files = _iter_files(base, req.globs, exclude)
+    files = _iter_files(base, req.globs, exclude, time_budget_seconds=4.0)
     matches = []
     flags = 0 if req.case_sensitive else re.IGNORECASE
     pattern: Optional[re.Pattern[str]] = None
@@ -521,11 +540,11 @@ async def symbols_index(req: SymbolsIndexRequest) -> Dict[str, Any]:
             tp = (base / p).resolve()
             if within(tp, base):
                 if tp.is_dir():
-                    targets.extend(_iter_files(tp, ["**/*"], DEFAULT_EXCLUDES))
+                    targets.extend(_iter_files(tp, ["**/*"], DEFAULT_EXCLUDES, max_count=5000, time_budget_seconds=3.5))
                 elif tp.is_file():
                     targets.append(tp)
     else:
-        targets = _iter_files(base, ["**/*"], DEFAULT_EXCLUDES)
+        targets = _iter_files(base, ["**/*"], DEFAULT_EXCLUDES, max_count=5000, time_budget_seconds=3.5)
     allowed_langs = set(req.languages or [])
     for p in targets:
         lang = _detect_lang(p)

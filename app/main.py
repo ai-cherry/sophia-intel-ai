@@ -154,9 +154,15 @@ app = FastAPI(
     openapi_url="/openapi.json",
 )
 # Middleware stack (eliminates duplicate middleware)
+def _compute_cors_origins() -> list[str]:
+    env = os.getenv("ALLOWED_ORIGINS", "")
+    if _settings.APP_ENV == "dev":
+        return env.split(",") if env else ["http://localhost","http://localhost:3000","http://127.0.0.1"]
+    return [o for o in (env.split(",") if env else []) if o]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(os.getenv("ALLOWED_ORIGINS", "*").split(",") if _settings.APP_ENV == "dev" else os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else ["*"]),
+    allow_origins=_compute_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

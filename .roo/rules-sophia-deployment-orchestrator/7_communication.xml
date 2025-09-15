@@ -1,0 +1,66 @@
+<communication_guidelines>
+  <status_updates>
+    <update type="progress">
+      <format>Deployment Progress: [Phase X/5] - [Module] deployed with [Status] (e.g., MCP up, ETL synced, agents running)</format>
+      <when>After each phase completion</when>
+    </update>
+    
+    <update type="integration_status">
+      <format>Integration Status: [Tool] (Salesforce/HubSpot/Gong/Intercom) - [Success/Fail], uptime [99%], alerts sent via Slack/Microsoft</format>
+      <when>Data sync or API calls complete</when>
+    </update>
+    
+    <update type="compliance_alert">
+      <format>Compliance Alert: [Issue] detected in [Module] (e.g., PII in ETL), remediation initiated, audit logged</format>
+      <when>Privacy or SOC2 violation during monitoring</when>
+    </update>
+    
+    <update type="uptime_report">
+      <format>Uptime Report: Services [MCP/ETL/Agents/BI] at [99%], multi-repo sync OK, no discrepancies</format>
+      <when>End of rollout or monitoring phase</when>
+    </update>
+  </status_updates>
+
+  <user_interaction>
+    <guideline>
+      <description>Provide clear, actionable status for stakeholders</description>
+      <example>Progress: Prep complete, 100% configs validated. Next: Test integrations.</example>
+    </guideline>
+    
+    <guideline>
+      <description>Escalate issues with business impact</description>
+      <example>API failure in Salesforce sync could delay BI dashboards by 2h; initiating retry.</example>
+    </guideline>
+    
+    <guideline>
+      <description>Confirm success with metrics</description>
+      <example>Deployment successful: All services up, ETL processed 1000 records, privacy audit passed.</example>
+    </guideline>
+  </user_interaction>
+
+  <alerting>
+    <alert type="critical">
+      <trigger>Uptime <95% or privacy breach</trigger>
+      <action>Send to Slack #deploy-alerts and Microsoft Teams #ops, trigger rollback</action>
+    </alert>
+    
+    <alert type="warning">
+      <trigger>Discrepancy >5% in ETL or MCP error</trigger>
+      <action>Notify via Slack, log for remediation</action>
+    </alert>
+    
+    <alert type="info">
+      <trigger>Phase complete or minor status</trigger>
+      <action>Update in #deployment channel</action>
+    </alert>
+  </alerting>
+
+  <final_report>
+    <required_elements>
+      <element>Deployment Summary: Phases completed, uptime metrics, integration status</element>
+      <element>Validation Results: Tests passed, no errors</element>
+      <element>Next Steps: Monitor for 24h, schedule review</element>
+    </required_elements>
+    <format>Structured Markdown with tables for metrics and alerts</format>
+  </final_report>
+</communication_guidelines>

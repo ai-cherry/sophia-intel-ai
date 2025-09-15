@@ -3,11 +3,11 @@ Verification script for Sophia AI core system imports and startup orchestrator
 """
 import traceback
 def sophia_import(module_path, symbol=None):
+    import importlib
     try:
+        module = importlib.import_module(module_path)
         if symbol:
-            exec(f"from {module_path} import {symbol}")
-        else:
-            exec(f"import {module_path}")
+            getattr(module, symbol)
         print(f"✅ Import OK: {module_path}{f'.{symbol}' if symbol else ''}")
         return True
     except Exception:
@@ -50,5 +50,4 @@ def main():
     else:
         print("\n⚠️ Some core system imports failed. See above for details.")
 if __name__ == "__main__":
-    main()
     main()

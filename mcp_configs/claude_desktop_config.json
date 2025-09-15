@@ -1,11 +1,31 @@
 {
   "mcpServers": {
-    "fs-memory": {
-      "command": "python3",
-      "args": ["/Users/lynnmusil/sophia-intel-ai/tools/mcp/fs_memory_stdio.py"],
-      "env": {},
-      "disabled": false,
-      "autoApprove": []
+    "sophia-memory": {
+      "type": "http",
+      "url": "http://localhost:8081",
+      "headers": {
+        "Authorization": "Bearer dev-token",
+        "Content-Type": "application/json"
+      },
+      "description": "Session memory and context management for Sophia Intel AI"
+    },
+    "sophia-filesystem": {
+      "type": "http",
+      "url": "http://localhost:8082", 
+      "headers": {
+        "Authorization": "Bearer dev-token",
+        "Content-Type": "application/json"
+      },
+      "description": "File operations and code intelligence for Sophia Intel AI"
+    },
+    "sophia-git": {
+      "type": "http",
+      "url": "http://localhost:8084",
+      "headers": {
+        "Authorization": "Bearer dev-token",
+        "Content-Type": "application/json"
+      },
+      "description": "Git operations and version control for Sophia Intel AI"
     }
   }
 }

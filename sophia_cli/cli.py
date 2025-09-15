@@ -5,6 +5,7 @@ import sys
 import subprocess
 from pathlib import Path
 from typing import Optional, List, Dict, Any
+from datetime import datetime
 
 import click
 import httpx
@@ -393,3 +394,183 @@ def _basic_validation(workspace: Path, paths: List[str]) -> List[str]:
             if res.returncode != 0:
                 errs.append(f"Py syntax error in {p}: {res.stderr.strip()}")
     return errs
+
+
+@main.command()
+@click.option("--json", "json_output", is_flag=True, help="Output in JSON format")
+@click.option("--verbose", "-v", is_flag=True, help="Show verbose output")
+@click.option("--timeout", type=int, default=5, help="Request timeout in seconds")
+def status(json_output: bool, verbose: bool, timeout: int) -> None:
+    """Check status of all MCP servers."""
+    servers = [
+        {"name": "Memory", "port": 8081, "endpoint": "/health"},
+        {"name": "Filesystem", "port": 8082, "endpoint": "/health"},
+        {"name": "Git", "port": 8084, "endpoint": "/health"},
+        {"name": "Vector", "port": 8085, "endpoint": "/health"},
+    ]
+    
+    auth_token = os.getenv("MCP_AUTH_TOKEN", "dev-token")
+    headers = {"Authorization": f"Bearer {auth_token}"}
+    
+    results = {}
+    total_healthy = 0
+    total_servers = len(servers)
+    
+    for server in servers:
+        url = f"http://localhost:{server['port']}{server['endpoint']}"
+        try:
+            with httpx.Client(timeout=float(timeout)) as client:
+                response = client.get(url, headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    status = data.get("status", "unknown")
+                    results[server["name"]] = {
+                        "status": status,
+                        "port": server["port"],
+                        "response_time": response.elapsed.total_seconds(),
+                        "details": data if verbose else None
+                    }
+                    if status in ["healthy", "degraded"]:
+                        total_healthy += 1
+                    
+                    # Display status with color
+                    if not json_output:
+                        if status == "healthy":
+                            click.echo(f"✅ {server['name']} Server (port {server['port']}): {click.style('HEALTHY', fg='green')}")
+                        elif status == "degraded":
+                            click.echo(f"⚠️  {server['name']} Server (port {server['port']}): {click.style('DEGRADED', fg='yellow')}")
+                        else:
+                            click.echo(f"❌ {server['name']} Server (port {server['port']}): {click.style('UNHEALTHY', fg='red')}")
+                else:
+                    results[server["name"]] = {
+                        "status": "error",
+                        "port": server["port"],
+                        "error": f"HTTP {response.status_code}"
+                    }
+                    if not json_output:
+                        click.echo(f"❌ {server['name']} Server (port {server['port']}): {click.style('ERROR', fg='red')} (HTTP {response.status_code})")
+        except httpx.TimeoutException:
+            results[server["name"]] = {
+                "status": "offline",
+                "port": server["port"],
+                "error": "timeout"
+            }
+            if not json_output:
+                click.echo(f"❌ {server['name']} Server (port {server['port']}): {click.style('OFFLINE', fg='red')} (timeout)")
+        except Exception as e:
+            results[server["name"]] = {
+                "status": "offline",
+                "port": server["port"],
+                "error": str(e)
+            }
+            if not json_output:
+                click.echo(f"❌ {server['name']} Server (port {server['port']}): {click.style('OFFLINE', fg='red')}")
+                if verbose:
+                    click.echo(f"   Error: {e}", err=True)
+    
+    # Summary
+    if json_output:
+        output = {
+            "timestamp": datetime.now().isoformat(),
+            "servers": results,
+            "summary": {
+                "total": total_servers,
+                "healthy": total_healthy,
+                "unhealthy": total_servers - total_healthy
+            }
+        }
+        click.echo(json.dumps(output, indent=2))
+    else:
+        click.echo(f"\n📊 Summary: {total_healthy}/{total_servers} servers operational")
+        
+        if total_healthy < total_servers:
+            click.echo("\nTo start MCP servers:")
+            click.echo("  cd ~/sophia-intel-ai")
+            click.echo("  ./startup_enhanced.sh")
+        
+        if verbose:
+            click.echo("\nFor detailed validation, run:")
+            click.echo("  sophia validate")
+
+
+@main.command()
+@click.option("--verbose", "-v", is_flag=True, help="Show verbose output")
+@click.option("--quick", "-q", is_flag=True, help="Quick validation (health checks only)")
+@click.option("--output", "-o", type=click.Path(), help="Save report to file")
+@click.option("--json", "json_output", is_flag=True, help="Output in JSON format")
+@click.option("--allow-vector-skip", is_flag=True, help="Allow Vector server to be skipped if Weaviate unavailable")
+def validate(verbose: bool, quick: bool, output: Optional[str], json_output: bool, allow_vector_skip: bool) -> None:
+    """Run comprehensive MCP server validation."""
+    sophia_dir = Path.home() / "sophia-intel-ai"
+    
+    if not sophia_dir.exists():
+        raise click.ClickException(f"sophia-intel-ai directory not found at {sophia_dir}")
+    
+    validation_script = sophia_dir / "scripts" / "validate_mcp_servers_enhanced.py"
+    
+    if not validation_script.exists():
+        # Fall back to non-enhanced version
+        validation_script = sophia_dir / "scripts" / "validate_mcp_servers.py"
+        if not validation_script.exists():
+            raise click.ClickException("Validation script not found")
+    
+    # Build command
+    cmd = [sys.executable, str(validation_script)]
+    
+    if verbose:
+        cmd.append("--verbose")
+    if quick:
+        cmd.append("--quick")
+    if output:
+        cmd.extend(["--output", output])
+    if json_output:
+        cmd.append("--json")
+    if allow_vector_skip:
+        cmd.append("--allow-vector-skip")
+    
+    try:
+        # Run validation script
+        result = subprocess.run(
+            cmd,
+            cwd=str(sophia_dir),
+            capture_output=True,
+            text=True
+        )
+        
+        # Handle output
+        if json_output:
+            # Parse and re-emit JSON for clean formatting
+            try:
+                data = json.loads(result.stdout)
+                click.echo(json.dumps(data, indent=2))
+            except json.JSONDecodeError:
+                # Fallback to raw output if not valid JSON
+                click.echo(result.stdout)
+        else:
+            click.echo(result.stdout)
+        
+        # Show errors if any
+        if result.stderr and verbose:
+            click.echo(result.stderr, err=True)
+        
+        # Handle non-zero exit codes
+        if result.returncode != 0:
+            if not allow_vector_skip or "Vector" not in result.stderr:
+                raise click.ClickException(f"Validation failed with exit code {result.returncode}")
+            else:
+                click.echo("⚠️  Validation completed with warnings (Vector server skipped)", err=True)
+        else:
+            if not json_output:
+                click.echo("\n✅ All MCP servers validated successfully!")
+                
+                if output:
+                    click.echo(f"Report saved to: {output}")
+                
+                if not verbose:
+                    click.echo("\nFor detailed validation, run:")
+                    click.echo("  sophia validate -v")
+    
+    except subprocess.CalledProcessError as e:
+        raise click.ClickException(f"Validation script failed: {e}")
+    except Exception as e:
+        raise click.ClickException(f"Error running validation: {e}")

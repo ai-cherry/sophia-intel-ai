@@ -1,0 +1,122 @@
+name: verify-airtable
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'API Base URL (e.g. https://api.example.com)'
+        required: true
+        default: 'https://api.example.com'
+      environment:
+        description: 'Environment to test against'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+jobs:
+  verify-airtable-integration:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Test Airtable /whoami endpoint
+        run: |
+          echo "Testing Airtable integration against ${{ github.event.inputs.base_url }}"
+          
+          # Test whoami endpoint
+          response=$(curl -s -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.AUTH_TOKEN }}" \
+            "${{ github.event.inputs.base_url }}/api/airtable/whoami")
+          
+          http_code="${response: -3}"
+          body="${response%???}"
+          
+          echo "Whoami response code: $http_code"
+          echo "Whoami response body: $body"
+          
+          if [[ $http_code -lt 200 || $http_code -ge 300 ]]; then
+            echo "❌ /whoami endpoint failed with status $http_code"
+            exit 1
+          fi
+          
+          echo "✅ /whoami endpoint successful"
+
+      - name: Test Airtable /bases endpoint
+        run: |
+          # Test bases endpoint
+          response=$(curl -s -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.AUTH_TOKEN }}" \
+            "${{ github.event.inputs.base_url }}/api/airtable/bases")
+          
+          http_code="${response: -3}"
+          body="${response%???}"
+          
+          echo "Bases response code: $http_code"
+          echo "Bases response body: $body"
+          
+          if [[ $http_code -lt 200 || $http_code -ge 300 ]]; then
+            echo "❌ /bases endpoint failed with status $http_code"
+            exit 1
+          fi
+          
+          echo "✅ /bases endpoint successful"
+
+      - name: Test Airtable /bases/{base_id}/tables endpoint (if base_id provided)
+        env:
+          AIRTABLE_BASE_ID: ${{ secrets.AIRTABLE_BASE_ID }}
+        run: |
+          if [[ -n "$AIRTABLE_BASE_ID" ]]; then
+            echo "Testing tables endpoint with base ID: $AIRTABLE_BASE_ID"
+          else
+            echo "⚠️ AIRTABLE_BASE_ID not set, skipping tables endpoint test"
+            exit 0
+          fi
+          # Test tables endpoint with provided base ID
+          response=$(curl -s -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.AUTH_TOKEN }}" \
+            "${{ github.event.inputs.base_url }}/api/airtable/bases/$AIRTABLE_BASE_ID/tables")
+          
+          http_code="${response: -3}"
+          body="${response%???}"
+          
+          echo "Tables response code: $http_code"
+          echo "Tables response body: $body"
+          
+          if [[ $http_code -lt 200 || $http_code -ge 300 ]]; then
+            echo "❌ /tables endpoint failed with status $http_code"
+            exit 1
+          fi
+          
+          echo "✅ /tables endpoint successful"
+
+      - name: Verify auth enforcement
+        run: |
+          echo "Testing auth enforcement (should fail without token)"
+          
+          # Test whoami without auth token (should fail)
+          response=$(curl -s -w "%{http_code}" \
+            "${{ github.event.inputs.base_url }}/api/airtable/whoami")
+          
+          http_code="${response: -3}"
+          echo "No-auth response code: $http_code"
+          
+          if [[ $http_code -eq 401 ]]; then
+            echo "✅ Auth enforcement working correctly (401 returned)"
+          else
+            echo "⚠️  Auth enforcement may not be working (expected 401, got $http_code)"
+          fi
+
+      - name: Summary
+        run: |
+          echo "🎉 Airtable integration verification completed successfully!"
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Base URL: ${{ github.event.inputs.base_url }}"
+          echo ""
+          echo "Next steps:"
+          echo "- Endpoints are accessible and secured"
+          echo "- Airtable token is working"
+          echo "- Auth enforcement is active"

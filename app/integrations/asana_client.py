@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Optional
 import aiohttp
+from app.api.utils.http_client import get_async_client, with_retries
 from app.orchestrators.resource_manager import ResourceType, resource_manager
 from config.unified_manager import get_config_manager
 logger = logging.getLogger(__name__)
@@ -61,25 +62,30 @@ class AsanaClient:
         """Cleanup function for resource manager"""
         if session and not session.closed:
             await session.close()
-    async def _make_request(
-        self, method: str, endpoint: str, **kwargs
-    ) -> dict[str, Any]:
-        """Make authenticated request to Asana API"""
-        if not self.session:
-            await self.initialize_session()
+    async def _make_request(self, method: str, endpoint: str, **kwargs) -> dict[str, Any]:
+        """Make authenticated request to Asana API using shared HTTP client with retries."""
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
-        try:
-            async with self.session.request(method, url, **kwargs) as response:
-                if response.status == 200:
-                    return await response.json()
-                elif response.status == 401:
-                    raise Exception("Asana authentication failed - check API token")
-                else:
-                    error_text = await response.text()
-                    raise Exception(f"Asana API error {response.status}: {error_text}")
-        except Exception as e:
-            logger.error(f"Asana API request failed: {e}")
-            raise
+        params = kwargs.get("params")
+        json_body = kwargs.get("json")
+        data = kwargs.get("data")
+        headers = self.headers | kwargs.get("headers", {})
+        client = await get_async_client()
+
+        async def _do():
+            resp = await client.request(method.upper(), url, params=params, json=json_body, data=data, headers=headers)
+            try:
+                resp.raise_for_status()
+            except Exception:
+                # read text for diagnostics before raising
+                text = resp.text
+                # httpx.Response.text is a property; ensure awaited content if needed
+                raise
+            return resp
+
+        response = await with_retries(_do)
+        # httpx returns json() sync
+        result = response.json()
+        return result
     # Core API Methods
     async def get_workspaces(self) -> list[dict[str, Any]]:
         """Get all accessible workspaces"""

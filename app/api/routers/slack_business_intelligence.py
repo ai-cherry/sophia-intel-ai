@@ -4,6 +4,9 @@ Provides REST endpoints for Sophia AI-powered Slack integration
 with Pay Ready's business intelligence and reporting systems.
 """
 import logging
+import os
+import hmac
+import hashlib
 from datetime import datetime
 from typing import Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -20,6 +23,35 @@ except NameError:
 router = APIRouter(
     prefix="/api/slack", tags=["slack", "business-intelligence", "sophia-ai"]
 )
+
+async def _slack_signature_guard(request: Request) -> None:
+    """Verify Slack signature (v0) if signing secret is configured.
+
+    Rejects requests with missing/invalid signature or stale timestamp (>5 minutes).
+    """
+    secret = os.getenv("SLACK_SIGNING_SECRET")
+    # If no secret configured, allow but log a warning (dev convenience)
+    if not secret:
+        logging.getLogger(__name__).warning("SLACK_SIGNING_SECRET not set; skipping signature verification")
+        return
+    timestamp = request.headers.get("X-Slack-Request-Timestamp")
+    signature = request.headers.get("X-Slack-Signature")
+    if not timestamp or not signature:
+        raise HTTPException(status_code=401, detail="Missing Slack signature headers")
+    # Prevent replay (>5 minutes)
+    try:
+        ts = int(timestamp)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid Slack timestamp")
+    from time import time as _now
+    if abs(_now() - ts) > 60 * 5:
+        raise HTTPException(status_code=401, detail="Stale Slack request")
+    body = await request.body()
+    basestring = f"v0:{timestamp}:{body.decode('utf-8', errors='ignore')}".encode()
+    computed = 'v0=' + hmac.new(secret.encode(), basestring, hashlib.sha256).hexdigest()
+    # Constant-time compare
+    if not hmac.compare_digest(computed, signature):
+        raise HTTPException(status_code=401, detail="Invalid Slack signature")
 def get_sophia_slack() -> SophiaSlackIntelligence:
     """Dependency to get Sophia Slack Intelligence instance"""
     try:
@@ -39,6 +71,7 @@ async def slack_webhook(request: Request):
     the Sophia AI Assistant through slash commands or app mentions.
     """
     try:
+        await _slack_signature_guard(request)
         # Parse request
         if request.headers.get("content-type") == "application/x-www-form-urlencoded":
             # Slash command
@@ -96,6 +129,7 @@ async def handle_slack_event(event_data: dict[str, Any]) -> dict[str, Any]:
 async def slack_commands(request: Request):
     """Dedicated endpoint for slash commands (alias of webhook form handler)."""
     try:
+        await _slack_signature_guard(request)
         form_data = await request.form()
         return await handle_slash_command(dict(form_data))
     except Exception as e:
@@ -106,6 +140,7 @@ async def slack_commands(request: Request):
 async def slack_interactivity(request: Request):
     """Handle interactive payloads from Slack (buttons, selects, modals)."""
     try:
+        await _slack_signature_guard(request)
         form = await request.form()
         payload = form.get("payload")
         if not payload:

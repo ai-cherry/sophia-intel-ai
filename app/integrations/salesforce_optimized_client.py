@@ -16,12 +16,12 @@ import redis.asyncio as redis
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 # Configuration
-SALESFORCE_CLIENT_ID = os.getenv("SALESFORCE_CLIENT_ID", "3MVG9GCMQoQ6yCBdJ_cOEWKUQq1VJpJo7oLtFRhnJRRnfYdBGgdQw_0wj0fKzNkPz5CW.n7BTzoWu80dQWjWj")
-SALESFORCE_CLIENT_SECRET = os.getenv("SALESFORCE_CLIENT_SECRET", "D19FF3AD2E5D37EE6E35B7E967EAC3BF23D86FA1F085FF3B8D69BC08E14AA491")
-SALESFORCE_USERNAME = os.getenv("SALESFORCE_USERNAME", "lynn@siliconvalley.com")
-SALESFORCE_PASSWORD = os.getenv("SALESFORCE_PASSWORD", "Uqbar1234")
-SALESFORCE_SECURITY_TOKEN = os.getenv("SALESFORCE_SECURITY_TOKEN", "8Z6mH79xGBHF9l2Uk38xQLwz")
-SALESFORCE_DOMAIN = os.getenv("SALESFORCE_DOMAIN", "https://na139.salesforce.com")
+SALESFORCE_CLIENT_ID = os.getenv("SALESFORCE_CLIENT_ID")
+SALESFORCE_CLIENT_SECRET = os.getenv("SALESFORCE_CLIENT_SECRET")
+SALESFORCE_USERNAME = os.getenv("SALESFORCE_USERNAME")
+SALESFORCE_PASSWORD = os.getenv("SALESFORCE_PASSWORD")
+SALESFORCE_SECURITY_TOKEN = os.getenv("SALESFORCE_SECURITY_TOKEN")
+SALESFORCE_DOMAIN = os.getenv("SALESFORCE_DOMAIN")
 SALESFORCE_API_VERSION = os.getenv("SALESFORCE_API_VERSION", "v59.0")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
@@ -127,6 +127,19 @@ class SalesforceOptimizedClient:
             
     async def _authenticate(self):
         """Authenticate using Username-Password OAuth flow"""
+        required = [
+            (self.domain, "SALESFORCE_DOMAIN"),
+            (self.client_id, "SALESFORCE_CLIENT_ID"),
+            (self.client_secret, "SALESFORCE_CLIENT_SECRET"),
+            (self.username, "SALESFORCE_USERNAME"),
+            (self.password, "SALESFORCE_PASSWORD"),
+            (self.security_token, "SALESFORCE_SECURITY_TOKEN"),
+        ]
+        missing = [name for val, name in required if not val]
+        if missing:
+            raise Exception(
+                f"Salesforce credentials missing: {', '.join(missing)} (configure via Pulumi ESC / environment)"
+            )
         auth_url = f"{self.domain}/services/oauth2/token"
         
         data = {

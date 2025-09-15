@@ -39,7 +39,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Gitleaks scan (non-blocking initially)
+      - name: Gitleaks scan (blocking)
         uses: zricethezav/gitleaks-action@v2
-        continue-on-error: true
-

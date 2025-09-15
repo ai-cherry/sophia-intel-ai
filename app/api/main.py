@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 # Configure structured logging
 from app.core.logging import setup_logging
+from app.security.security_headers import SecurityHeadersMiddleware
 setup_logging()
 logger = logging.getLogger(__name__)
 @asynccontextmanager
@@ -57,6 +58,12 @@ try:
     logger.info("✓ Rate limiting middleware enabled")
 except Exception as e:
     logger.warning(f"Rate limit middleware unavailable: {e}")
+# Security headers
+try:
+    app.add_middleware(SecurityHeadersMiddleware)
+    logger.info("✓ Security headers middleware enabled")
+except Exception as e:
+    logger.warning(f"Security headers middleware unavailable: {e}")
 # CORS configuration
 def _compute_cors_origins() -> list[str]:
     env = os.getenv("CORS_ORIGINS", "")

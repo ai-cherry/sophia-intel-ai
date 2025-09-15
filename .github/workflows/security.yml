@@ -23,7 +23,7 @@ jobs:
       - name: Install bandit
         run: pip install bandit
       - name: Run bandit
-        run: bandit -r app -q || true
+        run: bandit -r app -q -ll
 
   pip_audit:
     runs-on: ubuntu-latest
@@ -35,7 +35,7 @@ jobs:
       - name: Install tools
         run: pip install pip-audit
       - name: pip-audit
-        run: pip-audit -r requirements.txt || true
+        run: pip-audit -r requirements.txt
 
   trivy:
     runs-on: ubuntu-latest
@@ -47,5 +47,5 @@ jobs:
           scan-type: fs
           ignore-unfixed: true
           format: table
-          exit-code: '0'
+          exit-code: '1'
           severity: HIGH,CRITICAL

@@ -11,6 +11,11 @@ logs/*
 !logs/README.md
 *.log
 secrets/ssh/
+# Sensitive config (do not commit real values)
+centralized_config.yaml
+pulumi-esc-*.yaml
+secrets/**/*.yaml
+secrets/**/*.yml
 
 # Environments and secrets (never commit)
 .env

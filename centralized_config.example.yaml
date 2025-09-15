@@ -1,0 +1,36 @@
+# Centralized Configuration (Example)
+# Copy to centralized_config.yaml and fill values via Pulumi ESC or environment expansion.
+
+environment: dev
+
+providers:
+  slack:
+    bot_token: ${SLACK_BOT_TOKEN}
+    app_token: ${SLACK_APP_TOKEN}
+    signing_secret: ${SLACK_SIGNING_SECRET}
+  salesforce:
+    domain: ${SALESFORCE_DOMAIN}
+    client_id: ${SALESFORCE_CLIENT_ID}
+    client_secret: ${SALESFORCE_CLIENT_SECRET}
+    username: ${SALESFORCE_USERNAME}
+    password: ${SALESFORCE_PASSWORD}
+    security_token: ${SALESFORCE_SECURITY_TOKEN}
+  asana:
+    pat_token: ${ASANA_PAT}
+  hubspot:
+    access_token: ${HUBSPOT_ACCESS_TOKEN}
+  airtable:
+    api_key: ${AIRTABLE_PAT}
+    base_id: ${AIRTABLE_BASE_ID}
+  gong:
+    access_key: ${GONG_ACCESS_KEY}
+    client_secret: ${GONG_CLIENT_SECRET}
+
+datastores:
+  redis_url: ${REDIS_URL}
+  postgres_url: ${POSTGRES_URL}
+  weaviate_url: ${WEAVIATE_URL}
+
+notes:
+  - Do not commit real secrets. Use Pulumi ESC to source values and export dotenv for local dev.
+  - Example: `pulumi esc env open sophia/staging --format=dotenv > .esc.env && direnv allow`

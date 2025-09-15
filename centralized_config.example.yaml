@@ -1,36 +1,53 @@
 # Centralized Configuration (Example)
-# Copy to centralized_config.yaml and fill values via Pulumi ESC or environment expansion.
+# Copy to centralized_config.yaml for local development only.
+# Do NOT commit real secrets. Use environment variables or Pulumi ESC for production.
+#
+# Recommended: populate at runtime from environment or ESC:
+# - export GITHUB_TOKEN=...
+# - export AIRTABLE_ACCESS_TOKEN=...
+# - export SLACK_BOT_TOKEN=...
+# - export ASANA_PAT=...
+# - export LINEAR_API_KEY=...
+#
+# For Pulumi ESC, reference secret values in your environment and never store plaintext here.
 
-environment: dev
+# GitHub
+GITHUB_ORG: your-org
+GITHUB_REPO: your-repo
+# Tokens should come from env or ESC; leave placeholders only.
+GITHUB_TOKEN: ${GITHUB_TOKEN}
+GITHUB_PAT: ${GITHUB_PAT}
 
-providers:
-  slack:
-    bot_token: ${SLACK_BOT_TOKEN}
-    app_token: ${SLACK_APP_TOKEN}
-    signing_secret: ${SLACK_SIGNING_SECRET}
-  salesforce:
-    domain: ${SALESFORCE_DOMAIN}
-    client_id: ${SALESFORCE_CLIENT_ID}
-    client_secret: ${SALESFORCE_CLIENT_SECRET}
-    username: ${SALESFORCE_USERNAME}
-    password: ${SALESFORCE_PASSWORD}
-    security_token: ${SALESFORCE_SECURITY_TOKEN}
-  asana:
-    pat_token: ${ASANA_PAT}
-  hubspot:
-    access_token: ${HUBSPOT_ACCESS_TOKEN}
-  airtable:
-    api_key: ${AIRTABLE_PAT}
-    base_id: ${AIRTABLE_BASE_ID}
-  gong:
-    access_key: ${GONG_ACCESS_KEY}
-    client_secret: ${GONG_CLIENT_SECRET}
+# Airtable
+AIRTABLE_BASE_ID: ${AIRTABLE_BASE_ID}
+AIRTABLE_ACCESS_TOKEN: ${AIRTABLE_ACCESS_TOKEN}  # Preferred
+# Legacy keys (avoid if possible)
+AIRTABLE_API_TOKEN: ${AIRTABLE_API_TOKEN}
+AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
+AIRTABLE_PAT: ${AIRTABLE_PAT}
 
-datastores:
-  redis_url: ${REDIS_URL}
-  postgres_url: ${POSTGRES_URL}
-  weaviate_url: ${WEAVIATE_URL}
+# Slack
+SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
 
-notes:
-  - Do not commit real secrets. Use Pulumi ESC to source values and export dotenv for local dev.
-  - Example: `pulumi esc env open sophia/staging --format=dotenv > .esc.env && direnv allow`
+# Asana / Linear / Gong / Misc
+ASANA_PAT: ${ASANA_PAT}
+LINEAR_API_KEY: ${LINEAR_API_KEY}
+GONG_API_KEY: ${GONG_API_KEY}
+
+# Auth & API
+AUTH_TOKEN: ${AUTH_TOKEN}
+ENFORCE_AUTH: "true"    # "true"/"false" to require AUTH_TOKEN on protected routes
+ALLOWED_ORIGINS: "https://your-dashboard.example.com"  # CORS origins (comma-separated if multiple)
+
+# Database / Caching (examples)
+DATABASE_URL: ${DATABASE_URL}
+REDIS_URL: ${REDIS_URL}
+
+# RAG / Embeddings
+EMBEDDINGS_PROVIDER: "openai"  # or "local"
+OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+# Notes:
+# - Never insert real tokens in this file. Keep it as a template.
+# - Production deployments should use secret managers (Pulumi ESC, GitHub Environments, etc.).

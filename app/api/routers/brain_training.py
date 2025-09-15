@@ -99,6 +99,72 @@ async def upload_gong_csv(
     except Exception as e:
         logger.error(f"Error uploading Gong CSV: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/upload-universal")
+async def upload_universal(
+    background_tasks: BackgroundTasks,
+    files: list[UploadFile] = File(...),
+    learning_objectives: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+) -> JSONResponse:
+    """
+    Upload multiple files (txt, md, csv) to train Sophia's brain.
+    Parses text content and stores it in the unified memory with provenance metadata.
+    Large or binary formats (pdf/docx) are currently rejected for safety.
+    """
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided")
+    allowed_ext = {".txt", ".md", ".markdown", ".csv"}
+    objectives = [o.strip() for o in (learning_objectives or "").split(",") if o.strip()]
+
+    # Collect tasks for background storage
+    async def _store_text(name: str, text: str, meta: dict[str, Any]):
+        try:
+            await memory_system.store(
+                content={"title": name, "text": text},
+                metadata=meta,
+                tags=["brain_training", "upload"],
+            )
+        except Exception as e:
+            logger.warning(f"Failed to store memory for {name}: {e}")
+
+    accepted, rejected = [], []
+    for f in files:
+        try:
+            suffix = ("." + f.filename.split(".")[-1].lower()) if "." in f.filename else ""
+            if suffix not in allowed_ext:
+                rejected.append({"file": f.filename, "reason": f"Unsupported extension {suffix}"})
+                continue
+            raw = await f.read()
+            if len(raw) > MAX_FILE_SIZE:
+                rejected.append({"file": f.filename, "reason": "File too large"})
+                continue
+            # Decode text conservatively
+            try:
+                text = raw.decode("utf-8", errors="replace")
+            except Exception:
+                rejected.append({"file": f.filename, "reason": "Decode failed"})
+                continue
+            meta = {
+                "source": "upload_universal",
+                "filename": f.filename,
+                "content_type": f.content_type,
+                "objectives": objectives,
+            }
+            background_tasks.add_task(_store_text, f.filename, text, meta)
+            accepted.append({"file": f.filename, "size": len(raw)})
+        except Exception as e:
+            rejected.append({"file": f.filename, "reason": str(e)})
+
+    return JSONResponse(
+        {
+            "status": "queued",
+            "accepted": accepted,
+            "rejected": rejected,
+            "message": "Files queued for background ingestion into unified memory",
+        }
+    )
 @router.get("/gong/status/{job_id}")
 async def get_training_status(
     job_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)

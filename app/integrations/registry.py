@@ -132,21 +132,32 @@ class IntegrationRegistry:
         return _Salesforce()
 
     def _make_microsoft(self) -> Optional[BaseIntegrationClient]:
-        if not (os.getenv("MS_TENANT_ID") and os.getenv("MS_CLIENT_ID") and os.getenv("MS_CLIENT_SECRET")):
+        # Accept both MICROSOFT_* and MS_* env naming and return real client
+        tenant = os.getenv("MS_TENANT_ID") or os.getenv("MICROSOFT_TENANT_ID")
+        client_id = os.getenv("MS_CLIENT_ID") or os.getenv("MICROSOFT_CLIENT_ID")
+        client_secret = os.getenv("MS_CLIENT_SECRET") or os.getenv("MICROSOFT_SECRET_KEY")
+        if not (tenant and client_id and client_secret):
             return None
+        try:
+            from app.integrations.microsoft_graph_client import MicrosoftGraphClient
 
-        class _Microsoft(BaseIntegrationClient):
-            name = "microsoft"
+            client = MicrosoftGraphClient()
 
-            async def health(self) -> Dict[str, object]:
-                return {"ok": True, "details": {"scopes": [
-                    "ChannelMessage.Read.All",
-                    "Team.ReadBasic.All",
-                    "Files.Read.All",
-                    "Sites.Read.All",
-                ]}}
+            class _Microsoft(BaseIntegrationClient):
+                name = "microsoft"
 
-        return _Microsoft()
+                async def health(self) -> Dict[str, object]:
+                    # Try a lightweight call; if fails, report not ok
+                    try:
+                        data = await client.list_users(top=1)
+                        ok = bool(data)
+                        return {"ok": ok, "details": {"users_sample": data.get("value", [])[:1]}}
+                    except Exception as e:  # pragma: no cover
+                        return {"ok": False, "error": str(e)}
+
+            return _Microsoft()
+        except Exception:
+            return None
 
     def _make_lattice(self) -> Optional[BaseIntegrationClient]:
         if not (os.getenv("LATTICE_API_TOKEN") or os.getenv("LATTICE_API_KEY")):

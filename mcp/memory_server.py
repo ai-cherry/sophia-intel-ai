@@ -16,6 +16,9 @@ import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 from time import perf_counter
+import hmac
+import hashlib as _hashlib
+import json as _json
 from collections import deque
 from prometheus_client import Counter, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
@@ -26,13 +29,15 @@ _settings = settings_from_env()
 REDIS_URL = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/1")
 redis_client: Optional[redis.Redis] = None
 
-# Minimal auth scaffolding (optional):
-# If MCP_TOKEN is set, require Authorization: Bearer <token>.
-# If not set and MCP_DEV_BYPASS=true, allow unauthenticated (dev-friendly).
-_mcp_token = _settings.MCP_TOKEN or os.getenv("MCP_TOKEN")
+_mcp_jwt_secret = os.getenv("MCP_JWT_SECRET", "")
+_mcp_audience = os.getenv("MCP_JWT_AUD", "memory")
 _dev_bypass = (_settings.MCP_DEV_BYPASS == "1")
 _rate_limit_rpm = int(_settings.RATE_LIMIT_RPM)
 _rate_buckets: dict[str, deque] = {}
+
+# Startup validation
+if not _mcp_jwt_secret and not _dev_bypass:
+    raise SystemExit("MCP_JWT_SECRET required for production. Set MCP_DEV_BYPASS=1 for development.")
 
 # Metrics
 REGISTRY = CollectorRegistry()
@@ -40,21 +45,52 @@ REQ_COUNTER = Counter("mcp_requests_total", "Total HTTP requests", ["server", "m
 REQ_LATENCY = Histogram("mcp_request_latency_seconds", "Request latency seconds", ["server", "path"], registry=REGISTRY)
 
 
+def _b64url_encode(data: bytes) -> str:
+    import base64
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+
+def _b64url_decode(data: str) -> bytes:
+    import base64
+    padding = '=' * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def _verify_jwt_hs256(token: str, secret: str, aud: str) -> bool:
+    try:
+        header_b64, payload_b64, sig_b64 = token.split(".")
+        signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+        expected_sig = hmac.new(secret.encode("utf-8"), signing_input, _hashlib.sha256).digest()
+        if not hmac.compare_digest(_b64url_encode(expected_sig), sig_b64):
+            return False
+        payload = _json.loads(_b64url_decode(payload_b64))
+        if "exp" in payload and int(payload["exp"]) < int(time.time()):
+            return False
+        pa = payload.get("aud")
+        if isinstance(pa, list):
+            return "memory" in pa or aud in pa
+        if isinstance(pa, str):
+            return pa in ("memory", aud)
+        return False
+    except Exception:
+        return False
+
+
 @app.middleware("http")
 async def mcp_auth(request: Request, call_next):
     # Always allow health without auth
     if request.url.path in ("/health", "/metrics"):
         return await call_next(request)
-    if not _mcp_token:
+    if not _mcp_jwt_secret:
         if _dev_bypass:
             return await call_next(request)
-        return JSONResponse({"error": "MCP_TOKEN not set"}, status_code=401)
+        return JSONResponse({"error": "MCP_JWT_SECRET required"}, status_code=401)
     auth = request.headers.get("authorization", "")
     if not auth.startswith("Bearer "):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
     token = auth.split(" ", 1)[1]
-    if token != _mcp_token:
-        return JSONResponse({"error": "Invalid token"}, status_code=401)
+    if not _verify_jwt_hs256(token, _mcp_jwt_secret, _mcp_audience):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
     # Simple rate limiting per IP per minute (skip health/metrics)
     try:
         if _rate_limit_rpm > 0 and request.url.path not in ("/health", "/metrics"):

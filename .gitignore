@@ -37,6 +37,8 @@ node_modules/
 .next/
 dump.rdb
 workbench-ui/
+.roo/
+artifacts/
 
 # Databases and caches
 *.db

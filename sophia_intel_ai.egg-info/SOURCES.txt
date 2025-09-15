@@ -23,6 +23,7 @@ tests/test_chat_sse.py
 tests/test_context_api.py
 tests/test_core.py
 tests/test_foundational_knowledge.py
+tests/test_genetic_algorithm_mode.py
 tests/test_health.py
 tests/test_infrastructure.py
 tests/test_integration.py

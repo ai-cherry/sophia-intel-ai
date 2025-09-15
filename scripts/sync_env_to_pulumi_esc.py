@@ -94,9 +94,14 @@ def sync_integrations_to_esc(env_vars: dict[str, str]):
                 },
                 "slack": {
                     "appId": env_vars.get("SLACK_APP_ID", ""),
-                    "clientId": env_vars.get("SLACK_CLIENT_ID", ""),
-                    "clientSecret": {"fn::secret": env_vars.get("SLACK_CLIENT_SECRET", "")},
-                    "userToken": {"fn::secret": env_vars.get("SLACK_USER_TOKEN", "")},
+                    "clientId": env_vars.get("SLACK_CLIENT_ID", env_vars.get("SLACK_CLIENT_ID_1", "")),
+                    "clientSecret": {"fn::secret": env_vars.get("SLACK_CLIENT_SECRET", env_vars.get("SLACK_CLIENT_SECRET_1", ""))},
+                    "userToken": {"fn::secret": env_vars.get("SLACK_USER_TOKEN", env_vars.get("SLACK_USER_AUTH_TOKEN", ""))},
+                    "botToken": {"fn::secret": env_vars.get("SLACK_BOT_TOKEN", env_vars.get("SLACK_BOT_USER_AUTH", ""))},
+                    "appToken": {"fn::secret": env_vars.get("SLACK_APP_TOKEN", env_vars.get("SLACK_APP_TOKEN_1", ""))},
+                    "signingSecret": {"fn::secret": env_vars.get("SLACK_SIGNING_SECRET", "")},
+                    "refreshToken": {"fn::secret": env_vars.get("SLACK_REFRESH_TOKEN", "")},
+                    "verificationToken": {"fn::secret": env_vars.get("SLACK_VERIFICATION_TOKEN", "")},
                 },
                 "gong": {
                     "accessKey": env_vars.get("GONG_ACCESS_KEY", ""),
@@ -117,6 +122,13 @@ def sync_integrations_to_esc(env_vars: dict[str, str]):
                 },
                 "notion": {"apiKey": {"fn::secret": env_vars.get("NOTION_API_KEY", "")}},
                 "elevenlabs": {"apiKey": {"fn::secret": env_vars.get("ELEVENLABS_API_KEY", "")}},
+                "microsoft": {
+                    "tenantId": env_vars.get("MS_TENANT_ID", env_vars.get("MICROSOFT_TENANT_ID", "")),
+                    "clientId": env_vars.get("MS_CLIENT_ID", env_vars.get("MICROSOFT_CLIENT_ID", "")),
+                    "clientSecret": {"fn::secret": env_vars.get("MS_CLIENT_SECRET", env_vars.get("MICROSOFT_SECRET_KEY", ""))},
+                    "certificateId": env_vars.get("MICROSOFT_CERTIFICATE_ID", ""),
+                    "signingCertificate": env_vars.get("MICROSOFT_SIGNING_CERTIFICATE", ""),
+                },
             },
             "ai": {
                 "openai": {"apiKey": {"fn::secret": env_vars.get("OPENAI_API_KEY", "")}},
@@ -138,8 +150,17 @@ def sync_integrations_to_esc(env_vars: dict[str, str]):
             "environmentVariables": {
                 "LATTICE_API_KEY": "${integrations.lattice.apiKey}",
                 "SLACK_USER_TOKEN": "${integrations.slack.userToken}",
+                "SLACK_BOT_TOKEN": "${integrations.slack.botToken}",
+                "SLACK_SIGNING_SECRET": "${integrations.slack.signingSecret}",
+                "SLACK_APP_TOKEN": "${integrations.slack.appToken}",
+                "SLACK_VERIFICATION_TOKEN": "${integrations.slack.verificationToken}",
                 "LINEAR_API_KEY": "${integrations.linear.apiKey}",
                 "NOTION_API_KEY": "${integrations.notion.apiKey}",
+                "MS_TENANT_ID": "${integrations.microsoft.tenantId}",
+                "MS_CLIENT_ID": "${integrations.microsoft.clientId}",
+                "MS_CLIENT_SECRET": "${integrations.microsoft.clientSecret}",
+                "MICROSOFT_CERTIFICATE_ID": "${integrations.microsoft.certificateId}",
+                "MICROSOFT_SIGNING_CERTIFICATE": "${integrations.microsoft.signingCertificate}",
             }
         },
     }

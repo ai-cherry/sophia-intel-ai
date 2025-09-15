@@ -141,6 +141,29 @@ async def test_gong() -> Dict[str, Any]:
         result.update({"status": "failed", "error": str(e)})
     return result
 
+async def test_microsoft() -> Dict[str, Any]:
+    result: Dict[str, Any] = {"integration": "microsoft"}
+    tenant = os.getenv("MS_TENANT_ID") or os.getenv("MICROSOFT_TENANT_ID")
+    client_id = os.getenv("MS_CLIENT_ID") or os.getenv("MICROSOFT_CLIENT_ID")
+    client_secret = os.getenv("MS_CLIENT_SECRET") or os.getenv("MICROSOFT_SECRET_KEY")
+    if not (tenant and client_id and client_secret):
+        result.update({"status": "skipped", "reason": "Microsoft env not set"})
+        return result
+    try:
+        try:
+            import msal  # type: ignore
+        except Exception:
+            result.update({"status": "failed", "error": "msal not installed (pip install msal)"})
+            return result
+        authority = f"https://login.microsoftonline.com/{tenant}"
+        app = msal.ConfidentialClientApplication(client_id, authority=authority, client_credential=client_secret)
+        scope = ["https://graph.microsoft.com/.default"]
+        token = app.acquire_token_for_client(scopes=scope)
+        ok = bool(token and token.get("access_token"))
+        result.update({"status": "working" if ok else "failed", "token_type": token.get("token_type")})
+    except Exception as e:
+        result.update({"status": "failed", "error": str(e)})
+    return result
 
 async def main():
     # Load local env if available
@@ -153,6 +176,7 @@ async def main():
         test_salesforce,
         test_airtable,
         test_looker,
+        test_microsoft,
     ]
 
     results: Dict[str, Any] = {

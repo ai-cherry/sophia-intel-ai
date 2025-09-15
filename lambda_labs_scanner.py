@@ -12,10 +12,11 @@ from typing import Dict, List, Optional
 import requests
 class LambdaLabsScanner:
     def __init__(self):
-        self.api_key = os.getenv(
-            "LAMBDA_API_KEY",
-            "secret_sophia5apikey_a404a99d985d41828d7020f0b9a122a2.PjbWZb0lLubKu1nmyWYLy9Ycl3vyL18o",
-        )
+        self.api_key = os.getenv("LAMBDA_API_KEY", "")
+        if not self.api_key:
+            raise RuntimeError(
+                "LAMBDA_API_KEY not set. Export in your environment or .env.local (gitignored)."
+            )
         self.base_url = "https://cloud.lambdalabs.com/api/v1"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",

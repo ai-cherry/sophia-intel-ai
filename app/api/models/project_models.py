@@ -30,6 +30,8 @@ class ProjectsOverview(BaseModel):
     generated_at: str
     window: Dict[str, str]
     sources: IntegrationStatus
+    okrs: List[Dict[str, Any]] = []
+    okr_alignment: Dict[str, Any] = {}
     major_projects: List[ProjectItem] = []
     blockages: List[Dict[str, Any]] = []
     communication_issues: List[Dict[str, Any]] = []
@@ -40,4 +42,3 @@ class ProjectsOverview(BaseModel):
 class ProjectsSyncStatus(BaseModel):
     checked_at: str
     sources: IntegrationStatus
-

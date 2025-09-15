@@ -1,4 +1,5 @@
 import logging
+import time
 import os
 import tempfile
 from pathlib import Path
@@ -18,6 +19,7 @@ from app.integrations.gong_brain_training_adapter import GongBrainTrainingAdapte
 from app.memory.unified_memory_store import UnifiedMemoryStore
 from app.swarms.knowledge.brain_training import BrainTrainingPipeline
 from .brain_training_rate_limiter import upload_limiter
+from app.api.routes.agui_stream import bridge_websocket_event
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/brain-training", tags=["brain-training"])
 security = HTTPBearer()
@@ -134,6 +136,21 @@ async def upload_universal(
             # Update job progress
             try:
                 JOBS[job_id]["stored"] += 1
+            except Exception:
+                pass
+            # Broadcast progress via AG-UI stream (best-effort)
+            try:
+                await bridge_websocket_event(
+                    {
+                        "type": "brain_upload_progress",
+                        "job_id": job_id,
+                        "stored": JOBS[job_id]["stored"],
+                        "accepted": JOBS[job_id]["accepted"],
+                        "deduped": JOBS[job_id]["deduped"],
+                        "timestamp": time.time(),
+                        "domain": "sophia_intel",
+                    }
+                )
             except Exception:
                 pass
         except Exception as e:

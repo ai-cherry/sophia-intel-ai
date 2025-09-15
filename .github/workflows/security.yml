@@ -1,0 +1,51 @@
+name: security-suite
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gitleaks
+        uses: zricethezav/gitleaks-action@v2
+
+  bandit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install bandit
+        run: pip install bandit
+      - name: Run bandit
+        run: bandit -r app -q || true
+
+  pip_audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install tools
+        run: pip install pip-audit
+      - name: pip-audit
+        run: pip-audit -r requirements.txt || true
+
+  trivy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy on repo
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          ignore-unfixed: true
+          format: table
+          exit-code: '0'
+          severity: HIGH,CRITICAL

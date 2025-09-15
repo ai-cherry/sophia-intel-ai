@@ -35,6 +35,9 @@ class ChatQueryResponse(BaseModel):
     intent: Dict[str, Any] = Field(default_factory=dict, description="Detected intent")
     cached: bool = Field(default=False, description="Whether response was cached")
     timestamp: datetime = Field(default_factory=datetime.now)
+    citations: List[Dict[str, Any]] = Field(default_factory=list, description="Retrieved citations for the response")
+    retrieval_stats: Dict[str, Any] = Field(default_factory=dict, description="Retrieval telemetry for diagnostics")
+    trace_id: Optional[str] = Field(default=None, description="Trace identifier for observability")
 class ChatHistoryResponse(BaseModel):
     """Chat history response model"""
     conversations: List[Dict[str, Any]] = Field(default_factory=list)
@@ -93,6 +96,9 @@ async def chat_query(
             processing_time=result.get("processing_time", 0.0),
             intent=result.get("intent", {}),
             cached=result.get("cached", False),
+            citations=result.get("citations", []),
+            retrieval_stats=result.get("retrieval_stats", {}),
+            trace_id=result.get("trace_id"),
         )
         logger.info(
             f"✅ Query processed successfully: confidence={response.confidence:.2f}"

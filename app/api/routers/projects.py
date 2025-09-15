@@ -11,7 +11,9 @@ from datetime import datetime, timedelta
 from typing import Any
 import logging
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, HTTPException, Request, Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from app.api.middleware.rate_limit import rate_limit
 from app.connectors.registry import ConnectorRegistry
 from app.api.utils.simple_cache import TTLCache
 from app.api.models.project_models import ProjectsOverview, ProjectsSyncStatus
@@ -22,6 +24,16 @@ logger = logging.getLogger(__name__)
 _cache = TTLCache(default_ttl=120)
 
 router = APIRouter(prefix="/api/projects", tags=["projects"])
+security = HTTPBearer(auto_error=False)
+
+def _require_auth(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token_env = os.getenv("AUTH_TOKEN")
+    enforce = os.getenv("ENFORCE_AUTH", "false").lower() in ("1","true","yes")
+    if not token_env and not enforce:
+        return
+    provided = credentials.credentials if credentials else None
+    if not provided or (token_env and provided != token_env):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def _integration_status() -> dict[str, Any]:
@@ -50,7 +62,8 @@ def _integration_status() -> dict[str, Any]:
 
 
 @router.get("/sync-status", response_model=ProjectsSyncStatus)
-async def get_sync_status() -> dict[str, Any]:
+@rate_limit(limit=60)
+async def get_sync_status(_auth: Any = Depends(_require_auth)) -> dict[str, Any]:
     """Lightweight, resilient integration readiness report for PM sources."""
     status = _integration_status()
     now = datetime.utcnow().isoformat()
@@ -61,9 +74,11 @@ async def get_sync_status() -> dict[str, Any]:
 
 
 @router.get("/overview", response_model=ProjectsOverview)
+@rate_limit(limit=60)
 async def get_project_overview(
     refresh: int | None = None,
     if_none_match: str | None = Header(default=None, convert_underscores=False),
+    _auth: Any = Depends(_require_auth),
 ) -> Any:
     """Return a cross-platform project overview that calls out risks and blockers.
 

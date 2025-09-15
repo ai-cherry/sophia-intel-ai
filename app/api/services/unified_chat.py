@@ -342,11 +342,20 @@ class UnifiedChatService:
     async def _fetch_internal_results(self, query: str, context: Dict) -> Dict:
         """Fetch internal results via Unified RAG across knowledge/memory stores."""
         try:
-            domains = [d.lower() for d in context.get("domains", [])]
-            if "sales" in domains or "bi" in domains or "business" in domains:
-                domain = RAGDomain.SOPHIA
+            # Domain override support
+            override = (context.get("domain") or "").lower() if isinstance(context, dict) else ""
+            map_table = {
+                "bi": RAGDomain.SOPHIA,
+                "business": RAGDomain.SOPHIA,
+                "sales": RAGDomain.SOPHIA,
+                "shared": RAGDomain.SHARED,
+                "code": RAGDomain.CODE,
+            }
+            if override in map_table:
+                domain = map_table[override]
             else:
-                domain = RAGDomain.SHARED
+                domains = [d.lower() for d in context.get("domains", [])]
+                domain = RAGDomain.SOPHIA if any(d in {"sales", "bi", "business"} for d in domains) else RAGDomain.SHARED
             rag_ctx = RAGContext(
                 query=query,
                 domain=domain,
@@ -366,11 +375,35 @@ class UnifiedChatService:
                         "metadata": s.metadata,
                     }
                 )
+            # Build citations for frontend use
+            citations = []
+            for s in rag_result.sources[: rag_ctx.max_results]:
+                citations.append(
+                    {
+                        "id": s.memory_id,
+                        "title": s.title,
+                        "uri": s.metadata.get("uri") if isinstance(s.metadata, dict) else None,
+                        "source_type": s.source_type,
+                        "relevance": round(s.relevance_score, 3),
+                        "metadata": s.metadata,
+                    }
+                )
+            # Retrieval stats for telemetry
+            retrieval_stats = {
+                "k": rag_ctx.max_results,
+                "total_sources_found": rag_result.total_sources_found,
+                "processing_time_ms": rag_result.processing_time_ms,
+            }
+            import uuid as _uuid
+            trace_id = str(_uuid.uuid4())
             return {
                 "results": results,
                 "synthesized": rag_result.synthesized_context,
                 "strategy": rag_result.strategy_used.value,
                 "source": "internal",
+                "citations": citations,
+                "retrieval_stats": retrieval_stats,
+                "trace_id": trace_id,
             }
         except Exception as e:
             logger.warning(f"Unified RAG internal fetch failed: {e}")

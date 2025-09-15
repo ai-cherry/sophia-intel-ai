@@ -101,6 +101,9 @@ async def upload_gong_csv(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+JOBS: dict[str, dict[str, Any]] = {}
+
+
 @router.post("/upload-universal")
 async def upload_universal(
     background_tasks: BackgroundTasks,
@@ -115,21 +118,35 @@ async def upload_universal(
     """
     if not files:
         raise HTTPException(status_code=400, detail="No files provided")
+    if len(files) > MAX_BATCH_FILES:
+        raise HTTPException(status_code=400, detail=f"Too many files. Maximum {MAX_BATCH_FILES}")
     allowed_ext = {".txt", ".md", ".markdown", ".csv"}
     objectives = [o.strip() for o in (learning_objectives or "").split(",") if o.strip()]
 
     # Collect tasks for background storage
-    async def _store_text(name: str, text: str, meta: dict[str, Any]):
+    async def _store_text(job_id: str, name: str, text: str, meta: dict[str, Any]):
         try:
             await memory_system.store(
                 content={"title": name, "text": text},
                 metadata=meta,
                 tags=["brain_training", "upload"],
             )
+            # Update job progress
+            try:
+                JOBS[job_id]["stored"] += 1
+            except Exception:
+                pass
         except Exception as e:
             logger.warning(f"Failed to store memory for {name}: {e}")
 
+    import hashlib as _hashlib
+    import uuid as _uuid
+    job_id = f"upload_{_uuid.uuid4()}"
+    JOBS[job_id] = {"accepted": 0, "rejected": 0, "stored": 0, "deduped": 0, "created_at": time.time()}
+
     accepted, rejected = [], []
+    checksums: set[str] = set()
+    total_bytes = 0
     for f in files:
         try:
             suffix = ("." + f.filename.split(".")[-1].lower()) if "." in f.filename else ""
@@ -140,31 +157,68 @@ async def upload_universal(
             if len(raw) > MAX_FILE_SIZE:
                 rejected.append({"file": f.filename, "reason": "File too large"})
                 continue
+            total_bytes += len(raw)
+            if total_bytes > 10 * 1024 * 1024:
+                rejected.append({"file": f.filename, "reason": "Aggregate payload too large"})
+                continue
             # Decode text conservatively
             try:
                 text = raw.decode("utf-8", errors="replace")
             except Exception:
                 rejected.append({"file": f.filename, "reason": "Decode failed"})
                 continue
+            # Optional: sanitize CSV formulas
+            if suffix == ".csv":
+                sanitized_lines = []
+                sanitized = 0
+                for line in text.splitlines():
+                    if line.startswith(("=", "+", "-", "@")):
+                        sanitized_lines.append("'" + line)
+                        sanitized += 1
+                    else:
+                        sanitized_lines.append(line)
+                text = "\n".join(sanitized_lines)
+            # Deduplicate by checksum within this batch
+            digest = _hashlib.sha256(text.encode("utf-8")).hexdigest()
+            if digest in checksums:
+                JOBS[job_id]["deduped"] += 1
+                continue
+            checksums.add(digest)
             meta = {
                 "source": "upload_universal",
                 "filename": f.filename,
                 "content_type": f.content_type,
                 "objectives": objectives,
+                "checksum_sha256": digest,
             }
-            background_tasks.add_task(_store_text, f.filename, text, meta)
+            JOBS[job_id]["accepted"] += 1
+            background_tasks.add_task(_store_text, job_id, f.filename, text, meta)
             accepted.append({"file": f.filename, "size": len(raw)})
         except Exception as e:
             rejected.append({"file": f.filename, "reason": str(e)})
+            JOBS[job_id]["rejected"] += 1
 
     return JSONResponse(
         {
             "status": "queued",
+            "job_id": job_id,
             "accepted": accepted,
             "rejected": rejected,
             "message": "Files queued for background ingestion into unified memory",
         }
     )
+
+
+@router.get("/status/{job_id}")
+async def upload_status(job_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)) -> JSONResponse:
+    """Get status of a universal upload job."""
+    job = JOBS.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return JSONResponse({
+        "job_id": job_id,
+        **job,
+    })
 @router.get("/gong/status/{job_id}")
 async def get_training_status(
     job_id: str, credentials: HTTPAuthorizationCredentials = Depends(security)

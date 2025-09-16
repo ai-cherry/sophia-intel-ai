@@ -284,4 +284,20 @@ class Settings(BaseSettings):
         }
         return configs.get(integration, {})
 # Global settings instance
-settings = Settings()
+_settings_instance: Settings | None = None
+
+def get_settings() -> Settings:
+    """Lazy, memoized settings accessor.
+
+    Loads environment once (from repo .env.master if present) before instantiation
+    to prevent import-time ValidationError in environments without full secrets.
+    """
+    global _settings_instance
+    if _settings_instance is None:
+        try:
+            from app.core.env import load_env_once  # local silent loader
+            load_env_once()
+        except Exception:
+            pass
+        _settings_instance = Settings()
+    return _settings_instance

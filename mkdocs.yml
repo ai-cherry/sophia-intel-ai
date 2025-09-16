@@ -39,6 +39,8 @@ nav:
     - Setup: development/setup.md
     - Guidelines: development/guidelines.md
     - Testing: development/testing.md
+    - Codex CLI: development/codex-cli.md
+    - Codex Overview: CODEX.md
   - Deployment:
     - Production: deployment/production.md
     - Docker: deployment/docker.md

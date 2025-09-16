@@ -164,11 +164,13 @@ except ImportError as e:
             "status": "placeholder",
         }
 if __name__ == "__main__":
+    # Deprecated: use the canonical entrypoint at app/api/main.py
+    print("[DEPRECATED] backend/main.py is not the canonical API entrypoint. Use app/api/main.py")
     import uvicorn
     uvicorn.run(
-        "backend.main:app",
-        host="${BIND_IP}",
+        "app.api.main:app",
+        host=os.getenv("BIND_IP", "0.0.0.0"),
         port=int(os.getenv("PORT", 8000)),
-        reload=os.getenv("ENVIRONMENT") == "development",
+        reload=os.getenv("ENVIRONMENT", "development").lower() in ("dev", "development"),
         log_level="info",
     )

@@ -3,6 +3,7 @@ Sophia AI Platform v4.0 - Chat Router
 Integrates with UnifiedChatService for intelligent query processing
 """
 import logging
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -269,14 +270,6 @@ async def submit_feedback(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to submit feedback: {str(e)}",
         )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Failed to submit feedback: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to submit feedback: {str(e)}",
-        )
 # Health check endpoint
 @router.get(
     "/health",
@@ -346,5 +339,4 @@ async def chat_stream(request: ChatQueryRequest) -> StreamingResponse:
 
     return StreamingResponse(event_gen(), media_type="text/event-stream")
 # Register router
-from routers import register_router
-register_router("chat", router)
+# Removed legacy auto-registration to avoid import errors

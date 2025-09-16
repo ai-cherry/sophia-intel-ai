@@ -77,7 +77,11 @@ class GongWebhookHandler:
         
     async def setup(self):
         """Initialize connections"""
-        self.redis_client = await redis.from_url(REDIS_URL, decode_responses=True)
+        self.redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+        try:
+            await self.redis_client.ping()
+        except Exception:
+            logger.warning("Gong webhook Redis ping failed; continuing")
         self.gong_client = GongOptimizedClient()
         self.rag_pipeline = GongRAGPipeline()
         await self.rag_pipeline.setup()

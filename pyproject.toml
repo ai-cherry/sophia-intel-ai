@@ -66,6 +66,7 @@ dependencies = [
     
     # Monitoring & Logging
     "prometheus-client==0.19.0",
+    "python-json-logger>=2.0.7",
     "opentelemetry-api==1.22.0",
     "opentelemetry-sdk==1.22.0",
     "opentelemetry-instrumentation-fastapi==0.49b0",

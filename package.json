@@ -1,4 +1,12 @@
 {
+  "name": "sophia-intel-ai",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "codex:chat": "codex chat --model gpt-5-codex",
+    "codex:agent": "codex agent --model gpt-5-codex --dir .",
+    "codex:review": "codex review --model gpt-5-codex --format markdown > codex-review.md"
+  },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/node": "^24.3.0"

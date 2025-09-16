@@ -44,44 +44,35 @@ jobs:
             echo "No API key available; continuing (review may be empty)."
           fi
 
-      - name: Try Codex review action
-        id: review_action
-        continue-on-error: true
-        uses: codex-ai/review-action@v1
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          model: gpt-5-codex
-        env:
-          CODEX_API_KEY: ${{ env.ACTION_CODEX_API_KEY }}
+          node-version: '20'
 
-      - name: Save action output (if any)
+      - name: Install Codex CLI (npm)
+        id: install_cli
+        continue-on-error: true
+        run: |
+          npm install -g @codex/cli
+          echo "codex version: $(codex --version || echo 'not available')"
+
+      - name: Save action output (noop)
         if: always()
         shell: bash
         run: |
-          # If the action wrote a review file, normalize to codex-review.md
-          if [ -f codex-review.md ]; then
-            echo "Found codex-review.md from action."
-          elif [ -f review.md ]; then
-            mv review.md codex-review.md
-            echo "Moved review.md to codex-review.md"
-          else
-            echo "No review file from action."
-          fi
+          echo "No action output to normalize (using CLI path)."
 
-      - name: Fallback via local codex CLI (optional)
+      - name: Run codex CLI review
         if: always()
         shell: bash
         env:
           CODEX_API_KEY: ${{ env.ACTION_CODEX_API_KEY }}
         run: |
-          if [ -s codex-review.md ]; then
-            echo "Review already present; skipping CLI fallback."
-            exit 0
-          fi
           if command -v codex >/dev/null 2>&1; then
-            echo "Running local codex CLI fallback..."
+            echo "Running codex CLI review..."
             codex review --model gpt-5-codex --format markdown > codex-review.md || true
           else
-            echo "codex CLI not found on PATH; skipping CLI fallback."
+            echo "codex CLI not found on PATH; cannot generate review."
           fi
 
       - name: Comment review on PR

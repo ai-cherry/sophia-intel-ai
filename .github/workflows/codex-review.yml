@@ -82,7 +82,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
-            const { context, core } = require('@actions/github');
             const body = fs.existsSync('codex-review.md') ? fs.readFileSync('codex-review.md', 'utf8') : 'Codex review did not produce output.';
             const pr = context.payload.pull_request;
             if (!pr) {

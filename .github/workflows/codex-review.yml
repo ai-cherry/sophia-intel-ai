@@ -1,0 +1,106 @@
+name: Codex PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check API key presence
+        shell: bash
+        env:
+          CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -n "$CODEX_API_KEY" ]; then
+            echo "Codex API key (CODEX_API_KEY) is configured (masked)."
+          elif [ -n "$OPENAI_API_KEY" ]; then
+            echo "OpenAI API key (OPENAI_API_KEY) is configured (masked)."
+          else
+            echo "Warning: No CODEX_API_KEY or OPENAI_API_KEY secret available." >&2
+          fi
+
+      - name: Resolve API key (prefer CODEX)
+        shell: bash
+        env:
+          CODEX_API_KEY: ${{ secrets.CODEX_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -n "$CODEX_API_KEY" ]; then
+            echo "ACTION_CODEX_API_KEY=$CODEX_API_KEY" >> "$GITHUB_ENV"
+            echo "Using CODEX_API_KEY"
+          elif [ -n "$OPENAI_API_KEY" ]; then
+            echo "ACTION_CODEX_API_KEY=$OPENAI_API_KEY" >> "$GITHUB_ENV"
+            echo "Using OPENAI_API_KEY as fallback"
+          else
+            echo "No API key available; continuing (review may be empty)."
+          fi
+
+      - name: Try Codex review action
+        id: review_action
+        continue-on-error: true
+        uses: codex-ai/review-action@v1
+        with:
+          model: gpt-5-codex
+        env:
+          CODEX_API_KEY: ${{ env.ACTION_CODEX_API_KEY }}
+
+      - name: Save action output (if any)
+        if: always()
+        shell: bash
+        run: |
+          # If the action wrote a review file, normalize to codex-review.md
+          if [ -f codex-review.md ]; then
+            echo "Found codex-review.md from action."
+          elif [ -f review.md ]; then
+            mv review.md codex-review.md
+            echo "Moved review.md to codex-review.md"
+          else
+            echo "No review file from action."
+          fi
+
+      - name: Fallback via local codex CLI (optional)
+        if: always()
+        shell: bash
+        env:
+          CODEX_API_KEY: ${{ env.ACTION_CODEX_API_KEY }}
+        run: |
+          if [ -s codex-review.md ]; then
+            echo "Review already present; skipping CLI fallback."
+            exit 0
+          fi
+          if command -v codex >/dev/null 2>&1; then
+            echo "Running local codex CLI fallback..."
+            codex review --model gpt-5-codex --format markdown > codex-review.md || true
+          else
+            echo "codex CLI not found on PATH; skipping CLI fallback."
+          fi
+
+      - name: Comment review on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const { context, core } = require('@actions/github');
+            const body = fs.existsSync('codex-review.md') ? fs.readFileSync('codex-review.md', 'utf8') : 'Codex review did not produce output.';
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.setFailed('No pull request context.');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body
+              });
+            }

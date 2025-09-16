@@ -1,0 +1,59 @@
+{
+  "name": "Codex Complete Setup and Git Sync",
+  "description": "End-to-end setup of Codex CLI verification, API key persistence, repository sync, and CI verification.",
+  "assumptions": [
+    "Host is macOS Apple Silicon (ARM64) with zsh",
+    "User has a valid OPENAI_API_KEY or will provide it interactively",
+    "Repo root contains scripts/codex/verify_codex.sh and setup_codex_key.sh"
+  ],
+  "steps": [
+    {
+      "title": "Set OPENAI_API_KEY for this session",
+      "command": "if [ -z \"${OPENAI_API_KEY:-}\" ]; then read -s -p 'Enter OPENAI_API_KEY: ' KEY; echo; export OPENAI_API_KEY=\"$KEY\"; fi"
+    },
+    {
+      "title": "Verify Codex CLI",
+      "command": "bash scripts/codex/verify_codex.sh || true"
+    },
+    {
+      "title": "Persist OPENAI_API_KEY to ~/.zshrc",
+      "command": "bash scripts/codex/setup_codex_key.sh OPENAI_API_KEY <(echo $OPENAI_API_KEY)"
+    },
+    {
+      "title": "Reload shell profile",
+      "command": "source ~/.zshrc || true"
+    },
+    {
+      "title": "Git fetch/prune and switch to main/master",
+      "command": "git fetch --all --prune && { git checkout main || git checkout master; } && git pull --ff-only || true"
+    },
+    {
+      "title": "Delete merged local branches (safe)",
+      "command": "for b in $(git branch --merged | sed 's/^..//' | egrep -v '^(main|master)$'); do git branch -d \"$b\" || true; done"
+    },
+    {
+      "title": "Branch audit report",
+      "command": "git branch -vv && git branch -r && git branch --no-merged || true"
+    },
+    {
+      "title": "PR analysis via gh (optional)",
+      "command": "command -v gh >/dev/null 2>&1 && { gh pr list || true; gh pr status || true; } || true"
+    },
+    {
+      "title": "Codex local tests (optional)",
+      "command": "command -v npm >/dev/null 2>&1 && { npm run codex:chat -- -p 'test' || true; npm run codex:agent -- --dir . || true; npm run codex:review || true; } || true"
+    },
+    {
+      "title": "CI workflow presence",
+      "command": "test -f .github/workflows/codex-review.yml && sed -n '1,160p' .github/workflows/codex-review.yml || true"
+    }
+  ],
+  "security": {
+    "notes": [
+      "Do not store keys in the repo.",
+      "Avoid echoing secrets to logs. Use silent read or existing env vars.",
+      "If sharing logs, redact environment variables."
+    ]
+  }
+}
+

@@ -1,0 +1,11 @@
+default_model: gpt-5-codex
+aliases:
+  g5c: gpt-5-codex
+  g5: gpt-5
+  g4: gpt-4
+  codex: gpt-5-codex
+
+# Usage:
+#   cp .codexrc.yml.example ~/.codexrc.yml
+#   codex chat -m g5c -p "Hello"
+

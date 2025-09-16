@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 
@@ -21,12 +21,19 @@ class ModelInfo(BaseModel):
     priority: Optional[int] = Field(None, description="Lower means higher priority")
 
 
+def _config_path() -> Path:
+    env_path = os.getenv("MODELS_CONFIG_PATH")
+    if env_path:
+        return Path(env_path)
+    return Path("config/user_models_config.yaml")
+
+
 def _load_user_models() -> List[ModelInfo]:
     """Load models from config/user_models_config.yaml if available.
 
     Fallback to a small default set if the file is missing or invalid.
     """
-    config_path = Path("config/user_models_config.yaml")
+    config_path = _config_path()
     items: List[ModelInfo] = []
     if config_path.exists():
         try:
@@ -60,3 +67,52 @@ def _load_user_models() -> List[ModelInfo]:
 async def list_models() -> List[ModelInfo]:
     return _load_user_models()
 
+
+def _load_yaml(path: Path) -> Dict[str, Any]:
+    if path.exists():
+        try:
+            return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        except Exception:
+            return {}
+    return {}
+
+
+def _write_yaml(path: Path, data: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+
+def _mutate_model(model_id: str, mutate: callable) -> List[ModelInfo]:
+    path = _config_path()
+    data = _load_yaml(path)
+    models = data.setdefault("models", {})
+    if model_id not in models:
+        models[model_id] = {"enabled": True, "priority": 5}
+    mutate(models[model_id])
+    _write_yaml(path, data)
+    return _load_user_models()
+
+
+class ModelUpdate(BaseModel):
+    enabled: Optional[bool] = None
+    priority: Optional[int] = Field(None, ge=1, le=10)
+
+
+from app.api.security.rbac import require_admin
+
+
+@router.post("/{model_id}/enable", response_model=List[ModelInfo], dependencies=[Depends(require_admin)])
+async def enable_model(model_id: str) -> List[ModelInfo]:
+    return _mutate_model(model_id, lambda m: m.update({"enabled": True}))
+
+
+@router.post("/{model_id}/disable", response_model=List[ModelInfo], dependencies=[Depends(require_admin)])
+async def disable_model(model_id: str) -> List[ModelInfo]:
+    return _mutate_model(model_id, lambda m: m.update({"enabled": False}))
+
+
+@router.post("/{model_id}/priority", response_model=List[ModelInfo], dependencies=[Depends(require_admin)])
+async def set_priority(model_id: str, upd: ModelUpdate) -> List[ModelInfo]:
+    if upd.priority is None:
+        return _load_user_models()
+    return _mutate_model(model_id, lambda m: m.update({"priority": int(upd.priority)}))

@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sophia Intel – Unified Dashboard</title>
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; background: #0b1220; color: #e5e7eb; }
+    header { padding: 16px 20px; border-bottom: 1px solid #1f2937; display:flex; align-items:center; gap:16px; }
+    .logo { font-weight: 700; letter-spacing: .3px; }
+    .tabs { display: flex; gap: 8px; }
+    .tab { padding: 8px 12px; border: 1px solid #374151; border-radius: 6px; cursor: pointer; background:#111827; }
+    .tab.active { background:#1f2937; border-color:#4b5563; }
+    .container { padding: 16px 20px; }
+    .row { display:flex; gap:16px; flex-wrap: wrap; }
+    .card { background:#0f172a; border:1px solid #1f2937; border-radius:10px; padding:14px; flex:1; min-width:320px; }
+    .card h3 { margin:0 0 10px 0; font-size:15px; opacity:.9; }
+    .muted { color:#9ca3af; font-size:12px; }
+    input, select, textarea { background:#111827; color:#e5e7eb; border:1px solid #374151; padding:8px; border-radius:6px; }
+    button { background:#2563eb; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    button.secondary { background:#374151; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom:1px solid #1f2937; padding:8px; font-size:13px; }
+    code { background:#111827; padding:2px 6px; border-radius:4px; }
+    .kv { display:flex; gap:8px; align-items:center; }
+    .kv label { width:120px; color:#9ca3af; font-size:12px; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .pill { padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid #374151; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Sophia Intel – Unified App</div>
+    <div class="tabs">
+      <div class="tab active" data-tab="chat">Chat</div>
+      <div class="tab" data-tab="models">Models</div>
+      <div class="tab" data-tab="agents">Agents</div>
+      <div class="tab" data-tab="swarms">Swarms</div>
+      <div class="tab" data-tab="observability">Observability</div>
+      <div class="tab" data-tab="integrations">Integrations</div>
+    </div>
+    <div style="margin-left:auto" class="kv">
+      <label>X-Admin-Key</label>
+      <input id="adminKey" placeholder="optional for writes" />
+    </div>
+  </header>
+  <div class="container">
+    <!-- Chat -->
+    <section id="panel-chat" class="panel">
+      <div class="row">
+        <div class="card" style="flex:2">
+          <h3>Chat</h3>
+          <div class="kv"><label>Model</label>
+            <select id="chatModel">
+              <option>openai/gpt-4o-mini</option>
+              <option>anthropic/claude-sonnet-4</option>
+              <option>google/gemini-2.5-flash</option>
+              <option>x-ai/grok-code-fast-1</option>
+            </select>
+          </div>
+          <div class="kv"><label>Message</label><textarea id="chatText" rows="3" style="width:100%" placeholder="Ask anything…"></textarea></div>
+          <div class="actions">
+            <button onclick="chatSend()">Send</button>
+            <button class="secondary" onclick="chatClear()">Clear</button>
+          </div>
+          <div id="chatOutput" style="margin-top:10px; white-space:pre-wrap"></div>
+          <div class="muted">Using /api/chat/query (non-stream for UI); SSE available at /api/chat/stream</div>
+        </div>
+        <div class="card">
+          <h3>Health</h3>
+          <div id="healthBox">—</div>
+          <div class="actions"><button class="secondary" onclick="refreshHealth()">Refresh</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Models -->
+    <section id="panel-models" class="panel" style="display:none">
+      <div class="card">
+        <h3>Model Registry</h3>
+        <div class="actions"><button onclick="loadModels()">Reload</button></div>
+        <table id="modelsTable"><thead><tr><th>ID</th><th>Provider</th><th>Enabled</th><th>Priority</th><th>Actions</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <!-- Agents -->
+    <section id="panel-agents" class="panel" style="display:none">
+      <div class="row">
+        <div class="card">
+          <h3>Create Agent</h3>
+          <div class="kv"><label>Name</label><input id="agentName" placeholder="Agent name" /></div>
+          <div class="kv"><label>Role</label><input id="agentRole" placeholder="planner/coder/etc" /></div>
+          <div class="kv"><label>Specialty</label><input id="agentSpec" placeholder="specialty" /></div>
+          <div class="kv"><label>Description</label><input id="agentDesc" placeholder="description" /></div>
+          <div class="actions"><button onclick="createAgent()">Create</button></div>
+        </div>
+        <div class="card" style="flex:2">
+          <h3>Agents</h3>
+          <div class="actions"><button onclick="loadAgents()">Reload</button></div>
+          <table id="agentsTable"><thead><tr><th>Name</th><th>Role</th><th>Version</th><th>Published</th><th>Actions</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Swarms -->
+    <section id="panel-swarms" class="panel" style="display:none">
+      <div class="row">
+        <div class="card">
+          <h3>Create Swarm</h3>
+          <div class="kv"><label>Name</label><input id="swarmName" placeholder="Swarm name" /></div>
+          <div class="kv"><label>Description</label><input id="swarmDesc" placeholder="description" /></div>
+          <div class="actions"><button onclick="createSwarm()">Create</button></div>
+        </div>
+        <div class="card" style="flex:2">
+          <h3>Swarms</h3>
+          <div class="actions"><button onclick="loadSwarms()">Reload</button></div>
+          <table id="swarmsTable"><thead><tr><th>Name</th><th>Agents</th><th>Version</th><th>Published</th><th>Actions</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Observability -->
+    <section id="panel-observability" class="panel" style="display:none">
+      <div class="card">
+        <h3>System Status</h3>
+        <div id="obsHealth">—</div>
+        <div class="actions"><button class="secondary" onclick="refreshHealth()">Refresh</button></div>
+        <div class="muted">Prometheus metrics available at <code>/metrics</code></div>
+      </div>
+    </section>
+
+    <!-- Integrations -->
+    <section id="panel-integrations" class="panel" style="display:none">
+      <div class="card">
+        <h3>Integrations Snapshot</h3>
+        <ul id="integrationsList" class="muted"></ul>
+        <div class="actions"><button onclick="loadIntegrations()">Refresh</button></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => t.addEventListener('click', () => {
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.querySelectorAll('.panel').forEach(p => p.style.display='none');
+      document.getElementById('panel-' + t.dataset.tab).style.display='block';
+    }));
+
+    function adminHeaders() {
+      const key = document.getElementById('adminKey').value.trim();
+      return key ? { 'X-Admin-Key': key } : {};
+    }
+
+    async function chatSend() {
+      const q = document.getElementById('chatText').value.trim();
+      if (!q) return;
+      const out = document.getElementById('chatOutput');
+      out.textContent = 'Processing...';
+      const res = await fetch('/api/chat/query', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ query: q, context: {}, stream: false })
+      });
+      const data = await res.json();
+      out.textContent = data.response || JSON.stringify(data, null, 2);
+    }
+    function chatClear(){ document.getElementById('chatOutput').textContent=''; document.getElementById('chatText').value=''; }
+
+    async function refreshHealth(){
+      const box = document.getElementById('healthBox') || document.getElementById('obsHealth');
+      const res = await fetch('/health'); const data = await res.json();
+      (document.getElementById('healthBox')||{}).textContent = JSON.stringify(data);
+      (document.getElementById('obsHealth')||{}).textContent = JSON.stringify(data);
+    }
+
+    async function loadModels(){
+      const table = document.getElementById('modelsTable').querySelector('tbody');
+      table.innerHTML='';
+      const res = await fetch('/api/models');
+      const models = await res.json();
+      models.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m.id}</td><td>${m.provider||''}</td><td>${m.enabled}</td><td>${m.priority||''}</td>
+          <td class="actions">
+            <button class="secondary" onclick="toggleModel('${m.id}', ${!m.enabled})">${m.enabled?'Disable':'Enable'}</button>
+            <button class="secondary" onclick="setPriority('${m.id}', 1)">P1</button>
+            <button class="secondary" onclick="setPriority('${m.id}', 5)">P5</button>
+          </td>`;
+        table.appendChild(tr);
+      });
+    }
+    async function toggleModel(id, enable){
+      await fetch(`/api/models/${encodeURIComponent(id)}/${enable?'enable':'disable'}`, { method:'POST', headers: adminHeaders() });
+      loadModels();
+    }
+    async function setPriority(id, prio){
+      await fetch(`/api/models/${encodeURIComponent(id)}/priority`, { method:'POST', headers: {'Content-Type':'application/json', ...adminHeaders()}, body: JSON.stringify({priority: prio}) });
+      loadModels();
+    }
+
+    async function loadAgents(){
+      const table = document.getElementById('agentsTable').querySelector('tbody');
+      table.innerHTML='';
+      const res = await fetch('/api/factory/agents'); const agents = await res.json();
+      agents.forEach(a => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${a.name}</td><td>${a.role||''}</td><td>${a.version}</td><td>${a.published}</td>
+          <td class="actions">
+            <button class="secondary" onclick="publishAgent('${a.id}')">Publish</button>
+            <button class="secondary" onclick="deleteAgent('${a.id}')">Delete</button>
+          </td>`;
+        table.appendChild(tr);
+      });
+    }
+    async function createAgent(){
+      const payload = {
+        name: document.getElementById('agentName').value,
+        role: document.getElementById('agentRole').value,
+        specialty: document.getElementById('agentSpec').value,
+        description: document.getElementById('agentDesc').value,
+        config: {}
+      };
+      await fetch('/api/factory/agents', { method:'POST', headers:{'Content-Type':'application/json', ...adminHeaders()}, body: JSON.stringify(payload)});
+      loadAgents();
+    }
+    async function publishAgent(id){
+      await fetch(`/api/factory/agents/${id}/publish`, { method:'POST', headers: adminHeaders() });
+      loadAgents();
+    }
+    async function deleteAgent(id){
+      await fetch(`/api/factory/agents/${id}`, { method:'DELETE', headers: adminHeaders() });
+      loadAgents();
+    }
+
+    async function loadSwarms(){
+      const table = document.getElementById('swarmsTable').querySelector('tbody');
+      table.innerHTML='';
+      const res = await fetch('/api/factory/swarms'); const items = await res.json();
+      items.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.name}</td><td>${s.agent_ids.length}</td><td>${s.version}</td><td>${s.published}</td>
+          <td class="actions">
+            <button class="secondary" onclick="publishSwarm('${s.id}')">Publish</button>
+            <button class="secondary" onclick="deleteSwarm('${s.id}')">Delete</button>
+          </td>`;
+        table.appendChild(tr);
+      });
+    }
+    async function createSwarm(){
+      const payload = { name: document.getElementById('swarmName').value, description: document.getElementById('swarmDesc').value, agent_ids: [], template: {} };
+      await fetch('/api/factory/swarms', { method:'POST', headers:{'Content-Type':'application/json', ...adminHeaders()}, body: JSON.stringify(payload)});
+      loadSwarms();
+    }
+    async function publishSwarm(id){
+      await fetch(`/api/factory/swarms/${id}/publish`, { method:'POST', headers: adminHeaders() });
+      loadSwarms();
+    }
+    async function deleteSwarm(id){
+      await fetch(`/api/factory/swarms/${id}`, { method:'DELETE', headers: adminHeaders() });
+      loadSwarms();
+    }
+
+    async function loadIntegrations(){
+      const ul = document.getElementById('integrationsList'); ul.innerHTML='';
+      const entries = [
+        { name: 'Slack', url: '/api/slack/health' },
+        { name: 'Microsoft Graph', url: '/api/microsoft/health' },
+      ];
+      for (const e of entries){
+        try {
+          const res = await fetch(e.url); const j = await res.json();
+          const li = document.createElement('li'); li.textContent = `${e.name}: ${JSON.stringify(j)}`; ul.appendChild(li);
+        } catch(err){
+          const li = document.createElement('li'); li.textContent = `${e.name}: error`; ul.appendChild(li);
+        }
+      }
+    }
+
+    // Initial loads
+    refreshHealth(); loadModels(); loadAgents(); loadSwarms(); loadIntegrations();
+  </script>
+</body>
+</html>
+

@@ -153,21 +153,19 @@ pip3 install -r requirements.txt -r requirements/dev.txt
 
 Access:
 
-- BI dashboards run in an external project (Next.js) — not in this repo
-- API Health: <http://localhost:8000/health> (if you run backend)
+- Unified Dashboard: <http://localhost:8000/dashboard> (Chat, Models, Agents, Swarms, Observability, Integrations, Brain Training)
+- API Health: <http://localhost:8000/health>
 
 ### Dev Stack (Current)
 
 - Start MCP services: `./unified-system-manager.sh mcp-start` (Portkey is the only LLM gateway)
 - Check status: `./unified-system-manager.sh status`
-- Start API: `uvicorn backend.main:app --host 0.0.0.0 --port 8000`
+- Start API: `uvicorn app.api.main:app --host 0.0.0.0 --port 8000`
  
 
 Notes:
-- Main compose: `docker-compose.yml` (API/UI/DBs)
-- Proxy compose: `docker-compose.proxy.yml` (optional Nginx on :8080)
-- `scripts/quick-grok-test.sh` – one-off Grok test in `python:3.11-slim`
-- `cli/sophia_cli.py` – interactive CLI for API health, models, chat, code gen/review
+- Unified UI: `/dashboard` (served by `app/api/main.py`)
+- See `docs/NAMING_CONVENTIONS.md` for router/UI naming rules and anti‑duplication guidance
 
 **UPDATED Environment**:
 - Single source: `<repo>/.env.master` (git-ignored, chmod 600)

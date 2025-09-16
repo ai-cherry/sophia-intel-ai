@@ -164,31 +164,29 @@ async def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 # Import routers (prefer canonical app.* modules)
 try:
-<<<<<<< Updated upstream
     from app.api.routers import chat, memory, orchestration
     from app.api.routers import slack_business_intelligence as slack
     from app.api.routers import models as models_router
     from app.api.routers import factory as factory_router
+    from app.api.routers import microsoft
+    from app.api.routers import brain_training as brain_training_router
+    from app.api.routers import observability as observability_router
+    from app.api.routers import pm as pm_router
 
     # chat router declares "/chat" internally; mount under "/api"
-=======
-    from app.api.routers import chat, memory, orchestration, microsoft
-    from app.api.routers import slack_business_intelligence as slack
-    # chat router already has prefix "/chat"; mount under "/api" to avoid double path
->>>>>>> Stashed changes
     app.include_router(chat.router, prefix="/api", tags=["chat"])
     app.include_router(
         orchestration.router, prefix="/api/orchestration", tags=["orchestration"]
     )
     app.include_router(memory.router, prefix="/api/memory", tags=["memory"])
     app.include_router(slack.router)
-<<<<<<< Updated upstream
     app.include_router(models_router.router)
     app.include_router(factory_router.router)
-=======
     # microsoft router declares "/api/microsoft" internally; include without extra prefix
     app.include_router(microsoft.router)
->>>>>>> Stashed changes
+    app.include_router(brain_training_router.router)
+    app.include_router(observability_router.router)
+    app.include_router(pm_router.router)
     logger.info("✓ All routers loaded")
 except ImportError as e:
     logger.warning(f"Some routers not available: {e}")

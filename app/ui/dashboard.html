@@ -38,6 +38,7 @@
       <div class="tab" data-tab="swarms">Swarms</div>
       <div class="tab" data-tab="observability">Observability</div>
       <div class="tab" data-tab="integrations">Integrations</div>
+      <div class="tab" data-tab="pm">PM Summary</div>
     </div>
     <div style="margin-left:auto" class="kv">
       <label>X-Admin-Key</label>
@@ -133,8 +134,17 @@
     <section id="panel-integrations" class="panel" style="display:none">
       <div class="card">
         <h3>Integrations Snapshot</h3>
-        <ul id="integrationsList" class="muted"></ul>
         <div class="actions"><button onclick="loadIntegrations()">Refresh</button></div>
+        <pre id="integrationsReport" class="muted" style="white-space:pre-wrap"></pre>
+      </div>
+    </section>
+
+    <!-- PM Summary -->
+    <section id="panel-pm" class="panel" style="display:none">
+      <div class="card">
+        <h3>Project Management Summary</h3>
+        <div class="actions"><button onclick="loadPMSummary()">Refresh</button></div>
+        <pre id="pmSummary" class="muted" style="white-space:pre-wrap"></pre>
       </div>
     </section>
   </div>
@@ -262,19 +272,13 @@
     }
 
     async function loadIntegrations(){
-      const ul = document.getElementById('integrationsList'); ul.innerHTML='';
-      const entries = [
-        { name: 'Slack', url: '/api/slack/health' },
-        { name: 'Microsoft Graph', url: '/api/microsoft/health' },
-      ];
-      for (const e of entries){
-        try {
-          const res = await fetch(e.url); const j = await res.json();
-          const li = document.createElement('li'); li.textContent = `${e.name}: ${JSON.stringify(j)}`; ul.appendChild(li);
-        } catch(err){
-          const li = document.createElement('li'); li.textContent = `${e.name}: error`; ul.appendChild(li);
-        }
-      }
+      const pre = document.getElementById('integrationsReport');
+      try { const r = await fetch('/api/integrations/report'); const j = await r.json(); pre.textContent = JSON.stringify(j, null, 2);} catch { pre.textContent = 'Error'; }
+    }
+
+    async function loadPMSummary(){
+      const pre = document.getElementById('pmSummary');
+      try { const r = await fetch('/api/pm/summary'); const j = await r.json(); pre.textContent = JSON.stringify(j, null, 2);} catch { pre.textContent = 'Error'; }
     }
 
     // Initial loads
@@ -282,4 +286,3 @@
   </script>
 </body>
 </html>
-

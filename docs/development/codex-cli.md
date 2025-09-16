@@ -26,12 +26,12 @@ Config (aliases + defaults)
 - Create `~/.codexrc.yml` or copy our example:
   - From repo root: `cp .codexrc.yml.example ~/.codexrc.yml`
 - Recommended content:
-  - `default_model: gpt-5-codex`
+  - `default_model: chatgpt-5` (preferred), or `gpt-5-codex`
   - `aliases:`
     - `g5c: gpt-5-codex`
-    - `g5: gpt-5`
+    - `g5: chatgpt-5`
     - `g4: gpt-4`
-    - `codex: gpt-5-codex`
+    - `codex: chatgpt-5`
 
 Usage
 - Quick chat: `codex chat --model gpt-5-codex -p "Summarize our MCP servers"`

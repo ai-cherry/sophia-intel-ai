@@ -16,7 +16,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 # Configure structured logging
-from app.core.logging import setup_logging
+from app.api.core.logging import setup_logging
 from app.security.security_headers import SecurityHeadersMiddleware
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -164,35 +164,40 @@ async def metrics():
     return Response(content=generate_latest(), media_type=CONTENT_TYPE_LATEST)
 # Import routers (prefer canonical app.* modules)
 try:
+<<<<<<< Updated upstream
     from app.api.routers import chat, memory, orchestration
-    app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
+    from app.api.routers import slack_business_intelligence as slack
+    from app.api.routers import models as models_router
+    from app.api.routers import factory as factory_router
+
+    # chat router declares "/chat" internally; mount under "/api"
+=======
+    from app.api.routers import chat, memory, orchestration, microsoft
+    from app.api.routers import slack_business_intelligence as slack
+    # chat router already has prefix "/chat"; mount under "/api" to avoid double path
+>>>>>>> Stashed changes
+    app.include_router(chat.router, prefix="/api", tags=["chat"])
     app.include_router(
         orchestration.router, prefix="/api/orchestration", tags=["orchestration"]
     )
     app.include_router(memory.router, prefix="/api/memory", tags=["memory"])
+    app.include_router(slack.router)
+<<<<<<< Updated upstream
+    app.include_router(models_router.router)
+    app.include_router(factory_router.router)
+=======
+    # microsoft router declares "/api/microsoft" internally; include without extra prefix
+    app.include_router(microsoft.router)
+>>>>>>> Stashed changes
     logger.info("✓ All routers loaded")
 except ImportError as e:
     logger.warning(f"Some routers not available: {e}")
-    # Create placeholder endpoints
-    @app.post("/api/chat")
-    async def placeholder_chat(message: dict):
-        return {
-            "response": f"Echo: {message.get('text', 'Hello')}",
-            "status": "placeholder",
-        }
-    @app.post("/api/orchestration")
-    async def placeholder_orchestration(request: dict):
-        return {
-            "result": "Orchestration placeholder",
-            "agents": [],
-            "status": "placeholder",
-        }
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "app.api.main:app",
-        host="${BIND_IP}",
+        host=os.getenv("BIND_IP", "0.0.0.0"),
         port=int(os.getenv("PORT", 8000)),
-        reload=os.getenv("ENVIRONMENT") == "development",
+        reload=os.getenv("ENVIRONMENT", "development").lower() in ("dev", "development"),
         log_level="info",
     )

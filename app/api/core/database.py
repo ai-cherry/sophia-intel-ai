@@ -2,6 +2,7 @@
 import logging
 import os
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 logger = logging.getLogger(__name__)
 DATABASE_URL = os.getenv(
@@ -18,7 +19,7 @@ async def init_db():
     SessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     # Test connection
     async with engine.begin() as conn:
-        await conn.execute("SELECT 1")
+        await conn.execute(text("SELECT 1"))
     logger.info("Database initialized")
 async def check_connection():
     """Check if database is accessible"""
@@ -26,7 +27,7 @@ async def check_connection():
         return False
     try:
         async with engine.begin() as conn:
-            await conn.execute("SELECT 1")
+            await conn.execute(text("SELECT 1"))
         return True
     except:
         return False

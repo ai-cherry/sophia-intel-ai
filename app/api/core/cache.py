@@ -3,12 +3,12 @@ import logging
 import os
 import redis.asyncio as aioredis
 logger = logging.getLogger(__name__)
-REDIS_URL = os.getenv("REDIS_URL", "${REDIS_URL}")
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 redis_client = None
 async def init_redis():
     """Initialize Redis connection"""
     global redis_client
-    redis_client = await aioredis.from_url(REDIS_URL)
+    redis_client = aioredis.from_url(REDIS_URL)
     await redis_client.ping()
     logger.info("Redis initialized")
 async def check_connection():

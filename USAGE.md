@@ -38,3 +38,17 @@ Examples:
 See also:
 - `docs/ONE_TRUE_DEV_FLOW.md`
 - `docs/CODING_UI_STANDALONE.md`
+
+## Codex CLI Quick Verify (Optional)
+
+- Install (Apple Silicon): `arch -arm64 brew install codex-cli` or `arch -arm64 npm install -g @codex/cli`
+- PATH (Homebrew on ARM64): `echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && source ~/.zprofile`
+- Auth: `echo 'export CODEX_API_KEY="sk-xxxxx"' >> ~/.zshrc && source ~/.zshrc`
+- Config (optional): from repo root `cp ./.codexrc.yml.example ~/.codexrc.yml`
+- Verify binary arch: `file $(which codex)` → shows `Mach-O 64-bit executable arm64`
+- Sanity test: `codex chat -m gpt-5-codex -p "Hello"`
+
+Troubleshooting:
+- `ps -o arch= -p $(pgrep -f codex)` should be `arm64`; if `i386`, reinstall via `arch -arm64`.
+- `arch -arm64 node -v` should use ARM64 Node when installed via npm.
+- Full guide: `docs/development/codex-cli.md`.

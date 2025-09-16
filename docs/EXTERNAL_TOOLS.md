@@ -15,6 +15,9 @@ Quick Usage (examples)
 - claude: claude -m opus-4.1 -p "Outline MCP smoke plan"
 
 Notes
-- This repo never references these CLIs in code, scripts, or CI.
 - Portkey Gateway and MCP are the only in-repo runtime integrations.
+- A PR review workflow is provided and enabled (`.github/workflows/codex-review.yml`) that uses a GitHub Action; it includes an optional CLI fallback that only runs if a `codex` binary is on PATH. Remove or move the workflow to `workflow-templates` if you prefer to keep CI completely provider‑tool free.
 
+See Also
+- Codex CLI details and ARM64 setup: `Development → Codex CLI` (docs/development/codex-cli.md)
+- A PR Review GitHub Action is provided as a template under `.github/workflow-templates/` for downstream opt‑in.

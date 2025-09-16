@@ -3,6 +3,7 @@ Sophia AI Platform v4.0 - Chat Router
 Integrates with UnifiedChatService for intelligent query processing
 """
 import logging
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -10,6 +11,8 @@ from app.api.middleware.rate_limit import rate_limit
 from models.roles import require_auth, require_permission
 from pydantic import BaseModel, Field
 from services.unified_chat import UnifiedChatService
+from fastapi.responses import StreamingResponse
+import asyncio
 logger = logging.getLogger(__name__)
 # Initialize router
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -267,14 +270,6 @@ async def submit_feedback(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to submit feedback: {str(e)}",
         )
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"❌ Failed to submit feedback: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to submit feedback: {str(e)}",
-        )
 # Health check endpoint
 @router.get(
     "/health",
@@ -306,6 +301,42 @@ async def chat_health_check():
             "timestamp": datetime.now().isoformat(),
             "error": str(e),
         }
+
+
+@router.post(
+    "/stream",
+    summary="Stream chat response (SSE)",
+    description="Server-Sent Events streaming for chat responses",
+)
+@require_auth
+@require_permission("domains.chat")
+@rate_limit(limit=60)
+async def chat_stream(request: ChatQueryRequest) -> StreamingResponse:
+    async def event_gen():
+        try:
+            # Get full result then stream in chunks for now; future: true token streaming
+            result = await chat_service.process_query(request.query, request.context or {})
+            text = result.get("response", "")
+            # Send start event
+            yield f"event: start\n" f"data: {json.dumps({'trace_id': result.get('trace_id')})}\n\n"
+            # Chunk the response into ~200-char pieces
+            chunk_size = 200
+            for i in range(0, len(text), chunk_size):
+                chunk = text[i : i + chunk_size]
+                payload = {"delta": chunk}
+                yield f"data: {json.dumps(payload)}\n\n"
+                await asyncio.sleep(0)  # yield control
+            # Final metadata
+            meta = {
+                "sources": result.get("sources", []),
+                "confidence": result.get("confidence", 0.0),
+                "citations": result.get("citations", []),
+            }
+            yield f"event: end\n" f"data: {json.dumps(meta)}\n\n"
+        except Exception as e:
+            err = {"error": str(e)}
+            yield f"event: error\n" f"data: {json.dumps(err)}\n\n"
+
+    return StreamingResponse(event_gen(), media_type="text/event-stream")
 # Register router
-from routers import register_router
-register_router("chat", router)
+# Removed legacy auto-registration to avoid import errors

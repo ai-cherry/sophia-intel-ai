@@ -308,13 +308,13 @@ async def root():
     }
 # Development server configuration
 if __name__ == "__main__":
-    # Development mode with hot reload
+    # Deprecated entrypoint: use app/api/main.py instead
+    print("This entrypoint is deprecated. Launch app via app/api/main.py")
     uvicorn.run(
-        "app.main:app",
-        host="${BIND_IP}",
-        port=8000,
+        "app.api.main:app",
+        host=os.getenv("BIND_IP", "0.0.0.0"),
+        port=int(os.getenv("PORT", 8000)),
         reload=True,
         log_level="info",
         access_log=True,
-        loop="uvloop",  # High-performance event loop
     )

@@ -12,6 +12,9 @@ What’s included
   - `npm run codex:agent -- --dir .`
   - `npm run codex:review`
 
+Default model
+- Local config prefers `chatgpt-5` for general coding via Codex; `gpt-5-codex` remains available as alias `g5c`.
+
 Complete local setup & Git sync
 - See `codex-setup/CODEX_SETUP_INSTRUCTIONS.md` for an end-to-end executable script and an agent prompt to automate verification, key persistence, repo sync, and CI checks.
 

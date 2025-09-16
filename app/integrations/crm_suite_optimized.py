@@ -226,7 +226,8 @@ class SalesforceOptimizedClient:
         """
         
         if stage:
-            soql += f" AND StageName = '{stage}'"
+            esc_stage = stage.replace("'", "\\'")
+            soql += f" AND StageName = '{esc_stage}'"
             
         return await self.query(soql)
         
@@ -242,6 +243,9 @@ class SalesforceOptimizedClient:
         """
         
         if account_id:
+            import re
+            if not re.fullmatch(r"[a-zA-Z0-9]{15,18}", account_id or ""):
+                raise ValueError("Invalid Salesforce AccountId format")
             soql += f" WHERE AccountId = '{account_id}'"
             
         return await self.query(soql)

@@ -7,7 +7,14 @@ from datetime import datetime
 from typing import Dict
 from fastapi import APIRouter, HTTPException
 # Import Estuary services
-from backend.services.estuary_cdc_pool import get_estuary_pool
+try:
+    from app.api.services.estuary_cdc_pool import get_estuary_pool  # preferred
+except Exception:  # pragma: no cover
+    try:
+        from backend.services.estuary_cdc_pool import get_estuary_pool  # legacy fallback
+    except Exception:
+        def get_estuary_pool():  # type: ignore
+            raise RuntimeError("Estuary CDC pool not configured")
 from monitoring.estuary_haystack_rag import EstuaryHaystackRAG
 from swarms.estuary_swarm_fusion import EstuarySwarmFusion
 logger = logging.getLogger(__name__)

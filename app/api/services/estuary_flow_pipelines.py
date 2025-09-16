@@ -12,7 +12,13 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
 import aiohttp
-from backend.services.performance_monitor import monitor_performance
+try:
+    from app.api.services.performance_monitor import monitor_performance
+except Exception:
+    def monitor_performance(*args, **kwargs):  # type: ignore
+        def deco(func):
+            return func
+        return deco
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

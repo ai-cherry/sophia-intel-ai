@@ -6,6 +6,7 @@ import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
+from app.api.middleware.rate_limit import rate_limit
 from models.roles import require_auth, require_permission
 from pydantic import BaseModel, Field
 from services.unified_chat import UnifiedChatService
@@ -35,6 +36,9 @@ class ChatQueryResponse(BaseModel):
     intent: Dict[str, Any] = Field(default_factory=dict, description="Detected intent")
     cached: bool = Field(default=False, description="Whether response was cached")
     timestamp: datetime = Field(default_factory=datetime.now)
+    citations: List[Dict[str, Any]] = Field(default_factory=list, description="Retrieved citations for the response")
+    retrieval_stats: Dict[str, Any] = Field(default_factory=dict, description="Retrieval telemetry for diagnostics")
+    trace_id: Optional[str] = Field(default=None, description="Trace identifier for observability")
 class ChatHistoryResponse(BaseModel):
     """Chat history response model"""
     conversations: List[Dict[str, Any]] = Field(default_factory=list)
@@ -70,6 +74,7 @@ async def get_user_context() -> Dict[str, Any]:
 )
 @require_auth
 @require_permission("domains.chat")
+@rate_limit(limit=60)
 async def chat_query(
     request: ChatQueryRequest, user_context: Dict[str, Any] = Depends(get_user_context)
 ) -> ChatQueryResponse:
@@ -93,6 +98,9 @@ async def chat_query(
             processing_time=result.get("processing_time", 0.0),
             intent=result.get("intent", {}),
             cached=result.get("cached", False),
+            citations=result.get("citations", []),
+            retrieval_stats=result.get("retrieval_stats", {}),
+            trace_id=result.get("trace_id"),
         )
         logger.info(
             f"✅ Query processed successfully: confidence={response.confidence:.2f}"
@@ -112,6 +120,7 @@ async def chat_query(
 )
 @require_auth
 @require_permission("domains.chat")
+@rate_limit(limit=60)
 async def get_chat_history(
     page: int = 1,
     page_size: int = 20,
@@ -160,6 +169,7 @@ async def get_chat_history(
 )
 @require_auth
 @require_permission("domains.chat")
+@rate_limit(limit=30)
 async def delete_conversation(
     conversation_id: str, user_context: Dict[str, Any] = Depends(get_user_context)
 ):
@@ -185,6 +195,7 @@ async def delete_conversation(
 )
 @require_auth
 @require_permission("system.monitor")
+@rate_limit(limit=30)
 async def get_service_stats() -> ServiceStatsResponse:
     """
     Get chat service statistics and health metrics
@@ -212,6 +223,7 @@ async def get_service_stats() -> ServiceStatsResponse:
 )
 @require_auth
 @require_permission("domains.chat")
+@rate_limit(limit=60)
 async def submit_feedback(
     feedback_data: dict, user_context: Dict[str, Any] = Depends(get_user_context)
 ):

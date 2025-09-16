@@ -1,0 +1,160 @@
+[
+  {
+    "id": "F001",
+    "title": "Pulumi ESC files commit plaintext API keys",
+    "category": "secrets",
+    "severity": "blocker",
+    "confidence": 0.98,
+    "score": 97,
+    "files": [
+      "pulumi-esc-prod.yaml",
+      "pulumi-esc-dev.yaml",
+      "pulumi-esc-staging.yaml"
+    ],
+    "evidence": [
+      "pulumi-esc-prod.yaml:42 sk-svcacct-…",
+      "pulumi-esc-prod.yaml:45 sk-ant-api03-…",
+      "pulumi-esc-prod.yaml:48 AIza…",
+      "pulumi-esc-prod.yaml:51 gsk_…",
+      "pulumi-esc-prod.yaml:54 sk-… (DeepSeek)",
+      "pulumi-esc-prod.yaml:63 xai-…"
+    ],
+    "commands": [
+      "rg -n -i -S '(AKIA|ASIA|BEGIN RSA|api_key|secret|password|token)' --hidden -g '!**/.git/**'"
+    ]
+  },
+  {
+    "id": "F002",
+    "title": "Generated artifacts and dependencies committed (.next/, node_modules/, .venv*)",
+    "category": "generated_drift",
+    "severity": "high",
+    "confidence": 0.95,
+    "score": 85,
+    "files": [
+      ".next/",
+      "backups/ultimate_*/node_modules",
+      ".venv",
+      ".venv-litellm"
+    ],
+    "evidence": [
+      "find . -type f -size +5M … shows .next, node_modules, dylibs",
+      "ls -la shows .next and virtualenvs committed"
+    ],
+    "commands": [
+      "find . -type f -size +5M -not -path '*/.git/*' | sed -n '1,80p'",
+      "ls -la | rg -n '^\\.next$|^\\.venv|backups/.*node_modules'"
+    ]
+  },
+  {
+    "id": "F003",
+    "title": "UI code/build present in backend repo (violates AGENTS.md)",
+    "category": "policy_drift",
+    "severity": "high",
+    "confidence": 0.9,
+    "score": 78,
+    "files": ["workbench-ui/", "webui/", ".next/", "AGENTS.md"],
+    "evidence": [
+      "AGENTS.md: BI UI — NOT in this repo",
+      "workbench-ui/, webui/, .next/ present"
+    ],
+    "commands": [
+      "rg -n 'BI UI (Dashboards).*NOT in this repo' AGENTS.md",
+      "ls -la | rg -n 'workbench-ui|webui|^\\.next$'"
+    ]
+  },
+  {
+    "id": "F004",
+    "title": "Conflicting env single-source vs ~/.config and .env.local",
+    "category": "config_drift",
+    "severity": "high",
+    "confidence": 0.88,
+    "score": 74,
+    "files": ["ENVIRONMENT.md", "setup_config.sh", "pulumi-esc-*.yaml"],
+    "evidence": [
+      "ENVIRONMENT.md forbids .env.local and ~/.config",
+      "setup_config.sh creates .env.local",
+      "pulumi-esc-*.yaml references .env.local.unified"
+    ],
+    "commands": [
+      "rg -n -S '\\.env\\.local|~/.config|SOPHIA_REPO_ENV_FILE'"
+    ]
+  },
+  {
+    "id": "F005",
+    "title": "eval() on config values in config_unification.py",
+    "category": "exec_hazard",
+    "severity": "med",
+    "confidence": 0.9,
+    "score": 65,
+    "files": ["scripts/config_unification.py"],
+    "evidence": ["scripts/config_unification.py:756 config_vars[var_name] = eval(var_value)"]
+    ,"commands": ["rg -n -S 'eval\\(' scripts/config_unification.py"]
+  },
+  {
+    "id": "F006",
+    "title": "pickle load/dump used for archives",
+    "category": "deserialization",
+    "severity": "med",
+    "confidence": 0.9,
+    "score": 60,
+    "files": ["scripts/complete_refactoring.py"],
+    "evidence": [
+      "scripts/complete_refactoring.py:84 pickle.load",
+      "scripts/complete_refactoring.py:90 pickle.dump"
+    ],
+    "commands": ["rg -n -S 'pickle' scripts/complete_refactoring.py"]
+  },
+  {
+    "id": "F007",
+    "title": "shell=True and install pipe patterns",
+    "category": "shell_injection",
+    "severity": "med",
+    "confidence": 0.8,
+    "score": 58,
+    "files": ["scripts/agent_manager.py", "scripts/upgrade_tech_stack.sh"],
+    "evidence": [
+      "scripts/agent_manager.py:163 subprocess.Popen(..., shell=True)",
+      "scripts/upgrade_tech_stack.sh: wget ... | sh (echoed)"
+    ],
+    "commands": ["rg -n -S 'shell=True|wget\\s+|curl\\s+https?://' scripts"]
+  },
+  {
+    "id": "F008",
+    "title": "Hardcoded external endpoints in runtime paths",
+    "category": "networking",
+    "severity": "med",
+    "confidence": 0.8,
+    "score": 55,
+    "files": ["app/api/routers/production.py", "router/top25.py"],
+    "evidence": [
+      "app/api/routers/production.py:128 http://104.171.202.103:8080",
+      "router/top25.py:194 https://openrouter.ai/..."
+    ],
+    "commands": ["rg -n -S 'https?://[A-Za-z0-9._:/%-]+' app router"]
+  },
+  {
+    "id": "F009",
+    "title": "LICENSE referenced but missing",
+    "category": "provenance",
+    "severity": "med",
+    "confidence": 0.85,
+    "score": 52,
+    "files": ["README.md", "deploy/README.md"],
+    "evidence": [
+      "README.md mentions LICENSE; no top-level LICENSE present"
+    ],
+    "commands": ["ls -1 | rg -n '^LICENSE$' || true"]
+  },
+  {
+    "id": "F010",
+    "title": "OS cruft (.DS_Store) and secrets baseline hygiene",
+    "category": "hygiene",
+    "severity": "low",
+    "confidence": 0.8,
+    "score": 35,
+    "files": [".DS_Store", ".secrets.baseline"],
+    "evidence": [".DS_Store committed; detect-secrets baseline exists but secrets present"],
+    "commands": ["ls -la | rg -n '\\.DS_Store|\\.secrets.baseline'"]
+  }
+]
+

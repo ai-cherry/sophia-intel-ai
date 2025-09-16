@@ -3,9 +3,9 @@ Simple API Key Authentication Middleware
 Pragmatic approach - good enough security without over-engineering
 """
 import logging
+import os
 from typing import Optional
 from fastapi import Header, HTTPException, Request
-from backend.config.secrets import get_api_key
 logger = logging.getLogger(__name__)
 # Public endpoints that don't require API key
 PUBLIC_ENDPOINTS = {
@@ -31,13 +31,13 @@ async def verify_api_key(
     if path in PUBLIC_ENDPOINTS:
         return None  # No auth required
     # Check for API key
-    expected_key = get_api_key()
+    expected_key = os.getenv("API_SECRET_KEY") or os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")
     if not x_api_key:
         logger.warning(f"Missing API key for {path} from {request.client.host}")
         raise HTTPException(
             status_code=401, detail="API key required. Include X-API-Key header."
         )
-    if x_api_key != expected_key:
+    if not expected_key or x_api_key != expected_key:
         logger.warning(f"Invalid API key for {path} from {request.client.host}")
         raise HTTPException(status_code=403, detail="Invalid API key")
     logger.debug(f"Valid API key for {path}")
@@ -52,7 +52,7 @@ async def optional_api_key(
     path = request.url.path
     if path in PUBLIC_ENDPOINTS:
         return None
-    expected_key = get_api_key()
+    expected_key = os.getenv("API_SECRET_KEY") or os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")
     if x_api_key and x_api_key == expected_key:
         logger.debug(f"Valid API key provided for {path}")
         return x_api_key
@@ -63,7 +63,8 @@ def is_authenticated(api_key: Optional[str]) -> bool:
     """Check if the provided API key is valid"""
     if not api_key:
         return False
-    return api_key == get_api_key()
+    expected_key = os.getenv("API_SECRET_KEY") or os.getenv("SECRET_KEY") or os.getenv("JWT_SECRET")
+    return bool(expected_key and api_key == expected_key)
 # Convenience function for manual checks
 def require_api_key(api_key: Optional[str], endpoint: str = "unknown") -> None:
     """Manually check API key and raise exception if invalid"""

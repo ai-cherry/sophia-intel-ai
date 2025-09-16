@@ -18,9 +18,22 @@
 
 ## Policies
 
-- Portkey-only routing; no LiteLLM or local OpenRouter.
+- Portkey-only routing; no alternate local proxies or local OpenRouter.
 - No UI in this repo. Coding UI is external (local/cloud).
 - No dotenv or `~/.config` in runtime code.
+
+## CLI Guard Flags
+
+- `--max-input <int>`: hard cap on estimated input tokens; fails fast when exceeded.
+- `--max-output <int>`: cap on requested output tokens for the call.
+- `--max-cost <float>`: cap on estimated USD cost (rough heuristic per model); blocks over-budget calls.
+- `--thinking`: required to use models tagged as thinking (e.g., `magistral-medium-2506-thinking`).
+
+Examples:
+
+- `./bin/sophia plan --alias magistral-small --task "Add /ready endpoint" --max-input 4000 --max-output 800`
+- `./bin/sophia code --alias grok-fast --task "Add ready" --paths app/api --out artifacts/cli/patch.json --max-cost 0.5`
+- `./bin/sophia apply artifacts/cli/patch.json --task "Add ready" --no-validate`
 
 See also:
 - `docs/ONE_TRUE_DEV_FLOW.md`

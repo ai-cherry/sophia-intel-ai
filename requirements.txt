@@ -1,3 +1,5 @@
+# DEPRECATED: Use pyproject.toml for dependencies.
+# This file is retained for legacy tooling only and may be out of date.
 # Core dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0

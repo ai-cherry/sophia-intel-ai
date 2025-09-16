@@ -1,0 +1,64 @@
+# Centralized Configuration (Example)
+# Copy to centralized_config.yaml for local development only.
+# Do NOT commit real secrets. Use environment variables or Pulumi ESC for production.
+#
+# Recommended: populate at runtime from environment or ESC:
+# - export GITHUB_TOKEN=...
+# - export AIRTABLE_ACCESS_TOKEN=...
+# - export SLACK_BOT_TOKEN=...
+# - export ASANA_PAT=...
+# - export LINEAR_API_KEY=...
+#
+# For Pulumi ESC, reference secret values in your environment and never store plaintext here.
+
+# GitHub
+GITHUB_ORG: your-org
+GITHUB_REPO: your-repo
+# Tokens should come from env or ESC; leave placeholders only.
+GITHUB_TOKEN: ${GITHUB_TOKEN}
+GITHUB_PAT: ${GITHUB_PAT}
+
+# Airtable
+AIRTABLE_BASE_ID: ${AIRTABLE_BASE_ID}
+AIRTABLE_ACCESS_TOKEN: ${AIRTABLE_ACCESS_TOKEN}  # Preferred
+# Legacy keys (avoid if possible)
+AIRTABLE_API_TOKEN: ${AIRTABLE_API_TOKEN}
+AIRTABLE_API_KEY: ${AIRTABLE_API_KEY}
+AIRTABLE_PAT: ${AIRTABLE_PAT}
+
+# Slack
+SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+SLACK_BOT_USER_AUTH: ${SLACK_BOT_USER_AUTH}
+SLACK_USER_AUTH_TOKEN: ${SLACK_USER_AUTH_TOKEN}
+SLACK_SIGNING_SECRET: ${SLACK_SIGNING_SECRET}
+
+# Asana / Linear / Gong / Microsoft
+ASANA_API_CLIENT: ${ASANA_API_CLIENT}
+ASANA_CLIENT_SECRET: ${ASANA_CLIENT_SECRET}
+ASANA_PERSONAL_ACCESS_TOKEN: ${ASANA_PERSONAL_ACCESS_TOKEN}
+LINEAR_API_KEY: ${LINEAR_API_KEY}
+GONG_API_KEY: ${GONG_API_KEY}
+
+# Microsoft/Azure
+MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}
+MICROSOFT_TENANT_ID: ${MICROSOFT_TENANT_ID}
+MICROSOFT_SECRET_KEY: ${MICROSOFT_SECRET_KEY}
+MICROSOFT_CERTIFICATE_ID: ${MICROSOFT_CERTIFICATE_ID}
+MICROSOFT_SIGNING_CERTIFICATE: ${MICROSOFT_SIGNING_CERTIFICATE}
+
+# Auth & API
+AUTH_TOKEN: ${AUTH_TOKEN}
+ENFORCE_AUTH: "true"    # "true"/"false" to require AUTH_TOKEN on protected routes
+ALLOWED_ORIGINS: "https://your-dashboard.example.com"  # CORS origins (comma-separated if multiple)
+
+# Database / Caching (examples)
+DATABASE_URL: ${DATABASE_URL}
+REDIS_URL: ${REDIS_URL}
+
+# RAG / Embeddings
+EMBEDDINGS_PROVIDER: "openai"  # or "local"
+OPENAI_API_KEY: ${OPENAI_API_KEY}
+
+# Notes:
+# - Never insert real tokens in this file. Keep it as a template.
+# - Production deployments should use secret managers (Pulumi ESC, GitHub Environments, etc.).

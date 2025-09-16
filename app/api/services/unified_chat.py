@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
 from services.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+from app.rag.unified_rag import UnifiedRAGSystem, RAGContext, RAGDomain
 logger = logging.getLogger(__name__)
 class QueryIntent(Enum):
     """Types of query intents"""
@@ -178,6 +179,8 @@ class UnifiedChatService:
         self.intent_analyzer = IntentAnalyzer()
         self.intent_cache: Dict[str, Intent] = {}
         self.predictive_cache = PredictiveCache()
+        # RAG system for internal knowledge/memory retrieval
+        self._rag = UnifiedRAGSystem()
         # Initialize circuit breakers for external services
         self.web_circuit = CircuitBreaker(
             "web_search", CircuitBreakerConfig(failure_threshold=3, recovery_timeout=30)
@@ -337,21 +340,74 @@ class UnifiedChatService:
             "query": query,
         }
     async def _fetch_internal_results(self, query: str, context: Dict) -> Dict:
-        """Fetch internal system results"""
-        # Simulate internal data fetch
-        await asyncio.sleep(0.2)  # Fast internal systems
-        return {
-            "results": [
-                {
-                    "type": "dashboard_metric",
-                    "title": f"Internal data for: {query}",
-                    "value": "42",
-                    "source": "internal_db",
-                }
-            ],
-            "source": "internal",
-            "domains": context.get("domains", []),
-        }
+        """Fetch internal results via Unified RAG across knowledge/memory stores."""
+        try:
+            # Domain override support
+            override = (context.get("domain") or "").lower() if isinstance(context, dict) else ""
+            map_table = {
+                "bi": RAGDomain.SOPHIA,
+                "business": RAGDomain.SOPHIA,
+                "sales": RAGDomain.SOPHIA,
+                "shared": RAGDomain.SHARED,
+                "code": RAGDomain.CODE,
+            }
+            if override in map_table:
+                domain = map_table[override]
+            else:
+                domains = [d.lower() for d in context.get("domains", [])]
+                domain = RAGDomain.SOPHIA if any(d in {"sales", "bi", "business"} for d in domains) else RAGDomain.SHARED
+            rag_ctx = RAGContext(
+                query=query,
+                domain=domain,
+                user_id=context.get("user_id"),
+                max_results=8,
+            )
+            rag_result = await self._rag.retrieve_and_synthesize(rag_ctx)
+            results = []
+            for s in rag_result.sources[: rag_ctx.max_results]:
+                results.append(
+                    {
+                        "title": s.title,
+                        "snippet": (s.content[:300] + "...") if len(s.content) > 303 else s.content,
+                        "relevance": round(s.relevance_score, 3),
+                        "confidence": round(s.confidence, 3),
+                        "source_type": s.source_type,
+                        "metadata": s.metadata,
+                    }
+                )
+            # Build citations for frontend use
+            citations = []
+            for s in rag_result.sources[: rag_ctx.max_results]:
+                citations.append(
+                    {
+                        "id": s.memory_id,
+                        "title": s.title,
+                        "uri": s.metadata.get("uri") if isinstance(s.metadata, dict) else None,
+                        "source_type": s.source_type,
+                        "relevance": round(s.relevance_score, 3),
+                        "metadata": s.metadata,
+                    }
+                )
+            # Retrieval stats for telemetry
+            retrieval_stats = {
+                "k": rag_ctx.max_results,
+                "total_sources_found": rag_result.total_sources_found,
+                "processing_time_ms": rag_result.processing_time_ms,
+            }
+            import uuid as _uuid
+            trace_id = str(_uuid.uuid4())
+            return {
+                "results": results,
+                "synthesized": rag_result.synthesized_context,
+                "strategy": rag_result.strategy_used.value,
+                "source": "internal",
+                "citations": citations,
+                "retrieval_stats": retrieval_stats,
+                "trace_id": trace_id,
+            }
+        except Exception as e:
+            logger.warning(f"Unified RAG internal fetch failed: {e}")
+            return {"results": [], "source": "internal", "error": str(e)}
     async def _fetch_mcp_results(self, query: str, context: Dict) -> Dict:
         """Fetch MCP server results with circuit breaker"""
         try:

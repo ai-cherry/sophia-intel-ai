@@ -12,6 +12,7 @@ from enum import Enum
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Header, Request, BackgroundTasks
+from prometheus_client import Counter
 from pydantic import BaseModel, Field
 import redis.asyncio as redis
 
@@ -22,6 +23,14 @@ from app.core.websocket_manager import WebSocketManager
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/webhooks/gong", tags=["gong"])
+
+# Prometheus metrics
+GONG_WEBHOOK_REQUESTS = Counter(
+    "gong_webhook_requests_total", "Gong webhook requests", ["type"]
+)
+GONG_WEBHOOK_VERIFIED = Counter(
+    "gong_webhook_verified_total", "Gong webhook signature verification", ["status"]
+)
 
 # Redis for event queuing
 REDIS_URL = "redis://localhost:6380"
@@ -63,7 +72,8 @@ class GongWebhookHandler:
         self.gong_client = None
         self.rag_pipeline = None
         self.ws_manager = WebSocketManager()
-        self.webhook_secret = "your_webhook_secret"  # Should be from env
+        import os
+        self.webhook_secret = os.getenv("GONG_WEBHOOK_SECRET", "")
         
     async def setup(self):
         """Initialize connections"""
@@ -81,13 +91,21 @@ class GongWebhookHandler:
         """
         Verify webhook signature for security
         """
-        expected_signature = hmac.new(
-            self.webhook_secret.encode(),
-            payload,
-            hashlib.sha256
-        ).hexdigest()
-        
-        return hmac.compare_digest(expected_signature, signature)
+        if not self.webhook_secret:
+            # If not configured, reject in prod; allow only for explicit testing
+            return False
+        digest = hmac.new(self.webhook_secret.encode(), payload, hashlib.sha256).digest()
+        sig = signature
+        if sig.startswith("sha256="):
+            sig = sig[len("sha256="):]
+        # Compare against hex or base64
+        if hmac.compare_digest(sig.lower(), digest.hex()):
+            return True
+        try:
+            import base64
+            return hmac.compare_digest(base64.b64decode(sig, validate=True), digest)
+        except Exception:
+            return False
         
     async def queue_event(self, event: GongWebhookPayload) -> str:
         """
@@ -305,10 +323,12 @@ async def receive_webhook(
     # Get raw payload for signature verification
     payload = await request.body()
     
-    # Verify signature if provided
-    if x_gong_signature:
-        if not webhook_handler.verify_signature(payload, x_gong_signature):
-            raise HTTPException(status_code=401, detail="Invalid signature")
+    # Verify signature
+    GONG_WEBHOOK_REQUESTS.labels(type="event").inc()
+    if not x_gong_signature or not webhook_handler.verify_signature(payload, x_gong_signature):
+        GONG_WEBHOOK_VERIFIED.labels(status="invalid").inc()
+        raise HTTPException(status_code=401, detail="Invalid signature")
+    GONG_WEBHOOK_VERIFIED.labels(status="valid").inc()
     
     # Parse payload
     try:

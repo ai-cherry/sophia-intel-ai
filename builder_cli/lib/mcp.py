@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
 MCPManager: Start/stop/status helper for MCP servers (memory, filesystem, git).
-Used by builder-cli/forge.py to orchestrate local MCP lifecycle.
 """
 from __future__ import annotations
 import os
@@ -71,4 +70,3 @@ class MCPManager:
                 return cfg.port
             time.sleep(0.2)
         raise RuntimeError(f"Failed to start {server} on port {cfg.port}")
-

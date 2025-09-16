@@ -1,58 +1,161 @@
 {
-  "timestamp": 1757181847.7266371,
-  "tests": {
-    "Basic Health Checks": {
-      "Unified Server Health": {
-        "status": "passed",
-        "status_code": 200,
-        "response_size": 154
+  "timestamp": "2025-09-14T14:29:33.673551",
+  "results": {
+    "Memory": {
+      "server": "Memory",
+      "port": 8081,
+      "health": {
+        "ok": true,
+        "message": "\u2705 Healthy - {\"status\": \"healthy\", \"server\": \"memory\", \"redis\": \"connected\"}"
       },
-      "MCP Health": {
-        "status": "failed",
-        "status_code": 404
-      },
-      "Hub Status": {
-        "status": "failed",
-        "status_code": 404
+      "endpoints": [
+        {
+          "name": "Store Memory",
+          "path": "/sessions/test-validation/memory",
+          "method": "POST",
+          "ok": true,
+          "message": "\u2705 Success - {\"memory_id\": \"memory:test-validation:1757885366885\", \"stored\": true}",
+          "description": "Store memory in session"
+        },
+        {
+          "name": "Retrieve Memory",
+          "path": "/sessions/test-validation/memory",
+          "method": "GET",
+          "ok": true,
+          "message": "\u2705 Success - {\"session_id\": \"test-validation\", \"entries\": [{\"content\": \"Validation test entry\", \"role\": \"user\", \"",
+          "description": "Retrieve session memory"
+        },
+        {
+          "name": "Search Memory",
+          "path": "/search",
+          "method": "POST",
+          "ok": true,
+          "message": "\u2705 Success - {\"results\": [{\"memory_id\": \"memory:test-validation:1757885366885\", \"content\": \"Validation test entry",
+          "description": "Search across memories"
+        },
+        {
+          "name": "List Sessions",
+          "path": "/sessions",
+          "method": "GET",
+          "ok": true,
+          "message": "\u2705 Success - [{\"session_id\": \"test-validation\", \"created_at\": 0.0, \"updated_at\": 1757885366.8858109, \"entry_count",
+          "description": "List all active sessions"
+        },
+        {
+          "name": "Clear Session",
+          "path": "/sessions/test-validation/memory",
+          "method": "DELETE",
+          "ok": true,
+          "message": "\u2705 Success - {\"cleared\": true, \"entries_removed\": 1}",
+          "description": "Clear test session"
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0
       }
     },
-    "MCP Capabilities": {
-      "status": "failed",
-      "error": "HTTP 404"
+    "Filesystem": {
+      "server": "Filesystem",
+      "port": 8082,
+      "health": {
+        "ok": true,
+        "message": "\u2705 Healthy - {\"status\": \"healthy\", \"workspace\": \"/Users/lynnmusil/sophia-intel-ai\", \"name\": \"sophia\", \"read_only\""
+      },
+      "endpoints": [
+        {
+          "name": "List Files",
+          "path": "/fs/list",
+          "method": "POST",
+          "ok": true,
+          "message": "\u2705 Success - {\"entries\": [{\"name\": \".DS_Store\", \"path\": \".DS_Store\", \"type\": \"file\", \"size\": 6148}, {\"name\": \".ai",
+          "description": "List workspace files"
+        },
+        {
+          "name": "Read File",
+          "path": "/fs/read",
+          "method": "POST",
+          "ok": true,
+          "message": "\u2705 Success - {\"content\": \"---\\ntitle: Sophia Intel AI\\ntype: reference\\nstatus: active\\nversion: 2.0.0\\nlast_upda",
+          "description": "Read a file"
+        },
+        {
+          "name": "Repo List",
+          "path": "/repo/list",
+          "method": "POST",
+          "ok": true,
+          "message": "\u2705 Success - {\"files\": [{\"path\": \"test_gong_correct_api.py\", \"size\": 6826, \"lang\": \"python\"}, {\"path\": \"start_rel",
+          "description": "List repository files"
+        },
+        {
+          "name": "Repo Search",
+          "path": "/repo/search",
+          "method": "POST",
+          "ok": true,
+          "message": "\u2705 Success - {\"matches\": [{\"path\": \"start_reliability_monitoring.py\", \"line_number\": 10, \"column_start\": 7, \"colu",
+          "description": "Search in repository"
+        },
+        {
+          "name": "Symbol Index",
+          "path": "/symbols/index",
+          "method": "POST",
+          "ok": true,
+          "message": "\u2705 Success - {\"indexed\": 5000, \"symbols\": [{\"name\": \"WhatActuallyWorks\", \"kind\": \"class\", \"lang\": \"python\", \"file",
+          "description": "Index code symbols"
+        }
+      ],
+      "summary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0
+      }
     },
-    "Filesystem Operations": {
-      "status": "failed",
-      "error": "HTTP 404"
-    },
-    "Git Operations": {
-      "status": "failed",
-      "error": "HTTP 404"
-    },
-    "Memory Operations": {
-      "status": "failed",
-      "error": "HTTP 404"
-    },
-    "Embeddings Operations": {
-      "status": "failed",
-      "error": "HTTP 404"
-    },
-    "Server Management": {
-      "status": "failed",
-      "error": "HTTP 404"
-    },
-    "Connection Management": {
-      "status": "failed",
-      "error": "HTTP 404"
-    },
-    "Performance & Metrics": {
-      "status": "failed",
-      "error": "HTTP 404"
+    "Git": {
+      "server": "Git",
+      "port": 8084,
+      "health": {
+        "ok": true,
+        "message": "\u2705 Healthy - {\"status\": \"healthy\", \"ssh_agent\": true}"
+      },
+      "endpoints": [
+        {
+          "name": "Git Status",
+          "path": "/status",
+          "method": "GET",
+          "ok": true,
+          "message": "\u2705 Success - {\"branch\": \"ops/fly-esc-align-and-mcp-canonicalize\", \"porcelain\": \" M dump.rdb\\n M mcp/filesystem/se",
+          "description": "Get repository status"
+        },
+        {
+          "name": "Git Log",
+          "path": "/log?limit=5",
+          "method": "GET",
+          "ok": true,
+          "message": "\u2705 Success - {\"commits\": [{\"hash\": \"b8f9c5fe\", \"author\": \"scoobyjava\", \"date\": \"2025-09-14 13:42:39 -0700\", \"mess",
+          "description": "Get recent commits"
+        },
+        {
+          "name": "Git Branches",
+          "path": "/branches",
+          "method": "GET",
+          "ok": true,
+          "message": "\u2705 Success - {\"branches\": [\"feat/mcp-indexer-queue-policy-alignment\", \"main\", \"ops/fly-esc-align-and-mcp-canonica",
+          "description": "List branches"
+        }
+      ],
+      "summary": {
+        "total": 3,
+        "passed": 3,
+        "failed": 0
+      }
     }
   },
   "summary": {
-    "passed": 1,
-    "failed": 10,
-    "skipped": 0,
-    "total": 9
+    "total_servers": 3,
+    "healthy_servers": 3,
+    "total_endpoints": 13,
+    "passed_endpoints": 13,
+    "failed_endpoints": 0
   }
 }

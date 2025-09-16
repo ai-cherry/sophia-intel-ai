@@ -1,0 +1,67 @@
+name: auto-pr-on-push
+
+on:
+  push:
+    branches:
+      - 'agent/**'
+      - 'ops/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ensure-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Open or update PR for branch
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const headBranch = context.ref.replace('refs/heads/','');
+            const { data: repoInfo } = await github.repos.get({ owner, repo });
+            const baseBranch = repoInfo.default_branch || 'main';
+
+            // Find existing open PR from this branch
+            const { data: prs } = await github.pulls.list({ owner, repo, state: 'open', head: `${owner}:${headBranch}` });
+            if (prs.length > 0) {
+              core.info(`PR already open: #${prs[0].number}`);
+              return;
+            }
+
+            const title = `auto: ${headBranch}`;
+            const body = [
+              'Automated PR created by auto-pr-on-push workflow.',
+              '',
+              '- Origin: push to branch',
+              `- Branch: ${headBranch}`,
+              `- Base: ${baseBranch}`,
+              '',
+              'This PR was opened using the repo GITHUB_TOKEN. No PATs or SSH required.'
+            ].join('\n');
+
+            const { data: pr } = await github.pulls.create({
+              owner,
+              repo,
+              title,
+              head: headBranch,
+              base: baseBranch,
+              body,
+              draft: true,
+            });
+
+            // Add labels if repo has them; ignore failures
+            try {
+              await github.issues.addLabels({ owner, repo, issue_number: pr.number, labels: ['agent', 'auto-pr'] });
+            } catch (e) {
+              core.info('Labels not added (may not exist).');
+            }
+
+            core.info(`Opened PR #${pr.number}`);

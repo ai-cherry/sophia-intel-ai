@@ -1,0 +1,252 @@
+{
+  "mode": {
+    "id": "genetic-algorithm",
+    "name": "Genetic Algorithm Mode",
+    "version": "1.0.0",
+    "description": "Evolutionary code optimization using genetic algorithms to evolve optimal solutions through mutation, crossover, and selection",
+    "author": "Sophia Intel AI",
+    "status": "active",
+    "category": "optimization"
+  },
+  "configuration": {
+    "agent": "agents.specialized.genetic_algorithm_agent",
+    "model_routing": {
+      "phases": {
+        "initialization": {
+          "model": "claude-opus-4.1",
+          "description": "Population initialization and gene encoding"
+        },
+        "evaluation": {
+          "model": "deepseek-v3",
+          "description": "Fitness evaluation and testing"
+        },
+        "evolution": {
+          "model": "grok-code-fast-1",
+          "description": "Fast mutation and crossover operations"
+        },
+        "optimization": {
+          "model": "google-flash-2.5",
+          "description": "Performance optimization"
+        },
+        "synthesis": {
+          "model": "claude-opus-4.1",
+          "description": "Final solution synthesis and validation"
+        }
+      }
+    },
+    "mcp_integration": {
+      "memory_server": {
+        "url": "http://localhost:8081",
+        "capabilities": ["store_evolution_history", "retrieve_populations", "search_solutions"]
+      },
+      "filesystem_server": {
+        "url": "http://localhost:8082",
+        "capabilities": ["read_code", "write_optimized_code", "backup_generations"]
+      },
+      "git_server": {
+        "url": "http://localhost:8084",
+        "capabilities": ["symbol_search", "dependency_analysis", "commit_optimizations"]
+      }
+    },
+    "parameters": {
+      "default_population_size": 50,
+      "default_generations": 100,
+      "mutation_rate": 0.1,
+      "crossover_rate": 0.7,
+      "elitism_percentage": 0.1,
+      "convergence_threshold": 0.001,
+      "stagnation_limit": 10,
+      "tournament_size": 3
+    }
+  },
+  "capabilities": {
+    "optimization_targets": [
+      "performance",
+      "memory_usage",
+      "code_complexity",
+      "test_coverage",
+      "bundle_size",
+      "security_score",
+      "maintainability"
+    ],
+    "mutation_types": [
+      "algorithm_swap",
+      "data_structure_change",
+      "optimization_technique",
+      "refactoring",
+      "parallelization",
+      "caching_strategy",
+      "memory_optimization"
+    ],
+    "crossover_strategies": [
+      "single_point",
+      "two_point",
+      "uniform",
+      "arithmetic",
+      "heuristic"
+    ],
+    "selection_methods": [
+      "tournament",
+      "roulette_wheel",
+      "rank_based",
+      "elitism",
+      "truncation"
+    ]
+  },
+  "workflows": {
+    "evolve_solution": {
+      "steps": [
+        {
+          "phase": "initialization",
+          "actions": ["parse_problem", "encode_genes", "create_population"]
+        },
+        {
+          "phase": "evaluation",
+          "actions": ["evaluate_fitness", "rank_solutions", "calculate_statistics"]
+        },
+        {
+          "phase": "evolution",
+          "actions": ["select_parents", "crossover", "mutation", "create_offspring"]
+        },
+        {
+          "phase": "optimization",
+          "actions": ["local_search", "fine_tuning", "performance_analysis"]
+        },
+        {
+          "phase": "synthesis",
+          "actions": ["combine_solutions", "validate_results", "generate_code"]
+        }
+      ]
+    },
+    "optimize_code": {
+      "steps": [
+        {
+          "phase": "analysis",
+          "actions": ["parse_code", "identify_bottlenecks", "extract_genes"]
+        },
+        {
+          "phase": "evolution",
+          "actions": ["evolve_optimizations", "test_variations", "measure_improvements"]
+        },
+        {
+          "phase": "integration",
+          "actions": ["apply_optimizations", "validate_correctness", "benchmark_performance"]
+        }
+      ]
+    }
+  },
+  "fitness_functions": {
+    "performance": {
+      "weight": 1.0,
+      "metrics": ["execution_time", "throughput", "latency"],
+      "targets": {
+        "execution_time": "<100ms",
+        "throughput": ">1000req/s",
+        "latency": "<50ms"
+      }
+    },
+    "memory_usage": {
+      "weight": 0.8,
+      "metrics": ["heap_usage", "stack_usage", "gc_pressure"],
+      "targets": {
+        "heap_usage": "<100MB",
+        "stack_usage": "<1MB",
+        "gc_pressure": "low"
+      }
+    },
+    "code_complexity": {
+      "weight": 0.6,
+      "metrics": ["cyclomatic_complexity", "cognitive_complexity", "lines_of_code"],
+      "targets": {
+        "cyclomatic_complexity": "<10",
+        "cognitive_complexity": "<15",
+        "lines_of_code": "minimal"
+      }
+    },
+    "test_coverage": {
+      "weight": 0.9,
+      "metrics": ["line_coverage", "branch_coverage", "mutation_coverage"],
+      "targets": {
+        "line_coverage": ">90%",
+        "branch_coverage": ">85%",
+        "mutation_coverage": ">75%"
+      }
+    }
+  },
+  "examples": {
+    "sorting_optimization": {
+      "description": "Evolve optimal sorting algorithm for specific data patterns",
+      "input": {
+        "task_type": "evolve_solution",
+        "problem_description": "optimize_sorting_for_partially_sorted_data",
+        "optimization_target": "performance",
+        "generations": 50,
+        "population_size": 30
+      },
+      "expected_output": {
+        "best_algorithm": "adaptive_timsort",
+        "improvement": "45%",
+        "fitness_score": 0.92
+      }
+    },
+    "memory_optimization": {
+      "description": "Reduce memory footprint of data structures",
+      "input": {
+        "task_type": "optimize_code",
+        "code_snippet": "class DataStore { ... }",
+        "language": "python",
+        "optimization_targets": ["memory_usage", "performance"]
+      },
+      "expected_output": {
+        "optimized_code": "class OptimizedDataStore { ... }",
+        "memory_reduction": "60%",
+        "performance_gain": "25%"
+      }
+    }
+  },
+  "monitoring": {
+    "metrics": [
+      "evolution_progress",
+      "fitness_improvement_rate",
+      "population_diversity",
+      "convergence_speed",
+      "solution_quality"
+    ],
+    "logging": {
+      "level": "INFO",
+      "file": "/logs/genetic_algorithm_mode.json",
+      "rotation": "daily"
+    },
+    "alerts": {
+      "stagnation": {
+        "threshold": 10,
+        "action": "increase_mutation_rate"
+      },
+      "premature_convergence": {
+        "threshold": 0.1,
+        "action": "inject_diversity"
+      }
+    }
+  },
+  "constraints": {
+    "max_population_size": 1000,
+    "max_generations": 10000,
+    "max_evolution_time": 3600,
+    "min_diversity": 0.1,
+    "max_memory_usage": "1GB"
+  },
+  "dependencies": {
+    "python": ">=3.11",
+    "libraries": [
+      "asyncio",
+      "aiohttp",
+      "numpy",
+      "scipy"
+    ],
+    "mcp_servers": [
+      "memory_server",
+      "filesystem_server",
+      "git_server"
+    ]
+  }
+}

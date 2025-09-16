@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# LEGACY: use scripts/start_all_and_validate.sh
 set -euo pipefail
 # Start all MCP servers for Sophia Intel App (no lsof dependency)
 

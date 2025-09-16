@@ -2,7 +2,7 @@
 # USER-CONTROLLED CENTRALIZED MODEL CONFIGURATION
 # ============================================================================
 # This is YOUR configuration file - edit this to control all model routing
-# across LiteLLM Squad, Builder App, and Sophia Intel App
+# across the Sophia toolchain
 #
 # HOW TO USE:
 # 1. Set 'enabled: true' for models you want to use
@@ -13,7 +13,9 @@
 
 # Your API Configuration
 portkey:
-  api_key: "nYraiE8dOR9A1gDwaRNpSSXRkXBc"
+  # Never commit real API keys. Use environment variable expansion.
+  # Pull locally into .env.local (gitignored): PORTKEY_API_KEY=...
+  api_key: "${PORTKEY_API_KEY}"
   base_url: "https://api.portkey.ai/v1"
   
 # Your Model Preferences
@@ -315,11 +317,7 @@ routing_policies:
 # ============================================================================
 
 system_overrides:
-  litellm_squad:
-    default_policy: "balanced"
-    allow_all_models: true
-    parallel_requests: 5
-    test_on_free_tier: true  # Test on FREE before premium
+  # (removed legacy local proxy overrides)
     
   builder_app:
     planner_policy: "quality_max"

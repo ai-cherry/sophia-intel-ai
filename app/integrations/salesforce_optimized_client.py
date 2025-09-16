@@ -15,13 +15,20 @@ import aiohttp
 import redis.asyncio as redis
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+# Import secure query builder
+from .salesforce_secure_query_builder import (
+    SecureSalesforceQuery, 
+    SOQLOperator,
+    SecureQueryBuilderExamples
+)
+
 # Configuration
-SALESFORCE_CLIENT_ID = os.getenv("SALESFORCE_CLIENT_ID", "3MVG9GCMQoQ6yCBdJ_cOEWKUQq1VJpJo7oLtFRhnJRRnfYdBGgdQw_0wj0fKzNkPz5CW.n7BTzoWu80dQWjWj")
-SALESFORCE_CLIENT_SECRET = os.getenv("SALESFORCE_CLIENT_SECRET", "D19FF3AD2E5D37EE6E35B7E967EAC3BF23D86FA1F085FF3B8D69BC08E14AA491")
-SALESFORCE_USERNAME = os.getenv("SALESFORCE_USERNAME", "lynn@siliconvalley.com")
-SALESFORCE_PASSWORD = os.getenv("SALESFORCE_PASSWORD", "Uqbar1234")
-SALESFORCE_SECURITY_TOKEN = os.getenv("SALESFORCE_SECURITY_TOKEN", "8Z6mH79xGBHF9l2Uk38xQLwz")
-SALESFORCE_DOMAIN = os.getenv("SALESFORCE_DOMAIN", "https://na139.salesforce.com")
+SALESFORCE_CLIENT_ID = os.getenv("SALESFORCE_CLIENT_ID")
+SALESFORCE_CLIENT_SECRET = os.getenv("SALESFORCE_CLIENT_SECRET")
+SALESFORCE_USERNAME = os.getenv("SALESFORCE_USERNAME")
+SALESFORCE_PASSWORD = os.getenv("SALESFORCE_PASSWORD")
+SALESFORCE_SECURITY_TOKEN = os.getenv("SALESFORCE_SECURITY_TOKEN")
+SALESFORCE_DOMAIN = os.getenv("SALESFORCE_DOMAIN")
 SALESFORCE_API_VERSION = os.getenv("SALESFORCE_API_VERSION", "v59.0")
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
@@ -42,33 +49,7 @@ class SalesforceObject(Enum):
     QUOTE = "Quote"
 
 
-@dataclass
-class SalesforceQuery:
-    """SOQL query builder"""
-    object_name: str
-    fields: List[str] = field(default_factory=lambda: ["Id", "Name"])
-    where_conditions: List[str] = field(default_factory=list)
-    order_by: Optional[str] = None
-    limit: Optional[int] = None
-    offset: Optional[int] = None
-    
-    def build(self) -> str:
-        """Build SOQL query string"""
-        query = f"SELECT {', '.join(self.fields)} FROM {self.object_name}"
-        
-        if self.where_conditions:
-            query += f" WHERE {' AND '.join(self.where_conditions)}"
-            
-        if self.order_by:
-            query += f" ORDER BY {self.order_by}"
-            
-        if self.limit:
-            query += f" LIMIT {self.limit}"
-            
-        if self.offset:
-            query += f" OFFSET {self.offset}"
-            
-        return query
+# Legacy SalesforceQuery removed - replaced with SecureSalesforceQuery to prevent SOQL injection
 
 
 @dataclass
@@ -127,6 +108,19 @@ class SalesforceOptimizedClient:
             
     async def _authenticate(self):
         """Authenticate using Username-Password OAuth flow"""
+        required = [
+            (self.domain, "SALESFORCE_DOMAIN"),
+            (self.client_id, "SALESFORCE_CLIENT_ID"),
+            (self.client_secret, "SALESFORCE_CLIENT_SECRET"),
+            (self.username, "SALESFORCE_USERNAME"),
+            (self.password, "SALESFORCE_PASSWORD"),
+            (self.security_token, "SALESFORCE_SECURITY_TOKEN"),
+        ]
+        missing = [name for val, name in required if not val]
+        if missing:
+            raise Exception(
+                f"Salesforce credentials missing: {', '.join(missing)} (configure via Pulumi ESC / environment)"
+            )
         auth_url = f"{self.domain}/services/oauth2/token"
         
         data = {
@@ -361,8 +355,8 @@ class SalesforceOptimizedClient:
         stage: Optional[str] = None,
         close_date_range: Optional[tuple] = None
     ) -> List[Dict[str, Any]]:
-        """Get opportunities with filtering"""
-        query = SalesforceQuery(
+        """Get opportunities with filtering - Now using secure query builder"""
+        query = SecureSalesforceQuery(
             object_name="Opportunity",
             fields=[
                 "Id", "Name", "AccountId", "Amount", "CloseDate",
@@ -371,16 +365,16 @@ class SalesforceOptimizedClient:
         )
         
         if stage:
-            query.where_conditions.append(f"StageName = '{stage}'")
+            # Use secure query builder instead of string interpolation
+            query.add_string_equals("StageName", stage)
             
         if close_date_range:
             start_date, end_date = close_date_range
-            query.where_conditions.append(
-                f"CloseDate >= {start_date.strftime('%Y-%m-%d')} AND "
-                f"CloseDate <= {end_date.strftime('%Y-%m-%d')}"
-            )
+            # Use secure date range instead of string formatting
+            query.add_date_range("CloseDate", start_date, end_date)
             
-        query.order_by = "CloseDate DESC"
+        query.order_by_field = "CloseDate"
+        query.order_by_direction = "DESC"
         query.limit = 200
         
         return await self.query(query.build())
@@ -442,11 +436,16 @@ class SalesforceOptimizedClient:
         return pipeline
         
     async def test_connection(self) -> bool:
-        """Test API connection"""
+        """Test API connection - Now using secure query builder"""
         try:
-            # Try to query a small set of accounts
-            query = "SELECT Id, Name FROM Account LIMIT 1"
-            results = await self.query(query)
+            # Use secure query builder for test query
+            test_query = SecureSalesforceQuery(
+                object_name="Account",
+                fields=["Id", "Name"]
+            )
+            test_query.limit = 1
+            
+            results = await self.query(test_query.build())
             return True
         except Exception as e:
             print(f"Salesforce connection test failed: {e}")
@@ -468,9 +467,9 @@ class SalesforceSyncManager:
         self.redis_client = await redis.from_url(REDIS_URL, decode_responses=True)
         
     async def sync_contacts(self, since: Optional[datetime] = None) -> Dict[str, int]:
-        """Sync contacts from Salesforce"""
+        """Sync contacts from Salesforce - Now using secure query builder"""
         async with self.client as client:
-            query = SalesforceQuery(
+            query = SecureSalesforceQuery(
                 object_name="Contact",
                 fields=[
                     "Id", "FirstName", "LastName", "Email", "Phone",
@@ -479,9 +478,8 @@ class SalesforceSyncManager:
             )
             
             if since:
-                query.where_conditions.append(
-                    f"LastModifiedDate > {since.isoformat()}Z"
-                )
+                # Use secure query builder for date comparison
+                query.add_where_condition("LastModifiedDate", SOQLOperator.GREATER_THAN, since)
                 
             contacts = await client.query(query.build())
             
@@ -575,11 +573,12 @@ async def test_salesforce_client():
             # Test SOQL query
             print("\n2. Testing SOQL query...")
             try:
-                query = SalesforceQuery(
+                # Use secure query builder for test
+                query = SecureSalesforceQuery(
                     object_name="Account",
-                    fields=["Id", "Name", "Type", "Industry"],
-                    limit=5
+                    fields=["Id", "Name", "Type", "Industry"]
                 )
+                query.limit = 5
                 
                 accounts = await client.query(query.build())
                 print(f"   ✅ Found {len(accounts)} accounts")

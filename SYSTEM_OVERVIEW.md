@@ -44,7 +44,7 @@ This comprehensive quality control implementation has transformed the Sophia Int
 
 ### Service Management
 - **Redis**: Caching and session management (port 6379)
-- **LiteLLM**: AI model proxy with 25+ models (port 4000)
+ 
 - **MCP Memory**: Persistent memory server (port 8081)
 - **MCP Filesystem**: File operations server (port 8082)
 - **MCP Git**: Version control server (port 8084)
@@ -140,7 +140,7 @@ This comprehensive quality control implementation has transformed the Sophia Int
 
 ### Network Security
 - Authentication required for all API endpoints
-- Bearer token validation for LiteLLM
+ 
 - Health endpoints properly secured
 - Port conflict detection and resolution
 

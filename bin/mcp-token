@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Generate an MCP JWT token.
+# Example: mcp-token --aud filesystem --ttl 900
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT="${SCRIPT_DIR}/.."
+
+python3 "$REPO_ROOT/tools/mcp/token.py" "$@"
+

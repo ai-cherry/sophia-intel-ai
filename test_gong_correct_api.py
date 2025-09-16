@@ -5,9 +5,15 @@ Test Gong API with correct endpoints
 from datetime import datetime, timedelta
 import requests
 from requests.auth import HTTPBasicAuth
-# API credentials
-GONG_ACCESS_KEY = "TV33BPZ5UN45QKZCZ2UCAKRXHQ6Q3L5N"
-GONG_CLIENT_SECRET = "eyJhbGciOiJIUzI1NiJ9.eyJleHAiOjIwNTQxNTA4ODUsImFjY2Vzc0tleSI6IlRWMzNCUFo1VU40NVFLWkNaMlVDQUtSWEhRNlEzTDVOIn0.zgPvDQQIvU1kvF_9ctjcKuqC5xKhlpZo7MH5v7AYufU"
+import os
+
+# API credentials from environment (never commit real values)
+GONG_ACCESS_KEY = os.getenv("GONG_ACCESS_KEY", "")
+GONG_CLIENT_SECRET = os.getenv("GONG_CLIENT_SECRET", "")
+if not GONG_ACCESS_KEY or not GONG_CLIENT_SECRET:
+    print("GONG_ACCESS_KEY/GONG_CLIENT_SECRET not set; skipping live Gong tests.")
+    raise SystemExit(0)
+
 # Use Basic Auth
 auth = HTTPBasicAuth(GONG_ACCESS_KEY, GONG_CLIENT_SECRET)
 print("🔍 Testing Gong API Connectivity with Correct Endpoints")

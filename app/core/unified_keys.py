@@ -268,38 +268,28 @@ class UnifiedKeysManager:
         # Vector Database Keys
         self.vector_db_keys = {
             "QDRANT": APIKeyConfig(
-                key=os.getenv(
-                    "QDRANT_API_KEY",
-                    "ccabdaed-b564-4157-8846-b8f227c7f29b|hRnj-WYa5pxZlPuu2S2LmrX2LziBOdChyLP5Hq578N-HIi16EZIshA",
-                ),
+                key=os.getenv("QDRANT_API_KEY", ""),
                 type=KeyType.VECTOR_DB,
                 provider="qdrant",
                 base_url="https://a2a5dc3b-bf37-4907-9398-d49f5c6813ed.us-west-2-0.aws.cloud.qdrant.io",
                 description="Qdrant vector database",
             ),
             "WEAVIATE": APIKeyConfig(
-                key=os.getenv(
-                    "WEAVIATE_API_KEY", "VMKjGMQUnXQIDiFOciZZOhr7amBfCHMh7hNf"
-                ),
+                key=os.getenv("WEAVIATE_API_KEY", ""),
                 type=KeyType.VECTOR_DB,
                 provider="weaviate",
                 base_url="https://w6bigpoxsrwvq7wlgmmdva.c0.us-west3.gcp.weaviate.cloud",
                 description="Weaviate vector database",
             ),
             "REDIS": APIKeyConfig(
-                key=os.getenv(
-                    "REDIS_USER_KEY",
-                    "S666q3cr9wmzpetc6iud02iqv26774azveodh2pfadrd7pgq8l7",
-                ),
+                key=os.getenv("REDIS_USER_KEY", ""),
                 type=KeyType.VECTOR_DB,
                 provider="redis",
                 base_url="redis-15014.fcrce172.us-east-1-1.ec2.redns.redis-cloud.com:15014",
                 description="Redis cache and vector storage",
             ),
             "MEM0": APIKeyConfig(
-                key=os.getenv(
-                    "MEM0_API_KEY", "m0-migu5eMnfwT41nhTgVHsCnSAifVtOf3WIFz2vmQc"
-                ),
+                key=os.getenv("MEM0_API_KEY", ""),
                 type=KeyType.VECTOR_DB,
                 provider="mem0",
                 base_url="https://api.mem0.ai",
@@ -309,52 +299,38 @@ class UnifiedKeysManager:
         # Infrastructure Keys
         self.infrastructure_keys = {
             "NEON": APIKeyConfig(
-                key=os.getenv(
-                    "NEON_API_TOKEN",
-                    "napi_r3gsuacduzw44nqdqav1u0hr2uv4bb2if48r8627jkxo7e4b2sxn92wsgf6zlxby",
-                ),
+                key=os.getenv("NEON_API_TOKEN", ""),
                 type=KeyType.INFRASTRUCTURE,
                 provider="neon",
                 base_url="https://app-sparkling-wildflower-99699121.dpl.myneon.app",
                 description="Neon PostgreSQL database",
             ),
             "NEO4J": APIKeyConfig(
-                key=os.getenv("NEO4J_CLIENT_ID", "jPSJvG4itnj6DHbdUwm9dBTjeimb9wXv"),
+                key=os.getenv("NEO4J_CLIENT_ID", ""),
                 type=KeyType.INFRASTRUCTURE,
                 provider="neo4j",
                 description="Neo4j graph database",
             ),
             "N8N": APIKeyConfig(
-                key=os.getenv(
-                    "N8N_API_KEY",
-                    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIzN2Y4NTVkMi01ODIwLTQ2ZmMtYjlhMS1kMjdlN2ZhMGQ3MDIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzUwMjgyMjU5LCJleHAiOjE3NTgwMDYwMDB9.5uLdSTZdIwlSld3WpVGC0TVm97vvzXs3y44FNeRm3N8",
-                ),
+                key=os.getenv("N8N_API_KEY", ""),
                 type=KeyType.INFRASTRUCTURE,
                 provider="n8n",
                 description="n8n workflow automation",
             ),
             "PULUMI": APIKeyConfig(
-                key=os.getenv(
-                    "PULUMI_ACCESS_TOKEN",
-                    "pul-f60e05d69c13efa7a73abea7a7bf09c668fbc2dc",
-                ),
+                key=os.getenv("PULUMI_ACCESS_TOKEN", ""),
                 type=KeyType.INFRASTRUCTURE,
                 provider="pulumi",
                 description="Pulumi infrastructure as code",
             ),
             "AGNO": APIKeyConfig(
-                key=os.getenv(
-                    "AGNO_API_KEY", "phi-0cnOaV2N-MKID0LJTszPjAdj7XhunqMQFG4IwLPG9dI"
-                ),
+                key=os.getenv("AGNO_API_KEY", ""),
                 type=KeyType.INFRASTRUCTURE,
                 provider="agno",
                 description="Agno/PhiData framework",
             ),
             "CONTINUE": APIKeyConfig(
-                key=os.getenv(
-                    "CONTINUE_API_KEY",
-                    "con-483f8da98573b95f77c07381f7ccf1ff5e070acf7eac9bea929f64250e9f1dd2",
-                ),
+                key=os.getenv("CONTINUE_API_KEY", ""),
                 type=KeyType.INFRASTRUCTURE,
                 provider="continue",
                 description="Continue.dev integration",

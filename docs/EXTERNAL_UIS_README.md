@@ -6,7 +6,7 @@ Repos/Worktrees (outside this repo):
   - Uses MCP FS/Git (8082/8084) and Portkey (server-side) with .env.master
   - Scaffold: scripts/scaffold_forge_ui.sh
 - Workbench (../worktrees/workbench-ui, port 3200)
-  - VK health, logs, routing views; Portkey-only server calls
+  - VK health, logs, routing views; flexible provider routing (Portkey/OpenRouter/Direct) via `.env.master`
   - Optional read-only MCP context panels
   - Scaffold: scripts/scaffold_workbench_ui.sh
 - Sophia BI UI (../worktrees/sophia-bi-ui, port 3300)
@@ -37,7 +37,7 @@ bash scripts/scaffold_workbench_ui.sh  ../worktrees/workbench-ui
 cd ../worktrees/workbench-ui
 pnpm i || npm i
 REPO_ENV_MASTER_PATH=$(pwd -P | sed 's|/worktrees/workbench-ui||')/.env.master \
-  PORTKEY_API_KEY=pk_live_xxx \
+  AI_ROUTER=direct AI_PROVIDER=openai \
   npm run dev
 # Test
 curl -fsS http://localhost:3200/health

@@ -11,11 +11,17 @@ import re
 import ast
 import yaml
 from fastapi import FastAPI, HTTPException, Request
+import hmac
+import hashlib as _hashlib
+import json as _json
+import time as _time
 import json
 import time
+from config.python_settings import settings_from_env
+_settings = settings_from_env()
 try:
     import redis  # type: ignore
-    _redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+    _redis_url = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/1")
     _rq = redis.Redis.from_url(_redis_url)
 except Exception:
     _rq = None
@@ -69,12 +75,17 @@ def allowed_to_write(path: Path, policy: Policy) -> bool:
     return any(p.startswith(allow) for allow in policy.write_allowed)
 WORKSPACE_PATH = Path(os.getenv("WORKSPACE_PATH", "/workspace"))
 WORKSPACE_NAME = os.getenv("WORKSPACE_NAME", "sophia")
-READ_ONLY = os.getenv("READ_ONLY", "false").lower() == "true"
+READ_ONLY = (_settings.READ_ONLY == "1")
 app = FastAPI(title=f"MCP Filesystem Server ({WORKSPACE_NAME})")
-_mcp_token = os.getenv("MCP_TOKEN")
-_dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
-_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_mcp_jwt_secret = os.getenv("MCP_JWT_SECRET", "")
+_mcp_audience = os.getenv("MCP_JWT_AUD", "filesystem")
+_dev_bypass = (_settings.MCP_DEV_BYPASS == "1")
+_rate_limit_rpm = int(_settings.RATE_LIMIT_RPM)
 _rate_buckets: dict[str, deque] = {}
+
+# Startup validation
+if not _mcp_jwt_secret and not _dev_bypass:
+    raise SystemExit("MCP_JWT_SECRET required for production. Set MCP_DEV_BYPASS=1 for development.")
 
 # Metrics
 REGISTRY = CollectorRegistry()
@@ -82,21 +93,54 @@ REQ_COUNTER = Counter("mcp_requests_total", "Total HTTP requests", ["server", "m
 REQ_LATENCY = Histogram("mcp_request_latency_seconds", "Request latency seconds", ["server", "path"], registry=REGISTRY)
 
 
+def _b64url_encode(data: bytes) -> str:
+    import base64
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+
+def _b64url_decode(data: str) -> bytes:
+    import base64
+    padding = '=' * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def _verify_jwt_hs256(token: str, secret: str, aud: str) -> bool:
+    try:
+        header_b64, payload_b64, sig_b64 = token.split(".")
+        signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+        expected_sig = hmac.new(secret.encode("utf-8"), signing_input, _hashlib.sha256).digest()
+        if not hmac.compare_digest(_b64url_encode(expected_sig), sig_b64):
+            return False
+        payload = _json.loads(_b64url_decode(payload_b64))
+        # exp check
+        if "exp" in payload and int(payload["exp"]) < int(_time.time()):
+            return False
+        # audience check (string or list)
+        pa = payload.get("aud")
+        if isinstance(pa, list):
+            return aud in pa
+        if isinstance(pa, str):
+            return pa == aud
+        return False
+    except Exception:
+        return False
+
+
 @app.middleware("http")
 async def mcp_auth(request: Request, call_next):
     # Allow health without auth
     if request.url.path in ("/health", "/metrics"):
         return await call_next(request)
-    if not _mcp_token:
+    if not _mcp_jwt_secret:
         if _dev_bypass:
             return await call_next(request)
-        return JSONResponse({"error": "MCP_TOKEN not set"}, status_code=401)
+        return JSONResponse({"error": "MCP_JWT_SECRET required"}, status_code=401)
     auth = request.headers.get("authorization", "")
     if not auth.startswith("Bearer "):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
     token = auth.split(" ", 1)[1]
-    if token != _mcp_token:
-        return JSONResponse({"error": "Invalid token"}, status_code=401)
+    if not _verify_jwt_hs256(token, _mcp_jwt_secret, _mcp_audience):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
     # Rate limit (skip health/metrics)
     try:
         if _rate_limit_rpm > 0 and request.url.path not in ("/health", "/metrics"):
@@ -181,22 +225,35 @@ DEFAULT_EXCLUDES = [
 def _is_excluded(path: Path, exclude: List[str]) -> bool:
     sp = str(path)
     return any(fnmatch.fnmatch(sp, pat) for pat in exclude)
-def _iter_files(base: Path, globs: Optional[List[str]], exclude: List[str]) -> List[Path]:
+def _iter_files(
+    base: Path,
+    globs: Optional[List[str]],
+    exclude: List[str],
+    max_count: Optional[int] = None,
+    time_budget_seconds: Optional[float] = None,
+) -> List[Path]:
     base = base.resolve()
-    files: List[Path] = []
     patterns = globs or ["**/*"]
+    seen: set[Path] = set()
+    unique: List[Path] = []
+    start = perf_counter()
     for pat in patterns:
         for p in base.glob(pat):
-            if p.is_file() and not _is_excluded(p, exclude) and within(p, base):
-                files.append(p)
-    # De-duplicate while preserving order
-    seen = set()
-    unique: List[Path] = []
-    for p in files:
-        rp = p.resolve()
-        if rp not in seen:
+            if time_budget_seconds is not None and (perf_counter() - start) > time_budget_seconds:
+                return unique
+            if not p.is_file():
+                continue
+            if _is_excluded(p, exclude):
+                continue
+            if not within(p, base):
+                continue
+            rp = p.resolve()
+            if rp in seen:
+                continue
             unique.append(p)
             seen.add(rp)
+            if max_count is not None and len(unique) >= max_count:
+                return unique
     return unique
 def _detect_lang(path: Path) -> str:
     ext = path.suffix.lower()
@@ -313,7 +370,7 @@ def _extract_deps_for_file(path: Path, content: str, lang: str) -> List[str]:
 @app.get("/health")
 async def health() -> Dict[str, Any]:
     return {
-        "status": "ok",
+        "status": "healthy",
         "workspace": str(WORKSPACE_PATH),
         "name": WORKSPACE_NAME,
         "read_only": READ_ONLY,
@@ -423,9 +480,15 @@ async def repo_list(req: RepoListRequest) -> Dict[str, Any]:
     exclude = list(DEFAULT_EXCLUDES)
     if req.exclude:
         exclude += req.exclude
-    files = _iter_files(base, req.globs, exclude)
+    files = _iter_files(
+        base,
+        req.globs,
+        exclude,
+        max_count=(max(0, req.limit) or None),
+        time_budget_seconds=3.5,
+    )
     out = []
-    for p in files[: max(0, req.limit) or len(files)]:
+    for p in files:
         try:
             st = p.stat()
             out.append(
@@ -465,7 +528,7 @@ async def repo_read(req: RepoReadRequest) -> Dict[str, Any]:
 async def repo_search(req: RepoSearchRequest) -> Dict[str, Any]:
     base = WORKSPACE_PATH
     exclude = list(DEFAULT_EXCLUDES)
-    files = _iter_files(base, req.globs, exclude)
+    files = _iter_files(base, req.globs, exclude, time_budget_seconds=4.0)
     matches = []
     flags = 0 if req.case_sensitive else re.IGNORECASE
     pattern: Optional[re.Pattern[str]] = None
@@ -519,11 +582,11 @@ async def symbols_index(req: SymbolsIndexRequest) -> Dict[str, Any]:
             tp = (base / p).resolve()
             if within(tp, base):
                 if tp.is_dir():
-                    targets.extend(_iter_files(tp, ["**/*"], DEFAULT_EXCLUDES))
+                    targets.extend(_iter_files(tp, ["**/*"], DEFAULT_EXCLUDES, max_count=5000, time_budget_seconds=3.5))
                 elif tp.is_file():
                     targets.append(tp)
     else:
-        targets = _iter_files(base, ["**/*"], DEFAULT_EXCLUDES)
+        targets = _iter_files(base, ["**/*"], DEFAULT_EXCLUDES, max_count=5000, time_budget_seconds=3.5)
     allowed_langs = set(req.languages or [])
     for p in targets:
         lang = _detect_lang(p)

@@ -72,7 +72,7 @@ echo -e "\n📚 Phase 7: Cleaning documentation..."
 safe_remove "README_ARM64_LOCAL.md"
 safe_remove "README_UNIFIED.md"
 safe_remove "README_SOPHIA.md"
-safe_remove "LITELLM_BUILDER_APP_ARCHITECTURE.md"
+# (removed legacy doc)
 
 echo -e "\n🔌 Phase 8: Removing duplicate startup scripts..."
 # Analyze which startup scripts are actually needed

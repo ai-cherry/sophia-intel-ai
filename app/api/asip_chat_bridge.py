@@ -401,5 +401,7 @@ async def get_metrics():
         "timestamp": datetime.now().isoformat(),
     }
 if __name__ == "__main__":
+    import os
     import uvicorn
-    uvicorn.run(app, host="${BIND_IP}", port=8100)
+    bind_ip = os.getenv("BIND_IP", "0.0.0.0")
+    uvicorn.run(app, host=bind_ip, port=8100)

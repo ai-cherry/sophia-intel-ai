@@ -1,0 +1,44 @@
+name: verify-webhooks-live
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Public base URL of the deployed API (e.g., https://api.example.com)"
+        required: true
+        type: string
+      environment:
+        description: "Target environment (maps to GitHub Environments for secrets)"
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - prod
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show config
+        run: |
+          echo "Environment: ${{ inputs.environment }}"
+          echo "BASE_URL: ${{ inputs.base_url }}"
+
+      - name: Prepare script
+        run: chmod +x scripts/verify_webhooks.sh
+
+      - name: Verify live webhooks (Asana, Gong, Slack)
+        env:
+          BASE_URL: ${{ inputs.base_url }}
+          GONG_WEBHOOK_SECRET: ${{ secrets.GONG_WEBHOOK_SECRET }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+        run: ./scripts/verify_webhooks.sh
+

@@ -44,7 +44,7 @@ We have THREE viable options for our Platinum swarm implementation:
 
 ```python
 # Install
-pip install openai requests litellm
+pip install openai requests
 git clone https://github.com/agno-agi/agno
 cd agno && pip install -e .
 

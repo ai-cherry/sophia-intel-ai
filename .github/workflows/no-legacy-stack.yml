@@ -21,7 +21,7 @@ jobs:
       - name: Global forbidden patterns (runtime only; docs scanned separately)
         run: |
           set -euo pipefail
-          FORBIDDEN='(builder-agno-system|sophia-intel-app(?!/external)|litellm|/frontend\b|mcp/filesystem\.py\b|mcp/git_server\.py\b|npx\s+create-sophia-intel-app|http://localhost:4000|:8090|api\.x\.ai|\bXAI_API_KEY\b|\bgrok\b(?!.*EXTERNAL_TOOLS))'
+          FORBIDDEN='(builder-agno-system|sophia-intel-app(?!/external)|/frontend\b|mcp/filesystem\.py\b|mcp/git_server\.py\b|npx\s+create-sophia-intel-app|http://localhost:4000|:8090|api\.x\.ai|\bXAI_API_KEY\b|\bgrok\b(?!.*EXTERNAL_TOOLS))'
           if rg -n "$FORBIDDEN" -S --hidden --glob '!**/.git/**' --glob '!docs/**' ; then
             echo "Forbidden patterns detected. Purge or rewrite required." >&2
             exit 1

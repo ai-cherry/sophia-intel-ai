@@ -1,0 +1,132 @@
+<common_patterns>
+  <pattern name="general_etl_pipeline">
+    <description>Airbyte ETL pipeline for any data source to vector/BI/MCP</description>
+    <code><![CDATA[
+# General Airbyte ETL template
+import requests
+from datetime import datetime
+
+def trigger_airbyte_sync(connection_id, api_key):
+    url = f"https://airbyte-instance/api/v1/connections/{connection_id}/sync"
+    headers = {"Authorization": f"Bearer {api_key}"}
+    response = requests.post(url, headers=headers)
+    if response.status_code == 200:
+        job_id = response.json()['job']['id']
+        # Monitor job
+        status_url = f"https://airbyte-instance/api/v1/jobs/{job_id}/status"
+        status = requests.get(status_url, headers=headers).json()
+        return status['job']['status'] == 'succeeded'
+    return False
+
+# Usage: Sync CRM to Weaviate/MCP
+sync_success = trigger_airbyte_sync('crm-to-vector', 'api-key')
+if sync_success:
+    # Post-sync: Load to MCP memory
+    pass
+]]></code>
+    <when_to_use>For scheduled data sync from any source to vector DBs or BI</when_to_use>
+  </pattern>
+
+  <pattern name="api_integration">
+    <description>General API integration with OAuth and retry logic</description>
+    <code><![CDATA[
+# General API template
+import requests
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+class APIIntegrator:
+    def __init__(self, client_id, client_secret, base_url):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.base_url = base_url
+        self.access_token = None
+    
+    @retry(stop=stop_after_attempt(5), wait=wait_exponential(multiplier=1, min=4, max=10))
+    def authenticate(self):
+        # OAuth flow for Salesforce/HubSpot/Gong etc.
+        token_url = f"{self.base_url}/oauth/token"
+        data = {'grant_type': 'client_credentials', 'client_id': self.client_id, 'client_secret': self.client_secret}
+        response = requests.post(token_url, data=data)
+        if response.status_code == 200:
+            self.access_token = response.json()['access_token']
+    
+    def query_api(self, endpoint, params=None):
+        if not self.access_token:
+            self.authenticate()
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        response = requests.get(f"{self.base_url}/{endpoint}", params=params, headers=headers)
+        return response.json()
+]]></code>
+    <when_to_use>For secure API calls in integrations (CRM, Gong, Intercom)</when_to_use>
+  </pattern>
+
+  <pattern name="mcp_hook">
+    <description>MCP integration for git/memory/filesystem hooks</description>
+    <code><![CDATA[
+# MCP git commit and memory store example
+from mcp import git_server, memory_server
+
+def mcp_commit_and_store(message, files, key, value):
+    git_server.commit(message=message, files=files)
+    memory_server.store(key=key, value=value)
+
+# Usage: Commit deployment changes and store state
+mcp_commit_and_store("feat: deploy ETL", ["config.yaml"], "deployment_state", {"status": "deployed"})
+]]></code>
+    <when_to_use>For MCP ops in workflows (repo sync, state persistence)</when_to_use>
+  </pattern>
+
+  <pattern name="multi_repo_sync">
+    <description>Sync sophia-intel-ai and workbench-ui repos</description>
+    <code><![CDATA[
+# Multi-repo sync template
+import os
+
+def sync_repos():
+    os.chdir('/Users/lynnmusil/sophia-intel-ai')
+    os.system("git pull origin main")
+    os.chdir('../workbench-ui')
+    os.system("git pull origin main")
+    # Validate sync
+    os.system("git log --oneline -1") # Check latest commit
+
+# Usage: Sync before deployment
+sync_repos()
+]]></code>
+    <when_to_use>For multi-repo dependencies in rollout</when_to_use>
+  </pattern>
+
+  <pattern name="privacy_mask">
+    <description>Mask PII in ETL/MCP/vector data flows</description>
+    <code><![CDATA[
+# Privacy masking template
+import re
+
+def mask_pii(data):
+    # Anonymize emails, names, etc.
+    patterns = [r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'] # emails
+    for pattern in patterns:
+        data = re.sub(pattern, '[MASKED]', data)
+    return data
+
+# Usage: Mask in Airbyte or MCP store
+masked_data = mask_pii(raw_crm_data)
+]]></code>
+    <when_to_use>For privacy controls in data flows (GDPR/CCPA)</when_to_use>
+  </pattern>
+
+  <pattern name="agent_orchestration">
+    <description>Orchestrate agents with mode_factory</description>
+    <code><![CDATA[
+# Agent orchestration template
+from agents.core.mode_factory import ModeFactory
+from agents.core.mode_config import ModeConfig
+
+def orchestrate_deployment():
+    config = ModeConfig(slug="genetic-algorithm", task="optimize ETL")
+    agent = ModeFactory.create_agent(config)
+    agent.execute_phase("deployment")
+]]></code>
+    <when_to_use>For chaining agents in workflows</when_to_use>
+  </pattern>
+</common_patterns>

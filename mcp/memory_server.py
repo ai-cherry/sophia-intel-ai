@@ -10,27 +10,34 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from pydantic import BaseModel
+from config.python_settings import settings_from_env
 
 import redis.asyncio as redis
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse, Response
 from time import perf_counter
+import hmac
+import hashlib as _hashlib
+import json as _json
 from collections import deque
 from prometheus_client import Counter, Histogram, CollectorRegistry, generate_latest, CONTENT_TYPE_LATEST
 
 app = FastAPI(title="MCP Memory Server")
 
 # Redis connection (use DB 1 for memory)
-REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/1")
+_settings = settings_from_env()
+REDIS_URL = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/1")
 redis_client: Optional[redis.Redis] = None
 
-# Minimal auth scaffolding (optional):
-# If MCP_TOKEN is set, require Authorization: Bearer <token>.
-# If not set and MCP_DEV_BYPASS=true, allow unauthenticated (dev-friendly).
-_mcp_token = os.getenv("MCP_TOKEN")
-_dev_bypass = os.getenv("MCP_DEV_BYPASS", "false").lower() in ("1", "true", "yes")
-_rate_limit_rpm = int(os.getenv("RATE_LIMIT_RPM", "120"))
+_mcp_jwt_secret = os.getenv("MCP_JWT_SECRET", "")
+_mcp_audience = os.getenv("MCP_JWT_AUD", "memory")
+_dev_bypass = (_settings.MCP_DEV_BYPASS == "1")
+_rate_limit_rpm = int(_settings.RATE_LIMIT_RPM)
 _rate_buckets: dict[str, deque] = {}
+
+# Startup validation
+if not _mcp_jwt_secret and not _dev_bypass:
+    raise SystemExit("MCP_JWT_SECRET required for production. Set MCP_DEV_BYPASS=1 for development.")
 
 # Metrics
 REGISTRY = CollectorRegistry()
@@ -38,21 +45,52 @@ REQ_COUNTER = Counter("mcp_requests_total", "Total HTTP requests", ["server", "m
 REQ_LATENCY = Histogram("mcp_request_latency_seconds", "Request latency seconds", ["server", "path"], registry=REGISTRY)
 
 
+def _b64url_encode(data: bytes) -> str:
+    import base64
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
+
+
+def _b64url_decode(data: str) -> bytes:
+    import base64
+    padding = '=' * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def _verify_jwt_hs256(token: str, secret: str, aud: str) -> bool:
+    try:
+        header_b64, payload_b64, sig_b64 = token.split(".")
+        signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
+        expected_sig = hmac.new(secret.encode("utf-8"), signing_input, _hashlib.sha256).digest()
+        if not hmac.compare_digest(_b64url_encode(expected_sig), sig_b64):
+            return False
+        payload = _json.loads(_b64url_decode(payload_b64))
+        if "exp" in payload and int(payload["exp"]) < int(time.time()):
+            return False
+        pa = payload.get("aud")
+        if isinstance(pa, list):
+            return "memory" in pa or aud in pa
+        if isinstance(pa, str):
+            return pa in ("memory", aud)
+        return False
+    except Exception:
+        return False
+
+
 @app.middleware("http")
 async def mcp_auth(request: Request, call_next):
     # Always allow health without auth
     if request.url.path in ("/health", "/metrics"):
         return await call_next(request)
-    if not _mcp_token:
+    if not _mcp_jwt_secret:
         if _dev_bypass:
             return await call_next(request)
-        return JSONResponse({"error": "MCP_TOKEN not set"}, status_code=401)
+        return JSONResponse({"error": "MCP_JWT_SECRET required"}, status_code=401)
     auth = request.headers.get("authorization", "")
     if not auth.startswith("Bearer "):
         return JSONResponse({"error": "Unauthorized"}, status_code=401)
     token = auth.split(" ", 1)[1]
-    if token != _mcp_token:
-        return JSONResponse({"error": "Invalid token"}, status_code=401)
+    if not _verify_jwt_hs256(token, _mcp_jwt_secret, _mcp_audience):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
     # Simple rate limiting per IP per minute (skip health/metrics)
     try:
         if _rate_limit_rpm > 0 and request.url.path not in ("/health", "/metrics"):
@@ -273,11 +311,19 @@ async def list_sessions(limit: int = 100) -> List[Dict[str, Any]]:
     return sessions[:limit]
 
 
+class SearchRequest(BaseModel):
+    query: str
+    session_id: Optional[str] = None
+    limit: int = 20
+
 @app.post("/search")
-async def search_memory(query: str, session_id: Optional[str] = None, limit: int = 20):
+async def search_memory(req: SearchRequest):
     """Search across memory entries."""
     r = await get_redis()
-    results = []
+    results: List[Dict[str, Any]] = []
+    query = req.query
+    session_id = req.session_id
+    limit = req.limit
     
     # Determine search scope
     if session_id:
@@ -312,9 +358,85 @@ async def search_memory(query: str, session_id: Optional[str] = None, limit: int
 
 # Compatibility alias for clients expecting a namespaced memory search route
 @app.post("/memory/search")
-async def search_memory_alias(query: str, session_id: Optional[str] = None, limit: int = 20):
-    return await search_memory(query=query, session_id=session_id, limit=limit)
+async def search_memory_alias(req: SearchRequest):
+    return await search_memory(req=req)
 
+
+# Compatibility endpoints for legacy clients (e.g., Agno MCP client)
+# These mirror simple key/value semantics onto session-scoped memory.
+class KVRequest(BaseModel):
+    key: str
+    value: Any | None = None
+
+
+@app.post("/store")
+async def kv_store(req: KVRequest):
+    """Store a value under a session key, compatible with legacy /store.
+
+    Maps to: POST /sessions/{key}/memory with content serialized.
+    """
+    content: str
+    try:
+        # Preserve strings as-is; serialize other types
+        if isinstance(req.value, str):
+            content = req.value
+        else:
+            content = json.dumps(req.value)
+    except Exception:
+        content = str(req.value)
+
+    entry = MemoryEntry(content=content, role="assistant", metadata={"kv": True})
+    result = await store_memory(session_id=req.key, entry=entry)
+    return {"ok": True, "session": req.key, **result}
+
+
+@app.get("/retrieve")
+async def kv_retrieve(key: str):
+    """Retrieve session memory for a key, compatible with legacy /retrieve.
+
+    Returns the same structure as get_session_memory.
+    """
+    ctx = await get_session_memory(session_id=key, limit=100)
+    return ctx
+
+
+@app.delete("/delete")
+async def kv_delete(key: str):
+    """Delete all memory for a session key, compatible with legacy /delete."""
+    r = await get_redis()
+    # Remove timeline entries
+    timeline_key = f"session:{key}:timeline"
+    meta_key = f"session:{key}:meta"
+    try:
+        # Delete per-entry hashes referenced in the timeline
+        ids = await r.lrange(timeline_key, 0, -1)
+        if ids:
+            await r.delete(*ids)
+    except Exception:
+        pass
+    # Delete timeline and meta
+    await r.delete(timeline_key)
+    await r.delete(meta_key)
+    # Also delete any stray memory:<key>:* entries
+    try:
+        cursor = 0
+        pattern = f"memory:{key}:*"
+        while True:
+            cursor, keys = await r.scan(cursor, match=pattern, count=100)
+            if keys:
+                await r.delete(*keys)
+            if cursor == 0:
+                break
+    except Exception:
+        pass
+    return {"ok": True, "session": key, "deleted": True}
+
+
+@app.get("/search")
+async def kv_search(query: str, limit: int = 50):
+    """GET-based search, compatible with legacy /search?query=..."""
+    req = SearchRequest(query=query, limit=limit)
+    return await search_memory(req)
 
 if __name__ == "__main__":
     import uvicorn

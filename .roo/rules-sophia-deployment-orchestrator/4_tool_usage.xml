@@ -1,0 +1,104 @@
+<tool_usage_guide>
+  <tool_priorities>
+    <priority level="1">
+      <tool>execute_command</tool>
+      <when>Primary for deployment commands (docker for Airbyte/Weaviate/MCP, pm2 for agents, git for sync)</when>
+      <why>Direct execution for container ops, service starts, repo management</why>
+    </priority>
+    <priority level="2">
+      <tool>use_mcp_tool - git server</tool>
+      <when>For multi-repo operations (sync sophia-intel-ai and workbench-ui, commit changes)</when>
+      <why>Safe git ops without shell risks, integrates with MCP for state</why>
+    </priority>
+    <priority level="3">
+      <tool>read_file / write_to_file</tool>
+      <when>Update configs (sophia.config.yaml, .env.master, docker-compose.yml)</when>
+      <why>Dynamic adjustments for integrations and services</why>
+    </priority>
+    <priority level="4">
+      <tool>use_mcp_tool - memory server</tool>
+      <when>For state persistence (store deployment status, load configs)</when>
+      <why>Maintains workflow state across phases</why>
+    </priority>
+  </tool_priorities>
+
+  <tool_specific_guidance>
+    <tool name="execute_command">
+      <purpose>Execute deployment commands for full stack</purpose>
+      <when_to_use>For container ops, ETL setup, agent starts, service management</when_to_use>
+      <syntax>
+        <command>docker compose up -d</command>
+        <cwd>/Users/lynnmusil/sophia-intel-ai</cwd>
+      </parameter>
+      <examples>
+        <example scenario="deploy_mcp">
+          <code>docker compose -f docker-compose.mcp.yml up -d</code>
+          <output>MCP servers (memory/filesystem/git) started</output>
+        </example>
+        <example scenario="start_agents">
+          <code>pm2 start ecosystem.config.js --env production</code>
+          <output>Agents and blended factory running</output>
+        </example>
+        <example scenario="deploy_airbyte">
+          <code>docker compose -f docker-compose.airbyte.yml up -d</code>
+          <output>ETL pipelines for CRM/BI sync started</output>
+        </example>
+      </examples>
+    </tool>
+
+    <tool name="use_mcp_tool - git server">
+      <purpose>Manage repo operations and multi-repo sync</purpose>
+      <when_to_use>For git pull both repos, commit deployment changes</when_to_use>
+      <syntax>
+        <server_name>git server</server_name>
+        <tool_name>pull</tool_name>
+        <parameters>
+          <repo>sophia-intel-ai</repo>
+          <branch>main</branch>
+        </parameters>
+      </syntax>
+      <examples>
+        <example scenario="multi_repo_sync">
+          <code>use_mcp_tool server_name="github" tool_name="pull" parameters={"repo": "sophia-intel-ai", "branch": "main"}</code>
+          <output>Repo synced</output>
+        </example>
+      </examples>
+    </tool>
+
+    <tool name="read_file">
+      <purpose>Validate configs before/after deploy</purpose>
+      <when_to_use>For sophia.config.yaml, .env.master, docker-compose.yml</when_to_use>
+      <syntax>
+        <path>sophia.config.yaml</path>
+      </syntax>
+      <examples>
+        <example scenario="validate_env">
+          <code>read_file path=".env.master"</code>
+          <output>Config loaded for validation</output>
+        </example>
+      </examples>
+    </tool>
+
+    <tool name="write_to_file">
+      <purpose>Update configs during rollout</purpose>
+      <when_to_use>For dynamic changes to deployment files</when_to_use>
+      <syntax>
+        <path>.env.local</path>
+        <content>DEPLOYMENT_ENV=production</content>
+      </syntax>
+    </tool>
+
+    <tool name="use_mcp_tool - memory server">
+      <purpose>Persist deployment state</purpose>
+      <when_to_use>For storing status across phases</when_to_use>
+      <syntax>
+        <server_name>memory</server_name>
+        <tool_name>store</tool_name>
+        <arguments>
+          <key>deployment_status</key>
+          <value>{"phase": "deployed", "timestamp": "2025-09-15T06:00:00Z"}</value>
+        </arguments>
+      </syntax>
+    </tool>
+  </tool_specific_guidance>
+</tool_usage_guide>

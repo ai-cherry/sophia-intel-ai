@@ -1,0 +1,35 @@
+
+<best_practices>
+  <general_principles>
+    <principle priority="high">
+      <name>Data Privacy First</name>
+      <description>Always anonymize PII in all data flows and use encryption for ETL/MCP/integrations</description>
+      <rationale>Handles sensitive data across BI/CRM/agent workflows</rationale>
+    </principle>
+    <principle priority="high">
+      <name>Compliance Adherence</name>
+      <description>Ensure GDPR/CCPA/SOC2 compliance in all flows, including MCP memory and vector storage</description>
+      <rationale>Enterprise systems process regulated data</rationale>
+    </principle>
+    <principle priority="medium">
+      <name>Idempotent Operations</name>
+      <description>Design all ETL/MCP ops to be retryable without duplication</description>
+      <rationale>Prevents inconsistencies in BI/MCP during failures</rationale>
+    </principle>
+    <principle priority="high">
+      <name>Workflow Efficiency</name>
+      <description>Optimize for MCP/ETL/agent orchestration with batching and hybrid search</description>
+      <rationale>Fast insights from large datasets</rationale>
+    </principle>
+  </general_principles>
+
+  <general_conventions>
+    <convention category="etl_pipeline">
+      <rule>Use Airbyte for ETL workflows with connector-based scheduling for all data sources</rule>
+      <examples>
+        <good>Airbyte connection for CRM → MCP memory → BI</good>
+        <bad>Custom scripts without normalization</bad>
+      </examples>
+    </convention>
+    <convention category="mcp_integration">
+      <rule>Implement OAuth 2.0 for APIs

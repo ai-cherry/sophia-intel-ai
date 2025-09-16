@@ -1,0 +1,16 @@
+app = "sophia-worker"         # Fly app for background workers
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"   # Optionally use a dedicated Dockerfile for workers
+
+[deploy]
+  strategy = "rolling"        # Use rolling for long-running non-HTTP processes
+
+[processes]
+  # TODO: Replace with your actual worker entrypoint
+  worker = "python -m app.worker"
+
+# This app has no HTTP service; do not define [http_service].
+# Add checks if your worker exposes a health endpoint; otherwise rely on logs/metrics.
+

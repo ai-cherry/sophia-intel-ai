@@ -1,0 +1,10 @@
+[console_scripts]
+sophia = sophia_intel_ai.cli:main
+sophia-index = sophia_intel_ai.cli.indexing:main
+sophia-server = sophia_intel_ai.api.server:main
+sophia-worker = sophia_intel_ai.tasks.worker:main
+
+[sophia.plugins]
+filesystem = sophia_intel_ai.plugins.filesystem:FilesystemPlugin
+git = sophia_intel_ai.plugins.git:GitPlugin
+memory = sophia_intel_ai.plugins.memory:MemoryPlugin

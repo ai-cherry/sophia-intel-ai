@@ -169,7 +169,7 @@ jobs:
 - [OAuth2 with Multiple Providers](solutions/backend/authentication/oauth-multi.md) ⭐⭐⭐⭐
 
 ### AI Cost Optimization
-- [LiteLLM Smart Routing](solutions/ai/cost-optimization/litellm-routing.md) ⭐⭐⭐⭐⭐
+ 
 - [Context Caching Strategy](solutions/ai/context-management/caching.md) ⭐⭐⭐⭐
 
 ### Performance

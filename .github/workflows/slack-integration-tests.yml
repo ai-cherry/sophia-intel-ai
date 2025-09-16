@@ -1,0 +1,361 @@
+name: Slack Integration Tests
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'app/integrations/slack*'
+      - 'app/api/routers/slack*'
+      - 'tests/integration/slack/**'
+      - '.github/workflows/slack-integration-tests.yml'
+  pull_request:
+    paths:
+      - 'app/integrations/slack*'
+      - 'app/api/routers/slack*'
+      - 'tests/integration/slack/**'
+  schedule:
+    # Run daily at 8 AM UTC to catch integration issues
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+    inputs:
+      run_e2e:
+        description: 'Run E2E tests (requires Slack tokens)'
+        required: false
+        default: false
+        type: boolean
+      test_channel:
+        description: 'Slack test channel (e.g., #ci-tests)'
+        required: false
+        default: '#ci-slack-tests'
+
+env:
+  PYTHON_VERSION: "3.11"
+  POETRY_VERSION: "1.6.1"
+
+jobs:
+  # Unit and Integration Tests (no tokens required)
+  unit-tests:
+    name: Unit & Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+      
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+      
+      - name: Install root package
+        run: poetry install --no-interaction
+      
+      - name: Set test environment variables
+        run: |
+          echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
+          echo "ENVIRONMENT=test" >> $GITHUB_ENV
+          # Mock tokens for unit tests
+          echo "SLACK_BOT_TOKEN=xoxb-test-token" >> $GITHUB_ENV
+          echo "SLACK_SIGNING_SECRET=test-signing-secret" >> $GITHUB_ENV
+          echo "SLACK_USER_TOKEN=xoxp-test-user-token" >> $GITHUB_ENV
+          echo "SLACK_APP_TOKEN=xapp-test-app-token" >> $GITHUB_ENV
+      
+      - name: Run unit tests
+        run: |
+          poetry run pytest tests/integration/slack/ \
+            -m "unit" \
+            --cov=app.integrations.slack_optimized_client \
+            --cov=app.api.routers.slack_business_intelligence \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-fail-under=85 \
+            -v
+      
+      - name: Run integration tests (mocked)
+        run: |
+          poetry run pytest tests/integration/slack/ \
+            -m "integration and not e2e" \
+            --cov-append \
+            --cov=app.integrations.slack_optimized_client \
+            --cov=app.api.routers.slack_business_intelligence \
+            --cov-report=xml \
+            --cov-report=html \
+            -v
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: slack-integration
+          name: slack-integration-coverage
+      
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-html
+          path: htmlcov/
+
+  # Security and compliance tests
+  security-tests:
+    name: Security & Compliance Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+      
+      - name: Install dependencies
+        run: poetry install --no-interaction
+      
+      - name: Run security tests
+        run: |
+          poetry run pytest tests/integration/slack/ \
+            -k "security or signature" \
+            -v
+      
+      - name: Check for hardcoded secrets
+        run: |
+          poetry run python -c "
+          import os
+          import re
+          
+          # Scan test files for hardcoded tokens
+          for root, dirs, files in os.walk('tests/integration/slack/'):
+              for file in files:
+                  if file.endswith('.py'):
+                      filepath = os.path.join(root, file)
+                      with open(filepath, 'r') as f:
+                          content = f.read()
+                          # Check for real token patterns
+                          if re.search(r'xoxb-[0-9a-zA-Z-]+', content) and 'test-token' not in content:
+                              print(f'WARNING: Potential real token in {filepath}')
+                          if re.search(r'xoxp-[0-9a-zA-Z-]+', content) and 'test-user-token' not in content:
+                              print(f'WARNING: Potential real user token in {filepath}')
+          "
+
+  # E2E Tests (only run when tokens are available)
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.run_e2e == 'true') ||
+      github.event_name == 'schedule'
+    # Note: Configure 'staging' environment in GitHub repo settings to store Slack tokens
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install Poetry and dependencies
+        run: |
+          pip install poetry==${{ env.POETRY_VERSION }}
+          poetry install --no-interaction
+      
+      - name: Set environment variables
+        run: |
+          echo "REDIS_URL=redis://localhost:6379" >> $GITHUB_ENV
+          echo "ENVIRONMENT=staging" >> $GITHUB_ENV
+          echo "SLACK_TEST_CHANNEL=${{ github.event.inputs.test_channel || '#ci-slack-tests' }}" >> $GITHUB_ENV
+      
+      - name: Validate Slack tokens
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_USER_TOKEN: ${{ secrets.SLACK_USER_TOKEN }}
+          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+        run: |
+          poetry run python scripts/test_slack_tokens.py
+      
+      - name: Run E2E tests
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
+          SLACK_USER_TOKEN: ${{ secrets.SLACK_USER_TOKEN }}
+          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+        run: |
+          poetry run pytest tests/integration/slack/ \
+            -m "e2e" \
+            --tb=short \
+            -v \
+            --durations=10
+      
+      - name: Cleanup test messages
+        if: always()
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: |
+          # Clean up any test messages left behind
+          poetry run python -c "
+          import asyncio
+          import os
+          from app.integrations.slack_optimized_client import SlackOptimizedClient
+          
+          async def cleanup():
+              if not os.getenv('SLACK_BOT_TOKEN'):
+                  return
+              client = SlackOptimizedClient()
+              await client.setup()
+              # Implementation would clean up test messages
+              await client.stop()
+          
+          asyncio.run(cleanup())
+          "
+
+  # Performance benchmarks
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install poetry==${{ env.POETRY_VERSION }}
+          poetry install --no-interaction
+      
+      - name: Run performance tests
+        run: |
+          poetry run pytest tests/integration/slack/ \
+            -m "slow" \
+            --benchmark-only \
+            --benchmark-json=benchmark.json \
+            -v
+      
+      - name: Store benchmark results
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: benchmark.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+
+  # Code quality checks
+  quality-checks:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install poetry==${{ env.POETRY_VERSION }}
+          poetry install --no-interaction
+      
+      - name: Run linting
+        run: |
+          poetry run flake8 app/integrations/slack* app/api/routers/slack*
+          poetry run black --check app/integrations/slack* app/api/routers/slack*
+          poetry run isort --check-only app/integrations/slack* app/api/routers/slack*
+      
+      - name: Type checking
+        run: |
+          poetry run mypy app/integrations/slack_optimized_client.py
+          poetry run mypy app/api/routers/slack_business_intelligence.py
+      
+      - name: Check test quality
+        run: |
+          # Ensure all test functions are properly marked
+          poetry run python -c "
+          import ast
+          import os
+          
+          for root, dirs, files in os.walk('tests/integration/slack/'):
+              for file in files:
+                  if file.startswith('test_') and file.endswith('.py'):
+                      filepath = os.path.join(root, file)
+                      with open(filepath, 'r') as f:
+                          tree = ast.parse(f.read())
+                      
+                      for node in ast.walk(tree):
+                          if isinstance(node, ast.FunctionDef) and node.name.startswith('test_'):
+                              # Check if test has pytest marks
+                              decorators = [d.id if isinstance(d, ast.Name) else str(d) for d in node.decorator_list]
+                              if not any('pytest.mark' in str(d) for d in decorators):
+                                  print(f'Warning: {file}:{node.name} missing pytest.mark')
+          "
+
+  # Notification on failure
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [unit-tests, security-tests, quality-checks]
+    if: failure() && (github.event_name == 'push' || github.event_name == 'schedule')
+    
+    steps:
+      - name: Send Slack notification on failure
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"🚨 Slack Integration Tests Failed on `'"$GITHUB_REF_NAME"'` \n View: '"$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"'"}' \
+            $SLACK_WEBHOOK_URL

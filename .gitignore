@@ -11,6 +11,11 @@ logs/*
 !logs/README.md
 *.log
 secrets/ssh/
+# Sensitive config (do not commit real values)
+centralized_config.yaml
+pulumi-esc-*.yaml
+secrets/**/*.yaml
+secrets/**/*.yml
 
 # Environments and secrets (never commit)
 .env
@@ -30,6 +35,10 @@ venv/
 # Node/Next.js
 node_modules/
 .next/
+dump.rdb
+workbench-ui/
+.roo/
+artifacts/
 
 # Databases and caches
 *.db
@@ -42,6 +51,9 @@ data/**/*.sqlite*
 
 # Backups/archives
 backups/
+
+# Temporary scaffolds
+tmp/
 
 # OS
 .DS_Store

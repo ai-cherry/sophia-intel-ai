@@ -4,9 +4,23 @@ import os
 from typing import Any, Dict, Optional
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from app.api.middleware.rate_limit import rate_limit
 
 router = APIRouter(prefix="/api/airtable", tags=["airtable"])
+
+# Minimal bearer auth (opt-in via ENFORCE_AUTH or presence of AUTH_TOKEN)
+security = HTTPBearer(auto_error=False)
+
+def _require_auth(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    token_env = os.getenv("AUTH_TOKEN")
+    enforce = os.getenv("ENFORCE_AUTH", "false").lower() in ("1", "true", "yes")
+    if not token_env and not enforce:
+        return
+    provided = credentials.credentials if credentials else None
+    if not provided or (token_env and provided != token_env):
+        raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def _get_token() -> Optional[str]:
@@ -19,7 +33,8 @@ def _get_token() -> Optional[str]:
 
 
 @router.get("/whoami")
-async def whoami() -> Dict[str, Any]:
+@rate_limit(limit=60)
+async def whoami(_auth: Any = Depends(_require_auth)) -> Dict[str, Any]:
     token = _get_token()
     if not token:
         raise HTTPException(400, "Airtable token missing (AIRTABLE_ACCESS_TOKEN or similar)")
@@ -38,7 +53,8 @@ async def whoami() -> Dict[str, Any]:
 
 
 @router.get("/bases")
-async def list_bases() -> Dict[str, Any]:
+@rate_limit(limit=60)
+async def list_bases(_auth: Any = Depends(_require_auth)) -> Dict[str, Any]:
     """Attempt to list bases using the Metadata API.
 
     Note: Some accounts require OAuth or specific permissions for this endpoint. If this
@@ -62,7 +78,8 @@ async def list_bases() -> Dict[str, Any]:
 
 
 @router.get("/bases/{base_id}/tables")
-async def base_tables(base_id: str) -> Dict[str, Any]:
+@rate_limit(limit=60)
+async def base_tables(base_id: str, _auth: Any = Depends(_require_auth)) -> Dict[str, Any]:
     token = _get_token()
     if not token:
         raise HTTPException(400, "Airtable token missing (AIRTABLE_ACCESS_TOKEN or similar)")
@@ -78,4 +95,3 @@ async def base_tables(base_id: str) -> Dict[str, Any]:
         raise
     except Exception as e:
         raise HTTPException(502, f"list tables failed: {e}")
-

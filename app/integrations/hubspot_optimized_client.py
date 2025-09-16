@@ -15,6 +15,9 @@ import aiohttp
 import redis.asyncio as redis
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+# Import shared HTTP client for consistency and reliability
+from app.api.utils.http_client import get_async_client, with_retries
+
 # Configuration
 HUBSPOT_ACCESS_TOKEN = os.getenv("HUBSPOT_ACCESS_TOKEN")
 HUBSPOT_API_KEY = os.getenv("HUBSPOT_API_KEY")
@@ -228,10 +231,6 @@ class HubSpotOptimizedClient:
             return {"hapikey": self.api_key}
         return {}
         
-    @retry(
-        wait=wait_exponential(multiplier=1, min=4, max=60),
-        stop=stop_after_attempt(3)
-    )
     async def _make_request(
         self,
         method: str,
@@ -239,7 +238,7 @@ class HubSpotOptimizedClient:
         params: Optional[Dict] = None,
         json_data: Optional[Union[Dict, List]] = None
     ) -> Any:
-        """Make API request with retry logic"""
+        """Make API request using shared HTTP client with retries"""
         # Check cache for GET requests
         cache_key = None
         if method == "GET":
@@ -257,38 +256,44 @@ class HubSpotOptimizedClient:
             params = {}
         params.update(self._get_auth_params())
         
-        async with self.session.request(
-            method,
-            url,
-            params=params,
-            json=json_data,
-            headers=headers
-        ) as response:
-            if response.status == 429:
+        # Use shared HTTP client with retries
+        client = await get_async_client()
+
+        async def _do():
+            resp = await client.request(
+                method,
+                url,
+                params=params,
+                json=json_data,
+                headers=headers
+            )
+            
+            if resp.status_code == 429:
                 # Rate limited
-                retry_after = int(response.headers.get("X-HubSpot-RateLimit-Interval", 10))
+                retry_after = int(resp.headers.get("X-HubSpot-RateLimit-Interval", 10))
                 await asyncio.sleep(retry_after)
-                raise Exception(f"Rate limited, retry after {retry_after}s")
+                resp.raise_for_status()  # This will trigger retry
                 
-            if response.status >= 400:
-                error_text = await response.text()
-                raise Exception(f"HubSpot API error {response.status}: {error_text}")
+            if resp.status_code >= 400:
+                resp.raise_for_status()
                 
             # Handle empty responses
-            if response.status == 204:
+            if resp.status_code == 204:
                 return {}
                 
-            result = await response.json()
+            return resp.json()
+
+        result = await with_retries(_do)
+        
+        # Cache successful GET responses
+        if cache_key:
+            await self.redis_client.setex(
+                cache_key,
+                300,  # 5 minute cache
+                json.dumps(result)
+            )
             
-            # Cache successful GET responses
-            if cache_key:
-                await self.redis_client.setex(
-                    cache_key,
-                    300,  # 5 minute cache
-                    json.dumps(result)
-                )
-                
-            return result
+        return result
             
     async def get_contacts(
         self,

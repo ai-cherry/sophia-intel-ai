@@ -18,13 +18,6 @@ from app.memory.bus import UnifiedMemoryBus
 from app.observability.metrics import MetricsCollector
 from app.observability.otel import setup_telemetry
 
-# Import builder router
-try:
-    from app.api.routers.builder import router as builder_router
-    BUILDER_AVAILABLE = True
-except ImportError as e:
-    logger.warning(f"Builder router not available: {e}")
-    BUILDER_AVAILABLE = False
 # Early environment load (central unified env and fallbacks)
 try:
     from builder_cli.lib.env import load_central_env  # type: ignore
@@ -70,13 +63,15 @@ class SophiaAIUnified:
         self.error_count = 0
         self._setup_middleware()
         self._setup_routes()
-        self._setup_builder_routes()
+        # No builder routes
     def _setup_middleware(self):
         """Setup FastAPI middleware"""
         # CORS middleware
-        allowed_origins = os.getenv(
-            "CORS_ORIGINS", "${SOPHIA_FRONTEND_ENDPOINT},http://localhost:5173"
-        ).split(",")
+        raw = os.getenv("CORS_ORIGINS", "")
+        if self.environment in ("dev", "development"):
+            allowed_origins = raw.split(",") if raw else ["http://localhost","http://localhost:5173","http://127.0.0.1"]
+        else:
+            allowed_origins = [o for o in (raw.split(",") if raw else []) if o]
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=allowed_origins,
@@ -524,13 +519,7 @@ try:
 except Exception:
     get_config_manager = None  # type: ignore
     
-    def _setup_builder_routes(self):
-        """Setup builder-specific routes"""
-        if BUILDER_AVAILABLE:
-            self.app.include_router(builder_router)
-            logger.info("Builder API routes enabled at /api/builder/*")
-        else:
-            logger.warning("Builder API routes disabled - dependencies not available")
+    # builder routes removed
 # Create the unified server instance
 sophia_unified = SophiaAIUnified()
 app = sophia_unified.app

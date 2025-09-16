@@ -7,6 +7,7 @@ import time
 from contextlib import asynccontextmanager
 from typing import Any, Dict, List, Optional
 import redis.asyncio as redis
+from config.python_settings import settings_from_env
 import torch
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 # Global neural engine instance
 neural_engine: Optional[AsyncLLMEngine] = None
 cache_client: Optional[redis.Redis] = None
+_settings = settings_from_env()
 class NeuralInferenceRequest(BaseModel):
     """Request model for neural inference"""
     query: str = Field(..., description="Input query for neural reasoning")
@@ -95,10 +97,9 @@ class NeuralEngineManager:
         neural_engine = AsyncLLMEngine.from_engine_args(engine_args)
         # Initialize Redis cache
         try:
-            cache_client = redis.Redis(
-                host="redis-neural-cache",
-                port=6379,
-                db=0,
+            redis_url = _settings.REDIS_URL or os.getenv("REDIS_URL", "redis://localhost:6379/0")
+            cache_client = redis.from_url(
+                redis_url,
                 decode_responses=True,
                 socket_timeout=5.0,
                 socket_connect_timeout=5.0,

@@ -1,0 +1,67 @@
+<error_handling>
+  <scenario name="data_discrepancy">
+    <description>ETL sync failure between sources (CRM/BI) and targets (vector/MCP)</description>
+    <recovery>
+      - Stop ETL job in Airbyte
+      - Rollback git to pre-sync commit
+      - Re-run with validation script to check counts
+      - Alert via Slack/Microsoft if variance >5%
+      - Update MCP memory with corrected state
+    </recovery>
+  </scenario>
+
+  <scenario name="api_failure">
+    <description>Integration failure (e.g., Salesforce/HubSpot/Gong API downtime or rate limit)</description>
+    <recovery>
+      - Implement circuit breaker in API client
+      - Retry with exponential backoff (max 5 attempts)
+      - Switch to cached data from MCP memory
+      - Log failure and notify on-call via Slack
+      - Fallback to mock endpoints for testing
+    </recovery>
+  </scenario>
+
+  <scenario name="mcp_error">
+    <description>MCP server failure (e.g., memory store down, git sync error, filesystem issue)</description>
+    <recovery>
+      - Restart MCP services (docker compose restart mcp)
+      - Clear corrupted state from memory server
+      - Re-sync repos with MCP git
+      - Validate with health check script
+      - If persistent, rollback to previous snapshot
+    </recovery>
+  </scenario>
+
+  <scenario name="privacy_violation">
+    <description>GDPR/CCPA violation (e.g., unmasked PII in ETL/vector/agents)</description>
+    <recovery>
+      - Isolate affected data (quarantine ETL batch)
+      - Apply masking to all flows (CRM, vector ingestion)
+      - Audit logs for exposure (MCP filesystem search)
+      - Rollback deployment to last compliant commit
+      - Notify compliance officer via Microsoft/Slack
+      - Re-deploy with enhanced masking rules
+    </recovery>
+  </scenario>
+
+  <scenario name="multi_repo_sync_fail">
+    <description>Sync failure between sophia-intel-ai and workbench-ui (e.g., conflict, dep mismatch)</description>
+    <recovery>
+      - Manual git pull/rebase in both repos
+      - Check deps with MCP git
+      - Run validation script for shared configs (.env.master)
+      - If conflict, create worktree for resolution
+      - Test cross-repo (e.g., agent calling UI API)
+    </recovery>
+  </scenario>
+
+  <scenario name="agent_orchestration_fail">
+    <description>Blended factory or agent execution error (e.g., genetic mode crash)</description>
+    <recovery>
+      - Restart pm2 agents
+      - Check mode_factory logs for config errors
+      - Re-run orchestration with debug mode
+      - Update todo list with failure details
+    </recovery>
+  </scenario>
+</error_handling>

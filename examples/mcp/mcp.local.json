@@ -1,0 +1,68 @@
+{
+  "servers": {
+    "github": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GITHUB_TOKEN=${GITHUB_TOKEN}",
+        "ghcr.io/github/github-mcp-server"
+      ]
+    },
+    "fs": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["dist/index.js", "--root", "/path/to/your/project", "stdio"],
+      "env": {"ALLOW_WRITE": "true"}
+    },
+    "docker": {
+      "type": "stdio",
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-v", "/var/run/docker.sock:/var/run/docker.sock",
+        "modelcontextprotocol/server-docker",
+        "stdio"
+      ]
+    },
+    "python": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["server.py", "--sandbox", "stdio"],
+      "env": {"PYODIDE_URL": "local/wasm"}
+    },
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory", "stdio", "--db", "local.db"]
+    },
+    "local-rag": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["server.js", "--embedder", "mediapipe", "--search", "duckduckgo", "stdio"]
+    },
+    "memory-plus": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "memory-plus-mcp", "stdio", "--db", "local-vectors.db"],
+      "env": {"EMBED_MODEL": "all-MiniLM-L6-v2"}
+    },
+    "vector": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "-v", "./vectors:/data", "vector-mcp:latest", "stdio", "--db", "chroma"]
+    },
+    "superindex": {
+      "type": "stdio",
+      "command": "superindex-mcp",
+      "args": ["stdio", "--index", "apis"],
+      "env": {"MODEL": "sentence-transformers"}
+    },
+    "kodit": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "-v", "./repos:/index", "kodit-mcp:latest", "stdio", "--embed", "onnx"]
+    }
+  }
+}
+

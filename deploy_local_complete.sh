@@ -166,15 +166,15 @@ else
     wait_for_service 8084 "MCP Git"
 fi
 
-# MCP Vector Search Server
+# MCP Vector Server
 if check_port 8085; then
     echo -e "  MCP Vector: ${GREEN}Already running${NC}"
 else
-    echo "  Starting MCP Vector Search Server..."
+    echo "  Starting MCP Vector Server..."
     kill_port 8085
-    python3 -m mcp.vector_search_server > "$LOG_DIR/mcp_vector.log" 2>&1 &
+    python3 -m uvicorn mcp.vector.server:app --host 0.0.0.0 --port 8085 > "$LOG_DIR/mcp_vector.log" 2>&1 &
     echo $! > "$PID_DIR/mcp_vector.pid"
-    wait_for_service 8085 "MCP Vector Search"
+    wait_for_service 8085 "MCP Vector"
 fi
 
 echo ""
@@ -207,19 +207,7 @@ else
     wait_for_service 8000 "Bridge API"
 fi
 
-# Builder API
-if check_port 8004; then
-    echo -e "  Builder API: ${GREEN}Already running${NC}"
-else
-    echo "  Starting Builder API..."
-    kill_port 8004
-    cd builder_cli
-    python3 -m uvicorn app:app \
-        --host 0.0.0.0 --port 8004 --reload > "$LOG_DIR/builder_api.log" 2>&1 &
-    echo $! > "$PID_DIR/builder_api.pid"
-    cd ..
-    wait_for_service 8004 "Builder API"
-fi
+## Builder API removed
 
 echo ""
 

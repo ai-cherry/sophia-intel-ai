@@ -1,7 +1,7 @@
 Portkey-Only Policy
 
 Routing
-- Only Portkey Gateway with Virtual Keys (VKs). No LiteLLM. No local OpenRouter server. No alternates.
+- Only Portkey Gateway with Virtual Keys (VKs). No alternate local gateways or proxies.
 
 Keys
 - Single source: `./.env.master`, loaded by `./sophia` and inherited by processes it spawns.
@@ -19,4 +19,4 @@ Examples
 - Bad: direct calls to `api.openai.com`, `api.anthropic.com`, `api.x.ai`.
 
 CI Rules
-- CI fails on references to: `litellm`, `:8090`, `http://localhost:4000`, `builder-agno-system`, in-repo `sophia-intel-app`, `/frontend\b`, `mcp/filesystem.py`, `mcp/git_server.py`, `api.x.ai`, `XAI_API_KEY`, and `grok` (except in EXTERNAL_TOOLS docs).
+- CI fails on references to: local proxy ports (`:8090`, `:4000`), `builder-agno-system`, in-repo `sophia-intel-app`, `/frontend\b`, `mcp/filesystem.py`, `mcp/git_server.py`, `api.x.ai`, `XAI_API_KEY`, and `grok` (except in EXTERNAL_TOOLS docs).

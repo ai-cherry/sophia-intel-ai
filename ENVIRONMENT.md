@@ -34,7 +34,7 @@ PERPLEXITY_API_KEY=""                  # Web search
 OPENROUTER_API_KEY=""                  # 100+ models
 TOGETHER_API_KEY=""                    # Open models
 
-## Portkey Gateway is the only routing layer; no LiteLLM local proxy
+## Portkey Gateway is the only routing layer; no alternate local proxies
 
 # === MCP SERVER CONFIGURATION ===
 MCP_MEMORY_PORT=8081                   # Memory server
@@ -140,7 +140,6 @@ PORTKEY_API_KEY="your_portkey_api_key"
 # Production (.env.production)
 MCP_DEV_BYPASS=false
 MCP_TOKEN="cryptographically-secure-token"
-LITELLM_MASTER_KEY="production-secure-key"
 ```
 
 ## 🚀 Quick Setup for New Developers

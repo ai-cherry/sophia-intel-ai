@@ -90,8 +90,19 @@ class SalesforceClient:
         response = await self.session.get(url, headers=headers, params=params)
         response.raise_for_status()
         return response.json()
+    @staticmethod
+    def _escape_soql_literal(value: str) -> str:
+        """Escape single quotes for safe SOQL string literals."""
+        return value.replace("'", "\\'")
+    @staticmethod
+    def _validate_salesforce_id(value: str) -> str:
+        import re
+        if not re.fullmatch(r"[a-zA-Z0-9]{15,18}", value or ""):
+            raise ValueError("Invalid Salesforce ID format")
+        return value
     async def get_account(self, account_id: str) -> Dict[str, Any]:
         """Get account details"""
+        account_id = self._validate_salesforce_id(account_id)
         soql = f"""
         SELECT Id, Name, Type, Industry, AnnualRevenue, NumberOfEmployees, 
                Phone, Website, BillingCity, BillingState, BillingCountry,
@@ -107,13 +118,14 @@ class SalesforceClient:
         self, search_term: str, limit: int = 50
     ) -> List[Dict[str, Any]]:
         """Search contacts by name, email, or company"""
+        esc = self._escape_soql_literal(search_term)
         soql = f"""
         SELECT Id, Name, Email, Phone, Title, Account.Name, Account.Id,
                LastActivityDate, CreatedDate, LastModifiedDate
         FROM Contact 
-        WHERE (Name LIKE '%{search_term}%' 
-               OR Email LIKE '%{search_term}%' 
-               OR Account.Name LIKE '%{search_term}%')
+        WHERE (Name LIKE '%{esc}%' 
+               OR Email LIKE '%{esc}%' 
+               OR Account.Name LIKE '%{esc}%')
         ORDER BY LastActivityDate DESC NULLS LAST
         LIMIT {limit}
         """
@@ -121,6 +133,7 @@ class SalesforceClient:
         return result["records"]
     async def get_opportunities(self, account_id: str) -> List[Dict[str, Any]]:
         """Get opportunities for account"""
+        account_id = self._validate_salesforce_id(account_id)
         soql = f"""
         SELECT Id, Name, StageName, Amount, CloseDate, Probability,
                Type, LeadSource, CreatedDate, LastModifiedDate

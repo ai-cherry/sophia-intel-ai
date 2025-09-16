@@ -18,6 +18,9 @@ from slack_sdk.socket_mode.aiohttp import SocketModeClient
 from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode.response import SocketModeResponse
 
+# Import shared HTTP client for non-SDK requests
+from app.api.utils.http_client import get_async_client, with_retries
+
 # Configuration
 SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN")
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
@@ -258,9 +261,15 @@ class SlackOptimizedClient:
         response_url: str,
         response: Dict[str, Any]
     ):
-        """Send response to response URL"""
-        async with aiohttp.ClientSession() as session:
-            await session.post(response_url, json=response)
+        """Send response to response URL using shared HTTP client"""
+        client = await get_async_client()
+        
+        async def _do():
+            resp = await client.post(response_url, json=response)
+            resp.raise_for_status()
+            return resp
+        
+        await with_retries(_do)
             
     async def get_conversations(
         self,

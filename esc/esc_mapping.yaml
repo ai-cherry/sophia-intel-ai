@@ -1,0 +1,56 @@
+# Mapping from canonical env keys to Pulumi ESC secret paths per environment.
+
+version: 1
+
+environments:
+  dev:
+    OPENAI_API_KEY: secret://sophia/dev/ai_providers/openai_api_key
+    ANTHROPIC_API_KEY: secret://sophia/dev/ai_providers/anthropic_api_key
+    GOOGLE_GEMINI_API_KEY: secret://sophia/dev/ai_providers/google_gemini_api_key
+    MISTRAL_API_KEY: secret://sophia/dev/ai_providers/mistral_api_key
+    GROQ_API_KEY: secret://sophia/dev/ai_providers/groq_api_key
+    XAI_API_KEY: secret://sophia/dev/ai_providers/xai_api_key
+    COHERE_API_KEY: secret://sophia/dev/ai_providers/cohere_api_key
+    AI21_API_KEY: secret://sophia/dev/ai_providers/ai21_api_key
+    OPENROUTER_API_KEY: secret://sophia/dev/ai_providers/openrouter_api_key
+    PORTKEY_API_KEY: secret://sophia/dev/ai_providers/portkey_api_key
+    POSTGRES_URL: secret://sophia/dev/datastores/postgres_url
+    REDIS_URL: secret://sophia/dev/datastores/redis_url
+    WEAVIATE_URL: secret://sophia/dev/datastores/weaviate_url
+    NEO4J_URL: secret://sophia/dev/datastores/neo4j_url
+    MCP_TOKEN: secret://sophia/dev/mcp/token
+
+  staging:
+    OPENAI_API_KEY: secret://sophia/staging/ai_providers/openai_api_key
+    ANTHROPIC_API_KEY: secret://sophia/staging/ai_providers/anthropic_api_key
+    GOOGLE_GEMINI_API_KEY: secret://sophia/staging/ai_providers/google_gemini_api_key
+    MISTRAL_API_KEY: secret://sophia/staging/ai_providers/mistral_api_key
+    GROQ_API_KEY: secret://sophia/staging/ai_providers/groq_api_key
+    XAI_API_KEY: secret://sophia/staging/ai_providers/xai_api_key
+    COHERE_API_KEY: secret://sophia/staging/ai_providers/cohere_api_key
+    AI21_API_KEY: secret://sophia/staging/ai_providers/ai21_api_key
+    OPENROUTER_API_KEY: secret://sophia/staging/ai_providers/openrouter_api_key
+    PORTKEY_API_KEY: secret://sophia/staging/ai_providers/portkey_api_key
+    POSTGRES_URL: secret://sophia/staging/datastores/postgres_url
+    REDIS_URL: secret://sophia/staging/datastores/redis_url
+    WEAVIATE_URL: secret://sophia/staging/datastores/weaviate_url
+    NEO4J_URL: secret://sophia/staging/datastores/neo4j_url
+    MCP_TOKEN: secret://sophia/staging/mcp/token
+
+  prod:
+    OPENAI_API_KEY: secret://sophia/prod/ai_providers/openai_api_key
+    ANTHROPIC_API_KEY: secret://sophia/prod/ai_providers/anthropic_api_key
+    GOOGLE_GEMINI_API_KEY: secret://sophia/prod/ai_providers/google_gemini_api_key
+    MISTRAL_API_KEY: secret://sophia/prod/ai_providers/mistral_api_key
+    GROQ_API_KEY: secret://sophia/prod/ai_providers/groq_api_key
+    XAI_API_KEY: secret://sophia/prod/ai_providers/xai_api_key
+    COHERE_API_KEY: secret://sophia/prod/ai_providers/cohere_api_key
+    AI21_API_KEY: secret://sophia/prod/ai_providers/ai21_api_key
+    OPENROUTER_API_KEY: secret://sophia/prod/ai_providers/openrouter_api_key
+    PORTKEY_API_KEY: secret://sophia/prod/ai_providers/portkey_api_key
+    POSTGRES_URL: secret://sophia/prod/datastores/postgres_url
+    REDIS_URL: secret://sophia/prod/datastores/redis_url
+    WEAVIATE_URL: secret://sophia/prod/datastores/weaviate_url
+    NEO4J_URL: secret://sophia/prod/datastores/neo4j_url
+    MCP_TOKEN: secret://sophia/prod/mcp/token
+

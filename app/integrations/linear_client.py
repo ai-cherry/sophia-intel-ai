@@ -38,6 +38,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 import aiohttp
+from app.api.utils.http_client import get_async_client, with_retries
 from app.orchestrators.resource_manager import ResourceType, resource_manager
 from config.unified_manager import get_config_manager
 logger = logging.getLogger(__name__)
@@ -96,35 +97,23 @@ class LinearClient:
         """Cleanup function for resource manager"""
         if session and not session.closed:
             await session.close()
-    async def _make_graphql_request(
-        self, query: str, variables: dict[str, Any] = None
-    ) -> dict[str, Any]:
-        """Make authenticated GraphQL request to Linear API"""
-        if not self.session:
-            await self.initialize_session()
+    async def _make_graphql_request(self, query: str, variables: dict[str, Any] = None) -> dict[str, Any]:
+        """Make authenticated GraphQL request to Linear API using shared HTTP client with retries."""
         payload = {"query": query, "variables": variables or {}}
+        client = await get_async_client()
+
+        async def _do():
+            resp = await client.post(self.base_url, json=payload, headers=self.headers)
+            resp.raise_for_status()
+            return resp
+
         try:
-            async with self.session.post(self.base_url, json=payload) as response:
-                if response.status == 200:
-                    result = await response.json()
-                    # Check for GraphQL errors
-                    if "errors" in result:
-                        error_messages = [
-                            err.get("message", "") for err in result["errors"]
-                        ]
-                        raise Exception(
-                            f"Linear GraphQL errors: {'; '.join(error_messages)}"
-                        )
-                    return result.get("data", {})
-                elif response.status == 401:
-                    raise Exception("Linear authentication failed - check API key")
-                elif response.status == 403:
-                    raise Exception("Linear API forbidden - check permissions")
-                elif response.status == 429:
-                    raise Exception("Linear API rate limit exceeded - retry later")
-                else:
-                    error_text = await response.text()
-                    raise Exception(f"Linear API error {response.status}: {error_text}")
+            response = await with_retries(_do)
+            result = response.json()
+            if "errors" in result:
+                msgs = "; ".join(err.get("message", "") for err in result["errors"])
+                raise Exception(f"Linear GraphQL errors: {msgs}")
+            return result.get("data", {})
         except Exception as e:
             logger.error(f"Linear GraphQL request failed: {e}")
             raise

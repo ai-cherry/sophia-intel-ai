@@ -14,7 +14,9 @@ from datetime import datetime
 from typing import Any, Dict
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 # Configure structured logging
 from app.api.core.logging import setup_logging
 from app.security.security_headers import SecurityHeadersMiddleware
@@ -51,6 +53,15 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+# Mount static files and templates for dashboard UI
+try:
+    app.mount("/static", StaticFiles(directory="app/static"), name="static")
+    templates = Jinja2Templates(directory="app/templates")
+    logger.info("✓ Static files and templates mounted")
+except Exception as e:
+    logger.warning(f"Static files/templates unavailable: {e}")
+    templates = None
 # Core middleware (rate limiting)
 try:
     from app.api.middleware.rate_limit import RateLimitMiddleware
@@ -148,6 +159,7 @@ async def root() -> Dict[str, Any]:
             "docs": "/docs",
             "redoc": "/redoc",
             "metrics": "/metrics",
+            "dashboard": "/dashboard",
             "api": {
                 "chat": "/api/chat",
                 "orchestration": "/api/orchestration",
@@ -156,6 +168,16 @@ async def root() -> Dict[str, Any]:
         },
         "timestamp": datetime.utcnow().isoformat(),
     }
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard(request: Request):
+    """Serve the unified dashboard UI"""
+    if templates is None:
+        return HTMLResponse(
+            content="<h1>Dashboard Unavailable</h1><p>Templates not configured</p>",
+            status_code=503
+        )
+    return templates.TemplateResponse("hub.html", {"request": request})
 @app.get("/metrics")
 async def metrics():
     """Prometheus metrics endpoint"""

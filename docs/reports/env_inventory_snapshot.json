@@ -1,0 +1,3298 @@
+{
+  "root": "/Users/lynnmusil/sophia-intel-ai",
+  "patterns": [
+    ".env.template",
+    ".env.master",
+    ".env.example",
+    "env.example"
+  ],
+  "include_canonical": false,
+  "inventory": {
+    ".env.master": [
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/demo_unified_cli.sh",
+        "line": 20,
+        "content": "echo -e \"${YELLOW}Note: Local env is loaded from .env.master only. ~/.config and .env.local are deprecated.${NC}\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/demo_unified_cli.sh",
+        "line": 137,
+        "content": "echo \"  1. Add your API keys to <repo>/.env.master (chmod 600)\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/complete_workbench_separation.sh",
+        "line": 97,
+        "content": "export REPO_ENV_MASTER_PATH=../sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/complete_workbench_separation.sh",
+        "line": 106,
+        "content": "- `REPO_ENV_MASTER_PATH`: Path to main repo's .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/complete_workbench_separation.sh",
+        "line": 143,
+        "content": ".env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/complete_workbench_separation.sh",
+        "line": 179,
+        "content": "echo \"    REPO_ENV_MASTER_PATH=$CURRENT_DIR/.env.master npm run dev\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/unified-system-manager.sh",
+        "line": 17,
+        "content": "ENV_FILE=\"$SCRIPT_DIR/.env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/unified-system-manager.sh",
+        "line": 24,
+        "content": "# Source environment strictly from repo-local .env.master (single source of truth)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/unified-system-manager.sh",
+        "line": 29,
+        "content": "echo -e \"${RED}Error: .env.master not found at $ENV_FILE${NC}\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/unified-system-manager.sh",
+        "line": 30,
+        "content": "echo -e \"Create it once and you're done: cp .env.template .env.master && chmod 600 .env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 3,
+        "content": "Note: As of 2025-09-13, local development uses a single-source env file only: <repo>/.env.master. Do not use .env.local or ~/.config/sophia/env. Runtime code must rely on process env loaded by ./sophia; cloud deploys inject secrets via CI."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 7,
+        "content": "### Core Environment File: `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 13,
+        "content": "~/sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 16,
+        "content": "chmod 600 .env.master  # Only owner can read/write"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 59,
+        "content": "- Sources `.env.master` before starting anything"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 78,
+        "content": "# Load environment from .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 79,
+        "content": "env_file = Path.home() / \"sophia-intel-ai\" / \".env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 95,
+        "content": "source ~/sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 106,
+        "content": "path: '~/sophia-intel-ai/.env.master'"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 115,
+        "content": "### 1. Never Commit `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 119,
+        "content": "echo \".env.master\" >> .gitignore"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 126,
+        "content": "chmod 600 ~/.sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 129,
+        "content": "ls -la ~/.sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 136,
+        "content": "# Development (.env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 153,
+        "content": "cp .env.template .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 156,
+        "content": "nano .env.master  # Edit with your keys"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 159,
+        "content": "chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 189,
+        "content": "| \"API key not found\" | Check `.env.master` has the key |"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 190,
+        "content": "| \"Permission denied\" | Run `chmod 600 .env.master` |"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 196,
+        "content": "1. **ONE environment file**: `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 214,
+        "content": "# Create .env.master from secrets"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 215,
+        "content": "cat > .env.master << EOF"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 220,
+        "content": "chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md",
+        "line": 233,
+        "content": "1. **All configuration in `.env.master`** (secured with 600 permissions)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/health_check.sh",
+        "line": 5,
+        "content": "# Do not source local env files; environment is provided by ./sophia (.env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/health_check.sh",
+        "line": 193,
+        "content": "echo \"  \u2022 Check environment: ensure <repo>/.env.master exists (chmod 600)\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/REPOSITORY_ANALYSIS_REPORT.md",
+        "line": 37,
+        "content": "3. **Shared Config**: Reuse `.env.master` schema and ESC mapping; Workbench consumes the same contract."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/REPOSITORY_ANALYSIS_REPORT.md",
+        "line": 97,
+        "content": "2. `.env.master` - Environment variables (contains API keys)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AI_AGENT_INSTRUCTIONS.md",
+        "line": 7,
+        "content": "- Single env source: `<repo>/.env.master` loaded by `./sophia`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AI_AGENT_INSTRUCTIONS.md",
+        "line": 25,
+        "content": "- Put keys in `<repo>/.env.master`. Start via `./sophia`. Never prompt."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/CONVENTIONS.md",
+        "line": 24,
+        "content": "- Single source of truth: `<repo>/.env.master` (chmod 600)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 8,
+        "content": "@echo \"  env-check    Check .env.master configuration\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 9,
+        "content": "@echo \"  env-setup    Create .env.master template\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 34,
+        "content": "@echo \"\ud83d\udd0d Checking .env.master configuration...\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 35,
+        "content": "@test -f .env.master || (echo \"\u274c .env.master not found. Run 'make env-setup'\" && exit 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 36,
+        "content": "@chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 37,
+        "content": "@echo \"\u2705 .env.master found and secured\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 38,
+        "content": "@grep -q \"PORTKEY_API_KEY=\" .env.master || echo \"\u26a0\ufe0f  PORTKEY_API_KEY not set\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 39,
+        "content": "@grep -q \"OPENROUTER_API_KEY=\" .env.master || echo \"\u26a0\ufe0f  OPENROUTER_API_KEY not set\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 42,
+        "content": "@if [ ! -f .env.master ]; then \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 43,
+        "content": "echo \"\ud83d\udcdd Creating .env.master from template...\"; \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 44,
+        "content": "cp env.example .env.master 2>/dev/null || echo \"# Sophia Intel AI Environment\\nPORTKEY_API_KEY=\\nOPENROUTER_API_KEY=\\nTOGETHER_API_KEY=\" > .env.master; \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 45,
+        "content": "chmod 600 .env.master; \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 46,
+        "content": "echo \"\u2705 Created .env.master (please edit with your API keys)\"; \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 48,
+        "content": "echo \"\u26a0\ufe0f  .env.master already exists\"; \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/USAGE.md",
+        "line": 5,
+        "content": "- Start MCP: `./sophia start` (memory:8081, filesystem:8082, git:8084). Reads `./.env.master`. No prompts."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/USAGE.md",
+        "line": 16,
+        "content": "- Single source: `<repo>/.env.master` loaded by `./sophia`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/test_api_server.py",
+        "line": 17,
+        "content": "# Tests must rely on process environment (./sophia loads .env.master); no .env.local fallback"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/START_HERE.md",
+        "line": 7,
+        "content": "- Single source of truth: `<repo>/.env.master` (git-ignored)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/START_HERE.md",
+        "line": 11,
+        "content": "- Example keys (edit `.env.master`):"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/START_HERE.md",
+        "line": 41,
+        "content": "- Keys are never prompted; they flow from `.env.master` to all services started via `./sophia`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia",
+        "line": 6,
+        "content": "- Preserve single-user .env.master behavior (as requested)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia",
+        "line": 11,
+        "content": "- Load environment only from repo .env.master (single source of truth)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia",
+        "line": 43,
+        "content": "\"\"\"Single-source env loader: only repo-local .env.master. No fallbacks, no prompts.\"\"\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia",
+        "line": 45,
+        "content": "env_path = repo_dir / \".env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia",
+        "line": 130,
+        "content": "print(\"[ERROR] PORTKEY_API_KEY is required (single-source: ./.env.master). Failing fast.\", file=sys.stderr)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh",
+        "line": 29,
+        "content": "if [ ! -f .env.master ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh",
+        "line": 30,
+        "content": "echo -e \"${RED}   ERROR: .env.master not found${NC}\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh",
+        "line": 32,
+        "content": "cat > .env.master << 'EOF'"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh",
+        "line": 45,
+        "content": "envsubst < .env.master > .env.master.tmp"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh",
+        "line": 46,
+        "content": "mv .env.master.tmp .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh",
+        "line": 47,
+        "content": "chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh",
+        "line": 51,
+        "content": "source .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/MASTER_AI_REFERENCE.md",
+        "line": 223,
+        "content": "<repo>/.env.master           # Single source (create if missing; chmod 600)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/deepseek_cli.py",
+        "line": 8,
+        "content": "Environment: expects repo-local .env.master loaded by ./sophia. If run standalone,"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/deepseek_cli.py",
+        "line": 20,
+        "content": "# Optional: load repo-local .env.master when run standalone"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/add-portkey-key.sh",
+        "line": 10,
+        "content": "CURRENT_KEY=$(grep PORTKEY_API_KEY .env.master | cut -d'\"' -f2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/add-portkey-key.sh",
+        "line": 40,
+        "content": "# Update .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/add-portkey-key.sh",
+        "line": 41,
+        "content": "sed -i '' \"s/pk-vk-your-virtual-key-here/$NEW_KEY/g\" ~/sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/add-portkey-key.sh",
+        "line": 42,
+        "content": "echo \"\u2705 Updated .env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 15,
+        "content": "- Keys live in `<repo>/.env.master` and everything runs from `./sophia`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 70,
+        "content": "- Single source of truth: <repo>/.env.master (only this; no fallbacks)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 76,
+        "content": "- `./sophia` now loads only `.env.master`. No `~/.config`, no ESC fallback."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 77,
+        "content": "- `unified-system-manager.sh` sources only `.env.master` and exits with one clear line if missing."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 80,
+        "content": "- No scripts will ask for keys. If missing, you see one line: \u201c.env.master not found at \u2026; cp .env.template .env.master && chmod 600 .env.master\u201d."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 105,
+        "content": "- Add a minimal \u201cSophia Studio\u201d web UI as discussed for model/agent control \u2014 this won\u2019t touch the keys story; it reads the same `.env.master` server-side."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 109,
+        "content": "- One file: `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 131,
+        "content": "**IMPORTANT (updated)**: All API keys live in `<repo>/.env.master` (git-ignored, chmod 600). Use `./bin/keys edit` to manage. See `START_HERE.md` and [`docs/SETUP.md`](docs/SETUP.md) for full environment guidance. Run `./scripts/dev-preflight.sh` on Apple Silicon to confirm toolchains, PATH, and port hygiene before launches."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 171,
+        "content": "- Single source: `<repo>/.env.master` (git-ignored, chmod 600)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 176,
+        "content": "- Start Sophia MCP: `./sophia start` (8081, 8082, 8084; reads ./.env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 177,
+        "content": "- Start Coding UI (external project): reads same .env.master path; never prompts"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 917,
+        "content": "> Environment Policy Update (2025-09-13): Use a single `.env.master` at the repo root for all local secrets and config. `.env.local` and `~/.config/sophia/env` are deprecated and unsupported. See `docs/CENTRAL_ENV_AND_GITHUB.md` and run `scripts/start_all_and_validate.sh`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup.sh",
+        "line": 123,
+        "content": "if [ ! -f .env.master ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup.sh",
+        "line": 124,
+        "content": "log \"${RED}   ERROR: .env.master not found${NC}\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup.sh",
+        "line": 126,
+        "content": "cat > .env.master << 'EOF'"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup.sh",
+        "line": 142,
+        "content": "envsubst < .env.master > .env.master.tmp"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup.sh",
+        "line": 143,
+        "content": "mv .env.master.tmp .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup.sh",
+        "line": 144,
+        "content": "chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/startup.sh",
+        "line": 148,
+        "content": "source .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.env.template",
+        "line": 5,
+        "content": "# - One file only: <repo>/.env.master (git-ignored, chmod 600)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.env.template",
+        "line": 7,
+        "content": "# - ./sophia loads .env.master for all child processes"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.env.template",
+        "line": 10,
+        "content": "#   cp .env.template .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.env.template",
+        "line": 11,
+        "content": "#   chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 30,
+        "content": "3. `.env.master` (production pattern)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/LOCAL_DEV_AND_DEPLOYMENT.md",
+        "line": 98,
+        "content": "> Environment Policy Update: Env is single-source via ESC \u2192 .env.master. `.env.local` and `~/.config` references in this doc are deprecated and retained only for historical context."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AGENT_INTELLIGENCE_HUB.md",
+        "line": 19,
+        "content": "## \ud83d\udd10 CENTRALIZED SECRETS (`<repo>/.env.master`)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AGENT_INTELLIGENCE_HUB.md",
+        "line": 78,
+        "content": "5. Load centralized secrets from `<repo>/.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AGENT_INTELLIGENCE_HUB.md",
+        "line": 129,
+        "content": "2. **Load secrets**: Do not prompt. Start via `./sophia` which sources `<repo>/.env.master`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AGENT_STARTUP_PROMPT.md",
+        "line": 26,
+        "content": "source ./.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AGENT_STARTUP_PROMPT.md",
+        "line": 136,
+        "content": "- Centralized configuration at `<repo>/.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/AGENT_STARTUP_PROMPT.md",
+        "line": 158,
+        "content": "4. **[ ]** Load centralized secrets from `<repo>/.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/CONTRIBUTING.md",
+        "line": 41,
+        "content": "- Single source: `<repo>/.env.master` (git-ignored, chmod 600)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/CONTRIBUTING.md",
+        "line": 50,
+        "content": "- No hardcoded secrets; prefer env variables from `.env.master`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/RUN.md",
+        "line": 18,
+        "content": "make env-setup  # Creates .env.master template"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/RUN.md",
+        "line": 49,
+        "content": "The system uses a single `.env.master` file for all configuration:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/RUN.md",
+        "line": 63,
+        "content": "**Security**: `.env.master` is git-ignored and auto-secured with 600 permissions."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/RUN.md",
+        "line": 174,
+        "content": "make env-setup                    # Create .env.master template"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/RUN.md",
+        "line": 214,
+        "content": "rm .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/RUN.md",
+        "line": 250,
+        "content": "- **Environment**: Set `ENVIRONMENT=production` in `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/RUN.md",
+        "line": 252,
+        "content": "- **Secrets**: Use proper secret management (not `.env.master`)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/setup-opencode-portkey.sh",
+        "line": 19,
+        "content": "echo \"6. Add to .env.master: PORTKEY_API_KEY='pk-vk-xxx'\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/setup-opencode-portkey.sh",
+        "line": 24,
+        "content": "# Update .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/setup-opencode-portkey.sh",
+        "line": 25,
+        "content": "sed -i '' \"s/pk-vk-your-virtual-key-here/$PORTKEY_KEY/g\" ~/sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/setup-opencode-portkey.sh",
+        "line": 27,
+        "content": "echo \"\u2705 Updated .env.master with your Portkey key\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docker-compose.yml",
+        "line": 15,
+        "content": "- .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docker-compose.yml",
+        "line": 39,
+        "content": "- .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docker-compose.yml",
+        "line": 61,
+        "content": "- .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docker-compose.yml",
+        "line": 82,
+        "content": "- .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ONE_TRUE_DEV_FLOW.md",
+        "line": 13,
+        "content": "- Single env source: <repo>/.env.master (server-side load only). Required: PORTKEY_API_KEY + VKs; BI integrations as needed."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/ONE_TRUE_DEV_FLOW.md",
+        "line": 17,
+        "content": "- Secrets go in ./.env.master only. No dotenv or ~/.config at runtime."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/PORTKEY_GEMINI_SETUP.md",
+        "line": 7,
+        "content": "## Configuration in `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/PORTKEY_GEMINI_SETUP.md",
+        "line": 47,
+        "content": "# In .env.master, temporarily use direct key"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/link-master-env.sh",
+        "line": 9,
+        "content": "MASTER_ENV=\"$HOME/sophia-intel-ai/.env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/link-master-env.sh",
+        "line": 21,
+        "content": "echo \"\u2705 Linked .env.master to:\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/link-master-env.sh",
+        "line": 30,
+        "content": "echo \"[ -f ~/sophia-intel-ai/.env.master ] && source ~/sophia-intel-ai/.env.master\" >> ~/.zshrc"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/GITHUB_STRATEGY.md",
+        "line": 76,
+        "content": "- `.env.master` - API keys"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/oddities.md",
+        "line": 46,
+        "content": "- ENVIRONMENT.md: \u201csingle-source env only: .env.master \u2026 Do not use .env.local or ~/.config\u201d"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/oddities.md",
+        "line": 49,
+        "content": "- Minimal fix: Remove .env.local and ~/.config fallbacks; enforce .env.master only."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/oddities.md",
+        "line": 113,
+        "content": "- Smell: .env.local, ~/.config references vs .env.master policy"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/oddities.md",
+        "line": 136,
+        "content": "- ENVIRONMENT.md: \u201csingle-source .env.master; no ~/.config\u201d \u2192 setup_config.sh creates .env.local; docs reference ~/.config"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/oddities.md",
+        "line": 161,
+        "content": "- Delete .env.local scaffolding; standardize on .env.master; update scripts/docs"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/FOUNDATION_COMPLETE.md",
+        "line": 112,
+        "content": "- Location: `<repo>/.env.master` (single source of truth)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt",
+        "line": 5,
+        "content": "Summary: Converging on `.env.template` as canonical env template with encrypted runtime copy. Deprecating `.env.example` and `.env.master` once migration tooling lands. Unified loader will merge `.env.template` + `config/*.yml` with Convict/Zod validation."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt",
+        "line": 9,
+        "content": "2. Provide list of scripts/jobs under your ownership that source `.env.master` or `.env.example`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/evals/golden_qa/sample.jsonl",
+        "line": 1,
+        "content": "{\"id\":\"qa-001\",\"question\":\"What is the single source of truth for env?\",\"expected\":\".env.master\"}"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/infra/deploy.sh",
+        "line": 8,
+        "content": "# Load environment variables strictly from repo-local .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/infra/deploy.sh",
+        "line": 9,
+        "content": "if [ -f \".env.master\" ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/infra/deploy.sh",
+        "line": 11,
+        "content": "export $(grep -v '^#' .env.master | xargs)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/infra/deploy.sh",
+        "line": 12,
+        "content": "echo \"\u2705 Loaded environment from .env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/infra/deploy.sh",
+        "line": 14,
+        "content": "echo \"\u274c .env.master not found in repository root\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/infra/deploy.sh",
+        "line": 15,
+        "content": "echo \"   Create it: cp .env.template .env.master && chmod 600 .env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/portkey_config.py",
+        "line": 63,
+        "content": "\"PORTKEY_API_KEY is not set. Configure it in ./.env.master and start via ./sophia\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/config.py",
+        "line": 1,
+        "content": "\"\"\"Centralized configuration backed by repo `.env.master`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/config.py",
+        "line": 4,
+        "content": "to populate environment variables exactly once from the repository `.env.master`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/config.py",
+        "line": 21,
+        "content": "\"\"\"Load environment once from repo `.env.master` (silent).\"\"\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/env.py",
+        "line": 5,
+        "content": "- Load only from repo-local `.env.master` if present."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/env.py",
+        "line": 24,
+        "content": "\"\"\"Load environment once from repo `.env.master` only.\"\"\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/env.py",
+        "line": 29,
+        "content": "env_path = repo_root / \".env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/security/secure_env.py",
+        "line": 6,
+        "content": "- Single source: OS environment (loaded by ./sophia from ./.env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/security/secure_env.py",
+        "line": 22,
+        "content": "f\"Set it in ./.env.master and start via ./sophia\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/core/simple/reliable_provider.py",
+        "line": 81,
+        "content": "\"PORTKEY_API_KEY is not set. Configure it in ./.env.master and start via ./sophia\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/agents/README.md",
+        "line": 204,
+        "content": "2. **Add API keys** to `<repo>/.env.master` for full functionality (single source)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/integrations/gong_optimized_client.py",
+        "line": 147,
+        "content": "raise RuntimeError(\"Gong credentials missing: set GONG_ACCESS_KEY and GONG_CLIENT_SECRET in .env.master (repo root)\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/integrations/netsuite_oauth_callback.py",
+        "line": 126,
+        "content": "# Environment should be provided via process env (.env.master loaded by ./sophia)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/integrations/test_netsuite.py",
+        "line": 23,
+        "content": "# Rely on process environment (.env.master loaded by ./sophia)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/app/integrations/test_netsuite.py",
+        "line": 182,
+        "content": "# Environment should be provided by process env (.env.master via ./sophia)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.roo/custom_modes.yaml",
+        "line": 15,
+        "content": "- Handling multi-repo dependencies with shared configurations from sophia.config.yaml and .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.roo/rules-sophia-deployment-orchestrator/1_workflow.xml",
+        "line": 9,
+        "content": "<prerequisite>Valid .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.roo/rules-sophia-deployment-orchestrator/6_error_handling.xml",
+        "line": 52,
+        "content": "- Run validation script for shared configs (.env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.roo/rules-sophia-deployment-orchestrator/5_examples.xml",
+        "line": 7,
+        "content": "<step>2. Validate configs (sophia.config.yaml, .env.master)</step>"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.roo/rules-sophia-deployment-orchestrator/4_tool_usage.xml",
+        "line": 15,
+        "content": "<when>Update configs (sophia.config.yaml, .env.master, docker-compose.yml)</when>"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.roo/rules-sophia-deployment-orchestrator/4_tool_usage.xml",
+        "line": 70,
+        "content": "<when_to_use>For sophia.config.yaml, .env.master, docker-compose.yml</when_to_use>"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.roo/rules-sophia-deployment-orchestrator/4_tool_usage.xml",
+        "line": 76,
+        "content": "<code>read_file path=\".env.master\"</code>"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/bin/keys",
+        "line": 5,
+        "content": "ENV_PATH=\"$(cd \"$(dirname \"${BASH_SOURCE[0]}\")\"/.. && pwd)/.env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 136,
+        "content": "- Keys live in `<repo>/.env.master` and everything runs from `./sophia`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 191,
+        "content": "- Single source of truth: <repo>/.env.master (only this; no fallbacks)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 197,
+        "content": "- `./sophia` now loads only `.env.master`. No `~/.config`, no ESC fallback."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 198,
+        "content": "- `unified-system-manager.sh` sources only `.env.master` and exits with one clear line if missing."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 201,
+        "content": "- No scripts will ask for keys. If missing, you see one line: \u201c.env.master not found at \u2026; cp .env.template .env.master && chmod 600 .env.master\u201d."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 226,
+        "content": "- Add a minimal \u201cSophia Studio\u201d web UI as discussed for model/agent control \u2014 this won\u2019t touch the keys story; it reads the same `.env.master` server-side."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 230,
+        "content": "- One file: `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 252,
+        "content": "**IMPORTANT (updated)**: All API keys live in `<repo>/.env.master` (git-ignored, chmod 600). Use `./bin/keys edit` to manage. See `START_HERE.md` for details."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 292,
+        "content": "- Single source: `<repo>/.env.master` (git-ignored, chmod 600)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 297,
+        "content": "- Start Sophia MCP: `./sophia start` (8081, 8082, 8084; reads ./.env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 298,
+        "content": "- Start Coding UI (external project): reads same .env.master path; never prompts"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 1038,
+        "content": "> Environment Policy Update (2025-09-13): Use a single `.env.master` at the repo root for all local secrets and config. `.env.local` and `~/.config/sophia/env` are deprecated and unsupported. See `docs/CENTRAL_ENV_AND_GITHUB.md` and run `scripts/start_all_and_validate.sh`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/tsSchema.ts",
+        "line": 68,
+        "content": "const devEnvFile = options?.devEnvFile ?? '.env.master'"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/tsSchema.ts",
+        "line": 71,
+        "content": "// In dev, seed from .env.master first"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/python_settings.py",
+        "line": 67,
+        "content": "def settings_from_env(dev_env_file: str = \".env.master\") -> Settings:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/python_settings.py",
+        "line": 71,
+        "content": "# In dev, read from .env.master first (lowest precedence) then overlay process env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/env.schema.json",
+        "line": 41,
+        "content": "\"description\": \"Canonical environment variable schema for all services. Values for provider keys are placeholders in .env.master and resolved via Pulumi ESC in CI/CD.\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 26,
+        "content": "- OPENAI_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 27,
+        "content": "- ANTHROPIC_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 28,
+        "content": "- GOOGLE_GEMINI_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 29,
+        "content": "- MISTRAL_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 30,
+        "content": "- GROQ_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 31,
+        "content": "- XAI_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 32,
+        "content": "- COHERE_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 33,
+        "content": "- AI21_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 34,
+        "content": "- OPENROUTER_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 35,
+        "content": "- PORTKEY_API_KEY: string (placeholder in .env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 38,
+        "content": "- `.env.master` provides safe placeholders that avoid triggering GitHub secret detectors."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md",
+        "line": 40,
+        "content": "- Load order (dev): process env overrides `.env.master`. In CI/prod: process env only."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/deploy/README.md",
+        "line": 132,
+        "content": "cp .env.template .env.master && chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/deploy/README.md",
+        "line": 135,
+        "content": "nano .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/deploy/README.md",
+        "line": 339,
+        "content": "Never commit sensitive data. Store in `<repo>/.env.master`:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/tests/test_ai_agents.py",
+        "line": 7,
+        "content": "# No dotenv loading; tests should rely on process env or .env.master loaded by ./sophia"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/agents/load_env.py",
+        "line": 4,
+        "content": "Ensures every agent gets the real API keys from repo-local .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/agents/load_env.py",
+        "line": 12,
+        "content": "\"\"\"Locate repo-local .env.master by walking up from a starting path."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/agents/load_env.py",
+        "line": 16,
+        "content": "candidate = p / \".env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/agents/load_env.py",
+        "line": 22,
+        "content": "\"\"\"Load environment from repo-local .env.master (single source of truth)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/agents/load_env.py",
+        "line": 30,
+        "content": "raise FileNotFoundError(\".env.master not found\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/agents/load_env.py",
+        "line": 105,
+        "content": "print(\"\u2705 Loaded environment from .env.master\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/agents/load_env.py",
+        "line": 110,
+        "content": "print(f\".env.master not found at {repo_root}/.env.master; cp .env.template .env.master && chmod 600 .env.master\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/backend/config/settings.py",
+        "line": 292,
+        "content": "Loads environment once (from repo .env.master if present) before instantiation"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md",
+        "line": 26,
+        "content": "# Set environment to use main repo's .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md",
+        "line": 27,
+        "content": "export REPO_ENV_MASTER_PATH=$(pwd)/../sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md",
+        "line": 37,
+        "content": "- `REPO_ENV_MASTER_PATH`: Path to main repository's `.env.master` file"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md",
+        "line": 65,
+        "content": "REPO_ENV_MASTER_PATH=~/sophia-intel-ai/.env.master npm run dev"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md",
+        "line": 95,
+        "content": "-e REPO_ENV_MASTER_PATH=/config/.env.master \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md",
+        "line": 96,
+        "content": "-v ~/sophia-intel-ai/.env.master:/config/.env.master:ro \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md",
+        "line": 104,
+        "content": "1. **Cannot find .env.master**"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_REPO_DECISION.md",
+        "line": 12,
+        "content": "- Copy `.env.master` schema into the worktree automatically."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_EXTRACTION_PLAN.md",
+        "line": 50,
+        "content": "- `.env.master` based on backend schema, or consume via a small config package (e.g., `@sophia/config`) if you publish one."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_EXTRACTION_PLAN.md",
+        "line": 53,
+        "content": "- Local dev: `.env.master` with placeholders; CI/CD injects real values from ESC."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_EXTRACTION_PLAN.md",
+        "line": 56,
+        "content": "- (Optional) `env-validate` job to validate `.env.master` against schema"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_EXTRACTION_PLAN.md",
+        "line": 66,
+        "content": "- Work in `../worktrees/workbench-ui`; `.env.master` is synced on scaffold."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_EXTRACTION_PLAN.md",
+        "line": 81,
+        "content": "- Keep `.env.master` schemas consistent across repos. Prefer a small shared config package to avoid drift."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md",
+        "line": 3,
+        "content": "This repository uses a single canonical `.env.master` for local development, validated against `config/env.schema.json`. Real secrets and environment-specific values are sourced from Pulumi ESC (dev/staging/prod) in CI/CD."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md",
+        "line": 7,
+        "content": "- No real secrets in Git; `.env.master` contains safe placeholders."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md",
+        "line": 8,
+        "content": "- Local precedence: process env overrides `.env.master`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md",
+        "line": 14,
+        "content": "- `.env.master` \u2013 safe placeholders for local dev"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md",
+        "line": 18,
+        "content": "- Python: `config/python_settings.py` (`settings_from_env()`) reads `.env.master` in `APP_ENV=dev`, overlays with process env."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md",
+        "line": 22,
+        "content": "1) Edit `.env.master` placeholders if needed (don\u2019t insert real keys)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md",
+        "line": 27,
+        "content": "- Schema validation job ensures `.env.master` is consistent."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ARCHITECTURE.md",
+        "line": 3,
+        "content": "> Environment Policy (2025-09-13): The only supported local environment file is `<repo>/.env.master`. Any references to `.env.local` or `~/.config/sophia/env` in older sections are deprecated. See `docs/CENTRAL_ENV_AND_GITHUB.md` and use `scripts/start_all_and_validate.sh` to bring up and validate services."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AI_AGENT_INITIALIZATION_PROMPTS.md",
+        "line": 57,
+        "content": "- REPO_ENV_MASTER_PATH - Path to sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AI_AGENT_INITIALIZATION_PROMPTS.md",
+        "line": 114,
+        "content": "## Environment Variables (.env.master)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AI_AGENT_INITIALIZATION_PROMPTS.md",
+        "line": 139,
+        "content": "export REPO_ENV_MASTER_PATH=~/sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AI_AGENT_INITIALIZATION_PROMPTS.md",
+        "line": 197,
+        "content": "source .env.master  # Load master environment"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AI_AGENT_INITIALIZATION_PROMPTS.md",
+        "line": 291,
+        "content": "export REPO_ENV_MASTER_PATH=~/sophia-intel-ai/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AGENTS_CONTRACT.md",
+        "line": 28,
+        "content": "- No secrets in repo. Use `<repo>/.env.master` (single source) or platform secret store."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SETUP.md",
+        "line": 6,
+        "content": "- The only checked-in template is `.env.master`. Use `./bin/keys edit` to create or update it (600 permissions)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SETUP.md",
+        "line": 17,
+        "content": "./bin/keys edit        # opens $EDITOR with .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SETUP.md",
+        "line": 59,
+        "content": "- Avoid recreating `.env.local`; rely on `.env.master` + runtime overrides to keep secrets centralized."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CODING_UI_STANDALONE.md",
+        "line": 32,
+        "content": "- Single source: path to this repo `.env.master` loaded server-side only"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CODING_UI_STANDALONE.md",
+        "line": 39,
+        "content": "- Start Coding UI (external project): read same `.env.master` via explicit path"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CONFIG_CONTRACT.md",
+        "line": 19,
+        "content": "- Dev: `.env.master` \u2192 overridden by process env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AIML_ENHANCED_SETUP.md",
+        "line": 37,
+        "content": "cp .env.template .env.master && chmod 600 .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AIML_ENHANCED_SETUP.md",
+        "line": 40,
+        "content": "nano .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/AIML_ENHANCED_SETUP.md",
+        "line": 191,
+        "content": "# In <repo>/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CENTRAL_ENV_AND_GITHUB.md",
+        "line": 4,
+        "content": "- `.env.master` at repo root is the only runtime env file."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/PORTKEY_ONLY_POLICY.md",
+        "line": 7,
+        "content": "- Single source: `./.env.master`, loaded by `./sophia` and inherited by processes it spawns."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/PORTKEY_ONLY_POLICY.md",
+        "line": 12,
+        "content": "- All errors that reference missing keys must say: \"Set it in ./.env.master and start via ./sophia\"."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 8,
+        "content": "- Deliver a safe, reviewable migration path from `.env.master` / `.env.example` to `.env.template`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 27,
+        "content": "- Remove `.env.master`/`.env.example` from repo, leaving archival copies under `backups/` if needed."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 38,
+        "content": "- Restore `.env.master` and `.env.example` from git history if issues arise."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CENTRALIZED_RULES.md",
+        "line": 22,
+        "content": "- **ALL secrets** go in `<repo>/.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/PHASE_3_VERSION_CONTROL_SECURITY_REPORT.md",
+        "line": 108,
+        "content": "- \u2705 `.env.master` designated as single source of truth"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/PHASE_3_VERSION_CONTROL_SECURITY_REPORT.md",
+        "line": 429,
+        "content": ".env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UI_API_CONTRACTS.md",
+        "line": 5,
+        "content": "- All secrets are server-side via `<repo>/.env.master`; never expose keys client-side."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SLACK_SETUP_GUIDE.md",
+        "line": 15,
+        "content": "- Store in `<repo>/.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SLACK_SETUP_GUIDE.md",
+        "line": 30,
+        "content": "- Copy the following into `<repo>/.env.master`:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SLACK_SETUP_GUIDE.md",
+        "line": 142,
+        "content": "- Env vars (store in `<repo>/.env.master`): `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/LOCAL_DEPLOYMENT.md",
+        "line": 10,
+        "content": "- Environment: `<repo>/.env.master` (single source)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/LOCAL_DEPLOYMENT.md",
+        "line": 20,
+        "content": "Create `<repo>/.env.master`:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CLI_DEEPSEEK_GROK.md",
+        "line": 7,
+        "content": "- Reads keys from `<repo>/.env.master` loaded by `./sophia start` (no prompts)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CLI_DEEPSEEK_GROK.md",
+        "line": 10,
+        "content": "- Preferred location: `<repo>/.env.master` (picked up by `./sophia`)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/CLI_DEEPSEEK_GROK.md",
+        "line": 42,
+        "content": "- Env loading order: `./sophia` loads `<repo>/.env.master` only (no fallbacks)."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/DUAL_WORKSPACE_ARCHITECTURE.md",
+        "line": 70,
+        "content": "- Environment isolation via .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/DUAL_WORKSPACE_ARCHITECTURE.md",
+        "line": 81,
+        "content": "WORKSPACE_1_ENV=.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/DUAL_WORKSPACE_ARCHITECTURE.md",
+        "line": 93,
+        "content": "- Shared .env.master for credentials"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/MCP_READINESS_CHECKLIST.md",
+        "line": 98,
+        "content": "- Never hardcode secrets (use .env.master; CI injects for prod)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/MCP_READINESS_CHECKLIST.md",
+        "line": 131,
+        "content": "- Single source: .env.master (already enforced repository-wide)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/MCP_READINESS_CHECKLIST.md",
+        "line": 226,
+        "content": "- [ ] .env.master present and chmod 600; MCP_DEV_BYPASS set for env (true in dev, false in prod)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/GITHUB_SETUP.md",
+        "line": 11,
+        "content": "Add to your `<repo>/.env.master`:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ONE_TRUE_DEV_FLOW.md",
+        "line": 8,
+        "content": "- Start MCP: `./sophia start` \u2192 memory:8081, filesystem:8082, git:8084. Reads `./.env.master`. No prompts."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ONE_TRUE_DEV_FLOW.md",
+        "line": 10,
+        "content": "- Reads the same `./.env.master` server\u2011side only."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/ONE_TRUE_DEV_FLOW.md",
+        "line": 16,
+        "content": "- Single source: `<repo>/.env.master` loaded by `./sophia`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/RUNBOOKS.md",
+        "line": 4,
+        "content": "- `python scripts/validate_env_schema.py` \u2013 validates `.env.master` against `config/env.schema.json`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md",
+        "line": 25,
+        "content": "Sophia --> EnvLoad[Load .env.master]"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md",
+        "line": 225,
+        "content": "cp .env.example .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md",
+        "line": 226,
+        "content": "# Edit .env.master with your keys:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md",
+        "line": 302,
+        "content": "| \"Missing PORTKEY_API_KEY\" | Env not loaded | Ensure .env.master exists and is readable |"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md",
+        "line": 332,
+        "content": "[[ -f .env.master ]] && echo \"\u2705 Environment configured\" || echo \"\u274c Missing .env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/PULUMI_ESC_GUIDE.md",
+        "line": 14,
+        "content": "- Use `.env.master` placeholders. Do not copy real keys locally."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UIS_README.md",
+        "line": 6,
+        "content": "- Uses MCP FS/Git (8082/8084) and Portkey (server-side) with .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UIS_README.md",
+        "line": 9,
+        "content": "- VK health, logs, routing views; flexible provider routing (Portkey/OpenRouter/Direct) via `.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UIS_README.md",
+        "line": 16,
+        "content": "- Server-side load of <repo>/.env.master via absolute path (REPO_ENV_MASTER_PATH)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UIS_README.md",
+        "line": 24,
+        "content": "REPO_ENV_MASTER_PATH=$(pwd -P | sed 's|/worktrees/forge-ui||')/.env.master \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UIS_README.md",
+        "line": 39,
+        "content": "REPO_ENV_MASTER_PATH=$(pwd -P | sed 's|/worktrees/workbench-ui||')/.env.master \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 6,
+        "content": "Environment policy (enforced): `.env.master` only; manage with `./bin/keys edit`; start with `./sophia start`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 83,
+        "content": "# In .env.master:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 96,
+        "content": "cp .env.template .env.master  # If missing"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 97,
+        "content": "nano .env.master              # Add your API keys"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 98,
+        "content": "chmod 600 .env.master         # Secure permissions"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 120,
+        "content": "| \"API key not found\" | Check `.env.master` has the key |"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 121,
+        "content": "| \"Permission denied\" | Run `chmod 600 .env.master` |"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md",
+        "line": 173,
+        "content": "* **Config**: `.env.master` (environment). Portkey Gateway + VKs only."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SECURE_ENV_AND_TOOLS.md",
+        "line": 3,
+        "content": "- Deprecated: Use repo-local `.env.master` as the single source, server-side only. See `docs/CENTRAL_ENV_AND_GITHUB.md`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SECURE_ENV_AND_TOOLS.md",
+        "line": 5,
+        "content": "- Load order is now: `.env.master` only (server-side), then OS env overrides."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SECURE_ENV_AND_TOOLS.md",
+        "line": 13,
+        "content": "- Do not store provider keys (e.g., `CODEX_API_KEY`) in this repo or in `.env.master`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/development/CLI_QUICK_START.md",
+        "line": 15,
+        "content": "./bin/keys edit  # edits <repo>/.env.master (chmod 600)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/development/CLI_QUICK_START.md",
+        "line": 176,
+        "content": "./sophia start  # loads <repo>/.env.master and exports to child processes"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md",
+        "line": 8,
+        "content": "Recent duplication analysis highlighted three competing environment configuration patterns in the repository (`.env.example`, `.env.template`, `.env.master`). Tooling and documentation disagree on which file is canonical, and several loader scripts apply conflicting assumptions about encryption and source of truth. This misalignment has created deployment instability and onboarding friction."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md",
+        "line": 14,
+        "content": "3. Deprecate `.env.example`, `.env.master`, and ad-hoc environment bootstrap logic once migration tooling is ready."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md",
+        "line": 38,
+        "content": "If blockers surface during implementation, revert references to `.env.master` by restoring the previous onboarding docs and reinstituting legacy loader scripts from git history (commit prior to standardization). Document the issue in `/notify` and reschedule the migration after gaps are closed."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/deployment/FLY_LAMBDA_DEPLOY.md",
+        "line": 8,
+        "content": "- Ensure secrets are not in the repo. Place local values in `<repo>/.env.master` and pass to Fly using `fly secrets set`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 2,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/demo_unified_cli.sh (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 4,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/complete_workbench_separation.sh (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 5,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/unified-system-manager.sh (.env.master -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 6,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/ENVIRONMENT.md (.env.master -> 24)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 7,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/health_check.sh (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 8,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/REPOSITORY_ANALYSIS_REPORT.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 9,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/AI_AGENT_INSTRUCTIONS.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 10,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/CONVENTIONS.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 13,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/Makefile (.env.master -> 16, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 14,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/USAGE.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 15,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/test_api_server.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 16,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/START_HERE.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 17,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/sophia (.env.master -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 18,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/startup_enhanced.sh (.env.master -> 9)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 19,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/MASTER_AI_REFERENCE.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 20,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/deepseek_cli.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 21,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/add-portkey-key.sh (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 23,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/README.md (.env.example -> 1, .env.master -> 14)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 24,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/startup.sh (.env.master -> 9)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 25,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/duplication_report.md (.env.example -> 6, .env.master -> 1, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 26,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/LOCAL_DEV_AND_DEPLOYMENT.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 28,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/AGENT_INTELLIGENCE_HUB.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 29,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/AGENT_STARTUP_PROMPT.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 30,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/CONTRIBUTING.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 31,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/RUN.md (.env.master -> 7)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 32,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/setup-opencode-portkey.sh (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 33,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docker-compose.yml (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 35,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/ONE_TRUE_DEV_FLOW.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 36,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/PORTKEY_GEMINI_SETUP.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 37,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/link-master-env.sh (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 38,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/GITHUB_STRATEGY.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 39,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/oddities.md (.env.master -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 40,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/FOUNDATION_COMPLETE.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 41,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt (.env.example -> 2, .env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 42,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/infra/deploy.sh (.env.master -> 7)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 44,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/core/portkey_config.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 45,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/core/config.py (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 46,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/core/env.py (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 47,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/core/security/secure_env.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 48,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/core/simple/reliable_provider.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 49,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/agents/README.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 50,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/integrations/gong_optimized_client.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 51,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/integrations/netsuite_oauth_callback.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 52,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/app/integrations/test_netsuite.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 53,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.roo/custom_modes.yaml (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 54,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/bin/keys (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 55,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO (.env.example -> 1, .env.master -> 14)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 56,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/config/python_settings.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 57,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/config/env.schema.json (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 58,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/config/ENV_KEYS.md (.env.master -> 12)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 59,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/deploy/README.md (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 60,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/tests/test_ai_agents.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 62,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/agents/load_env.py (.env.master -> 10)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 63,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/backend/config/settings.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 64,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_INTEGRATION.md (.env.master -> 8)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 65,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_REPO_DECISION.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 66,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_EXTRACTION_PLAN.md (.env.master -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 67,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/ENVIRONMENT.md (.env.master -> 7)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 68,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/ARCHITECTURE.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 70,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/AI_AGENT_INITIALIZATION_PROMPTS.md (.env.master -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 71,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/AGENTS_CONTRACT.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 72,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SETUP.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 73,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/CODING_UI_STANDALONE.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 74,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/CONFIG_CONTRACT.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 75,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/AIML_ENHANCED_SETUP.md (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 76,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/CENTRAL_ENV_AND_GITHUB.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 77,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/PORTKEY_ONLY_POLICY.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 78,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md (.env.example -> 3, .env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 79,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/CENTRALIZED_RULES.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 80,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/PHASE_3_VERSION_CONTROL_SECURITY_REPORT.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 81,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UI_API_CONTRACTS.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 82,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SLACK_SETUP_GUIDE.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 83,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/LOCAL_DEPLOYMENT.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 84,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/CLI_DEEPSEEK_GROK.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 85,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/DUAL_WORKSPACE_ARCHITECTURE.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 86,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/MCP_READINESS_CHECKLIST.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 87,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/GITHUB_SETUP.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 88,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/ONE_TRUE_DEV_FLOW.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 89,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/RUNBOOKS.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 91,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md (.env.example -> 1, .env.master -> 6)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 92,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/PULUMI_ESC_GUIDE.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 93,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/EXTERNAL_UIS_README.md (.env.master -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 94,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/START_HERE_2025.md (.env.master -> 8)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 95,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SECURE_ENV_AND_TOOLS.md (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 96,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/development/CLI_QUICK_START.md (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 97,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md (.env.example -> 2, .env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 98,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/deployment/FLY_LAMBDA_DEPLOY.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 99,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/reports/sophia_cleanup_report.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 100,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.devcontainer/post-start.sh (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 101,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.devcontainer/README.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 102,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.devcontainer/postCreateCommand.sh (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 104,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/POLICIES/authority.yml (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 105,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/POLICIES/access.yml (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 106,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/configs/agents/master_architect.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 107,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/configs/agents/master_architect_persona.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 108,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py (.env.example -> 2, .env.master -> 2, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 109,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/start_all_and_validate.sh (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 110,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/keys_sync.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 112,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py (.env.example -> 3, .env.master -> 3, env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 113,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/finish_workbench_extraction.sh (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 114,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/ensure_env.sh (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 116,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/setup_portkey_keys.py (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 119,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/sync_env_from_esc.sh (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 120,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/create_portkey_virtual_keys.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 121,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/scaffold_forge_ui.sh (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 122,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/env_doctor.py (.env.example -> 1, .env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 124,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/validate_env_schema.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 125,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/test_new_api_keys.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 126,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/env_master_check.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 128,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/verify_all_integrations.py (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 129,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/check_env_single_source.py (.env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 130,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/scaffold_workbench_ui.sh (.env.master -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 131,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/quick_wins.sh (.env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 133,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/check_env_variants.sh (.env.example -> 1, .env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 135,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/ci/no_legacy_stack_guard.sh (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 137,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.github/PULL_REQUEST_TEMPLATE.md (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 139,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.github/workflows/env-validate.yml (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 140,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/builder_cli/lib/env.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 141,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/sophia_cli/cli.py (.env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/sophia_cleanup_report.md",
+        "line": 7,
+        "content": "- Environment copies consolidated: `.env`, `.env.local`, `.env.local.example` removed from root; `.env.master` remains source of truth"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/post-start.sh",
+        "line": 6,
+        "content": "# Environment is sourced only from <repo>/.env.master via ./sophia. Do not load .env here."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/README.md",
+        "line": 9,
+        "content": "Use MCP canonical ports (8081/8082/8084) and load <repo>/.env.master server-side."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/postCreateCommand.sh",
+        "line": 25,
+        "content": "# Do NOT install python-dotenv; env comes from ./.env.master via ./sophia"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/postCreateCommand.sh",
+        "line": 35,
+        "content": "# Environment policy: single source ./.env.master loaded by ./sophia. No .env files created here."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/POLICIES/authority.yml",
+        "line": 11,
+        "content": "environment_source: .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/POLICIES/access.yml",
+        "line": 2,
+        "content": "# Secrets live in .env.master; this file defines policy."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/POLICIES/access.yml",
+        "line": 6,
+        "content": "dev_bypass: true   # set MCP_DEV_BYPASS=false in .env.master for prod"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/configs/agents/master_architect.md",
+        "line": 10,
+        "content": "- All configuration in `<repo>/.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/configs/agents/master_architect_persona.md",
+        "line": 7,
+        "content": "- Secrets/keys are never committed; load from `<repo>/.env.master`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py",
+        "line": 5,
+        "content": "(e.g., `.env.master`, `.env.example`) to the canonical `.env.template`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py",
+        "line": 21,
+        "content": "(\".env.master\", \".env.template\"),"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/start_all_and_validate.sh",
+        "line": 3,
+        "content": "# Loads .env.master, starts all services, and validates health"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/start_all_and_validate.sh",
+        "line": 15,
+        "content": "ENV_FILE=\".env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/start_all_and_validate.sh",
+        "line": 76,
+        "content": "log_error \".env.master not found\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/start_all_and_validate.sh",
+        "line": 77,
+        "content": "log_info \"Creating template .env.master...\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/keys_sync.py",
+        "line": 3,
+        "content": "Sync .env.master against config/keys_registry.json:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/keys_sync.py",
+        "line": 14,
+        "content": "ENV_PATH = ROOT / \".env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 5,
+        "content": "identify non-canonical usage (e.g., `.env.master`, `.env.example`). The tool"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 22,
+        "content": "\".env.master\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 160,
+        "content": "for pattern in (\".env.master\", \".env.example\", \"env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/finish_workbench_extraction.sh",
+        "line": 66,
+        "content": "- In the new repo, ensure env uses REPO_ENV_MASTER_PATH for local dev or add a local .env.master."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/ensure_env.sh",
+        "line": 5,
+        "content": "MASTER_ENV=\"/Users/lynnmusil/sophia-intel-ai/.env.master\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_portkey_keys.py",
+        "line": 3,
+        "content": "DEPRECATED \u2013 use .env.master only."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_portkey_keys.py",
+        "line": 5,
+        "content": "This script predates the centralized `.env.master` policy and attempted to"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_portkey_keys.py",
+        "line": 6,
+        "content": "write `.env`/.env.local files. Do not use it. Configure keys in `<repo>/.env.master`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_portkey_keys.py",
+        "line": 224,
+        "content": "print(\"This script is deprecated. Use .env.master and scripts/start_all_and_validate.sh.\", file=sys.stderr)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/sync_env_from_esc.sh",
+        "line": 8,
+        "content": "OUT_FILE=${2:-.env.master}"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/create_portkey_virtual_keys.py",
+        "line": 3,
+        "content": "DEPRECATED \u2013 central env is .env.master and VKs should be managed manually or via"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/create_portkey_virtual_keys.py",
+        "line": 252,
+        "content": "logger.info(\"This script is deprecated. Use .env.master and manage VKs via Portkey UI.\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/scaffold_forge_ui.sh",
+        "line": 23,
+        "content": "- REPO_ENV_MASTER_PATH: absolute path to <repo>/.env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/scaffold_forge_ui.sh",
+        "line": 39,
+        "content": "REPO_ENV_MASTER_PATH=/absolute/path/to/<repo>/.env.master \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_doctor.py",
+        "line": 8,
+        "content": "Deprecated: Central env is <repo>/.env.master only. Do not use env_doctor to"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_doctor.py",
+        "line": 75,
+        "content": "print(\"This script is deprecated. Use .env.master; do not merge .env files.\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/validate_env_schema.py",
+        "line": 45,
+        "content": "env_path = os.path.join(ROOT, \".env.master\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/validate_env_schema.py",
+        "line": 55,
+        "content": "print(\".env.master validates against env.schema.json\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/test_new_api_keys.py",
+        "line": 11,
+        "content": "env_file = Path(\"/Users/lynnmusil/sophia-intel-ai/.env.master\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/test_new_api_keys.py",
+        "line": 168,
+        "content": "print(\"Keep others in .env.master for future use\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_master_check.py",
+        "line": 157,
+        "content": "env_path = repo / '.env.master'"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/verify_all_integrations.py",
+        "line": 320,
+        "content": "# Deprecated entrypoint: this script references .env.local. Use .env.master and"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/verify_all_integrations.py",
+        "line": 322,
+        "content": "print(\"This script is deprecated. Use .env.master and scripts/start_all_and_validate.sh.\", file=sys.stderr)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/check_env_single_source.py",
+        "line": 3,
+        "content": "Enforce single-source env policy: .env.master only."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/check_env_single_source.py",
+        "line": 64,
+        "content": "print(\"\\nFix: remove alternate env loading; use <repo>/.env.master only.\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/check_env_single_source.py",
+        "line": 66,
+        "content": "print(\"\u2705 Env policy check passed: single-source .env.master enforced.\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/scaffold_workbench_ui.sh",
+        "line": 26,
+        "content": "echo \"[scaffold] Syncing .env.master schema to worktree (if exists)\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/scaffold_workbench_ui.sh",
+        "line": 27,
+        "content": "if [ -f ./.env.master ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/scaffold_workbench_ui.sh",
+        "line": 28,
+        "content": "cp ./.env.master \"${TARGET_DIR}/.env.master\" || true"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/quick_wins.sh",
+        "line": 426,
+        "content": "if [ -f .env.master ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/quick_wins.sh",
+        "line": 427,
+        "content": "source .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/check_env_variants.sh",
+        "line": 4,
+        "content": "allowed=(\".env.master\" \".env.template\" \".env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/ci/no_legacy_stack_guard.sh",
+        "line": 25,
+        "content": "err \"Found forbidden dotenv or ~/.config usages; only ./.env.master via ./sophia\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.github/PULL_REQUEST_TEMPLATE.md",
+        "line": 6,
+        "content": "- [ ] Secrets policy respected (no keys in repo; uses <repo>/.env.master only)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.github/workflows/env-validate.yml",
+        "line": 19,
+        "content": "- name: Validate .env.master against schema"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/builder_cli/lib/env.py",
+        "line": 14,
+        "content": "\"\"\"Load repo `.env.master` once (idempotent).\"\"\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/apps/api/fly.toml",
+        "line": 35,
+        "content": "# - Ensure DATABASE_URL/REDIS_URL/etc exist in ESC with identical names to local .env.master."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_cli/cli.py",
+        "line": 47,
+        "content": "raise click.ClickException(\"Missing PORTKEY_API_KEY. Use ESC\u2192dotenv into .env.master and source it.\")"
+      }
+    ],
+    ".env.example": [
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6435,
+        "content": "# .env.example is missing:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6440,
+        "content": "**Found In**: 20+ Python files reference these keys but `.env.example` doesn't include them"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6597,
+        "content": "1. **Update `.env.example`**:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6761,
+        "content": "1. **Environment Configuration**: Missing API keys in `.env.example`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6770,
+        "content": "- Add `XAI_API_KEY` and `GROK_API_KEY` to `.env.example`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/roo_implementation_plan.json",
+        "line": 195,
+        "content": "\"files\": [\".env.example\", \"config/graph_config.yaml\"],"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 594,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.secrets.baseline",
+        "line": 139,
+        "content": "\".env.example\": ["
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.secrets.baseline",
+        "line": 142,
+        "content": "\"filename\": \".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 28,
+        "content": "1. `.env.example` (legacy pattern)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 34,
+        "content": "- Scripts expect different files: some use `.env.example`, others `.env.template`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 39,
+        "content": "Root files: .env.example, .env.template, env.example"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 40,
+        "content": "Scripts referencing .env.example: 15+ files"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 48,
+        "content": "- Remove deprecated `.env.example` variants"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 188,
+        "content": "- Remove deprecated `.env.example`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/DEPLOYMENT.md",
+        "line": 26,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/BRUTAL_AUDIT_REPORT.json",
+        "line": 21,
+        "content": "\"description\": \"Too many environment files (4): ['/home/ubuntu/sophia-main/config/production.env.example', '/home/ubuntu/sophia-main/env_manager.py', '/home/ubuntu/sophia-main/agents/specialized/env_guard_agent.py', '/home/ubuntu/sophia-main/__pycache__/env_manager.cpython-311.pyc']\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt",
+        "line": 5,
+        "content": "Summary: Converging on `.env.template` as canonical env template with encrypted runtime copy. Deprecating `.env.example` and `.env.master` once migration tooling lands. Unified loader will merge `.env.template` + `config/*.yml` with Convict/Zod validation."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt",
+        "line": 9,
+        "content": "2. Provide list of scripts/jobs under your ownership that source `.env.master` or `.env.example`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/tools/preflight_validator.py",
+        "line": 355,
+        "content": "\".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 715,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_UI_STARTUP_GUIDE.md",
+        "line": 381,
+        "content": "cp .env.example .env.local"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 8,
+        "content": "- Deliver a safe, reviewable migration path from `.env.master` / `.env.example` to `.env.template`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 27,
+        "content": "- Remove `.env.master`/`.env.example` from repo, leaving archival copies under `backups/` if needed."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 38,
+        "content": "- Restore `.env.master` and `.env.example` from git history if issues arise."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_OPERATIONAL_EXCELLENCE_ROADMAP.md",
+        "line": 352,
+        "content": "Create comprehensive .env.example with clear documentation for all configuration"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md",
+        "line": 225,
+        "content": "cp .env.example .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md",
+        "line": 8,
+        "content": "Recent duplication analysis highlighted three competing environment configuration patterns in the repository (`.env.example`, `.env.template`, `.env.master`). Tooling and documentation disagree on which file is canonical, and several loader scripts apply conflicting assumptions about encryption and source of truth. This misalignment has created deployment instability and onboarding friction."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md",
+        "line": 14,
+        "content": "3. Deprecate `.env.example`, `.env.master`, and ad-hoc environment bootstrap logic once migration tooling is ready."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 11,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md (.env.example -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 12,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/roo_implementation_plan.json (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 23,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/README.md (.env.example -> 1, .env.master -> 14)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 25,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/duplication_report.md (.env.example -> 6, .env.master -> 1, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 27,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/DEPLOYMENT.md (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 34,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/BRUTAL_AUDIT_REPORT.json (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 41,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt (.env.example -> 2, .env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 43,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/tools/preflight_validator.py (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 55,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO (.env.example -> 1, .env.master -> 14)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 69,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_UI_STARTUP_GUIDE.md (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 78,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md (.env.example -> 3, .env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 90,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_OPERATIONAL_EXCELLENCE_ROADMAP.md (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 91,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md (.env.example -> 1, .env.master -> 6)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 97,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md (.env.example -> 2, .env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 103,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh (.env.example -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 108,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py (.env.example -> 2, .env.master -> 2, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 111,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh (.env.example -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 112,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py (.env.example -> 3, .env.master -> 3, env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 115,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/cleanup_docs.sh (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 117,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/phase1_asip_rebuild.sh (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 118,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/cleanup.py (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 122,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/env_doctor.py (.env.example -> 1, .env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 123,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/setup_free_api_keys.sh (.env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 127,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/test_real_apis.sh (.env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 132,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/multi-agent-docker-env.sh (.env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 133,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/check_env_variants.sh (.env.example -> 1, .env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 134,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py (.env.example -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 136,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/dev/squad.sh (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh",
+        "line": 383,
+        "content": "# Create .env.example if missing"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh",
+        "line": 384,
+        "content": "if [ ! -f \".env.example\" ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh",
+        "line": 385,
+        "content": "cat > .env.example << 'EOF'"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py",
+        "line": 5,
+        "content": "(e.g., `.env.master`, `.env.example`) to the canonical `.env.template`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py",
+        "line": 22,
+        "content": "(\".env.example\", \".env.template\"),"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 56,
+        "content": "if [ -f .env.example ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 57,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 58,
+        "content": "print_warning \"Created .env from .env.example - please update with your API keys\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 60,
+        "content": "print_error \"No .env.example found - creating minimal .env\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 5,
+        "content": "identify non-canonical usage (e.g., `.env.master`, `.env.example`). The tool"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 23,
+        "content": "\".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 160,
+        "content": "for pattern in (\".env.master\", \".env.example\", \"env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/cleanup_docs.sh",
+        "line": 320,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/phase1_asip_rebuild.sh",
+        "line": 375,
+        "content": "assert os.path.exists('.env.example') or os.path.exists('.env.template')"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/cleanup.py",
+        "line": 41,
+        "content": "\".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_doctor.py",
+        "line": 33,
+        "content": "(\"deprecated.example\", ROOT / \".env.example\"),"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_free_api_keys.sh",
+        "line": 69,
+        "content": "echo -e \"\\n\u26a0\ufe0f No .env file found. Copy from .env.example first:\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_free_api_keys.sh",
+        "line": 70,
+        "content": "echo \"   cp .env.example .env\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/test_real_apis.sh",
+        "line": 15,
+        "content": "echo \"\u26a0\ufe0f No .env file found. Copy from .env.example first:\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/test_real_apis.sh",
+        "line": 16,
+        "content": "echo \"   cp .env.example .env\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/multi-agent-docker-env.sh",
+        "line": 75,
+        "content": "if [ -f \".env.example\" ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/multi-agent-docker-env.sh",
+        "line": 76,
+        "content": "echo \"Consider copying .env.example to .env and configuring your API keys\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/check_env_variants.sh",
+        "line": 4,
+        "content": "allowed=(\".env.master\" \".env.template\" \".env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 128,
+        "content": "env_files = [\".env.example\", \".env.development\", \".env.production\"]"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 212,
+        "content": "# Create missing .env.example if not exists"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 213,
+        "content": "env_example = self.repo_path / \".env.example\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 240,
+        "content": "print(\"  \u2705 Created .env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/dev/squad.sh",
+        "line": 58,
+        "content": "print_msg \"${YELLOW}\" \"Create one with: cp ${PROJECT_DIR}/.env.example ${ENV_FILE}\""
+      }
+    ],
+    "env.example": [
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6435,
+        "content": "# .env.example is missing:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6440,
+        "content": "**Found In**: 20+ Python files reference these keys but `.env.example` doesn't include them"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6597,
+        "content": "1. **Update `.env.example`**:"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6761,
+        "content": "1. **Environment Configuration**: Missing API keys in `.env.example`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md",
+        "line": 6770,
+        "content": "- Add `XAI_API_KEY` and `GROK_API_KEY` to `.env.example`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/roo_implementation_plan.json",
+        "line": 195,
+        "content": "\"files\": [\".env.example\", \"config/graph_config.yaml\"],"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/Makefile",
+        "line": 44,
+        "content": "cp env.example .env.master 2>/dev/null || echo \"# Sophia Intel AI Environment\\nPORTKEY_API_KEY=\\nOPENROUTER_API_KEY=\\nTOGETHER_API_KEY=\" > .env.master; \\"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/README.md",
+        "line": 594,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.secrets.baseline",
+        "line": 139,
+        "content": "\".env.example\": ["
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.secrets.baseline",
+        "line": 142,
+        "content": "\"filename\": \".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 28,
+        "content": "1. `.env.example` (legacy pattern)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 34,
+        "content": "- Scripts expect different files: some use `.env.example`, others `.env.template`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 39,
+        "content": "Root files: .env.example, .env.template, env.example"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 40,
+        "content": "Scripts referencing .env.example: 15+ files"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 48,
+        "content": "- Remove deprecated `.env.example` variants"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/duplication_report.md",
+        "line": 188,
+        "content": "- Remove deprecated `.env.example`"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/DEPLOYMENT.md",
+        "line": 26,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/BRUTAL_AUDIT_REPORT.json",
+        "line": 21,
+        "content": "\"description\": \"Too many environment files (4): ['/home/ubuntu/sophia-main/config/production.env.example', '/home/ubuntu/sophia-main/env_manager.py', '/home/ubuntu/sophia-main/agents/specialized/env_guard_agent.py', '/home/ubuntu/sophia-main/__pycache__/env_manager.cpython-311.pyc']\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt",
+        "line": 5,
+        "content": "Summary: Converging on `.env.template` as canonical env template with encrypted runtime copy. Deprecating `.env.example` and `.env.master` once migration tooling lands. Unified loader will merge `.env.template` + `config/*.yml` with Convict/Zod validation."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt",
+        "line": 9,
+        "content": "2. Provide list of scripts/jobs under your ownership that source `.env.master` or `.env.example`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/tools/preflight_validator.py",
+        "line": 355,
+        "content": "\".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO",
+        "line": 715,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_UI_STARTUP_GUIDE.md",
+        "line": 381,
+        "content": "cp .env.example .env.local"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 8,
+        "content": "- Deliver a safe, reviewable migration path from `.env.master` / `.env.example` to `.env.template`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 27,
+        "content": "- Remove `.env.master`/`.env.example` from repo, leaving archival copies under `backups/` if needed."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md",
+        "line": 38,
+        "content": "- Restore `.env.master` and `.env.example` from git history if issues arise."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_OPERATIONAL_EXCELLENCE_ROADMAP.md",
+        "line": 352,
+        "content": "Create comprehensive .env.example with clear documentation for all configuration"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md",
+        "line": 225,
+        "content": "cp .env.example .env.master"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md",
+        "line": 8,
+        "content": "Recent duplication analysis highlighted three competing environment configuration patterns in the repository (`.env.example`, `.env.template`, `.env.master`). Tooling and documentation disagree on which file is canonical, and several loader scripts apply conflicting assumptions about encryption and source of truth. This misalignment has created deployment instability and onboarding friction."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md",
+        "line": 14,
+        "content": "3. Deprecate `.env.example`, `.env.master`, and ad-hoc environment bootstrap logic once migration tooling is ready."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 11,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/TROUBLESHOOTING.md (.env.example -> 5)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 12,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/roo_implementation_plan.json (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 13,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/Makefile (.env.master -> 16, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 23,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/README.md (.env.example -> 1, .env.master -> 14)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 25,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/duplication_report.md (.env.example -> 6, .env.master -> 1, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 27,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/DEPLOYMENT.md (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 34,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/BRUTAL_AUDIT_REPORT.json (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 41,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/notify/env-standardization-2025-09-16.txt (.env.example -> 2, .env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 43,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/tools/preflight_validator.py (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 55,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/sophia_intel_ai.egg-info/PKG-INFO (.env.example -> 1, .env.master -> 14)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 69,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/WORKBENCH_UI_STARTUP_GUIDE.md (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 78,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/environment_standardization_rollout.md (.env.example -> 3, .env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 90,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_OPERATIONAL_EXCELLENCE_ROADMAP.md (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 91,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/SOPHIA_CLI_VALIDATION_REPORT.md (.env.example -> 1, .env.master -> 6)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 97,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/docs/decisions/2025-09-16-env-standardization.md (.env.example -> 2, .env.master -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 103,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh (.env.example -> 3)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 108,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py (.env.example -> 2, .env.master -> 2, env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 111,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh (.env.example -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 112,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py (.env.example -> 3, .env.master -> 3, env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 115,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/cleanup_docs.sh (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 117,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/phase1_asip_rebuild.sh (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 118,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/cleanup.py (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 122,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/env_doctor.py (.env.example -> 1, .env.master -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 123,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/setup_free_api_keys.sh (.env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 127,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/test_real_apis.sh (.env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 132,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/multi-agent-docker-env.sh (.env.example -> 2)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 133,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/check_env_variants.sh (.env.example -> 1, .env.master -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 134,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py (.env.example -> 4)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/docs/reports/env_migration_dryrun.txt",
+        "line": 136,
+        "content": "- /Users/lynnmusil/sophia-intel-ai/scripts/dev/squad.sh (.env.example -> 1)"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh",
+        "line": 383,
+        "content": "# Create .env.example if missing"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh",
+        "line": 384,
+        "content": "if [ ! -f \".env.example\" ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/.devcontainer/scripts/post-create.sh",
+        "line": 385,
+        "content": "cat > .env.example << 'EOF'"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py",
+        "line": 5,
+        "content": "(e.g., `.env.master`, `.env.example`) to the canonical `.env.template`."
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py",
+        "line": 22,
+        "content": "(\".env.example\", \".env.template\"),"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/migrate_env_references.py",
+        "line": 23,
+        "content": "(\"env.example\", \".env.template\"),"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 56,
+        "content": "if [ -f .env.example ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 57,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 58,
+        "content": "print_warning \"Created .env from .env.example - please update with your API keys\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_asip_complete.sh",
+        "line": 60,
+        "content": "print_error \"No .env.example found - creating minimal .env\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 5,
+        "content": "identify non-canonical usage (e.g., `.env.master`, `.env.example`). The tool"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 23,
+        "content": "\".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_inventory.py",
+        "line": 160,
+        "content": "for pattern in (\".env.master\", \".env.example\", \"env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/cleanup_docs.sh",
+        "line": 320,
+        "content": "cp .env.example .env"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/phase1_asip_rebuild.sh",
+        "line": 375,
+        "content": "assert os.path.exists('.env.example') or os.path.exists('.env.template')"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/cleanup.py",
+        "line": 41,
+        "content": "\".env.example\","
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/env_doctor.py",
+        "line": 33,
+        "content": "(\"deprecated.example\", ROOT / \".env.example\"),"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_free_api_keys.sh",
+        "line": 69,
+        "content": "echo -e \"\\n\u26a0\ufe0f No .env file found. Copy from .env.example first:\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/setup_free_api_keys.sh",
+        "line": 70,
+        "content": "echo \"   cp .env.example .env\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/test_real_apis.sh",
+        "line": 15,
+        "content": "echo \"\u26a0\ufe0f No .env file found. Copy from .env.example first:\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/test_real_apis.sh",
+        "line": 16,
+        "content": "echo \"   cp .env.example .env\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/multi-agent-docker-env.sh",
+        "line": 75,
+        "content": "if [ -f \".env.example\" ]; then"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/multi-agent-docker-env.sh",
+        "line": 76,
+        "content": "echo \"Consider copying .env.example to .env and configuring your API keys\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/check_env_variants.sh",
+        "line": 4,
+        "content": "allowed=(\".env.master\" \".env.template\" \".env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 128,
+        "content": "env_files = [\".env.example\", \".env.development\", \".env.production\"]"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 212,
+        "content": "# Create missing .env.example if not exists"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 213,
+        "content": "env_example = self.repo_path / \".env.example\""
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/development/validate_startup_scripts.py",
+        "line": 240,
+        "content": "print(\"  \u2705 Created .env.example\")"
+      },
+      {
+        "file": "/Users/lynnmusil/sophia-intel-ai/scripts/dev/squad.sh",
+        "line": 58,
+        "content": "print_msg \"${YELLOW}\" \"Create one with: cp ${PROJECT_DIR}/.env.example ${ENV_FILE}\""
+      }
+    ]
+  }
+}

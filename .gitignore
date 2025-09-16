@@ -3,6 +3,7 @@
 *.pid
 .backend.pid
 .frontend.pid
+.repo_backup_*/
 
 # Logs: ignore raw logs but allow summaries
 logs/*

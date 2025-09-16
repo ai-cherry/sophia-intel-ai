@@ -128,7 +128,7 @@ make sophia-setup
 make env.check
 ```
 
-**IMPORTANT (updated)**: All API keys live in `<repo>/.env.master` (git-ignored, chmod 600). Use `./bin/keys edit` to manage. See `START_HERE.md` for details.
+**IMPORTANT (updated)**: All API keys live in `<repo>/.env.master` (git-ignored, chmod 600). Use `./bin/keys edit` to manage. See `START_HERE.md` and [`docs/SETUP.md`](docs/SETUP.md) for full environment guidance. Run `./scripts/dev-preflight.sh` on Apple Silicon to confirm toolchains, PATH, and port hygiene before launches.
 
 3. Install Python dependencies:
 

@@ -1,0 +1,16 @@
+Subject: Environment Standardization Alignment
+
+Teams: Platform, Integrations, Security Ops
+
+Summary: Converging on `.env.template` as canonical env template with encrypted runtime copy. Deprecating `.env.example` and `.env.master` once migration tooling lands. Unified loader will merge `.env.template` + `config/*.yml` with Convict/Zod validation.
+
+Requested Actions:
+1. Review proposed plan and flag blockers by EOD 2025-09-17.
+2. Provide list of scripts/jobs under your ownership that source `.env.master` or `.env.example`.
+3. Identify any production deploys that depend on legacy filenames so we can include them in migration testing.
+
+Next Steps:
+- Codex agent delivering inventory tooling + migration scripts.
+- Follow-up working session pending your feedback.
+
+Thank you!

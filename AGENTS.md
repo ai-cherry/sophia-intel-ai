@@ -37,6 +37,25 @@
 - Performance: `google-flash-2.5`
 - Testing: `deepseek-v3`
 
+### Codex CLI /init Profile (v0.36.0)
+**Purpose**: Keep Codex CLI sessions aligned with Sophia Intel AI zero-debt rules.
+
+**On Init Run**
+- Auto-scan repo context (git log, CODEOWNERS, README, docs/) and prompt GPT-5-Codex to refresh `/AGENTS.md` or `.codex/guidelines.md` with coding standards, required test commands, and subsystem notes. Reject init if working tree is dirty or outside git.
+- Wire MCP endpoints automatically: read `config/startup-config*.yml` and `mcp/*/server.py`, hydrate Memory (8081), Filesystem (8082), Git (8084), and optional Vector servers. Health check each `http://localhost:PORT/health` before exposing the toolchain.
+
+**Secrets & Environment Guardrails**
+- Merge `.env` + `config/*.yaml` using `convict` and validate with Zod schemas (example: `z.string().min(32)` for API keys). Block write-mode if required secrets missing or dev/prod mixes detected. Surface remediation via `/notify`.
+
+**Testing & Review Hooks**
+- Generate Jest test stubs that mock `fs`, `js-yaml`, and MCP clients for new CLI logic. Require `npm run test:codex-init` before edits apply. Trigger CodeRabbit CLI (`coderabbit review --diff`) automatically after Codex produces patches.
+
+**Multimodal & Progress Tracking**
+- Accept `codex /init --attach <image>` to stash design assets via `sharp`. Maintain `.codex/session.json` with task to-dos, MCP connection status, and diff summaries for the TUI progress pane. Provide `/diff`, `/clear`, and `/model <name>` shortcuts aligned with MODELS.md.
+
+**Validation & Rollback**
+- Success criteria: all health checks green, schema validation passes, Jest suite clean, and updated guidelines committed. Roll back by removing the generated guideline file and restoring `.codex` state from git.
+
 ---
 
 ## 👥 AGENT PERSONAS

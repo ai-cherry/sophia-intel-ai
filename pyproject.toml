@@ -56,6 +56,8 @@ dependencies = [
     
     # Storage & Database
     "sqlalchemy==2.0.29",
+    "sqlmodel>=0.0.16",
+    "aiosqlite>=0.20.0",
     "sqlmodel==0.0.14",
     "weaviate-client==4.16.4",
     "redis==5.0.1",

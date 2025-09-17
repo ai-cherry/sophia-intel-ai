@@ -1,0 +1,33 @@
+version: 1
+updated_at: 2025-09-11T00:00:00Z
+metrics:
+  - id: mrr_growth
+    label: Monthly Recurring Revenue Growth
+    value: 12.4
+    unit: "%"
+    trend: up
+    target: 15.0
+    tags:
+      department: Revenue Operations
+      category: Growth
+      cadence: Monthly
+  - id: collections_cycle
+    label: Average Collections Cycle
+    value: 9.6
+    unit: " days"
+    trend: down
+    target: 8.0
+    tags:
+      department: Finance
+      category: Efficiency
+      cadence: Weekly
+  - id: agent_adoption
+    label: Agent Factory Adoption
+    value: 68.0
+    unit: "%"
+    trend: up
+    target: 75.0
+    tags:
+      department: Operations
+      category: Engagement
+      cadence: Monthly

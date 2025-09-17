@@ -1,0 +1,26 @@
+version: 1
+namespace: pay_ready_business_intelligence
+dimensions:
+  department:
+    description: Owning business unit for the metric
+    allowed:
+      - Revenue Operations
+      - Finance
+      - Operations
+      - Customer Success
+      - Product
+  category:
+    description: Analytical lens applied to the metric
+    allowed:
+      - Growth
+      - Efficiency
+      - Engagement
+      - Risk
+      - Reliability
+  cadence:
+    description: Reporting cadence for the metric
+    allowed:
+      - Daily
+      - Weekly
+      - Monthly
+      - Quarterly

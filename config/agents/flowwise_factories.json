@@ -1,0 +1,45 @@
+[
+  {
+    "id": "flowwise-factory-sales",
+    "department": "Revenue Operations",
+    "function": "Pipeline Recovery",
+    "status": "online",
+    "agents": [
+      {
+        "id": "FLW_REVOPS_PIPELINE_RECOVERY",
+        "name": "Pipeline Recovery Assistant",
+        "description": "Identifies stalled accounts and orchestrates Flowwise workflows to reactivate revenue.",
+        "owner": "Revenue Ops",
+        "tags": ["revenue", "workflow", "recovery"],
+        "version": "1.2.0",
+        "endpoint_path": "/api/v1/prediction/flow-recovery"
+      },
+      {
+        "id": "FLW_CS_PLAYBOOK_AUTOMATION",
+        "name": "Customer Success Playbooks",
+        "description": "Guides CS teams through Flowwise-built automation playbooks.",
+        "owner": "Customer Success",
+        "tags": ["customer_success", "automation"],
+        "version": "1.0.5",
+        "endpoint_path": "/api/v1/prediction/cs-playbooks"
+      }
+    ]
+  },
+  {
+    "id": "flowwise-factory-finance",
+    "department": "Finance",
+    "function": "Cash Flow Insights",
+    "status": "degraded",
+    "agents": [
+      {
+        "id": "FLW_FINANCE_CASH_ALERTS",
+        "name": "Cash Volatility Monitor",
+        "description": "Surfaces Pay Ready collections risk and sends alerts to finance teams.",
+        "owner": "Finance Ops",
+        "tags": ["finance", "alerts"],
+        "version": "0.9.3",
+        "endpoint_path": "/api/v1/prediction/cash-alerts"
+      }
+    ]
+  }
+]

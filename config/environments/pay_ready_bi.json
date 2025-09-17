@@ -1,0 +1,13 @@
+{
+  "name": "pay_ready_bi",
+  "description": "Dedicated environment profile for Pay Ready business intelligence stack",
+  "env": {
+    "FLOWWISE_BASE_URL": "https://flowwise.payready.ai",
+    "AGNO_BASE_URL": "https://agno.payready.ai",
+    "PAY_READY_VECTOR_NAMESPACE": "pay_ready_business_intelligence"
+  },
+  "secrets": [
+    "FLOWWISE_API_KEY",
+    "AGNO_API_KEY"
+  ]
+}

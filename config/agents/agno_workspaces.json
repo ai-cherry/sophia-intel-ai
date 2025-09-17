@@ -1,0 +1,46 @@
+[
+  {
+    "id": "agno-developer-studio-core",
+    "purpose": "Core Platform Automations",
+    "version": "2.3.0",
+    "maintainer": "Platform Engineering",
+    "pipelines": 8,
+    "health": "green",
+    "agents": [
+      {
+        "id": "AGN_PLATFORM_v2",
+        "name": "Platform Hardening",
+        "description": "Applies infrastructure guardrails and runs compliance checks across Pay Ready tenants.",
+        "owner": "Platform Engineering",
+        "tags": ["compliance", "sre"],
+        "version": "2.3.0"
+      },
+      {
+        "id": "AGN_DATAOPS_v1",
+        "name": "DataOps Schema Migrator",
+        "description": "Automates safe schema rollouts for Pay Ready data warehouse.",
+        "owner": "Data Engineering",
+        "tags": ["dataops", "migrations"],
+        "version": "1.4.1"
+      }
+    ]
+  },
+  {
+    "id": "agno-developer-studio-experiments",
+    "purpose": "Experimental Pipelines",
+    "version": "2.2.1",
+    "maintainer": "AI Engineering",
+    "pipelines": 3,
+    "health": "yellow",
+    "agents": [
+      {
+        "id": "AGN_EXPERIMENTS_v1",
+        "name": "Experiment Launcher",
+        "description": "Launches gated experiments within developer studio.",
+        "owner": "AI Engineering",
+        "tags": ["experimentation", "feature-flags"],
+        "version": "1.1.0"
+      }
+    ]
+  }
+]

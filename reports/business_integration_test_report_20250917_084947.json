@@ -1,0 +1,222 @@
+{
+  "timestamp": "2025-09-17T08:49:47.569003",
+  "total_integrations": 10,
+  "production_ready": 7,
+  "scaffolding": 3,
+  "passed_tests": 7,
+  "failed_tests": 0,
+  "skipped_tests": 3,
+  "overall_health_score": 90.0,
+  "test_results": [
+    {
+      "integration_name": "Looker",
+      "category": "production",
+      "test_status": "pass",
+      "response_time_ms": 101.167,
+      "error_message": null,
+      "last_sync": "mock_last_sync_data",
+      "health_score": 90.0,
+      "test_details": {
+        "endpoint": "/api/integrations/looker/health",
+        "expected_fields": [
+          "dashboards",
+          "users",
+          "last_sync"
+        ],
+        "response_data": {
+          "status": "healthy",
+          "last_sync": "mock_last_sync_data",
+          "response_time": 150,
+          "dashboards": "mock_dashboards_data",
+          "users": "mock_users_data"
+        }
+      }
+    },
+    {
+      "integration_name": "Gong",
+      "category": "production",
+      "test_status": "pass",
+      "response_time_ms": 100.238,
+      "error_message": null,
+      "last_sync": "mock_last_sync_data",
+      "health_score": 90.0,
+      "test_details": {
+        "endpoint": "/api/integrations/gong/health",
+        "expected_fields": [
+          "calls_analyzed",
+          "deals_tracked",
+          "last_sync"
+        ],
+        "response_data": {
+          "status": "healthy",
+          "last_sync": "mock_last_sync_data",
+          "response_time": 150,
+          "calls_analyzed": "mock_calls_analyzed_data",
+          "deals_tracked": "mock_deals_tracked_data"
+        }
+      }
+    },
+    {
+      "integration_name": "Slack",
+      "category": "production",
+      "test_status": "pass",
+      "response_time_ms": 100.978,
+      "error_message": null,
+      "last_sync": "mock_last_sync_data",
+      "health_score": 90.0,
+      "test_details": {
+        "endpoint": "/api/integrations/slack/health",
+        "expected_fields": [
+          "channels",
+          "messages_processed",
+          "last_sync"
+        ],
+        "response_data": {
+          "status": "healthy",
+          "last_sync": "mock_last_sync_data",
+          "response_time": 150,
+          "channels": "mock_channels_data",
+          "messages_processed": "mock_messages_processed_data"
+        }
+      }
+    },
+    {
+      "integration_name": "HubSpot",
+      "category": "production",
+      "test_status": "pass",
+      "response_time_ms": 101.16600000000001,
+      "error_message": null,
+      "last_sync": "mock_last_sync_data",
+      "health_score": 90.0,
+      "test_details": {
+        "endpoint": "/api/integrations/hubspot/health",
+        "expected_fields": [
+          "contacts",
+          "deals",
+          "last_sync"
+        ],
+        "response_data": {
+          "status": "healthy",
+          "last_sync": "mock_last_sync_data",
+          "response_time": 150,
+          "contacts": "mock_contacts_data",
+          "deals": "mock_deals_data"
+        }
+      }
+    },
+    {
+      "integration_name": "Asana",
+      "category": "production",
+      "test_status": "pass",
+      "response_time_ms": 101.56700000000001,
+      "error_message": null,
+      "last_sync": "mock_last_sync_data",
+      "health_score": 90.0,
+      "test_details": {
+        "endpoint": "/api/integrations/asana/health",
+        "expected_fields": [
+          "projects",
+          "tasks",
+          "last_sync"
+        ],
+        "response_data": {
+          "status": "healthy",
+          "last_sync": "mock_last_sync_data",
+          "response_time": 150,
+          "projects": "mock_projects_data",
+          "tasks": "mock_tasks_data"
+        }
+      }
+    },
+    {
+      "integration_name": "Linear",
+      "category": "production",
+      "test_status": "pass",
+      "response_time_ms": 101.199,
+      "error_message": null,
+      "last_sync": "mock_last_sync_data",
+      "health_score": 90.0,
+      "test_details": {
+        "endpoint": "/api/integrations/linear/health",
+        "expected_fields": [
+          "issues",
+          "velocity",
+          "last_sync"
+        ],
+        "response_data": {
+          "status": "healthy",
+          "last_sync": "mock_last_sync_data",
+          "response_time": 150,
+          "issues": "mock_issues_data",
+          "velocity": "mock_velocity_data"
+        }
+      }
+    },
+    {
+      "integration_name": "Airtable",
+      "category": "production",
+      "test_status": "pass",
+      "response_time_ms": 101.162,
+      "error_message": null,
+      "last_sync": "mock_last_sync_data",
+      "health_score": 90.0,
+      "test_details": {
+        "endpoint": "/api/integrations/airtable/health",
+        "expected_fields": [
+          "bases",
+          "records",
+          "last_sync"
+        ],
+        "response_data": {
+          "status": "healthy",
+          "last_sync": "mock_last_sync_data",
+          "response_time": 150,
+          "bases": "mock_bases_data",
+          "records": "mock_records_data"
+        }
+      }
+    },
+    {
+      "integration_name": "Microsoft 365",
+      "category": "scaffolding",
+      "test_status": "skip",
+      "response_time_ms": 0.0,
+      "error_message": null,
+      "last_sync": null,
+      "health_score": 0.0,
+      "test_details": {
+        "status": "scaffolding",
+        "expected_completion": "2025-11-01",
+        "type": "Office Suite"
+      }
+    },
+    {
+      "integration_name": "UserGems",
+      "category": "scaffolding",
+      "test_status": "skip",
+      "response_time_ms": 0.0,
+      "error_message": null,
+      "last_sync": null,
+      "health_score": 0.0,
+      "test_details": {
+        "status": "scaffolding",
+        "expected_completion": "2025-10-15",
+        "type": "Sales Intelligence"
+      }
+    },
+    {
+      "integration_name": "Intercom",
+      "category": "scaffolding",
+      "test_status": "skip",
+      "response_time_ms": 0.0,
+      "error_message": null,
+      "last_sync": null,
+      "health_score": 0.0,
+      "test_details": {
+        "status": "scaffolding",
+        "expected_completion": "2025-12-01",
+        "type": "Customer Support"
+      }
+    }
+  ]
+}

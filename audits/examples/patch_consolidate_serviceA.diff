@@ -1,0 +1,131 @@
+From 0123456789abcdef Mon Sep 17 00:00:00 2025
+From: Roo <roo@example.com>
+Date: Wed, 17 Sep 2025 00:00:00 +0000
+Subject: [PATCH] Consolidate service payload processing into libs/shared/service_utils.py
+
+diff --git a/libs/shared/service_utils.py b/libs/shared/service_utils.py
+new file mode 100644
+index 0000000..1111111
+--- /dev/null
++++ b/libs/shared/service_utils.py
+@@ -0,0 +1,80 @@
++"""Shared utilities for service payload processing.
++Canonical location for duplicated helpers extracted from services/serviceA and services/serviceB.
++"""
++from typing import Dict, Any
++import re
++
++def process_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
++    """
++    Normalize and validate incoming payloads for internal service use.
++    Returns a processed dict with normalized keys and types.
++    """
++    processed: Dict[str, Any] = {}
++
++    # Trim strings and normalize keys to snake_case
++    for k, v in payload.items():
++        key = re.sub(r'(?<!^)(?=[A-Z])', '_', k).lower()
++        if isinstance(v, str):
++            v = v.strip()
++        processed[key] = v
++
++    # Basic validation and defaults
++    if 'id' not in processed or not processed.get('id'):
++        raise ValueError("payload must contain an 'id' field")
++
++    # Coerce numeric string IDs to int where applicable
++    try:
++        if isinstance(processed.get('id'), str) and processed['id'].isdigit():
++            processed['id'] = int(processed['id'])
++    except Exception:
++        # preserve original and let caller handle type issues
++        pass
++
++    # Example derived field
++    if 'amount' in processed:
++        try:
++            processed['amount'] = float(processed['amount'])
++        except Exception:
++            processed['amount'] = 0.0
++
++    return processed
++
++# End of file
++
+
+diff --git a/services/serviceA/handler.py b/services/serviceA/handler.py
+index e69de29..2222222 100644
+--- a/services/serviceA/handler.py
++++ b/services/serviceA/handler.py
+@@ -1,40 +1,12 @@
+-# Local helper implementation (duplicated from serviceB)
+-def process_payload(payload):
+-    # trim and normalize keys
+-    processed = {}
+-    for k, v in payload.items():
+-        key = ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_')
+-        processed[key] = v.strip() if isinstance(v, str) else v
+-    if 'id' not in processed:
+-        raise ValueError("missing id")
+-    if 'amount' in processed:
+-        try:
+-            processed['amount'] = float(processed['amount'])
+-        except:
+-            processed['amount'] = 0.0
+-    return processed
+-
+-
+-def handle_event(event):
+-    payload = event.get('payload', {})
+-    data = process_payload(payload)
+-    # business logic follows...
+-    return {"status": "ok", "data": data}
++from libs.shared.service_utils import process_payload
++
++def handle_event(event):
++    """
++    Entry point for Service A events. Delegates payload normalization to
++    the shared canonical implementation in libs.shared.service_utils.
++    """
++    payload = event.get('payload', {})
++    data = process_payload(payload)
++    # business logic follows...
++    return {"status": "ok", "data": data}
+@@ -41,0 +13,0 @@
+ 
+
+diff --git a/services/serviceB/processor.py b/services/serviceB/processor.py
+index e69de29..3333333 100644
+--- a/services/serviceB/processor.py
++++ b/services/serviceB/processor.py
+@@ -1,50 +1,14 @@
+-# Duplicate processing implementation
+-def _process_payload(payload):
+-    processed = {}
+-    for k, v in payload.items():
+-        key = ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_')
+-        processed[key] = v.strip() if isinstance(v, str) else v
+-    if not processed.get('id'):
+-        raise RuntimeError("id required")
+-    try:
+-        processed['amount'] = float(processed.get('amount', 0))
+-    except:
+-        processed['amount'] = 0.0
+-    return processed
+-
+-def run_processor(raw):
+-    payload = raw.get('payload', {})
+-    processed = _process_payload(payload)
+-    # further processing...
+-    return processed
++from libs.shared.service_utils import process_payload
++
++def run_processor(raw):
++    """
++    Processor entry point for Service B. Uses the shared process_payload()
++    to normalize and validate incoming data consistently across services.
++    """
++    payload = raw.get('payload', {})
++    processed = process_payload(payload)
++    # further processing...
++    return processed

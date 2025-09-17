@@ -18,7 +18,7 @@
     {
       "category": "CONFLICTS",
       "severity": "CRITICAL",
-      "description": "Too many environment files (4): ['/home/ubuntu/sophia-main/config/production.env.example', '/home/ubuntu/sophia-main/env_manager.py', '/home/ubuntu/sophia-main/agents/specialized/env_guard_agent.py', '/home/ubuntu/sophia-main/__pycache__/env_manager.cpython-311.pyc']",
+      "description": "Too many environment files (4): ['/home/ubuntu/sophia-main/config/production.env.template', '/home/ubuntu/sophia-main/env_manager.py', '/home/ubuntu/sophia-main/agents/specialized/env_guard_agent.py', '/home/ubuntu/sophia-main/__pycache__/env_manager.cpython-311.pyc']",
       "file": null,
       "fix_needed": true
     },

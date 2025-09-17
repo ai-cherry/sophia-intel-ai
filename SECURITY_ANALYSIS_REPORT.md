@@ -14,7 +14,7 @@ Comprehensive analysis of the security overhaul implemented for secrets manageme
 - **Security by default**: Requires MCP_JWT_SECRET in production, fails fast if missing
 
 **2. Secrets Management**
-- **Clean environment variables**: JWT-first approach with no legacy tokens in env.example
+- **Clean environment variables**: JWT-first approach with no legacy tokens in .env.template
 - **Proper gitignore**: Added `.roo/` and `artifacts/` to prevent accidental commits
 - **Placeholder approach**: Uses `${VARIABLE}` references instead of hardcoded values
 - **Local development**: `.env.local` support for development secrets

@@ -1,37 +1,51 @@
-# Claude Code Configuration - Multi-Tool Environment
+# Claude Configuration for Sophia Intel AI
 
-## MCP Integration
-- Memory Server: http://localhost:8081
-- Filesystem Server: http://localhost:8082  
-- Git Server: http://localhost:8084
+## Deployment Requirements
 
-## Core Rules
-- NO try/catch spam - handle errors at boundaries only
-- Functional > OOP when reasonable
-- Use background tasks for long operations
-- Atomic commits with conventional format
-- Always lint: black (Python), prettier (JS/TS)
+### Critical Node Version
+- **MUST USE Node 20 LTS** - Node 24 breaks Next.js 14's SWC binary
+- Path: `/opt/homebrew/opt/node@20/bin/node`
 
-## File Organization
-- `/src` or `/app` - Source code
-- `/tests` - Test files
-- `/docs` - Documentation
-- `/scripts` - Utility scripts
-- NO files in root except configs
+### Network Binding
+- **ALWAYS bind to 127.0.0.1** - Never use localhost or [::1]
+- All dev servers must use `-H 127.0.0.1` flag
 
-## Commands
-- Use `--mode plan` for complex tasks
-- Background: `--background` for tests/builds
-- Preview: `--preview` before commits
+### Next.js Structure
+- Both `app/` and `pages/` directories required
+- `pages/index.tsx` must import from `app/page`
 
-## Integration with Other Tools
-- Opencode: Share env vars via .env
-- Codex: Git operations coordinated
-- Cursor: Rules sync via .cursorrules
-- MCP: Shared context via servers
+## Service Ports
 
-## Security
-- NEVER commit .env or secrets
-- Use environment variables
-- Validate all inputs
-- No eval() or exec()
+| Service | Port | URL |
+|---------|------|-----|
+| Sophia Dashboard | 3000 | http://127.0.0.1:3000 |
+| Workbench UI | 3001 | http://127.0.0.1:3001 |
+| MCP Memory | 8081 | http://127.0.0.1:8081 |
+| AI Orchestrator | 8000 | http://127.0.0.1:8000 |
+
+## Quick Commands
+
+```bash
+# Start Sophia Dashboard
+/opt/homebrew/opt/node@20/bin/node node_modules/next/dist/bin/next dev -H 127.0.0.1 -p 3000
+
+# Check status
+ai_status
+
+# Deploy all services
+~/deploy-all-services.sh
+```
+
+## Business Integrations
+
+### Production (7)
+- Looker, Gong, Slack, HubSpot, Asana, Linear, Airtable
+
+### Scaffolding (3)
+- Microsoft 365, UserGems, Intercom
+
+## Testing
+```bash
+npm run validate:architecture
+python tests/integration/business_integration_test_suite.py
+```

@@ -378,7 +378,7 @@ mkdir -p scripts tests docs
 mkdir -p src/app/api/mcp
 
 # 3. Create environment file
-cp .env.example .env.local
+cp .env.template .env.local
 # Edit .env.local with your configuration
 
 # 4. Initialize git (if not already done)

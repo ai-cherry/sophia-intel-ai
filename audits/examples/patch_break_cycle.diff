@@ -1,0 +1,77 @@
+*** Begin Patch
+*** Add File: pkg/auth/interface.go
++package auth
++
++// Authenticator defines the minimal interface required by higher-level packages
++// to perform authentication checks. Moving the interface into a low-dependency
++// package breaks direct import cycles (higher-level code depends on interface
++// not concrete implementation).
++type Authenticator interface {
++    Authenticate(token string) (userID string, err error)
++}
++
+*** End Patch
+*** Begin Patch
+*** Add File: pkg/auth/adapter/db_auth_adapter.go
++package auth
++
++import (
++    "pkg/db"
++)
++
++// DBAuthAdapter implements Authenticator using the concrete db package.
++// This adapter lives in auth package but imports db; higher-level packages
++// import auth only via the interface, avoiding cycles.
++type DBAuthAdapter struct {
++    Client *db.Client
++}
++
++func (a *DBAuthAdapter) Authenticate(token string) (string, error) {
++    return a.Client.VerifyToken(token)
++}
++
+*** End Patch
+*** Begin Patch
+*** Update File: pkg/db/impl.go
+@@
+-package db
+-
+-import "pkg/auth"
+-
+-type Client struct { /* ... */ }
+-
+-func (c *Client) VerifyToken(token string) (string, error) {
+-    // previous implementation lived here and imported auth causing cycle:
+-    // auth -> db -> auth
+-    return "user123", nil
+-}
++package db
++
++type Client struct { /* ... */ }
++
++func (c *Client) VerifyToken(token string) (string, error) {
++    // db no longer imports auth; it provides token verification to adapters.
++    return "user123", nil
++}
+*** End Patch
+*** Begin Patch
+*** Update File: services/api/server.go
+@@
+-import "pkg/auth"
+-import "pkg/db"
++import "pkg/auth"
++
++// Previously this file imported db and auth in a way that created an import cycle
++// through shared helpers. Refactor uses the interface from auth and receives an
++// Authenticator via dependency injection.
+@@
+-func NewServer() *Server {
+-    dbClient := db.NewClient()
+-    authImpl := auth.NewDBAuth(dbClient) // caused cycle before
+-    return &Server{DB: dbClient, Auth: authImpl}
+-}
++func NewServer(authImpl auth.Authenticator) *Server {
++    dbClient := db.NewClient()
++    return &Server{DB: dbClient, Auth: authImpl}
++}
+*** End Patch

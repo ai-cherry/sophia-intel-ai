@@ -1,0 +1,45 @@
+*** Begin Patch
+*** Add File: libs/shared/formatting.py
++"""Shared formatting helpers extracted from services to reduce duplication.
++See plan: [`audits/repository_continuity_architecture_plan.md`](audits/repository_continuity_architecture_plan.md:1)
++"""
++def format_currency(amount_cents: int) -> str:
++    """Format integer cents into a USD currency string."""
++    return f"${amount_cents/100:,.2f}"
++
+*** End Patch
+*** Begin Patch
+*** Update File: services/payments/payment_processor.py
+@@
+-from typing import Dict
+-
+-def format_currency(amount_cents: int) -> str:
+-    # local duplicate helper - extracted to libs/shared/formatting.py
+-    return f"${amount_cents/100:,.2f}"
+-
++from typing import Dict
++from libs.shared.formatting import format_currency
+@@
+-    total = 0
+-    for item in items:
+-        total += item["amount_cents"]
+-    print("Total:", format_currency(total))
++    total = sum(item["amount_cents"] for item in items)
++    print("Total:", format_currency(total))
+*** End Patch
+*** Begin Patch
+*** Update File: services/invoices/invoice_generator.py
+@@
+-from shared_utils import format_currency
+-
+-def generate_invoice(lines):
+-    total = 0
+-    for l in lines:
+-        total += l.amount_cents
+-    return f"Invoice total: {format_currency(total)}"
++from libs.shared.formatting import format_currency
++
++def generate_invoice(lines):
++    total = sum(l.amount_cents for l in lines)
++    return f"Invoice total: {format_currency(total)}"
+*** End Patch

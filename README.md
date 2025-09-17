@@ -591,7 +591,7 @@ pip3 install -r requirements.txt
 ### 2. Configure API Keys
 
 ```bash
-cp .env.example .env
+cp .env.template .env
 ```
 
 Edit `.env` with your API keys:

@@ -192,7 +192,7 @@
           "id": "4.1",
           "task": "Environment Configuration",
           "description": "Set up proper environment variables and configuration",
-          "files": [".env.example", "config/graph_config.yaml"],
+          "files": [".env.template", "config/graph_config.yaml"],
           "variables": {
             "WEAVIATE_URL": "Weaviate instance URL",
             "WEAVIATE_API_KEY": "API key for cloud Weaviate",

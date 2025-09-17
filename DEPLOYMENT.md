@@ -23,7 +23,7 @@ git clone https://github.com/your-org/builder-stack.git
 cd builder-stack
 
 # 2. Copy environment file
-cp .env.example .env
+cp .env.template .env
 # Edit .env with your API keys
 
 # 3. Start the stack

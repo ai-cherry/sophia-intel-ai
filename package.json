@@ -1,14 +1,52 @@
 {
-  "name": "sophia-intel-ai",
-  "version": "0.0.0",
-  "private": true,
+  "name": "sophia-intel-ai-dashboard",
+  "version": "1.0.0",
+  "description": "Unified business intelligence dashboard for Pay Ready",
   "scripts": {
-    "codex:chat": "codex chat --model gpt-5-codex",
-    "codex:agent": "codex agent --model gpt-5-codex --dir .",
-    "codex:review": "codex review --model gpt-5-codex --format markdown > codex-review.md"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "validate:architecture": "python scripts/validation/architecture_validator.py",
+    "audit:tech-debt": "npm audit && python scripts/tech_debt_audit.py"
+  },
+  "dependencies": {
+    "@headlessui/react": "^1.7.0",
+    "@heroicons/react": "^2.0.0",
+    "@types/dompurify": "^3.0.5",
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "clsx": "^2.0.0",
+    "dompurify": "^3.2.7",
+    "next": "14.2.32",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "tailwindcss": "^3.0.0",
+    "typescript": "^5.0.0"
   },
   "devDependencies": {
-    "@types/express": "^5.0.3",
-    "@types/node": "^24.3.0"
-  }
+    "@tailwindcss/forms": "^0.5.0",
+    "autoprefixer": "^10.0.0",
+    "eslint": "^8.0.0",
+    "eslint-config-next": "^14.0.0",
+    "postcss": "^8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "sophia-intel-ai"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "next.config.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
 }

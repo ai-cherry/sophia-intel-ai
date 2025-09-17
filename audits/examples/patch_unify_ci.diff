@@ -1,0 +1,97 @@
+*** Begin Patch
+*** Add File: .github/workflows/reusable-ci.yml
++name: Reusable CI
++on:
++  workflow_call:
++    inputs:
++      run-tests:
++        required: false
++        type: boolean
++jobs:
++  checkout_and_setup:
++    runs-on: ubuntu-latest
++    outputs:
++      node-version: ${{ steps.node-version.outputs.node-version }}
++    steps:
++      - name: Checkout
++        uses: actions/checkout@v4
++      - name: Setup Node
++        id: node-version
++        uses: actions/setup-node@v4
++        with:
++          node-version: "18"
++  run_tests:
++    needs: checkout_and_setup
++    if: ${{ inputs.run-tests == 'true' }}
++    runs-on: ubuntu-latest
++    steps:
++      - name: Run tests
++        run: npm ci && npm test
++
++# Use this reusable workflow from other workflow files with
++# uses: ./.github/workflows/reusable-ci.yml
+*** End Patch
+*** Begin Patch
+*** Update File: .github/workflows/ci.yml
+@@
+-name: CI
+-on:
+-  push:
+-    branches:
+-      - main
+-jobs:
+-  build:
+-    runs-on: ubuntu-latest
+-    steps:
+-      - name: Checkout
+-        uses: actions/checkout@v4
+-      - name: Setup Node
+-        uses: actions/setup-node@v4
+-        with:
+-          node-version: 18
+-      - name: Run tests
+-        run: npm ci && npm test
++name: CI (calls reusable)
++on:
++  push:
++    branches:
++      - main
++jobs:
++  call-reusable:
++    uses: ./.github/workflows/reusable-ci.yml
++    with:
++      run-tests: true
+*** End Patch
+*** Begin Patch
+*** Update File: .github/workflows/integration.yml
+@@
+-name: Integration
+-on:
+-  pull_request:
+-jobs:
+-  integration:
+-    runs-on: ubuntu-latest
+-    steps:
+-      - name: Checkout
+-        uses: actions/checkout@v4
+-      - name: Setup Node
+-        uses: actions/setup-node@v4
+-        with:
+-          node-version: 18
+-      - name: Integration tests
+-        run: npm ci && npm run integration
++name: Integration (calls reusable)
++on:
++  pull_request:
++jobs:
++  call-reusable:
++    uses: ./.github/workflows/reusable-ci.yml
++    with:
++      run-tests: false
++  integration:
++    needs: call-reusable
++    runs-on: ubuntu-latest
++    steps:
++      - name: Integration tests
++        run: npm ci && npm run integration
+*** End Patch

@@ -1,0 +1,84 @@
+From 456789abcdef Mon Sep 17 00:00:00 2025
+From: Roo <roo@example.com>
+Date: Wed, 17 Sep 2025 00:00:00 +0000
+Subject: [PATCH] Deprecate legacy module and add compatibility shim
+
+diff --git a/libs/shared/legacy_shim.py b/libs/shared/legacy_shim.py
+new file mode 100644
+index 0000000..aaaabbb
+--- /dev/null
++++ b/libs/shared/legacy_shim.py
+@@ -0,0 +1,34 @@
++"""Compatibility shim for legacy_module.
++This shim forwards calls to the canonical implementation in libs.shared.service_utils
++while emitting a deprecation warning. Keep this small and stable to ease migration.
++"""
++from typing import Any, Dict
++import warnings
++
++from libs.shared.service_utils import process_payload as _process_payload
++
++def legacy_process(payload: Dict[str, Any]) -> Dict[str, Any]:
++    """
++    Legacy entry point retained for backward compatibility.
++    Emits a DeprecationWarning and delegates to the canonical process_payload.
++    """
++    warnings.warn(
++        "services.legacy_module.legacy_process is deprecated; use libs.shared.service_utils.process_payload",
++        DeprecationWarning,
++        stacklevel=2,
++    )
++    return _process_payload(payload)
++
++# End of shim
+
+diff --git a/services/legacy_module.py b/services/legacy_module.py
+index 4444444..5555555 100644
+--- a/services/legacy_module.py
++++ b/services/legacy_module.py
+@@ -1,62 +1,22 @@
+-# Legacy in-file processing implementation
+-def legacy_process(payload):
+-    # original logic lived here and duplicated behavior from other services
+-    processed = {}
+-    for k, v in payload.items():
+-        key = ''.join(['_' + c.lower() if c.isupper() else c for c in k]).lstrip('_')
+-        processed[key] = v.strip() if isinstance(v, str) else v
+-    if not processed.get('id'):
+-        raise RuntimeError("id required")
+-    try:
+-        processed['amount'] = float(processed.get('amount', 0))
+-    except:
+-        processed['amount'] = 0.0
+-    return processed
+-
+-# more module-level functions...
++# NOTE: This module contains legacy implementations.
++# We have extracted the canonical implementation to libs.shared.service_utils
++# and introduce a compatibility shim at libs/shared/legacy_shim.py to smooth migration.
++# The legacy implementation is DEPRECATED. Do not add new callers here.
++
++from libs.shared.legacy_shim import legacy_process
++
++def handle_legacy_event(event):
++    """Example wrapper that reuses the shared shim/canonical code."""
++    payload = event.get('payload', {})
++    return {"status": "ok", "data": legacy_process(payload)}
++
++# End of updated legacy_module
+
+diff --git a/services/legacy_module.py b/services/legacy_module.py
+index 5555555..6666666 100644
+--- a/services/legacy_module.py
++++ b/services/legacy_module.py
+@@ -69,0 +70,13 @@
++# BEGIN PROPOSED_DELETION (DO NOT APPLY)
++# The following block documents the planned deletion of the legacy_module.py file.
++# Actual deletion must be approved by the service owner and coordinated with release.
++# To delete after approval:
++#   git rm services/legacy_module.py
++#   git commit -m "chore: remove legacy_module after owner approval"
++# NOTE: We intentionally do NOT perform the deletion in this patch.
++# This section is purely informational and serves as an audit trail for maintainers.
++# END PROPOSED_DELETION
++

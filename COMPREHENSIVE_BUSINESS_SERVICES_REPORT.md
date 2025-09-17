@@ -195,6 +195,6 @@ python3 tools/salesforce/smoke.py  # ⚪ Ready for credentials
 ✅ **Graceful Degradation** - Tests skip cleanly when credentials missing  
 ✅ **Real API Testing** - Live integration tests, not mocks  
 ✅ **Write Operation Safety** - Optional write tests gated by environment flags  
-✅ **Environment Documentation** - All required variables documented in env.example  
+✅ **Environment Documentation** - All required variables documented in .env.template  
 
 The integration test framework is now enterprise-ready with comprehensive coverage for all major business services.

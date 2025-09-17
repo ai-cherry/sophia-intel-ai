@@ -222,7 +222,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 # 4. Configure environment
-cp .env.example .env.master
+cp .env.template .env.master
 # Edit .env.master with your keys:
 # - PORTKEY_API_KEY=your_key
 # - PORTKEY_VK_OPENAI=your_vk

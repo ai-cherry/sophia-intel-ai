@@ -1,0 +1,6 @@
+id,path,reason,backed_by_tests,approved_by,owner,approval_date,notes
+D001,services/legacy_auth/legacy_helper.py,duplicate helper now in libs/shared,yes,,security-team,,
+D002,services/old_payments/adapter.py,import cycle via local adapter,yes,,payments-team,,
+D003,.github/workflows/old-ci.yml,duplicated CI job replaced by reusable workflow,yes,,devops,,
+D004,docs/old_examples/*,outdated examples causing confusion,no,,docs,,
+D005,infra/old_helm/templates/legacy.yaml,unused helm manifest and not in staging,yes,,platform,,

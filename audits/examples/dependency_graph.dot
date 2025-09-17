@@ -1,0 +1,43 @@
+# Graphviz DOT: sample repository dependency graph
+# Render with: dot -Tsvg audits/examples/dependency_graph.dot -o audits/examples/dependency_graph.svg
+# or: dot -Tpng audits/examples/dependency_graph.dot -o audits/examples/dependency_graph.png
+#
+# See plan: [`audits/repository_continuity_architecture_plan.md`](audits/repository_continuity_architecture_plan.md:1)
+
+digraph repo_dependency_graph {
+  rankdir=LR;
+  node [shape=box, style=filled, fillcolor="#f8f9fa", fontname="Helvetica"];
+  edge [color="#5b6f82"];
+
+  "services/api" -> "pkg/auth"  [label="uses"];
+  "services/api" -> "pkg/db"    [label="uses"];
+  "services/payments" -> "libs/shared" [label="uses"];
+  "services/invoices" -> "libs/shared" [label="uses"];
+  "pkg/auth" -> "pkg/db" [label="verifies token"];
+  "pkg/db" -> "libs/storage" [label="persists"];
+  "libs/shared" -> "libs/utils" [label="depends"];
+  "services/worker" -> "services/payments" [label="async call"];
+  "services/worker" -> "services/invoices" [label="async call"];
+
+  subgraph cluster_services {
+    label="Services";
+    color="#dfe7ef";
+    "services/api"; "services/payments"; "services/invoices"; "services/worker";
+  }
+
+  subgraph cluster_libs {
+    label="Libraries";
+    color="#eef4ea";
+    "libs/shared"; "libs/utils"; "libs/telemetry";
+  }
+
+  subgraph cluster_platform {
+    label="Platform / Infra";
+    color="#fff3cd";
+    "pkg/db"; "libs/storage"; "k8s"; "ci";
+  }
+
+  // example cycle marker (for illustration only)
+  // If this appears in your real graph, treat as P0 and break it via adapter/interface
+  "pkg/db" -> "pkg/auth" [style=dashed, color="#d9534f", label="cycle? (flag)"];
+}

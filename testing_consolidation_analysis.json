@@ -1,0 +1,71 @@
+{
+  "stats": {
+    "services_with_pairs": 7,
+    "high_overlap_count": 6,
+    "medium_overlap_count": 0,
+    "low_overlap_count": 1,
+    "archive_candidates": [
+      "linear",
+      "intercom",
+      "hubspot",
+      "salesforce",
+      "airbyte",
+      "asana"
+    ],
+    "merge_candidates": [],
+    "keep_both": [
+      "microsoft"
+    ]
+  },
+  "service_pairs": [
+    {
+      "service": "microsoft",
+      "tool_script": "tools/microsoft/smoke.py",
+      "integration_test": "tests/integration/microsoft/test_graph_smoke.py",
+      "overlap_percentage": 33.3,
+      "consolidation_action": "keep_both"
+    },
+    {
+      "service": "linear",
+      "tool_script": "tools/linear/smoke.py",
+      "integration_test": "tests/integration/linear/test_linear_smoke.py",
+      "overlap_percentage": 100.0,
+      "consolidation_action": "archive_tool_script"
+    },
+    {
+      "service": "intercom",
+      "tool_script": "tools/intercom/smoke.py",
+      "integration_test": "tests/integration/intercom/test_intercom_smoke.py",
+      "overlap_percentage": 100.0,
+      "consolidation_action": "archive_tool_script"
+    },
+    {
+      "service": "hubspot",
+      "tool_script": "tools/hubspot/smoke.py",
+      "integration_test": "tests/integration/hubspot/test_hubspot_smoke.py",
+      "overlap_percentage": 100.0,
+      "consolidation_action": "archive_tool_script"
+    },
+    {
+      "service": "salesforce",
+      "tool_script": "tools/salesforce/smoke.py",
+      "integration_test": "tests/integration/salesforce/test_salesforce_smoke.py",
+      "overlap_percentage": 100.0,
+      "consolidation_action": "archive_tool_script"
+    },
+    {
+      "service": "airbyte",
+      "tool_script": "tools/airbyte/smoke.py",
+      "integration_test": "tests/integration/airbyte/test_airbyte_smoke.py",
+      "overlap_percentage": 100.0,
+      "consolidation_action": "archive_tool_script"
+    },
+    {
+      "service": "asana",
+      "tool_script": "tools/asana/smoke.py",
+      "integration_test": "tests/integration/asana/test_asana_smoke.py",
+      "overlap_percentage": 100.0,
+      "consolidation_action": "archive_tool_script"
+    }
+  ]
+}

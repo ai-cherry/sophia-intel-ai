@@ -125,7 +125,7 @@ class StartupValidator:
     def validate_environment_files(self) -> Dict:
         """Validate environment configuration files"""
         print("\n🔍 Validating Environment Files...")
-        env_files = [".env.example", ".env.development", ".env.production"]
+        env_files = [".env.template", ".env.development", ".env.production"]
         results = {}
         for env_file in env_files:
             env_path = self.repo_path / env_file
@@ -209,8 +209,8 @@ class StartupValidator:
     def create_fixes(self):
         """Create fixes for common issues"""
         print("\n🔧 Creating Fixes...")
-        # Create missing .env.example if not exists
-        env_example = self.repo_path / ".env.example"
+        # Create missing .env.template if not exists
+        env_example = self.repo_path / ".env.template"
         if not env_example.exists():
             env_content = """# Sophia AI Environment Variables
 # Copy to .env and fill in your values
@@ -237,7 +237,7 @@ DEBUG=true
 LOG_LEVEL=INFO
 """
             env_example.write_text(env_content)
-            print("  ✅ Created .env.example")
+            print("  ✅ Created .env.template")
         # Fix shell scripts without error handling
         for script_path, results in self.results.get("shell_scripts", {}).items():
             if not results["has_error_handling"]:

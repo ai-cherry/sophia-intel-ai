@@ -372,7 +372,7 @@ class TestSecurity:
     
     def sophia_env_template_exists(self):
         """Environment template should exist"""
-        assert os.path.exists('.env.example') or os.path.exists('.env.template')
+        assert os.path.exists('.env.template') or os.path.exists('.env.template')
 
 if __name__ == "__main__":
     pytest.main([__file__, '-v', '--cov=backend', '--cov=asip', '--cov-report=term'])

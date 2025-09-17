@@ -66,8 +66,8 @@ if [ -f ".env" ]; then
     check_key "ANTHROPIC_API_KEY" "Anthropic"
     check_key "GONG_ACCESS_KEY" "Gong"
 else
-    echo -e "\n⚠️ No .env file found. Copy from .env.example first:"
-    echo "   cp .env.example .env"
+    echo -e "\n⚠️ No .env file found. Copy from .env.template first:"
+    echo "   cp .env.template .env"
 fi
 
 echo -e "\n💡 Remember: Features gracefully disable without keys"

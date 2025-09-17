@@ -38,7 +38,7 @@ def cleanup_repository():
         # Environment backups
         ".env.backup",
         ".env.old",
-        ".env.example",
+        ".env.template",
         # Cache and build artifacts
         "**/__pycache__",
         "**/*.pyc",

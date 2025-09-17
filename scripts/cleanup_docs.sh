@@ -317,7 +317,7 @@ npm install
 
 ### 2. Configure Environment
 ```bash
-cp .env.example .env
+cp .env.template .env
 # Edit .env with your API keys
 ```
 

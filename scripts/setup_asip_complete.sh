@@ -53,11 +53,11 @@ print_status "Directories created"
 echo ""
 echo "3️⃣  Setting up environment variables..."
 if [ ! -f .env ]; then
-    if [ -f .env.example ]; then
-        cp .env.example .env
-        print_warning "Created .env from .env.example - please update with your API keys"
+    if [ -f .env.template ]; then
+        cp .env.template .env
+        print_warning "Created .env from .env.template - please update with your API keys"
     else
-        print_error "No .env.example found - creating minimal .env"
+        print_error "No .env.template found - creating minimal .env"
         cat > .env << 'EOF'
 # Minimal environment configuration
 ENVIRONMENT=development

@@ -12,8 +12,8 @@ echo "================================"
 if [ -f ".env" ]; then
     export $(grep -v '^#' .env | xargs)
 else
-    echo "⚠️ No .env file found. Copy from .env.example first:"
-    echo "   cp .env.example .env"
+    echo "⚠️ No .env file found. Copy from .env.template first:"
+    echo "   cp .env.template .env"
     exit 1
 fi
 

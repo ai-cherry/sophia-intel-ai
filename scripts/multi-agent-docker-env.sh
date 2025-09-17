@@ -72,8 +72,8 @@ start_environment() {
     # Check for .env file
     if [ ! -f ".env" ]; then
         echo -e "${YELLOW}⚠️  .env file not found${NC}"
-        if [ -f ".env.example" ]; then
-            echo "Consider copying .env.example to .env and configuring your API keys"
+        if [ -f ".env.template" ]; then
+            echo "Consider copying .env.template to .env and configuring your API keys"
         fi
     else
         echo -e "${GREEN}✅ .env file found${NC}"

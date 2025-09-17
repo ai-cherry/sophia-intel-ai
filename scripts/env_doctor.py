@@ -30,8 +30,8 @@ def collect_sources() -> List[Tuple[str, Path, Dict[str, str]]]:
         ("template", ROOT / ".env.template"),
         ("env", ROOT / ".env"),
         ("env.local", ROOT / ".env.local"),
-        ("deprecated.example", ROOT / ".env.example"),
-        ("deprecated.mcp.example", ROOT / ".env.mcp.example"),
+        ("deprecated.example", ROOT / ".env.template"),
+        ("deprecated.mcp.example", ROOT / ".env.template"),
         ("deprecated.sophia.example", ROOT / ".env.sophia.example"),
         ("secure_vault", Path("~/.config//env").expanduser()),
     ]

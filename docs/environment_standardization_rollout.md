@@ -5,7 +5,7 @@
 
 ## Objectives
 - Provide automated visibility into legacy environment filename usage.
-- Deliver a safe, reviewable migration path from `.env.master` / `.env.example` to `.env.template`.
+- Deliver a safe, reviewable migration path from `.env.master` / `.env.template` to `.env.template`.
 - Unify loader logic around a single Convict + Zod validation pipeline.
 
 ## Tooling
@@ -24,7 +24,7 @@
    - Add Convict merge + Zod schema validation to Codex CLI init checks.
 4. **Apply Migration (Day 3-4)**
    - Re-run migration script with `--apply` after approvals.
-   - Remove `.env.master`/`.env.example` from repo, leaving archival copies under `backups/` if needed.
+   - Remove `.env.master`/`.env.template` from repo, leaving archival copies under `backups/` if needed.
 5. **Doc & CI Updates (Day 4-5)**
    - Update `ENVIRONMENT.md`, onboarding docs, deploy scripts.
    - Enforce `scripts/env_inventory.py --fail-noncanonical` in CI to prevent regressions.
@@ -35,6 +35,6 @@
 - Codex CLI `npm run test:codex-init` verifying convict/Zod integration.
 
 ## Rollback
-- Restore `.env.master` and `.env.example` from git history if issues arise.
+- Restore `.env.master` and `.env.template` from git history if issues arise.
 - Revert loader changes and disable CI gating command temporarily.
 - Document rollback reason via `/notify` and update `docs/decisions/2025-09-16-env-standardization.md`.

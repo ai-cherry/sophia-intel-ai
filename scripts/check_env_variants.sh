@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-allowed=(".env.master" ".env.template" ".env.example")
+allowed=(".env.master" ".env.template" ".env.template")
 violations=()
 for f in .env*; do
   [[ -e "$f" ]] || continue

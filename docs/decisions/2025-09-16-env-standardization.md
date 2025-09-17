@@ -5,13 +5,13 @@
 
 ## Context
 
-Recent duplication analysis highlighted three competing environment configuration patterns in the repository (`.env.example`, `.env.template`, `.env.master`). Tooling and documentation disagree on which file is canonical, and several loader scripts apply conflicting assumptions about encryption and source of truth. This misalignment has created deployment instability and onboarding friction.
+Recent duplication analysis highlighted three competing environment configuration patterns in the repository (`.env.template`, `.env.template`, `.env.master`). Tooling and documentation disagree on which file is canonical, and several loader scripts apply conflicting assumptions about encryption and source of truth. This misalignment has created deployment instability and onboarding friction.
 
 ## Decision
 
 1. Adopt `.env.template` as the canonical template that all onboarding, automation, and documentation reference.
 2. Maintain an encrypted runtime copy managed by the existing secret tooling (`env_manager.py`) while keeping the plaintext template under version control.
-3. Deprecate `.env.example`, `.env.master`, and ad-hoc environment bootstrap logic once migration tooling is ready.
+3. Deprecate `.env.template`, `.env.master`, and ad-hoc environment bootstrap logic once migration tooling is ready.
 4. Require that all shell scripts and Python utilities hydrate their configuration through a unified loader module that resolves `.env.template` + `config/*.yml` using Convict/Zod validation rules.
 
 ## Rationale

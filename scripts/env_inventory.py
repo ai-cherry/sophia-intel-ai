@@ -2,7 +2,7 @@
 """Repository-wide environment reference inventory.
 
 Scans the codebase for references to environment template files so we can
-identify non-canonical usage (e.g., `.env.master`, `.env.example`). The tool
+identify non-canonical usage (e.g., `.env.master`, `.env.template`). The tool
 outputs a JSON summary by default and can optionally emit a table for quick
 CLI review.
 """
@@ -20,8 +20,8 @@ from typing import Dict, Iterable, List, Sequence
 KNOWN_PATTERNS: Sequence[str] = (
     ".env.template",
     ".env.master",
-    ".env.example",
-    "env.example",
+    ".env.template",
+    ".env.template",
 )
 
 # Directories that should be ignored when scanning. These cover third-party
@@ -157,7 +157,7 @@ def main(argv: Sequence[str]) -> int:
     if args.fail_noncanonical:
         offenders = {
             pattern: len(inventory.get(pattern, []))
-            for pattern in (".env.master", ".env.example", "env.example")
+            for pattern in (".env.master", ".env.template", ".env.template")
         }
         offenders = {pattern: count for pattern, count in offenders.items() if count}
         if offenders:
